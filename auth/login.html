@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -20,14 +21,20 @@
 
 <body>
 
-    <div class="login-container">
+    <div class="auth-container">
 
-        <div class="login-card">
+        <div class="auth-card">
 
-            <h1>تسجيل الدخول</h1>
+            <div class="auth-logo">
+                TERA
+            </div>
+
+            <h1>
+                تسجيل الدخول
+            </h1>
 
             <p>
-                مرحباً بك في بوابة المستثمر
+                أهلاً بك في بوابة المستثمر
             </p>
 
             <form id="loginForm">
@@ -41,6 +48,7 @@
                     <input
                         type="email"
                         id="email"
+                        placeholder="example@email.com"
                         required>
 
                 </div>
@@ -54,17 +62,51 @@
                     <input
                         type="password"
                         id="password"
+                        placeholder="********"
                         required>
 
                 </div>
 
-                <button type="submit">
+                <div class="auth-options">
+
+                    <label>
+
+                        <input type="checkbox">
+
+                        تذكرني
+
+                    </label>
+
+                    <a href="forgot-password.html">
+
+                        نسيت كلمة المرور؟
+
+                    </a>
+
+                </div>
+
+                <button
+                    type="submit">
 
                     تسجيل الدخول
 
                 </button>
 
             </form>
+
+            <div class="auth-footer">
+
+                <span>
+                    ليس لديك حساب؟
+                </span>
+
+                <a href="register.html">
+
+                    إنشاء حساب جديد
+
+                </a>
+
+            </div>
 
         </div>
 
@@ -96,3 +138,4 @@
 </body>
 
 </html>
+```
