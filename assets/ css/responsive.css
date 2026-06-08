@@ -1,1 +1,173 @@
+```css
+/* ==========================================
+   Tablet
+========================================== */
 
+@media (max-width: 1024px){
+
+    .stats-grid,
+    .report-cards{
+
+        grid-template-columns:
+        repeat(2, 1fr);
+
+    }
+
+    .sidebar{
+
+        width:220px;
+
+    }
+
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media (max-width: 768px){
+
+    .app-layout{
+
+        flex-direction:column;
+
+    }
+
+    .sidebar{
+
+        width:100%;
+
+        border-left:none;
+
+        border-bottom:1px solid var(--border);
+
+    }
+
+    .sidebar ul{
+
+        display:flex;
+
+        flex-wrap:wrap;
+
+    }
+
+    .sidebar ul li{
+
+        flex:1 1 50%;
+
+    }
+
+    .header{
+
+        flex-direction:column;
+
+        gap:10px;
+
+        height:auto;
+
+        padding:15px;
+
+    }
+
+    .stats-grid,
+    .report-cards{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .quick-actions{
+
+        flex-direction:column;
+
+    }
+
+    .quick-actions .btn,
+    .quick-actions button{
+
+        width:100%;
+
+    }
+
+    table{
+
+        display:block;
+
+        overflow-x:auto;
+
+        white-space:nowrap;
+
+    }
+
+    .auth-card{
+
+        padding:25px;
+
+    }
+
+}
+
+/* ==========================================
+   Small Mobile
+========================================== */
+
+@media (max-width: 480px){
+
+    body{
+
+        font-size:14px;
+
+    }
+
+    .page-title{
+
+        font-size:18px;
+
+    }
+
+    .auth-logo{
+
+        font-size:26px;
+
+    }
+
+    .auth-card{
+
+        padding:20px;
+
+    }
+
+    .card{
+
+        padding:15px;
+
+    }
+
+    .stat-card span{
+
+        font-size:20px;
+
+    }
+
+    button{
+
+        width:100%;
+
+    }
+
+}
+
+/* ==========================================
+   Large Screens
+========================================== */
+
+@media (min-width: 1400px){
+
+    .main-wrapper{
+
+        max-width:1600px;
+
+    }
+
+}
+```
