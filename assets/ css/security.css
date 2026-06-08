@@ -1,3 +1,4 @@
+```css
 .security-section{
     background:#fff;
     padding:24px;
@@ -15,11 +16,19 @@
     padding:6px 12px;
     border-radius:20px;
     margin:10px 0;
+    font-size:13px;
+    font-weight:600;
 }
 
-.status.active{
+.status.active,
+.status.success{
     background:#dcfce7;
     color:#15803d;
+}
+
+.status.failed{
+    background:#fee2e2;
+    color:#991b1b;
 }
 
 table{
@@ -30,6 +39,7 @@ table{
 th,
 td{
     padding:12px;
-    border-bottom:1px solid #eee;
+    border-bottom:1px solid #e5e7eb;
     text-align:right;
 }
+```
