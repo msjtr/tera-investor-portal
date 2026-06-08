@@ -1,1 +1,38 @@
+.filters{
+    display:flex;
+    gap:15px;
+    margin-bottom:25px;
+}
 
+.filters input,
+.filters select{
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+.opportunities-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:20px;
+}
+
+.opportunity-card{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+.progress{
+    height:8px;
+    background:#eee;
+    border-radius:10px;
+    overflow:hidden;
+    margin:15px 0;
+}
+
+.progress-bar{
+    height:100%;
+    background:#22c55e;
+}
