@@ -1,1 +1,53 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Tajawal',sans-serif;
+}
 
+body{
+    background:#f8fafc;
+    color:#1f2937;
+}
+
+.topbar{
+    height:70px;
+    background:#ffffff;
+    border-bottom:1px solid #e5e7eb;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 24px;
+}
+
+.sidebar{
+    width:260px;
+    height:100vh;
+    background:#ffffff;
+    border-left:1px solid #e5e7eb;
+}
+
+.sidebar ul{
+    list-style:none;
+}
+
+.sidebar ul li a{
+    display:block;
+    padding:14px 20px;
+    text-decoration:none;
+    color:#374151;
+}
+
+.sidebar ul li a:hover{
+    background:#f3f4f6;
+}
+
+#content{
+    padding:24px;
+}
+
+.footer-content{
+    text-align:center;
+    padding:20px;
+    border-top:1px solid #e5e7eb;
+}
