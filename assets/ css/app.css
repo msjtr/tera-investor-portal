@@ -1,326 +1,194 @@
 ```css
 /* ==========================================
-   TERA Investor Portal - Global Styles
+   Auth Pages
 ========================================== */
 
-:root{
-
-    --primary:#0f766e;
-    --primary-light:#14b8a6;
-
-    --background:#f8fafc;
-    --surface:#ffffff;
-
-    --border:#e5e7eb;
-
-    --text:#111827;
-    --text-light:#6b7280;
-
-    --success:#22c55e;
-    --warning:#f59e0b;
-    --danger:#ef4444;
-
-    --shadow:
-    0 2px 12px rgba(0,0,0,.05);
-
-    --radius:12px;
-
-}
-
-/* ==========================================
-   Reset
-========================================== */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-html{
-    scroll-behavior:smooth;
-}
-
-body{
-
-    direction:rtl;
-
-    background:var(--background);
-
-    color:var(--text);
-
-    font-family:
-    Tahoma,
-    Arial,
-    sans-serif;
-
-    min-height:100vh;
-
-}
-
-/* ==========================================
-   Links
-========================================== */
-
-a{
-
-    text-decoration:none;
-
-    color:inherit;
-
-}
-
-/* ==========================================
-   Lists
-========================================== */
-
-ul,
-ol{
-
-    list-style:none;
-
-}
-
-/* ==========================================
-   Layout
-========================================== */
-
-.app-layout{
+.auth-container{
 
     display:flex;
 
-    min-height:100vh;
-
-}
-
-.main-wrapper{
-
-    flex:1;
-
-    display:flex;
-
-    flex-direction:column;
-
-}
-
-main{
-
-    flex:1;
-
-    padding:24px;
-
-}
-
-/* ==========================================
-   Header
-========================================== */
-
-.header{
-
-    height:70px;
-
-    background:var(--surface);
-
-    border-bottom:1px solid var(--border);
-
-    display:flex;
+    justify-content:center;
 
     align-items:center;
 
-    justify-content:space-between;
-
-    padding:0 24px;
-
-}
-
-.page-title{
-
-    font-size:20px;
-
-    font-weight:700;
-
-}
-
-.header-actions{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:15px;
-
-}
-
-/* ==========================================
-   Sidebar
-========================================== */
-
-.sidebar{
-
-    width:260px;
-
-    background:var(--surface);
-
-    border-left:1px solid var(--border);
-
-}
-
-.sidebar-logo{
-
-    padding:24px;
-
-    text-align:center;
-
-    font-size:24px;
-
-    font-weight:700;
-
-    color:var(--primary);
-
-}
-
-.sidebar ul li a{
-
-    display:block;
-
-    padding:14px 20px;
-
-    transition:.3s;
-
-}
-
-.sidebar ul li a:hover{
-
-    background:#f1f5f9;
-
-    color:var(--primary);
-
-}
-
-/* ==========================================
-   Cards
-========================================== */
-
-.card{
-
-    background:var(--surface);
-
-    border-radius:var(--radius);
-
-    box-shadow:var(--shadow);
+    min-height:100vh;
 
     padding:20px;
 
 }
 
-/* ==========================================
-   Forms
-========================================== */
-
-input,
-select,
-textarea{
+.auth-card{
 
     width:100%;
 
-    padding:12px;
-
-    border:1px solid var(--border);
-
-    border-radius:8px;
-
-    outline:none;
-
-}
-
-input:focus,
-select:focus,
-textarea:focus{
-
-    border-color:var(--primary);
-
-}
-
-/* ==========================================
-   Buttons
-========================================== */
-
-button{
-
-    border:none;
-
-    cursor:pointer;
-
-    border-radius:8px;
-
-    padding:12px 20px;
-
-    background:var(--primary);
-
-    color:#fff;
-
-    transition:.3s;
-
-}
-
-button:hover{
-
-    background:var(--primary-light);
-
-}
-
-/* ==========================================
-   Tables
-========================================== */
-
-table{
-
-    width:100%;
-
-    border-collapse:collapse;
+    max-width:450px;
 
     background:var(--surface);
 
-}
+    padding:35px;
 
-th,
-td{
+    border-radius:var(--radius);
 
-    padding:14px;
-
-    border-bottom:1px solid var(--border);
-
-    text-align:right;
+    box-shadow:var(--shadow);
 
 }
 
-th{
+.auth-logo{
 
-    background:#f8fafc;
+    text-align:center;
+
+    font-size:32px;
 
     font-weight:700;
 
+    color:var(--primary);
+
+    margin-bottom:20px;
+
 }
 
-/* ==========================================
-   Status
-========================================== */
+.auth-card h1{
 
-.status{
+    text-align:center;
 
-    display:inline-block;
+    margin-bottom:10px;
 
-    padding:6px 12px;
+}
 
-    border-radius:20px;
+.auth-card p{
 
-    font-size:13px;
+    text-align:center;
+
+    color:var(--text-light);
+
+    margin-bottom:25px;
+
+}
+
+.form-group{
+
+    margin-bottom:15px;
+
+}
+
+.form-group label{
+
+    display:block;
+
+    margin-bottom:8px;
 
     font-weight:600;
 
 }
 
-.status.success{
+.auth-options{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin:15px 0;
+
+}
+
+.auth-footer{
+
+    margin-top:20px;
+
+    text-align:center;
+
+}
+
+/* ==========================================
+   Page Header
+========================================== */
+
+.page-header{
+
+    margin-bottom:25px;
+
+}
+
+.page-header h1{
+
+    font-size:28px;
+
+    margin-bottom:8px;
+
+}
+
+.page-header p{
+
+    color:var(--text-light);
+
+}
+
+/* ==========================================
+   Section Header
+========================================== */
+
+.section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+/* ==========================================
+   Grid
+========================================== */
+
+.grid{
+
+    display:grid;
+
+    gap:20px;
+
+}
+
+.grid-2{
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+}
+
+.grid-3{
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+}
+
+.grid-4{
+
+    grid-template-columns:
+    repeat(4,1fr);
+
+}
+
+/* ==========================================
+   Alerts
+========================================== */
+
+.alert{
+
+    padding:15px;
+
+    border-radius:8px;
+
+    margin-bottom:15px;
+
+}
+
+.alert-success{
 
     background:#dcfce7;
 
@@ -328,7 +196,7 @@ th{
 
 }
 
-.status.warning{
+.alert-warning{
 
     background:#fef3c7;
 
@@ -336,7 +204,7 @@ th{
 
 }
 
-.status.danger{
+.alert-danger{
 
     background:#fee2e2;
 
@@ -345,50 +213,123 @@ th{
 }
 
 /* ==========================================
-   Footer
+   Breadcrumb
 ========================================== */
 
-.footer{
+.breadcrumb{
 
-    padding:20px;
+    display:flex;
 
-    text-align:center;
+    gap:10px;
 
-    border-top:1px solid var(--border);
+    margin-bottom:20px;
 
-    background:var(--surface);
+    color:var(--text-light);
+
+}
+
+.breadcrumb a{
+
+    color:var(--primary);
 
 }
 
 /* ==========================================
-   Utilities
+   Loader
 ========================================== */
 
-.text-center{
-    text-align:center;
+.loader{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-direction:column;
+
+    min-height:100vh;
+
 }
 
-.mt-10{
-    margin-top:10px;
+.spinner{
+
+    width:40px;
+
+    height:40px;
+
+    border:4px solid #e5e7eb;
+
+    border-top:4px solid var(--primary);
+
+    border-radius:50%;
+
+    animation:spin 1s linear infinite;
+
 }
 
-.mt-20{
-    margin-top:20px;
+@keyframes spin{
+
+    100%{
+
+        transform:rotate(360deg);
+
+    }
+
 }
 
-.mt-30{
-    margin-top:30px;
+/* ==========================================
+   Buttons Variants
+========================================== */
+
+.btn-success{
+
+    background:var(--success);
+
 }
 
-.mb-10{
-    margin-bottom:10px;
+.btn-warning{
+
+    background:var(--warning);
+
 }
 
-.mb-20{
-    margin-bottom:20px;
+.btn-danger{
+
+    background:var(--danger);
+
 }
 
-.mb-30{
-    margin-bottom:30px;
+/* ==========================================
+   Dark Mode Ready
+========================================== */
+
+.dark{
+
+    background:#111827;
+
+    color:#ffffff;
+
+}
+
+.dark .card,
+.dark .sidebar,
+.dark .header,
+.dark .auth-card{
+
+    background:#1f2937;
+
+}
+
+.dark input,
+.dark select,
+.dark textarea{
+
+    background:#111827;
+
+    color:#fff;
+
+    border-color:#374151;
+
 }
 ```
