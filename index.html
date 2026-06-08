@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -11,61 +12,15 @@
     <meta name="description"
           content="بوابة المستثمر - تيرا">
 
-    <title>بوابة المستثمر | تيرا</title>
+    <title>TERA Investor Portal</title>
 
-    <style>
+    <!-- Global CSS -->
 
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-        }
+    <link rel="stylesheet"
+          href="assets/css/app.css">
 
-        body{
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            background:#f8fafc;
-            font-family:Tahoma, Arial, sans-serif;
-        }
-
-        .loader{
-            text-align:center;
-        }
-
-        .logo{
-            font-size:42px;
-            font-weight:700;
-            color:#0f766e;
-            margin-bottom:20px;
-        }
-
-        .spinner{
-            width:45px;
-            height:45px;
-            border:4px solid #e5e7eb;
-            border-top:4px solid #0f766e;
-            border-radius:50%;
-            margin:auto;
-            animation:spin 1s linear infinite;
-        }
-
-        p{
-            margin-top:15px;
-            color:#6b7280;
-        }
-
-        @keyframes spin{
-            from{
-                transform:rotate(0deg);
-            }
-            to{
-                transform:rotate(360deg);
-            }
-        }
-
-    </style>
+    <link rel="stylesheet"
+          href="assets/css/responsive.css">
 
 </head>
 
@@ -80,19 +35,25 @@
         <div class="spinner"></div>
 
         <p>
-            جاري تحميل بوابة المستثمر...
+            جاري تحميل النظام...
         </p>
 
     </div>
 
+    <!-- Global JS -->
+
+    <script src="assets/js/app.js"></script>
+
     <script>
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener(
+            'DOMContentLoaded',
+            () => {
 
-            const token =
-            localStorage.getItem('investorToken');
-
-            setTimeout(() => {
+                const token =
+                localStorage.getItem(
+                    'investorToken'
+                );
 
                 if(token){
 
@@ -106,12 +67,12 @@
 
                 }
 
-            }, 1000);
-
-        });
+            }
+        );
 
     </script>
 
 </body>
 
 </html>
+```
