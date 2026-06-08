@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -8,7 +9,12 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+    <meta name="description"
+          content="بوابة المستثمر - تيرا">
+
     <title>تسجيل الدخول | تيرا</title>
+
+    <!-- Global CSS -->
 
     <link rel="stylesheet"
           href="../assets/css/app.css">
@@ -40,13 +46,14 @@
 
                 <div class="form-group">
 
-                    <label>
+                    <label for="email">
                         البريد الإلكتروني
                     </label>
 
                     <input
                         type="email"
                         id="email"
+                        name="email"
                         placeholder="example@email.com"
                         required>
 
@@ -54,13 +61,14 @@
 
                 <div class="form-group">
 
-                    <label>
+                    <label for="password">
                         كلمة المرور
                     </label>
 
                     <input
                         type="password"
                         id="password"
+                        name="password"
                         placeholder="********"
                         required>
 
@@ -70,7 +78,9 @@
 
                     <label>
 
-                        <input type="checkbox">
+                        <input
+                            type="checkbox"
+                            id="rememberMe">
 
                         تذكرني
 
@@ -111,29 +121,15 @@
 
     </div>
 
-    <script>
+    <!-- Global JS -->
 
-        document
-        .getElementById('loginForm')
-        .addEventListener(
-            'submit',
-            function(e){
+    <script src="../assets/js/app.js"></script>
 
-                e.preventDefault();
+    <!-- Auth JS -->
 
-                localStorage.setItem(
-                    'investorToken',
-                    'demo-token'
-                );
-
-                window.location.href =
-                '../pages/dashboard/index.html';
-
-            }
-        );
-
-    </script>
+    <script src="../assets/js/auth.js"></script>
 
 </body>
 
 </html>
+```
