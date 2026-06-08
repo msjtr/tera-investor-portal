@@ -1,10 +1,12 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
 
     <meta charset="UTF-8">
+
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
@@ -14,7 +16,7 @@
 
     <title>تسجيل الدخول | تيرا</title>
 
-    <!-- Global CSS -->
+    <!-- CSS -->
 
     <link rel="stylesheet"
           href="../assets/css/app.css">
@@ -55,6 +57,7 @@
                         id="email"
                         name="email"
                         placeholder="example@email.com"
+                        autocomplete="email"
                         required>
 
                 </div>
@@ -70,6 +73,7 @@
                         id="password"
                         name="password"
                         placeholder="********"
+                        autocomplete="current-password"
                         required>
 
                 </div>
@@ -87,15 +91,14 @@
                     </label>
 
                     <a href="forgot-password.html">
-
                         نسيت كلمة المرور؟
-
                     </a>
 
                 </div>
 
                 <button
-                    type="submit">
+                    type="submit"
+                    class="btn-primary">
 
                     تسجيل الدخول
 
@@ -110,9 +113,7 @@
                 </span>
 
                 <a href="register.html">
-
                     إنشاء حساب جديد
-
                 </a>
 
             </div>
@@ -121,15 +122,12 @@
 
     </div>
 
-    <!-- Global JS -->
+    <!-- JS -->
 
     <script src="../assets/js/app.js"></script>
-
-    <!-- Auth JS -->
 
     <script src="../assets/js/auth.js"></script>
 
 </body>
 
 </html>
-```
