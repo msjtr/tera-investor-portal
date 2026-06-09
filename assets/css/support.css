@@ -1,173 +1,85 @@
 /* ==========================================
-   Premium Knowledge & Support Containers (حاويات مركز المساعدة)
+   TERA Investor Portal - Support & Ticketing Engine
 ========================================== */
-.support-section,
-.notifications-section,
-.help-section,
-.faq-section,
-.legal-section {
-    background: #ffffff;
-    padding: 32px;
-    border-radius: 20px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    margin-bottom: 28px;
-}
 
-/* ==========================================
-   Interactive Help Cards (بطاقات المساعدة السريعة)
-========================================== */
-.help-card {
-    padding: 20px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    margin-bottom: 16px;
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.help-card:hover {
-    border-color: rgba(13, 148, 136, 0.3); /* تمييز الكارت بلمسة تيل ناعمة عند الاهتمام */
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
-    transform: translateY(-2px);
-}
-
-/* ==========================================
-   Premium FAQ Accordions (هندسة قائمة الأسئلة الشائعة)
-========================================== */
-details {
-    margin-bottom: 16px;
-    padding: 0;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: #ffffff;
+/* كروت الأسئلة الشائعة القابلة للطي (Accordion FAQ) */
+.faq-accordion-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
     overflow: hidden;
-    transition: all .3s ease;
 }
 
-/* تفتيح خلفية السؤال المفتوح تلقائياً لتمييزه عن البقية */
-details[open] {
-    border-color: var(--primary-teal, #0d9488);
-    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.05);
-}
-
-/* رأس السؤال التفاعلي */
-summary {
-    padding: 16px 20px;
-    font-weight: 700;
+.faq-trigger-header {
+    width: 100%;
+    padding: 20px;
+    background: none;
+    border: none;
+    text-align: right;
     font-size: 15px;
-    color: var(--text, #0f172a);
+    font-weight: 700;
+    color: var(--secondary-dark);
     cursor: pointer;
-    list-style: none; /* إخفاء سهم المتصفح الافتراضي القديم */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    user-select: none;
-    transition: background-color .2s ease;
 }
 
-/* إخفاء السهم في متصفحات سفاري وكروم القديمة */
-summary::-webkit-details-marker {
-    display: none;
-}
-
-summary:hover {
-    background-color: #f8fafc;
-}
-
-/* إضافة سهم تفاعلي مخصص يدعم الـ RTL الفاخر */
-summary::after {
-    content: "";
-    width: 16px;
-    height: 16px;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-size: contain;
-    transition: transform .3s ease;
-}
-
-/* تدوير السهم المخصص بنعومة عند فتح السؤال */
-details[open] summary::after {
-    transform: rotate(180deg);
-}
-
-/* حاوية الإجابة الداخلية للسؤال */
-details .faq-content {
+.faq-panel-content {
     padding: 0 20px 20px 20px;
-    color: #475569;
+    color: var(--text-muted);
     font-size: 14px;
     line-height: 1.7;
-    border-top: 1px dashed #f1f5f9;
-    background: #ffffff;
+    display: none; /* يتم إظهاره عبر جافا سكريبت الدعم */
 }
 
-/* ==========================================
-   Fintech Textareas (حقول كتابة الرسائل وبطاقات الدعم)
-========================================== */
-textarea {
-    width: 100%;
-    min-height: 140px; /* طول افتراضي مريح للأسطر المتعددة */
-    padding: 14px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
+/* صندوق تذاكر الدعم والدردشة الداخلي */
+.ticket-chat-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+.ticket-chat-history {
+    flex-grow: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* فقاعات المحادثة (Chat Bubbles) */
+.chat-message-bubble {
+    max-width: 70%;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
-    color: var(--text, #0f172a);
-    background-color: #ffffff;
-    font-family: inherit; /* لضمان ثبات الخط العربي المعتمد للمنصة */
-    line-height: 1.6;
-    resize: vertical; /* السماح للمستثمر بالتوسيع العمودي فقط لحماية الهيكل الاستجابي */
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1.5;
 }
 
-textarea:hover {
-    border-color: #94a3b8;
+.chat-message-bubble.investor {
+    background: var(--primary-teal);
+    color: #ffffff;
+    align-self: flex-start;
+    border-top-right-radius: 0;
 }
 
-/* توهج الأمان الفاخر عند تفعيل حقل الكتابة */
-textarea:focus {
-    outline: none;
-    border-color: var(--primary-teal, #0d9488);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+.chat-message-bubble.agent {
+    background: var(--bg-global);
+    color: var(--secondary-dark);
+    align-self: flex-end;
+    border-top-left-radius: 0;
 }
 
-/* تجميل نصوص المساعدة الافتراضية داخل الحقل */
-textarea::placeholder {
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-/* ==========================================
-   Responsive Help Layout (استجابة شاشات الأجهزة الذكية)
-========================================== */
-@media (max-width: 768px) {
-    .support-section,
-    .notifications-section,
-    .help-section,
-    .faq-section,
-    .legal-section {
-        padding: 24px 16px;
-        border-radius: 16px;
-        margin-bottom: 20px;
-    }
-
-    .help-card {
-        padding: 16px;
-        border-radius: 12px;
-    }
-
-    summary {
-        padding: 14px 16px;
-        font-size: 14px;
-    }
-
-    details .faq-content {
-        padding: 0 16px 16px 16px;
-        font-size: 13px;
-    }
-
-    textarea {
-        padding: 12px 14px;
-        min-height: 120px;
-    }
+.ticket-input-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
 }
