@@ -1,93 +1,57 @@
-/* ==========================================
-   TERA Investor Portal - Core System (Refined)
-   المسار: /assets/css/core.css
-========================================== */
+/* ==========================================================================
+   TERA Investor Portal - Core Design System (Based on Image_2.png)
+   المسار: assets/css/core.css
+========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
 
 :root {
-    /* تم تعديل التباين ليكون أكثر وضوحاً في وضع الظلام */
-    --color-primary: #3b82f6;        /* زرقاء ساطعة أكثر */
-    --color-primary-dark: #1e40af; 
-    --color-primary-light: #60a5fa;
-    --color-dark: #0a0a0a;
-    --color-surface: #121212;        /* أغمق قليلاً لعمق بصري أفضل */
-    --color-text: #f1f5f9;           /* أكثر راحة للعين */
-    --color-text-muted: #94a3b8;
-    --color-border: #262626;
+    /* 1. لوحة الألوان (مستخرجة بدقة من شعارك وصورتك) */
+    --bg-page: #FFFFFF;        /* خلفية بيضاء نقية */
+    --text-main: #1D1D1B;      /* لون أسود مائل للأزرق (مثل كلمة TERA) */
+    --text-muted: #6B7280;     /* لون رمادي للنصوص الثانوية */
     
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    
+    /* الألوان الأساسية والثانوية (من سهم الشعار) */
+    --primary: #2AB8B6;        /* لون التيل الفاتح الأساسي */
+    --primary-dark: #1F9D9C;   /* تيل أغمق للhover */
+    --border-color: #E2E8F0;   /* لون حدود خفيف */
+
+    /* 2. الخطوط المعتمدة */
     --font-family: 'Tajawal', sans-serif;
+
+    /* 3. تأثيرات الزجاج (Glassmorphism) */
+    --glass-bg: rgba(255, 255, 255, 0.6); /* زجاج أبيض شفاف */
+    --glass-blur: blur(16px);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+    
+    /* 4. هندسة الواجهة (UI Geometry) */
+    --radius-xl: 20px; /* انحناء زوايا مثل الصورة */
+    --radius-md: 10px;
+    --shadow-glass: 0 10px 30px rgba(0, 0, 0, 0.05); /* ظل ناعم جداً */
+    --transition: all 0.2s ease;
 }
 
-/* 2. إعادة تهيئة المتصفح (CSS Reset) */
-*, *::before, *::after {
+/* التنسيقات العامة للواجهة */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility; /* تحسين عرض الخطوط */
-}
-
-html {
-    font-size: 16px;
-    scroll-behavior: smooth;
-    -webkit-text-size-adjust: 100%;
 }
 
 body {
-    background-color: var(--color-dark);
-    color: var(--color-text);
+    background-color: var(--bg-page);
+    color: var(--text-main);
     font-family: var(--font-family);
     line-height: 1.6;
-    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* 3. تحسين Accessibility (Accessibility Focus Ring) */
-:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-}
-
-/* 4. تنسيقات أساسية للعناصر التفاعلية */
-button, input, select, textarea {
-    font-family: var(--font-family);
-    border: none;
-}
-
-a {
-    color: var(--color-primary-light);
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-a:hover {
-    color: #ffffff;
-}
-
-/* 5. أدوات المساعدة المحسنة */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px; /* تحسين الهوامش الجانبية */
-}
-
-/* 6. التمرير الاحترافي */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary);
+/* كلاس البطاقة الزجاجية المعتمد */
+.tera-glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glass);
 }
