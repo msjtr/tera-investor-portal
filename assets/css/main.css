@@ -1,28 +1,30 @@
-/* ==========================================
-   TERA Investor Portal - Main Layout (Optimized)
-========================================== */
+/* ==========================================================================
+   TERA Investor Portal - Main Layout (Official Glassmorphism Identity)
+   المسار: /assets/css/main.css
+========================================================================== */
 
-/* 1. هيكل الصفحة: ضمان بقاء الفوتر في الأسفل دائماً */
+/* 1. هيكل الصفحة: تضمن بقاء الفوتر في الأسفل دائماً مع خلفية بيضاء نقية */
 .main-wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
+    background-color: var(--bg-body, #FFFFFF); /* تضمن أن الخلفية بيضاء دائمًا خلف الزجاج */
 }
 
-/* 2. الهيدر: إضافة Z-index أعلى لضمان ظهوره دائماً */
+/* 2. الهيدر: تأثير زجاجي أبيض ناصع وشفاف يبرز ألوان الشعار */
 .main-header {
     height: 70px;
-    background: rgba(10, 10, 10, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--color-border, #262626);
+    background: rgba(255, 255, 255, 0.6); /* زجاج أبيض شفاف */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(11, 25, 44, 0.08); /* حدود ناعمة بلون كحلي خفيف جدًا */
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 2000; /* رفع القيمة لضمان الأولوية القصوى */
+    z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -30,7 +32,7 @@
     box-sizing: border-box;
 }
 
-/* 3. الحاوية: استخدام min-height لدفع الفوتر للأسفل */
+/* 3. الحاوية الأساسية للمحتوى */
 .page-container {
     padding: 30px;
     margin-top: 70px; 
@@ -38,26 +40,31 @@
     margin-left: auto;
     margin-right: auto;
     width: 100%;
-    flex: 1; /* المحرك الأساسي لدفع الفوتر */
-    min-height: calc(100vh - 70px - 120px); /* (ارتفاع الشاشة - الهيدر - الفوتر التقريبي) */
+    flex: 1; /* يدفع الفوتر للأسفل تلقائياً */
+    min-height: calc(100vh - 70px - 120px);
     box-sizing: border-box;
 }
 
-/* 4. البطاقات: إضافة تأثير الظل الخفيف للعمق البصري */
+/* 4. البطاقات (Cards): تحويل كامل إلى تصميم الزجاج الأبيض الفاخر */
 .card {
-    background: var(--color-surface, #171717);
-    border: 1px solid var(--color-border, #262626);
-    border-radius: var(--radius-lg, 16px);
+    background: rgba(255, 255, 255, 0.5) !important; /* خلفية زجاجية نصف شفافة */
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important; /* حدود بيضاء مضيئة لإبراز حافة الزجاج */
+    border-radius: var(--radius-lg, 20px); /* انحناء دائري أنيق ومتناسق مع تصميم الهوية */
     padding: 24px;
     margin-bottom: 24px;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 10px 30px rgba(11, 25, 44, 0.04); /* ظلال ناعمة للغاية لإعطاء عمق بصري رائع */
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(11, 25, 44, 0.07);
+    border-color: rgba(42, 184, 182, 0.3) !important; /* إضاءة ناعمة بلون التيل عند التمرير بالماوس */
 }
 
-/* 5. شبكة العرض: استخدام 280px بدلاً من 300px لضمان ظهورها في معظم الهواتف */
+/* 5. شبكة العرض (Grid System) لبطاقات الاستثمار والأرباح */
 .grid-system {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -65,33 +72,42 @@
     width: 100%;
 }
 
-/* 6. التذييل: تأمين خلفية ثابتة */
+/* 6. التذييل (Footer): متناسق مع النقاء العام وبخلفية شفافة خفيفة */
 .main-footer {
     padding: 40px;
     text-align: center;
-    border-top: 1px solid var(--color-border, #262626);
-    color: var(--color-text-muted, #94a3b8);
-    background: var(--color-dark, #0a0a0a);
+    border-top: 1px solid rgba(11, 25, 44, 0.06);
+    color: var(--text-muted, #64748B);
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
 }
 
-/* 7. إضافات جمالية */
+/* 7. بطاقات الإحصائيات (Stats Cards) الخاصة بالمحفظة والأرباح */
 .stats-card {
-    border: 1px solid var(--color-border, #262626);
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
     padding: 20px;
-    border-radius: var(--radius-md, 10px);
+    border-radius: var(--radius-md, 12px);
     text-align: center;
-    background: var(--color-surface, #171717);
-    transition: var(--transition, all 0.3s ease);
+    box-shadow: 0 4px 20px rgba(11, 25, 44, 0.02);
+    transition: all 0.25s ease;
     cursor: default;
 }
 
-/* 8. Responsive Fixes */
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(42, 184, 182, 0.1); /* توهج بلون سهم الاستثمار الفيروزي المضيء */
+}
+
+/* 8. إصلاحات مرونة التجاوب مع الجوال (Responsive Fixes) */
 @media (max-width: 992px) {
     .page-container { padding: 20px; }
 }
 
 @media (max-width: 480px) {
-    .main-header { padding: 0 15px; }
+    .main-header { padding: 0 20px; }
     .grid-system { grid-template-columns: 1fr; }
-    .card { padding: 16px; }
+    .card { padding: 20px; border-radius: 16px; }
 }
