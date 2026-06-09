@@ -1,4 +1,3 @@
-```javascript
 document
 .getElementById('forgotPasswordForm')
 .addEventListener(
@@ -31,4 +30,3 @@ document
 
     }
 );
-```
