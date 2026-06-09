@@ -1,113 +1,256 @@
-/* ==========================================
-   TERA Registration Styles
-   المسار: /auth/register/register.css
-========================================== */
+/* /auth/register/register.css */
 
-/* 1. Tracker (شريط التقدم) */
+:root {
+    --bg-dark: #0b0f19;
+    --card-bg: #111827;
+    --primary-gold: #c5a880; /* لون تيرا المميز */
+    --border-color: #1f2937;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+}
+
+body {
+    background-color: var(--bg-dark);
+    font-family: 'Tajawal', sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+}
+
+.register-page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.register-card-wide {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 650px;
+    padding: 40px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* تنسيق الشعار المنهار في الصورة */
+.auth-logo-section {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.main-logo {
+    max-width: 180px;
+    height: auto;
+}
+
+.sub-logo-text {
+    font-size: 14px;
+    color: var(--primary-gold);
+    margin-top: 8px;
+    letter-spacing: 2px;
+}
+
+.page-title {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* إصلاح شريط الـ Tracker */
 .reg-steps-tracker {
     display: flex;
     justify-content: space-between;
-    margin: 30px 0 40px;
+    margin-bottom: 40px;
     position: relative;
 }
 
+.reg-steps-tracker::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-color);
+    z-index: 0;
+    transform: translateY(-50%);
+}
+
 .reg-step-node {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #1a1a1a;
+    background: #1f2937;
     border: 2px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    color: var(--text-muted);
-    transition: var(--transition);
-    position: relative;
     z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.reg-step-node .step-num {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-muted);
 }
 
 .reg-step-node.active {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: white;
+    background: var(--primary-gold);
+    border-color: var(--primary-gold);
+}
+
+.reg-step-node.active .step-num {
+    color: #000;
 }
 
 .reg-step-node.completed {
-    border-color: var(--primary);
-    background: #0f172a;
-    color: var(--primary);
+    background: #10b981;
+    border-color: #10b981;
 }
 
-/* 2. Form Steps (تنسيق المراحل) */
+.reg-step-node.completed .step-num {
+    color: #fff;
+}
+
+/* تنسيق الحقول بشكل آمن وعزل تام */
 .form-step {
     display: none;
 }
 
 .form-step.active {
     display: block;
-    animation: fadeIn 0.4s ease;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.step-heading {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: var(--primary-gold);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
 }
 
-/* 3. Actions & Buttons */
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tera-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+}
+
+.tera-input-field {
+    background: #1f2937;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.tera-input-field:focus {
+    border-color: var(--primary-gold);
+}
+
+.form-row-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* حقل الجوال الخاص المنسق */
+.phone-input-wrapper {
+    display: flex;
+    position: relative;
+}
+
+.phone-input-wrapper .tera-input-field {
+    flex: 1;
+    padding-left: 70px;
+}
+
+.phone-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+    direction: ltr;
+}
+
+/* الأزرار والإجراءات */
 .step-actions {
     display: flex;
     justify-content: space-between;
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+    margin-top: 30px;
 }
 
-.btn-next, .btn-prev, .btn-submit {
-    padding: 12px 32px;
-    border-radius: var(--radius-md);
+.step-actions.flex-end {
+    justify-content: flex-end;
+}
+
+.btn-next, .btn-submit {
+    background: var(--primary-gold);
+    color: #0b0f19;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: bold;
     border: none;
-    font-weight: 600;
     cursor: pointer;
-    transition: var(--transition);
 }
 
-.btn-next { background: var(--primary); color: white; }
-.btn-prev { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
-.btn-submit { background: #10b981; color: white; } /* أخضر للنجاح */
-
-.btn-next:hover { background: var(--primary-dark); }
-
-/* 4. Password Strength Meter */
-.password-strength {
-    height: 4px;
-    background: #1a1a1a;
-    margin: -10px 0 20px;
-    border-radius: 2px;
-    overflow: hidden;
+.btn-prev {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 12px 30px;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
-.strength-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.3s, background 0.3s;
+.btn-submit {
+    background: #10b981;
+    color: #fff;
 }
 
-.strength-fill.weak { background: #ef4444; }
-.strength-fill.medium { background: #f59e0b; }
-.strength-fill.strong { background: #10b981; }
+.checkboxes-group .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
 
-/* 5. Responsive */
+.auth-footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.auth-link {
+    color: var(--primary-gold);
+    text-decoration: none;
+    font-weight: bold;
+}
+
 @media (max-width: 600px) {
+    .form-row-split {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
     .register-card-wide {
         padding: 20px;
-    }
-    .reg-steps-tracker {
-        gap: 5px;
-    }
-    .reg-step-node {
-        width: 30px;
-        height: 30px;
-        font-size: 12px;
     }
 }
