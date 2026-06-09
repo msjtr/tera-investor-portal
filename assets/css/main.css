@@ -1,18 +1,17 @@
 /* ==========================================
-   TERA Investor Portal - Main Layout (Final Polish)
-   المسار: /assets/css/main.css
+   TERA Investor Portal - Main Layout (Optimized)
 ========================================== */
 
-/* 1. هيكل الصفحة الأساسي */
+/* 1. هيكل الصفحة: ضمان بقاء الفوتر في الأسفل دائماً */
 .main-wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
-    overflow-x: hidden; /* منع التمرير الأفقي غير المرغوب فيه */
+    overflow-x: hidden;
 }
 
-/* 2. تحسين القائمة العلوية */
+/* 2. الهيدر: إضافة Z-index أعلى لضمان ظهوره دائماً */
 .main-header {
     height: 70px;
     background: rgba(10, 10, 10, 0.95);
@@ -23,15 +22,15 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: 2000; /* رفع القيمة لضمان الأولوية القصوى */
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
-    box-sizing: border-box; /* ضروري جداً لمنع التمدد */
+    box-sizing: border-box;
 }
 
-/* 3. حاوية الصفحة الرئيسية */
+/* 3. الحاوية: استخدام min-height لدفع الفوتر للأسفل */
 .page-container {
     padding: 30px;
     margin-top: 70px; 
@@ -39,47 +38,43 @@
     margin-left: auto;
     margin-right: auto;
     width: 100%;
-    flex: 1; 
+    flex: 1; /* المحرك الأساسي لدفع الفوتر */
+    min-height: calc(100vh - 70px - 120px); /* (ارتفاع الشاشة - الهيدر - الفوتر التقريبي) */
     box-sizing: border-box;
 }
 
-/* 4. البطاقات (Cards) */
+/* 4. البطاقات: إضافة تأثير الظل الخفيف للعمق البصري */
 .card {
     background: var(--color-surface, #171717);
     border: 1px solid var(--color-border, #262626);
     border-radius: var(--radius-lg, 16px);
     padding: 24px;
     margin-bottom: 24px;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
 
-/* 5. شبكة العرض المرنة (Grid System) */
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 5. شبكة العرض: استخدام 280px بدلاً من 300px لضمان ظهورها في معظم الهواتف */
 .grid-system {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
     width: 100%;
-    box-sizing: border-box;
 }
 
-/* 6. التذييل (Footer) */
+/* 6. التذييل: تأمين خلفية ثابتة */
 .main-footer {
     padding: 40px;
     text-align: center;
     border-top: 1px solid var(--color-border, #262626);
     color: var(--color-text-muted, #94a3b8);
-    font-size: 14px;
     background: var(--color-dark, #0a0a0a);
 }
 
 /* 7. إضافات جمالية */
-.text-gradient {
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 800; /* تعزيز الوزن */
-}
-
 .stats-card {
     border: 1px solid var(--color-border, #262626);
     padding: 20px;
@@ -87,34 +82,16 @@
     text-align: center;
     background: var(--color-surface, #171717);
     transition: var(--transition, all 0.3s ease);
+    cursor: default;
 }
 
-.stats-card:hover {
-    border-color: var(--color-primary-light, #3b82f6);
-    transform: translateY(-5px);
-}
-
-/* 8. إصلاح التجاوب (Responsive Fixes) */
+/* 8. Responsive Fixes */
 @media (max-width: 992px) {
-    .page-container {
-        padding: 20px;
-    }
-    
-    .main-header {
-        padding: 0 20px;
-    }
+    .page-container { padding: 20px; }
 }
 
 @media (max-width: 480px) {
-    .main-header {
-        padding: 0 15px;
-    }
-
-    .grid-system {
-        grid-template-columns: 1fr; 
-    }
-    
-    .card {
-        padding: 16px; /* تقليل الحشو في الشاشات الصغيرة */
-    }
+    .main-header { padding: 0 15px; }
+    .grid-system { grid-template-columns: 1fr; }
+    .card { padding: 16px; }
 }
