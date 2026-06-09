@@ -3,166 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب مستثمر | تيرا</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <title>إنشاء حساب مستثمر جديد | TERA</title>
     <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/auth/register/register.css">
 </head>
-<body>
+<body class="main-wrapper">
 
-<div class="register-page-wrapper">
-    <div class="register-card-wide">
-        <div class="auth-logo-section">
-            <img src="/images/logo.svg" alt="TERA Logo" class="main-logo">
-            <h2 class="sub-logo-text">عالمك بلا حدود</h2>
-        </div>
+    <div class="top-nav-bar">
+        <a href="/" class="btn-back-home">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            العودة للصفحة الرئيسية
+        </a>
+    </div>
 
-        <h1 class="page-title">إنشاء حساب مستثمر</h1>
-        
-        <div class="reg-steps-tracker">
-            <div class="reg-step-node active"><span class="step-num">1</span></div>
-            <div class="reg-step-node"><span class="step-num">2</span></div>
-            <div class="reg-step-node"><span class="step-num">3</span></div>
-            <div class="reg-step-node"><span class="step-num">4</span></div>
-            <div class="reg-step-node"><span class="step-num">5</span></div>
-            <div class="reg-step-node"><span class="step-num">6</span></div>
-            <div class="reg-step-node"><span class="step-num">7</span></div>
-        </div>
+    <div class="auth-container">
+        <div class="register-card-wide">
+            
+            <div class="auth-logo-section">
+                <img src="/images/logo.svg" alt="TERA Logo" class="main-logo">
+                <h2 class="sub-logo-text">بوابة المستثمر</h2>
+            </div>
 
-        <form id="registerForm" autocomplete="off">
-            <div class="form-step active">
-                <h3 class="step-heading">معلومات الحساب</h3>
-                <div class="form-group">
-                    <label class="tera-label">اسم المستخدم</label>
-                    <input type="text" name="username" class="tera-input-field" placeholder="أدخل اسم المستخدم" required>
-                </div>
-                <div class="form-row-split">
+            <div class="page-intro-header">
+                <h1 class="page-title">إنشاء حساب مستثمر جديد</h1>
+                <p class="page-subtitle">أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
+            </div>
+            
+            <div class="reg-steps-tracker">
+                <div class="reg-step-node active" data-step="1"><span class="step-num">1</span><span class="step-text">إنشاء الحساب</span></div>
+                <div class="reg-step-node" data-step="2"><span class="step-num">2</span><span class="step-text">المعلومات الشخصية</span></div>
+                <div class="reg-step-node" data-step="3"><span class="step-num">3</span><span class="step-text">بيانات التواصل</span></div>
+                <div class="reg-step-node" data-step="4"><span class="step-num">4</span><span class="step-text">الإقرارات</span></div>
+            </div>
+
+            <form id="registerForm" autocomplete="off" novalidate>
+                
+                <div class="form-step active" id="step1">
+                    <h3 class="step-heading">المرحلة الأولى: إنشاء الحساب</h3>
+                    
                     <div class="form-group">
-                        <label class="tera-label">البريد الإلكتروني</label>
-                        <input type="email" name="email" class="tera-input-field" placeholder="example@domain.com" required>
+                        <label class="tera-label">اسم المستخدم</label>
+                        <input type="text" id="reg_username" name="username" class="tera-input-field" placeholder="أدخل اسم المستخدم">
+                        
+                        <div class="validation-box" id="username_requirements">
+                            <div class="req-item" id="user_len"><span class="indicator">🔴</span> من 4 إلى 20 حرفاً</div>
+                            <div class="req-item" id="user_alpha"><span class="indicator">🔴</span> أحرف إنجليزية وأرقام فقط</div>
+                            <div class="req-item" id="user_space"><span class="indicator">🔴</span> لا يحتوي على مسافات</div>
+                            <div class="req-item" id="user_spec"><span class="indicator">🔴</span> لا يحتوي على رموز خاصة</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label class="tera-label">البريد الإلكتروني</label>
+                            <input type="email" id="reg_email" name="email" class="tera-input-field" placeholder="example@domain.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="tera-label">تأكيد البريد الإلكتروني</label>
+                            <input type="email" id="reg_confirm_email" class="tera-input-field" placeholder="إعادة كتابة البريد الإلكتروني">
+                            <div class="match-status" id="email_match_status"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label class="tera-label">كلمة المرور</label>
+                            <input type="password" id="reg_password" name="password" class="tera-input-field" placeholder="••••••••">
+                            
+                            <div class="validation-box">
+                                <div class="req-item" id="pass_len"><span class="indicator">🔴</span> 8 أحرف على الأقل</div>
+                                <div class="req-item" id="pass_upper"><span class="indicator">🔴</span> حرف كبير باللغة الإنجليزية</div>
+                                <div class="req-item" id="pass_lower"><span class="indicator">🔴</span> حرف صغير باللغة الإنجليزية</div>
+                                <div class="req-item" id="pass_num"><span class="indicator">🔴</span> رقم واحد على الأقل</div>
+                                <div class="req-item" id="pass_spec"><span class="indicator">🔴</span> رمز خاص واحد على الأقل</div>
+                            </div>
+                            <div class="password-strength-container">
+                                <div class="strength-label">مؤشر القوة: <span id="strength_text">ضعيفة</span></div>
+                                <div class="strength-bar"><div id="strengthFill" class="strength-fill weak"></div></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="tera-label">تأكيد كلمة المرور</label>
+                            <input type="password" id="reg_confirm_password" class="tera-input-field" placeholder="••••••••">
+                            <div class="match-status" id="pass_match_status"></div>
+                        </div>
+                    </div>
+
+                    <div class="step-actions flex-end">
+                        <button type="button" class="btn-primary btn-next">التالي ←</button>
+                    </div>
+                </div>
+
+                <div class="form-step" id="step2">
+                    <h3 class="step-heading">المرحلة الثانية: المعلومات الشخصية والهوية</h3>
+                    
+                    <div class="form-group">
+                        <label class="tera-label">الاسم الكامل بالعربية (كما هو مدون في الوثيقة الرسمية)</label>
+                        <input type="text" name="full_name_ar" class="tera-input-field" required>
                     </div>
                     <div class="form-group">
-                        <label class="tera-label">تأكيد البريد الإلكتروني</label>
-                        <input type="email" name="confirm_email" class="tera-input-field" placeholder="إعادة كتابة البريد الإلكتروني" required>
+                        <label class="tera-label">الاسم الكامل بالإنجليزية (كما هو مدون في الوثيقة الرسمية)</label>
+                        <input type="text" name="full_name_en" class="tera-input-field" style="direction: ltr; text-align: right;" required>
+                    </div>
+
+                    <div class="form-row-split">
+                        <div class="form-group">
+                            <label class="tera-label">الجنس</label>
+                            <select name="gender" class="tera-input-field" required>
+                                <option value="">اختر الجنس</option>
+                                <option value="male">ذكر</option>
+                                <option value="female">أنثى</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="tera-label">الجنسية</label>
+                            <select name="nationality" id="nationality_select" class="tera-input-field" required>
+                                <option value="">اختر الجنسية</option>
+                                <option value="saudi">سعودي</option>
+                                <option value="resident">مقيم</option>
+                                <option value="gcc">مواطن خليجي</option>
+                                <option value="foreign">أجنبي</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="dynamic_identity_section"></div>
+
+                    <div class="form-group checkboxes-group" style="margin-top: 20px;">
+                        <label class="checkbox-label"><input type="checkbox" name="declare_age" required> أقر بأن عمري 18 عاماً فأكثر.</label>
+                        <label class="checkbox-label"><input type="checkbox" name="declare_beneficiary" required> أقر بأنني المستفيد الحقيقي من الحساب.</label>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn-prev">→ السابق</button>
+                        <button type="button" class="btn-primary btn-next">التالي ←</button>
                     </div>
                 </div>
-                <div class="form-row-split">
+
+                <div class="form-step" id="step3">
+                    <h3 class="step-heading">المرحلة الثالثة: بيانات التواصل والعنوان</h3>
+                    
+                    <div class="form-row-split">
+                        <div class="form-group" style="flex: 0 0 30%;">
+                            <label class="tera-label">مفتاح الدولة</label>
+                            <select name="phone_prefix" class="tera-input-field" style="direction: ltr;">
+                                <option value="+966">+966 (السعودية)</option>
+                                <option value="+971">+971 (الإمارات)</option>
+                                <option value="+965">+965 (الكويت)</option>
+                                <option value="+973">+973 (البحرين)</option>
+                                <option value="+968">+968 (عمان)</option>
+                                <option value="+974">+974 (قطر)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="tera-label">رقم الجوال</label>
+                            <input type="tel" name="phone" class="tera-input-field" placeholder="5xxxxxxxx" style="direction: ltr;" required>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label class="tera-label">كلمة المرور</label>
-                        <input type="password" id="password" name="password" class="tera-input-field" required>
+                        <label class="tera-label">وسيلة التواصل المفضلة</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="preferred_contact" value="email" checked> البريد الإلكتروني</label>
+                            <label class="radio-label"><input type="radio" name="preferred_contact" value="phone"> الجوال</label>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="tera-label">تأكيد كلمة المرور</label>
-                        <input type="password" name="confirm_password" class="tera-input-field" required>
-                    </div>
-                </div>
-                <div class="password-strength">
-                    <div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div>
-                </div>
-                <div class="step-actions flex-end">
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
 
-            <div class="form-step">
-                <h3 class="step-heading">المعلومات الشخصية</h3>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">الاسم الأول</label><input type="text" name="first_name" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">اسم العائلة</label><input type="text" name="last_name" class="tera-input-field" required></div>
-                </div>
-                <div class="form-row-split">
-                    <div class="form-group">
-                        <label class="tera-label">الجنس</label>
-                        <select name="gender" class="tera-input-field"><option>ذكر</option><option>أنثى</option></select>
-                    </div>
-                    <div class="form-group"><label class="tera-label">تاريخ الميلاد</label><input type="date" name="dob" class="tera-input-field" required></div>
-                </div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
+                    <div id="dynamic_address_section"></div>
 
-            <div class="form-step">
-                <h3 class="step-heading">بيانات الهوية</h3>
-                <div class="form-group">
-                    <label class="tera-label">الجنسية</label>
-                    <select name="nationality" id="nationality" class="tera-input-field">
-                        <option value="saudi">سعودي</option>
-                        <option value="gcc">خليجي</option>
-                        <option value="resident">مقيم</option>
-                        <option value="foreign">أجنبي</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label id="identityLabel" class="tera-label">رقم الهوية الوطنية</label>
-                    <input type="text" name="id_number" class="tera-input-field" required>
-                </div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
-
-            <div class="form-step">
-                <h3 class="step-heading">بيانات التواصل</h3>
-                <div class="form-group">
-                    <label class="tera-label">رقم الجوال</label>
-                    <div class="phone-input-wrapper">
-                        <input type="tel" name="phone" class="tera-input-field" placeholder="5xxxxxxxx" style="direction: ltr;" required>
-                        <span class="phone-prefix">+966</span>
+                    <div class="step-actions">
+                        <button type="button" class="btn-prev">→ السابق</button>
+                        <button type="button" class="btn-primary btn-next">التالي ←</button>
                     </div>
                 </div>
-                <div class="form-group"><label class="tera-label">العنوان الوطني</label><input type="text" name="address" class="tera-input-field" required></div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
 
-            <div class="form-step">
-                <h3 class="step-heading">البيانات البنكية</h3>
-                <div class="form-group"><label class="tera-label">اسم البنك</label><input type="text" name="bank_name" class="tera-input-field" required></div>
-                <div class="form-group"><label class="tera-label">رقم الآيبان (IBAN)</label><input type="text" name="iban" class="tera-input-field" placeholder="SA03..." required></div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
+                <div class="form-step" id="step4">
+                    <h3 class="step-heading">المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
+                    
+                    <div class="agreements-scroll-container">
+                        <label class="checkbox-label alignment-fix">
+                            <input type="checkbox" class="agreement-check" name="agree_terms" required>
+                            <span>أقر وأوافق على <strong>الشروط والأحكام</strong> الخاصة ببوابة المستثمرين في منصة تيرا — عالمك بلا حدود، وأتعهد باستخدام المنصة والأنظمة والخدمات المرتبطة بها وفقاً للأنظمة والتعليمات واللوائح المعمول بها.</span>
+                        </label>
+                        
+                        <label class="checkbox-label alignment-fix">
+                            <input type="checkbox" class="agreement-check" name="agree_privacy" required>
+                            <span>أوافق على <strong>سياسة الخصوصية</strong> الخاصة ببوابة المستثمرين في منصة تيرا — عالمك بلا حدود، وأفوض المنصة بجمع ومعالجة وحفظ واستخدام البيانات والمعلومات المسجلة لأغراض التحقق الأمني وحماية الحساب والامتثال للمتطلبات النظامية وتحسين الخدمات المقدمة.</span>
+                        </label>
 
-            <div class="form-step">
-                <h3 class="step-heading">رفع المستندات</h3>
-                <div class="form-group"><label class="tera-label">صورة الهوية الوطنية / الإقامة</label><input type="file" name="id_image" class="tera-input-field" required></div>
-                <div class="form-group"><label class="tera-label">شهادة الحساب البنكي (الآيبان)</label><input type="file" name="bank_cert" class="tera-input-field" required></div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="button" class="btn-next">التالي</button>
-                </div>
-            </div>
+                        <label class="checkbox-label alignment-fix">
+                            <input type="checkbox" class="agreement-check" name="agree_usage" required>
+                            <span>أقر بموافقتي على <strong>سياسة الاستخدام</strong>، وأتعهد بعدم إساءة استخدام المنصة أو محاولة الوصول غير المصرح به أو مشاركة بيانات الدخول أو تنفيذ أي نشاط مخالف للأنظمة أو التعليمات.</span>
+                        </label>
 
-            <div class="form-step">
-                <h3 class="step-heading">الإقرارات والاتفاقية</h3>
-                <div class="form-group checkboxes-group">
-                    <label class="checkbox-label"><input type="checkbox" name="terms" required> أوافق على الشروط والأحكام وسياسة الخصوصية لمنصة تيرا.</label>
-                    <label class="checkbox-label"><input type="checkbox" name="aml" required> أقر بصحة البيانات المذكورة وألتزم بوقائع مكافحة غسل الأموال.</label>
-                </div>
-                <div class="step-actions">
-                    <button type="button" class="btn-prev">السابق</button>
-                    <button type="submit" class="btn-submit">تأكيد وإنشاء الحساب</button>
-                </div>
-            </div>
-        </form>
+                        <label class="checkbox-label alignment-fix">
+                            <input type="checkbox" class="agreement-check" name="agree_security" required>
+                            <span>أوافق على <strong>إجراءات وأنظمة التحقق الأمني والحماية الإلكترونية</strong> المعتمدة داخل بوابة المستثمرين في منصة تيرا — عالمك بلا حدود، بما يشمل: التحقق عبر البريد الإلكتروني، رموز OTP، تسجيل بيانات الجهاز والـ IP، وتحليل المخاطر واكتشاف الاحتيال.</span>
+                        </label>
 
-        <div class="auth-footer">
-            <span>لديك حساب بالفعل؟</span> <a href="/auth/login.html" class="auth-link">تسجيل الدخول</a>
+                        <label class="checkbox-label alignment-fix">
+                            <input type="checkbox" class="agreement-check" name="agree_integrity" required>
+                            <span>أقر بأن جميع البيانات والمعلومات والمستندات المقدمة <strong>صحيحة ودقيقة وتعود لي شخصياً</strong>، وأتحمل كامل المسؤولية النظامية والقانونية عن صحتها وعن حماية الحساب وبيانات الدخول.</span>
+                        </label>
+
+                        <div class="global-acceptance-wrapper">
+                            <label class="checkbox-label final-heavy-label">
+                                <input type="checkbox" id="master_agreement_check">
+                                <strong>قرأت جميع الإقرارات والاتفاقيات أعلاه وأوافق عليها بالكامل.</strong>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="final-pledge-box">
+                        <h4>الإقرار النهائي</h4>
+                        <p>أتعهد بأن جميع البيانات والمعلومات المقدمة في هذا الطلب صحيحة وسارية المفعول، وأوافق على الالتزام بجميع الأنظمة والسياسات والاتفاقيات المنظمة لاستخدام بوابة المستثمرين في منصة تيرا — عالمك بلا حدود.</p>
+                    </div>
+
+                    <div class="step-actions">
+                        <button type="button" class="btn-prev">→ السابق</button>
+                        <button type="submit" class="btn-primary btn-submit" id="submit_register_btn" disabled>إنشاء الحساب</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="auth-footer">
+                <span>لديك حساب مستثمر بالفعل؟</span>
+                <a href="/auth/login.html" class="auth-link">تسجيل الدخول إلى حسابك</a>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="/assets/js/core.js"></script>
-<script src="/assets/js/app.js"></script>
-<script src="/auth/register/register.js"></script>
+    <script src="/auth/register/register.js"></script>
 </body>
 </html>
