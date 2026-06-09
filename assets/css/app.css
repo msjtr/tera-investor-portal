@@ -616,3 +616,47 @@ th{
 .mb-30{
     margin-bottom:30px;
 }
+
+```css
+/* ==========================================
+   Register Page Support
+========================================== */
+
+.register-container{
+
+    max-width:1000px !important;
+
+}
+
+.valid{
+
+    border-color:#22c55e !important;
+
+}
+
+.invalid{
+
+    border-color:#ef4444 !important;
+
+}
+
+.validation-message{
+
+    margin-top:5px;
+
+    font-size:12px;
+
+}
+
+.validation-success{
+
+    color:#16a34a;
+
+}
+
+.validation-error{
+
+    color:#dc2626;
+
+}
+```
