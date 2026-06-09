@@ -1,1 +1,364 @@
+```css
+/* ==========================================
+   Register Page
+========================================== */
 
+.register-container{
+
+    width:100%;
+
+}
+
+.register-stepper{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:30px;
+
+    position:relative;
+
+}
+
+.register-stepper::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:18px;
+
+    right:0;
+
+    left:0;
+
+    height:2px;
+
+    background:#e5e7eb;
+
+    z-index:1;
+
+}
+
+.step{
+
+    position:relative;
+
+    z-index:2;
+
+    text-align:center;
+
+    flex:1;
+
+}
+
+.step-number{
+
+    width:38px;
+
+    height:38px;
+
+    border-radius:50%;
+
+    background:#e5e7eb;
+
+    color:#6b7280;
+
+    margin:auto;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-weight:700;
+
+}
+
+.step.active .step-number{
+
+    background:#0f766e;
+
+    color:#fff;
+
+}
+
+.step.completed .step-number{
+
+    background:#22c55e;
+
+    color:#fff;
+
+}
+
+.step-title{
+
+    margin-top:10px;
+
+    font-size:13px;
+
+}
+
+/* ==========================================
+   Step Content
+========================================== */
+
+.form-step{
+
+    display:none;
+
+}
+
+.form-step.active{
+
+    display:block;
+
+}
+
+.form-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(250px,1fr));
+
+    gap:20px;
+
+}
+
+/* ==========================================
+   Password Strength
+========================================== */
+
+.password-strength{
+
+    margin-top:10px;
+
+}
+
+.strength-bar{
+
+    height:8px;
+
+    border-radius:10px;
+
+    background:#e5e7eb;
+
+    overflow:hidden;
+
+}
+
+.strength-fill{
+
+    height:100%;
+
+    width:0;
+
+    transition:.3s;
+}
+
+.strength-weak{
+
+    background:#ef4444;
+}
+
+.strength-medium{
+
+    background:#f59e0b;
+}
+
+.strength-strong{
+
+    background:#22c55e;
+}
+
+.strength-text{
+
+    margin-top:6px;
+
+    font-size:13px;
+}
+
+/* ==========================================
+   Validation
+========================================== */
+
+.valid{
+
+    border-color:#22c55e !important;
+}
+
+.invalid{
+
+    border-color:#ef4444 !important;
+}
+
+.validation-message{
+
+    font-size:12px;
+
+    margin-top:5px;
+}
+
+.validation-success{
+
+    color:#15803d;
+}
+
+.validation-error{
+
+    color:#dc2626;
+}
+
+/* ==========================================
+   Password Rules
+========================================== */
+
+.password-rules{
+
+    margin-top:10px;
+
+    padding:15px;
+
+    background:#f8fafc;
+
+    border-radius:10px;
+
+    font-size:13px;
+}
+
+.password-rules li{
+
+    margin-bottom:6px;
+}
+
+.rule-valid{
+
+    color:#16a34a;
+}
+
+.rule-invalid{
+
+    color:#dc2626;
+}
+
+/* ==========================================
+   Phone Group
+========================================== */
+
+.phone-group{
+
+    display:flex;
+
+    gap:10px;
+}
+
+.country-code{
+
+    width:130px;
+}
+
+/* ==========================================
+   Identity Section
+========================================== */
+
+.identity-section{
+
+    margin-top:20px;
+
+    padding:20px;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:12px;
+
+    background:#fafafa;
+}
+
+/* ==========================================
+   Navigation Buttons
+========================================== */
+
+.step-actions{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-top:30px;
+}
+
+.btn-prev{
+
+    background:#6b7280;
+}
+
+.btn-prev:hover{
+
+    background:#4b5563;
+}
+
+.btn-next{
+
+    background:#0f766e;
+}
+
+.btn-submit{
+
+    background:#16a34a;
+}
+
+/* ==========================================
+   Terms Section
+========================================== */
+
+.terms-box{
+
+    padding:20px;
+
+    background:#f8fafc;
+
+    border-radius:12px;
+
+    border:1px solid #e5e7eb;
+}
+
+.terms-box label{
+
+    display:block;
+
+    margin-bottom:12px;
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media(max-width:768px){
+
+    .register-stepper{
+
+        flex-wrap:wrap;
+
+        gap:15px;
+    }
+
+    .step{
+
+        flex:0 0 48%;
+    }
+
+    .phone-group{
+
+        flex-direction:column;
+    }
+
+    .country-code{
+
+        width:100%;
+    }
+
+}
+```
