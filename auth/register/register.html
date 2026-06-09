@@ -1,1 +1,302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>إنشاء حساب | تيرا</title>
+
+    <meta name="description" content="إنشاء حساب مستثمر جديد في منصة تيرا">
+
+    <link rel="icon" href="/favicon.ico">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+          rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css">
+
+    <!-- Register CSS -->
+    <link rel="stylesheet" href="/auth/register/register.css">
+</head>
+
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card register-container">
+
+        <div class="auth-logo">
+            TERA
+        </div>
+
+        <h1>إنشاء حساب مستثمر</h1>
+
+        <p>
+            أكمل البيانات التالية لإنشاء حسابك الاستثماري
+        </p>
+
+        <!-- Stepper -->
+
+        <div class="register-stepper">
+
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-title">الحساب</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">البيانات الشخصية</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">الهوية</div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-title">الإقرار</div>
+            </div>
+
+        </div>
+
+        <form id="registerForm">
+
+            <!-- STEP 1 -->
+
+            <div class="form-step active">
+
+                <div class="form-group">
+                    <label>اسم المستخدم</label>
+                    <input type="text" id="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>تأكيد البريد الإلكتروني</label>
+                    <input type="email" id="confirmEmail" required>
+                </div>
+
+                <div class="form-group">
+                    <label>مفتاح الدولة</label>
+
+                    <select id="countryCode">
+
+                        <option value="+966">السعودية +966</option>
+                        <option value="+971">الإمارات +971</option>
+                        <option value="+965">الكويت +965</option>
+                        <option value="+973">البحرين +973</option>
+                        <option value="+968">عمان +968</option>
+                        <option value="+974">قطر +974</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+                    <label>رقم الجوال</label>
+
+                    <input
+                        type="tel"
+                        id="mobile"
+                        placeholder="بدون الصفر"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور</label>
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        required>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-next">
+                    التالي
+                </button>
+
+            </div>
+
+            <!-- STEP 2 -->
+
+            <div class="form-step">
+
+                <div class="form-group">
+                    <label>الاسم الكامل بالعربية</label>
+                    <input type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label>الاسم الكامل بالإنجليزية</label>
+                    <input type="text" required>
+                </div>
+
+                <div class="form-group">
+                    <label>الجنس</label>
+
+                    <select>
+                        <option value="">اختر</option>
+                        <option>ذكر</option>
+                        <option>أنثى</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>تاريخ الميلاد</label>
+                    <input type="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label>الجنسية</label>
+
+                    <select id="nationality">
+
+                        <option value="saudi">سعودي</option>
+                        <option value="resident">مقيم</option>
+                        <option value="gcc">مواطن خليجي</option>
+                        <option value="foreign">أجنبي</option>
+
+                    </select>
+                </div>
+
+                <button type="button" class="btn-prev">
+                    السابق
+                </button>
+
+                <button type="button" class="btn-next">
+                    التالي
+                </button>
+
+            </div>
+
+            <!-- STEP 3 -->
+
+            <div class="form-step">
+
+                <div class="form-group">
+
+                    <label id="identityLabel">
+                        رقم الهوية الوطنية
+                    </label>
+
+                    <input
+                        type="text"
+                        id="identityNumber">
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>
+                        تاريخ الانتهاء
+                    </label>
+
+                    <input
+                        type="date"
+                        id="identityExpiry">
+
+                </div>
+
+                <button type="button" class="btn-prev">
+                    السابق
+                </button>
+
+                <button type="button" class="btn-next">
+                    التالي
+                </button>
+
+            </div>
+
+            <!-- STEP 4 -->
+
+            <div class="form-step">
+
+                <label>
+                    <input type="checkbox" required>
+                    أوافق على الشروط والأحكام
+                </label>
+
+                <label>
+                    <input type="checkbox" required>
+                    أوافق على سياسة الخصوصية
+                </label>
+
+                <label>
+                    <input type="checkbox" required>
+                    أوافق على اتفاقية المستثمر
+                </label>
+
+                <label>
+                    <input type="checkbox" required>
+                    أوافق على الإفصاح الضريبي
+                </label>
+
+                <label>
+                    <input type="checkbox" required>
+                    أقر بصحة البيانات
+                </label>
+
+                <button type="button" class="btn-prev">
+                    السابق
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn-submit">
+                    إنشاء الحساب
+                </button>
+
+            </div>
+
+        </form>
+
+        <div class="auth-footer">
+
+            <span>
+                لديك حساب بالفعل؟
+            </span>
+
+            <a href="/auth/login.html">
+                تسجيل الدخول
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Global JS -->
+<script src="/assets/js/app.js"></script>
+
+<script src="/assets/js/auth.js"></script>
+
+<!-- Register JS -->
+<script src="/auth/register/register.js"></script>
+
+</body>
+</html>
