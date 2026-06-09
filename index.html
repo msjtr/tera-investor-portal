@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -5,21 +6,27 @@
 
     <meta charset="UTF-8">
 
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
-          content="بوابة المستثمر - تيرا">
+          content="بوابة المستثمر - منصة تيرا">
 
-    <title>TERA Investor Portal</title>
+    <title>بوابة المستثمر | تيرا</title>
+
+    <link rel="icon"
+          href="/favicon.ico">
 
     <!-- Global CSS -->
 
     <link rel="stylesheet"
-          href="assets/css/app.css">
+          href="/assets/css/app.css">
 
     <link rel="stylesheet"
-          href="assets/css/responsive.css">
+          href="/assets/css/responsive.css">
 
 </head>
 
@@ -27,21 +34,21 @@
 
     <div class="loader">
 
-        <div class="logo">
+        <div class="auth-logo">
             TERA
         </div>
 
         <div class="spinner"></div>
 
         <p>
-            جاري تحميل النظام...
+            جاري تحميل بوابة المستثمر...
         </p>
 
     </div>
 
     <!-- Global JS -->
 
-    <script src="assets/js/app.js"></script>
+    <script src="/assets/js/app.js"></script>
 
     <script>
 
@@ -54,17 +61,21 @@
                     'investorToken'
                 );
 
-                if(token){
+                setTimeout(() => {
 
-                    window.location.href =
-                    'pages/dashboard/index.html';
+                    if(token){
 
-                }else{
+                        window.location.href =
+                        '/pages/dashboard/index.htm';
 
-                    window.location.href =
-                    'auth/login.html';
+                    }else{
 
-                }
+                        window.location.href =
+                        '/auth/login.html';
+
+                    }
+
+                },1000);
 
             }
         );
@@ -74,4 +85,4 @@
 </body>
 
 </html>
-
+```
