@@ -1,543 +1,403 @@
 /* ==========================================
-   Variables
+   Variables & Brand Identity
 ========================================== */
+:root {
+    /* التدرج اللوني المعتمد للمنصة (الأزرق الملكي والتيل الفاخر) */
+    --primary: #1e3a8a;
+    --primary-teal: #0d9488;
+    --primary-light: #3b82f6;
 
-:root{
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
 
-    --primary:#0f766e;
-    --primary-light:#14b8a6;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-light: #64748b;
+    --bg-light: #f8fafc;
 
-    --success:#22c55e;
-    --warning:#f59e0b;
-    --danger:#ef4444;
-
-    --border:#e5e7eb;
-    --text:#111827;
-    --text-light:#6b7280;
-
-    --shadow:
-    0 10px 25px rgba(0,0,0,.06);
-
-    --transition:.3s ease;
-
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px rgba(15, 23, 42, 0.05);
+    
+    --transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==========================================
    Register Container
 ========================================== */
-
-.register-container{
-
-    max-width:1000px !important;
-
+.register-container {
+    max-width: 1000px !important;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
-.auth-logo{
-
-    text-align:center;
-    margin-bottom:24px;
-
+.auth-logo {
+    text-align: center;
+    margin-bottom: 24px;
 }
 
-.auth-logo img{
-
-    max-width:160px;
-    height:auto;
-
-}
-
-/* ==========================================
-   Stepper
-========================================== */
-
-.register-stepper{
-
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-
-    margin:35px 0 45px;
-
-    position:relative;
-
-}
-
-.register-stepper::before{
-
-    content:"";
-
-    position:absolute;
-
-    top:20px;
-
-    right:40px;
-    left:40px;
-
-    height:3px;
-
-    background:#e5e7eb;
-
-    z-index:1;
-
-}
-
-.step{
-
-    flex:1;
-
-    text-align:center;
-
-    position:relative;
-
-    z-index:2;
-
-}
-
-.step-number{
-
-    width:42px;
-    height:42px;
-
-    border-radius:50%;
-
-    background:#e5e7eb;
-
-    color:#6b7280;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    margin:auto;
-
-    font-weight:700;
-
-    transition:var(--transition);
-
-}
-
-.step.active .step-number{
-
-    background:var(--primary);
-
-    color:#fff;
-
-    transform:scale(1.08);
-
-    box-shadow:
-    0 0 0 5px rgba(15,118,110,.15);
-
-}
-
-.step.completed .step-number{
-
-    background:var(--success);
-
-    color:#fff;
-
-}
-
-.step-title{
-
-    margin-top:10px;
-
-    font-size:13px;
-
-    font-weight:600;
-
-    color:var(--text-light);
-
-}
-
-.step.active .step-title{
-
-    color:var(--primary);
-
+.auth-logo img {
+    max-width: 160px;
+    height: auto;
 }
 
 /* ==========================================
-   Form Step
+   Stepper (مؤشر خطوات التسجيل)
 ========================================== */
-
-.form-step{
-
-    display:none;
-
-    animation:fadeIn .3s ease;
-
+.register-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 35px 0 45px;
+    position: relative;
 }
 
-.form-step.active{
-
-    display:block;
-
+.register-stepper::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    left: 40px;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 1;
 }
 
-@keyframes fadeIn{
+.step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
 
-    from{
+.step-number {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    font-weight: 700;
+    font-size: 15px;
+    transition: var(--transition);
+    border: 3px solid #fff;
+}
 
-        opacity:0;
-        transform:translateY(10px);
+.step.active .step-number {
+    background: var(--primary);
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 0 0 5px rgba(30, 58, 138, 0.15);
+}
 
+.step.completed .step-number {
+    background: var(--success);
+    color: #fff;
+}
+
+.step-title {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.step.active .step-title {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.step.completed .step-title {
+    color: var(--success);
+}
+
+/* ==========================================
+   Form Step Control
+========================================== */
+.form-step {
+    display: none;
+    animation: fadeIn .4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
     }
-
-    to{
-
-        opacity:1;
-        transform:translateY(0);
-
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-
 }
 
 /* ==========================================
-   Grid
+   Grid Layout
 ========================================== */
-
-.form-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(280px,1fr));
-
-    gap:20px;
-
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
 }
 
 /* ==========================================
-   Form Fields
+   Form Fields (العناصر والمدخلات)
 ========================================== */
-
-.form-group{
-
-    display:flex;
-    flex-direction:column;
-
+.form-group {
+    display: flex;
+    flex-direction: column;
 }
 
-.form-group label{
-
-    margin-bottom:8px;
-
-    font-weight:600;
-
-    color:#374151;
-
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #334155;
+    font-size: 14px;
 }
 
 .form-group input,
-.form-group select{
-
-    width:100%;
-
-    padding:14px 15px;
-
-    border:1px solid #d1d5db;
-
-    border-radius:10px;
-
-    background:#fff;
-
-    transition:var(--transition);
-
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font-size: 15px;
+    transition: var(--transition);
 }
 
 .form-group input:hover,
-.form-group select:hover{
-
-    border-color:#94a3b8;
-
+.form-group select:hover {
+    border-color: #94a3b8;
 }
 
 .form-group input:focus,
-.form-group select:focus{
-
-    outline:none;
-
-    border-color:var(--primary);
-
-    box-shadow:
-    0 0 0 4px rgba(15,118,110,.12);
-
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+    background: #fff;
 }
 
 /* ==========================================
-   Password Strength
+   Password Strength Meter
 ========================================== */
-
-.password-strength{
-
-    margin-top:12px;
-
+.password-strength {
+    margin-top: 12px;
 }
 
-.strength-bar{
-
-    height:8px;
-
-    background:#e5e7eb;
-
-    border-radius:999px;
-
-    overflow:hidden;
-
+.strength-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
 }
 
-.strength-fill{
-
-    height:100%;
-
-    width:0;
-
-    transition:.4s ease;
-
+.strength-fill {
+    height: 100%;
+    width: 0;
+    transition: width .4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.strength-weak{
+.strength-weak { background: var(--danger); }
+.strength-medium { background: var(--warning); }
+.strength-strong { background: var(--success); }
 
-    background:var(--danger);
-
-}
-
-.strength-medium{
-
-    background:var(--warning);
-
-}
-
-.strength-strong{
-
-    background:var(--success);
-
-}
-
-.strength-text{
-
-    margin-top:8px;
-
-    font-size:13px;
-
-    font-weight:600;
-
+.strength-text {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 /* ==========================================
-   Validation
+   Validation Classes
 ========================================== */
-
-.valid{
-
-    border-color:var(--success) !important;
-
+.valid {
+    border-color: var(--success) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2310b981'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 16px center;
+    background-size: 20px;
+    padding-left: 45px !important;
 }
 
-.invalid{
-
-    border-color:var(--danger) !important;
-
+.invalid {
+    border-color: var(--danger) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ef4444'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 16px center;
+    background-size: 20px;
+    padding-left: 45px !important;
 }
 
-.text-success{
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
 
-    color:var(--success);
-
+/* ==========================================
+   Identity & Terms Boxes
+========================================== */
+.identity-section,
+.terms-box {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-light);
+    margin-bottom: 20px;
 }
 
-.text-danger{
+.terms-box label {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    cursor: pointer;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.6;
+}
 
-    color:var(--danger);
-
+.terms-box input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    accent-color: var(--primary-teal);
 }
 
 /* ==========================================
-   Identity Box
+   Buttons (أزرار التحكم والتنقل)
 ========================================== */
-
-.identity-section{
-
-    padding:25px;
-
-    border:1px solid var(--border);
-
-    border-radius:12px;
-
-    background:#fafafa;
-
-}
-
-/* ==========================================
-   Terms
-========================================== */
-
-.terms-box{
-
-    padding:25px;
-
-    border:1px solid var(--border);
-
-    border-radius:12px;
-
-    background:#fafafa;
-
-}
-
-.terms-box label{
-
-    display:flex;
-
-    gap:10px;
-
-    align-items:flex-start;
-
-    margin-bottom:12px;
-
-    cursor:pointer;
-
-}
-
-/* ==========================================
-   Buttons
-========================================== */
-
-.step-actions{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    gap:15px;
-
-    margin-top:35px;
-
+.step-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 40px;
+    border-top: 1px dashed var(--border);
+    padding-top: 25px;
 }
 
 .btn-prev,
 .btn-next,
-.btn-submit{
-
-    border:none;
-
-    color:#fff;
-
-    padding:13px 28px;
-
-    border-radius:10px;
-
-    font-weight:700;
-
-    cursor:pointer;
-
-    transition:var(--transition);
-
+.btn-submit {
+    border: none;
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.btn-prev{
-
-    background:#6b7280;
-
+.btn-prev {
+    background: #64748b;
 }
 
-.btn-prev:hover{
-
-    background:#4b5563;
-
+.btn-prev:hover {
+    background: #475569;
+    transform: translateY(-1px);
 }
 
-.btn-next{
-
-    background:var(--primary);
-
+.btn-next {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-teal) 100%);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
 }
 
-.btn-next:hover{
-
-    background:var(--primary-light);
-
+.btn-next:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(13, 148, 136, 0.25);
+    opacity: 0.95;
 }
 
-.btn-submit{
-
-    background:#16a34a;
-
+.btn-submit {
+    background: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-.btn-submit:hover{
-
-    background:#15803d;
-
+.btn-submit:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.3);
 }
 
 /* ==========================================
-   Footer
+   Footer Links
 ========================================== */
-
-.auth-footer{
-
-    margin-top:35px;
-
-    text-align:center;
-
+.auth-footer {
+    margin-top: 35px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 14px;
 }
 
-.auth-footer a{
-
-    color:var(--primary);
-
-    font-weight:700;
-
+.auth-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 700;
+    margin-right: 5px;
 }
 
-.auth-footer a:hover{
-
-    text-decoration:underline;
-
+.auth-footer a:hover {
+    text-decoration: underline;
+    color: var(--primary-teal);
 }
 
 /* ==========================================
-   Mobile
+   Responsive Design (الموبايل والشاشات الصغيرة)
 ========================================== */
-
-@media(max-width:768px){
-
-    .register-stepper{
-
-        flex-wrap:wrap;
-
-        gap:15px;
-
+@media (max-width: 768px) {
+    .register-container {
+        padding: 24px 16px;
     }
 
-    .register-stepper::before{
-
-        display:none;
-
+    .register-stepper {
+        gap: 12px;
     }
 
-    .step{
-
-        flex:0 0 calc(50% - 8px);
-
+    .register-stepper::before {
+        display: none; /* إلغاء الخط الممتد لمنع تشوه التصميم */
     }
 
-    .form-grid{
-
-        grid-template-columns:1fr;
-
+    .step {
+        flex: 1 1 auto;
     }
 
-    .step-actions{
-
-        flex-direction:column;
-
+    .step-title {
+        font-size: 11px;
+        font-weight: 700;
     }
 
-    .step-actions button{
-
-        width:100%;
-
+    .step-number {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
     }
 
+    .form-grid {
+        grid-template-columns: 1fr; /* جعل الحقول تحت بعضها تلقائياً */
+        gap: 16px;
+    }
+
+    .step-actions {
+        flex-direction: column-reverse; /* زر التالي يكون في الأعلى ليسهل النقر عليه */
+        gap: 12px;
+    }
+
+    .step-actions button {
+        width: 100%;
+        padding: 15px;
+    }
 }
