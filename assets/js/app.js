@@ -1,4 +1,3 @@
-```javascript
 /* ==========================================
    TERA Investor Portal
    Global App JS
@@ -29,22 +28,68 @@ function initializeApp(){
 
     initializeCurrencyFields();
 
+    checkProtectedPages();
+
 }
 
 /* ==========================================
    Authentication
 ========================================== */
 
+const AUTH_TOKEN = 'tera_token';
+
+function isAuthenticated(){
+
+    return !!localStorage.getItem(
+        AUTH_TOKEN
+    );
+
+}
+
 function logout(){
 
     localStorage.removeItem(
-        'investorToken'
+        AUTH_TOKEN
     );
 
     sessionStorage.clear();
 
     window.location.href =
     '/auth/login.html';
+
+}
+
+function checkProtectedPages(){
+
+    const protectedPaths = [
+
+        '/pages/dashboard/',
+        '/pages/investments/',
+        '/pages/portfolio/',
+        '/pages/profile/',
+        '/pages/reports/',
+        '/pages/security/',
+        '/pages/support/'
+
+    ];
+
+    const currentPath =
+    window.location.pathname;
+
+    const isProtected =
+    protectedPaths.some(path =>
+        currentPath.includes(path)
+    );
+
+    if(
+        isProtected &&
+        !isAuthenticated()
+    ){
+
+        window.location.href =
+        '/auth/login.html';
+
+    }
 
 }
 
@@ -58,7 +103,8 @@ function formatCurrency(amount){
         'ar-SA',
         {
             style:'currency',
-            currency:'SAR'
+            currency:'SAR',
+            minimumFractionDigits:2
         }
     ).format(amount);
 
@@ -98,6 +144,10 @@ function showAlert(
     type = 'success'
 ){
 
+    console.log(
+        `[${type}] ${message}`
+    );
+
     alert(message);
 
 }
@@ -118,10 +168,12 @@ function highlightActiveMenu(){
 
     links.forEach(link => {
 
+        const href =
+        link.getAttribute('href');
+
         if(
-            currentPage.includes(
-                link.getAttribute('href')
-            )
+            href &&
+            currentPage.includes(href)
         ){
 
             link.classList.add(
@@ -135,7 +187,7 @@ function highlightActiveMenu(){
 }
 
 /* ==========================================
-   Tooltips Placeholder
+   Tooltips
 ========================================== */
 
 function initializeTooltips(){
@@ -153,9 +205,7 @@ function initializeTooltips(){
 function initializeCurrencyFields(){
 
     document
-    .querySelectorAll(
-        '.currency'
-    )
+    .querySelectorAll('.currency')
     .forEach(field => {
 
         const value =
@@ -207,8 +257,27 @@ function removeStorage(
     key
 ){
 
-    localStorage.removeItem(
-        key
+    localStorage.removeItem(key);
+
+}
+
+/* ==========================================
+   User Helpers
+========================================== */
+
+function getCurrentUser(){
+
+    return getStorage(
+        'tera_user'
+    );
+
+}
+
+function saveCurrentUser(user){
+
+    setStorage(
+        'tera_user',
+        user
     );
 
 }
@@ -265,4 +334,66 @@ function hideLoader(){
     }
 
 }
-```
+
+/* ==========================================
+   Dashboard Helpers
+========================================== */
+
+function updateStatistic(
+    selector,
+    value
+){
+
+    const element =
+    document.querySelector(
+        selector
+    );
+
+    if(element){
+
+        element.innerText =
+        value;
+
+    }
+
+}
+
+/* ==========================================
+   Notification Counter
+========================================== */
+
+function updateNotificationCount(
+    count
+){
+
+    const badge =
+    document.querySelector(
+        '.notification-count'
+    );
+
+    if(badge){
+
+        badge.innerText = count;
+
+        badge.style.display =
+        count > 0
+        ? 'inline-flex'
+        : 'none';
+
+    }
+
+}
+
+/* ==========================================
+   Global Export
+========================================== */
+
+window.logout = logout;
+window.goTo = goTo;
+window.goBack = goBack;
+window.showAlert = showAlert;
+window.showLoader = showLoader;
+window.hideLoader = hideLoader;
+window.formatCurrency = formatCurrency;
+window.formatNumber = formatNumber;
+window.formatDate = formatDate;
