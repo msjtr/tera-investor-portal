@@ -26,8 +26,6 @@
           type="image/svg+xml"
           href="/images/favicon.svg">
 
-    <!-- Google Fonts -->
-
     <link rel="preconnect"
           href="https://fonts.googleapis.com">
 
@@ -35,22 +33,11 @@
           href="https://fonts.gstatic.com"
           crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=300;400;500;700;800&display=swap"
           rel="stylesheet">
-
-    <!-- CSS -->
-
-    <link rel="stylesheet"
-          href="/assets/css/core.css">
 
     <link rel="stylesheet"
           href="/assets/css/main.css">
-
-    <link rel="stylesheet"
-          href="/assets/css/app.css">
-
-    <link rel="stylesheet"
-          href="/assets/css/responsive.css">
 
     <style>
 
@@ -62,7 +49,7 @@
         }
 
         body{
-            background:#f8fafc;
+            background:#f4f7fa;
             min-height:100vh;
         }
 
@@ -81,7 +68,8 @@
             border-radius:24px;
             padding:60px;
             text-align:center;
-            box-shadow:0 15px 40px rgba(0,0,0,.08);
+            box-shadow:0 20px 50px rgba(15, 23, 42, 0.05);
+            border: 1px solid rgba(229, 231, 235, 0.6);
         }
 
         .logo{
@@ -89,21 +77,25 @@
         }
 
         .logo img{
-            width:140px;
+            width:150px;
             height:auto;
         }
 
         h1{
-            font-size:42px;
-            color:#111827;
+            font-size:38px;
+            color:#0f172a;
             margin-bottom:15px;
+            font-weight: 800;
         }
 
         .subtitle{
             font-size:18px;
-            color:#6b7280;
+            color:#475569;
             margin-bottom:40px;
             line-height:1.8;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .actions{
@@ -116,24 +108,32 @@
 
         .btn{
             text-decoration:none;
-            padding:14px 30px;
+            padding:14px 35px;
             border-radius:12px;
             font-weight:700;
-            transition:.3s;
+            transition:.3s ease-in-out;
         }
 
         .btn-primary{
-            background:#0f172a;
+            background:#1e3a8a; /* الأزرق الملكي الفاخر */
             color:#fff;
+            box-shadow: 0 4px 14px rgba(30, 58, 138, 0.3);
         }
 
         .btn-primary:hover{
-            opacity:.9;
+            background:#1d4ed8;
+            transform: translateY(-2px);
         }
 
         .btn-secondary{
-            background:#e5e7eb;
-            color:#111827;
+            background:#f1f5f9;
+            color:#1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover{
+            background:#e2e8f0;
+            transform: translateY(-2px);
         }
 
         .stats{
@@ -145,53 +145,70 @@
 
         .card{
             background:#fff;
-            border:1px solid #e5e7eb;
+            border:1px solid #e2e8f0;
             border-radius:16px;
             padding:25px;
+            text-align: right;
+            transition: .3s;
+        }
+
+        .card:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-3px);
         }
 
         .card h3{
             margin-bottom:10px;
-            color:#111827;
+            color:#0f172a;
+            font-size: 18px;
+            font-weight: 700;
         }
 
         .card p{
-            color:#6b7280;
-            line-height:1.8;
+            color:#64748b;
+            line-height:1.7;
+            font-size: 14px;
         }
 
         .quick-links{
             margin-top:50px;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 40px;
         }
 
         .quick-links h2{
             margin-bottom:25px;
-            color:#111827;
+            color:#0f172a;
+            font-size: 22px;
+            font-weight: 700;
         }
 
         .links-grid{
             display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
             gap:15px;
         }
 
         .links-grid a{
             text-decoration:none;
-            color:#111827;
+            color:#334155;
             background:#f8fafc;
             padding:16px;
             border-radius:12px;
-            border:1px solid #e5e7eb;
+            border:1px solid #e2e8f0;
+            font-weight: 500;
             transition:.3s;
         }
 
         .links-grid a:hover{
-            background:#eef2ff;
+            background:#eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
         }
 
         footer{
-            margin-top:50px;
-            color:#9ca3af;
+            margin-top:60px;
+            color:#94a3b8;
             font-size:14px;
         }
 
@@ -218,19 +235,19 @@
 
         <p class="subtitle">
             منصة متكاملة لإدارة الاستثمارات والمحافظ الاستثمارية
-            ومتابعة الأرباح والتقارير وإدارة الحسابات.
+            ومتابعة الأرباح والتقارير وإدارة الحسابات الذكية.
         </p>
 
         <div class="actions">
 
             <a href="/auth/login.html"
                class="btn btn-primary">
-                تسجيل الدخول
+                 تسجيل الدخول
             </a>
 
             <a href="/auth/register/register.html"
                class="btn btn-secondary">
-                إنشاء حساب جديد
+                 إنشاء حساب جديد
             </a>
 
         </div>
@@ -239,49 +256,49 @@
 
             <div class="card">
                 <h3>الفرص الاستثمارية</h3>
-                <p>استعراض الفرص المتاحة وإدارة الطلبات الاستثمارية.</p>
+                <p>استعراض الفرص المتاحة وإدارة الطلبات الاستثمارية وعوائدها التنافسية.</p>
             </div>
 
             <div class="card">
                 <h3>المحفظة الاستثمارية</h3>
-                <p>متابعة الأصول والأرباح والسحوبات والتحويلات.</p>
+                <p>متابعة فورية للأصول، الأرباح المستحقة، السحوبات، والعمليات المالية بدقة.</p>
             </div>
 
             <div class="card">
                 <h3>التقارير المالية</h3>
-                <p>تقارير تفصيلية وتحليلات دورية للمستثمر.</p>
+                <p>تقارير تفصيلية، كشوفات حساب موثقة، وتحليلات دورية مخصصة للمستثمر.</p>
             </div>
 
         </div>
 
         <div class="quick-links">
 
-            <h2>روابط سريعة</h2>
+            <h2>روابط الوصول السريع</h2>
 
             <div class="links-grid">
 
                 <a href="/pages/dashboard/index.html">
-                    لوحة التحكم
+                     لوحة التحكم
                 </a>
 
                 <a href="/pages/investments/opportunities.html">
-                    الفرص الاستثمارية
+                     الفرص الاستثمارية
                 </a>
 
                 <a href="/pages/portfolio/portfolio-overview.html">
-                    المحفظة الاستثمارية
+                     المحفظة الاستثمارية
                 </a>
 
                 <a href="/pages/reports/reports-dashboard.html">
-                    التقارير
+                     التقارير المالية
                 </a>
 
                 <a href="/pages/profile/personal-information.html">
-                    الملف الشخصي
+                     الملف الشخصي
                 </a>
 
                 <a href="/pages/support/help-center.html">
-                    مركز المساعدة
+                     مركز المساعدة
                 </a>
 
             </div>
@@ -289,35 +306,27 @@
         </div>
 
         <footer>
-            © 2026 TERA Investor Portal
+            © 2026 TERA Investor Portal. جميع الحقوق محفوظة.
         </footer>
 
     </div>
 
 </section>
 
-<script src="/assets/js/core.js"></script>
-<script src="/assets/js/main.js"></script>
-<script src="/assets/js/app.js"></script>
+<script type="module" src="/assets/js/main.js"></script>
 
 <script>
-
 document.addEventListener('DOMContentLoaded', () => {
-
-    const token = localStorage.getItem('tera_token');
+    // التحقق من التوكن الموحد للنظام لمنع تضارب الجلسات
+    const tokenKey = window.TERA_AUTH_TOKEN || 'tera_token';
+    const token = localStorage.getItem(tokenKey);
 
     if(token){
-
-        window.location.href =
-        '/pages/dashboard/index.html';
-
+        window.location.href = '/pages/dashboard/index.html';
     }
-
 });
-
 </script>
 
 </body>
 
 </html>
-
