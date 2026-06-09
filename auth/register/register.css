@@ -4,14 +4,26 @@
 
 :root{
 
-    --primary:#2563eb;
-    --primary-light:#3b82f6;
+    --primary:#0f766e;
+    --primary-light:#14b8a6;
+
     --success:#22c55e;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+
+    --border:#e5e7eb;
+    --text:#111827;
+    --text-light:#6b7280;
+
+    --shadow:
+    0 10px 25px rgba(0,0,0,.06);
+
+    --transition:.3s ease;
 
 }
 
 /* ==========================================
-   Register Page
+   Register Container
 ========================================== */
 
 .register-container{
@@ -23,13 +35,13 @@
 .auth-logo{
 
     text-align:center;
-    margin-bottom:20px;
+    margin-bottom:24px;
 
 }
 
 .auth-logo img{
 
-    max-width:140px;
+    max-width:160px;
     height:auto;
 
 }
@@ -42,7 +54,10 @@
 
     display:flex;
     justify-content:space-between;
-    margin:30px 0;
+    align-items:flex-start;
+
+    margin:35px 0 45px;
+
     position:relative;
 
 }
@@ -50,12 +65,18 @@
 .register-stepper::before{
 
     content:"";
+
     position:absolute;
+
     top:20px;
-    right:0;
-    left:0;
-    height:2px;
+
+    right:40px;
+    left:40px;
+
+    height:3px;
+
     background:#e5e7eb;
+
     z-index:1;
 
 }
@@ -63,37 +84,56 @@
 .step{
 
     flex:1;
+
     text-align:center;
+
     position:relative;
+
     z-index:2;
 
 }
 
 .step-number{
 
-    width:40px;
-    height:40px;
+    width:42px;
+    height:42px;
+
     border-radius:50%;
+
     background:#e5e7eb;
+
     color:#6b7280;
+
     display:flex;
+
     align-items:center;
     justify-content:center;
+
     margin:auto;
+
     font-weight:700;
+
+    transition:var(--transition);
 
 }
 
 .step.active .step-number{
 
     background:var(--primary);
+
     color:#fff;
+
+    transform:scale(1.08);
+
+    box-shadow:
+    0 0 0 5px rgba(15,118,110,.15);
 
 }
 
 .step.completed .step-number{
 
     background:var(--success);
+
     color:#fff;
 
 }
@@ -101,18 +141,30 @@
 .step-title{
 
     margin-top:10px;
+
     font-size:13px;
+
     font-weight:600;
+
+    color:var(--text-light);
+
+}
+
+.step.active .step-title{
+
+    color:var(--primary);
 
 }
 
 /* ==========================================
-   Form Steps
+   Form Step
 ========================================== */
 
 .form-step{
 
     display:none;
+
+    animation:fadeIn .3s ease;
 
 }
 
@@ -122,16 +174,41 @@
 
 }
 
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+        transform:translateY(10px);
+
+    }
+
+    to{
+
+        opacity:1;
+        transform:translateY(0);
+
+    }
+
+}
+
+/* ==========================================
+   Grid
+========================================== */
+
 .form-grid{
 
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(280px,1fr));
+
     gap:20px;
 
 }
 
 /* ==========================================
-   Form Elements
+   Form Fields
 ========================================== */
 
 .form-group{
@@ -144,7 +221,9 @@
 .form-group label{
 
     margin-bottom:8px;
+
     font-weight:600;
+
     color:#374151;
 
 }
@@ -153,11 +232,23 @@
 .form-group select{
 
     width:100%;
-    padding:12px 15px;
+
+    padding:14px 15px;
+
     border:1px solid #d1d5db;
+
     border-radius:10px;
-    transition:.3s;
+
     background:#fff;
+
+    transition:var(--transition);
+
+}
+
+.form-group input:hover,
+.form-group select:hover{
+
+    border-color:#94a3b8;
 
 }
 
@@ -165,38 +256,11 @@
 .form-group select:focus{
 
     outline:none;
+
     border-color:var(--primary);
-    box-shadow:0 0 0 3px rgba(37,99,235,.15);
 
-}
-
-/* ==========================================
-   Password
-========================================== */
-
-.password-wrapper{
-
-    position:relative;
-
-}
-
-.password-wrapper input{
-
-    padding-left:50px;
-
-}
-
-.toggle-password{
-
-    position:absolute;
-    left:10px;
-    top:50%;
-    transform:translateY(-50%);
-    background:none;
-    border:none;
-    cursor:pointer;
-    color:#6b7280;
-    font-size:18px;
+    box-shadow:
+    0 0 0 4px rgba(15,118,110,.12);
 
 }
 
@@ -206,15 +270,18 @@
 
 .password-strength{
 
-    margin-top:10px;
+    margin-top:12px;
 
 }
 
 .strength-bar{
 
     height:8px;
+
     background:#e5e7eb;
-    border-radius:20px;
+
+    border-radius:999px;
+
     overflow:hidden;
 
 }
@@ -222,62 +289,38 @@
 .strength-fill{
 
     height:100%;
+
     width:0;
-    transition:.3s;
+
+    transition:.4s ease;
 
 }
 
 .strength-weak{
 
-    background:#ef4444;
+    background:var(--danger);
 
 }
 
 .strength-medium{
 
-    background:#f59e0b;
+    background:var(--warning);
 
 }
 
 .strength-strong{
 
-    background:#22c55e;
+    background:var(--success);
 
 }
 
 .strength-text{
 
     margin-top:8px;
+
     font-size:13px;
+
     font-weight:600;
-
-}
-
-/* ==========================================
-   Password Rules
-========================================== */
-
-.password-rules{
-
-    background:#f8fafc;
-    border:1px solid #e5e7eb;
-    border-radius:10px;
-    padding:15px;
-
-}
-
-.password-rules ul{
-
-    list-style:none;
-    padding:0;
-    margin:0;
-
-}
-
-.password-rules li{
-
-    margin-bottom:8px;
-    font-size:13px;
 
 }
 
@@ -287,46 +330,40 @@
 
 .valid{
 
-    border-color:#22c55e !important;
+    border-color:var(--success) !important;
 
 }
 
 .invalid{
 
-    border-color:#ef4444 !important;
-
-}
-
-#passwordMatch{
-
-    display:block;
-    margin-top:5px;
-    font-size:13px;
-    font-weight:600;
+    border-color:var(--danger) !important;
 
 }
 
 .text-success{
 
-    color:#22c55e;
+    color:var(--success);
 
 }
 
 .text-danger{
 
-    color:#ef4444;
+    color:var(--danger);
 
 }
 
 /* ==========================================
-   Identity Section
+   Identity Box
 ========================================== */
 
 .identity-section{
 
     padding:25px;
-    border:1px solid #e5e7eb;
+
+    border:1px solid var(--border);
+
     border-radius:12px;
+
     background:#fafafa;
 
 }
@@ -338,8 +375,11 @@
 .terms-box{
 
     padding:25px;
-    border:1px solid #e5e7eb;
+
+    border:1px solid var(--border);
+
     border-radius:12px;
+
     background:#fafafa;
 
 }
@@ -347,29 +387,30 @@
 .terms-box label{
 
     display:flex;
-    align-items:flex-start;
+
     gap:10px;
+
+    align-items:flex-start;
+
     margin-bottom:12px;
+
     cursor:pointer;
 
 }
 
-.terms-box input[type="checkbox"]{
-
-    margin-top:3px;
-
-}
-
 /* ==========================================
-   Navigation Buttons
+   Buttons
 ========================================== */
 
 .step-actions{
 
     display:flex;
+
     justify-content:space-between;
+
     gap:15px;
-    margin-top:30px;
+
+    margin-top:35px;
 
 }
 
@@ -378,12 +419,18 @@
 .btn-submit{
 
     border:none;
+
     color:#fff;
-    padding:12px 24px;
+
+    padding:13px 28px;
+
     border-radius:10px;
-    cursor:pointer;
+
     font-weight:700;
-    transition:.3s;
+
+    cursor:pointer;
+
+    transition:var(--transition);
 
 }
 
@@ -424,12 +471,13 @@
 }
 
 /* ==========================================
-   Auth Footer
+   Footer
 ========================================== */
 
 .auth-footer{
 
-    margin-top:30px;
+    margin-top:35px;
+
     text-align:center;
 
 }
@@ -437,8 +485,8 @@
 .auth-footer a{
 
     color:var(--primary);
+
     font-weight:700;
-    text-decoration:none;
 
 }
 
@@ -454,15 +502,10 @@
 
 @media(max-width:768px){
 
-    .register-container{
-
-        max-width:100% !important;
-
-    }
-
     .register-stepper{
 
         flex-wrap:wrap;
+
         gap:15px;
 
     }
@@ -475,7 +518,7 @@
 
     .step{
 
-        flex:0 0 calc(50% - 10px);
+        flex:0 0 calc(50% - 8px);
 
     }
 
