@@ -12,66 +12,65 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStep = 0;
 
     // ==========================================
-    // 🛠️ أولاً: ميزة إظهار وإخفاء كلمة المرور (عين الرؤية)
+    // 🛠️ أولاً: ميزة إظهار وإخفاء كلمة المرور التفاعلية
     // ==========================================
-    function injectPasswordToggle(inputField) {
-        if (!inputField) return;
+    function setupPasswordToggle(inputFieldId, toggleBtnId) {
+        const inputField = document.getElementById(inputFieldId);
+        const toggleBtn = document.getElementById(toggleBtnId);
         
-        const wrapper = document.createElement('div');
-        wrapper.className = 'password-toggle-wrapper';
-        wrapper.style.position = 'relative';
-        wrapper.style.width = '100%';
-        
-        inputField.parentNode.insertBefore(wrapper, inputField);
-        wrapper.appendChild(inputField);
-        
-        const toggleBtn = document.createElement('button');
-        toggleBtn.type = 'button';
-        toggleBtn.className = 'password-toggle-btn';
-        toggleBtn.innerHTML = '👁️';
-        toggleBtn.style.cssText = `
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            z-index: 10;
-            padding: 4px;
-        `;
-        
-        inputField.style.paddingLeft = '45px';
-        wrapper.appendChild(toggleBtn);
+        if (!inputField || !toggleBtn) return;
         
         toggleBtn.addEventListener('click', () => {
             if (inputField.type === 'password') {
                 inputField.type = 'text';
-                toggleBtn.innerHTML = '🔒';
+                // تغيير الأيقونة إلى عين مغلقة أو قفل مفتوح عند العرض حركياً
+                toggleBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                    </svg>
+                `;
             } else {
                 inputField.type = 'password';
-                toggleBtn.innerHTML = '👁️';
+                // إرجاع الأيقونة الافتراضية للعين الكاملة
+                toggleBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    </svg>
+                `;
             }
         });
     }
 
+    // تفعيل التحكم لعين كلمة المرور المخصصة في الهيكل الجديد
+    setupPasswordToggle('reg_password', 'togglePasswordView');
+
     const passwordInput = document.getElementById('reg_password');
     const confirmPasswordInput = document.getElementById('reg_confirm_password');
-    injectPasswordToggle(passwordInput);
-    injectPasswordToggle(confirmPasswordInput);
 
     // ==========================================
     // 🔍 ثانياً: التحقق الحي من شروط اسم المستخدم
     // ==========================================
     const usernameInput = document.getElementById('reg_username');
     if (usernameInput) {
+        // تعيين الحالة المبدئية عند التحميل
+        updateReq('user_len', false);
+        updateReq('user_alpha', false);
+        updateReq('user_space', true);
+        updateReq('user_spec', true);
+
         usernameInput.addEventListener('input', (e) => {
             const val = e.target.value;
+            if(val.length === 0) {
+                updateReq('user_len', false);
+                updateReq('user_alpha', false);
+                updateReq('user_space', true);
+                updateReq('user_spec', true);
+                return;
+            }
             updateReq('user_len', val.length >= 4 && val.length <= 20);
-            updateReq('user_alpha', /^[A-Za-z0-9]+$/.test(val) || val.length === 0);
+            updateReq('user_alpha', /^[A-Za-z0-9]+$/.test(val));
             updateReq('user_space', !/\s/.test(val));
-            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/ Jerusalem]/.test(val));
+            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/]/.test(val));
         });
     }
 
@@ -82,6 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const strengthText = document.getElementById('strength_text');
 
     if (passwordInput) {
+        // تعيين الحالة المبدئية للشروط
+        updateReq('pass_len', false);
+        updateReq('pass_upper', false);
+        updateReq('pass_lower', false);
+        updateReq('pass_num', false);
+        updateReq('pass_spec', false);
+
         passwordInput.addEventListener('input', (e) => {
             const val = e.target.value;
             let score = 0;
@@ -96,19 +102,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 strengthFill.className = 'strength-fill';
                 if (val.length === 0) {
                     strengthFill.style.width = '0%';
-                    strengthText.textContent = 'ضعيفة';
+                    if(strengthText) strengthText.textContent = 'ضعيفة';
                 } else if (score <= 2) {
                     strengthFill.classList.add('weak');
-                    strengthText.textContent = 'ضعيفة';
+                    if(strengthText) strengthText.textContent = 'ضعيفة';
                 } else if (score === 3) {
                     strengthFill.classList.add('medium');
-                    strengthText.textContent = 'متوسطة';
+                    if(strengthText) strengthText.textContent = 'متوسطة';
                 } else if (score === 4) {
                     strengthFill.classList.add('strong');
-                    strengthText.textContent = 'قوية';
+                    if(strengthText) strengthText.textContent = 'قوية';
                 } else {
                     strengthFill.classList.add('very-strong');
-                    strengthText.textContent = 'قوية جداً';
+                    if(strengthText) strengthText.textContent = 'قوية جداً';
                 }
             }
             checkPasswordsMatch();
@@ -218,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('input[name="foreign_doc_type"]').forEach(radio => {
                 radio.addEventListener('change', (e) => {
                     const wrapper = document.getElementById('foreign_dynamic_wrapper');
+                    if (!wrapper) return;
                     if (e.target.value === 'passport') {
                         wrapper.innerHTML = `
                             <div class="form-group"><label class="tera-label">دولة إصدار الجواز</label><input type="text" name="passport_country" class="tera-input-field" required></div>
@@ -227,7 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                <div class="form-group"><label class="tera-label">تاريخ انتهاء الجواز</label><input type="date" name="passport_expiry_date" class="tera-input-field" required></div>
                             </div>`;
                     } else {
-                        renderIdentityFields('foreign');
+                        wrapper.innerHTML = `
+                            <div class="form-group"><label class="tera-label">الدولة</label><input type="text" name="foreign_country" class="tera-input-field" required></div>
+                            <div class="form-group"><label class="tera-label">رقم الهوية</label><input type="text" name="foreign_id" class="tera-input-field" required></div>
+                            <div class="form-row-split">
+                               <div class="form-group"><label class="tera-label">تاريخ الإصدار</label><input type="date" name="foreign_issue_date" class="tera-input-field" required></div>
+                               <div class="form-group"><label class="tera-label">تاريخ الانتهاء</label><input type="date" name="foreign_expiry_date" class="tera-input-field" required></div>
+                            </div>`;
                     }
                 });
             });
@@ -266,134 +279,4 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="form-group"><label class="tera-label">الحي</label><input type="text" name="address_global_district" class="tera-input-field" required></div>
                         <div class="form-group"><label class="tera-label">الشارع</label><input type="text" name="address_global_street" class="tera-input-field" required></div>
                      </div>
-                     <div class="form-group"><label class="tera-label">الرمز البريدي</label><input type="text" name="address_global_zip" class="tera-input-field" required></div>
-                     <div class="form-group"><label class="tera-label">وصف إضافي للعنوان</label><textarea name="address_global_desc" class="tera-input-field" style="height: 80px;"></textarea></div>`;
-        }
-        dynamicAddress.innerHTML = html;
-    }
-
-    // ==========================================
-    // 🚀 خامساً: منظومة التحقق الذكي والانتقال للخطأ
-    // ==========================================
-    form.addEventListener('click', (e) => {
-        if (e.target.classList.contains('btn-next')) {
-            if (validateCurrentStep()) {
-                currentStep++;
-                updateUI();
-            }
-        } else if (e.target.classList.contains('btn-prev')) {
-            currentStep--;
-            updateUI();
-        }
-    });
-
-    function validateCurrentStep() {
-        const currentEl = steps[currentStep];
-        const requiredFields = currentEl.querySelectorAll('input[required], select[required]');
-        let firstInvalidField = null;
-
-        currentEl.querySelectorAll('.tera-input-field').forEach(f => f.classList.remove('error'));
-
-        for (let field of requiredFields) {
-            const isCheckbox = field.type === 'checkbox';
-            const isInvalid = isCheckbox ? !field.checked : !field.value.trim();
-
-            if (isInvalid) {
-                field.classList.add('error');
-                if (!firstInvalidField) {
-                    firstInvalidField = field;
-                }
-            }
-        }
-
-        if (currentStep === 0) {
-            const user = usernameInput.value;
-            const pass = passwordInput.value;
-
-            if (user.length < 4 || /[^A-Za-z0-9]/.test(user)) {
-                if (!firstInvalidField) firstInvalidField = usernameInput;
-                usernameInput.classList.add('error');
-            }
-            if (emailInput.value !== confirmEmailInput.value || !confirmEmailInput.value) {
-                if (!firstInvalidField) firstInvalidField = confirmEmailInput;
-                confirmEmailInput.classList.add('error');
-            }
-            if (pass !== confirmPasswordInput.value || pass.length < 8) {
-                if (!firstInvalidField) firstInvalidField = confirmPasswordInput;
-                confirmPasswordInput.classList.add('error');
-            }
-        }
-
-        if (firstInvalidField) {
-            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => { firstInvalidField.focus(); }, 400);
-            
-            if(typeof firstInvalidField.reportValidity === 'function') {
-                firstInvalidField.reportValidity();
-            }
-            return false;
-        }
-
-        return true;
-    }
-
-    function updateUI() {
-        steps.forEach((step, idx) => step.classList.toggle('active', idx === currentStep));
-        stepNodes.forEach((node, idx) => {
-            node.classList.toggle('active', idx === currentStep);
-            node.classList.toggle('completed', idx < currentStep);
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // === 6. التحكم بالإقرارات والاتفاقيات ===
-    const masterCheck = document.getElementById('master_agreement_check');
-    const individualChecks = Array.from(document.querySelectorAll('.agreement-check'));
-    const submitBtn = document.getElementById('submit_register_btn');
-
-    if (masterCheck) {
-        masterCheck.addEventListener('change', (e) => {
-            individualChecks.forEach(ch => ch.checked = e.target.checked);
-            if(submitBtn) submitBtn.disabled = !e.target.checked;
-        });
-
-        individualChecks.forEach(ch => {
-            ch.addEventListener('change', () => {
-                const allChecked = individualChecks.every(c => c.checked);
-                masterCheck.checked = allChecked;
-                if(submitBtn) submitBtn.disabled = !allChecked;
-            });
-        });
-    }
-
-    // === 7. الإرسال النهائي ومعالجة السيرفر ===
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!validateCurrentStep()) return;
-        
-        if(submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري معالجة طلبك وحمايته...';
-        }
-
-        try {
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            const response = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) throw new Error('فشل تسجيل الطلب، يرجى مراجعة الحقول والتحقق.');
-            window.location.href = '/auth/verify-otp.html';
-        } catch (err) {
-            alert(err.message);
-            if(submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'إنشاء الحساب';
-            }
-        }
-    });
-}); // <--- هذا السطر هو الإغلاق الصارم لـ DOMContentLoaded ويضمن اختفاء خطأ SyntaxError تماماً!
+                     <div class="form-group"><label class="tera-label">الرمز البريدي</label><input type="text" name="address_global_zip" class="tera-input
