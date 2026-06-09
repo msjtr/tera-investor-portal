@@ -5,7 +5,7 @@
 
 .register-container{
 
-    width:100%;
+    max-width:1000px !important;
 
 }
 
@@ -15,7 +15,7 @@
 
     justify-content:space-between;
 
-    margin-bottom:30px;
+    margin:30px 0;
 
     position:relative;
 
@@ -27,7 +27,7 @@
 
     position:absolute;
 
-    top:18px;
+    top:20px;
 
     right:0;
 
@@ -43,21 +43,21 @@
 
 .step{
 
-    position:relative;
-
-    z-index:2;
+    flex:1;
 
     text-align:center;
 
-    flex:1;
+    position:relative;
+
+    z-index:2;
 
 }
 
 .step-number{
 
-    width:38px;
+    width:40px;
 
-    height:38px;
+    height:40px;
 
     border-radius:50%;
 
@@ -65,13 +65,13 @@
 
     color:#6b7280;
 
-    margin:auto;
-
     display:flex;
 
     align-items:center;
 
     justify-content:center;
+
+    margin:auto;
 
     font-weight:700;
 
@@ -79,7 +79,7 @@
 
 .step.active .step-number{
 
-    background:#0f766e;
+    background:var(--primary);
 
     color:#fff;
 
@@ -87,7 +87,7 @@
 
 .step.completed .step-number{
 
-    background:#22c55e;
+    background:var(--success);
 
     color:#fff;
 
@@ -99,10 +99,12 @@
 
     font-size:13px;
 
+    font-weight:600;
+
 }
 
 /* ==========================================
-   Step Content
+   Steps
 ========================================== */
 
 .form-step{
@@ -142,9 +144,9 @@
 
     height:8px;
 
-    border-radius:10px;
-
     background:#e5e7eb;
+
+    border-radius:20px;
 
     overflow:hidden;
 
@@ -157,28 +159,79 @@
     width:0;
 
     transition:.3s;
+
 }
 
 .strength-weak{
 
     background:#ef4444;
+
 }
 
 .strength-medium{
 
     background:#f59e0b;
+
 }
 
 .strength-strong{
 
     background:#22c55e;
+
 }
 
 .strength-text{
 
-    margin-top:6px;
+    margin-top:8px;
 
     font-size:13px;
+
+    font-weight:600;
+
+}
+
+/* ==========================================
+   Password Rules
+========================================== */
+
+.password-rules{
+
+    margin-top:15px;
+
+    background:#f8fafc;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:10px;
+
+    padding:15px;
+
+}
+
+.password-rules ul{
+
+    list-style:none;
+
+}
+
+.password-rules li{
+
+    margin-bottom:8px;
+
+    font-size:13px;
+
+}
+
+.rule-valid{
+
+    color:#16a34a;
+
+}
+
+.rule-invalid{
+
+    color:#dc2626;
+
 }
 
 /* ==========================================
@@ -188,64 +241,37 @@
 .valid{
 
     border-color:#22c55e !important;
+
 }
 
 .invalid{
 
     border-color:#ef4444 !important;
+
 }
 
 .validation-message{
 
+    margin-top:5px;
+
     font-size:12px;
 
-    margin-top:5px;
 }
 
 .validation-success{
 
-    color:#15803d;
+    color:#16a34a;
+
 }
 
 .validation-error{
 
     color:#dc2626;
+
 }
 
 /* ==========================================
-   Password Rules
-========================================== */
-
-.password-rules{
-
-    margin-top:10px;
-
-    padding:15px;
-
-    background:#f8fafc;
-
-    border-radius:10px;
-
-    font-size:13px;
-}
-
-.password-rules li{
-
-    margin-bottom:6px;
-}
-
-.rule-valid{
-
-    color:#16a34a;
-}
-
-.rule-invalid{
-
-    color:#dc2626;
-}
-
-/* ==========================================
-   Phone Group
+   Phone Input
 ========================================== */
 
 .phone-group{
@@ -253,11 +279,15 @@
     display:flex;
 
     gap:10px;
+
 }
 
 .country-code{
 
-    width:130px;
+    width:140px;
+
+    flex-shrink:0;
+
 }
 
 /* ==========================================
@@ -266,7 +296,21 @@
 
 .identity-section{
 
-    margin-top:20px;
+    padding:20px;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:12px;
+
+    background:#fafafa;
+
+}
+
+/* ==========================================
+   Terms
+========================================== */
+
+.terms-box{
 
     padding:20px;
 
@@ -275,6 +319,17 @@
     border-radius:12px;
 
     background:#fafafa;
+
+}
+
+.terms-box label{
+
+    display:block;
+
+    margin-bottom:12px;
+
+    cursor:pointer;
+
 }
 
 /* ==========================================
@@ -288,48 +343,69 @@
     justify-content:space-between;
 
     margin-top:30px;
+
 }
 
 .btn-prev{
 
     background:#6b7280;
+
 }
 
 .btn-prev:hover{
 
     background:#4b5563;
+
 }
 
 .btn-next{
 
-    background:#0f766e;
+    background:var(--primary);
+
+}
+
+.btn-next:hover{
+
+    background:var(--primary-light);
+
 }
 
 .btn-submit{
 
     background:#16a34a;
+
+}
+
+.btn-submit:hover{
+
+    background:#15803d;
+
 }
 
 /* ==========================================
-   Terms Section
+   Username Rules
 ========================================== */
 
-.terms-box{
+.username-rules{
 
-    padding:20px;
+    margin-top:10px;
+
+    padding:15px;
 
     background:#f8fafc;
 
-    border-radius:12px;
-
     border:1px solid #e5e7eb;
+
+    border-radius:10px;
+
 }
 
-.terms-box label{
+.username-rules li{
 
-    display:block;
+    font-size:13px;
 
-    margin-bottom:12px;
+    margin-bottom:6px;
+
 }
 
 /* ==========================================
@@ -338,26 +414,56 @@
 
 @media(max-width:768px){
 
+    .register-container{
+
+        max-width:100% !important;
+
+    }
+
     .register-stepper{
 
         flex-wrap:wrap;
 
         gap:15px;
+
     }
 
     .step{
 
         flex:0 0 48%;
+
+    }
+
+    .form-grid{
+
+        grid-template-columns:1fr;
+
     }
 
     .phone-group{
 
         flex-direction:column;
+
     }
 
     .country-code{
 
         width:100%;
+
+    }
+
+    .step-actions{
+
+        flex-direction:column;
+
+        gap:10px;
+
+    }
+
+    .step-actions button{
+
+        width:100%;
+
     }
 
 }
