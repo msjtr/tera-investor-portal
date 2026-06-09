@@ -1,4 +1,3 @@
-```css
 /* ==========================================
    Register Page
 ========================================== */
@@ -8,6 +7,10 @@
     max-width:1000px !important;
 
 }
+
+/* ==========================================
+   Stepper
+========================================== */
 
 .register-stepper{
 
@@ -104,7 +107,7 @@
 }
 
 /* ==========================================
-   Steps
+   Form Steps
 ========================================== */
 
 .form-step{
@@ -124,9 +127,47 @@
     display:grid;
 
     grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
+    repeat(auto-fit,minmax(280px,1fr));
 
     gap:20px;
+
+}
+
+/* ==========================================
+   Password
+========================================== */
+
+.password-wrapper{
+
+    position:relative;
+
+}
+
+.password-wrapper input{
+
+    padding-left:50px;
+
+}
+
+.toggle-password{
+
+    position:absolute;
+
+    left:10px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    background:none;
+
+    border:none;
+
+    cursor:pointer;
+
+    color:#6b7280;
+
+    font-size:18px;
 
 }
 
@@ -196,8 +237,6 @@
 
 .password-rules{
 
-    margin-top:15px;
-
     background:#f8fafc;
 
     border:1px solid #e5e7eb;
@@ -222,18 +261,6 @@
 
 }
 
-.rule-valid{
-
-    color:#16a34a;
-
-}
-
-.rule-invalid{
-
-    color:#dc2626;
-
-}
-
 /* ==========================================
    Validation
 ========================================== */
@@ -250,43 +277,15 @@
 
 }
 
-.validation-message{
+#passwordMatch{
+
+    display:block;
 
     margin-top:5px;
 
-    font-size:12px;
+    font-size:13px;
 
-}
-
-.validation-success{
-
-    color:#16a34a;
-
-}
-
-.validation-error{
-
-    color:#dc2626;
-
-}
-
-/* ==========================================
-   Phone Input
-========================================== */
-
-.phone-group{
-
-    display:flex;
-
-    gap:10px;
-
-}
-
-.country-code{
-
-    width:140px;
-
-    flex-shrink:0;
+    font-weight:600;
 
 }
 
@@ -296,7 +295,7 @@
 
 .identity-section{
 
-    padding:20px;
+    padding:25px;
 
     border:1px solid #e5e7eb;
 
@@ -312,7 +311,7 @@
 
 .terms-box{
 
-    padding:20px;
+    padding:25px;
 
     border:1px solid #e5e7eb;
 
@@ -341,6 +340,8 @@
     display:flex;
 
     justify-content:space-between;
+
+    gap:15px;
 
     margin-top:30px;
 
@@ -383,28 +384,22 @@
 }
 
 /* ==========================================
-   Username Rules
+   Auth Footer
 ========================================== */
 
-.username-rules{
+.auth-footer{
 
-    margin-top:10px;
+    margin-top:30px;
 
-    padding:15px;
-
-    background:#f8fafc;
-
-    border:1px solid #e5e7eb;
-
-    border-radius:10px;
+    text-align:center;
 
 }
 
-.username-rules li{
+.auth-footer a{
 
-    font-size:13px;
+    color:var(--primary);
 
-    margin-bottom:6px;
+    font-weight:700;
 
 }
 
@@ -440,23 +435,9 @@
 
     }
 
-    .phone-group{
-
-        flex-direction:column;
-
-    }
-
-    .country-code{
-
-        width:100%;
-
-    }
-
     .step-actions{
 
         flex-direction:column;
-
-        gap:10px;
 
     }
 
@@ -467,4 +448,3 @@
     }
 
 }
-```
