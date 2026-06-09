@@ -1,47 +1,38 @@
 /* ==========================================
-   TERA Investor Portal - Main JS (Optimized)
+   TERA Investor Portal - Main JS (Router Refined)
 ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const page = window.location.pathname;
-    console.log('Current Page:', page);
+    const path = window.location.pathname;
+    console.log('Current Page Path:', path);
 
-    // تعريف المسارات والوظائف المرتبطة بها في كائن واحد (Map)
+    // تعريف المسارات (المطابقة تكون من الأكثر تخصيصاً للأقل)
     const routeHandlers = {
-        '/pages/dashboard/': () => console.log('Dashboard Loaded'),
-        '/pages/investments/': () => console.log('Investments Loaded'),
-        '/pages/portfolio/': () => console.log('Portfolio Loaded'),
-        '/pages/reports/': () => console.log('Reports Loaded'),
-        '/pages/profile/': () => console.log('Profile Loaded'),
-        '/pages/security/': () => console.log('Security Loaded'),
-        '/pages/support/': () => console.log('Support Loaded'),
-        '/auth/': () => console.log('Authentication Page Loaded')
+        '/pages/dashboard/': () => console.log('Dashboard Initialized'),
+        '/pages/investments/': () => console.log('Investments Initialized'),
+        '/pages/portfolio/': () => console.log('Portfolio Initialized'),
+        '/pages/reports/': () => console.log('Reports Initialized'),
+        '/pages/profile/': () => console.log('Profile Initialized'),
+        '/pages/security/': () => console.log('Security Initialized'),
+        '/pages/support/': () => console.log('Support Initialized'),
+        '/auth/': () => console.log('Authentication Module Loaded')
     };
 
-    // التنفيذ الذكي: البحث عن المسار المطابق وتشغيل وظيفته
-    Object.keys(routeHandlers).forEach(route => {
-        if (page.includes(route)) {
-            routeHandlers[route]();
-        }
-    });
+    // التنفيذ الذكي: مطابقة المسار بدقة
+    // نستخدم find للبحث عن أول مسار يطابق بداية الرابط (تجنباً لتشغيل عدة دوال)
+    const matchedRoute = Object.keys(routeHandlers).find(route => path.startsWith(route));
+
+    if (matchedRoute) {
+        routeHandlers[matchedRoute]();
+    } else {
+        console.log('General Page Loaded');
+    }
 });
 
 /* ==========================================
    Helpers (Clean & Exported)
 ========================================== */
 
-/**
- * دالة للحصول على المسار الحالي
- */
-const getCurrentPage = () => window.location.pathname;
-
-/**
- * دالة للتحقق من وجود مسار معين
- */
-const pageContains = (path) => window.location.pathname.includes(path);
-
-// تصدير الأدوات إلى window بشكل مجمع
-Object.assign(window, {
-    getCurrentPage,
-    pageContains
-});
+// تحديث الدوال لتعمل بشكل أضمن
+window.getCurrentPage = () => window.location.pathname;
+window.pageContains = (path) => window.location.pathname.includes(path);
