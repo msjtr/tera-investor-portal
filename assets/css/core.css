@@ -1,229 +1,97 @@
 /* ==========================================
-   Premium Cards (بطاقات الحاويات الفاخرة)
+   TERA Investor Portal - Core Foundations
 ========================================== */
-.card {
-    background: var(--surface, #ffffff);
-    border-radius: var(--radius, 16px);
-    padding: 24px;
-    /* ظلال ناعمة وموزعة لحماية راحة العين أثناء القراءة المطولة */
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+
+/* استيراد الخطوط الفاخرة لواجهات الفينتك */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* لوحة الألوان المعتمدة لمنصة تيرا */
+    --primary-teal: #0d9488;
+    --primary-hover: #0f766e;
+    --secondary-blue: #1e3a8a;
+    --secondary-dark: #0f172a;
+    
+    /* ألوان الخلفيات والنصوص */
+    --bg-global: #f8fafc;
+    --bg-surface: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    
+    /* الحالات الديناميكية */
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    
+    /* هندسة الأبعاد والظلال */
+    --radius-xl: 24px;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow-premium: 0 10px 25px rgba(15, 23, 42, 0.04);
+    --shadow-smooth: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card:hover {
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-    border-color: rgba(226, 232, 240, 1);
+/* إعادة تهيئة المتصفح القياسية */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-/* ==========================================
-   Status Chips (مؤشرات الحالات المالية والاستثمارية)
-========================================== */
-.status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.01em;
+body {
+    font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-global);
+    color: var(--text-main);
+    direction: rtl; /* التوجيه العربي الافتراضي لكامل المنصة */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
-.status-success {
-    background: #e6f4ea; /* أخضر ناعم مريح لعمليات الإيداع والموافقة */
-    color: #137333;
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition-smooth);
 }
 
-.status-warning {
-    background: #fef7e0; /* أصفر دافئ للعمليات المعلقة وتحت المراجعة */
-    color: #b06000;
+button, input, select, textarea {
+    font-family: inherit;
 }
 
-.status-danger {
-    background: #fce8e6; /* أحمر خفيف للعمليات المرفوضة أو الملغاة */
-    color: #c5221f;
-}
-
-.status-info {
-    background: #e8f0fe; /* أزرق سماوي للعمليات قيد التنفيذ أو التحديث */
-    color: #1a73e8;
-}
-
-/* ==========================================
-   Badges & Micro Counters (الأوسمة والعدادات)
-========================================== */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    background: var(--danger, #ef4444);
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-}
-
-.notification-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--danger, #ef4444);
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 700;
-    border: 2px solid var(--surface, #ffffff); /* عزل العداد عن الأيقونة الخلفية لتصميم أكثر احترافية */
-}
-
-/* ==========================================
-   Premium Glassmorphism Loader (شاشة التحميل)
-========================================== */
+/* عناصر التحميل العامة (Loader) الموزعة بالصفحات */
 .loader {
     position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.75);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    display: none; /* يتم التحكم به عبر global.js */
+    justify-content: center;
+    align-items: center;
     z-index: 9999;
 }
 
-.loader::after {
-    content: "";
+.loader-spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid #e2e8f0;
-    border-top-color: var(--primary, #1e3a8a);
-    border-right-color: var(--primary-teal, #0d9488);
+    border: 4px solid var(--border);
+    border-top-color: var(--primary-teal);
     border-radius: 50%;
-    animation: tera-spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    animation: spin 1s linear infinite;
 }
 
-@keyframes tera-spin {
-    to {
-        transform: rotate(360deg);
-    }
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-/* ==========================================
-   Responsive Tables & Layouts (الجداول المرنة)
-========================================== */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-/* ==========================================
-   Sidebar Active State (مؤشر القائمة الجانبية RTL)
-========================================== */
-.sidebar a.active {
-    color: var(--primary, #1e3a8a);
-    font-weight: 700;
-    background: linear-gradient(270deg, rgba(30, 58, 138, 0.06) 0%, rgba(13, 148, 136, 0.01) 100%);
-    border-right: 4px solid var(--primary-teal, #0d9488);
-    border-left: none;
-}
-
-/* ==========================================
-   Micro Animations (التحركات التفاعلية الفاخرة)
-========================================== */
-.fade-in {
-    animation: fadeIn .4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* ==========================================
-   Sleek Custom Scrollbar (شريط التمرير الحديث)
-========================================== */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 20px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* ==========================================
-   Advanced Grid System (بناء الشبكة الهيكلية الفاخرة)
-========================================== */
-.container {
-    width: 100%;
-    margin-right: auto;
-    margin-left: auto;
-    padding-right: 24px;
-    padding-left: 24px;
-}
-
-/* تعريف أساسيات المصفوفات لضمان ثباتها البرمجي قبل تفعيل الـ Media Queries */
-.grid-2, .grid-3, .grid-4 {
-    display: grid;
-    gap: 24px;
-}
-
-.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-/* ==========================================
-   Responsive Grid Queries (شاشات الأجهزة الذكية واللوحية)
-========================================== */
-@media (max-width: 1200px) {
-    .grid-4 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 992px) {
-    .grid-3 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .grid-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 768px) {
-    .grid-2,
-    .grid-3,
-    .grid-4 {
-        grid-template-columns: 1fr; /* تحويل كافة المصفوفات لعمود واحد متناسق على شاشات الموبايل */
-        gap: 16px; /* تقليص الفجوات لزيادة المساحة المتاحة للمحتوى */
-    }
-
-    .container {
-        padding-right: 16px;
-        padding-left: 16px;
-    }
+/* الحاوية الديناميكية لنظام التنبيهات الزجاجية (Toasts) */
+.tera-toast-container {
+    padding: 16px;
+    direction: rtl;
 }
