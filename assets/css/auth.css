@@ -1,461 +1,360 @@
 /* ==========================================
-   Auth Pages
+   Variables & Theme Setup
 ========================================== */
+:root {
+    --primary: #1e3a8a;       /* الأزرق الملكي الفاخر */
+    --primary-teal: #0d9488;  /* التيل الاحترافي */
+    --primary-light: #3b82f6;
 
-.auth-container{
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
 
-    min-height:100vh;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-light: #64748b;
+    --bg-light: #f8fafc;
 
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    padding:30px;
-
-    background:
-    linear-gradient(
-        135deg,
-        #f8fafc,
-        #eef6f5
-    );
-
-}
-
-.auth-card{
-
-    width:100%;
-
-    max-width:500px;
-
-    background:#fff;
-
-    padding:35px;
-
-    border-radius:16px;
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,.08);
-
-}
-
-.auth-logo{
-
-    text-align:center;
-
-    margin-bottom:20px;
-
-}
-
-.auth-logo img{
-
-    max-width:140px;
-
-    height:auto;
-
-    margin:auto;
-
-}
-
-.auth-logo-text{
-
-    font-size:38px;
-
-    font-weight:700;
-
-    color:#0f766e;
-
+    --shadow-card: 0 20px 40px rgba(15, 23, 42, 0.06);
+    --transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==========================================
-   Headings
+   Auth Pages Layout & Container
 ========================================== */
-
-.auth-card h1{
-
-    text-align:center;
-
-    margin-bottom:10px;
-
-    color:#111827;
-
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    /* تدرج لوني ناعم يعكس واجهات الأنظمة البنكية الحديثة */
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
 }
 
-.auth-card p{
+.auth-card {
+    width: 100%;
+    max-width: 500px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    animation: fadeIn .4s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-    text-align:center;
+.auth-logo {
+    text-align: center;
+    margin-bottom: 24px;
+}
 
-    color:#6b7280;
+.auth-logo img {
+    max-width: 140px;
+    height: auto;
+    margin: 0 auto;
+}
 
-    margin-bottom:25px;
-
-    line-height:1.8;
-
+.auth-logo-text {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.03em;
 }
 
 /* ==========================================
-   Forms
+   Typography & Headings
 ========================================== */
-
-.form-group{
-
-    margin-bottom:18px;
-
+.auth-card h1 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-size: 24px;
+    font-weight: 700;
 }
 
-.form-group label{
+.auth-card p {
+    text-align: center;
+    color: var(--text-light);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    font-size: 15px;
+}
 
-    display:block;
+/* ==========================================
+   Form Fields Styling
+========================================== */
+.form-group {
+    margin-bottom: 20px;
+}
 
-    margin-bottom:8px;
-
-    font-weight:600;
-
-    color:#374151;
-
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #334155;
+    font-size: 14px;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea{
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    color: var(--text);
+    font-size: 15px;
+    transition: var(--transition);
+}
 
-    width:100%;
-
-    padding:14px;
-
-    border:1px solid #d1d5db;
-
-    border-radius:10px;
-
-    transition:.3s;
-
-    background:#fff;
-
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: #94a3b8;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus{
-
-    border-color:#0f766e;
-
-    outline:none;
-
-    box-shadow:
-    0 0 0 3px rgba(15,118,110,.15);
-
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
 }
 
 /* ==========================================
-   Auth Options
+   Auth Options (تذكرني / نسيت كلمة المرور)
 ========================================== */
-
-.auth-options{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:10px;
-
-    margin:15px 0 20px;
-
-    flex-wrap:wrap;
-
+.auth-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 24px;
+    flex-wrap: wrap;
+    font-size: 14px;
 }
 
-.auth-options a{
+.auth-options a {
+    color: var(--primary-teal);
+    font-weight: 700;
+    text-decoration: none;
+}
 
-    color:#0f766e;
-
-    font-weight:600;
-
+.auth-options a:hover {
+    text-decoration: underline;
 }
 
 /* ==========================================
-   Buttons
+   Premium Buttons Architecture
 ========================================== */
-
-.btn-primary{
-
-    width:100%;
-
-    padding:14px;
-
-    border:none;
-
-    border-radius:10px;
-
-    background:#0f766e;
-
-    color:#fff;
-
-    font-size:16px;
-
-    font-weight:600;
-
-    cursor:pointer;
-
-    transition:.3s;
-
+.btn-primary {
+    width: 100%;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-teal) 100%);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+    transition: var(--transition);
 }
 
-.btn-primary:hover{
-
-    background:#14b8a6;
-
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.25);
+    opacity: 0.95;
 }
 
-.btn-secondary{
-
-    width:100%;
-
-    padding:14px;
-
-    border:none;
-
-    border-radius:10px;
-
-    background:#64748b;
-
-    color:#fff;
-
-    font-size:16px;
-
-    font-weight:600;
-
-    cursor:pointer;
-
+.btn-secondary {
+    width: 100%;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
 }
 
-.btn-secondary:hover{
-
-    background:#475569;
-
+.btn-secondary:hover {
+    background: #e2e8f0;
+    color: var(--text);
+    transform: translateY(-1px);
 }
 
 /* ==========================================
-   Footer
+   Auth Footer
 ========================================== */
-
-.auth-footer{
-
-    margin-top:20px;
-
-    text-align:center;
-
+.auth-footer {
+    margin-top: 24px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 14px;
 }
 
-.auth-footer a{
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+    margin-right: 4px;
+}
 
-    color:#0f766e;
-
-    font-weight:600;
-
+.auth-footer a:hover {
+    text-decoration: underline;
+    color: var(--primary-teal);
 }
 
 /* ==========================================
-   Validation
+   Input Field Validation States
 ========================================== */
-
-.valid{
-
-    border-color:#22c55e !important;
-
+.valid {
+    border-color: var(--success) !important;
 }
 
-.invalid{
-
-    border-color:#ef4444 !important;
-
+.invalid {
+    border-color: var(--danger) !important;
 }
 
-.validation-message{
-
-    margin-top:5px;
-
-    font-size:12px;
-
+.validation-message {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
-.validation-success{
+.validation-success { color: #059669; }
+.validation-error { color: #dc2626; }
 
-    color:#16a34a;
-
+/* ==========================================
+   Premium Alert Boxes (التنبيهات الذكية)
+========================================== */
+.auth-alert {
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    /* شريط جانبي أيمن يعكس السلوك العربي المتناسق RTL */
+    border-right: 4px solid transparent;
 }
 
-.validation-error{
+.auth-alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border-right-color: var(--success);
+}
 
-    color:#dc2626;
+.auth-alert-danger {
+    background: #fef2f2;
+    color: #991b1b;
+    border-right-color: var(--danger);
+}
 
+.auth-alert-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border-right-color: var(--warning);
 }
 
 /* ==========================================
-   Alerts
+   OTP Code Inputs (خانات تفعيل رمز التحقق)
 ========================================== */
-
-.auth-alert{
-
-    padding:12px 15px;
-
-    border-radius:10px;
-
-    margin-bottom:15px;
-
+.otp-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 24px 0;
+    direction: ltr; /* للحفاظ على ترتيب الخانات من اليسار لليمين برمجياً */
 }
 
-.auth-alert-success{
-
-    background:#dcfce7;
-
-    color:#166534;
-
+.otp-input {
+    width: 56px !important;
+    height: 56px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: var(--text);
+    transition: var(--transition);
 }
 
-.auth-alert-danger{
-
-    background:#fee2e2;
-
-    color:#991b1b;
-
-}
-
-.auth-alert-warning{
-
-    background:#fef3c7;
-
-    color:#92400e;
-
+.otp-input:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
 }
 
 /* ==========================================
-   OTP
+   Password Strength Component
 ========================================== */
-
-.otp-container{
-
-    display:flex;
-
-    justify-content:center;
-
-    gap:10px;
-
-    margin:20px 0;
-
+.password-strength {
+    margin-top: 12px;
 }
 
-.otp-input{
+.strength-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
 
-    width:55px !important;
+.strength-fill {
+    height: 100%;
+    width: 0;
+    transition: width .4s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-    height:55px;
+.strength-weak { background: var(--danger); }
+.strength-medium { background: var(--warning); }
+.strength-strong { background: var(--success); }
 
-    text-align:center;
-
-    font-size:22px;
-
-    font-weight:700;
-
+.strength-text {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 /* ==========================================
-   Password Strength
+   Responsive (الموبايل والشاشات اللوحية)
 ========================================== */
-
-.password-strength{
-
-    margin-top:10px;
-
-}
-
-.strength-bar{
-
-    height:8px;
-
-    background:#e5e7eb;
-
-    border-radius:20px;
-
-    overflow:hidden;
-
-}
-
-.strength-fill{
-
-    height:100%;
-
-    width:0;
-
-    transition:.3s;
-
-}
-
-.strength-weak{
-
-    background:#ef4444;
-
-}
-
-.strength-medium{
-
-    background:#f59e0b;
-
-}
-
-.strength-strong{
-
-    background:#22c55e;
-
-}
-
-.strength-text{
-
-    margin-top:8px;
-
-    font-size:13px;
-
-    font-weight:600;
-
-}
-
-/* ==========================================
-   Mobile
-========================================== */
-
-@media(max-width:768px){
-
-    .auth-card{
-
-        padding:25px;
-
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 28px 20px;
+        border-radius: 20px;
     }
 
-    .auth-options{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
+    .auth-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 
-    .otp-container{
-
-        gap:6px;
-
+    .otp-container {
+        gap: 8px;
     }
 
-    .otp-input{
-
-        width:45px !important;
-
-        height:45px;
-
-        font-size:18px;
-
+    .otp-input {
+        width: 46px !important;
+        height: 46px;
+        font-size: 20px;
+        border-radius: 10px;
     }
-
 }
 
+/* حركية الظهور النظيف */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
