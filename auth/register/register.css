@@ -1,8 +1,7 @@
 /* ==========================================
-   TERA Investor Portal - Registration CSS
+   TERA Investor Portal - Registration CSS (Fixed)
 ========================================== */
 
-/* تنسيق بطاقة التسجيل الرئيسية */
 .register-card-wide {
     width: 100%;
     max-width: 640px;
@@ -18,9 +17,10 @@
     box-sizing: border-box;
 }
 
-/* تنسيق الخطوات المخفية */
+/* إصلاح مشكلة ظهور العناصر المخفية */
 .form-step {
     display: none;
+    width: 100%; /* ضمان أخذ كامل العرض */
 }
 
 .form-step.active {
@@ -28,15 +28,25 @@
     animation: fadeIn 0.4s ease-out;
 }
 
-/* مؤشر شريط الخطوات (Stepper) */
+/* إصلاح الـ Stepper */
 .reg-steps-tracker {
     display: flex;
     justify-content: space-between;
     margin-bottom: 40px;
     position: relative;
+    padding: 0 10px;
 }
 
 .reg-step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-size: 12px;
+}
+
+.step-number {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -44,22 +54,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
     font-weight: bold;
     transition: all 0.3s ease;
 }
 
-.reg-step-node.active {
-    background: #3b82f6; /* لون منصة تيرا الأساسي */
+.reg-step-node.active .step-number {
+    background: #3b82f6;
     color: #fff;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
 }
 
-/* التنسيق الجمالي للأزرار */
+/* إصلاح توزيع الأزرار - ضمان عدم تداخلها في الشاشات الصغيرة */
 .step-actions {
     display: flex;
     justify-content: space-between;
     margin-top: 32px;
+    flex-wrap: wrap; /* السماح بالالتفاف في الجوال */
+    gap: 10px;
 }
 
 .btn-next, .btn-prev, .btn-submit {
@@ -71,6 +82,7 @@
     color: white;
     font-weight: 600;
     transition: all 0.3s;
+    min-width: 120px; /* ضمان حجم مناسب للأزرار */
 }
 
 .btn-prev {
@@ -78,33 +90,10 @@
     border: 1px solid #444;
 }
 
-.btn-prev:hover { background: #333; }
-.btn-next:hover, .btn-submit:hover { background: #2563eb; transform: translateY(-2px); }
-
-/* مؤشر قوة كلمة المرور (مُحسّن) */
-.password-strength { margin-top: 10px; }
-.strength-bar {
-    height: 6px;
-    width: 100%;
-    background: #222;
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.strength-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.4s ease, background-color 0.4s;
-}
-
-.strength-fill.weak { background-color: #ef4444; }
-.strength-fill.medium { background-color: #f59e0b; }
-.strength-fill.strong { background-color: #10b981; }
-
-/* بطاقات اختيار نوع المستثمر */
+/* إصلاح تداخل الـ Grid في الـ Types */
 .investor-type-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
     margin-bottom: 25px;
 }
@@ -123,18 +112,24 @@
     background: rgba(59, 130, 246, 0.1);
 }
 
-/* تأثير الظهور التدريجي */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+/* تحسين مؤشر قوة كلمة المرور */
+.password-strength { margin-top: 10px; }
+.strength-bar {
+    height: 6px;
+    width: 100%;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 5px;
 }
 
-/* تنسيق الروابط القانونية */
-.legal-checkbox-wrap {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    cursor: pointer;
+.strength-text {
+    font-size: 12px;
+    color: #888;
+}
+
+/* إصلاح الأنيميشن */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
