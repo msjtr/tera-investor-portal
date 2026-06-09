@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateReq('user_len', val.length >= 4 && val.length <= 20);
             updateReq('user_alpha', /^[A-Za-z0-9]+$/.test(val) || val.length === 0);
             updateReq('user_space', !/\s/.test(val));
-            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/]/.test(val));
+            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/ Jerusalem]/.test(val));
         });
     }
 
@@ -294,24 +294,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function validateCurrentStep() {
         const currentEl = steps[currentStep];
-        // جلب جميع الحقول الإلزامية داخل المرحلة الحالية فقط
-        const requiredFields = currentEl.querySelectorAll('input[required], select[required], checkbox[required]');
+        const requiredFields = currentEl.querySelectorAll('input[required], select[required]');
         let firstInvalidField = null;
 
-        // تنظيف الحقول من كلاسات الأخطاء السابقة قبل الفحص الجديد
         currentEl.querySelectorAll('.tera-input-field').forEach(f => f.classList.remove('error'));
 
         for (let field of requiredFields) {
-            // التحقق من الحقول النصية والقوائم المنسدلة والتشيك بوكس
             const isCheckbox = field.type === 'checkbox';
             const isInvalid = isCheckbox ? !field.checked : !field.value.trim();
 
             if (isInvalid) {
                 field.classList.add('error');
                 if (!firstInvalidField) {
-                    firstInvalidField = field; // تحديد أول حقل ناقص للانتقال إليه
+                    firstInvalidField = field;
                 }
             }
         }
 
-        // قفل أمان إضافي صارم للمرحلة الأولى (
+        if (currentStep === 0) {
+            const user = usernameInput.value;
+            const pass = passwordInput.value;
+
+            if (user.length < 4 || /[^A-Za-z0-9]/.test(user)) {
+                if (!firstInvalidField) firstInvalidField = usernameInput;
+                usernameInput.classList.add('error');
+            }
+            if (emailInput.value !== confirmEmailInput.value || !confirmEmailInput.value) {
+                if (!firstInvalidField) firstInvalidField = confirmEmailInput;
+                confirmEmailInput.classList.add('error');
+            }
+            if (pass !== confirmPasswordInput.value || pass.length < 8) {
+                if (!firstInvalidField) firstInvalidField = confirmPasswordInput;
+                confirmPasswordInput.classList.add('error');
+            }
+        }
+
+        if (firstInvalidField) {
+            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => { firstInvalidField.focus(); }, 400);
+            
+            if(typeof firstInvalidField.reportValidity === 'function') {
+                firstInvalidField.reportValidity();
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    function updateUI() {
+        steps.forEach((step, idx) => step.classList.toggle('active', idx === currentStep));
+        stepNodes.forEach((node, idx) => {
+            node.classList.toggle('active', idx === currentStep);
+            node.classList.toggle('completed', idx < currentStep);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // === 6. التحكم بالإقرارات والاتفاقيات ===
+    const masterCheck = document.getElementById('master_agreement_check');
+    const individualChecks = Array.from(document.querySelectorAll('.agreement-check'));
+    const submitBtn = document.getElementById('submit_register_btn');
+
+    if (masterCheck)
