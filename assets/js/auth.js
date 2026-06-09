@@ -1,4 +1,3 @@
-```javascript id="5xqf8h"
 /* ==========================================
    TERA Investor Portal
    Auth JS
@@ -109,4 +108,3 @@ function getToken(){
     );
 
 }
-```
