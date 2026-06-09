@@ -1,4 +1,3 @@
-```javascript
 /* ==========================================
    TERA Investor Portal
    Main JS
@@ -151,4 +150,3 @@ getCurrentPage;
 
 window.pageContains =
 pageContains;
-```
