@@ -1,46 +1,31 @@
 /* ==========================================
-   TERA Investor Portal - app.js (Fixed & Protected)
+   TERA Investor Portal - App.js (Hardened Version)
 ========================================== */
 
-/**
- * 1. تعريف الدوال أولاً (قبل أي استدعاء أو تصدير)
- */
-
-function logout() {
+// 1. "تعريف مبكر" (Early Definition) - هذا يمنع خطأ "is not defined"
+window.logout = window.logout || function() { 
     localStorage.removeItem('tera_token');
-    sessionStorage.clear();
-    window.location.href = '/auth/login.html';
-}
+    window.location.href = '/auth/login.html'; 
+};
 
-function initializeTooltips() {
-    // ضع منطق التلميحات هنا إذا كنت تستخدم مكتبة، أو اتركها فارغة
-    console.log('Tooltips initialized');
-}
+window.initializeTooltips = window.initializeTooltips || function() {
+    console.log('Tooltips placeholder active');
+};
 
+// 2. الدوال الرئيسية
 function initializeApp() {
-    // التحقق من وجود الدوال قبل استدعائها
+    console.log('App initialized...');
     if (typeof highlightActiveMenu === 'function') highlightActiveMenu();
-    
-    // الحل الجذري للخطأ: التحقق من وجود الدالة
-    if (typeof initializeTooltips === 'function') {
-        initializeTooltips();
-    } else {
-        console.warn('initializeTooltips not found, skipping...');
-    }
-    
     if (typeof initializeCurrencyFields === 'function') initializeCurrencyFields();
+    initializeTooltips(); // الآن هي معرفة في السطر 8
 }
 
-/* ==========================================
-   2. تنفيذ الكود عند تحميل الصفحة
-========================================== */
+// 3. التحميل
 document.addEventListener('DOMContentLoaded', () => {
     console.log('TERA Investor Portal Loaded');
     
     // حماية الصفحات
-    if (typeof checkProtectedPages === 'function') {
-        checkProtectedPages();
-    }
+    if (typeof checkProtectedPages === 'function') checkProtectedPages();
     
     try {
         initializeApp();
@@ -48,12 +33,3 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Initialization Error:', err);
     }
 });
-
-/* ==========================================
-   3. تصدير الدوال (يتم هذا في النهاية فقط)
-========================================== */
-window.logout = logout;
-window.initializeApp = initializeApp;
-
-// تعريف الدوال المساعدة الأساسية إذا لم تكن موجودة في ملفات أخرى
-if (!window.goTo) window.goTo = (url) => window.location.href = url;
