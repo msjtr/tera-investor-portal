@@ -1,0 +1,471 @@
+/* ==========================================
+   TERA Investor Portal
+   Core CSS Framework
+========================================== */
+
+/* ==========================================
+   CSS Variables
+========================================== */
+
+:root{
+
+    --primary:#0f766e;
+    --primary-light:#14b8a6;
+
+    --secondary:#0f172a;
+
+    --background:#f8fafc;
+    --surface:#ffffff;
+
+    --border:#e5e7eb;
+
+    --text:#111827;
+    --text-light:#6b7280;
+
+    --success:#22c55e;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+    --info:#3b82f6;
+
+    --radius-sm:6px;
+    --radius:12px;
+    --radius-lg:16px;
+
+    --shadow-sm:
+    0 1px 3px rgba(0,0,0,.08);
+
+    --shadow:
+    0 2px 12px rgba(0,0,0,.05);
+
+    --shadow-lg:
+    0 10px 30px rgba(0,0,0,.08);
+
+    --transition:.3s ease;
+
+}
+
+/* ==========================================
+   Reset
+========================================== */
+
+*,
+*::before,
+*::after{
+
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+body{
+
+    direction:rtl;
+
+    min-height:100vh;
+
+    background:
+    var(--background);
+
+    color:
+    var(--text);
+
+    font-family:
+    Tahoma,
+    Arial,
+    sans-serif;
+
+    line-height:1.7;
+
+    text-rendering:
+    optimizeLegibility;
+
+}
+
+/* ==========================================
+   Typography
+========================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6{
+
+    font-weight:700;
+
+    line-height:1.4;
+
+}
+
+p{
+
+    color:
+    var(--text-light);
+
+}
+
+small{
+
+    font-size:12px;
+
+}
+
+/* ==========================================
+   Links
+========================================== */
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+    transition:
+    var(--transition);
+
+}
+
+/* ==========================================
+   Lists
+========================================== */
+
+ul,
+ol{
+
+    list-style:none;
+
+}
+
+/* ==========================================
+   Images
+========================================== */
+
+img{
+
+    display:block;
+
+    max-width:100%;
+
+    height:auto;
+
+}
+
+/* ==========================================
+   Forms Base
+========================================== */
+
+input,
+select,
+textarea,
+button{
+
+    font-family:inherit;
+
+}
+
+input,
+select,
+textarea{
+
+    width:100%;
+
+    padding:12px;
+
+    border:
+    1px solid var(--border);
+
+    border-radius:
+    var(--radius-sm);
+
+    outline:none;
+
+    transition:
+    var(--transition);
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+    border-color:
+    var(--primary);
+
+}
+
+/* ==========================================
+   Buttons Base
+========================================== */
+
+button{
+
+    border:none;
+
+    cursor:pointer;
+
+}
+
+/* ==========================================
+   Container
+========================================== */
+
+.container{
+
+    width:100%;
+
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:
+    0 20px;
+
+}
+
+/* ==========================================
+   Flex Helpers
+========================================== */
+
+.flex{
+
+    display:flex;
+
+}
+
+.flex-center{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+
+.flex-between{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+}
+
+.flex-column{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+/* ==========================================
+   Grid Helpers
+========================================== */
+
+.grid{
+
+    display:grid;
+
+}
+
+.grid-2{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:20px;
+
+}
+
+.grid-3{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:20px;
+
+}
+
+.grid-4{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(4,1fr);
+
+    gap:20px;
+
+}
+
+/* ==========================================
+   Width Helpers
+========================================== */
+
+.w-100{
+
+    width:100%;
+
+}
+
+.w-50{
+
+    width:50%;
+
+}
+
+/* ==========================================
+   Margin Helpers
+========================================== */
+
+.mt-10{
+    margin-top:10px;
+}
+
+.mt-20{
+    margin-top:20px;
+}
+
+.mt-30{
+    margin-top:30px;
+}
+
+.mt-40{
+    margin-top:40px;
+}
+
+.mb-10{
+    margin-bottom:10px;
+}
+
+.mb-20{
+    margin-bottom:20px;
+}
+
+.mb-30{
+    margin-bottom:30px;
+}
+
+.mb-40{
+    margin-bottom:40px;
+}
+
+/* ==========================================
+   Padding Helpers
+========================================== */
+
+.p-10{
+    padding:10px;
+}
+
+.p-20{
+    padding:20px;
+}
+
+.p-30{
+    padding:30px;
+}
+
+/* ==========================================
+   Text Helpers
+========================================== */
+
+.text-center{
+    text-align:center;
+}
+
+.text-right{
+    text-align:right;
+}
+
+.text-left{
+    text-align:left;
+}
+
+.text-primary{
+    color:var(--primary);
+}
+
+.text-success{
+    color:var(--success);
+}
+
+.text-warning{
+    color:var(--warning);
+}
+
+.text-danger{
+    color:var(--danger);
+}
+
+/* ==========================================
+   Display Helpers
+========================================== */
+
+.d-none{
+    display:none;
+}
+
+.d-block{
+    display:block;
+}
+
+.d-flex{
+    display:flex;
+}
+
+/* ==========================================
+   Border Radius
+========================================== */
+
+.rounded{
+
+    border-radius:
+    var(--radius);
+
+}
+
+.rounded-lg{
+
+    border-radius:
+    var(--radius-lg);
+
+}
+
+/* ==========================================
+   Shadows
+========================================== */
+
+.shadow-sm{
+
+    box-shadow:
+    var(--shadow-sm);
+
+}
+
+.shadow{
+
+    box-shadow:
+    var(--shadow);
+
+}
+
+.shadow-lg{
+
+    box-shadow:
+    var(--shadow-lg);
+
+}
