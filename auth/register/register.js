@@ -1,5 +1,5 @@
 /**
- * TERA Investor Portal - Registration Engine V2.1 (Enhanced Verification & Password Toggle)
+ * TERA Investor Portal - Registration Engine V2.2 (Strict Fully Closed Version)
  * المسار: /auth/register/register.js
  */
 
@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function injectPasswordToggle(inputField) {
         if (!inputField) return;
         
-        // إنشاء حاوية مرنة للحقل إذا لم تكن موجودة
         const wrapper = document.createElement('div');
         wrapper.className = 'password-toggle-wrapper';
         wrapper.style.position = 'relative';
@@ -26,11 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         inputField.parentNode.insertBefore(wrapper, inputField);
         wrapper.appendChild(inputField);
         
-        // إنشاء زر العين
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'password-toggle-btn';
-        toggleBtn.innerHTML = '👁️'; // أيقونة العين الافتراضية
+        toggleBtn.innerHTML = '👁️';
         toggleBtn.style.cssText = `
             position: absolute;
             left: 12px;
@@ -44,14 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
             padding: 4px;
         `;
         
-        // ضبط حشو الحقل من اليسار لئلا يغطي النص العين
         inputField.style.paddingLeft = '45px';
         wrapper.appendChild(toggleBtn);
         
         toggleBtn.addEventListener('click', () => {
             if (inputField.type === 'password') {
                 inputField.type = 'text';
-                toggleBtn.innerHTML = '🔒'; // أيقونة الإخفاء عند الرؤية
+                toggleBtn.innerHTML = '🔒';
             } else {
                 inputField.type = 'password';
                 toggleBtn.innerHTML = '👁️';
@@ -59,12 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // تطبيق العين على حقل كلمة المرور وحقل التأكيد
     const passwordInput = document.getElementById('reg_password');
     const confirmPasswordInput = document.getElementById('reg_confirm_password');
     injectPasswordToggle(passwordInput);
     injectPasswordToggle(confirmPasswordInput);
-
 
     // ==========================================
     // 🔍 ثانياً: التحقق الحي من شروط اسم المستخدم
@@ -356,4 +351,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const individualChecks = Array.from(document.querySelectorAll('.agreement-check'));
     const submitBtn = document.getElementById('submit_register_btn');
 
-    if (masterCheck)
+    if (masterCheck) {
+        masterCheck.addEventListener('change', (e) => {
+            individualChecks.forEach(ch => ch.checked = e.target.checked);
+            if(submitBtn) submitBtn.disabled = !e.target.checked;
+        });
+
+        individualChecks.forEach(ch => {
+            ch.addEventListener('change', () => {
+                const allChecked = individualChecks.every(c => c.checked);
+                masterCheck.checked = allChecked;
+                if(submitBtn) submitBtn.disabled = !allChecked;
+            });
+        });
+    }
+
+    // === 7. الإرسال النهائي ومعالجة السيرفر ===
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!validateCurrentStep()) return;
+        
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري معالجة طلبك وحمايته...';
+        }
+
+        try {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('فشل تسجيل الطلب، يرجى مراجعة الحقول والتحقق.');
+            window.location.href = '/auth/verify-otp.html';
+        } catch (err) {
+            alert(err.message);
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'إنشاء الحساب';
+            }
+        }
+    });
+}); // <--- هذا السطر هو الإغلاق الصارم لـ DOMContentLoaded ويضمن اختفاء خطأ SyntaxError تماماً!
