@@ -1,78 +1,93 @@
 /* ==========================================
-   TERA Investor Portal - Global Responsive Layout Overrides
+   TERA Investor Portal - Global Responsive Layout
+   المسار: /assets/css/responsive.css
 ========================================== */
 
 @media (max-width: 768px) {
-    /* تحويل القائمة الجانبية إلى قائمة مخفية أو مرنة */
+    /* 1. إصلاح القائمة الجانبية (Sidebar) */
     .app-layout {
-        flex-direction: column;
+        flex-direction: column !important;
     }
 
     .sidebar {
-        width: 100%;
+        width: 100% !important;
+        position: relative;
         border-left: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .sidebar-header {
-        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
     }
 
     .sidebar-menu {
-        padding: 12px;
-        flex-direction: row;
-        overflow-x: auto; /* السماح بالتمرير الأفقي للأزرار على الجوال */
-        gap: 8px;
+        flex-direction: row !important;
+        overflow-x: auto;
+        padding: 10px 15px !important;
+        gap: 12px;
+        -webkit-overflow-scrolling: touch; /* لتحسين سلاسة التمرير في iOS */
+        scrollbar-width: none; /* إخفاء شريط التمرير في Firefox */
+    }
+
+    .sidebar-menu::-webkit-scrollbar {
+        display: none; /* إخفاء شريط التمرير في Chrome/Safari */
     }
 
     .sidebar-menu li a {
-        padding: 10px 14px;
         white-space: nowrap;
-        font-size: 13px;
+        padding: 8px 16px !important;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.03);
     }
 
     .sidebar-footer {
-        display: none; /* إخفاء ذيل القائمة لعدم تشتيت الشاشة */
+        display: none !important;
     }
 
-    /* تهيئة الهيدر والمحتوى العام للجوال */
-    .header {
-        padding: 0 16px;
-        height: 70px;
-    }
-
-    .page-title {
-        font-size: 18px;
+    /* 2. تحسينات الهيدر (Header) */
+    .main-header {
+        padding: 0 16px !important;
     }
 
     .user-info {
-        display: none; /* إخفاء اسم المستخدم في الشاشات الصغيرة جداً للاكتفاء بالرمز الدائري */
+        display: none !important; /* توفير مساحة أكبر للأيقونات */
     }
 
-    .content-body {
-        padding: 16px;
+    /* 3. هيكلية المحتوى (Content Body) */
+    .page-container {
+        margin-top: 60px !important;
+        padding: 16px !important;
     }
 
-    /* ملاءمة كروت الإحصائيات وبطاقات الأرباح */
     .metrics-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
+        grid-template-columns: 1fr !important; /* عمود واحد فقط للجوال */
+        gap: 16px !important;
     }
 
+    /* 4. معالجة البطاقات الكبيرة (Hero Components) */
     .portfolio-balance-hero {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 20px;
-        padding: 20px;
+        padding: 20px !important;
+        text-align: center;
     }
 
     .balance-amount-display {
-        font-size: 28px;
+        font-size: 24px !important;
     }
 
-    /* معالجة كروت تسجيل الدخول الزجاجية لتملأ الشاشة بكفاءة */
-    .auth-container {
-        padding: 24px 16px;
-        border-radius: var(--radius-md);
+    /* 5. تحسين واجهة المصادقة */
+    .register-card-wide, .auth-card {
+        margin: 10px auto !important;
+        padding: 24px !important;
+        width: 100% !important;
+    }
+}
+
+/* تحسين إضافي للأجهزة الصغيرة جداً (أقل من 480px) */
+@media (max-width: 480px) {
+    .form-row-split {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    h1 {
+        font-size: 20px !important;
     }
 }
