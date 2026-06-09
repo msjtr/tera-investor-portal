@@ -1,205 +1,112 @@
 /* ==========================================
-   Premium Settings Sections (أقسام الإعدادات الفاخرة)
+   TERA Investor Portal - Profile & KYC Modules
 ========================================== */
-.profile-section,
-.bank-section,
-.contact-section,
-.attachments-section,
-.address-section {
-    background: #ffffff;
-    padding: 32px;
-    border-radius: 20px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    margin-bottom: 28px;
-    transition: border-color .3s ease;
-}
 
-.profile-section:hover,
-.bank-section:hover {
-    border-color: rgba(203, 213, 225, 0.8);
-}
-
-/* عناوين الأقسام الفرعية */
-.settings-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text, #0f172a);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-/* ==========================================
-   Advanced Form Grid (هندسة النماذج الذكية)
-========================================== */
-form {
+/* تخطيط صفحة الملف الشخصي (تقسيم جانبي للتبويب داخلياً) */
+.profile-layout-grid {
     display: grid;
-    gap: 20px;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
 }
 
-/* فئة مضافة لتقسيم الحقول بشكل أفقي متناسق على الشاشات الكبيرة */
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
+@media (max-width: 992px) {
+    .profile-layout-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* التسميات الخاصة بالحقول */
-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: #475569;
-    margin-bottom: 8px;
-    letter-spacing: -0.01em;
+/* القائمة الفرعية للتنقل بين أقسام الحساب */
+.profile-nav-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-/* ==========================================
-   Fintech Inputs & Selects (حقول الإدخال وقوائم الاختيار)
-========================================== */
-input,
-select,
-textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text, #0f172a);
-    background-color: #ffffff;
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* حقول القراءة فقط (مثل البريد الإلكتروني غير القابل للتعديل) */
-input[readonly], 
-input[disabled] {
-    background-color: #f8fafc;
-    color: #94a3b8;
-    border-color: #e2e8f0;
-    cursor: not-allowed;
-}
-
-input:hover:not([readonly]),
-select:hover:not([disabled]) {
-    border-color: #94a3b8;
-}
-
-/* تأثير التوهج المالي الآمن عند الكتابة أو الاختيار */
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--primary-teal, #0d9488);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
-}
-
-/* تحسين شكل القوائم المنسدلة الافتراضية */
-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: left 16px center; /* التموضع متوافق مع الواجهات العربية وحقول الـ RTL */
-    background-size: 16px;
-    padding-left: 40px;
-}
-
-/* ==========================================
-   Premium Action Buttons (أزرار الحفظ والاعتماد الفاخرة)
-========================================== */
-button,
-.btn-save {
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    background: linear-gradient(135deg, var(--primary, #1e3a8a) 0%, var(--primary-teal, #0d9488) 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(30, 58, 138, 0.15);
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
+.profile-nav-link {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: var(--radius-md);
 }
 
-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 22px rgba(13, 148, 136, 0.25);
-    opacity: 0.95;
+.profile-nav-link:hover,
+.profile-nav-link.active {
+    color: var(--primary-teal);
+    background: rgba(13, 148, 136, 0.05);
 }
 
-button:active {
-    transform: translateY(1px);
+/* استمارات إدخال وتعديل البيانات */
+.profile-form-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
 }
 
-/* الأزرار الفرعية أو الإلغاء */
-button.btn-secondary {
-    background: #f1f5f9;
-    color: #475569;
-    box-shadow: none;
+@media (max-width: 576px) {
+    .profile-form-body {
+        grid-template-columns: 1fr;
+    }
 }
 
-button.btn-secondary:hover {
-    background: #e2e8f0;
-    color: var(--text, #0f172a);
-    box-shadow: none;
-    transform: none;
-}
-
-/* ==========================================
-   Premium File Upload Wrapper (تنسيقات إضافية للمرفقات الثبوتية)
-========================================== */
-.file-upload-box {
-    border: 2px dashed #cbd5e1;
-    padding: 24px;
-    border-radius: 12px;
+/* منطقة رفع الملفات الرسمية (الهوية، صك العقار، إلخ) */
+.upload-zone-wrapper {
+    border: 2px dashed rgba(13, 148, 136, 0.3);
+    background: rgba(13, 148, 136, 0.01);
+    border-radius: var(--radius-lg);
+    padding: 40px;
     text-align: center;
-    background: #f8fafc;
     cursor: pointer;
-    transition: all .3s ease;
+    transition: var(--transition-smooth);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
-.file-upload-box:hover {
-    border-color: var(--primary-teal, #0d9488);
-    background: rgba(13, 148, 136, 0.02);
+.upload-zone-wrapper:hover {
+    border-color: var(--primary-teal);
+    background: rgba(13, 148, 136, 0.04);
 }
 
-/* ==========================================
-   Responsive Settings (استجابة الهواتف الذكية)
-========================================== */
-@media (max-width: 768px) {
-    .profile-section,
-    .bank-section,
-    .contact-section,
-    .attachments-section,
-    .address-section {
-        padding: 24px 16px;
-        border-radius: 16px;
-        margin-bottom: 20px;
-    }
+.upload-icon {
+    font-size: 32px;
+    color: var(--primary-teal);
+}
 
-    form {
-        gap: 16px;
-    }
+/* كروت استعراض المرفقات المرفوعة مسبقاً */
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
 
-    .form-row {
-        grid-template-columns: 1fr; /* دمج الأعمدة المزدوجة لعمود واحد مريح على الهاتف */
-        gap: 16px;
-    }
+.attachment-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
 
-    input,
-    select,
-    textarea {
-        padding: 12px 14px;
-    }
+.attachment-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-    button,
-    .btn-save {
-        width: 100%; /* تمدد كامل لزر الحفظ لسهولة الضغط اللمسي عبر الهاتف */
-        padding: 15px;
-    }
+.attachment-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--secondary-dark);
 }
