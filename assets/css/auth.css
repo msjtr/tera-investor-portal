@@ -44,21 +44,41 @@
 
     text-align:center;
 
+    margin-bottom:20px;
+
+}
+
+.auth-logo img{
+
+    max-width:140px;
+
+    height:auto;
+
+    margin:auto;
+
+}
+
+.auth-logo-text{
+
     font-size:38px;
 
     font-weight:700;
 
     color:#0f766e;
 
-    margin-bottom:20px;
-
 }
+
+/* ==========================================
+   Headings
+========================================== */
 
 .auth-card h1{
 
     text-align:center;
 
     margin-bottom:10px;
+
+    color:#111827;
 
 }
 
@@ -74,6 +94,10 @@
 
 }
 
+/* ==========================================
+   Forms
+========================================== */
+
 .form-group{
 
     margin-bottom:18px;
@@ -88,9 +112,13 @@
 
     font-weight:600;
 
+    color:#374151;
+
 }
 
-.form-group input{
+.form-group input,
+.form-group select,
+.form-group textarea{
 
     width:100%;
 
@@ -102,9 +130,13 @@
 
     transition:.3s;
 
+    background:#fff;
+
 }
 
-.form-group input:focus{
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
 
     border-color:#0f766e;
 
@@ -114,6 +146,38 @@
     0 0 0 3px rgba(15,118,110,.15);
 
 }
+
+/* ==========================================
+   Auth Options
+========================================== */
+
+.auth-options{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin:15px 0 20px;
+
+    flex-wrap:wrap;
+
+}
+
+.auth-options a{
+
+    color:#0f766e;
+
+    font-weight:600;
+
+}
+
+/* ==========================================
+   Buttons
+========================================== */
 
 .btn-primary{
 
@@ -145,6 +209,38 @@
 
 }
 
+.btn-secondary{
+
+    width:100%;
+
+    padding:14px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#64748b;
+
+    color:#fff;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+}
+
+.btn-secondary:hover{
+
+    background:#475569;
+
+}
+
+/* ==========================================
+   Footer
+========================================== */
+
 .auth-footer{
 
     margin-top:20px;
@@ -160,3 +256,206 @@
     font-weight:600;
 
 }
+
+/* ==========================================
+   Validation
+========================================== */
+
+.valid{
+
+    border-color:#22c55e !important;
+
+}
+
+.invalid{
+
+    border-color:#ef4444 !important;
+
+}
+
+.validation-message{
+
+    margin-top:5px;
+
+    font-size:12px;
+
+}
+
+.validation-success{
+
+    color:#16a34a;
+
+}
+
+.validation-error{
+
+    color:#dc2626;
+
+}
+
+/* ==========================================
+   Alerts
+========================================== */
+
+.auth-alert{
+
+    padding:12px 15px;
+
+    border-radius:10px;
+
+    margin-bottom:15px;
+
+}
+
+.auth-alert-success{
+
+    background:#dcfce7;
+
+    color:#166534;
+
+}
+
+.auth-alert-danger{
+
+    background:#fee2e2;
+
+    color:#991b1b;
+
+}
+
+.auth-alert-warning{
+
+    background:#fef3c7;
+
+    color:#92400e;
+
+}
+
+/* ==========================================
+   OTP
+========================================== */
+
+.otp-container{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:10px;
+
+    margin:20px 0;
+
+}
+
+.otp-input{
+
+    width:55px !important;
+
+    height:55px;
+
+    text-align:center;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+/* ==========================================
+   Password Strength
+========================================== */
+
+.password-strength{
+
+    margin-top:10px;
+
+}
+
+.strength-bar{
+
+    height:8px;
+
+    background:#e5e7eb;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+}
+
+.strength-fill{
+
+    height:100%;
+
+    width:0;
+
+    transition:.3s;
+
+}
+
+.strength-weak{
+
+    background:#ef4444;
+
+}
+
+.strength-medium{
+
+    background:#f59e0b;
+
+}
+
+.strength-strong{
+
+    background:#22c55e;
+
+}
+
+.strength-text{
+
+    margin-top:8px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media(max-width:768px){
+
+    .auth-card{
+
+        padding:25px;
+
+    }
+
+    .auth-options{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+    .otp-container{
+
+        gap:6px;
+
+    }
+
+    .otp-input{
+
+        width:45px !important;
+
+        height:45px;
+
+        font-size:18px;
+
+    }
+
+}
+
