@@ -40,7 +40,7 @@
         }
 
         body{
-            background:#f4f7fa;
+            background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
             min-height:100vh;
         }
 
@@ -52,15 +52,17 @@
             padding:40px;
         }
 
+        /* تصميم عصري بلمسة Glassmorphic فاخرة */
         .hero-card{
             width:100%;
             max-width:1200px;
-            background:#ffffff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius:24px;
             padding:60px;
             text-align:center;
-            box-shadow:0 20px 50px rgba(15, 23, 42, 0.05);
-            border: 1px solid rgba(229, 231, 235, 0.6);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .logo{
@@ -105,15 +107,17 @@
             transition:.3s ease-in-out;
         }
 
+        /* تدرج لوني مميز يجمع بين الأزرق الملكي والتيل الفاخر */
         .btn-primary{
-            background:#1e3a8a; /* الأزرق الملكي */
+            background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
             color:#fff;
-            box-shadow: 0 4px 14px rgba(30, 58, 138, 0.3);
+            box-shadow: 0 4px 15px rgba(30, 58, 138, 0.25);
         }
 
         .btn-primary:hover{
-            background:#1d4ed8;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+            opacity: 0.95;
         }
 
         .btn-secondary{
@@ -144,8 +148,9 @@
         }
 
         .card:hover {
-            border-color: #cbd5e1;
+            border-color: #0d9488; /* تمييز البطاقات بلون التيل عند التمرير */
             transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
         }
 
         .card h3{
@@ -176,4 +181,110 @@
 
         .links-grid{
             display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(200px,1fr
+            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:15px;
+        }
+
+        .links-grid a{
+            text-decoration:none;
+            color:#334155;
+            background:#f8fafc;
+            padding:16px;
+            border-radius:12px;
+            border:1px solid #e2e8f0;
+            font-weight: 500;
+            transition:.3s;
+        }
+
+        .links-grid a:hover{
+            background:#eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        footer{
+            margin-top:60px;
+            color:#94a3b8;
+            font-size:14px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<section class="hero">
+
+    <div class="hero-card">
+
+        <div class="logo">
+            <img src="/images/logo.svg" alt="TERA">
+        </div>
+
+        <h1>مرحباً بك في منصة تيرا</h1>
+
+        <p class="subtitle">
+            منصة متكاملة لإدارة الاستثمارات والمحافظ الاستثمارية
+            ومتابعة الأرباح والتقارير وإدارة الحسابات الذكية.
+        </p>
+
+        <div class="actions">
+            <a href="/auth/login.html" class="btn btn-primary">تسجيل الدخول</a>
+            <a href="/auth/register/register.html" class="btn btn-secondary">إنشاء حساب جديد</a>
+        </div>
+
+        <div class="stats">
+            <div class="card">
+                <h3>الفرص الاستثمارية</h3>
+                <p>استعراض الفرص المتاحة وإدارة الطلبات الاستثمارية وعوائدها التنافسية.</p>
+            </div>
+
+            <div class="card">
+                <h3>المحفظة الاستثمارية</h3>
+                <p>متابعة فورية للأصول، الأرباح المستحقة، السحوبات، والعمليات المالية بدقة.</p>
+            </div>
+
+            <div class="card">
+                <h3>التقارير المالية</h3>
+                <p>تقارير تفصيلية، كشوفات حساب موثقة، وتحليلات دورية مخصصة للمستثمر.</p>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <h2>روابط الوصول السريع</h2>
+
+            <div class="links-grid">
+                <a href="/pages/dashboard/index.html">لوحة التحكم</a>
+                <a href="/pages/investments/opportunities.html">الفرص الاستثمارية</a>
+                <a href="/pages/portfolio/portfolio-overview.html">المحفظة الاستثمارية</a>
+                <a href="/pages/reports/reports-dashboard.html">التقارير المالية</a>
+                <a href="/pages/profile/personal-information.html">الملف الشخصي</a>
+                <a href="/pages/support/help-center.html">مركز المساعدة</a>
+            </div>
+        </div>
+
+        <footer>
+            © 2026 TERA Investor Portal. جميع الحقوق محفوظة.
+        </footer>
+
+    </div>
+
+</section>
+
+<script type="module" src="/assets/js/main.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // التحقق الآمن من جلسة المستثمر المفتوحة مسبقاً
+    const tokenKey = window.TERA_AUTH_TOKEN || 'tera_token';
+    const token = localStorage.getItem(tokenKey);
+
+    if(token){
+        window.location.href = '/pages/dashboard/index.html';
+    }
+});
+</script>
+
+</body>
+
+</html>
