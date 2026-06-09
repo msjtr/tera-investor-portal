@@ -1,128 +1,297 @@
 /**
- * TERA Investor Portal - Registration Wizard Engine
+ * TERA Investor Portal - Registration Engine V2
  * المسار: /auth/register/register.js
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const registerForm = document.getElementById('registerForm');
-    if (!registerForm) return;
+    const form = document.getElementById('registerForm');
+    if (!form) return;
 
-    const formSteps = Array.from(registerForm.querySelectorAll('.form-step'));
+    const steps = Array.from(form.querySelectorAll('.form-step'));
     const stepNodes = Array.from(document.querySelectorAll('.reg-steps-tracker .reg-step-node'));
     let currentStep = 0;
 
-    // === 1. تحديث واجهة الخطوات وشريط التتبع ===
-    const updateUI = () => {
-        formSteps.forEach((step, index) => {
-            step.classList.toggle('active', index === currentStep);
+    // === 1. التحقق الحي من شروط اسم المستخدم ===
+    const usernameInput = document.getElementById('reg_username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            
+            updateReq('user_len', val.length >= 4 && val.length <= 20);
+            updateReq('user_alpha', /^[A-Za-z0-9]+$/.test(val) || val.length === 0);
+            updateReq('user_space', !/\s/.test(val));
+            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/ Jerusalem]/.test(val));
         });
+    }
 
-        stepNodes.forEach((node, index) => {
-            node.classList.toggle('active', index === currentStep);
-            node.classList.toggle('completed', index < currentStep);
-        });
-
-        const card = document.querySelector('.register-card-wide');
-        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    // === 2. التحقق الذكي من الحقول والخطوات الحالية ===
-    const validateStep = () => {
-        const currentStepEl = formSteps[currentStep];
-        const fields = currentStepEl.querySelectorAll('input[required], select[required]');
-        
-        for (let field of fields) {
-            if (!field.checkValidity()) {
-                field.reportValidity();
-                return false;
-            }
-        }
-
-        if (currentStep === 0) {
-            const email = currentStepEl.querySelector('input[name="email"]');
-            const confirmEmail = currentStepEl.querySelector('input[name="confirm_email"]');
-            const password = document.getElementById('password');
-            const confirmPassword = currentStepEl.querySelector('input[name="confirm_password"]');
-
-            if (email && confirmEmail && email.value !== confirmEmail.value) {
-                confirmEmail.setCustomValidity('البريد الإلكتروني غير متطابق');
-                confirmEmail.reportValidity();
-                return false;
-            } else if (confirmEmail) {
-                confirmEmail.setCustomValidity('');
-            }
-
-            if (password && confirmPassword && password.value !== confirmPassword.value) {
-                confirmPassword.setCustomValidity('كلمة المرور غير متطابقة');
-                confirmPassword.reportValidity();
-                return false;
-            } else if (confirmPassword) {
-                confirmPassword.setCustomValidity('');
-            }
-        }
-        return true;
-    };
-
-    // === 3. مؤشر قوة كلمة المرور ===
-    const passwordInput = document.getElementById('password');
+    // === 2. التحقق الحي من قوة كلمة المرور وتطابقها ===
+    const passwordInput = document.getElementById('reg_password');
+    const confirmPasswordInput = document.getElementById('reg_confirm_password');
     const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strength_text');
 
-    if (passwordInput && strengthFill) {
+    if (passwordInput) {
         passwordInput.addEventListener('input', (e) => {
             const val = e.target.value;
             let score = 0;
 
-            if (val.length >= 8) score++;
-            if (/[A-Z]/.test(val)) score++;
-            if (/[0-9]/.test(val)) score++;
+            if (val.length >= 8) { updateReq('pass_len', true); score++; } else updateReq('pass_len', false);
+            if (/[A-Z]/.test(val)) { updateReq('pass_upper', true); score++; } else updateReq('pass_upper', false);
+            if (/[a-z]/.test(val)) { updateReq('pass_lower', true); score++; } else updateReq('pass_lower', false);
+            if (/[0-9]/.test(val)) { updateReq('pass_num', true); score++; } else updateReq('pass_num', false);
+            if (/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/]/.test(val)) { updateReq('pass_spec', true); score++; } else updateReq('pass_spec', false);
 
-            strengthFill.style.width = val.length === 0 ? '0%' : (score === 0 ? '10%' : (score * 33.3) + '%');
-            strengthFill.className = 'strength-fill ' + (score < 2 ? 'weak' : score === 2 ? 'medium' : 'strong');
+            // تمثيل القوة على شريط الهوية
+            strengthFill.className = 'strength-fill';
+            if (val.length === 0) {
+                strengthFill.style.width = '0%';
+                strengthText.textContent = 'ضعيفة';
+            } else if (score <= 2) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = 'ضعيفة';
+            } else if (score === 3) {
+                strengthFill.classList.add('medium');
+                strengthText.textContent = 'متوسطة';
+            } else if (score === 4) {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = 'قوية';
+            } else {
+                strengthFill.classList.add('very-strong');
+                strengthText.textContent = 'قوية جداً';
+            }
+            checkPasswordsMatch();
         });
     }
 
-    // === 4. التبديل الديناميكي لمسميات الهوية ===
-    const nationalitySelect = document.getElementById('nationality');
-    const identityLabel = document.getElementById('identityLabel');
-    
-    if (nationalitySelect && identityLabel) {
-        nationalitySelect.addEventListener('change', (e) => {
-            const labels = {
-                'saudi': 'رقم الهوية الوطنية',
-                'gcc': 'رقم الهوية الخليجية',
-                'resident': 'رقم الإقامة',
-                'foreign': 'رقم جواز السفر'
-            };
-            identityLabel.textContent = labels[e.target.value] || 'رقم الهوية';
+    if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', checkPasswordsMatch);
+
+    function checkPasswordsMatch() {
+        const pStatus = document.getElementById('pass_match_status');
+        if (!confirmPasswordInput.value) { pStatus.textContent = ''; return; }
+        if (passwordInput.value === confirmPasswordInput.value) {
+            pStatus.innerHTML = '<span style="color: #22C55E;">🟢 كلمة المرور متطابقة</span>';
+        } else {
+            pStatus.innerHTML = '<span style="color: #EF4444;">🔴 كلمة المرور غير متطابقة</span>';
+        }
+    }
+
+    // التحقق المباشر من تطابق البريد
+    const emailInput = document.getElementById('reg_email');
+    const confirmEmailInput = document.getElementById('reg_confirm_email');
+    if (confirmEmailInput) {
+        confirmEmailInput.addEventListener('input', () => {
+            const eStatus = document.getElementById('email_match_status');
+            if (!confirmEmailInput.value) { eStatus.textContent = ''; return; }
+            if (emailInput.value === confirmEmailInput.value) {
+                eStatus.innerHTML = '<span style="color: #22C55E;">🟢 البريد الإلكتروني متطابق</span>';
+            } else {
+                eStatus.innerHTML = '<span style="color: #EF4444;">🔴 البريد الإلكتروني غير متطابق</span>';
+            }
         });
     }
 
-    // === 5. معالجة نقرات الأزرار بالتفويض ===
-    registerForm.addEventListener('click', (e) => {
+    function updateReq(id, isValid) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('valid', isValid);
+            el.querySelector('.indicator').textContent = isValid ? '🟢' : '🔴';
+        }
+    }
+
+    // === 3. تجميع حقول الهوية والجنسية ديناميكياً لتجنب كسر التخطيط ===
+    const natSelect = document.getElementById('nationality_select');
+    const dynamicIdentity = document.getElementById('dynamic_identity_section');
+    const dynamicAddress = document.getElementById('dynamic_address_section');
+
+    if (natSelect) {
+        natSelect.addEventListener('change', (e) => {
+            const nat = e.target.value;
+            renderIdentityFields(nat);
+            renderAddressFields(nat);
+        });
+    }
+
+    function renderIdentityFields(nat) {
+        if (!nat) { dynamicIdentity.innerHTML = ''; return; }
+        let html = `<div class="identity-sub-card" style="background: rgba(11,25,44,0.02); padding: 20px; border-radius: 12px; margin-top: 15px;">`;
+        
+        if (nat === 'saudi') {
+            html += `<h4>بيانات الهوية الوطنية</h4>
+                     <div class="form-group"><label class="tera-label">رقم الهوية الوطنية</label><input type="text" name="id_number" class="tera-input-field" required></div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">تاريخ إصدار الهوية</label><input type="date" name="id_issue_date" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">تاريخ انتهاء الهوية</label><input type="date" name="id_expiry_date" class="tera-input-field" required></div>
+                     </div>`;
+        } else if (nat === 'resident') {
+            html += `<h4>بيانات الإقامة</h4>
+                     <div class="form-group"><label class="tera-label">رقم الإقامة</label><input type="text" name="resident_number" class="tera-input-field" required></div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">تاريخ إصدار الإقامة</label><input type="date" name="resident_issue_date" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">تاريخ انتهاء الإقامة</label><input type="date" name="resident_expiry_date" class="tera-input-field" required></div>
+                     </div>`;
+        } else if (nat === 'gcc') {
+            html += `<h4>بيانات مواطن خليجي</h4>
+                     <div class="form-group"><label class="tera-label">الدولة</label><input type="text" name="gcc_country" class="tera-input-field" placeholder="مثال: الإمارات" required></div>
+                     <div class="form-group"><label class="tera-label">رقم الهوية الخليجية</label><input type="text" name="gcc_id" class="tera-input-field" required></div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">تاريخ الإصدار</label><input type="date" name="gcc_issue_date" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">تاريخ الانتهاء</label><input type="date" name="gcc_expiry_date" class="tera-input-field" required></div>
+                     </div>`;
+        } else if (nat === 'foreign') {
+            html += `<h4>بيانات وثيقة الأجنبي</h4>
+                     <div class="form-group">
+                        <label class="tera-label">نوع الوثيقة</label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="foreign_doc_type" value="national_id" checked> الهوية الوطنية لبلده</label>
+                            <label class="radio-label"><input type="radio" name="foreign_doc_type" value="passport"> جواز السفر</label>
+                        </div>
+                     </div>
+                     <div id="foreign_dynamic_wrapper">
+                        <div class="form-group"><label class="tera-label">الدولة</label><input type="text" name="foreign_country" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">رقم الهوية</label><input type="text" name="foreign_id" class="tera-input-field" required></div>
+                        <div class="form-row-split">
+                           <div class="form-group"><label class="tera-label">تاريخ الإصدار</label><input type="date" name="foreign_issue_date" class="tera-input-field" required></div>
+                           <div class="form-group"><label class="tera-label">تاريخ الانتهاء</label><input type="date" name="foreign_expiry_date" class="tera-input-field" required></div>
+                        </div>
+                     </div>`;
+        }
+        html += `</div>`;
+        dynamicIdentity.innerHTML = html;
+
+        // تفعيل مفتاح التحويل الداخلي لجواز سفر الأجنبي
+        if (nat === 'foreign') {
+            document.querySelectorAll('input[name="foreign_doc_type"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const wrapper = document.getElementById('foreign_dynamic_wrapper');
+                    if (e.target.value === 'passport') {
+                        wrapper.innerHTML = `
+                            <div class="form-group"><label class="tera-label">دولة إصدار الجواز</label><input type="text" name="passport_country" class="tera-input-field" required></div>
+                            <div class="form-group"><label class="tera-label">رقم جواز السفر</label><input type="text" name="passport_number" class="tera-input-field" required></div>
+                            <div class="form-row-split">
+                               <div class="form-group"><label class="tera-label">تاريخ إصدار الجواز</label><input type="date" name="passport_issue_date" class="tera-input-field" required></div>
+                               <div class="form-group"><label class="tera-label">تاريخ انتهاء الجواز</label><input type="date" name="passport_expiry_date" class="tera-input-field" required></div>
+                            </div>`;
+                    } else {
+                        renderIdentityFields('foreign');
+                    }
+                });
+            });
+        }
+    }
+
+    function renderAddressFields(nat) {
+        if (!nat) { dynamicAddress.innerHTML = ''; return; }
+        let html = `<h3 class="step-heading" style="margin-top:25px;">العنوان</h3>`;
+        
+        if (nat === 'saudi') {
+            html += `<h4>بيانات العنوان الوطني</h4>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">رقم المبنى</label><input type="text" name="address_building" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">الرقم الفرعي</label><input type="text" name="address_sub" class="tera-input-field" required></div>
+                     </div>
+                     <div class="form-group"><label class="tera-label">اسم الشارع</label><input type="text" name="address_street" class="tera-input-field" required></div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">الحي</label><input type="text" name="address_district" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">المدينة</label><input type="text" name="address_city" class="tera-input-field" required></div>
+                     </div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">الرمز البريدي</label><input type="text" name="address_zip" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">الرقم الإضافي</label><input type="text" name="address_additional" class="tera-input-field" required></div>
+                     </div>
+                     <div class="form-group"><label class="tera-label">رقم الوحدة (اختياري)</label><input type="text" name="address_unit" class="tera-input-field"></div>
+                     <div class="form-group"><label class="tera-label">الاسم المختصر للعنوان الوطني</label><input type="text" name="address_short_name" class="tera-input-field" required></div>`;
+        } else {
+            html += `<h4>بيانات العنوان الدولي</h4>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">الدولة</label><input type="text" name="address_global_country" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">المدينة</label><input type="text" name="address_global_city" class="tera-input-field" required></div>
+                     </div>
+                     <div class="form-group"><label class="tera-label">المحافظة / الولاية</label><input type="text" name="address_global_state" class="tera-input-field" required></div>
+                     <div class="form-row-split">
+                        <div class="form-group"><label class="tera-label">الحي</label><input type="text" name="address_global_district" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">الشارع</label><input type="text" name="address_global_street" class="tera-input-field" required></div>
+                     </div>
+                     <div class="form-group"><label class="tera-label">الرمز البريدي</label><input type="text" name="address_global_zip" class="tera-input-field" required></div>
+                     <div class="form-group"><label class="tera-label">وصف إضافي للعنوان</label><textarea name="address_global_desc" class="tera-input-field" style="height: 80px;"></textarea></div>`;
+        }
+        dynamicAddress.innerHTML = html;
+    }
+
+    // === 4. معالج التنقل بين الخطوات وحظر الاختراق البصري ===
+    form.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-next')) {
-            if (validateStep() && currentStep < formSteps.length - 1) {
+            if (validateCurrentStep()) {
                 currentStep++;
                 updateUI();
             }
         } else if (e.target.classList.contains('btn-prev')) {
-            if (currentStep > 0) {
-                currentStep--;
-                updateUI();
-            }
+            currentStep--;
+            updateUI();
         }
     });
 
-    // === 6. معالجة الإرسال النهائي ===
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!validateStep()) return;
+    function validateCurrentStep() {
+        const currentEl = steps[currentStep];
+        const requiredFields = currentEl.querySelectorAll('input[required], select[required]');
+        
+        for (let field of requiredFields) {
+            if (!field.value.trim()) {
+                field.classList.add('error');
+                field.reportValidity();
+                return false;
+            } else {
+                field.classList.remove('error');
+            }
+        }
 
-        const submitBtn = registerForm.querySelector('.btn-submit');
+        // قفل أمان إضافي للخطوة الأولى
+        if (currentStep === 0) {
+            const pass = passwordInput.value;
+            const user = usernameInput.value;
+            if (user.length < 4 || /[^A-Za-z0-9]/.test(user)) { usernameInput.reportValidity(); return false; }
+            if (pass !== confirmPasswordInput.value || pass.length < 8) { confirmPasswordInput.reportValidity(); return false; }
+            if (emailInput.value !== confirmEmailInput.value) { confirmEmailInput.reportValidity(); return false; }
+        }
+        return true;
+    }
+
+    function updateUI() {
+        steps.forEach((step, idx) => step.classList.toggle('active', idx === currentStep));
+        stepNodes.forEach((node, idx) => {
+            node.classList.toggle('active', idx === currentStep);
+            node.classList.toggle('completed', idx < currentStep);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // === 5. مفتاح التحكم النهائي في الإقرارات والاتفاقيات ===
+    const masterCheck = document.getElementById('master_agreement_check');
+    const individualChecks = Array.from(document.querySelectorAll('.agreement-check'));
+    const submitBtn = document.getElementById('submit_register_btn');
+
+    if (masterCheck) {
+        masterCheck.addEventListener('change', (e) => {
+            individualChecks.forEach(ch => ch.checked = e.target.checked);
+            submitBtn.disabled = !e.target.checked;
+        });
+
+        individualChecks.forEach(ch => {
+            ch.addEventListener('change', () => {
+                const allChecked = individualChecks.every(c => c.checked);
+                masterCheck.checked = allChecked;
+                submitBtn.disabled = !allChecked;
+            });
+        });
+    }
+
+    // === 6. الإرسال ومعالجة ما بعد التسجيل والأمان ===
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري الإنشاء...';
+        submitBtn.textContent = 'جاري معالجة طلبك وحمايته...';
 
         try {
-            const formData = new FormData(registerForm);
+            const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
             const response = await fetch('/api/v1/auth/register', {
@@ -131,12 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(data)
             });
 
-            if (!response.ok) throw new Error('فشل تسجيل الحساب، يرجى المحاولة لاحقاً');
-            window.location.href = '/pages/dashboard/index.html';
-        } catch (error) {
-            alert(error.message);
+            if (!response.ok) throw new Error('فشل تسجيل الطلب، يرجى مراجعة الحقول والتحقق.');
+
+            // النجاح: التوجيه لصفحة تفعيل رمز OTP والبروفايل اللاحق
+            window.location.href = '/auth/verify-otp.html';
+        } catch (err) {
+            alert(err.message);
             submitBtn.disabled = false;
-            submitBtn.textContent = 'تأكيد وإنشاء الحساب';
+            submitBtn.textContent = 'إنشاء الحساب';
         }
     });
 });
