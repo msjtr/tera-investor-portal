@@ -1,37 +1,43 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - ADVANCED 3D REGISTRATION STYLES (2026)
+   TERA INVESTOR PORTAL - PREMIUM GLASSMORPHISM REGISTRATION STYLES (2026)
    ========================================================================== */
 
 :root {
-    /* لوحة ألوان مستوحاة بدقة من شعار تيرا */
-    --primary-dark: #06163a;       /* الكحلي الداكن الفاخر للشعار */
-    --secondary-teal: #0bd1c3;     /* الفيروزي المشع من السهم */
-    --teal-gradient: linear-gradient(135deg, #0bd1c3 0%, #069e94 100%);
-    --dark-gradient: linear-gradient(145deg, #0a2258, #04102b);
+    /* لوحة الألوان الرسمية المعتمدة - منصة تيرا */
+    --primary-dark: #06163a;         /* الكحلي العميق الفاخر */
+    --royal-blue: #0a2258;           /* الأزرق الملكي للبنية الهيكلية */
+    --secondary-teal: #0bd1c3;       /* الفيروزي المشع (Teal) لعناصر الجذب والأكشن */
     
-    /* ألوان حالات الإدخال والتنبيه ثلاثية الأبعاد */
-    --bg-light-3d: #f3f6fa;
-    --shadow-dark-3d: rgba(6, 22, 58, 0.15);
-    --shadow-light-3d: rgba(255, 255, 255, 0.8);
-    --error-red-3d: #e74c3c;
-    --success-green-3d: #2ecc71;
+    /* التدرجات الفاخرة للهوية (Premium Gradients) */
+    --teal-gradient: linear-gradient(135deg, #0bd1c3 0%, #069e94 100%);
+    --dark-gradient: linear-gradient(145deg, #0a2258 0%, #04102b 100%);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    
+    /* محددات العمق والحالات التفاعلية */
+    --shadow-premium: rgba(6, 22, 58, 0.08);
+    --shadow-floating: rgba(6, 22, 58, 0.16);
+    --error-red: #ef4444;            /* الأحمر الصريح للتحذيرات والأخطاء */
+    --success-green: #22c55e;        /* الأخضر الحيوي لحالات التحقق الناجحة */
 }
 
-/* التنسيق العام لبطاقة التسجيل */
+/* التنسيق الفاخر لبطاقة التسجيل العريضة بأسلوب Glassmorphism */
 .register-card-wide {
-    background: var(--bg-light-3d);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 24px;
     padding: 40px;
     box-shadow: 
-        10px 10px 20px var(--shadow-dark-3d), 
-        -10px -10px 20px var(--shadow-light-3d);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+        0 20px 40px var(--shadow-premium),
+        0 1px 3px rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     position: relative;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 /* ==========================================================================
-   1. شريط تتبع الخطوات ثلاثي الأبعاد (Steps Tracker)
+   1. شريط تتبع الخطوات الفاخر (Steps Tracker)
    ========================================================================== */
 .reg-steps-tracker {
     display: flex;
@@ -48,11 +54,10 @@
     top: 50%;
     left: 0;
     right: 0;
-    height: 6px;
-    background: #e0e8f5;
+    height: 4px;
+    background: #e2e8f0;
     transform: translateY(-50%);
-    border-radius: 3px;
-    box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.08);
+    border-radius: 2px;
     z-index: 1;
 }
 
@@ -62,44 +67,56 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .reg-step-node .step-num {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--bg-light-3d);
+    background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    color: #8fa0be;
-    box-shadow: 
-        4px 4px 8px var(--shadow-dark-3d), 
-        -4px -4px 8px var(--shadow-light-3d);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-weight: 700;
+    font-size: 14px;
+    color: #94a3b8;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* الحالة النشطة للخطوة (تأثير بروز إيجابي مشع) */
+/* الخطوة النشطة الحالية (بروز فيروزي مشع ومتوهج بخفة) */
 .reg-step-node.active .step-num {
     background: var(--teal-gradient);
-    color: white;
-    box-shadow: 
-        0px 4px 15px rgba(11, 209, 195, 0.4),
-        inset 1px 2px 3px rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 0 0 4px rgba(11, 209, 195, 0.2), 0 8px 16px rgba(11, 209, 195, 0.3);
     transform: scale(1.1);
 }
 
+/* الخطوة المكتملة مسبقاً (تتحول إلى الكحلي الداكن الفاخر للهوية لإبراز التقدم) */
+.reg-step-node.completed .step-num {
+    background: var(--royal-blue);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(10, 34, 88, 0.15);
+}
+
 .reg-step-node .step-text {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
+    color: #64748b;
+    transition: color 0.3s ease;
+}
+
+.reg-step-node.active .step-text {
     color: var(--primary-dark);
-    text-shadow: 1px 1px 0px var(--shadow-light-3d);
+    font-weight: 700;
 }
 
 /* ==========================================================================
-   2. حقول الإدخال ثلاثية الأبعاد وعناصر التحكم (Inputs & Toggles)
+   2. حقول الإدخال المتناسقة وعناصر التحكم التفاعلية
    ========================================================================== */
 .form-group {
     position: relative;
@@ -110,277 +127,244 @@
     display: block;
     font-weight: 700;
     color: var(--primary-dark);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-size: 14px;
-    text-shadow: 1px 1px 0px var(--shadow-light-3d);
 }
 
-/* تأثير الحفر ثلاثي الأبعاد المقعر للحقول الإدخالية */
+/* تصميم الحقول بأسلوب متباين ناعم وبدون حفر مفرط لتسهيل القراءة */
 .tera-input-field {
     width: 100%;
-    padding: 15px 20px;
+    padding: 14px 18px;
     font-size: 15px;
-    border: none;
+    border: 1.5px solid #e2e8f0;
     outline: none;
-    background: var(--bg-light-3d);
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
     color: var(--primary-dark);
     font-weight: 500;
-    /* تأثير الحفر المعياري Neumorphic Inset */
-    box-shadow: 
-        inset 4px 4px 8px var(--shadow-dark-3d), 
-        inset -4px -4px 8px var(--shadow-light-3d);
-    transition: all 0.25s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    transition: all 0.2s ease-in-out;
     box-sizing: border-box;
 }
 
-/* عند التركيز والكتابة داخل الحقل (يتحول الحفر الداخلي إلى توهج فيروزي ذو عمق) */
+/* عند الضغط والتركيز داخل الحقل (حواف فيروزية ذكية ونظيفة) */
 .tera-input-field:focus {
-    box-shadow: 
-        inset 2px 2px 4px var(--shadow-dark-3d), 
-        inset -2px -2px 4px var(--shadow-light-3d),
-        0 0 0 2px rgba(11, 209, 195, 0.25);
-    background: #fcfdfe;
+    border-color: var(--secondary-teal);
+    box-shadow: 0 0 0 3px rgba(11, 209, 195, 0.15);
+    background: #ffffff;
 }
 
-/* الأيقونات التفاعلية ثلاثية الأبعاد (العين والقفل) داخل الحقول */
+/* حقل يحتوي على خطأ في التحقق من صحة البيانات */
+.tera-input-field.error {
+    border-color: var(--error-red) !important;
+    background: rgba(239, 68, 68, 0.02) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* تموضع محاذاة الأيقونات التفاعلية جهة اليمين أو اليسار داخل الحقل */
 .form-group .input-icon-wrapper {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
-/* وضع الأيقونات التفاعلية في جهة اليسار لأن واجهة الخطوط RTL */
 .3d-toggle-icon {
     position: absolute;
-    left: 15px;
+    left: 14px;
     cursor: pointer;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 8px;
-    background: var(--bg-light-3d);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 
-        2px 2px 5px var(--shadow-dark-3d), 
-        -2px -2px 5px var(--shadow-light-3d);
     transition: all 0.2s ease;
     user-select: none;
+    color: #94a3b8;
 }
 
-/* تأثير الضغط الفعلي للزر عند النقر على العين أو القفل */
-.3d-toggle-icon:active {
-    box-shadow: 
-        inset 1px 1px 3px var(--shadow-dark-3d), 
-        inset -1px -1px 3px var(--shadow-light-3d);
-    transform: scale(0.95);
+.3d-toggle-icon:hover {
+    color: var(--primary-dark);
+    background: rgba(6, 22, 58, 0.05);
 }
 
 .3d-toggle-icon svg {
-    width: 16px;
-    height: 16px;
-    fill: var(--primary-dark);
-    transition: fill 0.2s ease;
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
 }
 
+/* الأيقونة مفعلة (إظهار كلمة المرور) */
 .3d-toggle-icon.active svg {
     fill: var(--secondary-teal);
-    filter: drop-shadow(0px 0px 3px rgba(11, 209, 195, 0.6));
 }
 
 /* ==========================================================================
-   3. صناديق ومؤشرات التحقق والاشتراطات الحية (Validation Boxes)
+   3. صناديق التحقق والاشتراطات الحية المتطابقة مع الهوية
    ========================================================================== */
 .validation-box {
-    margin-top: 15px;
+    margin-top: 12px;
     padding: 16px;
-    background: var(--bg-light-3d);
-    border-radius: 16px;
-    box-shadow: 
-        5px 5px 10px var(--shadow-dark-3d), 
-        -5px -5px 10px var(--shadow-light-3d);
+    background: rgba(10, 34, 88, 0.02);
+    border: 1px solid rgba(10, 34, 88, 0.05);
+    border-radius: 12px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
 }
 
 .req-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #5d7294;
-    transition: color 0.3s ease;
+    color: #64748b;
+    transition: all 0.2s ease;
 }
 
-/* تحويل دوت التنبيه العادية (🔴) إلى زر ومؤشر كريستالي ثلاثي الأبعاد */
+/* استبدال المؤشر القديم بكريستالة هوية تفاعلية مصغرة */
 .req-item .indicator {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     display: inline-block;
-    background: #e74c3c;
-    box-shadow: 
-        inset -2px -2px 4px rgba(0,0,0,0.4),
-        0px 2px 4px rgba(231, 76, 60, 0.4);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--error-red);
+    transition: all 0.25s ease;
 }
 
-/* عند استيفاء الشرط بنجاح (يتحول المؤشر فوراً للون الأخضر المتوهج بارزاً للخارج) */
+/* عند استيفاء الشرط بنجاح */
 .req-item.valid {
     color: var(--primary-dark);
 }
 
 .req-item.valid .indicator {
-    background: #2ecc71;
-    box-shadow: 
-        inset -2px -2px 4px rgba(0,0,0,0.2),
-        0px 0px 8px rgba(46, 204, 113, 0.7);
-    transform: scale(1.15);
+    background: var(--success-green);
+    transform: scale(1.2);
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
 }
 
 /* ==========================================================================
-   4. مؤشر قوة كلمة المرور ثلاثي الأبعاد (Password Strength Bar)
+   4. شريط قياس قوة كلمة المرور
    ========================================================================== */
 .password-strength-container {
-    margin-top: 15px;
+    margin-top: 12px;
 }
 
 .strength-label {
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
     color: var(--primary-dark);
     margin-bottom: 6px;
 }
 
-/* مجرى شريط القوة المحفور داخلياً */
 .strength-bar {
-    height: 8px;
-    background: var(--bg-light-3d);
-    border-radius: 10px;
-    box-shadow: 
-        inset 2px 2px 4px var(--shadow-dark-3d), 
-        inset -2px -2px 4px var(--shadow-light-3d);
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
 }
 
-/* الحشوة الممتلئة تظهر كأسطوانة زجاجية بارزة ومضيئة */
 .strength-fill {
     height: 100%;
     width: 0;
-    border-radius: 10px;
-    box-shadow: inset 1px 2px 3px rgba(255, 255, 255, 0.4);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+    border-radius: 4px;
+    transition: width 0.3s ease, background-color 0.3s ease;
 }
 
-.strength-fill.weak { background: var(--error-red-3d); width: 25%; }
-.strength-fill.medium { background: #f1c40f; width: 60%; }
-.strength-fill.strong { background: var(--success-green-3d); width: 100%; box-shadow: 0px 0px 8px rgba(46, 204, 113, 0.5); }
+.strength-fill.weak { background: var(--error-red); width: 25%; }
+.strength-fill.medium { background: #f59e0b; width: 60%; }
+.strength-fill.strong { background: var(--success-green); width: 100%; }
 
 /* ==========================================================================
-   5. الأزرار التفاعلية المنبثقة ثلاثية الأبعاد (3D Floating Buttons)
+   5. أزرار الإجراءات المتطورة والفاخرة (Premium Buttons)
    ========================================================================== */
 .btn-primary {
     background: var(--teal-gradient);
-    color: white;
+    color: #ffffff;
     border: none;
     padding: 14px 32px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
-    /* تأثير البروز الماسي المتوهج للخارج */
-    box-shadow: 
-        0px 5px 15px rgba(11, 209, 195, 0.35),
-        3px 5px 10px rgba(6, 22, 58, 0.15),
-        inset 1px 2px 3px rgba(255, 255, 255, 0.3);
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 4px 12px rgba(11, 209, 195, 0.25);
+    transition: all 0.25s ease;
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 
-        0px 8px 20px rgba(11, 209, 195, 0.5),
-        4px 7px 14px rgba(6, 22, 58, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(11, 209, 195, 0.4);
 }
 
-/* محاكاة الحركة الميكانيكية للضغط لأسفل عند النقر الفعلي للزر */
 .btn-primary:active {
-    transform: translateY(1px);
-    box-shadow: 
-        0px 2px 5px rgba(11, 209, 195, 0.4),
-        inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(11, 209, 195, 0.2);
 }
 
-/* الأزرار الخلفية أو الثانوية (السابق) ذات المظهر الخرساني المصقول الناعم */
+/* أزرار الإجراء السابق / الرجوع */
 .btn-prev {
-    background: var(--bg-light-3d);
-    color: var(--primary-dark);
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: #ffffff;
+    color: var(--royal-blue);
+    border: 1.5px solid #e2e8f0;
     padding: 14px 32px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
-    box-shadow: 
-        4px 4px 8px var(--shadow-dark-3d), 
-        -4px -4px 8px var(--shadow-light-3d);
     transition: all 0.2s ease;
 }
 
 .btn-prev:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-        6px 6px 12px var(--shadow-dark-3d), 
-        -6px -6px 12px var(--shadow-light-3d);
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--primary-dark);
 }
 
-.btn-prev:active {
-    transform: translateY(1px);
-    box-shadow: 
-        inset 2px 2px 5px var(--shadow-dark-3d), 
-        inset -2px -2px 5px var(--shadow-light-3d);
-}
-
-/* حالة الزر العاطل المعطلة بذكاء بصري */
+/* زر الحفظ النهائي والإرسال في حالة التعطيل (Disabled) */
 .btn-primary:disabled {
-    background: #d1d9e6;
-    color: #a6b4c9;
-    cursor: not-allowed;
+    background: #cbd5e1 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
     transform: none !important;
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.05) !important;
+    box-shadow: none !important;
 }
 
 /* ==========================================================================
-   6. صناديق الإقرارات والاتفاقيات المصقولة (Glassmorphism & 3D Cards)
+   6. بطاقات الإقرارات الصافية والنهائية
    ========================================================================== */
 .final-pledge-box {
-    background: linear-gradient(145deg, #ffffff, #e6edf8);
-    border-radius: 16px;
+    background: rgba(10, 34, 88, 0.03);
+    border-radius: 14px;
     padding: 20px;
     margin: 25px 0;
-    border-right: 5px solid var(--secondary-teal);
-    box-shadow: 
-        6px 6px 12px var(--shadow-dark-3d), 
-        -6px -6px 12px var(--shadow-light-3d);
+    border-right: 4px solid var(--secondary-teal);
+    border-left: 1px solid rgba(10, 34, 88, 0.05);
+    border-top: 1px solid rgba(10, 34, 88, 0.05);
+    border-bottom: 1px solid rgba(10, 34, 88, 0.05);
 }
 
 .final-pledge-box h4 {
     color: var(--primary-dark);
-    margin: 0 0 8px 0;
+    margin: 0 0 6px 0;
     font-size: 15px;
     font-weight: 700;
 }
 
 .final-pledge-box p {
-    color: #4a5c7a;
+    color: #475569;
     font-size: 13.5px;
     line-height: 1.6;
     margin: 0;
+}
+
+.match-status {
+    font-size: 12.5px;
+    margin-top: 6px;
+    font-weight: 600;
 }
