@@ -1,12 +1,15 @@
 /* ==========================================
-   TERA Investor Portal - Global App JS (Fixed)
+   TERA Investor Portal - Global App JS
+   المسار: /assets/js/app.js
 ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('TERA Investor Portal Loaded');
-    
+
+    // 1. حماية الصفحات الحساسة فور تحميل الدوم
     checkProtectedPages();
-    
+
+    // 2. تهيئة النظام مع حماية ضد توقف السكربت (Fail-safe)
     try {
         initializeApp();
     } catch (err) {
@@ -14,22 +17,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+/**
+ * تهيئة مكونات التطبيق الأساسية
+ */
 function initializeApp() {
     highlightActiveMenu();
-    // حماية الاستدعاء: فقط إذا كانت الدالة موجودة
+    
+    // التحقق من وجود الدالة قبل استدعائها لتجنب ReferenceError
     if (typeof initializeTooltips === 'function') {
         initializeTooltips();
-    } else {
-        console.warn('initializeTooltips is not defined, skipping...');
     }
+    
     initializeCurrencyFields();
 }
 
 /* ==========================================
-   Authentication Functions
+   Authentication & Security
 ========================================== */
+const AUTH_TOKEN = 'tera_token';
+
+function isAuthenticated() {
+    return !!localStorage.getItem(AUTH_TOKEN);
+}
+
 function logout() {
-    localStorage.removeItem('tera_token');
+    localStorage.removeItem(AUTH_TOKEN);
     sessionStorage.clear();
     window.location.href = '/auth/login.html';
 }
@@ -37,22 +49,36 @@ function logout() {
 function checkProtectedPages() {
     const protectedPaths = ['/pages/dashboard', '/pages/investments', '/pages/portfolio'];
     const currentPath = window.location.pathname;
+    
+    // التحقق إذا كان المسار محمي وغير مصرح بالدخول
     const isProtected = protectedPaths.some(path => currentPath.startsWith(path));
-
-    if (isProtected && !localStorage.getItem('tera_token')) {
+    if (isProtected && !isAuthenticated()) {
         window.location.href = '/auth/login.html';
     }
 }
 
 /* ==========================================
-   Helpers
+   Helpers & UI Logic
 ========================================== */
 function goTo(url) {
     window.location.href = url;
 }
 
 function showAlert(message, type = 'success') {
+    // يمكنك لاحقاً ربطها بمكتبة Toastr أو SweetAlert
     console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
+function highlightActiveMenu() {
+    const currentPage = window.location.pathname;
+    const links = document.querySelectorAll('.sidebar a');
+    
+    links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && (currentPage === href || currentPage.includes(href))) {
+            link.classList.add('active');
+        }
+    });
 }
 
 function formatCurrency(amount) {
@@ -61,16 +87,6 @@ function formatCurrency(amount) {
         currency: 'SAR',
         minimumFractionDigits: 2
     }).format(amount);
-}
-
-function highlightActiveMenu() {
-    const currentPage = window.location.pathname;
-    document.querySelectorAll('.sidebar a').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href !== '#' && (currentPage === href || currentPage.includes(href))) {
-            link.classList.add('active');
-        }
-    });
 }
 
 function initializeCurrencyFields() {
@@ -83,7 +99,7 @@ function initializeCurrencyFields() {
 }
 
 /* ==========================================
-   Global Export (يجب أن تكون في نهاية الملف)
+   Global Export (للوصول للدوال من أي مكان)
 ========================================== */
 Object.assign(window, {
     logout,
