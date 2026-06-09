@@ -13,6 +13,7 @@ document.addEventListener(
         initializePasswordToggle();
         initializeNationality();
         initializeMobile();
+        initializeRegisterForm();
 
     }
 );
@@ -24,14 +25,10 @@ document.addEventListener(
 function initializeSteps(){
 
     const steps =
-    document.querySelectorAll(
-        '.form-step'
-    );
+    document.querySelectorAll('.form-step');
 
-    const stepIndicators =
-    document.querySelectorAll(
-        '.step'
-    );
+    const indicators =
+    document.querySelectorAll('.step');
 
     let currentStep = 0;
 
@@ -43,38 +40,48 @@ function initializeSteps(){
             'click',
             () => {
 
-                if(
-                    currentStep <
-                    steps.length - 1
-                ){
+                if(currentStep >= steps.length - 1)
+                    return;
 
-                    steps[
-                        currentStep
-                    ].classList.remove(
-                        'active'
-                    );
+                const currentForm =
+                steps[currentStep];
 
-                    stepIndicators[
-                        currentStep
-                    ].classList.add(
-                        'completed'
-                    );
+                const fields =
+                currentForm.querySelectorAll(
+                    'input[required], select[required]'
+                );
 
-                    currentStep++;
+                let valid = true;
 
-                    steps[
-                        currentStep
-                    ].classList.add(
-                        'active'
-                    );
+                fields.forEach(field => {
 
-                    stepIndicators[
-                        currentStep
-                    ].classList.add(
-                        'active'
-                    );
+                    if(!field.checkValidity()){
 
-                }
+                        field.reportValidity();
+                        valid = false;
+
+                    }
+
+                });
+
+                if(!valid) return;
+
+                steps[currentStep]
+                .classList.remove('active');
+
+                indicators[currentStep]
+                .classList.add('completed');
+
+                indicators[currentStep]
+                .classList.remove('active');
+
+                currentStep++;
+
+                steps[currentStep]
+                .classList.add('active');
+
+                indicators[currentStep]
+                .classList.add('active');
 
             }
         );
@@ -89,31 +96,22 @@ function initializeSteps(){
             'click',
             () => {
 
-                if(
-                    currentStep > 0
-                ){
+                if(currentStep <= 0)
+                    return;
 
-                    steps[
-                        currentStep
-                    ].classList.remove(
-                        'active'
-                    );
+                steps[currentStep]
+                .classList.remove('active');
 
-                    stepIndicators[
-                        currentStep
-                    ].classList.remove(
-                        'active'
-                    );
+                indicators[currentStep]
+                .classList.remove('active');
 
-                    currentStep--;
+                currentStep--;
 
-                    steps[
-                        currentStep
-                    ].classList.add(
-                        'active'
-                    );
+                steps[currentStep]
+                .classList.add('active');
 
-                }
+                indicators[currentStep]
+                .classList.add('active');
 
             }
         );
@@ -129,21 +127,19 @@ function initializeSteps(){
 function initializePasswordStrength(){
 
     const password =
-    document.getElementById(
-        'password'
-    );
+    document.getElementById('password');
 
     const strengthFill =
-    document.getElementById(
-        'strengthFill'
-    );
+    document.getElementById('strengthFill');
 
     const strengthText =
-    document.getElementById(
-        'strengthText'
-    );
+    document.getElementById('strengthText');
 
-    if(!password) return;
+    if(
+        !password ||
+        !strengthFill ||
+        !strengthText
+    ) return;
 
     password.addEventListener(
         'input',
@@ -154,20 +150,11 @@ function initializePasswordStrength(){
 
             let score = 0;
 
-            if(value.length >= 8)
-                score++;
-
-            if(/[A-Z]/.test(value))
-                score++;
-
-            if(/[a-z]/.test(value))
-                score++;
-
-            if(/[0-9]/.test(value))
-                score++;
-
-            if(/[^A-Za-z0-9]/.test(value))
-                score++;
+            if(value.length >= 8) score++;
+            if(/[A-Z]/.test(value)) score++;
+            if(/[a-z]/.test(value)) score++;
+            if(/[0-9]/.test(value)) score++;
+            if(/[^A-Za-z0-9]/.test(value)) score++;
 
             strengthFill.className =
             'strength-fill';
@@ -181,7 +168,7 @@ function initializePasswordStrength(){
                 strengthFill.style.width =
                 '33%';
 
-                strengthText.innerText =
+                strengthText.textContent =
                 'ضعيفة';
 
             }
@@ -195,7 +182,7 @@ function initializePasswordStrength(){
                 strengthFill.style.width =
                 '66%';
 
-                strengthText.innerText =
+                strengthText.textContent =
                 'متوسطة';
 
             }
@@ -209,7 +196,7 @@ function initializePasswordStrength(){
                 strengthFill.style.width =
                 '100%';
 
-                strengthText.innerText =
+                strengthText.textContent =
                 'قوية';
 
             }
@@ -226,67 +213,47 @@ function initializePasswordStrength(){
 function initializePasswordMatch(){
 
     const password =
-    document.getElementById(
-        'password'
-    );
+    document.getElementById('password');
 
     const confirm =
-    document.getElementById(
-        'confirmPassword'
-    );
+    document.getElementById('confirmPassword');
 
     const message =
-    document.getElementById(
-        'passwordMatch'
-    );
+    document.getElementById('passwordMatch');
 
     if(
         !password ||
-        !confirm
+        !confirm ||
+        !message
     ) return;
 
     confirm.addEventListener(
         'input',
         () => {
 
-            if(
-                confirm.value ===
-                password.value
-            ){
+            const match =
+            password.value ===
+            confirm.value;
 
-                confirm.classList.add(
-                    'valid'
-                );
+            confirm.classList.toggle(
+                'valid',
+                match
+            );
 
-                confirm.classList.remove(
-                    'invalid'
-                );
+            confirm.classList.toggle(
+                'invalid',
+                !match
+            );
 
-                message.innerText =
-                '✓ كلمة المرور متطابقة';
+            message.textContent =
+            match
+            ? '✓ كلمة المرور متطابقة'
+            : '✕ كلمة المرور غير متطابقة';
 
-                message.style.color =
-                '#16a34a';
-
-            }
-
-            else{
-
-                confirm.classList.add(
-                    'invalid'
-                );
-
-                confirm.classList.remove(
-                    'valid'
-                );
-
-                message.innerText =
-                '✕ كلمة المرور غير متطابقة';
-
-                message.style.color =
-                '#dc2626';
-
-            }
+            message.className =
+            match
+            ? 'text-success'
+            : 'text-danger';
 
         }
     );
@@ -300,14 +267,10 @@ function initializePasswordMatch(){
 function initializeEmailMatch(){
 
     const email =
-    document.getElementById(
-        'email'
-    );
+    document.getElementById('email');
 
     const confirm =
-    document.getElementById(
-        'confirmEmail'
-    );
+    document.getElementById('confirmEmail');
 
     if(
         !email ||
@@ -318,32 +281,19 @@ function initializeEmailMatch(){
         'input',
         () => {
 
-            if(
-                email.value ===
-                confirm.value
-            ){
+            const match =
+            email.value.trim() ===
+            confirm.value.trim();
 
-                confirm.classList.add(
-                    'valid'
-                );
+            confirm.classList.toggle(
+                'valid',
+                match
+            );
 
-                confirm.classList.remove(
-                    'invalid'
-                );
-
-            }
-
-            else{
-
-                confirm.classList.add(
-                    'invalid'
-                );
-
-                confirm.classList.remove(
-                    'valid'
-                );
-
-            }
+            confirm.classList.toggle(
+                'invalid',
+                !match
+            );
 
         }
     );
@@ -357,9 +307,7 @@ function initializeEmailMatch(){
 function initializePasswordToggle(){
 
     document
-    .querySelectorAll(
-        '.toggle-password'
-    )
+    .querySelectorAll('.toggle-password')
     .forEach(button => {
 
         button.addEventListener(
@@ -369,22 +317,12 @@ function initializePasswordToggle(){
                 const input =
                 button.previousElementSibling;
 
-                if(
-                    input.type ===
-                    'password'
-                ){
+                if(!input) return;
 
-                    input.type =
-                    'text';
-
-                }
-
-                else{
-
-                    input.type =
-                    'password';
-
-                }
+                input.type =
+                input.type === 'password'
+                ? 'text'
+                : 'password';
 
             }
         );
@@ -418,34 +356,25 @@ function initializeNationality(){
         'change',
         () => {
 
-            switch(
-                nationality.value
-            ){
+            switch(nationality.value){
 
                 case 'saudi':
-
-                    label.innerText =
+                    label.textContent =
                     'رقم الهوية الوطنية';
-
                     break;
 
                 case 'resident':
-
-                    label.innerText =
+                    label.textContent =
                     'رقم الإقامة';
-
                     break;
 
                 case 'gcc':
-
-                    label.innerText =
+                    label.textContent =
                     'رقم الهوية الخليجية';
-
                     break;
 
                 default:
-
-                    label.innerText =
+                    label.textContent =
                     'رقم جواز السفر';
 
             }
@@ -473,21 +402,15 @@ function initializeMobile(){
         () => {
 
             mobile.value =
-            mobile.value.replace(
-                /\D/g,
-                ''
-            );
+            mobile.value
+            .replace(/\D/g,'');
 
             if(
-                mobile.value.startsWith(
-                    '0'
-                )
+                mobile.value.startsWith('0')
             ){
 
                 mobile.value =
-                mobile.value.substring(
-                    1
-                );
+                mobile.value.substring(1);
 
             }
 
@@ -500,22 +423,75 @@ function initializeMobile(){
    Submit Form
 ========================================== */
 
-document
-.getElementById(
-    'registerForm'
-)
-?.addEventListener(
-    'submit',
-    e => {
+function initializeRegisterForm(){
 
-        e.preventDefault();
+    const form =
+    document.getElementById(
+        'registerForm'
+    );
 
-        alert(
-            'تم إنشاء الحساب بنجاح'
-        );
+    if(!form) return;
 
-        window.location.href =
-        '/auth/verify-otp.html';
+    form.addEventListener(
+        'submit',
+        e => {
 
-    }
-);
+            e.preventDefault();
+
+            const email =
+            document.getElementById('email');
+
+            const confirmEmail =
+            document.getElementById('confirmEmail');
+
+            const password =
+            document.getElementById('password');
+
+            const confirmPassword =
+            document.getElementById('confirmPassword');
+
+            if(
+                email.value !==
+                confirmEmail.value
+            ){
+
+                alert(
+                    'البريد الإلكتروني غير متطابق'
+                );
+
+                return;
+
+            }
+
+            if(
+                password.value !==
+                confirmPassword.value
+            ){
+
+                alert(
+                    'كلمة المرور غير متطابقة'
+                );
+
+                return;
+
+            }
+
+            localStorage.setItem(
+                'tera_registration_email',
+                email.value
+            );
+
+            localStorage.setItem(
+                'tera_registration_mobile',
+                document.getElementById(
+                    'mobile'
+                ).value
+            );
+
+            window.location.href =
+            '/auth/verify-otp.html';
+
+        }
+    );
+
+}
