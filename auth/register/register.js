@@ -1,5 +1,5 @@
 /**
- * TERA Investor Portal - Registration Wizard Engine (Fixed & Enhanced)
+ * TERA Investor Portal - Registration Wizard Engine
  * المسار: /auth/register/register.js
  */
 
@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
             node.classList.toggle('completed', index < currentStep);
         });
 
-        // التمرير السلس لأعلى النموذج عند الانتقال لراحة المستخدم
         const card = document.querySelector('.register-card-wide');
         if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -39,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // تحقق إضافي خاص بالخطوة الأولى: تطابق البريد الإلكتروني وكلمات المرور
         if (currentStep === 0) {
             const email = currentStepEl.querySelector('input[name="email"]');
             const confirmEmail = currentStepEl.querySelector('input[name="confirm_email"]');
@@ -62,11 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmPassword.setCustomValidity('');
             }
         }
-
         return true;
     };
 
-    // === 3. مؤشر قوة كلمة المرور (خطوة 1) ===
+    // === 3. مؤشر قوة كلمة المرور ===
     const passwordInput = document.getElementById('password');
     const strengthFill = document.getElementById('strengthFill');
 
@@ -79,13 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (/[A-Z]/.test(val)) score++;
             if (/[0-9]/.test(val)) score++;
 
-            // حساب العرض وتغيير الألوان بناءً على التنسيق الجديد
             strengthFill.style.width = val.length === 0 ? '0%' : (score === 0 ? '10%' : (score * 33.3) + '%');
             strengthFill.className = 'strength-fill ' + (score < 2 ? 'weak' : score === 2 ? 'medium' : 'strong');
         });
     }
 
-    // === 4. التبديل الديناميكي لمسميات الهوية (خطوة 3) ===
+    // === 4. التبديل الديناميكي لمسميات الهوية ===
     const nationalitySelect = document.getElementById('nationality');
     const identityLabel = document.getElementById('identityLabel');
     
@@ -116,10 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // === 6. معالجة الإرسال النهائي وتجهيز الـ FormData ===
+    // === 6. معالجة الإرسال النهائي ===
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         if (!validateStep()) return;
 
         const submitBtn = registerForm.querySelector('.btn-submit');
@@ -127,12 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'جاري الإنشاء...';
 
         try {
-            // بما أن النموذج يحتوي على ملفات (ملفات خطوة 6)، يفضل إرسال البيانات كـ FormData للباك اند
-            // وإذا كان الباك اند يستقبل فقط JSON، نقوم بتحويل النصيات فقط كما فعلت سابقاً:
             const formData = new FormData(registerForm);
-            
-            // في حال الاستثمار الحقيقي والرفع الفعلي للملفات، يرسل الـ formData مباشرة:
-            // body: formData بدون تحديد Content-Type (المتصفح سيحددها تلقائياً مع الـ boundary)
             const data = Object.fromEntries(formData.entries());
 
             const response = await fetch('/api/v1/auth/register', {
@@ -142,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) throw new Error('فشل تسجيل الحساب، يرجى المحاولة لاحقاً');
-            
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
             alert(error.message);
