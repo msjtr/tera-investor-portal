@@ -3,23 +3,22 @@
    Master CSS File
 ========================================== */
 
-/* Core */
-@import url('./core.css');
+/* Core & Global Base */
+@import url('/assets/css/core.css');
+@import url('/assets/css/app.css');
 
-/* Global */
-@import url('./app.css');
+/* Auth Modules */
+/* تم تصحيح المسار ليطابق المجلد الفعلي لصفحة التسجيل */
+@import url('/auth/register/register.css');
 
-/* Modules */
-@import url('./dashboard.css');
-@import url('./investments.css');
-@import url('./portfolio.css');
-@import url('./reports.css');
-@import url('./profile.css');
-@import url('./security.css');
-@import url('./support.css');
+/* Dashboard Modules */
+@import url('/assets/css/dashboard.css');
+@import url('/assets/css/investments.css');
+@import url('/assets/css/portfolio.css');
+@import url('/assets/css/reports.css');
+@import url('/assets/css/profile.css');
+@import url('/assets/css/security.css');
+@import url('/assets/css/support.css');
 
-/* Auth */
-@import url('./register.css');
-
-/* Responsive */
-@import url('./responsive.css');
+/* Responsive (يجب أن يبقى دائماً في النهاية لضمان عمل الـ Media Queries بشكل صحيح) */
+@import url('/assets/css/responsive.css');
