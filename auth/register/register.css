@@ -1,35 +1,52 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - BRAND IDENTITY STYLES (WHITE GLASSMORPHISM)
+   TERA INVESTOR PORTAL - OFFICIAL BRAND STYLES (WHITE GLASSMORPHISM)
    ========================================================================== */
 
 :root {
-    /* لوحة الألوان المحدثة بناءً على الشعار الجديد والخلفية البيضاء الزجاجية */
     --primary: #2AB8B6;         /* لون التيل المضيء من سهم الشعار */
     --primary-dark: #1F9D9C;    /* درجة أغمق للـ Hover والتفاعل */
     --bg-body: #FFFFFF;         /* خلفية بيضاء نقية للموقع بالكامل */
     
-    /* لون النص الأساسي (كحلي داكن جداً مستخرج من كلمة TERA باللوجو) */
-    --text-main: #0B192C;       
+    --text-main: #0B192C;       /* كحلي داكن جداً مستخرج من كلمة TERA باللوجو */
     --text-muted: #64748B;      /* لون رمادي احترافي للنصوص الثانوية والتلميحات */
     
-    /* تأثيرات الزجاج الأبيض (White Glassmorphism) */
+    /* تأثيرات الزجاج الأبيض */
     --glass-bg: rgba(255, 255, 255, 0.45);
     --glass-blur: blur(20px);
     --glass-border: 1px solid rgba(255, 255, 255, 0.6);
-    --shadow-glass: 0 15px 35px rgba(11, 25, 44, 0.05); /* ظل ناعم للغاية بلون النص */
+    --shadow-glass: 0 15px 35px rgba(11, 25, 44, 0.05);
 
-    /* الحواف والحدود القياسية */
-    --border-color: rgba(11, 25, 44, 0.09); /* حدود ناعمة تناسب الخلفية البيضاء */
-    --radius-md: 10px;          /* انحناء الحقول والأزرار القياسي */
-    --radius-lg: 20px;          /* انحناء البطاقات الكبيرة مثل الشاشة المعتمدة */
+    --border-color: rgba(11, 25, 44, 0.09);
+    --radius-md: 10px;
+    --radius-lg: 20px;
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ألوان الحالات الحية (تتماشى مع بساطة الهوية الجديدة) */
     --error-red: #EF4444;
     --success-green: #22C55E;
 }
 
-/* التنسيق العام لبطاقة التسجيل بأسلوب الزجاج الأبيض الفاخر */
+/* التنسيق الأساسي للهيكل وإدارة المراحل التلقائية */
+.auth-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* إخفاء المراحل وإظهارها برمجياً لعدم تداخل المراحل */
+.form-step {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.form-step.active {
+    display: block;
+    opacity: 1;
+}
+
+/* بطاقة الواجهة الزجاجية */
 .register-card-wide {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
@@ -38,14 +55,65 @@
     padding: 40px;
     box-shadow: var(--shadow-glass);
     border: var(--glass-border);
-    position: relative;
-    overflow: hidden;
     color: var(--text-main);
+    box-sizing: border-box;
 }
 
-/* ==========================================================================
-   1. شريط تتبع الخطوات (Steps Tracker)
-   ========================================================================== */
+/* أسلوب الترويسة والشعار */
+.auth-logo-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.btn-back-home {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-back-home:hover {
+    color: var(--primary);
+}
+
+.main-logo {
+    height: 40px;
+}
+
+.sub-logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.page-intro-header {
+    margin-bottom: 35px;
+}
+
+.page-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 10px 0;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* شريط تتبع الخطوات العلوي */
 .reg-steps-tracker {
     display: flex;
     justify-content: space-between;
@@ -74,6 +142,7 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    background: transparent;
 }
 
 .reg-step-node .step-num {
@@ -91,7 +160,6 @@
     transition: var(--transition);
 }
 
-/* الحالة النشطة للخطوة (تأخذ لون التيل المضيء للهوية) */
 .reg-step-node.active .step-num {
     background: var(--primary);
     color: var(--bg-body);
@@ -100,7 +168,6 @@
     transform: scale(1.05);
 }
 
-/* الخطوات المكتملة مسبقاً */
 .reg-step-node.completed .step-num {
     background: rgba(42, 184, 182, 0.08);
     color: var(--primary);
@@ -119,12 +186,28 @@
     font-weight: 700;
 }
 
-/* ==========================================================================
-   2. حقول الإدخال وعناصر التحكم (Inputs & Toggles)
-   ========================================================================== */
+/* الحقول والنصوص والعناصر الفنية */
+.step-heading {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 25px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary);
+    display: inline-block;
+}
+
 .form-group {
-    position: relative;
     margin-bottom: 25px;
+}
+
+.form-row-split {
+    display: flex;
+    gap: 20px;
+}
+
+.form-row-split .form-group {
+    flex: 1;
 }
 
 .tera-label {
@@ -135,7 +218,6 @@
     font-size: 14px;
 }
 
-/* الحقول بتصميم زجاجي ناعم ومتناسق مع الخلفية البيضاء للموقع */
 .tera-input-field {
     width: 100%;
     padding: 14px 16px;
@@ -150,28 +232,26 @@
     box-sizing: border-box;
 }
 
-/* عند التركيز والكتابة داخل الحقل (حواف بلون التيل المضيء للشعار) */
 .tera-input-field:focus {
     border-color: var(--primary);
     background: var(--bg-body);
     box-shadow: 0 0 0 3px rgba(42, 184, 182, 0.1);
 }
 
-/* في حالة وجود خطأ في البيانات */
 .tera-input-field.error {
     border-color: var(--error-red) !important;
     background: rgba(239, 68, 68, 0.02) !important;
 }
 
-.form-group .input-icon-wrapper {
+/* عناصر الإدخال الحركية والأيقونات */
+.input-icon-wrapper {
     position: relative;
     display: flex;
     align-items: center;
     width: 100%;
 }
 
-/* أيقونات العين والقفل التفاعلية */
-.3d-toggle-icon {
+.toggle-icon-btn {
     position: absolute;
     left: 14px;
     cursor: pointer;
@@ -186,24 +266,17 @@
     color: var(--text-muted);
 }
 
-.3d-toggle-icon:hover {
+.toggle-icon-btn:hover, .toggle-icon-btn.active {
     color: var(--primary);
     background: rgba(42, 184, 182, 0.05);
 }
 
-.3d-toggle-icon svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
+.static-icon {
+    cursor: default;
+    pointer-events: none;
 }
 
-.3d-toggle-icon.active svg {
-    fill: var(--primary);
-}
-
-/* ==========================================================================
-   3. صناديق ومؤشرات التحقق والاشتراطات الحية
-   ========================================================================== */
+/* صناديق مؤشرات الاشتراطات الحية */
 .validation-box {
     margin-top: 12px;
     padding: 14px;
@@ -219,23 +292,22 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     color: var(--text-muted);
     transition: var(--transition);
 }
 
 .req-item .indicator {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     display: inline-block;
     background: var(--text-muted);
-    opacity: 0.4;
+    opacity: 0.3;
     transition: var(--transition);
 }
 
-/* عند استيفاء الشرط بنجاح (مؤشر التيل المضيء) */
 .req-item.valid {
     color: var(--text-main);
 }
@@ -243,13 +315,16 @@
 .req-item.valid .indicator {
     background: var(--primary);
     opacity: 1;
-    transform: scale(1.2);
+    transform: scale(1.1);
     box-shadow: 0 0 6px rgba(42, 184, 182, 0.4);
 }
 
-/* ==========================================================================
-   4. مؤشر قوة كلمة المرور
-   ========================================================================== */
+.req-item.invalid .indicator {
+    background: var(--error-red);
+    opacity: 1;
+}
+
+/* مؤشر قوة كلمة المرور */
 .password-strength-container {
     margin-top: 12px;
 }
@@ -266,7 +341,6 @@
     background: var(--border-color);
     border-radius: 3px;
     overflow: hidden;
-    position: relative;
 }
 
 .strength-fill {
@@ -280,24 +354,108 @@
 .strength-fill.medium { background: #F59E0B; width: 60%; }
 .strength-fill.strong { background: var(--success-green); width: 100%; }
 
-/* ==========================================================================
-   5. الأزرار التفاعلية (Buttons)
-   ========================================================================== */
-/* الزر الأساسي بلون التيل المضيء والـ Hover بالدرجة الأغمق المحددة */
+.match-status {
+    font-size: 12px;
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* خيارات الاختيار والتحقق الذكية */
+.checkboxes-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkbox-label, .radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.checkbox-label input, .radio-label input {
+    margin-top: 4px;
+    accent-color: var(--primary);
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 5px;
+}
+
+/* الحاويات المتقدمة للمرحلة الرابعة */
+.agreements-scroll-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.global-acceptance-wrapper {
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+    margin-top: 5px;
+}
+
+.final-pledge-box {
+    background: rgba(11, 25, 44, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 30px;
+    border-right: 4px solid var(--primary);
+}
+
+.final-pledge-box h4 {
+    color: var(--text-main);
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.final-pledge-box p {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* هندسة الأزرار */
+.step-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.step-actions.flex-end {
+    justify-content: flex-end;
+}
+
 .btn-primary {
     background: var(--primary);
     color: var(--bg-body);
     border: none;
-    padding: 14px 32px;
+    padding: 13px 32px;
     font-size: 15px;
     font-weight: 700;
     border-radius: var(--radius-md);
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(42, 184, 182, 0.2);
     transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .btn-primary:hover {
@@ -306,17 +464,11 @@
     box-shadow: 0 6px 16px rgba(31, 157, 156, 0.3);
 }
 
-.btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(31, 157, 156, 0.2);
-}
-
-/* الزر الثانوي (السابق) متوافق مع النمط الزجاجي الأبيض */
 .btn-prev {
     background: rgba(255, 255, 255, 0.5);
     color: var(--text-main);
     border: 1.5px solid var(--border-color);
-    padding: 14px 32px;
+    padding: 13px 32px;
     font-size: 15px;
     font-weight: 700;
     border-radius: var(--radius-md);
@@ -337,28 +489,21 @@
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   6. صناديق الإقرارات والاتفاقيات
-   ========================================================================== */
-.final-pledge-box {
-    background: rgba(11, 25, 44, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    margin: 25px 0;
-    border-right: 4px solid var(--primary); /* حافة جانبية بلون التيل المضيء */
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
-.final-pledge-box h4 {
-    color: var(--text-main);
-    margin: 0 0 6px 0;
-    font-size: 15px;
+.auth-link {
+    color: var(--primary);
+    text-decoration: none;
+    margin-right: 5px;
     font-weight: 700;
 }
 
-.final-pledge-box p {
-    color: var(--text-muted);
-    font-size: 13.5px;
-    line-height: 1.6;
-    margin: 0;
+.auth-link:hover {
+    text-decoration: underline;
 }
