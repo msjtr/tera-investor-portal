@@ -1,126 +1,79 @@
 /* ==========================================
-   Premium Security Section (قسم الأمان الرئيسي)
+   TERA Investor Portal - Security & Session Hardening
 ========================================== */
-.security-section {
-    background: #ffffff;
-    padding: 32px;
-    border-radius: 20px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    margin-bottom: 28px;
-}
 
-/* ==========================================
-   Security Cards (بطاقات التحقق الثنائي وإدارة الحماية)
-========================================== */
-.security-card {
-    padding: 24px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+/* كروت تنشيط الأمان الثنائي (2FA Toggle Card) */
+.security-status-hero {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative;
-}
-
-.security-card:hover {
-    border-color: rgba(13, 148, 136, 0.25); /* تلميح لوني ناعم يعكس التفاعل الفاخر */
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
-    transform: translateY(-2px);
-}
-
-/* ==========================================
-   Premium Security Status Pills (مؤشرات حالات الأمان)
-========================================== */
-.status {
-    display: inline-flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    padding: 6px 14px;
-    border-radius: 999px;
-    margin: 8px 0;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.01em;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
 }
 
-/* الجلسات النشطة أو محاولات الدخول الناجحة */
-.status.active,
-.status.success {
-    background: #e6f4ea; 
-    color: #137333;
+.security-badge-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-/* محاولات الدخول الفاشلة أو الحسابات غير الموثقة */
-.status.failed {
-    background: #fce8e6;
-    color: #c5221f;
+/* مفاتيح التبديل السريعة (Custom Switch Checkboxes) */
+.switch-control {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
 }
 
-/* الحالات المعطلة أو الجلسات المنتهية */
-.status.inactive {
-    background: #f1f5f9;
-    color: #64748b;
+.switch-control input { opacity: 0; width: 0; height: 0; }
+
+.slider-knob {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+    border-radius: 34px;
 }
 
-/* ==========================================
-   Audit Logs & Device Tables (جداول سجلات الأمان والأجهزة)
-========================================== */
-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+.slider-knob:before {
+    position: absolute;
+    content: "";
+    height: 18px; width: 18px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
 }
 
-th {
-    background: #f8fafc;
-    color: var(--text-light, #64748b);
-    font-weight: 700;
-    font-size: 13px;
-    border-bottom: 2px solid #edf2f7;
-}
+input:checked + .slider-knob { background-color: var(--primary-teal); }
+input:checked + .slider-knob:before { transform: translateX(24px); }
 
-th,
-td {
+/* جدول سجل الأجهزة المتصلة بحساب المستثمر */
+.session-device-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 16px;
-    text-align: right; /* متوافق هندسياً مع اتجاه الواجهات العربية RTL */
+    border-bottom: 1px solid var(--border);
 }
 
-td {
-    border-bottom: 1px solid #f1f5f9;
-    color: #334155;
-    font-size: 14px;
-    transition: background-color .2s ease;
+.session-device-card:last-child { border-bottom: none; }
+
+.device-info-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
-/* تمييز الصفوف لتسهيل تتبع كشوفات وجلسات الدخول */
-tr:hover td {
-    background-color: #f8fafc;
-}
-
-/* حماية الحواف الدائرية لجدول جلسات الأمان */
-tr:last-child td:first-child { border-bottom-right-radius: 12px; }
-tr:last-child td:last-child { border-bottom-left-radius: 12px; }
-
-/* ==========================================
-   Responsive Security Layout (استجابة شاشات الجوال والتابلت)
-========================================== */
-@media (max-width: 768px) {
-    .security-section {
-        padding: 24px 16px;
-        border-radius: 16px;
-    }
-
-    .security-card {
-        padding: 20px;
-        border-radius: 12px;
-    }
-
-    th, td {
-        padding: 12px 10px;
-        font-size: 13px;
-    }
+.device-status-active {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
 }
