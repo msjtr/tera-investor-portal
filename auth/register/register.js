@@ -4,43 +4,39 @@
  * نظام إدارة استمارة التسجيل متعددة الخطوات - منصة تيرا الاستثمارية
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
     // === 1. تعريف عناصر واجهة المستخدم (DOM Elements) ===
-    const registerForm = document.getElementById('registerForm');
+    var registerForm = document.getElementById('registerForm');
     if (!registerForm) return;
 
-    const formSteps = Array.from(registerForm.querySelectorAll('.form-step'));
-    const stepNodes = Array.from(document.querySelectorAll('.reg-steps-tracker .reg-step-node'));
-    const nextButtons = registerForm.querySelectorAll('.btn-next');
-    const prevButtons = registerForm.querySelectorAll('.btn-prev');
+    var formSteps = Array.from(registerForm.querySelectorAll('.form-step'));
+    var stepNodes = Array.from(document.querySelectorAll('.reg-steps-tracker .reg-step-node'));
+    var nextButtons = registerForm.querySelectorAll('.btn-next');
+    var prevButtons = registerForm.querySelectorAll('.btn-prev');
     
     // عناصر التحقق من كلمة المرور
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const strengthFill = document.getElementById('strengthFill');
-    const strengthText = document.getElementById('strengthText');
-    const passwordMatchSpan = document.getElementById('passwordMatch');
+    var passwordInput = document.getElementById('password');
+    var confirmPasswordInput = document.getElementById('confirmPassword');
+    var strengthFill = document.getElementById('strengthFill');
+    var strengthText = document.getElementById('strengthText');
+    var passwordMatchSpan = document.getElementById('passwordMatch');
     
     // عناصر ديناميكية (الجنسية ونوع الحساب)
-    const nationalitySelect = document.getElementById('nationality');
-    const identityLabel = document.getElementById('identityLabel');
-    const identityInput = document.getElementById('identityNumber');
-    const typeCards = document.querySelectorAll('.type-selector-card');
-    const investorTypeHidden = document.getElementById('investorType');
+    var nationalitySelect = document.getElementById('nationality');
+    var identityLabel = document.getElementById('identityLabel');
+    var identityInput = document.getElementById('identityNumber');
+    var typeCards = document.querySelectorAll('.type-selector-card');
+    var investorTypeHidden = document.getElementById('investorType');
 
-    let currentStep = 0;
+    var currentStep = 0;
 
     // === 2. نظام التنقل بين الخطوات (Wizard Navigation) ===
-    
-    // تحديث الواجهة الرسومية للخطوات والشريط العلوي
     function updateFormSteps() {
-        // تحديث ظهور الحقول
-        formSteps.forEach((step, index) => {
+        formSteps.forEach(function (step, index) {
             step.classList.toggle('active', index === currentStep);
         });
 
-        // تحديث شريط الحالة العلوي (Stepper)
-        stepNodes.forEach((node, index) => {
+        stepNodes.forEach(function (node, index) {
             if (index <= currentStep) {
                 node.classList.add('active');
             } else {
@@ -48,16 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // التمرير التلقائي لأعلى البطاقة لراحة المستخدم عند التنقل
-        const container = document.querySelector('.register-card-wide');
+        var container = document.querySelector('.register-card-wide');
         if (container) {
             container.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
-    // زر التالي
-    nextButtons.forEach(button => {
-        button.addEventListener('click', () => {
+    nextButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
             if (validateCurrentStep()) {
                 if (currentStep < formSteps.length - 1) {
                     currentStep++;
@@ -67,9 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // زر السابق
-    prevButtons.forEach(button => {
-        button.addEventListener('click', () => {
+    prevButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
             if (currentStep > 0) {
                 currentStep--;
                 updateFormSteps();
@@ -79,11 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === 3. التحقق الذكي من حقول الخطوة الحالية (Validation) ===
     function validateCurrentStep() {
-        const activeStepFields = formSteps[currentStep].querySelectorAll('input[required], select[required]');
-        let isStepValid = true;
+        var activeStepFields = formSteps[currentStep].querySelectorAll('input[required], select[required]');
+        var isStepValid = true;
 
-        // التحقق القياسي للمتصفح (HTML5 Validation)
-        activeStepFields.forEach(field => {
+        activeStepFields.forEach(function (field) {
             if (!field.checkValidity()) {
                 field.reportValidity();
                 isStepValid = false;
@@ -92,23 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isStepValid) return false;
 
-        // تحققات منطقية مخصصة بناءً على رقم الخطوة الحالية
         if (currentStep === 0) {
-            // مطابقة البريد الإلكتروني
-            const email = document.getElementById('email').value;
-            const confirmEmail = document.getElementById('confirmEmail').value;
+            var email = document.getElementById('email').value;
+            var confirmEmail = document.getElementById('confirmEmail').value;
             if (email !== confirmEmail) {
                 alert('البريد الإلكتروني وتأكيده غير متطابقين.');
                 return false;
             }
 
-            // مطابقة كلمة المرور
             if (passwordInput.value !== confirmPasswordInput.value) {
                 alert('كلمات المرور غير متطابقة.');
                 return false;
             }
             
-            // إلزام المستخدم بحد أدنى من الأمان
             if (checkPasswordStrength(passwordInput.value) < 3) {
                 alert('الرجاء اختيار كلمة مرور أقوى تحتوي على مزيج من الأحرف والأرقام قبل الانتقال.');
                 return false;
@@ -116,8 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentStep === 2) {
-            // تحقق كفاءة رقم الهوية أو الإقامة للمملكة العربية السعودية (10 أرقام)
-            const nationality = nationalitySelect.value;
+            var nationality = nationalitySelect.value;
             if ((nationality === 'saudi' || nationality === 'resident') && identityInput.value.length !== 10) {
                 alert('يجب أن يتكون رقم الهوية الوطنية أو الإقامة من 10 أرقام صحيحة.');
                 return false;
@@ -129,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === 4. فحص قوة كلمة المرور ومطابقتها (Password Security) ===
     function checkPasswordStrength(password) {
-        let score = 0;
+        var score = 0;
         if (password.length >= 8) score++;
         if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
         if (/[0-9]/.test(password)) score++;
@@ -152,11 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (passwordInput) {
-        passwordInput.addEventListener('input', () => {
-            const pass = passwordInput.value;
-            const score = checkPasswordStrength(pass);
+        passwordInput.addEventListener('input', function () {
+            var pass = passwordInput.value;
+            var score = checkPasswordStrength(pass);
             
-            strengthFill.className = 'strength-fill'; // إعادة تعيين كلاس الألوان
+            strengthFill.className = 'strength-fill';
             
             if (pass.length === 0) {
                 strengthText.textContent = 'أدخل كلمة المرور';
@@ -187,12 +174,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === 5. التحكم الديناميكي بفئة المستثمر والجنسية ===
-    
-    // تبديل واجهات كروت اختيار فئة المستثمر (أفراد / شركات)
-    typeCards.forEach(card => {
-        card.addEventListener('click', () => {
-            typeCards.forEach(c => c.classList.remove('selected'));
+    typeCards.forEach(function (card) {
+        card.addEventListener('click', function () {
+            typeCards.forEach(function (c) { c.classList.remove('selected'); });
             card.classList.add('selected');
             
-            const selectedType = card.getAttribute('data-type');
+            var selectedType = card.getAttribute('data-type');
             if (investorTypeHidden) investorTypeHidden.value = selectedType;
+            
+            var nameArLabel = document.querySelector('label[for="fullNameAr"]');
+            var nameEnLabel = document.querySelector('label[for="fullNameEn"]');
+            
+            if (selectedType === 'corporate') {
+                if (nameArLabel) nameArLabel.textContent = 'اسم الشركة / المؤسسة الرسمي (بالعربية)';
+                if (nameEnLabel) nameEnLabel.textContent = 'اسم الشركة الرسمي (بالإنجليزية)';
+                if (identityLabel) identityLabel.textContent = 'رقم السجل التجاري للمنشأة';
+                if (identityInput) identityInput.placeholder = 'أدخل رقم السجل التجاري المكون من 10 أرقام';
+            } else {
+                if (nameArLabel) nameArLabel.textContent = 'الاسم الكامل (بالعربية)';
+                if (nameEnLabel) nameEnLabel.textContent = 'الاسم الكامل (بالإنجليزية)';
+                if (nationalitySelect) updateIdentityLabelByNationality(nationalitySelect.value);
+            }
+        });
+    });
+
+    if (nationalitySelect) {
+        nationalitySelect.addEventListener('change', function (e) {
+            if (investorTypeHidden && investorTypeHidden.value === 'individual') {
+                updateIdentityLabelByNationality(e.target.value);
+            }
+        });
+    }
+
+    function updateIdentityLabelByNationality(nationality) {
+        if (!identityLabel || !identityInput) return;
+        
+        switch (nationality) {
+            case 'saudi':
+                identityLabel.textContent = 'رقم الهوية الوطنية';
+                identityInput.placeholder = '1xxxxxxxx';
+                break;
+            case 'resident':
+                identityLabel.textContent = 'رقم هوية مقيم (الإقامة)';
+                identityInput.placeholder = '2xxxxxxxx';
+                break;
+            case 'gcc':
+                identityLabel.textContent = 'رقم الهوية الخليجية أو جواز السفر';
+                identityInput.placeholder = 'أدخل رقم الهوية أو الجواز';
+                break;
+            default:
+                identityLabel.textContent = 'رقم جواز السفر الدولي';
+                identityInput.placeholder = 'أدخل رقم جواز السفر';
+        }
+    }
+
+    if (identityInput) {
+        identityInput.addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    }
+    
+    var mobileInput = document.getElementById('mobile');
+    if (mobileInput) {
+        mobileInput.addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    // === 6. معالجة الإرسال النهائي للاستمارة (Form Submission) ===
+    registerForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (!validateCurrentStep()) return;
+
+        var formData = new FormData(registerForm);
+        var registrationPayload = Object.fromEntries(formData.entries());
+
+        var submitBtn = registerForm.querySelector('.btn-submit');
+        var originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري معالجة البيانات وتجهيز المحفظة...';
+
+        try {
+            var response = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(registrationPayload)
+            });
+
+            var result = await response.json();
+
+            if (response.ok) {
+                alert('تم إنشاء حسابك المستثمري بنجاح! سيتم توجيهك الآن إلى لوحة التحكم الخاصة بك.');
+                window.location.href = result.redirectUrl || '/pages/dashboard/index.html';
+            } else {
+                throw new Error(result.message || 'حدث خطأ غير متوقع أثناء المعالجة، يرجى إعادة التحقق.');
+            }
+
+        } catch (error) {
+            alert('فشلت عملية التسجيل: ' + error.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+        }
+    });
+});
