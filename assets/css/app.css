@@ -1,102 +1,230 @@
+```css
 /* ==========================================
-   Auth Pages
+   TERA Investor Portal
+   Global Styles
 ========================================== */
 
-.auth-container{
+:root{
 
-    display:flex;
+    --primary:#0f766e;
+    --primary-light:#14b8a6;
 
-    justify-content:center;
+    --background:#f8fafc;
+    --surface:#ffffff;
 
-    align-items:center;
+    --border:#e5e7eb;
+
+    --text:#111827;
+    --text-light:#6b7280;
+
+    --success:#22c55e;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+
+    --radius:12px;
+
+    --shadow:
+    0 2px 12px rgba(0,0,0,.05);
+
+}
+
+/* ==========================================
+   Reset
+========================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+
+    direction:rtl;
+
+    background:var(--background);
+
+    color:var(--text);
+
+    font-family:
+    Tahoma,
+    Arial,
+    sans-serif;
 
     min-height:100vh;
 
-    padding:20px;
+    line-height:1.7;
 
 }
 
-.auth-card{
+/* ==========================================
+   Links
+========================================== */
 
-    width:100%;
+a{
 
-    max-width:450px;
+    text-decoration:none;
 
-    background:var(--surface);
-
-    padding:35px;
-
-    border-radius:var(--radius);
-
-    box-shadow:var(--shadow);
+    color:inherit;
 
 }
 
-.auth-logo{
+/* ==========================================
+   Lists
+========================================== */
+
+ul,
+ol{
+
+    list-style:none;
+
+}
+
+/* ==========================================
+   Images
+========================================== */
+
+img{
+
+    max-width:100%;
+
+    display:block;
+
+}
+
+/* ==========================================
+   Layout
+========================================== */
+
+.app-layout{
+
+    display:flex;
+
+    min-height:100vh;
+
+}
+
+.main-wrapper{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+main{
+
+    flex:1;
+
+    padding:24px;
+
+}
+
+/* ==========================================
+   Header
+========================================== */
+
+.header{
+
+    height:70px;
+
+    background:#fff;
+
+    border-bottom:
+    1px solid var(--border);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:0 24px;
+
+}
+
+.page-title{
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.header-actions{
+
+    display:flex;
+
+    gap:15px;
+
+}
+
+/* ==========================================
+   Sidebar
+========================================== */
+
+.sidebar{
+
+    width:260px;
+
+    background:#fff;
+
+    border-left:
+    1px solid var(--border);
+
+}
+
+.sidebar-logo{
+
+    padding:24px;
 
     text-align:center;
 
-    font-size:32px;
+    font-size:28px;
 
     font-weight:700;
 
     color:var(--primary);
 
-    margin-bottom:20px;
-
 }
 
-.auth-card h1{
-
-    text-align:center;
-
-    margin-bottom:10px;
-
-}
-
-.auth-card p{
-
-    text-align:center;
-
-    color:var(--text-light);
-
-    margin-bottom:25px;
-
-}
-
-.form-group{
-
-    margin-bottom:15px;
-
-}
-
-.form-group label{
+.sidebar ul li a{
 
     display:block;
 
-    margin-bottom:8px;
+    padding:14px 20px;
 
-    font-weight:600;
-
-}
-
-.auth-options{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin:15px 0;
+    transition:.3s;
 
 }
 
-.auth-footer{
+.sidebar ul li a:hover{
 
-    margin-top:20px;
+    background:#f1f5f9;
 
-    text-align:center;
+    color:var(--primary);
+
+}
+
+/* ==========================================
+   Cards
+========================================== */
+
+.card{
+
+    background:#fff;
+
+    border-radius:var(--radius);
+
+    box-shadow:var(--shadow);
+
+    padding:20px;
 
 }
 
@@ -125,51 +253,179 @@
 }
 
 /* ==========================================
-   Section Header
+   Forms
 ========================================== */
 
-.section-header{
+.form-group{
 
-    display:flex;
+    margin-bottom:18px;
 
-    justify-content:space-between;
+}
 
-    align-items:center;
+.form-group label{
 
-    margin-bottom:20px;
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
+}
+
+input,
+select,
+textarea{
+
+    width:100%;
+
+    padding:12px;
+
+    border:
+    1px solid var(--border);
+
+    border-radius:8px;
+
+    outline:none;
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+    border-color:
+    var(--primary);
 
 }
 
 /* ==========================================
-   Grid
+   Buttons
 ========================================== */
 
-.grid{
+button,
+.btn{
 
-    display:grid;
+    display:inline-block;
 
-    gap:20px;
+    border:none;
+
+    cursor:pointer;
+
+    padding:12px 20px;
+
+    border-radius:8px;
+
+    background:
+    var(--primary);
+
+    color:#fff;
+
+    transition:.3s;
 
 }
 
-.grid-2{
+button:hover,
+.btn:hover{
 
-    grid-template-columns:
-    repeat(2,1fr);
-
-}
-
-.grid-3{
-
-    grid-template-columns:
-    repeat(3,1fr);
+    background:
+    var(--primary-light);
 
 }
 
-.grid-4{
+.btn-success{
 
-    grid-template-columns:
-    repeat(4,1fr);
+    background:
+    var(--success);
+
+}
+
+.btn-warning{
+
+    background:
+    var(--warning);
+
+}
+
+.btn-danger{
+
+    background:
+    var(--danger);
+
+}
+
+/* ==========================================
+   Tables
+========================================== */
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    background:#fff;
+
+}
+
+th,
+td{
+
+    padding:14px;
+
+    border-bottom:
+    1px solid var(--border);
+
+    text-align:right;
+
+}
+
+th{
+
+    background:#f8fafc;
+
+    font-weight:700;
+
+}
+
+/* ==========================================
+   Status
+========================================== */
+
+.status{
+
+    display:inline-block;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.status.success{
+
+    background:#dcfce7;
+
+    color:#166534;
+
+}
+
+.status.warning{
+
+    background:#fef3c7;
+
+    color:#92400e;
+
+}
+
+.status.danger{
+
+    background:#fee2e2;
+
+    color:#991b1b;
 
 }
 
@@ -212,32 +468,12 @@
 }
 
 /* ==========================================
-   Breadcrumb
+   Auth Pages
 ========================================== */
 
-.breadcrumb{
+.auth-container{
 
-    display:flex;
-
-    gap:10px;
-
-    margin-bottom:20px;
-
-    color:var(--text-light);
-
-}
-
-.breadcrumb a{
-
-    color:var(--primary);
-
-}
-
-/* ==========================================
-   Loader
-========================================== */
-
-.loader{
+    min-height:100vh;
 
     display:flex;
 
@@ -245,89 +481,140 @@
 
     align-items:center;
 
-    flex-direction:column;
+    padding:30px;
 
-    min-height:100vh;
-
-}
-
-.spinner{
-
-    width:40px;
-
-    height:40px;
-
-    border:4px solid #e5e7eb;
-
-    border-top:4px solid var(--primary);
-
-    border-radius:50%;
-
-    animation:spin 1s linear infinite;
+    background:
+    linear-gradient(
+        135deg,
+        #f8fafc,
+        #eef6f5
+    );
 
 }
 
-@keyframes spin{
+.auth-card{
 
-    100%{
+    width:100%;
 
-        transform:rotate(360deg);
+    max-width:500px;
 
-    }
+    background:#fff;
+
+    padding:35px;
+
+    border-radius:16px;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.08);
+
+}
+
+.auth-logo{
+
+    text-align:center;
+
+    font-size:38px;
+
+    font-weight:700;
+
+    color:var(--primary);
+
+    margin-bottom:20px;
+
+}
+
+.auth-card h1{
+
+    text-align:center;
+
+    margin-bottom:10px;
+
+}
+
+.auth-card p{
+
+    text-align:center;
+
+    color:var(--text-light);
+
+    margin-bottom:25px;
+
+}
+
+.auth-options{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin:15px 0 20px;
+
+}
+
+.auth-footer{
+
+    text-align:center;
+
+    margin-top:20px;
+
+}
+
+.auth-footer a{
+
+    color:var(--primary);
+
+    font-weight:600;
 
 }
 
 /* ==========================================
-   Buttons Variants
+   Footer
 ========================================== */
 
-.btn-success{
+.footer{
 
-    background:var(--success);
+    padding:20px;
 
-}
+    text-align:center;
 
-.btn-warning{
+    background:#fff;
 
-    background:var(--warning);
-
-}
-
-.btn-danger{
-
-    background:var(--danger);
+    border-top:
+    1px solid var(--border);
 
 }
 
 /* ==========================================
-   Dark Mode Ready
+   Utilities
 ========================================== */
 
-.dark{
-
-    background:#111827;
-
-    color:#ffffff;
-
+.text-center{
+    text-align:center;
 }
 
-.dark .card,
-.dark .sidebar,
-.dark .header,
-.dark .auth-card{
-
-    background:#1f2937;
-
+.mt-10{
+    margin-top:10px;
 }
 
-.dark input,
-.dark select,
-.dark textarea{
-
-    background:#111827;
-
-    color:#fff;
-
-    border-color:#374151;
-
+.mt-20{
+    margin-top:20px;
 }
+
+.mt-30{
+    margin-top:30px;
+}
+
+.mb-10{
+    margin-bottom:10px;
+}
+
+.mb-20{
+    margin-bottom:20px;
+}
+
+.mb-30{
+    margin-bottom:30px;
+}
+```
