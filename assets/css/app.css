@@ -1,199 +1,45 @@
 /* ==========================================
-   Register Page Support & Validation
+   TERA Investor Portal - App Utilities & Overrides
 ========================================== */
-.register-container {
-    max-width: 1000px !important;
-}
 
-/* تحديث تفاعلي مرن للحواف الملونة لتطابق التدرج اللوني العام */
-.valid {
-    border-color: var(--success, #10b981) !important;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
-}
+/* فئات مرنة لتوزيع عناصر النصوص والألوان بسرعة داخل الـ HTML */
+.text-teal { color: var(--primary-teal) !important; }
+.text-blue { color: var(--secondary-blue) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
 
-.invalid {
-    border-color: var(--danger, #ef4444) !important;
-    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
-}
+.font-weight-bold { font-weight: 700 !important; }
+.font-weight-black { font-weight: 900 !important; }
 
-.validation-message {
-    margin-top: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.validation-success {
-    color: #059669;
-}
-
-.validation-error {
-    color: #dc2626;
-}
-
-/* ==========================================
-   Sidebar Active State (مؤشر القائمة الجانبية النشط)
-========================================== */
-.sidebar a.active {
-    background: linear-gradient(270deg, rgba(30, 58, 138, 0.06) 0%, rgba(13, 148, 136, 0.01) 100%);
-    color: var(--primary, #1e3a8a);
-    font-weight: 700;
-    /* خط المؤشر على اليمين بما يتوافق تماماً مع الاتجاه dir="rtl" */
-    border-right: 4px solid var(--primary-teal, #0d9488);
-    border-left: none;
-}
-
-/* ==========================================
-   Dashboard Stats (بطاقات لوحة التحكم الإحصائية)
-========================================== */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-}
-
-.stat-card {
-    background: #ffffff;
-    border-radius: var(--radius, 16px);
-    padding: 24px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
-    border-color: rgba(13, 148, 136, 0.3); /* تمييز البطاقة بلمسة تيل ناعمة عند الـ Hover */
-}
-
-.stat-card h3 {
+/* مدخلات الاستمارات القياسية الموحدة للمنصة */
+.tera-input-field {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
-    color: var(--text-light, #64748b);
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
+    color: var(--text-main);
+    transition: var(--transition-smooth);
+    outline: none;
 }
 
-.stat-card .value {
-    font-size: 30px;
-    font-weight: 800;
-    color: var(--text, #0f172a);
-    letter-spacing: -0.02em;
+.tera-input-field:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 
-/* ==========================================
-   Badges & Micro-Indicators (الأوسمة والمؤشرات)
-========================================== */
-.badge {
+/* شارات الحالة الموحدة للجداول والبطاقات الاستثمارية */
+.tera-badge {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 8px;
-    border-radius: 999px;
-    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
     font-weight: 700;
-    color: #ffffff;
-    background: var(--danger, #ef4444);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
-/* عداد التنبيهات الافتراضي غير النشط */
-.notification-count {
-    display: none;
-}
-
-/* ==========================================
-   Premium Glassmorphism Loader (شاشة التحميل الذكية)
-========================================== */
-.loader {
-    position: fixed;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(8px); /* تأثير ضبابي زجاجي يمنح جودة فائقة للواجهة */
-    -webkit-backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-/* دوران مؤشر التحميل بتدرج يطابق هويات الفينتك العالمية */
-.loader::after {
-    content: "";
-    width: 48px;
-    height: 48px;
-    border: 4px solid #e2e8f0;
-    border-top-color: var(--primary, #1e3a8a);
-    border-right-color: var(--primary-teal, #0d9488);
-    border-radius: 50%;
-    animation: tera-spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes tera-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* ==========================================
-   Sleek Custom Scrollbar (شريط التمرير الحديث)
-========================================== */
-::-webkit-scrollbar {
-    width: 6px; /* تحويله لشريط نحيف وأنيق للمنصات الرقمية */
-    height: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 20px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-/* ==========================================
-   Responsive Tables & Layout Utilities
-========================================== */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-/* إدارة مرنة وموحدة لأحجام اللوجو عبر المنصة بالكامل */
-.logo img,
-.auth-logo img,
-.sidebar-logo img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* ==========================================
-   Fade In Animation (التحركات التفاعلية الفاخرة)
-========================================== */
-.fade-in {
-    animation: fadeIn .4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+.tera-badge.success { background-color: #dcfce7; color: #16a34a; }
+.tera-badge.warning { background-color: #fef3c7; color: #d97706; }
+.tera-badge.danger { background-color: #fee2e2; color: #dc2626; }
