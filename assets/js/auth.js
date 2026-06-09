@@ -3,7 +3,8 @@
    Auth JS
 ========================================== */
 
-const AUTH_TOKEN = 'tera_token';
+// حل مشكلة التكرار نهائياً بجعل المتغير مستنداً إلى النطاق العام (Global)
+window.TERA_AUTH_TOKEN = window.TERA_AUTH_TOKEN || 'tera_token';
 
 /* ==========================================
    Login
@@ -12,7 +13,7 @@ const AUTH_TOKEN = 'tera_token';
 function login(token){
 
     localStorage.setItem(
-        AUTH_TOKEN,
+        window.TERA_AUTH_TOKEN,
         token
     );
 
@@ -33,7 +34,7 @@ function login(token){
 function logout(){
 
     localStorage.removeItem(
-        AUTH_TOKEN
+        window.TERA_AUTH_TOKEN
     );
 
     localStorage.removeItem(
@@ -54,7 +55,7 @@ function logout(){
 function isAuthenticated(){
 
     return !!localStorage.getItem(
-        AUTH_TOKEN
+        window.TERA_AUTH_TOKEN
     );
 
 }
@@ -96,7 +97,7 @@ function redirectIfLoggedIn(){
 function getToken(){
 
     return localStorage.getItem(
-        AUTH_TOKEN
+        window.TERA_AUTH_TOKEN
     );
 
 }
@@ -190,19 +191,24 @@ function getLoginTime(){
 }
 
 /* ==========================================
-   Auto Initialize
+   Auto Initialize (الأتمتة الذكية للمسارات)
 ========================================== */
 
 document.addEventListener(
     'DOMContentLoaded',
     () => {
 
-        const path =
-        window.location.pathname;
+        const path = window.location.pathname;
 
+        // 1. حماية الصفحات الداخلية تلقائياً لو كان الرابط يتبع للمجلد /pages/
+        if (path.includes('/pages/')) {
+            protectPage();
+        }
+
+        // 2. منع المستخدم المسجل دخولاً من العودة لصفحات المصادقة
         if(
             path.includes('/auth/login.html') ||
-            path.includes('/auth/register/') ||
+            path.includes('/auth/register') || // تم تعديلها لتقبل روابط Vercel الذكية بدون سلاش أخير
             path.includes('/auth/forgot-password.html')
         ){
 
