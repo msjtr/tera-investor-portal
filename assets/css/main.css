@@ -1,0 +1,25 @@
+/* ==========================================
+   TERA Investor Portal
+   Master CSS File
+========================================== */
+
+/* Core */
+@import url('./core.css');
+
+/* Global */
+@import url('./app.css');
+
+/* Modules */
+@import url('./dashboard.css');
+@import url('./investments.css');
+@import url('./portfolio.css');
+@import url('./reports.css');
+@import url('./profile.css');
+@import url('./security.css');
+@import url('./support.css');
+
+/* Auth */
+@import url('./register.css');
+
+/* Responsive */
+@import url('./responsive.css');
