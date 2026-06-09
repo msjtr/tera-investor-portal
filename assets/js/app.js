@@ -1,14 +1,12 @@
 /* ==========================================
-   TERA Investor Portal - Global App JS (Fixed & Stable)
+   TERA Investor Portal - Global App JS (Fixed)
 ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('TERA Investor Portal Loaded');
     
-    // 1. حماية الصفحات
     checkProtectedPages();
     
-    // 2. تهيئة الواجهة مع حماية ضد الأخطاء
     try {
         initializeApp();
     } catch (err) {
@@ -18,22 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeApp() {
     highlightActiveMenu();
-    // التحقق من وجود الدالة قبل استدعائها لتجنب الانهيار
-    if (typeof initializeTooltips === 'function') initializeTooltips();
+    // حماية الاستدعاء: فقط إذا كانت الدالة موجودة
+    if (typeof initializeTooltips === 'function') {
+        initializeTooltips();
+    } else {
+        console.warn('initializeTooltips is not defined, skipping...');
+    }
     initializeCurrencyFields();
 }
 
 /* ==========================================
-   Authentication & Security
+   Authentication Functions
 ========================================== */
-const AUTH_TOKEN = 'tera_token';
-
-function isAuthenticated() {
-    return !!localStorage.getItem(AUTH_TOKEN);
-}
-
 function logout() {
-    localStorage.removeItem(AUTH_TOKEN);
+    localStorage.removeItem('tera_token');
     sessionStorage.clear();
     window.location.href = '/auth/login.html';
 }
@@ -43,24 +39,14 @@ function checkProtectedPages() {
     const currentPath = window.location.pathname;
     const isProtected = protectedPaths.some(path => currentPath.startsWith(path));
 
-    if (isProtected && !isAuthenticated()) {
+    if (isProtected && !localStorage.getItem('tera_token')) {
         window.location.href = '/auth/login.html';
     }
 }
 
 /* ==========================================
-   Helpers & Utilities
+   Helpers
 ========================================== */
-function highlightActiveMenu() {
-    const currentPage = window.location.pathname;
-    document.querySelectorAll('.sidebar a').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href !== '#' && (currentPage === href || currentPage.includes(href))) {
-            link.classList.add('active');
-        }
-    });
-}
-
 function goTo(url) {
     window.location.href = url;
 }
@@ -77,6 +63,16 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
+function highlightActiveMenu() {
+    const currentPage = window.location.pathname;
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && (currentPage === href || currentPage.includes(href))) {
+            link.classList.add('active');
+        }
+    });
+}
+
 function initializeCurrencyFields() {
     document.querySelectorAll('.currency').forEach(field => {
         const value = parseFloat(field.dataset.amount);
@@ -86,7 +82,9 @@ function initializeCurrencyFields() {
     });
 }
 
-// تصدير الدوال للعالمية بشكل آمن (فقط الدوال المعرفة)
+/* ==========================================
+   Global Export (يجب أن تكون في نهاية الملف)
+========================================== */
 Object.assign(window, {
     logout,
     goTo,
