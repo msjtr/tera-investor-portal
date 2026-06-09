@@ -46,10 +46,10 @@
                         <input type="text" id="reg_username" name="username" class="tera-input-field" placeholder="أدخل اسم المستخدم" required>
                         
                         <div class="validation-box" id="username_requirements">
-                            <div class="req-item" id="user_len"><span class="indicator">🔴</span> من 4 إلى 20 حرفاً</div>
-                            <div class="req-item" id="user_alpha"><span class="indicator">🔴</span> أحرف إنجليزية وأرقام فقط</div>
-                            <div class="req-item" id="user_space"><span class="indicator">🔴</span> لا يحتوي على مسافات</div>
-                            <div class="req-item" id="user_spec"><span class="indicator">🔴</span> لا يحتوي على رموز خاصة</div>
+                            <div class="req-item" id="user_len"><span class="indicator"></span> من 4 إلى 20 حرفاً</div>
+                            <div class="req-item" id="user_alpha"><span class="indicator"></span> أحرف إنجليزية وأرقام فقط</div>
+                            <div class="req-item" id="user_space"><span class="indicator"></span> لا يحتوي على مسافات</div>
+                            <div class="req-item" id="user_spec"><span class="indicator"></span> لا يحتوي على رموز خاصة</div>
                         </div>
                     </div>
 
@@ -68,23 +68,38 @@
                     <div class="form-row-split">
                         <div class="form-group">
                             <label class="tera-label">كلمة المرور</label>
-                            <input type="password" id="reg_password" name="password" class="tera-input-field" placeholder="••••••••" required>
+                            <div class="input-icon-wrapper">
+                                <input type="password" id="reg_password" name="password" class="tera-input-field" placeholder="••••••••" required>
+                                <div class="3d-toggle-icon" id="togglePasswordView" title="إظهار/إخفاء كلمة المرور">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                </div>
+                            </div>
                             
                             <div class="validation-box">
-                                <div class="req-item" id="pass_len"><span class="indicator">🔴</span> 8 أحرف على الأقل</div>
-                                <div class="req-item" id="pass_upper"><span class="indicator">🔴</span> حرف كبير باللغة الإنجليزية</div>
-                                <div class="req-item" id="pass_lower"><span class="indicator">🔴</span> حرف صغير باللغة الإنجليزية</div>
-                                <div class="req-item" id="pass_num"><span class="indicator">🔴</span> رقم واحد على الأقل</div>
-                                <div class="req-item" id="pass_spec"><span class="indicator">🔴</span> رمز خاص واحد على الأقل</div>
+                                <div class="req-item" id="pass_len"><span class="indicator"></span> 8 أحرف على الأقل</div>
+                                <div class="req-item" id="pass_upper"><span class="indicator"></span> حرف كبير باللغة الإنجليزية</div>
+                                <div class="req-item" id="pass_lower"><span class="indicator"></span> حرف صغير باللغة الإنجليزية</div>
+                                <div class="req-item" id="pass_num"><span class="indicator"></span> رقم واحد على الأقل</div>
+                                <div class="req-item" id="pass_spec"><span class="indicator"></span> رمز خاص واحد على الأقل</div>
                             </div>
                             <div class="password-strength-container">
                                 <div class="strength-label">مؤشر القوة: <span id="strength_text">ضعيفة</span></div>
                                 <div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div>
                             </div>
                         </div>
+
                         <div class="form-group">
                             <label class="tera-label">تأكيد كلمة المرور</label>
-                            <input type="password" id="reg_confirm_password" class="tera-input-field" placeholder="••••••••" required>
+                            <div class="input-icon-wrapper">
+                                <input type="password" id="reg_confirm_password" class="tera-input-field" placeholder="••••••••" required>
+                                <div class="3d-toggle-icon static-icon" id="lockConfirmIndicator">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                    </svg>
+                                </div>
+                            </div>
                             <div class="match-status" id="pass_match_status"></div>
                         </div>
                     </div>
@@ -203,7 +218,7 @@
 
                         <label class="checkbox-label alignment-fix">
                             <input type="checkbox" class="agreement-check" name="agree_integrity" required>
-                            <span>أقر بأن جميع البيانات والمعلومات والمستندات المقدمة <strong>صحيحة ودقيقة وتعود لي شخصياً</strong>، وأتحمل كامل المسؤولية النظامية والقانونية عن صحتها وعن حماية الحساب وبيانات الدخول.</span>
+                            <span>أقر بأن جميع البيانات والمعلومات والمستندات القدمة <strong>صحيحة ودقيقة وتعود لي شخصياً</strong>، وأتحمل كامل المسؤولية النظامية والقانونية عن صحتها وعن حماية الحساب وبيانات الدخول.</span>
                         </label>
 
                         <div class="global-acceptance-wrapper">
