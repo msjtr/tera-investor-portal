@@ -1,263 +1,90 @@
 /* ==========================================
-   Portfolio Pages Header (رأس صفحة المحفظة)
+   TERA Investor Portal - Portfolio & Financial Statements
 ========================================== */
-.portfolio-header {
-    margin-bottom: 32px;
-}
 
-.portfolio-header h1 {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text, #0f172a);
-    margin-bottom: 8px;
-    letter-spacing: -0.02em;
-}
-
-.portfolio-header p {
-    font-size: 15px;
-    color: var(--text-light, #64748b);
-}
-
-/* ==========================================
-   Portfolio Summary Grid (مصفوفة ملخص المحفظة)
-========================================== */
-.portfolio-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
-}
-
-.summary-card {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 28px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.summary-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.07);
-}
-
-.summary-card h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-light, #64748b);
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
-}
-
-.summary-card .amount {
-    font-size: 32px;
-    font-weight: 800;
-    color: var(--primary, #1e3a8a); /* الأزرق الملكي للمبالغ الإجمالية ورأس المال */
-    letter-spacing: -0.03em;
-    line-height: 1.2;
-}
-
-/* ==========================================
-   Profit Cards (بطاقات عوائد الأرباح الفاخرة)
-========================================== */
-.profit-card {
-    background: #ffffff;
-    padding: 24px;
-    border-radius: 16px;
-    border: 1px solid rgba(16, 185, 129, 0.15); /* إطار أخضر خفيف جداً يرمز للمكاسب */
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-}
-
-.profit-card .profit-value {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--success, #10b981); /* الأخضر الحيوي للأرباح الصافية المحققة */
-    letter-spacing: -0.02em;
-}
-
-/* ==========================================
-   Premium Withdraw Section (قسم طلبات السحب الآمنة)
-========================================== */
-.withdraw-card {
-    background: #ffffff;
+/* كارت المحفظة الرئيسي الشامل */
+.portfolio-balance-hero {
+    background: linear-gradient(135deg, var(--secondary-blue) 0%, #1e40af 100%);
+    border-radius: var(--radius-lg);
     padding: 32px;
-    border-radius: 20px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15);
 }
 
-.withdraw-card form {
+.balance-meta-block {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 8px;
 }
 
-.available-balance {
-    color: var(--success, #059669);
+.balance-title-label {
+    font-size: 14px;
+    color: #93c5fd;
     font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    letter-spacing: 0.5px;
 }
 
-/* ==========================================
-   Financial Statements & Transactions Containers
-========================================== */
-.statement-card,
-.transactions-section {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 28px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
+.balance-amount-display {
+    font-size: 36px;
+    font-weight: 800;
+}
+
+/* نظام التبويب الداخلي (Tabs) للتنقل بين كشوفات الأرباح والعمليات المعلقة */
+.portfolio-tabs-nav {
+    display: flex;
+    gap: 12px;
+    border-bottom: 2px solid var(--border);
     margin-bottom: 24px;
+    list-style: none;
 }
 
-/* تمييز حركات الأموال البصرية داخل الواجهة */
-.transaction-income {
-    color: var(--success, #10b981);
+.tab-nav-item {
+    padding: 12px 20px;
+    font-size: 14px;
     font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+    transition: var(--transition-smooth);
 }
 
-.transaction-expense {
-    color: var(--danger, #ef4444);
-    font-weight: 700;
+.tab-nav-item:hover,
+.tab-nav-item.active {
+    color: var(--primary-teal);
 }
 
-/* ==========================================
-   Premium Portfolio & Account Tables (الجداول الاستثمارية)
-========================================== */
-.portfolio-table {
+.tab-nav-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    height: 2px;
+    background-color: var(--primary-teal);
 }
 
-.portfolio-table th {
-    background: #f8fafc;
-    color: var(--text-light, #64748b);
-    font-weight: 700;
+/* مجموعات معاملات سحب الرصيد البنكي */
+.bank-transfer-form-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    max-width: 600px;
+}
+
+.bank-info-alert {
+    background: rgba(13, 148, 136, 0.05);
+    border: 1px solid rgba(13, 148, 136, 0.15);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 24px;
+    color: var(--primary-teal);
     font-size: 13px;
-    padding: 16px;
-    border-bottom: 2px solid #edf2f7;
-    text-align: right;
-}
-
-.portfolio-table td {
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
-    color: #334155;
-    font-size: 14px;
-    transition: background-color .2s ease;
-    text-align: right;
-}
-
-.portfolio-table tr:hover td {
-    background: #f8fafc; /* تمييز ناعم للصف عند مرور الماوس */
-}
-
-/* حماية وتدوير زوايا الجدول الاستثماري */
-.portfolio-table tr:last-child td:first-child { border-bottom-right-radius: 12px; }
-.portfolio-table tr:last-child td:last-child { border-bottom-left-radius: 12px; }
-
-/* ==========================================
-   Premium Charts Area (منطقة الرسوم البيانية)
-========================================== */
-.chart-container {
-    background: #ffffff;
-    padding: 28px;
-    border-radius: 20px;
-    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    min-height: 380px;
-    transition: all .3s ease;
-}
-
-/* ==========================================
-   Elegant Empty State (جمالية البيانات الفارغة)
-========================================== */
-.empty-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--text-light, #64748b);
-    background: #f8fafc;
-    border-radius: 16px;
-    border: 2px dashed #e2e8f0;
-}
-
-.empty-state h3 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text, #0f172a);
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    font-size: 14px;
-    max-width: 400px;
-    margin: 0 auto;
-    line-height: 1.5;
-}
-
-/* ==========================================
-   Withdraw Pill Statuses (حالات طلبات السحب)
-========================================== */
-.status-pending {
-    background: #fffbeb;
-    color: #b06000;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 12px;
-}
-
-.status-approved {
-    background: #e6f4ea;
-    color: #137333;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 12px;
-}
-
-.status-rejected {
-    background: #fce8e6;
-    color: #c5221f;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 12px;
-}
-
-/* ==========================================
-   Responsive Architecture (استجابة الجوال والشاشات اللوحية)
-========================================== */
-@media (max-width: 768px) {
-    .portfolio-header h1 {
-        font-size: 24px;
-    }
-
-    .portfolio-summary {
-        gap: 16px;
-    }
-
-    .summary-card {
-        padding: 20px;
-        border-radius: 16px;
-    }
-
-    .summary-card .amount {
-        font-size: 26px;
-    }
-
-    .withdraw-card,
-    .statement-card,
-    .transactions-section,
-    .chart-container {
-        padding: 20px 16px;
-        border-radius: 16px;
-    }
+    font-weight: 600;
+    line-height: 1.6;
 }
