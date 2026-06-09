@@ -1,5 +1,5 @@
 /**
- * TERA Investor Portal - Registration Engine V2
+ * TERA Investor Portal - Registration Engine V2.1 (Enhanced Verification & Password Toggle)
  * المسار: /auth/register/register.js
  */
 
@@ -11,22 +11,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const stepNodes = Array.from(document.querySelectorAll('.reg-steps-tracker .reg-step-node'));
     let currentStep = 0;
 
-    // === 1. التحقق الحي من شروط اسم المستخدم ===
+    // ==========================================
+    // 🛠️ أولاً: ميزة إظهار وإخفاء كلمة المرور (عين الرؤية)
+    // ==========================================
+    function injectPasswordToggle(inputField) {
+        if (!inputField) return;
+        
+        // إنشاء حاوية مرنة للحقل إذا لم تكن موجودة
+        const wrapper = document.createElement('div');
+        wrapper.className = 'password-toggle-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+        
+        inputField.parentNode.insertBefore(wrapper, inputField);
+        wrapper.appendChild(inputField);
+        
+        // إنشاء زر العين
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'password-toggle-btn';
+        toggleBtn.innerHTML = '👁️'; // أيقونة العين الافتراضية
+        toggleBtn.style.cssText = `
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 10;
+            padding: 4px;
+        `;
+        
+        // ضبط حشو الحقل من اليسار لئلا يغطي النص العين
+        inputField.style.paddingLeft = '45px';
+        wrapper.appendChild(toggleBtn);
+        
+        toggleBtn.addEventListener('click', () => {
+            if (inputField.type === 'password') {
+                inputField.type = 'text';
+                toggleBtn.innerHTML = '🔒'; // أيقونة الإخفاء عند الرؤية
+            } else {
+                inputField.type = 'password';
+                toggleBtn.innerHTML = '👁️';
+            }
+        });
+    }
+
+    // تطبيق العين على حقل كلمة المرور وحقل التأكيد
+    const passwordInput = document.getElementById('reg_password');
+    const confirmPasswordInput = document.getElementById('reg_confirm_password');
+    injectPasswordToggle(passwordInput);
+    injectPasswordToggle(confirmPasswordInput);
+
+
+    // ==========================================
+    // 🔍 ثانياً: التحقق الحي من شروط اسم المستخدم
+    // ==========================================
     const usernameInput = document.getElementById('reg_username');
     if (usernameInput) {
         usernameInput.addEventListener('input', (e) => {
             const val = e.target.value;
-            
             updateReq('user_len', val.length >= 4 && val.length <= 20);
             updateReq('user_alpha', /^[A-Za-z0-9]+$/.test(val) || val.length === 0);
             updateReq('user_space', !/\s/.test(val));
-            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/ Jerusalem]/.test(val));
+            updateReq('user_spec', !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/]/.test(val));
         });
     }
 
-    // === 2. التحقق الحي من قوة كلمة المرور وتطابقها ===
-    const passwordInput = document.getElementById('reg_password');
-    const confirmPasswordInput = document.getElementById('reg_confirm_password');
+    // ==========================================
+    // 🛡️ ثالثاً: التحقق الحي من قوة كلمة المرور وتطابقها
+    // ==========================================
     const strengthFill = document.getElementById('strengthFill');
     const strengthText = document.getElementById('strength_text');
 
@@ -41,23 +97,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (/[0-9]/.test(val)) { updateReq('pass_num', true); score++; } else updateReq('pass_num', false);
             if (/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?/]/.test(val)) { updateReq('pass_spec', true); score++; } else updateReq('pass_spec', false);
 
-            // تمثيل القوة على شريط الهوية
-            strengthFill.className = 'strength-fill';
-            if (val.length === 0) {
-                strengthFill.style.width = '0%';
-                strengthText.textContent = 'ضعيفة';
-            } else if (score <= 2) {
-                strengthFill.classList.add('weak');
-                strengthText.textContent = 'ضعيفة';
-            } else if (score === 3) {
-                strengthFill.classList.add('medium');
-                strengthText.textContent = 'متوسطة';
-            } else if (score === 4) {
-                strengthFill.classList.add('strong');
-                strengthText.textContent = 'قوية';
-            } else {
-                strengthFill.classList.add('very-strong');
-                strengthText.textContent = 'قوية جداً';
+            if (strengthFill) {
+                strengthFill.className = 'strength-fill';
+                if (val.length === 0) {
+                    strengthFill.style.width = '0%';
+                    strengthText.textContent = 'ضعيفة';
+                } else if (score <= 2) {
+                    strengthFill.classList.add('weak');
+                    strengthText.textContent = 'ضعيفة';
+                } else if (score === 3) {
+                    strengthFill.classList.add('medium');
+                    strengthText.textContent = 'متوسطة';
+                } else if (score === 4) {
+                    strengthFill.classList.add('strong');
+                    strengthText.textContent = 'قوية';
+                } else {
+                    strengthFill.classList.add('very-strong');
+                    strengthText.textContent = 'قوية جداً';
+                }
             }
             checkPasswordsMatch();
         });
@@ -67,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkPasswordsMatch() {
         const pStatus = document.getElementById('pass_match_status');
+        if (!pStatus) return;
         if (!confirmPasswordInput.value) { pStatus.textContent = ''; return; }
         if (passwordInput.value === confirmPasswordInput.value) {
             pStatus.innerHTML = '<span style="color: #22C55E;">🟢 كلمة المرور متطابقة</span>';
@@ -75,12 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // التحقق المباشر من تطابق البريد
     const emailInput = document.getElementById('reg_email');
     const confirmEmailInput = document.getElementById('reg_confirm_email');
     if (confirmEmailInput) {
         confirmEmailInput.addEventListener('input', () => {
             const eStatus = document.getElementById('email_match_status');
+            if (!eStatus) return;
             if (!confirmEmailInput.value) { eStatus.textContent = ''; return; }
             if (emailInput.value === confirmEmailInput.value) {
                 eStatus.innerHTML = '<span style="color: #22C55E;">🟢 البريد الإلكتروني متطابق</span>';
@@ -94,11 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(id);
         if (el) {
             el.classList.toggle('valid', isValid);
-            el.querySelector('.indicator').textContent = isValid ? '🟢' : '🔴';
+            const ind = el.querySelector('.indicator');
+            if (ind) ind.textContent = isValid ? '🟢' : '🔴';
         }
     }
 
-    // === 3. تجميع حقول الهوية والجنسية ديناميكياً لتجنب كسر التخطيط ===
+    // ==========================================
+    // 🧱 رابعاً: بناء الحقول الديناميكية (الجنسية والعناوين)
+    // ==========================================
     const natSelect = document.getElementById('nationality_select');
     const dynamicIdentity = document.getElementById('dynamic_identity_section');
     const dynamicAddress = document.getElementById('dynamic_address_section');
@@ -158,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `</div>`;
         dynamicIdentity.innerHTML = html;
 
-        // تفعيل مفتاح التحويل الداخلي لجواز سفر الأجنبي
         if (nat === 'foreign') {
             document.querySelectorAll('input[name="foreign_doc_type"]').forEach(radio => {
                 radio.addEventListener('change', (e) => {
@@ -217,7 +277,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dynamicAddress.innerHTML = html;
     }
 
-    // === 4. معالج التنقل بين الخطوات وحظر الاختراق البصري ===
+    // ==========================================
+    // 🚀 خامساً: منظومة التحقق الذكي والانتقال للخطأ
+    // ==========================================
     form.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-next')) {
             if (validateCurrentStep()) {
@@ -232,82 +294,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function validateCurrentStep() {
         const currentEl = steps[currentStep];
-        const requiredFields = currentEl.querySelectorAll('input[required], select[required]');
-        
+        // جلب جميع الحقول الإلزامية داخل المرحلة الحالية فقط
+        const requiredFields = currentEl.querySelectorAll('input[required], select[required], checkbox[required]');
+        let firstInvalidField = null;
+
+        // تنظيف الحقول من كلاسات الأخطاء السابقة قبل الفحص الجديد
+        currentEl.querySelectorAll('.tera-input-field').forEach(f => f.classList.remove('error'));
+
         for (let field of requiredFields) {
-            if (!field.value.trim()) {
+            // التحقق من الحقول النصية والقوائم المنسدلة والتشيك بوكس
+            const isCheckbox = field.type === 'checkbox';
+            const isInvalid = isCheckbox ? !field.checked : !field.value.trim();
+
+            if (isInvalid) {
                 field.classList.add('error');
-                field.reportValidity();
-                return false;
-            } else {
-                field.classList.remove('error');
+                if (!firstInvalidField) {
+                    firstInvalidField = field; // تحديد أول حقل ناقص للانتقال إليه
+                }
             }
         }
 
-        // قفل أمان إضافي للخطوة الأولى
-        if (currentStep === 0) {
-            const pass = passwordInput.value;
-            const user = usernameInput.value;
-            if (user.length < 4 || /[^A-Za-z0-9]/.test(user)) { usernameInput.reportValidity(); return false; }
-            if (pass !== confirmPasswordInput.value || pass.length < 8) { confirmPasswordInput.reportValidity(); return false; }
-            if (emailInput.value !== confirmEmailInput.value) { confirmEmailInput.reportValidity(); return false; }
-        }
-        return true;
-    }
-
-    function updateUI() {
-        steps.forEach((step, idx) => step.classList.toggle('active', idx === currentStep));
-        stepNodes.forEach((node, idx) => {
-            node.classList.toggle('active', idx === currentStep);
-            node.classList.toggle('completed', idx < currentStep);
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // === 5. مفتاح التحكم النهائي في الإقرارات والاتفاقيات ===
-    const masterCheck = document.getElementById('master_agreement_check');
-    const individualChecks = Array.from(document.querySelectorAll('.agreement-check'));
-    const submitBtn = document.getElementById('submit_register_btn');
-
-    if (masterCheck) {
-        masterCheck.addEventListener('change', (e) => {
-            individualChecks.forEach(ch => ch.checked = e.target.checked);
-            submitBtn.disabled = !e.target.checked;
-        });
-
-        individualChecks.forEach(ch => {
-            ch.addEventListener('change', () => {
-                const allChecked = individualChecks.every(c => c.checked);
-                masterCheck.checked = allChecked;
-                submitBtn.disabled = !allChecked;
-            });
-        });
-    }
-
-    // === 6. الإرسال ومعالجة ما بعد التسجيل والأمان ===
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'جاري معالجة طلبك وحمايته...';
-
-        try {
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            const response = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) throw new Error('فشل تسجيل الطلب، يرجى مراجعة الحقول والتحقق.');
-
-            // النجاح: التوجيه لصفحة تفعيل رمز OTP والبروفايل اللاحق
-            window.location.href = '/auth/verify-otp.html';
-        } catch (err) {
-            alert(err.message);
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'إنشاء الحساب';
-        }
-    });
-});
+        // قفل أمان إضافي صارم للمرحلة الأولى (
