@@ -34,120 +34,50 @@
         <p>أكمل الخطوات التالية لتجهيز محفظتك الاستثمارية في منصة تيرا</p>
 
         <div class="reg-steps-tracker">
-            <div class="reg-step-node active">
-                <div class="step-number">1</div>
-                <div class="step-label">الحساب</div>
-            </div>
-            <div class="reg-step-node">
-                <div class="step-number">2</div>
-                <div class="step-label">البيانات</div>
-            </div>
-            <div class="reg-step-node">
-                <div class="step-number">3</div>
-                <div class="step-label">التوثيق</div>
-            </div>
-            <div class="reg-step-node">
-                <div class="step-number">4</div>
-                <div class="step-label">الإقرار</div>
-            </div>
+            <div class="reg-step-node active"><div class="step-number">1</div><div class="step-label">الحساب</div></div>
+            <div class="reg-step-node"><div class="step-number">2</div><div class="step-label">البيانات</div></div>
+            <div class="reg-step-node"><div class="step-number">3</div><div class="step-label">التوثيق</div></div>
+            <div class="reg-step-node"><div class="step-number">4</div><div class="step-label">الإقرار</div></div>
         </div>
 
         <form id="registerForm" autocomplete="off">
-            <!-- STEP 1 -->
             <div class="form-step active">
-                <div class="form-row-split">
-                    <div class="form-group">
-                        <label for="username">اسم المستخدم</label>
-                        <input type="text" id="username" name="username" class="tera-input-field" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="mobile">رقم الجوال</label>
-                        <div style="display: flex; gap: 8px; direction: ltr;">
-                            <input type="tel" id="mobile" name="mobile" placeholder="5xxxxxxxx" class="tera-input-field" style="flex-grow: 1; text-align: right;" required>
-                            <select id="countryCode" name="country_code" class="tera-input-field" style="width: 110px;">
-                                <option value="+966">+966 🇸🇦</option>
-                                <option value="+971">+971 🇦🇪</option>
-                                <option value="+965">+965 🇰🇼</option>
-                                <option value="+973">+973 🇧🇭</option>
-                                <option value="+968">+968 🇴🇲</option>
-                                <option value="+974">+974 🇶🇦</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row-split" style="margin-top: 16px;">
-                    <div class="form-group">
-                        <label for="email">البريد الإلكتروني</label>
-                        <input type="email" id="email" name="email" class="tera-input-field" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmEmail">تأكيد البريد الإلكتروني</label>
-                        <input type="email" id="confirmEmail" name="confirm_email" class="tera-input-field" required>
-                    </div>
-                </div>
-
-                <div class="form-row-split" style="margin-top: 16px;">
-                    <div class="form-group">
-                        <label for="password">كلمة المرور</label>
-                        <input type="password" id="password" name="password" class="tera-input-field" required>
-                        <div class="password-strength">
-                            <div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div>
-                            <div id="strengthText" class="strength-text">أدخل كلمة المرور</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">تأكيد كلمة المرور</label>
-                        <input type="password" id="confirmPassword" name="confirm_password" class="tera-input-field" required>
-                        <span id="passwordMatch" style="font-size: 12px; font-weight: 700; display: block; margin-top: 6px;"></span>
-                    </div>
-                </div>
-
                 <div class="step-actions" style="margin-top: 32px;">
                     <div></div>
                     <button type="button" class="btn-next">التالي</button>
                 </div>
             </div>
 
-            <!-- STEP 2 -->
             <div class="form-step">
-                <label style="display: block; margin-bottom: 12px; font-weight: 700;">فئة الاستثمار</label>
-                <div class="investor-type-grid">
-                    <div class="type-selector-card selected" data-type="individual">
-                        <div class="type-icon">👤</div>
-                        <div class="type-title">حساب فردي</div>
-                    </div>
-                    <div class="type-selector-card" data-type="corporate">
-                        <div class="type-icon">🏢</div>
-                        <div class="type-title">شركة / مؤسسة</div>
+                <div class="form-row-split">
+                    <div class="form-group">
+                        <label for="fullNameAr">الاسم الكامل</label>
+                        <input type="text" id="fullNameAr" name="full_name_ar" class="tera-input-field" required>
                     </div>
                 </div>
-                <input type="hidden" id="investorType" name="investor_type" value="individual">
-                <!-- (بقية حقول الخطوة الثانية كما هي) -->
                 <div class="step-actions" style="margin-top: 32px;">
                     <button type="button" class="btn-prev">السابق</button>
                     <button type="button" class="btn-next">التالي</button>
                 </div>
             </div>
 
-            <!-- بقية الخطوات و زر الإرسال Submit -->
-            <div class="step-actions" style="margin-top: 32px;">
-                <button type="submit" class="btn-submit">إنشاء الحساب</button>
+            <div class="form-step">
+                <p>يجب الموافقة على الشروط والأحكام لإتمام التسجيل.</p>
+                <div class="step-actions" style="margin-top: 32px;">
+                    <button type="button" class="btn-prev">السابق</button>
+                    <button type="submit" class="btn-submit">إنشاء الحساب</button>
+                </div>
             </div>
         </form>
 
         <div class="auth-footer">
-            <span>لديك حساب بالفعل؟</span>
-            <a href="/auth/login.html">تسجيل الدخول</a>
+            <span>لديك حساب بالفعل؟</span> <a href="/auth/login.html">تسجيل الدخول</a>
         </div>
     </div>
 </div>
 
-<!-- تحميل الملفات الأساسية -->
 <script src="/assets/js/core.js"></script>
 <script src="/assets/js/app.js"></script>
-
-<!-- تحميل المنطق الخاص بالمصادقة والتسجيل -->
 <script type="module">
     import '/assets/js/auth.js';
     import '/auth/register/register.js';
