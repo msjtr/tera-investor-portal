@@ -1,71 +1,100 @@
 /* ==========================================
-   TERA Investor Portal - Main Layout
+   TERA Investor Portal - Main Layout (Fixed)
    المسار: /assets/css/main.css
 ========================================== */
 
-/* تخطيط الصفحة العام */
+/* 1. هيكل الصفحة الأساسي */
 .main-wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-}
-
-/* التخطيط الداخلي للصفحات (Dashboard Layout) */
-.page-container {
-    padding: 30px;
-    margin-top: 80px; /* لتفادي تداخل القائمة العلوية */
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
     width: 100%;
 }
 
-/* تنسيق البطاقات العامة للمحتوى */
-.card {
-    background: var(--color-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    margin-bottom: 24px;
-}
-
-/* القائمة العلوية (Header/Navbar) */
+/* 2. تحسين القائمة العلوية */
 .main-header {
     height: 70px;
     background: rgba(10, 10, 10, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border, #262626);
     position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
+    box-sizing: border-box;
 }
 
-/* تنسيق الشبكة (Grid System) - مرونة عالية */
+/* 3. حاوية الصفحة الرئيسية */
+.page-container {
+    padding: 30px;
+    margin-top: 70px; /* مطابق لارتفاع الهيدر */
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    flex: 1; /* يضمن دفع الفوتر للأسفل */
+}
+
+/* 4. البطاقات (Cards) */
+.card {
+    background: var(--color-surface, #171717);
+    border: 1px solid var(--color-border, #262626);
+    border-radius: var(--radius-lg, 16px);
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: transform 0.2s ease;
+}
+
+/* 5. شبكة العرض المرنة (Grid System) */
 .grid-system {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 24px;
+    width: 100%;
 }
 
-/* التذييل (Footer) */
+/* 6. التذييل (Footer) */
 .main-footer {
     padding: 40px;
     text-align: center;
-    border-top: 1px solid var(--border-color);
-    color: var(--text-muted);
+    border-top: 1px solid var(--color-border, #262626);
+    color: var(--color-text-muted, #94a3b8);
     font-size: 14px;
-    margin-top: auto;
+    background: var(--color-dark, #0a0a0a);
 }
 
-/* تحسين التجاوب */
+/* 7. إضافات جمالية (Gradient Text & Stats) */
+.text-gradient {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.stats-card {
+    border: 1px solid var(--color-border, #262626);
+    padding: 20px;
+    border-radius: var(--radius-md, 10px);
+    text-align: center;
+    transition: var(--transition, all 0.3s ease);
+}
+
+.stats-card:hover {
+    border-color: var(--color-primary-light, #3b82f6);
+    transform: translateY(-5px);
+}
+
+/* 8. إصلاح التجاوب (Responsive Fixes) */
 @media (max-width: 992px) {
     .page-container {
-        padding: 15px;
+        padding: 20px;
+        margin-top: 70px;
     }
     
     .main-header {
@@ -73,19 +102,8 @@
     }
 }
 
-/* كلاسات مساعدة للنصوص */
-.text-gradient {
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.stats-card {
-    text-align: center;
-    transition: var(--transition);
-}
-
-.stats-card:hover {
-    border-color: var(--color-primary-light);
-    transform: translateY(-5px);
+@media (max-width: 480px) {
+    .grid-system {
+        grid-template-columns: 1fr; /* عمود واحد في الشاشات الصغيرة جداً */
+    }
 }
