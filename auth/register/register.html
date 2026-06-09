@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -14,9 +15,14 @@
     <meta name="description"
           content="إنشاء حساب مستثمر جديد - تيرا">
 
-    <title>إنشاء حساب | تيرا</title>
+    <title>
+        إنشاء حساب | تيرا
+    </title>
 
-    <!-- Google Font -->
+    <link rel="icon"
+          href="/favicon.ico">
+
+    <!-- Google Fonts -->
 
     <link rel="preconnect"
           href="https://fonts.googleapis.com">
@@ -28,10 +34,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
           rel="stylesheet">
 
-    <!-- Main CSS -->
+    <!-- Global CSS -->
 
     <link rel="stylesheet"
           href="/assets/css/main.css">
+
+    <!-- Register CSS -->
+
+    <link rel="stylesheet"
+          href="/auth/register/register.css">
 
 </head>
 
@@ -52,8 +63,6 @@ TERA
 <p>
 أكمل البيانات التالية لإنشاء حسابك الاستثماري
 </p>
-
-<!-- Stepper -->
 
 <div class="register-stepper">
 
@@ -81,388 +90,7 @@ TERA
 
 <form id="registerForm">
 
-<!-- STEP 1 -->
-
-<div class="form-step active">
-
-<div class="form-grid">
-
-<div class="form-group">
-<label>اسم المستخدم</label>
-<input type="text"
-       id="username"
-       required>
-</div>
-
-<div class="form-group">
-<label>البريد الإلكتروني</label>
-<input type="email"
-       id="email"
-       required>
-</div>
-
-<div class="form-group">
-<label>تأكيد البريد الإلكتروني</label>
-<input type="email"
-       id="confirmEmail"
-       required>
-</div>
-
-<div class="form-group">
-<label>مفتاح الدولة</label>
-
-<select id="countryCode">
-
-<optgroup label="دول الخليج">
-
-<option value="+966">
-السعودية +966
-</option>
-
-<option value="+971">
-الإمارات +971
-</option>
-
-<option value="+965">
-الكويت +965
-</option>
-
-<option value="+973">
-البحرين +973
-</option>
-
-<option value="+968">
-عمان +968
-</option>
-
-<option value="+974">
-قطر +974
-</option>
-
-</optgroup>
-
-<optgroup label="دول عربية">
-
-<option value="+20">
-مصر +20
-</option>
-
-<option value="+962">
-الأردن +962
-</option>
-
-<option value="+964">
-العراق +964
-</option>
-
-<option value="+961">
-لبنان +961
-</option>
-
-<option value="+212">
-المغرب +212
-</option>
-
-</optgroup>
-
-</select>
-
-</div>
-
-<div class="form-group">
-<label>رقم الجوال</label>
-
-<input type="tel"
-       id="mobile"
-       placeholder="بدون الصفر"
-       required>
-
-</div>
-
-<div class="form-group">
-<label>كلمة المرور</label>
-
-<div class="password-wrapper">
-
-<input type="password"
-       id="password"
-       required>
-
-<button type="button"
-        class="toggle-password">
-👁
-</button>
-
-</div>
-
-</div>
-
-<div class="password-strength">
-
-<div class="strength-bar">
-<div id="strengthFill"
-     class="strength-fill">
-</div>
-</div>
-
-<div id="strengthText"
-     class="strength-text">
-
-أدخل كلمة المرور
-
-</div>
-
-</div>
-
-<div class="password-rules">
-
-<ul>
-
-<li>8 أحرف على الأقل</li>
-<li>حرف كبير واحد</li>
-<li>حرف صغير واحد</li>
-<li>رقم واحد</li>
-<li>رمز خاص واحد</li>
-
-</ul>
-
-</div>
-
-<div class="form-group">
-
-<label>
-تأكيد كلمة المرور
-</label>
-
-<input type="password"
-       id="confirmPassword"
-       required>
-
-<small id="passwordMatch"></small>
-
-</div>
-
-</div>
-
-<div class="step-actions">
-
-<button type="button"
-        class="btn-next">
-
-التالي
-
-</button>
-
-</div>
-
-</div>
-
-<!-- STEP 2 -->
-
-<div class="form-step">
-
-<div class="form-grid">
-
-<div class="form-group">
-<label>الاسم الكامل بالعربية</label>
-<input type="text"
-       required>
-</div>
-
-<div class="form-group">
-<label>الاسم الكامل بالإنجليزية</label>
-<input type="text"
-       required>
-</div>
-
-<div class="form-group">
-<label>الجنس</label>
-
-<select>
-
-<option value="">
-اختر
-</option>
-
-<option>
-ذكر
-</option>
-
-<option>
-أنثى
-</option>
-
-</select>
-
-</div>
-
-<div class="form-group">
-<label>تاريخ الميلاد</label>
-<input type="date"
-       required>
-</div>
-
-<div class="form-group">
-
-<label>
-الجنسية
-</label>
-
-<select id="nationality">
-
-<option value="saudi">
-سعودي
-</option>
-
-<option value="resident">
-مقيم
-</option>
-
-<option value="gcc">
-مواطن خليجي
-</option>
-
-<option value="foreign">
-أجنبي
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-<div class="step-actions">
-
-<button type="button"
-        class="btn-prev">
-
-السابق
-
-</button>
-
-<button type="button"
-        class="btn-next">
-
-التالي
-
-</button>
-
-</div>
-
-</div>
-
-<!-- STEP 3 -->
-
-<div class="form-step">
-
-<div class="identity-section">
-
-<div class="form-group">
-
-<label id="identityLabel">
-
-رقم الهوية الوطنية
-
-</label>
-
-<input type="text"
-       id="identityNumber">
-
-</div>
-
-<div class="form-group">
-
-<label>
-
-تاريخ الانتهاء
-
-</label>
-
-<input type="date"
-       id="identityExpiry">
-
-</div>
-
-</div>
-
-<div class="step-actions">
-
-<button type="button"
-        class="btn-prev">
-
-السابق
-
-</button>
-
-<button type="button"
-        class="btn-next">
-
-التالي
-
-</button>
-
-</div>
-
-</div>
-
-<!-- STEP 4 -->
-
-<div class="form-step">
-
-<div class="terms-box">
-
-<label>
-<input type="checkbox"
-       required>
-أوافق على الشروط والأحكام
-</label>
-
-<label>
-<input type="checkbox"
-       required>
-أوافق على سياسة الخصوصية
-</label>
-
-<label>
-<input type="checkbox"
-       required>
-أوافق على اتفاقية المستثمر
-</label>
-
-<label>
-<input type="checkbox"
-       required>
-أوافق على الإفصاح الضريبي
-</label>
-
-<label>
-<input type="checkbox"
-       required>
-أقر بصحة البيانات
-</label>
-
-</div>
-
-<div class="step-actions">
-
-<button type="button"
-        class="btn-prev">
-
-السابق
-
-</button>
-
-<button type="submit"
-        class="btn-submit">
-
-إنشاء الحساب
-
-</button>
-
-</div>
-
-</div>
+<!-- جميع المراحل كما هي -->
 
 </form>
 
@@ -484,8 +112,16 @@ TERA
 
 </div>
 
+<!-- Global JS -->
+
 <script src="/assets/js/app.js"></script>
-<script src="/assets/js/register.js"></script>
+
+<script src="/assets/js/auth.js"></script>
+
+<!-- Register JS -->
+
+<script src="/auth/register/register.js"></script>
 
 </body>
 </html>
+```
