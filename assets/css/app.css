@@ -1,45 +1,116 @@
 /* ==========================================
-   TERA Investor Portal - App Utilities & Overrides
+   TERA Investor Portal - Global App Styles
+   المسار: /assets/css/app.css
 ========================================== */
 
-/* فئات مرنة لتوزيع عناصر النصوص والألوان بسرعة داخل الـ HTML */
-.text-teal { color: var(--primary-teal) !important; }
-.text-blue { color: var(--secondary-blue) !important; }
-.text-success { color: var(--success) !important; }
-.text-danger { color: var(--danger) !important; }
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --bg-body: #0a0a0a;
+    --bg-card: #121212;
+    --text-main: #ffffff;
+    --text-muted: #a3a3a3;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --transition: all 0.3s ease;
+}
 
-.font-weight-bold { font-weight: 700 !important; }
-.font-weight-black { font-weight: 900 !important; }
+/* تنسيقات عامة للجسم */
+body {
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    font-family: 'Tajawal', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
 
-/* مدخلات الاستمارات القياسية الموحدة للمنصة */
+/* التنسيق الأساسي للحقول (Input Fields) */
 .tera-input-field {
     width: 100%;
     padding: 12px 16px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-main);
-    transition: var(--transition-smooth);
+    color: white;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: var(--transition);
     outline: none;
 }
 
 .tera-input-field:focus {
-    border-color: var(--primary-teal);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.08);
 }
 
-/* شارات الحالة الموحدة للجداول والبطاقات الاستثمارية */
-.tera-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 700;
+.form-group {
+    margin-bottom: 20px;
 }
 
-.tera-badge.success { background-color: #dcfce7; color: #16a34a; }
-.tera-badge.warning { background-color: #fef3c7; color: #d97706; }
-.tera-badge.danger { background-color: #fee2e2; color: #dc2626; }
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* تنسيق عام للأزرار */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+/* تنسيق الروابط */
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+/* التجاوب (Responsive Utilities) */
+@media (max-width: 768px) {
+    .form-row-split {
+        flex-direction: column;
+    }
+}
+
+/* تنسيق الرسائل (Alerts/Errors) */
+.error-message {
+    color: #ff4d4d;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+/* تحسينات التصميم العام */
+.auth-logo img {
+    max-width: 120px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
