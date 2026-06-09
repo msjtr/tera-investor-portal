@@ -1,14 +1,14 @@
 /* ==========================================
-   TERA Investor Portal - Global App JS (Fixed)
+   TERA Investor Portal - Global App JS (Fixed & Stable)
 ========================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('TERA Investor Portal Loaded');
     
-    // حماية الصفحات أولاً قبل تهيئة الواجهة
+    // 1. حماية الصفحات
     checkProtectedPages();
     
-    // تغليف الدوال في try-catch لمنع توقف السكربت في حال فشل عنصر واحد
+    // 2. تهيئة الواجهة مع حماية ضد الأخطاء
     try {
         initializeApp();
     } catch (err) {
@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeApp() {
     highlightActiveMenu();
-    initializeTooltips();
+    // التحقق من وجود الدالة قبل استدعائها لتجنب الانهيار
+    if (typeof initializeTooltips === 'function') initializeTooltips();
     initializeCurrencyFields();
 }
 
@@ -31,11 +32,15 @@ function isAuthenticated() {
     return !!localStorage.getItem(AUTH_TOKEN);
 }
 
+function logout() {
+    localStorage.removeItem(AUTH_TOKEN);
+    sessionStorage.clear();
+    window.location.href = '/auth/login.html';
+}
+
 function checkProtectedPages() {
     const protectedPaths = ['/pages/dashboard', '/pages/investments', '/pages/portfolio'];
     const currentPath = window.location.pathname;
-
-    // استخدام some مع مطابقة دقيقة أو أكثر ذكاءً
     const isProtected = protectedPaths.some(path => currentPath.startsWith(path));
 
     if (isProtected && !isAuthenticated()) {
@@ -44,30 +49,32 @@ function checkProtectedPages() {
 }
 
 /* ==========================================
-   Active Menu (Fixed Logic)
+   Helpers & Utilities
 ========================================== */
 function highlightActiveMenu() {
     const currentPage = window.location.pathname;
-    const links = document.querySelectorAll('.sidebar a');
-
-    links.forEach(link => {
+    document.querySelectorAll('.sidebar a').forEach(link => {
         const href = link.getAttribute('href');
-        if (!href || href === '#') return;
-
-        // مطابقة دقيقة للمسار لمنع تضارب الروابط
-        if (currentPage === href || (href !== '/' && currentPage.includes(href))) {
+        if (href && href !== '#' && (currentPage === href || currentPage.includes(href))) {
             link.classList.add('active');
         }
     });
 }
 
-/* ==========================================
-   Global Utilities
-========================================== */
+function goTo(url) {
+    window.location.href = url;
+}
+
 function showAlert(message, type = 'success') {
-    // استبدل alert بنظام تنبيهات (يمكنك لاحقاً ربطه بـ toast library)
     console.log(`[${type.toUpperCase()}] ${message}`);
-    // إزالة alert() لتجنب إزعاج المستخدم
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        style: 'currency',
+        currency: 'SAR',
+        minimumFractionDigits: 2
+    }).format(amount);
 }
 
 function initializeCurrencyFields() {
@@ -79,18 +86,7 @@ function initializeCurrencyFields() {
     });
 }
 
-/* ==========================================
-   Formatting Helpers
-========================================== */
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('ar-SA', {
-        style: 'currency',
-        currency: 'SAR',
-        minimumFractionDigits: 2
-    }).format(amount);
-}
-
-// تصدير الدوال للعالمية بشكل آمن
+// تصدير الدوال للعالمية بشكل آمن (فقط الدوال المعرفة)
 Object.assign(window, {
     logout,
     goTo,
