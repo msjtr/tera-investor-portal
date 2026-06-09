@@ -1,19 +1,126 @@
 /* ==========================================
-   Register Page
+   TERA Register Page
 ========================================== */
 
 document.addEventListener(
     'DOMContentLoaded',
     () => {
 
+        initializeSteps();
         initializePasswordStrength();
         initializePasswordMatch();
         initializeEmailMatch();
-        initializeNationalityFields();
-        initializeMobileValidation();
+        initializePasswordToggle();
+        initializeNationality();
+        initializeMobile();
 
     }
 );
+
+/* ==========================================
+   Multi Step Form
+========================================== */
+
+function initializeSteps(){
+
+    const steps =
+    document.querySelectorAll(
+        '.form-step'
+    );
+
+    const stepIndicators =
+    document.querySelectorAll(
+        '.step'
+    );
+
+    let currentStep = 0;
+
+    document
+    .querySelectorAll('.btn-next')
+    .forEach(button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                if(
+                    currentStep <
+                    steps.length - 1
+                ){
+
+                    steps[
+                        currentStep
+                    ].classList.remove(
+                        'active'
+                    );
+
+                    stepIndicators[
+                        currentStep
+                    ].classList.add(
+                        'completed'
+                    );
+
+                    currentStep++;
+
+                    steps[
+                        currentStep
+                    ].classList.add(
+                        'active'
+                    );
+
+                    stepIndicators[
+                        currentStep
+                    ].classList.add(
+                        'active'
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+    document
+    .querySelectorAll('.btn-prev')
+    .forEach(button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                if(
+                    currentStep > 0
+                ){
+
+                    steps[
+                        currentStep
+                    ].classList.remove(
+                        'active'
+                    );
+
+                    stepIndicators[
+                        currentStep
+                    ].classList.remove(
+                        'active'
+                    );
+
+                    currentStep--;
+
+                    steps[
+                        currentStep
+                    ].classList.add(
+                        'active'
+                    );
+
+                }
+
+            }
+        );
+
+    });
+
+}
 
 /* ==========================================
    Password Strength
@@ -67,42 +174,42 @@ function initializePasswordStrength(){
 
             if(score <= 2){
 
-                strengthFill.style.width =
-                '33%';
-
                 strengthFill.classList.add(
                     'strength-weak'
                 );
 
-                strengthText.textContent =
+                strengthFill.style.width =
+                '33%';
+
+                strengthText.innerText =
                 'ضعيفة';
 
             }
 
             else if(score <= 4){
 
-                strengthFill.style.width =
-                '66%';
-
                 strengthFill.classList.add(
                     'strength-medium'
                 );
 
-                strengthText.textContent =
+                strengthFill.style.width =
+                '66%';
+
+                strengthText.innerText =
                 'متوسطة';
 
             }
 
             else{
 
-                strengthFill.style.width =
-                '100%';
-
                 strengthFill.classList.add(
                     'strength-strong'
                 );
 
-                strengthText.textContent =
+                strengthFill.style.width =
+                '100%';
+
+                strengthText.innerText =
                 'قوية';
 
             }
@@ -123,44 +230,61 @@ function initializePasswordMatch(){
         'password'
     );
 
-    const confirmPassword =
+    const confirm =
     document.getElementById(
         'confirmPassword'
     );
 
+    const message =
+    document.getElementById(
+        'passwordMatch'
+    );
+
     if(
         !password ||
-        !confirmPassword
+        !confirm
     ) return;
 
-    confirmPassword.addEventListener(
+    confirm.addEventListener(
         'input',
         () => {
 
             if(
-                password.value ===
-                confirmPassword.value
+                confirm.value ===
+                password.value
             ){
 
-                confirmPassword.classList.add(
+                confirm.classList.add(
                     'valid'
                 );
 
-                confirmPassword.classList.remove(
+                confirm.classList.remove(
                     'invalid'
                 );
+
+                message.innerText =
+                '✓ كلمة المرور متطابقة';
+
+                message.style.color =
+                '#16a34a';
 
             }
 
             else{
 
-                confirmPassword.classList.add(
+                confirm.classList.add(
                     'invalid'
                 );
 
-                confirmPassword.classList.remove(
+                confirm.classList.remove(
                     'valid'
                 );
+
+                message.innerText =
+                '✕ كلمة المرور غير متطابقة';
+
+                message.style.color =
+                '#dc2626';
 
             }
 
@@ -180,30 +304,30 @@ function initializeEmailMatch(){
         'email'
     );
 
-    const confirmEmail =
+    const confirm =
     document.getElementById(
         'confirmEmail'
     );
 
     if(
         !email ||
-        !confirmEmail
+        !confirm
     ) return;
 
-    confirmEmail.addEventListener(
+    confirm.addEventListener(
         'input',
         () => {
 
             if(
                 email.value ===
-                confirmEmail.value
+                confirm.value
             ){
 
-                confirmEmail.classList.add(
+                confirm.classList.add(
                     'valid'
                 );
 
-                confirmEmail.classList.remove(
+                confirm.classList.remove(
                     'invalid'
                 );
 
@@ -211,11 +335,11 @@ function initializeEmailMatch(){
 
             else{
 
-                confirmEmail.classList.add(
+                confirm.classList.add(
                     'invalid'
                 );
 
-                confirmEmail.classList.remove(
+                confirm.classList.remove(
                     'valid'
                 );
 
@@ -227,55 +351,102 @@ function initializeEmailMatch(){
 }
 
 /* ==========================================
+   Password Toggle
+========================================== */
+
+function initializePasswordToggle(){
+
+    document
+    .querySelectorAll(
+        '.toggle-password'
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                const input =
+                button.previousElementSibling;
+
+                if(
+                    input.type ===
+                    'password'
+                ){
+
+                    input.type =
+                    'text';
+
+                }
+
+                else{
+
+                    input.type =
+                    'password';
+
+                }
+
+            }
+        );
+
+    });
+
+}
+
+/* ==========================================
    Nationality
 ========================================== */
 
-function initializeNationalityFields(){
+function initializeNationality(){
 
     const nationality =
     document.getElementById(
         'nationality'
     );
 
-    const identityLabel =
+    const label =
     document.getElementById(
         'identityLabel'
     );
 
     if(
         !nationality ||
-        !identityLabel
+        !label
     ) return;
 
     nationality.addEventListener(
         'change',
         () => {
 
-            const value =
-            nationality.value;
-
-            if(
-                value === 'saudi'
+            switch(
+                nationality.value
             ){
 
-                identityLabel.textContent =
-                'رقم الهوية الوطنية';
+                case 'saudi':
 
-            }
+                    label.innerText =
+                    'رقم الهوية الوطنية';
 
-            else if(
-                value === 'resident'
-            ){
+                    break;
 
-                identityLabel.textContent =
-                'رقم الإقامة';
+                case 'resident':
 
-            }
+                    label.innerText =
+                    'رقم الإقامة';
 
-            else{
+                    break;
 
-                identityLabel.textContent =
-                'رقم الجواز أو الهوية';
+                case 'gcc':
+
+                    label.innerText =
+                    'رقم الهوية الخليجية';
+
+                    break;
+
+                default:
+
+                    label.innerText =
+                    'رقم جواز السفر';
 
             }
 
@@ -288,7 +459,7 @@ function initializeNationalityFields(){
    Mobile Validation
 ========================================== */
 
-function initializeMobileValidation(){
+function initializeMobile(){
 
     const mobile =
     document.getElementById(
@@ -314,7 +485,9 @@ function initializeMobileValidation(){
             ){
 
                 mobile.value =
-                mobile.value.substring(1);
+                mobile.value.substring(
+                    1
+                );
 
             }
 
@@ -322,3 +495,27 @@ function initializeMobileValidation(){
     );
 
 }
+
+/* ==========================================
+   Submit Form
+========================================== */
+
+document
+.getElementById(
+    'registerForm'
+)
+?.addEventListener(
+    'submit',
+    e => {
+
+        e.preventDefault();
+
+        alert(
+            'تم إنشاء الحساب بنجاح'
+        );
+
+        window.location.href =
+        '/auth/verify-otp.html';
+
+    }
+);
