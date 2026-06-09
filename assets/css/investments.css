@@ -1,38 +1,117 @@
-.filters{
-    display:flex;
-    gap:15px;
-    margin-bottom:25px;
+/* ==========================================
+   Advanced Filters Area (منطقة الفلترة والبحث الذكي)
+========================================= */
+.filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap; /* تضمن مرونة هبوط العناصر تحت بعضها على شاشات الجوال */
+    align-items: center;
 }
 
 .filters input,
-.filters select{
-    padding:12px;
-    border:1px solid #ddd;
-    border-radius:8px;
+.filters select {
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text, #0f172a);
+    background-color: #ffffff;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 200px;
 }
 
-.opportunities-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-    gap:20px;
+/* مرونة الامتداد الكامل للحقول على الأجهزة الصغيرة */
+.filters input {
+    flex: 1;
+    min-width: 260px;
 }
 
-.opportunity-card{
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 2px 10px rgba(0,0,0,.05);
+.filters input:hover,
+.filters select:hover {
+    border-color: #94a3b8;
 }
 
-.progress{
-    height:8px;
-    background:#eee;
-    border-radius:10px;
-    overflow:hidden;
-    margin:15px 0;
+.filters input:focus,
+.filters select:focus {
+    outline: none;
+    border-color: var(--primary-teal, #0d9488);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
 }
 
-.progress-bar{
-    height:100%;
-    background:#22c55e;
+/* ==========================================
+   Investment Opportunities Grid (مصفوفة الفرص الاستثمارية)
+========================================== */
+.opportunities-grid {
+    display: grid;
+    /* توزيع ديناميكي احترافي يضمن ثبات العرض الأدنى للبطاقة الاستثمارية */
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+}
+
+/* ==========================================
+   Premium Opportunity Card (بطاقة الفرصة الاستثمارية الفاخرة)
+========================================== */
+.opportunity-card {
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 20px;
+    box-shadow: var(--shadow, 0 10px 25px rgba(15, 23, 42, 0.04));
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.opportunity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    border-color: rgba(13, 148, 136, 0.3); /* تمييز البطاقة بلمسة تيل ناعمة عند الاهتمام بها */
+}
+
+/* ==========================================
+   Sleek Progress Bars (أشرطة نسبة اكتمال التمويل)
+========================================== */
+.progress {
+    height: 8px;
+    background: #f1f5f9; /* أرضية شريط ناعمة وحديثة */
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    /* تدرج لوني فينتك فاخر يعطي إيحاءً بالحيوية والنجاح المالي */
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* في حال رغبت بتلوين شريط تقدم الفرص المكتملة كلياً بنمط مختلف تلقائياً */
+.opportunity-card.completed .progress-bar {
+    background: linear-gradient(90deg, var(--primary, #1e3a8a) 0%, var(--primary-teal, #0d9488) 100%);
+}
+
+/* ==========================================
+   Responsive Optimizations (تحسينات الشاشات الذكية)
+========================================== */
+@media (max-width: 768px) {
+    .filters {
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .filters input,
+    .filters select {
+        width: 100%; /* تمدد كامل الحقول لراحة تصفح مثالية عبر الجوال */
+        min-width: 100%;
+    }
+
+    .opportunity-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
 }
