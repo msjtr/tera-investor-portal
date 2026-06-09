@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -17,12 +18,30 @@
     <title>تسجيل الدخول | تيرا</title>
 
     <link rel="icon"
-          href="/favicon.ico">
+          href="/images/favicon.svg">
+
+    <!-- Google Fonts -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap"
+          rel="stylesheet">
 
     <!-- CSS -->
 
     <link rel="stylesheet"
-          href="/assets/css/app.css">
+          href="/assets/css/core.css">
+
+    <link rel="stylesheet"
+          href="/assets/css/main.css">
+
+    <link rel="stylesheet"
+          href="/assets/css/auth.css">
 
     <link rel="stylesheet"
           href="/assets/css/responsive.css">
@@ -36,10 +55,16 @@
         <div class="auth-card">
 
             <div class="auth-logo">
-                TERA
+
+                <img src="/images/logo.svg"
+                     alt="TERA"
+                     style="max-width:140px;">
+
             </div>
 
-            <h1>تسجيل الدخول</h1>
+            <h1>
+                تسجيل الدخول
+            </h1>
 
             <p>
                 أهلاً بك في بوابة المستثمر
@@ -82,10 +107,13 @@
                 <div class="auth-options">
 
                     <label>
+
                         <input
                             type="checkbox"
                             id="rememberMe">
+
                         تذكرني
+
                     </label>
 
                     <a href="/auth/forgot-password.html">
@@ -110,7 +138,7 @@
                     ليس لديك حساب؟
                 </span>
 
-                <a href="/auth/register.html">
+                <a href="/auth/register/register.html">
                     إنشاء حساب جديد
                 </a>
 
@@ -122,10 +150,33 @@
 
     <!-- JS -->
 
+    <script src="/assets/js/core.js"></script>
+
     <script src="/assets/js/app.js"></script>
 
     <script src="/assets/js/auth.js"></script>
 
+    <script>
+
+        document
+        .getElementById('loginForm')
+        .addEventListener('submit', function(e){
+
+            e.preventDefault();
+
+            localStorage.setItem(
+                'tera_token',
+                'authenticated'
+            );
+
+            window.location.href =
+            '/pages/dashboard/index.html';
+
+        });
+
+    </script>
+
 </body>
 
 </html>
+```
