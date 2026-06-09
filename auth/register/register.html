@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -20,6 +21,9 @@
           href="/assets/css/app.css">
 
     <link rel="stylesheet"
+          href="/assets/css/register.css">
+
+    <link rel="stylesheet"
           href="/assets/css/responsive.css">
 
 </head>
@@ -28,130 +32,315 @@
 
     <div class="auth-container">
 
-        <div class="auth-card">
+        <div class="auth-card register-container">
 
             <div class="auth-logo">
                 TERA
             </div>
 
             <h1>
-                إنشاء حساب جديد
+                إنشاء حساب مستثمر
             </h1>
 
             <p>
-                أدخل بياناتك لإنشاء حساب مستثمر
+                أكمل البيانات التالية لإنشاء حسابك الاستثماري
             </p>
+
+            <!-- Stepper -->
+
+            <div class="register-stepper">
+
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-title">الحساب</div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-title">الشخصية</div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-title">الهوية</div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-title">الإقرار</div>
+                </div>
+
+            </div>
 
             <form id="registerForm">
 
-                <div class="form-group">
+                <!-- المرحلة الأولى -->
 
-                    <label for="fullName">
-                        الاسم الكامل
-                    </label>
+                <div class="form-step active">
 
-                    <input
-                        type="text"
-                        id="fullName"
-                        name="fullName"
-                        required>
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label>اسم المستخدم</label>
+                            <input type="text"
+                                   id="username"
+                                   minlength="3"
+                                   maxlength="20"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email"
+                                   id="email"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>تأكيد البريد الإلكتروني</label>
+                            <input type="email"
+                                   id="confirmEmail"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>مفتاح الدولة</label>
+
+                            <select id="countryCode">
+
+                                <optgroup label="دول الخليج">
+                                    <option value="+966">السعودية +966</option>
+                                    <option value="+971">الإمارات +971</option>
+                                    <option value="+965">الكويت +965</option>
+                                    <option value="+973">البحرين +973</option>
+                                    <option value="+968">عمان +968</option>
+                                    <option value="+974">قطر +974</option>
+                                </optgroup>
+
+                                <optgroup label="دول عربية">
+                                    <option value="+20">مصر +20</option>
+                                    <option value="+962">الأردن +962</option>
+                                    <option value="+964">العراق +964</option>
+                                    <option value="+961">لبنان +961</option>
+                                    <option value="+212">المغرب +212</option>
+                                </optgroup>
+
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label>رقم الجوال</label>
+                            <input type="tel"
+                                   id="mobile"
+                                   placeholder="بدون الصفر"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>كلمة المرور</label>
+
+                            <input type="password"
+                                   id="password"
+                                   required>
+
+                        </div>
+
+                        <div class="password-strength">
+
+                            <div class="strength-bar">
+                                <div id="strengthFill"
+                                     class="strength-fill">
+                                </div>
+                            </div>
+
+                            <div id="strengthText"
+                                 class="strength-text">
+                                أدخل كلمة المرور
+                            </div>
+
+                        </div>
+
+                        <div class="password-rules">
+
+                            <ul>
+
+                                <li>
+                                    8 أحرف على الأقل
+                                </li>
+
+                                <li>
+                                    حرف كبير واحد
+                                </li>
+
+                                <li>
+                                    حرف صغير واحد
+                                </li>
+
+                                <li>
+                                    رقم واحد
+                                </li>
+
+                                <li>
+                                    رمز خاص واحد
+                                </li>
+
+                            </ul>
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>
+                                تأكيد كلمة المرور
+                            </label>
+
+                            <input type="password"
+                                   id="confirmPassword"
+                                   required>
+
+                        </div>
+
+                    </div>
+
+                    <div class="step-actions">
+
+                        <button type="button"
+                                class="btn-next">
+                            التالي
+                        </button>
+
+                    </div>
 
                 </div>
 
-                <div class="form-group">
+                <!-- المرحلة الثانية -->
 
-                    <label for="nationalId">
-                        رقم الهوية
-                    </label>
+                <div class="form-step">
 
-                    <input
-                        type="text"
-                        id="nationalId"
-                        name="nationalId"
-                        maxlength="10"
-                        required>
+                    <div class="form-grid">
 
-                </div>
+                        <div class="form-group">
+                            <label>الاسم الأول</label>
+                            <input type="text" required>
+                        </div>
 
-                <div class="form-group">
+                        <div class="form-group">
+                            <label>اسم الأب</label>
+                            <input type="text" required>
+                        </div>
 
-                    <label for="mobile">
-                        رقم الجوال
-                    </label>
+                        <div class="form-group">
+                            <label>اسم الجد</label>
+                            <input type="text">
+                        </div>
 
-                    <input
-                        type="tel"
-                        id="mobile"
-                        name="mobile"
-                        placeholder="05XXXXXXXX"
-                        required>
+                        <div class="form-group">
+                            <label>اسم العائلة</label>
+                            <input type="text" required>
+                        </div>
 
-                </div>
+                        <div class="form-group">
+                            <label>تاريخ الميلاد</label>
+                            <input type="date" required>
+                        </div>
 
-                <div class="form-group">
+                        <div class="form-group">
 
-                    <label for="email">
-                        البريد الإلكتروني
-                    </label>
+                            <label>الجنسية</label>
 
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        required>
+                            <select id="nationality">
 
-                </div>
+                                <option value="saudi">
+                                    سعودي
+                                </option>
 
-                <div class="form-group">
+                                <option value="resident">
+                                    مقيم
+                                </option>
 
-                    <label for="password">
-                        كلمة المرور
-                    </label>
+                                <option value="other">
+                                    غير سعودي
+                                </option>
 
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required>
+                            </select>
 
-                </div>
+                        </div>
 
-                <div class="form-group">
-
-                    <label for="confirmPassword">
-                        تأكيد كلمة المرور
-                    </label>
-
-                    <input
-                        type="password"
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        required>
+                    </div>
 
                 </div>
 
-                <div class="auth-options">
+                <!-- المرحلة الثالثة -->
 
-                    <label>
+                <div class="form-step">
 
-                        <input
-                            type="checkbox"
-                            id="agreeTerms"
-                            required>
+                    <div class="identity-section">
 
-                        أوافق على الشروط والأحكام
+                        <div class="form-group">
 
-                    </label>
+                            <label id="identityLabel">
+                                رقم الهوية الوطنية
+                            </label>
+
+                            <input type="text"
+                                   id="identityNumber">
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>
+                                تاريخ الانتهاء
+                            </label>
+
+                            <input type="date"
+                                   id="identityExpiry">
+
+                        </div>
+
+                    </div>
 
                 </div>
 
-                <button
-                    type="submit"
-                    class="btn-primary">
+                <!-- المرحلة الرابعة -->
 
-                    إنشاء الحساب
+                <div class="form-step">
 
-                </button>
+                    <div class="terms-box">
+
+                        <label>
+                            <input type="checkbox"
+                                   required>
+                            أوافق على الشروط والأحكام
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   required>
+                            أوافق على سياسة الخصوصية
+                        </label>
+
+                        <label>
+                            <input type="checkbox"
+                                   required>
+                            أقر بصحة البيانات
+                        </label>
+
+                    </div>
+
+                    <div class="step-actions">
+
+                        <button type="submit"
+                                class="btn-submit">
+
+                            إنشاء الحساب
+
+                        </button>
+
+                    </div>
+
+                </div>
 
             </form>
 
@@ -171,44 +360,10 @@
 
     </div>
 
-    <script>
-
-        document
-        .getElementById('registerForm')
-        .addEventListener(
-            'submit',
-            function(e){
-
-                e.preventDefault();
-
-                const password =
-                document.getElementById(
-                    'password'
-                ).value;
-
-                const confirmPassword =
-                document.getElementById(
-                    'confirmPassword'
-                ).value;
-
-                if(password !== confirmPassword){
-
-                    alert(
-                        'كلمتا المرور غير متطابقتين'
-                    );
-
-                    return;
-
-                }
-
-                window.location.href =
-                '/auth/complete-profile.html';
-
-            }
-        );
-
-    </script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/register.js"></script>
 
 </body>
 
 </html>
+```
