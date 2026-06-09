@@ -1,112 +1,87 @@
 /**
- * TERA Investor Portal - Registration Wizard Engine (Fixed)
+ * TERA Investor Portal - Registration Wizard Engine (Optimized)
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
     if (!registerForm) return;
 
     const formSteps = Array.from(registerForm.querySelectorAll('.form-step'));
     const stepNodes = Array.from(document.querySelectorAll('.reg-steps-tracker .reg-step-node'));
-    const nextButtons = registerForm.querySelectorAll('.btn-next');
-    const prevButtons = registerForm.querySelectorAll('.btn-prev');
-    
-    // استخدام Optional Chaining أو التحقق من وجود العنصر لتجنب أخطاء Null
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const strengthFill = document.getElementById('strengthFill');
-    const strengthText = document.getElementById('strengthText');
-    const passwordMatchSpan = document.getElementById('passwordMatch');
-
     let currentStep = 0;
 
     // === التنقل بين الخطوات ===
-    function updateFormSteps() {
+    const updateFormSteps = () => {
         formSteps.forEach((step, index) => {
             step.classList.toggle('active', index === currentStep);
         });
 
         stepNodes.forEach((node, index) => {
-            node.classList.toggle('active', index <= currentStep);
+            node.classList.toggle('active', index === currentStep);
+            node.classList.toggle('completed', index < currentStep);
         });
 
-        document.querySelector('.register-card-wide').scrollIntoView({ behavior: 'smooth' });
-    }
+        // التمرير إلى أعلى النموذج عند الانتقال
+        const header = document.querySelector('h1');
+        if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
-    nextButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault(); // منع الإرسال التلقائي
-            if (validateCurrentStep() && currentStep < formSteps.length - 1) {
-                currentStep++;
-                updateFormSteps();
-            }
-        });
-    });
-
-    prevButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (currentStep > 0) {
-                currentStep--;
-                updateFormSteps();
-            }
-        });
-    });
-
-    // === التحقق من الحقول (مُحسّن) ===
-    function validateCurrentStep() {
-        const activeStepFields = formSteps[currentStep].querySelectorAll('input[required], select[required]');
-        for (let field of activeStepFields) {
+    // === التحقق من الحقول في الخطوة الحالية ===
+    const validateCurrentStep = () => {
+        const fields = formSteps[currentStep].querySelectorAll('input[required], select[required]');
+        for (let field of fields) {
             if (!field.checkValidity()) {
                 field.reportValidity();
                 return false;
             }
         }
         return true;
-    }
+    };
 
-    // === معالجة كلمة المرور (آمنة) ===
-    if (passwordInput && confirmPasswordInput) {
-        const checkStrength = (val) => {
-            let score = 0;
-            if (val.length >= 8) score++;
-            if (/[A-Z]/.test(val)) score++;
-            if (/[0-9]/.test(val)) score++;
-            return score;
+    // تفويض الحدث (Event Delegation) للأزرار
+    registerForm.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-next')) {
+            if (validateCurrentStep() && currentStep < formSteps.length - 1) {
+                currentStep++;
+                updateFormSteps();
+            }
+        } else if (e.target.classList.contains('btn-prev')) {
+            if (currentStep > 0) {
+                currentStep--;
+                updateFormSteps();
+            }
+        }
+    });
+
+    // === منطق كلمة المرور (مع التحقق من وجود الحقول) ===
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.querySelector('input[name="confirm_password"]');
+    
+    if (passwordInput && confirmInput) {
+        const validatePasswords = () => {
+            const match = passwordInput.value === confirmInput.value;
+            confirmInput.setCustomValidity(match ? '' : 'كلمات المرور غير متطابقة');
+            
+            // تحديث الـ UI (مؤشر القوة)
+            const score = (passwordInput.value.length >= 8) + /[A-Z]/.test(passwordInput.value) + /[0-9]/.test(passwordInput.value);
+            const strengthFill = document.getElementById('strengthFill');
+            if (strengthFill) {
+                strengthFill.style.width = (score * 33) + '%';
+                strengthFill.className = `strength-fill ${score < 2 ? 'weak' : score === 2 ? 'medium' : 'strong'}`;
+            }
         };
-
-        [passwordInput, confirmPasswordInput].forEach(el => {
-            el.addEventListener('input', () => {
-                const score = checkStrength(passwordInput.value);
-                if (strengthFill) {
-                    strengthFill.style.width = (score * 33) + '%';
-                    strengthFill.className = 'strength-fill ' + (score < 2 ? 'weak' : score === 2 ? 'medium' : 'strong');
-                }
-                if (passwordMatchSpan) {
-                    const match = passwordInput.value === confirmPasswordInput.value;
-                    passwordMatchSpan.textContent = confirmPasswordInput.value ? (match ? '✓ متطابقة' : '✕ غير متطابقة') : '';
-                    passwordMatchSpan.style.color = match ? '#10b981' : '#ef4444';
-                }
-            });
-        });
+        [passwordInput, confirmInput].forEach(el => el.addEventListener('input', validatePasswords));
     }
 
     // === تسجيل الاستمارة ===
-    registerForm.addEventListener('submit', async function (e) {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // التحقق النهائي من تطابق كلمات المرور قبل الإرسال
-        if (passwordInput.value !== confirmPasswordInput.value) {
-            alert('كلمات المرور غير متطابقة');
-            return;
-        }
-
         const submitBtn = registerForm.querySelector('.btn-submit');
         submitBtn.disabled = true;
         submitBtn.textContent = 'جاري المعالجة...';
 
-        const formData = new FormData(registerForm);
-        const data = Object.fromEntries(formData.entries());
+        const data = Object.fromEntries(new FormData(registerForm).entries());
 
         try {
             const response = await fetch('/api/v1/auth/register', {
@@ -114,15 +89,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            
-            if (!response.ok) throw new Error('فشل الاتصال بالخادم');
+
+            if (!response.ok) throw new Error('حدث خطأ أثناء التسجيل، حاول مجدداً.');
             
             const result = await response.json();
             window.location.href = result.redirectUrl || '/dashboard';
         } catch (error) {
-            alert(error.message);
+            console.error(error);
             submitBtn.disabled = false;
             submitBtn.textContent = 'إنشاء الحساب';
+            // استبدل alert بـ Toast أو رسالة تظهر داخل الصفحة
+            alert(error.message); 
         }
     });
 });
