@@ -1,360 +1,167 @@
 /* ==========================================
-   Variables & Theme Setup
+   TERA Investor Portal - Authentication Suite
 ========================================== */
-:root {
-    --primary: #1e3a8a;       /* الأزرق الملكي الفاخر */
-    --primary-teal: #0d9488;  /* التيل الاحترافي */
-    --primary-light: #3b82f6;
 
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --text-light: #64748b;
-    --bg-light: #f8fafc;
-
-    --shadow-card: 0 20px 40px rgba(15, 23, 42, 0.06);
-    --transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ==========================================
-   Auth Pages Layout & Container
-========================================== */
-.auth-container {
+.auth-page {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: radial-gradient(circle at top right, var(--secondary-blue) 0%, var(--secondary-dark) 100%);
     padding: 24px;
-    /* تدرج لوني ناعم يعكس واجهات الأنظمة البنكية الحديثة */
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+    position: relative;
+    overflow: hidden;
 }
 
-.auth-card {
+/* نمط الدوائر اللامعة في الخلفية لمنع الملل البصري */
+.auth-page::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.15) 0%, transparent 70%);
+    top: -200px;
+    right: -100px;
+    z-index: 1;
+}
+
+/* كارت تسجيل الدخول الزجاجي */
+.auth-container {
     width: 100%;
-    max-width: 500px;
-    background: #ffffff;
+    max-width: 480px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xl);
     padding: 40px;
-    border-radius: 24px;
-    box-shadow: var(--shadow-card);
-    border: 1px solid rgba(226, 232, 240, 0.7);
-    animation: fadeIn .4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    color: #ffffff;
 }
 
-.auth-logo {
+.auth-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
-.auth-logo img {
-    max-width: 140px;
+.auth-brand-logo {
+    width: 64px;
     height: auto;
-    margin: 0 auto;
+    margin-bottom: 16px;
 }
 
-.auth-logo-text {
-    font-size: 36px;
-    font-weight: 800;
-    color: var(--primary);
-    letter-spacing: -0.03em;
-}
-
-/* ==========================================
-   Typography & Headings
-========================================== */
-.auth-card h1 {
-    text-align: center;
-    margin-bottom: 10px;
-    color: var(--text);
+.auth-title {
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #ffffff;
 }
 
-.auth-card p {
-    text-align: center;
-    color: var(--text-light);
-    margin-bottom: 28px;
-    line-height: 1.6;
-    font-size: 15px;
+.auth-subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+    font-weight: 500;
 }
 
-/* ==========================================
-   Form Fields Styling
-========================================== */
+/* مجموعات المدخلات الذكية */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    position: relative;
 }
 
 .form-group label {
     display: block;
+    font-size: 13px;
+    font-weight: 700;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #334155;
-    font-size: 14px;
+    color: #cbd5e1;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.auth-input {
     width: 100%;
     padding: 14px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    background: #ffffff;
-    color: var(--text);
-    font-size: 15px;
-    transition: var(--transition);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition-smooth);
 }
 
-.form-group input:hover,
-.form-group select:hover,
-.form-group textarea:hover {
-    border-color: #94a3b8;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.auth-input:focus {
     outline: none;
     border-color: var(--primary-teal);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.25);
+    background: rgba(255, 255, 255, 0.08);
 }
 
-/* ==========================================
-   Auth Options (تذكرني / نسيت كلمة المرور)
-========================================== */
-.auth-options {
+/* روابط الاستعادة والخيارات الجانبية */
+.auth-meta-links {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin: 18px 0 24px;
-    flex-wrap: wrap;
-    font-size: 14px;
-}
-
-.auth-options a {
-    color: var(--primary-teal);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.auth-options a:hover {
-    text-decoration: underline;
-}
-
-/* ==========================================
-   Premium Buttons Architecture
-========================================== */
-.btn-primary {
-    width: 100%;
-    padding: 14px 28px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-teal) 100%);
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
-    transition: var(--transition);
-}
-
-.btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.25);
-    opacity: 0.95;
-}
-
-.btn-secondary {
-    width: 100%;
-    padding: 14px 28px;
-    border: none;
-    border-radius: 12px;
-    background: #f1f5f9;
-    color: #475569;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition);
-    border: 1px solid #e2e8f0;
-}
-
-.btn-secondary:hover {
-    background: #e2e8f0;
-    color: var(--text);
-    transform: translateY(-1px);
-}
-
-/* ==========================================
-   Auth Footer
-========================================== */
-.auth-footer {
-    margin-top: 24px;
-    text-align: center;
-    color: var(--text-light);
-    font-size: 14px;
-}
-
-.auth-footer a {
-    color: var(--primary);
-    font-weight: 700;
-    text-decoration: none;
-    margin-right: 4px;
-}
-
-.auth-footer a:hover {
-    text-decoration: underline;
-    color: var(--primary-teal);
-}
-
-/* ==========================================
-   Input Field Validation States
-========================================== */
-.valid {
-    border-color: var(--success) !important;
-}
-
-.invalid {
-    border-color: var(--danger) !important;
-}
-
-.validation-message {
-    margin-top: 6px;
+    margin-bottom: 28px;
     font-size: 13px;
     font-weight: 600;
 }
 
-.validation-success { color: #059669; }
-.validation-error { color: #dc2626; }
-
-/* ==========================================
-   Premium Alert Boxes (التنبيهات الذكية)
-========================================== */
-.auth-alert {
-    padding: 14px 16px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    font-weight: 600;
-    /* شريط جانبي أيمن يعكس السلوك العربي المتناسق RTL */
-    border-right: 4px solid transparent;
+.link-forgot {
+    color: var(--primary-teal);
 }
 
-.auth-alert-success {
-    background: #f0fdf4;
-    color: #166534;
-    border-right-color: var(--success);
+.link-forgot:hover {
+    color: #2dd4bf;
+    text-decoration: underline;
 }
 
-.auth-alert-danger {
-    background: #fef2f2;
-    color: #991b1b;
-    border-right-color: var(--danger);
+/* أزرار الفينتك الفاخرة لتأكيد العمليات */
+.btn-auth-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-teal);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
-.auth-alert-warning {
-    background: #fffbeb;
-    color: #92400e;
-    border-right-color: var(--warning);
+.btn-auth-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
 }
 
-/* ==========================================
-   OTP Code Inputs (خانات تفعيل رمز التحقق)
-========================================== */
+/* مربعات إدخال الرمز الموثق (OTP Input Fields) */
 .otp-container {
     display: flex;
     justify-content: center;
     gap: 12px;
     margin: 24px 0;
-    direction: ltr; /* للحفاظ على ترتيب الخانات من اليسار لليمين برمجياً */
+    direction: ltr; /* لضمان كتابة الأرقام بالتسلسل من اليسار لليمين */
 }
 
-.otp-input {
-    width: 56px !important;
+.otp-box {
+    width: 56px;
     height: 56px;
     text-align: center;
     font-size: 24px;
-    font-weight: 700;
-    border-radius: 12px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    color: var(--text);
-    transition: var(--transition);
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    transition: var(--transition-smooth);
 }
 
-.otp-input:focus {
+.otp-box:focus {
+    outline: none;
     border-color: var(--primary-teal);
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
-}
-
-/* ==========================================
-   Password Strength Component
-========================================== */
-.password-strength {
-    margin-top: 12px;
-}
-
-.strength-bar {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.strength-fill {
-    height: 100%;
-    width: 0;
-    transition: width .4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.strength-weak { background: var(--danger); }
-.strength-medium { background: var(--warning); }
-.strength-strong { background: var(--success); }
-
-.strength-text {
-    margin-top: 8px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-/* ==========================================
-   Responsive (الموبايل والشاشات اللوحية)
-========================================== */
-@media (max-width: 768px) {
-    .auth-card {
-        padding: 28px 20px;
-        border-radius: 20px;
-    }
-
-    .auth-options {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .otp-container {
-        gap: 8px;
-    }
-
-    .otp-input {
-        width: 46px !important;
-        height: 46px;
-        font-size: 20px;
-        border-radius: 10px;
-    }
-}
-
-/* حركية الظهور النظيف */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.3);
+    background: rgba(255, 255, 255, 0.08);
 }
