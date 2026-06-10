@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
-    // 1. إدارة التنقل بين المراحل مع التحقق
+    // 1. إدارة التنقل بين المراحل مع التحقق (UX)
     // ==========================================
     let currentStep = 0;
     const steps = document.querySelectorAll('.step');
@@ -8,18 +8,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.btn-next').forEach(btn => {
         btn.addEventListener('click', () => {
-            // التحقق من صحة حقول المرحلة الحالية قبل الانتقال
+            // التحقق من صحة حقول المرحلة الحالية قبل الانتقال لمنع التجاوز
             const currentInputs = steps[currentStep].querySelectorAll('input, select, textarea');
             let isStepValid = true;
 
             currentInputs.forEach(input => {
                 if (!input.checkValidity()) {
-                    input.reportValidity(); // إظهار تلميح الخطأ للمستخدم
+                    input.reportValidity(); // إظهار تلميح المتصفح الافتراضي للخطأ
                     isStepValid = false;
                 }
             });
 
-            if (!isStepValid) return; // منع الانتقال إذا كانت هناك حقول غير مكتملة
+            if (!isStepValid) return; // إيقاف الانتقال إذا لم تكتمل البيانات
 
             if (currentStep < steps.length - 1) {
                 steps[currentStep].classList.remove('active');
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isValid) {
             el.innerHTML = el.innerHTML.replace('☐', '☑');
-            el.style.color = '#008080'; // لون تيرا النيلي للمؤشرات الصحيحة
+            el.style.color = '#008080'; // النيلي الخاص بالهوية البصرية للمؤشرات الصحيحة
             el.style.fontWeight = '600';
         } else {
             el.innerHTML = el.innerHTML.replace('☑', '☐');
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vAlphaNum = /^[a-zA-Z0-9]+$/.test(val);
             const vNoSpace = !/\s/.test(val) && val.length > 0;
             const vNoSpec = !/[^a-zA-Z0-9]/.test(val) && val.length > 0;
-            const vUnique = val.length > 0; // محاكاة فحص التوفر
+            const vUnique = val.length > 0; 
 
             toggleCondition('u-len', vLen);
             toggleCondition('u-alphanum', vAlphaNum);
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 generateForeignAddress(addrContainer, "العنوان الدولي الدائم للمستثمر");
 
-                // استخدام Event Delegation لربط الأزرار المستحدثة بدقة وبدون تكرار في الذاكرة
+                // تفويض الأحداث (Event Delegation) لربط حقول الراديو الديناميكية بأمان
                 const radioGroup = document.getElementById('foreign-radio-group');
                 if (radioGroup) {
                     radioGroup.addEventListener('change', function(e) {
@@ -304,18 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (chkAll) {
         const agreementCheckboxes = document.querySelectorAll('.agreements input[type="checkbox"]:not(#chkAll)');
         
-        // عند تغيير زر "تحديد الكل"
         chkAll.addEventListener('change', function() {
             agreementCheckboxes.forEach(chk => chk.checked = this.checked);
         });
 
-        // متابعة الأزرار الفردية: إذا ألغى المستخدم أياً منها، يتم إلغاء تحديد الكل تلقائياً
         agreementCheckboxes.forEach(chk => {
             chk.addEventListener('change', function() {
                 if (!this.checked) {
                     chkAll.checked = false;
                 } else {
-                    // إذا أصبحت كل الأزرار محددة، قم بتفعيل زر تحديد الكل
                     const allChecked = Array.from(agreementCheckboxes).every(c => c.checked);
                     chkAll.checked = allChecked;
                 }
@@ -328,10 +325,18 @@ document.addEventListener('DOMContentLoaded', () => {
         regForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // تسلسل تفعيل الحساب وتأكيد الـ OTP
-            alert("يتم معالجة البيانات وبناء حساب المستثمر...\nسيتم إرسال رمز التحقق الآمن (OTP) إلى بريدك الإلكتروني المسجل الآن.");
+            alert("يتم معالجة البيانات وبناء حساب المستثمر...\nسيتم إرسال رمز التحقق الآمن (OTP) إلى بريدك الإلكتروني الآن.");
             
-            const otp = prompt("يرجى إدخال رمز التحقق المستلم المكون من 4 أرقام (OTP):");
+            const otp = prompt("يرجى إدخال رمز التحقق المستلم (OTP):");
             
             if (otp && otp.trim() !== "") {
-                alert("تم
+                alert("تم تفعيل حسابك كـ مستثمر بنجاح!\n\nسيتم توجيهك الآن إلى صفحة استكمال بيانات الهوية والآيبان ورفع المستندات الرسمية لتوثيق المحفظة.");
+                
+                // تحسين المسار ليتوافق مع المسار المطلق للموقع على سيرفر المعاينة (Render Static Site)
+                window.location.href = "/complete-profile.html";
+            } else {
+                alert("تم إلغاء عملية التحقق، يرجى إعادة المحاولة لضمان إنشاء الحساب المستثمر بنجاح.");
+            }
+        });
+    }
+});
