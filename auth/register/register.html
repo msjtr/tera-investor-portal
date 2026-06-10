@@ -17,7 +17,7 @@
                     العودة للصفحة الرئيسية
                 </a>
                 <div class="logo-group-wrapper">
-                    <h2 class="sub-logo-text">بوابة المستثمر | TERA</h2>
+                    <h2 class="sub-logo-text">TERA | بوابة المستثمر</h2>
                 </div>
             </div>
 
@@ -27,82 +27,62 @@
             </div>
             
             <div class="reg-steps-tracker">
-                <div class="reg-step-node active" data-step="1"><span class="step-num">1</span><span class="step-text">إنشاء الحساب</span></div>
-                <div class="reg-step-node" data-step="2"><span class="step-num">2</span><span class="step-text">المعلومات الشخصية</span></div>
-                <div class="reg-step-node" data-step="3"><span class="step-num">3</span><span class="step-text">بيانات التواصل</span></div>
-                <div class="reg-step-node" data-step="4"><span class="step-num">4</span><span class="step-text">الإقرارات</span></div>
+                <div class="reg-step-node active" data-step="1"><span class="step-num">1</span><span>إنشاء الحساب</span></div>
+                <div class="reg-step-node" data-step="2"><span class="step-num">2</span><span>الشخصية والهوية</span></div>
+                <div class="reg-step-node" data-step="3"><span class="step-num">3</span><span>التواصل والعنوان</span></div>
+                <div class="reg-step-node" data-step="4"><span class="step-num">4</span><span>الإقرارات</span></div>
             </div>
 
-            <form id="registerForm" autocomplete="off" novalidate>
+            <form id="registerForm" novalidate>
                 
                 <div class="form-step active" id="step1">
                     <h3 class="step-heading">المرحلة الأولى: إنشاء الحساب</h3>
-                    
                     <div class="form-group">
                         <label class="tera-label">اسم المستخدم</label>
-                        <input type="text" id="reg_username" name="username" class="tera-input-field" placeholder="أدخل اسم المستخدم" required>
+                        <input type="text" id="reg_username" class="tera-input-field" placeholder="من 4 إلى 20 حرفاً (أحرف وأرقام فقط)" required pattern="[a-zA-Z0-9]{4,20}">
                     </div>
-
                     <div class="form-row-split">
                         <div class="form-group">
                             <label class="tera-label">البريد الإلكتروني</label>
-                            <input type="email" id="reg_email" name="email" class="tera-input-field" placeholder="example@domain.com" required>
+                            <input type="email" id="reg_email" class="tera-input-field" required>
                         </div>
                         <div class="form-group">
                             <label class="tera-label">تأكيد البريد الإلكتروني</label>
-                            <input type="email" id="reg_confirm_email" class="tera-input-field" placeholder="إعادة كتابة البريد الإلكتروني" required>
+                            <input type="email" id="reg_confirm_email" class="tera-input-field" required>
                         </div>
                     </div>
-
                     <div class="form-row-split">
                         <div class="form-group">
                             <label class="tera-label">كلمة المرور</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" id="reg_password" name="password" class="tera-input-field" placeholder="••••••••" required>
-                                <button type="button" class="toggle-icon-btn" id="togglePasswordView" title="إظهار/إخفاء كلمة المرور">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                                </button>
-                            </div>
+                            <input type="password" id="reg_password" class="tera-input-field" placeholder="••••••••" required>
                         </div>
-
                         <div class="form-group">
                             <label class="tera-label">تأكيد كلمة المرور</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" id="reg_confirm_password" class="tera-input-field" placeholder="••••••••" required>
-                                <button type="button" class="toggle-icon-btn" id="toggleConfirmPasswordView" title="إظهار/إخفاء كلمة المرور">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                                </button>
-                            </div>
+                            <input type="password" id="reg_confirm_password" class="tera-input-field" placeholder="••••••••" required>
                         </div>
                     </div>
-
-                    <div class="step-actions flex-end">
-                        <button type="button" class="btn-primary btn-next" data-step-index="0">التالي ←</button>
-                    </div>
+                    <div class="step-actions flex-end"><button type="button" class="btn-primary btn-next" data-step-index="0">التالي ←</button></div>
                 </div>
 
                 <div class="form-step" id="step2">
                     <h3 class="step-heading">المرحلة الثانية: المعلومات الشخصية والهوية</h3>
-                    
-                    <div class="section-divider-title">المعلومات الشخصية</div>
                     <div class="form-group">
-                        <label class="tera-label">الاسم الكامل بالعربية</label>
-                        <input type="text" name="full_name_ar" class="tera-input-field" placeholder="الاسم الرباعي" required>
+                        <label class="tera-label">الاسم الكامل (عربي)</label>
+                        <input type="text" class="tera-input-field" required>
                     </div>
-
+                    <div class="form-group">
+                        <label class="tera-label">الاسم الكامل (إنجليزي)</label>
+                        <input type="text" class="tera-input-field" required>
+                    </div>
                     <div class="form-row-split">
                         <div class="form-group">
                             <label class="tera-label">الجنس</label>
-                            <select name="gender" class="tera-input-field" required>
-                                <option value="">اختر الجنس</option>
-                                <option value="male">ذكر</option>
-                                <option value="female">أنثى</option>
-                            </select>
+                            <select class="tera-input-field" required><option value="">اختر...</option><option>ذكر</option><option>أنثى</option></select>
                         </div>
                         <div class="form-group">
                             <label class="tera-label">الجنسية</label>
-                            <select name="nationality" id="nationality_select" class="tera-input-field" required>
-                                <option value="">اختر الجنسية</option>
+                            <select id="nationality_select" class="tera-input-field" required>
+                                <option value="">اختر...</option>
                                 <option value="saudi">سعودي</option>
                                 <option value="resident">مقيم</option>
                                 <option value="gcc">مواطن خليجي</option>
@@ -110,10 +90,7 @@
                             </select>
                         </div>
                     </div>
-
-                    <div class="section-divider-title" id="identity_title" style="display: none; margin-top: 20px;">بيانات الهوية الرسمية</div>
                     <div id="dynamic_identity_section"></div>
-
                     <div class="step-actions">
                         <button type="button" class="btn-prev">→ السابق</button>
                         <button type="button" class="btn-primary btn-next" data-step-index="1">التالي ←</button>
@@ -122,26 +99,11 @@
 
                 <div class="form-step" id="step3">
                     <h3 class="step-heading">المرحلة الثالثة: بيانات التواصل والعنوان</h3>
-                    
-                    <div class="section-divider-title">بيانات التواصل</div>
                     <div class="form-row-split">
-                        <div class="form-group" style="flex: 0 0 30%;">
-                            <label class="tera-label">مفتاح الدولة</label>
-                            <select name="phone_prefix" class="tera-input-field" style="direction: ltr;" required>
-                                <option value="+966">+966</option>
-                                <option value="+971">+971</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label class="tera-label">رقم الجوال</label>
-                            <input type="tel" name="phone" class="tera-input-field" placeholder="5xxxxxxxx" style="direction: ltr;" required>
-                        </div>
+                        <div class="form-group"><label class="tera-label">مفتاح الدولة</label><input type="text" class="tera-input-field" required></div>
+                        <div class="form-group"><label class="tera-label">رقم الجوال</label><input type="tel" class="tera-input-field" required></div>
                     </div>
-
-                    <div id="dynamic_address_section">
-                        <div class="alert-box" style="padding:15px; background:#f9f9f9; border-radius:8px; border:1px dashed #ccc; text-align:center; color:#666;">الرجاء اختيار الجنسية من المرحلة السابقة لعرض حقول العنوان المناسبة.</div>
-                    </div>
-
+                    <div id="dynamic_address_section"></div>
                     <div class="step-actions">
                         <button type="button" class="btn-prev">→ السابق</button>
                         <button type="button" class="btn-primary btn-next" data-step-index="2">التالي ←</button>
@@ -150,27 +112,20 @@
 
                 <div class="form-step" id="step4">
                     <h3 class="step-heading">المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
-                    
                     <div class="agreements-scroll-container">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="agree_terms" required>
-                            <span>أقر وأوافق على <strong>الشروط والأحكام</strong> الخاصة ببوابة المستثمرين.</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="agree_privacy" required>
-                            <span>أوافق على <strong>سياسة الخصوصية</strong> وجمع البيانات.</span>
-                        </label>
+                        <label class="checkbox-label"><input type="checkbox" required> <span>أوافق على الشروط والأحكام وسياسة الاستخدام.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" required> <span>أوافق على سياسة الخصوصية ومعالجة البيانات.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" required> <span>أوافق على إجراءات التحقق الأمني ورمز OTP.</span></label>
+                        <label class="checkbox-label"><input type="checkbox" required> <span>أقر بأن جميع البيانات صحيحة وأتحمل المسؤولية القانونية.</span></label>
                     </div>
-
                     <div class="step-actions">
                         <button type="button" class="btn-prev">→ السابق</button>
-                        <button type="submit" class="btn-primary btn-submit">إنشاء الحساب</button>
+                        <button type="submit" class="btn-primary">إنشاء الحساب</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-
     <script src="register.js"></script>
 </body>
 </html>
