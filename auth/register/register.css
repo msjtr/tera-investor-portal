@@ -419,3 +419,38 @@ input:focus, select:focus, textarea:focus {
     .steps-indicator { flex-direction: column; gap: 10px; align-items: flex-start; }
     .back-home-btn { position: relative; margin-bottom: 15px; display: inline-block; }
 }
+
+/* أضف هذه الأسطر الجديدة إلى نهاية ملف register.css الحالي لديك */
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-left: 60px; /* ترك مساحة كافية للزر جهة اليسار/الأمام حسب الاتجاه */
+}
+
+.toggle-password {
+    position: absolute;
+    left: 10px;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 5px;
+    user-select: none;
+    z-index: 5;
+}
+
+.toggle-password:hover {
+    text-decoration: underline;
+}
+
+/* لمنع تخريب حواف حقول الـ select المضافة حديثاً للمفاتيح */
+select#countryCode {
+    background-position: left 10px center;
+}
