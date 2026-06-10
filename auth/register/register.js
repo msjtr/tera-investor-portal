@@ -246,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 generateForeignAddress(addrContainer, "العنوان الدولي الدائم للمستثمر");
 
-                // تفويض الأحداث (Event Delegation) لربط حقول الراديو الديناميكية بأمان
                 const radioGroup = document.getElementById('foreign-radio-group');
                 if (radioGroup) {
                     radioGroup.addEventListener('change', function(e) {
@@ -331,8 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (otp && otp.trim() !== "") {
                 alert("تم تفعيل حسابك كـ مستثمر بنجاح!\n\nسيتم توجيهك الآن إلى صفحة استكمال بيانات الهوية والآيبان ورفع المستندات الرسمية لتوثيق المحفظة.");
-                
-                // تحسين المسار ليتوافق مع المسار المطلق للموقع على سيرفر المعاينة (Render Static Site)
                 window.location.href = "/complete-profile.html";
             } else {
                 alert("تم إلغاء عملية التحقق، يرجى إعادة المحاولة لضمان إنشاء الحساب المستثمر بنجاح.");
