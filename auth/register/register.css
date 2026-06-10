@@ -1,390 +1,421 @@
-/* ==========================================================================
-   TERA Investor Portal - Premium Registration Stylesheet
-   ========================================================================== */
-
+/* تصميم عصري مخصص لصفحة تسجيل المستثمر - منصة TERA */
 :root {
-    --royal-blue: #2A52BE;       /* أزرق ملكي غني ومشرق */
-    --teal: #008080;             /* لون تيرا النيلي المعتمد */
-    --text-color: #1e293b;       /* لون نص داكن مريح للعين */
-    --input-border: #cbd5e1;
-    --glass-bg: rgba(255, 255, 255, 0.75); /* تأثير زجاجي حقيقي ومدروس للمحتوى */
-    --glass-border: rgba(255, 255, 255, 0.6);
-    --glass-shadow: 0 20px 40px 0 rgba(15, 23, 42, 0.08);
-}
-
-* {
-    box-sizing: border-box;
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --text-dark: #212529;
+    --bg-light: #f8f9fa;
+    --border-color: #dee2e6;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* تدرج لوني فاخر يعزز إبراز تأثير الزجاج للمنصة */
-    background: linear-gradient(135deg, #f0f4f9 0%, #dbeafe 50%, #ccfbf1 100%);
-    background-attachment: fixed;
-    color: var(--text-color);
-    padding: 40px 20px;
+    background-color: #f4f6f9;
+    color: var(--text-dark);
     margin: 0;
+    padding: 0;
 }
 
-/* حاوية الزجاج الذكية */
-.glass-container {
-    max-width: 850px;
-    margin: auto;
-    background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 40px;
-    box-shadow: var(--glass-shadow);
+.register-container {
+    max-width: 750px;
+    margin: 40px auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-header { 
-    text-align: center; 
-    margin-bottom: 35px; 
-}
-
-.back-link { 
-    display: inline-block; 
-    margin-bottom: 20px; 
-    color: var(--royal-blue); 
-    text-decoration: none; 
-    font-weight: 700;
-    font-size: 0.95em;
-    transition: transform 0.2s ease;
-}
-.back-link:hover {
-    transform: translateX(5px);
-}
-
-/* تنسيق الشعارات الجديد المضاف للهيكل المحدث */
-.logo-wrapper {
+/* الهيدر والعناوين */
+.auth-header {
     text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.back-home-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-decoration: none;
+    color: var(--secondary-color);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+
+.back-home-btn:hover {
+    color: var(--primary-color);
+}
+
+.logo-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.logo {
+    width: 45px;
+    height: 45px;
+}
+
+.brand-name {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+}
+
+.auth-header h1 {
+    font-size: 20px;
+    margin: 5px 0;
+    color: #495057;
+}
+
+.auth-header h2 {
+    font-size: 24px;
+    margin: 10px 0;
+    color: var(--primary-color);
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #6c757d;
+    line-height: 1.6;
+}
+
+/* مؤشر المراحل الخطية */
+.steps-indicator {
+    display: flex;
+    justify-content: space-between;
+    background: var(--bg-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.steps-indicator .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.4;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.steps-indicator .step.active {
+    opacity: 1;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.step-num {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.step-text {
+    font-size: 12px;
+}
+
+/* الاستمارات والحقول */
+.form-step-section {
+    display: none;
+}
+
+.form-step-section.active {
+    display: block;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-step-section h3 {
+    border-bottom: 2px solid var(--bg-light);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #343a40;
+}
+
+fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #fff;
+}
+
+legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: var(--primary-color);
+}
+
+.form-group {
     margin-bottom: 20px;
 }
 
-.tera-logo {
-    max-width: 160px;
-    height: auto;
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+label {
     display: block;
-    margin: 0 auto 8px;
-}
-
-.sub-logo {
-    font-size: 16px;
-    color: var(--teal);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-header h1 {
-    font-size: 1.8em;
-    color: #0f172a;
-    margin: 15px 0 10px;
-}
-
-header p {
-    color: #64748b;
-    font-size: 0.95em;
-    line-height: 1.6;
-    max-width: 650px;
-    margin: 0 auto;
-}
-
-/* شريط تتبع المراحل */
-.tracker { 
-    display: flex; 
-    justify-content: space-between; 
-    margin-bottom: 35px; 
-    border-bottom: 2px solid rgba(15, 23, 42, 0.06); 
-    padding-bottom: 20px; 
-    font-size: 0.9em; 
-}
-
-.step-node { 
-    color: #94a3b8; 
+    margin-bottom: 8px;
     font-weight: 500;
-    transition: all 0.3s ease;
-    padding-bottom: 5px;
+    font-size: 14px;
 }
 
-.step-node.active { 
-    color: var(--royal-blue); 
-    font-weight: 700; 
-    border-bottom: 3px solid var(--teal); 
-}
-
-/* تفعيل خطوات الاستمارات */
-.step { display: none; }
-.step.active { display: block; animation: fadeIn 0.4s ease-out; }
-
-@keyframes fadeIn { 
-    from { opacity: 0; transform: translateY(8px); } 
-    to { opacity: 1; transform: translateY(0); } 
-}
-
-.section-title { 
-    font-size: 1.1em; 
-    font-weight: 700; 
-    color: var(--teal); 
-    margin: 30px 0 18px; 
-    border-bottom: 1px dashed var(--input-border); 
-    padding-bottom: 8px; 
-}
-
-.address-header-status {
-    font-size: 0.95em;
-    font-weight: 700;
-    color: var(--royal-blue);
-    background: rgba(42, 82, 190, 0.06);
-    padding: 8px 12px;
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
-    margin-bottom: 15px;
-    display: inline-block;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
 }
 
-/* الحقول والمجموعات السطرية */
-.input-group { margin-bottom: 22px; }
-
-.row-group { 
-    display: flex; 
-    gap: 20px; 
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
 }
 
-label { 
-    display: block; 
-    margin-bottom: 8px; 
-    font-weight: 600; 
-    color: #334155; 
-    font-size: 0.95em;
+.radio-group, .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
 }
 
-input[type="text"], 
-input[type="email"], 
-input[type="password"], 
-input[type="tel"], 
-input[type="date"], 
-select {
-    width: 100%; 
-    padding: 12px 14px; 
-    border: 1px solid var(--input-border); 
-    border-radius: 8px; 
-    font-size: 14px; 
-    box-sizing: border-box; 
-    background: #ffffff;
-    color: var(--text-color);
-    transition: all 0.25s ease;
-}
-
-input:focus, select:focus { 
-    outline: none; 
-    border-color: var(--royal-blue); 
-    box-shadow: 0 0 0 4px rgba(42, 82, 190, 0.12); 
-    background: #ffffff;
-}
-
-/* تعديل خيارات الراديو لتتوافق مع الـ RTL */
-.radio-group {
-    padding: 8px 0;
-}
-.radio-group label { 
-    display: inline-flex; 
+.radio-group label, .checkbox-group label {
+    font-weight: normal;
+    cursor: pointer;
+    display: flex;
     align-items: center;
-    margin-left: 0;
-    margin-right: 24px; /* مسافة أمان صحيحة لاتجاه اليمين إلى اليسار */
-    font-weight: 500; 
-    cursor: pointer; 
-}
-.radio-group label input {
-    margin-left: 8px;
+    gap: 8px;
 }
 
-/* صناديق التحقق من الشروط للمدخلات */
-.validation-box { 
-    background: #f8fafc; 
-    border: 1px solid #e2e8f0; 
-    padding: 16px; 
-    border-radius: 8px; 
-    margin-top: 12px; 
-    font-size: 0.88em; 
+/* صناديق وشروط التحقق */
+.validation-box {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 8px;
 }
-.validation-box Scstrong { 
-    color: #475569; 
+
+.headline-validation {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    font-weight: bold;
 }
-.validation-box ul { 
-    list-style: none; 
-    padding: 0; 
-    margin: 12px 0 0 0; 
+
+.validation-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.validation-box li { 
-    margin-bottom: 6px; 
-    color: #64748b; 
+
+.validation-box li {
+    font-size: 13px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 6px;
 }
-.status-check { 
-    margin-top: 12px; 
-    padding-top: 12px; 
-    border-top: 1px solid #e2e8f0; 
+
+.validation-box li::before {
+    content: "🔴";
 }
 
-/* صناديق الاتفاقيات والإقرارات */
-.declaration-box { 
-    background: rgba(0, 128, 128, 0.03); 
-    border-right: 4px solid var(--teal); 
-    padding: 24px; 
-    border-radius: 8px; 
-    margin-bottom: 25px; 
+.validation-box li.valid::before {
+    content: "🟢";
 }
-.declaration-box label { 
-    display: flex; 
-    gap: 14px; 
-    align-items: flex-start; 
-    font-weight: 500; 
-    margin-bottom: 18px; 
-    line-height: 1.6; 
-    cursor: pointer; 
-    color: #334155;
+
+.validation-box li.valid {
+    color: var(--success-color);
 }
-.declaration-box label:last-child {
-    margin-bottom: 0;
+
+.status-msg {
+    font-size: 13px;
+    margin-top: 5px;
+    font-weight: 500;
 }
-.declaration-box input[type="checkbox"] { 
-    margin-top: 4px; 
-    width: 18px; 
-    height: 18px; 
-    accent-color: var(--teal);
+
+.status-msg.valid { color: var(--success-color); }
+.status-msg.invalid { color: var(--danger-color); }
+
+/* مؤشر قوة كلمة المرور */
+.password-strength-container {
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+.strength-bar {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+#strength-bar-fill {
+    height: 100%;
+    width: 0;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.strength-weak { color: var(--danger-color); font-weight: bold; }
+.strength-medium { color: var(--warning-color); font-weight: bold; }
+.strength-strong { color: var(--success-color); font-weight: bold; }
+.strength-very-strong { color: #0f5132; font-weight: bold; }
+
+/* الإقرارات والاتفاقيات */
+.agreements-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.agreement-item {
+    background: var(--bg-light);
+    padding: 12px;
+    border-radius: 6px;
+    border-right: 4px solid var(--secondary-color);
+}
+
+.agreement-item label {
+    font-weight: normal;
+    line-height: 1.6;
+    font-size: 13px;
     cursor: pointer;
 }
 
-/* صندوق الإقرار النهائي الفاخر */
-.final-declaration { 
-    background: rgba(42, 82, 190, 0.04); 
-    padding: 24px; 
-    border-radius: 10px; 
-    text-align: center; 
-    margin-bottom: 30px; 
-    border: 1px dashed var(--royal-blue); 
-}
-.final-declaration h4 { 
-    color: var(--royal-blue); 
-    margin-top: 0; 
-    margin-bottom: 8px; 
-    font-size: 1.1em;
-}
-.final-declaration p { 
-    margin: 0; 
-    font-weight: 600; 
-    line-height: 1.6; 
-    color: #1e293b;
-    font-size: 0.95em;
+.master-agreement {
+    border-right-color: var(--primary-color);
+    background: #e7f1ff;
 }
 
-/* أزرار التحكم والإرسال */
-.actions { 
-    display: flex; 
-    gap: 16px; 
-    margin-top: 35px; 
-    justify-content: center; 
+.nested-list {
+    margin: 8px 20px 0 0;
+    padding: 0;
+    font-size: 13px;
+    color: #495057;
 }
 
-button { 
-    padding: 12px 35px; 
-    font-size: 15px; 
-    cursor: pointer; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: 700; 
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+.nested-list li {
+    margin-bottom: 4px;
 }
 
-.btn-next { 
-    background: var(--royal-blue); 
-    color: #ffffff; 
-}
-.btn-submit { 
-    background: var(--teal); 
-    color: #ffffff;
-}
-.btn-prev { 
-    background: #e2e8f0; 
-    color: #475569; 
+.final-pledge-box {
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 20px;
 }
 
-button:hover { 
-    opacity: 0.95; 
-    transform: translateY(-2px); 
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-}
-button:active {
-    transform: translateY(0);
+.final-pledge-box h4 {
+    margin: 0 0 5px 0;
+    color: #664d03;
 }
 
-/* أسفل الصفحة والروابط التوجيهية */
-.footer-links { 
-    text-align: center; 
-    margin-top: 35px; 
-    padding-top: 24px; 
-    border-top: 1px solid rgba(15, 23, 42, 0.06); 
-    font-size: 0.95em;
-}
-.footer-links p {
-    color: #64748b;
+.final-pledge-box p {
     margin: 0;
-}
-.footer-links a { 
-    color: var(--teal); 
-    text-decoration: none; 
-    display: inline-block; 
-    margin-top: 8px; 
-    font-weight: 700;
-}
-.footer-links a:hover { 
-    text-decoration: underline; 
+    font-size: 13px;
+    color: #664d03;
+    line-height: 1.5;
 }
 
-/* ==========================================================================
-   Responsive Breakpoints - شاشات الهواتف والتابلت
-   ========================================================================== */
-@media (max-width: 768px) {
-    body {
-        padding: 20px 10px;
-    }
-    .glass-container {
-        padding: 24px 16px;
-    }
-    .row-group {
-        flex-direction: column;
-        gap: 0; /* تحويل العناصر المتجاورة لعمودية لمنع الانضغاط والأخطاء */
-    }
-    .tracker {
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
-        background: rgba(15, 23, 42, 0.02);
-        padding: 14px;
-        border-radius: 8px;
-    }
-    .step-node {
-        padding-bottom: 0;
-        width: 100%;
-    }
-    .step-node.active {
-        border-bottom: none;
-        border-right: 3px solid var(--teal);
-        padding-right: 8px;
-    }
-    .radio-group label {
-        margin-right: 0;
-        display: flex;
-        margin-bottom: 10px;
-    }
-    button {
-        width: 100%; /* تمديد الأزرار لتسهيل النقر عبر الهواتف */
-    }
-    .actions {
-        flex-direction: column-reverse;
-    }
+/* أزرار التنقل */
+.form-navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn {
+    padding: 10px 24px;
+    font-size: 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    transition: background 0.2s;
+}
+
+.btn-primary { background: var(--primary-color); color: white; }
+.btn-primary:hover { background: #0b5ed7; }
+.btn-secondary { background: var(--secondary-color); color: white; }
+.btn-secondary:hover { background: #5c636a; }
+.btn-success { background: var(--success-color); color: white; }
+.btn-success:hover { background: #157347; }
+
+/* فوتر السفلي */
+.auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* كلاسات عامة للمحرك */
+.hidden { display: none !important; }
+
+/* النافذة المنبثقة OTP */
+.modal-overlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* التجاوب مع الجوال */
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; gap: 0; }
+    .steps-indicator { flex-direction: column; gap: 10px; align-items: flex-start; }
+    .back-home-btn { position: relative; margin-bottom: 15px; display: inline-block; }
 }
