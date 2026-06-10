@@ -1,353 +1,480 @@
-document.addEventListener("DOMContentLoaded", function () {
-    
-    // المجموعات الجغرافية المحددة للتحقق والدول
-    const gccCountries = [
-        { name: "الإمارات العربية المتحدة", code: "+971" },
-        { name: "مملكة البحرين", code: "+973" },
-        { name: "سلطنة عمان", code: "+968" },
-        { name: "دولة قطر", code: "+974" },
-        { name: "دولة الكويت", code: "+965" }
-    ];
+// register.js - الصفحة الخاصة بإنشاء حساب مستثمر جديد
+// يعتمد على core.js و auth.js المحملين قبل هذا الملف
 
-    const arabCountries = [
-        { name: "مصر", code: "+20" },
-        { name: "الأردن", code: "+962" },
-        { name: "المغرب", code: "+212" },
-        { name: "الجزائر", code: "+213" },
-        { name: "تونس", code: "+216" },
-        { name: "العراق", code: "+964" },
-        { name: "اليمن", code: "+967" },
-        { name: "السودان", code: "+249" },
-        { name: "لبنان", code: "+961" },
-        { name: "سوريا", code: "+963" },
-        { name: "ليبيا", code: "+218" },
-        { name: "فلسطين", code: "+970" }
-    ];
+(function() {
+    'use strict';
 
-    // تغذية القوائم المنسدلة الأولية للهويات
-    document.querySelectorAll(".gcc-country-select").forEach(select => {
-        select.innerHTML = '<option value="">اختر الدولة الخليجية</option>';
-        gccCountries.forEach(c => select.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-    });
-
-    document.querySelectorAll(".arab-country-select").forEach(select => {
-        select.innerHTML = '<option value="">اختر الدولة العربية</option>';
-        arabCountries.forEach(c => select.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-    });
-
-    // --- حظر وتصفية لغة الإدخال في الأسماء بشكل صارم وحي ---
-    const fullNameAr = document.getElementById("fullNameAr");
-    const fullNameEn = document.getElementById("fullNameEn");
-
-    // الاسم العربي: يقبل فقط الحروف العربية والمسافات
-    fullNameAr.addEventListener("input", function() {
-        this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, "");
-    });
-
-    // الاسم الإنجليزي: يقبل فقط الحروف الإنجليزية والمسافات
-    fullNameEn.addEventListener("input", function() {
-        this.value = this.value.replace(/[^a-zA-Z\s]/g, "");
-    });
-
-
-    // --- محرك إظهار / إخفاء كلمات المرور ---
-    document.querySelectorAll(".toggle-password").forEach(button => {
-        button.addEventListener("click", function() {
-            const targetId = this.getAttribute("data-target");
-            const inputField = document.getElementById(targetId);
-            
-            if (inputField.type === "password") {
-                inputField.type = "text";
-                this.innerText = "إخفاء";
-            } else {
-                inputField.type = "password";
-                this.innerText = "إظهار";
-            }
-        });
-    });
-
-
-    // --- إدارة ديناميكية مفاتيح الاتصال والدول بالمرحلة الثالثة ---
-    const nationalityType = document.getElementById("nationalityType");
-    const countryCodeContainer = document.getElementById("countryCodeContainer");
-    const intlAddressCountry = document.getElementById("intlAddressCountry");
-    const mobileInput = document.getElementById("mobileNumber");
-
-    // فحص منع الصفر في بداية رقم الجوال عند الإدخال
-    mobileInput.addEventListener("input", function() {
-        if(this.value.startsWith("0")) {
-            this.value = this.value.substring(1);
-        }
-    });
-
-    function updateCommunicationAndAddressLogic(type) {
-        // تفريغ وتجهيز الحاوية الخاصة بمفتاح الاتصال
-        countryCodeContainer.innerHTML = '<label>مفتاح الدولة</label>';
-
-        if (type === "saudi" || type === "resident") {
-            // مواطن أو مقيم: تثبيت مفتاح السعودية +966
-            countryCodeContainer.innerHTML += `<input type="text" id="countryCode" value="+966" readonly style="background: #e9ecef; cursor: not-allowed;">`;
-            
-            if (type === "resident") {
-                // المقيم تظهر له الدول العربية في عنوانه الدولي إن لزم
-                fillSelectWithOptions(intlAddressCountry, arabCountries, "اختر الدولة العربية");
-            }
-        } 
-        else if (type === "gcc") {
-            // مواطن خليجي: قائمة مفاتيح دول الخليج فقط
-            let selectHtml = `<select id="countryCode" required><option value="">اختر</option>`;
-            gccCountries.forEach(c => { selectHtml += `<option value="${c.code}">${c.code} (${c.name})</option>`; });
-            selectHtml += `</select>`;
-            countryCodeContainer.innerHTML += selectHtml;
-
-            // تغذية سيكشن العناوين بدول الخليج فقط
-            fillSelectWithOptions(intlAddressCountry, gccCountries, "اختر الدولة الخليجية");
-        } 
-        else if (type === "foreigner") {
-            // أجنبي: قائمة مفاتيح الدول العربية فقط
-            let selectHtml = `<select id="countryCode" required><option value="">اختر</option>`;
-            arabCountries.forEach(c => { selectHtml += `<option value="${c.code}">${c.code} (${c.name})</option>`; });
-            selectHtml += `</select>`;
-            countryCodeContainer.innerHTML += selectHtml;
-
-            // تغذية سيكشن العناوين بالدول العربية فقط
-            fillSelectWithOptions(intlAddressCountry, arabCountries, "اختر الدولة العربية");
-        }
-    }
-
-    function fillSelectWithOptions(selectElement, list, placeholder) {
-        if(!selectElement) return;
-        selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-        list.forEach(c => { selectElement.innerHTML += `<option value="${c.name}">${c.name}</option>`; });
-    }
-
-
-    // --- بقية منطق المراحل والمزامنة كما هي مسبقاً مع دمج التحديثات العلوية ---
-    const dynamicIdSection = document.getElementById("dynamic-identity-section");
-    const addrSaudiResident = document.getElementById("address-saudi-resident");
-    const addrInternational = document.getElementById("address-international");
-
-    nationalityType.addEventListener("change", function() {
-        const type = this.value;
+    // انتظار تحميل DOM بالكامل
+    document.addEventListener('DOMContentLoaded', function() {
+        // ------------------- عناصر DOM الرئيسية -------------------
+        const form = document.getElementById('registrationForm');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const steps = document.querySelectorAll('.step');
+        const stepSections = document.querySelectorAll('.form-step-section');
         
-        // تشغيل نظام المفاتيح المحدث فوراً
-        updateCommunicationAndAddressLogic(type);
+        let currentStep = 1;
+        const totalSteps = stepSections.length;
 
-        dynamicIdSection.classList.add("hidden");
-        document.querySelectorAll(".nationality-fields").forEach(el => el.classList.add("hidden"));
-        document.querySelectorAll(".nationality-fields input, .nationality-fields select").forEach(el => el.removeAttribute("required"));
-
-        if(type) {
-            dynamicIdSection.classList.remove("hidden");
-            const targetFields = document.getElementById(`fields-${type}`);
-            targetFields.classList.remove("hidden");
-            targetFields.querySelectorAll("input, select").forEach(el => el.setAttribute("required", "true"));
+        // ------------------- دوال مساعدة خاصة بالصفحة -------------------
+        function showStep(step) {
+            // إخفاء جميع الأقسام وإظهار القسم المطلوب
+            stepSections.forEach((section, idx) => {
+                section.classList.toggle('active', (idx + 1) === step);
+            });
+            // تحديث مؤشر الخطوات
+            steps.forEach((stepEl, idx) => {
+                stepEl.classList.toggle('active', (idx + 1) === step);
+            });
+            // إدارة أزرار التنقل
+            if (prevBtn) prevBtn.classList.toggle('hidden', step === 1);
+            if (nextBtn) nextBtn.classList.toggle('hidden', step === totalSteps);
+            if (submitBtn) submitBtn.classList.toggle('hidden', step !== totalSteps);
+            currentStep = step;
         }
 
-        if(type === "saudi" || type === "resident") {
-            addrSaudiResident.classList.remove("hidden");
-            addrInternational.classList.add("hidden");
-            document.querySelectorAll(".addr-input").forEach(el => el.removeAttribute("required"));
-            addrSaudiResident.querySelectorAll(".addr-input").forEach(el => el.setAttribute("required", "true"));
-        } else if (type === "gcc" || type === "foreigner") {
-            addrInternational.classList.remove("hidden");
-            addrSaudiResident.classList.add("hidden");
-            document.querySelectorAll(".addr-input").forEach(el => el.removeAttribute("required"));
-            addrInternational.querySelectorAll(".addr-input").forEach(el => el.setAttribute("required", "true"));
-        } else {
-            addrSaudiResident.classList.add("hidden");
-            addrInternational.classList.add("hidden");
-        }
-    });
+        // التحقق من صحة الخطوة الحالية (تعتمد على الدوال العامة من core.js إن وجدت)
+        function validateCurrentStep() {
+            const activeSection = document.querySelector('.form-step-section.active');
+            if (!activeSection) return false;
 
-    document.querySelectorAll('input[name="foreignerDocType"]').forEach(radio => {
-        radio.addEventListener("change", function() {
-            document.querySelectorAll(".sub-fields").forEach(el => el.classList.add("hidden"));
-            document.querySelectorAll(".sub-fields input, .sub-fields select").forEach(el => el.removeAttribute("required"));
-            
-            if(this.value === "national_id") {
-                const sub = document.getElementById("sub-fields-foreigner-id");
-                sub.classList.remove("hidden");
-                sub.querySelectorAll("input, select").forEach(el => el.setAttribute("required", "true"));
-            } else if (this.value === "passport") {
-                const sub = document.getElementById("sub-fields-passport");
-                sub.classList.remove("hidden");
-                sub.querySelectorAll("input, select").forEach(el => el.setAttribute("required", "true"));
+            // 1. التحقق من الحقول المطلوبة (required)
+            const requiredFields = activeSection.querySelectorAll('[required]');
+            let isValid = true;
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('error');
+                    // استخدام showNotification من core.js إذا كانت موجودة
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification(`الرجاء تعبئة الحقل: ${field.labels?.[0]?.innerText || field.placeholder || 'حقل مطلوب'}`, 'error');
+                    } else {
+                        alert('يرجى تعبئة جميع الحقول المطلوبة');
+                    }
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+
+            // 2. تحقق خاص بالمرحلة الأولى (إنشاء الحساب)
+            if (activeSection.id === 'step1') {
+                // اسم المستخدم
+                const username = document.getElementById('username').value;
+                if (typeof window.validateUsername === 'function') {
+                    const uCheck = window.validateUsername(username);
+                    if (!uCheck.valid) {
+                        isValid = false;
+                        if (typeof window.showNotification === 'function')
+                            window.showNotification('اسم المستخدم غير صالح (4-20 حرف، أحرف إنجليزية وأرقام فقط)', 'error');
+                    }
+                    // تحديث واجهة التحقق
+                    document.getElementById('u-length')?.classList.toggle('valid', uCheck.lengthOk);
+                    document.getElementById('u-chars')?.classList.toggle('valid', uCheck.charsOk);
+                    document.getElementById('u-spaces')?.classList.toggle('valid', uCheck.noSpaces);
+                    document.getElementById('u-specials')?.classList.toggle('valid', uCheck.noSpecials);
+                }
+
+                // تطابق البريد الإلكتروني
+                const email = document.getElementById('email').value;
+                const confirmEmail = document.getElementById('confirmEmail').value;
+                if (email !== confirmEmail) {
+                    isValid = false;
+                    const statusDiv = document.getElementById('email-match-status');
+                    if (statusDiv) statusDiv.textContent = '✗ البريدان غير متطابقين';
+                    if (typeof window.showNotification === 'function')
+                        window.showNotification('البريد الإلكتروني غير متطابق', 'error');
+                }
+
+                // قوة كلمة المرور
+                const password = document.getElementById('password').value;
+                if (typeof window.checkPasswordStrength === 'function') {
+                    const strength = window.checkPasswordStrength(password);
+                    if (strength.strength < 3) {
+                        isValid = false;
+                        if (typeof window.showNotification === 'function')
+                            window.showNotification('كلمة المرور ضعيفة جداً، يرجى استخدام 8 أحرف على الأقل + حروف كبيرة وصغيرة + أرقام + رموز', 'error');
+                    }
+                }
+
+                // تطابق كلمتي المرور
+                const confirmPass = document.getElementById('confirmPassword').value;
+                if (password !== confirmPass) {
+                    isValid = false;
+                    const statusDiv = document.getElementById('password-match-status');
+                    if (statusDiv) statusDiv.textContent = '✗ كلمتا المرور غير متطابقتين';
+                    if (typeof window.showNotification === 'function')
+                        window.showNotification('كلمة المرور غير متطابقة', 'error');
+                }
             }
-        });
-    });
 
-    // سيلكتور التحكم الخطي بالمراحل الـ 4
-    let currentStep = 1;
-    const totalSteps = 4;
-    const form = document.getElementById("registrationForm");
-    const prevBtn = document.getElementById("prevBtn");
-    const nextBtn = document.getElementById("nextBtn");
-    const submitBtn = document.getElementById("submitBtn");
+            // 3. تحقق خاص بالمرحلة الثانية (الإقرارات العمر والمستفيد)
+            if (activeSection.id === 'step2') {
+                const ageCheck = document.getElementById('declarationAge');
+                const beneficiaryCheck = document.getElementById('declarationBeneficiary');
+                if (!ageCheck.checked) {
+                    isValid = false;
+                    if (typeof window.showNotification === 'function')
+                        window.showNotification('يجب الإقرار بأن عمرك 18 عاماً فأكثر', 'error');
+                }
+                if (!beneficiaryCheck.checked) {
+                    isValid = false;
+                    if (typeof window.showNotification === 'function')
+                        window.showNotification('يجب الإقرار بأنك المستفيد الحقيقي', 'error');
+                }
+            }
 
-    function updateStepUI() {
-        document.querySelectorAll(".form-step-section").forEach(sec => sec.classList.remove("active"));
-        document.getElementById(`step${currentStep}`).classList.add("active");
+            // 4. تحقق خاص بالمرحلة الرابعة (الإقرارات والاتفاقيات)
+            if (activeSection.id === 'step4') {
+                const agreementChecks = document.querySelectorAll('.agreement-check');
+                let allChecked = true;
+                agreementChecks.forEach(cb => {
+                    if (!cb.checked) allChecked = false;
+                });
+                const masterCheck = document.getElementById('masterAgreementCheck');
+                if (masterCheck && masterCheck.checked) {
+                    // تفعيل جميع الإقرارات تلقائياً
+                    agreementChecks.forEach(cb => cb.checked = true);
+                    allChecked = true;
+                }
+                if (!allChecked) {
+                    isValid = false;
+                    if (typeof window.showNotification === 'function')
+                        window.showNotification('يجب الموافقة على جميع الإقرارات والاتفاقيات', 'error');
+                }
+            }
 
-        document.querySelectorAll(".steps-indicator .step").forEach(step => {
-            const stepNum = parseInt(step.getAttribute("data-step"));
-            step.classList.toggle("active", stepNum <= currentStep);
-        });
-
-        prevBtn.classList.toggle("hidden", currentStep === 1);
-        if (currentStep === totalSteps) {
-            nextBtn.classList.add("hidden");
-            submitBtn.classList.remove("hidden");
-        } else {
-            nextBtn.classList.remove("hidden");
-            submitBtn.classList.add("hidden");
+            return isValid;
         }
-    }
 
-    nextBtn.addEventListener("click", () => {
-        if (validateStep(currentStep)) {
-            if (currentStep < totalSteps) { currentStep++; updateStepUI(); }
-        }
-    });
-
-    prevBtn.addEventListener("click", () => {
-        if (currentStep > 1) { currentStep--; updateStepUI(); }
-    });
-
-    function validateStep(step) {
-        let isValid = true;
-        const section = document.getElementById(`step${step}`);
-        const inputs = section.querySelectorAll("input[required], select[required]");
-        
-        inputs.forEach(input => {
-            if (!input.value.trim() && !input.closest('.hidden')) {
-                isValid = false;
-                input.style.borderColor = "var(--danger-color)";
+        // دالة تجميع بيانات النموذج (استكمال لوظيفة core.js)
+        function collectAllFormData() {
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            // إضافة الحقول الديناميكية (الهوية، العنوان)
+            // الهوية حسب الجنسية
+            const nationality = document.getElementById('nationalityType')?.value;
+            if (nationality === 'saudi') {
+                const idNum = document.querySelector('#fields-saudi input[type="text"]')?.value;
+                const issueDate = document.querySelector('#fields-saudi input[type="date"]:first-of-type')?.value;
+                const expiryDate = document.querySelector('#fields-saudi input[type="date"]:last-of-type')?.value;
+                if (idNum) data.nationalId = idNum;
+                if (issueDate) data.nationalIdIssueDate = issueDate;
+                if (expiryDate) data.nationalIdExpiry = expiryDate;
+            } else if (nationality === 'resident') {
+                const iqamaNum = document.querySelector('#fields-resident input[type="text"]')?.value;
+                const issueDate = document.querySelector('#fields-resident input[type="date"]:first-of-type')?.value;
+                const expiryDate = document.querySelector('#fields-resident input[type="date"]:last-of-type')?.value;
+                if (iqamaNum) data.iqamaNumber = iqamaNum;
+                if (issueDate) data.iqamaIssue = issueDate;
+                if (expiryDate) data.iqamaExpiry = expiryDate;
+            } else if (nationality === 'gcc') {
+                const gccCountry = document.querySelector('#fields-gcc .gcc-country-select')?.value;
+                const gccId = document.querySelector('#fields-gcc input[type="text"]')?.value;
+                const issueDate = document.querySelector('#fields-gcc input[type="date"]:first-of-type')?.value;
+                const expiryDate = document.querySelector('#fields-gcc input[type="date"]:last-of-type')?.value;
+                if (gccCountry) data.gccCountry = gccCountry;
+                if (gccId) data.gccNationalId = gccId;
+                if (issueDate) data.gccIdIssue = issueDate;
+                if (expiryDate) data.gccIdExpiry = expiryDate;
+            } else if (nationality === 'foreigner') {
+                const docType = document.querySelector('input[name="foreignerDocType"]:checked')?.value;
+                data.foreignerDocType = docType;
+                if (docType === 'national_id') {
+                    const country = document.querySelector('#sub-fields-foreigner-id .arab-country-select')?.value;
+                    const idNum = document.querySelector('#sub-fields-foreigner-id input[type="text"]')?.value;
+                    const issue = document.querySelector('#sub-fields-foreigner-id input[type="date"]:first-of-type')?.value;
+                    const expiry = document.querySelector('#sub-fields-foreigner-id input[type="date"]:last-of-type')?.value;
+                    if (country) data.foreignerCountry = country;
+                    if (idNum) data.foreignerNationalId = idNum;
+                    if (issue) data.foreignerIdIssue = issue;
+                    if (expiry) data.foreignerIdExpiry = expiry;
+                } else if (docType === 'passport') {
+                    const country = document.querySelector('#sub-fields-passport .arab-country-select')?.value;
+                    const passportNum = document.querySelector('#sub-fields-passport input[type="text"]')?.value;
+                    const issue = document.querySelector('#sub-fields-passport input[type="date"]:first-of-type')?.value;
+                    const expiry = document.querySelector('#sub-fields-passport input[type="date"]:last-of-type')?.value;
+                    if (country) data.passportCountry = country;
+                    if (passportNum) data.passportNumber = passportNum;
+                    if (issue) data.passportIssue = issue;
+                    if (expiry) data.passportExpiry = expiry;
+                }
+            }
+            // جمع بيانات العنوان
+            const isSaudiOrResident = (nationality === 'saudi' || nationality === 'resident');
+            if (isSaudiOrResident) {
+                const buildingNo = document.querySelector('#address-saudi-resident .addr-input:first-of-type')?.value;
+                const subNumber = document.querySelectorAll('#address-saudi-resident .addr-input')[1]?.value;
+                const street = document.querySelectorAll('#address-saudi-resident .addr-input')[2]?.value;
+                const district = document.querySelectorAll('#address-saudi-resident .addr-input')[3]?.value;
+                const city = document.querySelectorAll('#address-saudi-resident .addr-input')[4]?.value;
+                const postalCode = document.querySelectorAll('#address-saudi-resident .addr-input')[5]?.value;
+                const extraNumber = document.querySelectorAll('#address-saudi-resident .addr-input')[6]?.value;
+                const unitNumber = document.querySelector('#address-saudi-resident input[type="text"]:nth-of-type(2)')?.value;
+                const shortName = document.querySelector('#address-saudi-resident .addr-input:last-of-type')?.value;
+                data.buildingNumber = buildingNo;
+                data.streetSubNumber = subNumber;
+                data.streetName = street;
+                data.district = district;
+                data.city = city;
+                data.postalCode = postalCode;
+                data.extraNumber = extraNumber;
+                data.unitNumber = unitNumber;
+                data.addressShortName = shortName;
             } else {
-                input.style.borderColor = "var(--border-color)";
+                const country = document.getElementById('intlAddressCountry')?.value;
+                const city = document.querySelector('#address-international .addr-input:nth-of-type(2)')?.value;
+                const state = document.querySelector('#address-international .addr-input:nth-of-type(3)')?.value;
+                const district = document.querySelector('#address-international .addr-input:nth-of-type(4)')?.value;
+                const street = document.querySelector('#address-international .addr-input:nth-of-type(5)')?.value;
+                const zip = document.querySelector('#address-international .addr-input:nth-of-type(6)')?.value;
+                const extraDesc = document.querySelector('#address-international textarea')?.value;
+                data.internationalCountry = country;
+                data.internationalCity = city;
+                data.internationalState = state;
+                data.internationalDistrict = district;
+                data.internationalStreet = street;
+                data.internationalZip = zip;
+                data.addressExtra = extraDesc;
             }
-        });
-
-        if (step === 1) {
-            const userValid = !section.querySelectorAll(".validation-box li.invalid").length;
-            const emailMatch = document.getElementById("email").value === document.getElementById("confirmEmail").value;
-            const passMatch = document.getElementById("password").value === document.getElementById("confirmPassword").value;
-            if(!userValid || !emailMatch || !passMatch) isValid = false;
+            return data;
         }
-        return isValid;
-    }
 
-    // شروط وتحقق المرحلة الأولى الحية
-    const usernameInput = document.getElementById("username");
-    usernameInput.addEventListener("input", function() {
-        const val = this.value;
-        document.getElementById("u-length").className = (val.length >= 4 && val.length <= 20) ? "valid" : "invalid";
-        document.getElementById("u-chars").className = /^[a-zA-Z0-9]+$/.test(val) ? "valid" : "invalid";
-        document.getElementById("u-spaces").className = (!val.includes(" ") && val.length > 0) ? "valid" : "invalid";
-        document.getElementById("u-specials").className = /^[a-zA-Z0-9\s]*$/.test(val) ? "valid" : "invalid";
-    });
-
-    const email = document.getElementById("email");
-    const confirmEmail = document.getElementById("confirmEmail");
-    const emailStatus = document.getElementById("email-match-status");
-
-    function checkEmailMatch() {
-        if(confirmEmail.value.length === 0) { emailStatus.innerHTML = ""; return; }
-        if(email.value === confirmEmail.value) {
-            emailStatus.innerHTML = "🟢 البريد الإلكتروني متطابق";
-            emailStatus.className = "status-msg valid";
-        } else {
-            emailStatus.innerHTML = "🔴 البريد الإلكتروني غير متطابق";
-            emailStatus.className = "status-msg invalid";
+        // إرسال البيانات إلى الخادم (محاكاة)
+        async function submitRegistration(data) {
+            // هنا يمكن استبدال المحاكاة باستدعاء API حقيقي
+            console.log('بيانات التسجيل المرسلة:', data);
+            // محاكاة زمن الشبكة
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({ success: true, message: 'تم إنشاء الحساب بنجاح، يرجى تفعيله عبر البريد الإلكتروني' });
+                }, 1500);
+            });
         }
-    }
-    email.addEventListener("input", checkEmailMatch);
-    confirmEmail.addEventListener("input", checkEmailMatch);
 
-    const password = document.getElementById("password");
-    password.addEventListener("input", function() {
-        const val = this.value;
-        const hasUpper = /[A-Z]/.test(val);
-        const hasLower = /[a-z]/.test(val);
-        const hasNumber = /[0-9]/.test(val);
-        const hasSpecial = /[^A-Za-z0-9]/.test(val);
-        const isLongEnough = val.length >= 8;
-
-        document.getElementById("p-length").className = isLongEnough ? "valid" : "invalid";
-        document.getElementById("p-upper").className = hasUpper ? "valid" : "invalid";
-        document.getElementById("p-lower").className = hasLower ? "valid" : "invalid";
-        document.getElementById("p-number").className = hasNumber ? "valid" : "invalid";
-        document.getElementById("p-special").className = hasSpecial ? "valid" : "invalid";
-
-        let score = 0;
-        if (isLongEnough) score++;
-        if (hasUpper && hasLower) score++;
-        if (hasNumber) score++;
-        if (hasSpecial) score++;
-
-        const strengthText = document.getElementById("strength-text");
-        const strengthFill = document.getElementById("strength-bar-fill");
-
-        if (val.length === 0) {
-            strengthText.innerText = "ضعيفة"; strengthText.className = "strength-weak"; strengthFill.style.width = "0%";
-        } else if (score <= 2) {
-            strengthText.innerText = "ضعيفة"; strengthText.className = "strength-weak"; strengthFill.style.width = "25%"; strengthFill.style.backgroundColor = "var(--danger-color)";
-        } else if (score === 3) {
-            strengthText.innerText = "متوسطة"; strengthText.className = "strength-medium"; strengthFill.style.width = "60%"; strengthFill.style.backgroundColor = "var(--warning-color)";
-        } else if (score === 4 && val.length < 12) {
-            strengthText.innerText = "قوية"; strengthText.className = "strength-strong"; strengthFill.style.width = "85%"; strengthFill.style.backgroundColor = "var(--success-color)";
-        } else if (score === 4 && val.length >= 12) {
-            strengthText.innerText = "قوية جداً"; strengthText.className = "strength-very-strong"; strengthFill.style.width = "100%"; strengthFill.style.backgroundColor = "#0f5132";
+        // ------------------- الأحداث -------------------
+        // زر "التالي"
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                if (validateCurrentStep()) {
+                    if (currentStep < totalSteps) {
+                        showStep(currentStep + 1);
+                    }
+                }
+            });
         }
-    });
 
-    const confirmPassword = document.getElementById("confirmPassword");
-    const passwordStatus = document.getElementById("password-match-status");
-
-    function checkPasswordMatch() {
-        if(confirmPassword.value.length === 0) { passwordStatus.innerHTML = ""; return; }
-        if(password.value === confirmPassword.value) {
-            passwordStatus.innerHTML = "🟢 كلمة المرور متطابقة";
-            passwordStatus.className = "status-msg valid";
-        } else {
-            passwordStatus.innerHTML = "🔴 كلمة المرور غير متطابقة";
-            passwordStatus.className = "status-msg invalid";
+        // زر "السابق"
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
         }
-    }
-    password.addEventListener("input", checkPasswordMatch);
-    confirmPassword.addEventListener("input", checkPasswordMatch);
 
-    const masterCheck = document.getElementById("masterAgreementCheck");
-    const individualChecks = document.querySelectorAll(".agreement-check");
+        // إرسال النموذج (المرحلة الرابعة)
+        if (form && submitBtn) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (!validateCurrentStep()) return;
 
-    masterCheck.addEventListener("change", function() { individualChecks.forEach(ch => ch.checked = this.checked); });
-    individualChecks.forEach(ch => {
-        ch.addEventListener("change", function() {
-            masterCheck.checked = Array.from(individualChecks).every(c => c.checked);
-        });
-    });
+                // تعطيل الزر لمنع الإرسال المتكرر
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'جاري إنشاء الحساب...';
 
-    form.addEventListener("submit", function(e) {
-        e.preventDefault();
-        if(!validateStep(4)) { alert("يرجى الموافقة على الإقرارات للمتابعة."); return; }
-        document.getElementById("otpModal").classList.remove("hidden");
-    });
+                const formData = collectAllFormData();
+                const result = await submitRegistration(formData);
 
-    const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-    const otpInput = document.getElementById("otpInput");
-    const completeLaterSection = document.getElementById("completeLaterSection");
-
-    verifyOtpBtn.addEventListener("click", () => {
-        if(otpInput.value.length === 4) {
-            completeLaterSection.classList.remove("hidden");
-            verifyOtpBtn.classList.add("hidden");
-            otpInput.setAttribute("disabled", "true");
-        } else {
-            alert("أدخل رمز التحقق المكون من 4 أرقام.");
+                if (result.success) {
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification(result.message, 'success');
+                    } else {
+                        alert(result.message);
+                    }
+                    // إظهار مودال OTP
+                    const otpModal = document.getElementById('otpModal');
+                    if (otpModal) otpModal.classList.remove('hidden');
+                } else {
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification(result.message || 'حدث خطأ، حاول مرة أخرى', 'error');
+                    } else {
+                        alert('حدث خطأ أثناء إنشاء الحساب');
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'إنشاء الحساب';
+                }
+            });
         }
-    });
 
-    document.getElementById("completeLaterBtn").addEventListener("click", () => {
-        window.location.href = "../complete-profile.html";
+        // ------------------- منطق ديناميكي للحقول -------------------
+        // إظهار/إخفاء حقول الهوية بناءً على الجنسية
+        const nationalitySelect = document.getElementById('nationalityType');
+        const identitySection = document.getElementById('dynamic-identity-section');
+        if (nationalitySelect && identitySection) {
+            nationalitySelect.addEventListener('change', function() {
+                identitySection.classList.remove('hidden');
+                // إخفاء جميع مجموعات الهوية أولاً
+                document.querySelectorAll('.nationality-fields').forEach(el => el.classList.add('hidden'));
+                const val = this.value;
+                if (val === 'saudi') document.getElementById('fields-saudi')?.classList.remove('hidden');
+                else if (val === 'resident') document.getElementById('fields-resident')?.classList.remove('hidden');
+                else if (val === 'gcc') document.getElementById('fields-gcc')?.classList.remove('hidden');
+                else if (val === 'foreigner') document.getElementById('fields-foreigner')?.classList.remove('hidden');
+            });
+            // تشغيل التغيير الافتراضي لضبط الحالة
+            nationalitySelect.dispatchEvent(new Event('change'));
+        }
+
+        // إظهار حقول الأجنبي الفرعية حسب نوع الوثيقة
+        const foreignerRadios = document.querySelectorAll('input[name="foreignerDocType"]');
+        if (foreignerRadios.length) {
+            function toggleForeignerSubFields() {
+                const selected = document.querySelector('input[name="foreignerDocType"]:checked')?.value;
+                const idDiv = document.getElementById('sub-fields-foreigner-id');
+                const passportDiv = document.getElementById('sub-fields-passport');
+                if (selected === 'national_id') {
+                    if (idDiv) idDiv.classList.remove('hidden');
+                    if (passportDiv) passportDiv.classList.add('hidden');
+                } else if (selected === 'passport') {
+                    if (idDiv) idDiv.classList.add('hidden');
+                    if (passportDiv) passportDiv.classList.remove('hidden');
+                } else {
+                    if (idDiv) idDiv.classList.add('hidden');
+                    if (passportDiv) passportDiv.classList.add('hidden');
+                }
+            }
+            foreignerRadios.forEach(radio => radio.addEventListener('change', toggleForeignerSubFields));
+            toggleForeignerSubFields(); // التهيئة
+        }
+
+        // إظهار حقول العنوان حسب الجنسية
+        const addressSaudi = document.getElementById('address-saudi-resident');
+        const addressInternational = document.getElementById('address-international');
+        function updateAddressFields() {
+            const nationality = document.getElementById('nationalityType')?.value;
+            const isSaudiOrResident = (nationality === 'saudi' || nationality === 'resident');
+            if (addressSaudi) addressSaudi.classList.toggle('hidden', !isSaudiOrResident);
+            if (addressInternational) addressInternational.classList.toggle('hidden', isSaudiOrResident);
+        }
+        if (nationalitySelect) {
+            nationalitySelect.addEventListener('change', updateAddressFields);
+            updateAddressFields();
+        }
+
+        // تحقق فوري من تطابق البريد الإلكتروني
+        const emailField = document.getElementById('email');
+        const confirmEmailField = document.getElementById('confirmEmail');
+        if (emailField && confirmEmailField) {
+            function checkEmailMatch() {
+                const statusDiv = document.getElementById('email-match-status');
+                if (emailField.value && confirmEmailField.value && emailField.value === confirmEmailField.value) {
+                    statusDiv.textContent = '✓ البريدان متطابقان';
+                    statusDiv.style.color = 'green';
+                } else if (confirmEmailField.value) {
+                    statusDiv.textContent = '✗ البريدان غير متطابقين';
+                    statusDiv.style.color = 'red';
+                } else {
+                    statusDiv.textContent = '';
+                }
+            }
+            emailField.addEventListener('input', checkEmailMatch);
+            confirmEmailField.addEventListener('input', checkEmailMatch);
+        }
+
+        // تحقق فوري من كلمة المرور وقوتها
+        const passwordField = document.getElementById('password');
+        const confirmPassField = document.getElementById('confirmPassword');
+        if (passwordField && confirmPassField) {
+            function checkPasswordMatch() {
+                const statusDiv = document.getElementById('password-match-status');
+                if (passwordField.value && confirmPassField.value && passwordField.value === confirmPassField.value) {
+                    statusDiv.textContent = '✓ كلمتا المرور متطابقتان';
+                    statusDiv.style.color = 'green';
+                } else if (confirmPassField.value) {
+                    statusDiv.textContent = '✗ كلمتا المرور غير متطابقتين';
+                    statusDiv.style.color = 'red';
+                } else {
+                    statusDiv.textContent = '';
+                }
+            }
+            passwordField.addEventListener('input', function() {
+                if (typeof window.checkPasswordStrength === 'function') {
+                    const strength = window.checkPasswordStrength(this.value);
+                    const fillBar = document.getElementById('strength-bar-fill');
+                    const strengthText = document.getElementById('strength-text');
+                    if (fillBar) {
+                        const percent = (strength.strength / 5) * 100;
+                        fillBar.style.width = percent + '%';
+                        let color = '#f44336';
+                        if (strength.level === 'متوسطة') color = '#ff9800';
+                        if (strength.level === 'قوية') color = '#4caf50';
+                        fillBar.style.backgroundColor = color;
+                    }
+                    if (strengthText) strengthText.textContent = strength.level;
+                }
+                checkPasswordMatch();
+            });
+            confirmPassField.addEventListener('input', checkPasswordMatch);
+        }
+
+        // تفعيل مربع "الموافقة الشاملة"
+        const masterCheck = document.getElementById('masterAgreementCheck');
+        if (masterCheck) {
+            masterCheck.addEventListener('change', function(e) {
+                const allAgreements = document.querySelectorAll('.agreement-check');
+                allAgreements.forEach(cb => cb.checked = e.target.checked);
+            });
+        }
+
+        // ------------------- منطق مودال OTP -------------------
+        const otpModal = document.getElementById('otpModal');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const otpInput = document.getElementById('otpInput');
+        const completeLaterSection = document.getElementById('completeLaterSection');
+        const completeLaterBtn = document.getElementById('completeLaterBtn');
+
+        if (verifyOtpBtn && otpModal) {
+            verifyOtpBtn.addEventListener('click', function() {
+                const enteredOtp = otpInput.value.trim();
+                // في الواقع يتم التحقق من الخادم، هنا نستخدم رمز تجريبي "1234"
+                if (enteredOtp === '1234') {
+                    if (completeLaterSection) completeLaterSection.classList.remove('hidden');
+                    verifyOtpBtn.disabled = true;
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification('تم تفعيل الحساب بنجاح!', 'success');
+                    }
+                    // يمكن إعادة توجيه المستخدم أو إبقاءه
+                } else {
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification('رمز التحقق غير صحيح، حاول مرة أخرى', 'error');
+                    } else {
+                        alert('رمز التحقق غير صحيح');
+                    }
+                }
+            });
+        }
+
+        if (completeLaterBtn) {
+            completeLaterBtn.addEventListener('click', function() {
+                // توجيه المستخدم إلى لوحة التحكم أو الصفحة الرئيسية
+                window.location.href = '../../pages/dashboard/index.html';
+            });
+        }
+
+        // إغلاق المودال عند النقر خارج المحتوى (اختياري)
+        if (otpModal) {
+            otpModal.addEventListener('click', function(e) {
+                if (e.target === otpModal) {
+                    otpModal.classList.add('hidden');
+                }
+            });
+        }
+
+        // تهيئة أولية: إظهار الخطوة الأولى
+        showStep(1);
     });
-});
+})();
