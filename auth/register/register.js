@@ -1,179 +1,256 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. التنقل بين المراحل
+    let currentStep = 0;
+    const steps = document.querySelectorAll('.step');
+    const trackers = document.querySelectorAll('.step-node');
 
-    // 1️⃣ منطق إظهار/إخفاء كلمة المرور
-    function setupPasswordToggle(buttonId, inputId) {
-        const toggleBtn = document.getElementById(buttonId);
-        const passwordInput = document.getElementById(inputId);
-
-        if (toggleBtn && passwordInput) {
-            toggleBtn.addEventListener('click', function(e) {
-                e.preventDefault(); // منع إرسال النموذج إذا كان الزر داخل form
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                // تغيير لون الأيقونة لتدل على التفعيل
-                if(type === 'text') {
-                    toggleBtn.style.color = '#00796B';
-                } else {
-                    toggleBtn.style.color = '#666';
-                }
-            });
-        }
-    }
-
-    setupPasswordToggle('togglePasswordView', 'reg_password');
-    setupPasswordToggle('toggleConfirmPasswordView', 'reg_confirm_password');
-
-
-    // 2️⃣ منطق التنقل بين المراحل مع التحقق الصارم (Validation)
-    const steps = document.querySelectorAll('.form-step');
-    const stepNodes = document.querySelectorAll('.reg-step-node');
-    const nextBtns = document.querySelectorAll('.btn-next');
-    const prevBtns = document.querySelectorAll('.btn-prev');
-
-    // دالة التحقق من الحقول المطلوبة في المرحلة الحالية
-    function validateCurrentStep(stepElement) {
-        // جلب جميع الحقول التي تحتوي على سمة required داخل المرحلة الحالية فقط
-        const requiredInputs = stepElement.querySelectorAll('input[required], select[required]');
-        let isValid = true;
-
-        for (let i = 0; i < requiredInputs.length; i++) {
-            const input = requiredInputs[i];
-            if (!input.checkValidity()) {
-                input.reportValidity(); // يظهر رسالة الخطأ الأصلية للمتصفح (مثل: يرجى ملء هذا الحقل)
-                isValid = false;
-                break; // التوقف عند أول حقل فارغ والتركيز عليه
-            }
-        }
-        return isValid;
-    }
-
-    nextBtns.forEach(btn => {
+    document.querySelectorAll('.btn-next').forEach(btn => {
         btn.addEventListener('click', () => {
-            const currentStepIndex = parseInt(btn.getAttribute('data-step-index'));
-            const currentStepElement = steps[currentStepIndex];
-
-            // لا تنتقل إلا إذا كانت جميع الحقول المطلوبة ممتلئة
-            if (validateCurrentStep(currentStepElement)) {
-                // إخفاء المرحلة الحالية
-                currentStepElement.classList.remove('active');
-                stepNodes[currentStepIndex].classList.remove('active');
-                
-                // إظهار المرحلة التالية
-                steps[currentStepIndex + 1].classList.add('active');
-                stepNodes[currentStepIndex + 1].classList.add('active');
+            if (currentStep < steps.length - 1) {
+                steps[currentStep].classList.remove('active');
+                trackers[currentStep].classList.remove('active');
+                currentStep++;
+                steps[currentStep].classList.add('active');
+                trackers[currentStep].classList.add('active');
+                window.scrollTo(0, 0);
             }
         });
     });
 
-    prevBtns.forEach((btn, index) => {
+    document.querySelectorAll('.btn-prev').forEach(btn => {
         btn.addEventListener('click', () => {
-            // زر السابق لا يحتاج لتحقق
-            steps[index + 1].classList.remove('active');
-            stepNodes[index + 1].classList.remove('active');
-            
-            steps[index].classList.add('active');
-            stepNodes[index].classList.add('active');
+            if (currentStep > 0) {
+                steps[currentStep].classList.remove('active');
+                trackers[currentStep].classList.remove('active');
+                currentStep--;
+                steps[currentStep].classList.add('active');
+                trackers[currentStep].classList.add('active');
+                window.scrollTo(0, 0);
+            }
         });
     });
 
+    // 2. دوال التحديث للشروط
+    const toggleCondition = (id, isValid) => {
+        const el = document.getElementById(id);
+        if(isValid) {
+            el.innerHTML = el.innerHTML.replace('☐', '☑');
+            el.style.color = 'green';
+        } else {
+            el.innerHTML = el.innerHTML.replace('☑', '☐');
+            el.style.color = '#555';
+        }
+    };
 
-    // 3️⃣ منطق الجنسية (الحقول الديناميكية)
-    const nationalitySelect = document.getElementById('nationality_select');
-    const dynamicIdentityContainer = document.getElementById('dynamic_identity_section');
-    const dynamicAddressContainer = document.getElementById('dynamic_address_section');
-    const identityTitle = document.getElementById('identity_title');
+    // التحقق من اسم المستخدم
+    document.getElementById('username').addEventListener('input', function() {
+        const val = this.value;
+        const vLen = val.length >= 4 && val.length <= 20;
+        const vAlphaNum = /^[a-zA-Z0-9]+$/.test(val) && val.length > 0;
+        const vNoSpace = !/\s/.test(val) && val.length > 0;
+        const vNoSpec = !/[^a-zA-Z0-9\s]/.test(val) && val.length > 0;
+        // محاكاة (غير مستخدم مسبقاً) ستكون صحيحة دائماً في هذه الواجهة
+        const vUnique = val.length > 0;
 
-    nationalitySelect.addEventListener('change', function(e) {
-        const selected = e.target.value;
+        toggleCondition('u-len', vLen);
+        toggleCondition('u-alphanum', vAlphaNum);
+        toggleCondition('u-nospace', vNoSpace);
+        toggleCondition('u-nospec', vNoSpec);
+        toggleCondition('u-unique', vUnique);
+
+        const statusEl = document.getElementById('user-status');
+        if(vLen && vAlphaNum && vNoSpace && vNoSpec && vUnique) {
+            statusEl.innerText = '🟢 تم تحقيق الشرط';
+            statusEl.style.color = 'green';
+        } else {
+            statusEl.innerText = '🔴 لم يتم تحقيق الشرط';
+            statusEl.style.color = 'red';
+        }
+    });
+
+    // التحقق من البريد الإلكتروني
+    const checkEmailMatch = () => {
+        const e1 = document.getElementById('email').value;
+        const e2 = document.getElementById('emailConfirm').value;
+        const statusEl = document.getElementById('email-match');
+        if (e1 && e2 && e1 === e2) {
+            statusEl.innerText = '🟢 البريد الإلكتروني متطابق';
+            statusEl.style.color = 'green';
+        } else {
+            statusEl.innerText = '🔴 البريد الإلكتروني غير متطابق';
+            statusEl.style.color = 'red';
+        }
+    };
+    document.getElementById('email').addEventListener('input', checkEmailMatch);
+    document.getElementById('emailConfirm').addEventListener('input', checkEmailMatch);
+
+    // التحقق من كلمة المرور
+    document.getElementById('password').addEventListener('input', function() {
+        const val = this.value;
+        const vLen = val.length >= 8;
+        const vUpper = /[A-Z]/.test(val);
+        const vLower = /[a-z]/.test(val);
+        const vNum = /[0-9]/.test(val);
+        const vSpec = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+
+        toggleCondition('p-len', vLen);
+        toggleCondition('p-upper', vUpper);
+        toggleCondition('p-lower', vLower);
+        toggleCondition('p-num', vNum);
+        toggleCondition('p-spec', vSpec);
+
+        let score = vLen + vUpper + vLower + vNum + vSpec;
+        const strengthEl = document.getElementById('strength-text');
+        if (score <= 2) { strengthEl.innerText = 'ضعيفة'; strengthEl.style.color = 'red'; }
+        else if (score === 3) { strengthEl.innerText = 'متوسطة'; strengthEl.style.color = 'orange'; }
+        else if (score === 4) { strengthEl.innerText = 'قوية'; strengthEl.style.color = 'blue'; }
+        else if (score === 5) { strengthEl.innerText = 'قوية جداً'; strengthEl.style.color = 'green'; }
         
-        if(identityTitle) {
-            identityTitle.style.display = selected ? 'block' : 'none';
-        }
+        checkPassMatch();
+    });
 
-        // --- سعودي ---
-        if (selected === 'saudi') {
-            dynamicIdentityContainer.innerHTML = `
-                <div class="form-group">
-                    <label class="tera-label">رقم الهوية الوطنية</label>
-                    <input type="text" class="tera-input-field" placeholder="أدخل رقم الهوية (10 أرقام)" required>
+    const checkPassMatch = () => {
+        const p1 = document.getElementById('password').value;
+        const p2 = document.getElementById('passwordConfirm').value;
+        const statusEl = document.getElementById('pass-match');
+        if (p1 && p2 && p1 === p2) {
+            statusEl.innerText = '🟢 كلمة المرور متطابقة';
+            statusEl.style.color = 'green';
+        } else {
+            statusEl.innerText = '🔴 كلمة المرور غير متطابقة';
+            statusEl.style.color = 'red';
+        }
+    };
+    document.getElementById('passwordConfirm').addEventListener('input', checkPassMatch);
+
+    // 3. الحقول الديناميكية (الهوية والعنوان)
+    document.getElementById('nationality').addEventListener('change', function() {
+        const idContainer = document.getElementById('identity-dynamic-container');
+        const addrContainer = document.getElementById('address-dynamic-container');
+        const val = this.value;
+
+        if (val === 'saudi') {
+            idContainer.innerHTML = `
+                <div class="input-group"><label>رقم الهوية الوطنية</label><input type="text" required></div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
+                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
+                </div>`;
+            addrContainer.innerHTML = `
+                <div class="section-title">بيانات العنوان الوطني</div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>الرقم المبنى</label><input type="text" required></div>
+                    <div class="input-group" style="flex:1;"><label>الرقم الفرعي</label><input type="text"></div>
                 </div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">تاريخ إصدار الهوية</label><input type="date" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">تاريخ انتهاء الهوية</label><input type="date" class="tera-input-field" required></div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>اسم الشارع</label><input type="text" required></div>
+                    <div class="input-group" style="flex:1;"><label>الحي</label><input type="text" required></div>
                 </div>
-            `;
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
+                    <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
+                </div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>الرقم الإضافي</label><input type="text"></div>
+                    <div class="input-group" style="flex:1;"><label>رقم الوحدة (اختياري)</label><input type="text"></div>
+                </div>
+                <div class="input-group"><label>الاسم المختصر للعنوان الوطني</label><input type="text"></div>`;
+        } 
+        else if (val === 'resident') {
+            idContainer.innerHTML = `
+                <div class="input-group"><label>رقم الإقامة</label><input type="text" required></div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الإقامة</label><input type="date" required></div>
+                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الإقامة</label><input type="date" required></div>
+                </div>`;
+            generateForeignAddress(addrContainer);
+        }
+        else if (val === 'gcc') {
+            idContainer.innerHTML = `
+                <div class="input-group"><label>الدولة</label><input type="text" required></div>
+                <div class="input-group"><label>رقم الهوية الخليجية</label><input type="text" required></div>
+                <div class="row-group">
+                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
+                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
+                </div>`;
+            generateForeignAddress(addrContainer);
+        }
+        else if (val === 'foreign') {
+            idContainer.innerHTML = `
+                <div class="input-group">
+                    <label>نوع الوثيقة</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="docType" value="id" required> الهوية الوطنية لبلده</label>
+                        <label><input type="radio" name="docType" value="passport"> جواز السفر</label>
+                    </div>
+                </div>
+                <div id="foreign-doc-details"></div>`;
             
-            dynamicAddressContainer.innerHTML = `
-                <div class="section-divider-title">العنوان الوطني</div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">رقم المبنى</label><input type="text" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">الرقم الفرعي</label><input type="text" class="tera-input-field"></div>
-                </div>
-                <div class="form-group"><label class="tera-label">اسم الشارع</label><input type="text" class="tera-input-field" required></div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">الحي</label><input type="text" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">المدينة</label><input type="text" class="tera-input-field" required></div>
-                </div>
-            `;
-        } 
-        // --- مقيم ---
-        else if (selected === 'resident') {
-            dynamicIdentityContainer.innerHTML = `
-                <div class="form-group">
-                    <label class="tera-label">رقم الإقامة</label>
-                    <input type="text" class="tera-input-field" placeholder="أدخل رقم الإقامة" required>
-                </div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">تاريخ إصدار الإقامة</label><input type="date" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">تاريخ انتهاء الإقامة</label><input type="date" class="tera-input-field" required></div>
-                </div>
-            `;
-            renderNonSaudiAddress();
-        } 
-        // --- خليجي ---
-        else if (selected === 'gcc') {
-            dynamicIdentityContainer.innerHTML = `
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">الدولة</label><input type="text" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">رقم الهوية الخليجية</label><input type="text" class="tera-input-field" required></div>
-                </div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">تاريخ الإصدار</label><input type="date" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">تاريخ الانتهاء</label><input type="date" class="tera-input-field" required></div>
-                </div>
-            `;
-            renderNonSaudiAddress();
-        } 
-        // --- أجنبي ---
-        else if (selected === 'foreign') {
-            dynamicIdentityContainer.innerHTML = `
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">دولة الإصدار</label><input type="text" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">رقم جواز السفر</label><input type="text" class="tera-input-field" required></div>
-                </div>
-                <div class="form-row-split">
-                    <div class="form-group"><label class="tera-label">تاريخ الإصدار</label><input type="date" class="tera-input-field" required></div>
-                    <div class="form-group"><label class="tera-label">تاريخ الانتهاء</label><input type="date" class="tera-input-field" required></div>
-                </div>
-            `;
-            renderNonSaudiAddress();
-        } 
-        // --- لم يتم اختيار شيء ---
-        else {
-            dynamicIdentityContainer.innerHTML = '';
-            dynamicAddressContainer.innerHTML = '<div class="alert-box" style="padding:15px; background:#f9f9f9; border-radius:8px; border:1px dashed #ccc; text-align:center; color:#666;">الرجاء اختيار الجنسية من المرحلة السابقة لعرض حقول العنوان المناسبة.</div>';
+            generateForeignAddress(addrContainer);
+
+            document.querySelectorAll('input[name="docType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const docDetails = document.getElementById('foreign-doc-details');
+                    if (this.value === 'id') {
+                        docDetails.innerHTML = `
+                            <div class="input-group"><label>الدولة</label><input type="text" required></div>
+                            <div class="input-group"><label>رقم الهوية</label><input type="text" required></div>
+                            <div class="row-group">
+                                <div class="input-group" style="flex:1;"><label>تاريخ الإصدار</label><input type="date" required></div>
+                                <div class="input-group" style="flex:1;"><label>تاريخ الانتهاء</label><input type="date" required></div>
+                            </div>`;
+                    } else {
+                        docDetails.innerHTML = `
+                            <div class="input-group"><label>دولة الإصدار</label><input type="text" required></div>
+                            <div class="input-group"><label>رقم جواز السفر</label><input type="text" required></div>
+                            <div class="row-group">
+                                <div class="input-group" style="flex:1;"><label>تاريخ إصدار الجواز</label><input type="date" required></div>
+                                <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الجواز</label><input type="date" required></div>
+                            </div>`;
+                    }
+                });
+            });
+        } else {
+            idContainer.innerHTML = '';
+            addrContainer.innerHTML = '';
         }
     });
 
-    function renderNonSaudiAddress() {
-        dynamicAddressContainer.innerHTML = `
-            <div class="section-divider-title">العنوان السكني</div>
-            <div class="form-row-split">
-                <div class="form-group"><label class="tera-label">الدولة</label><input type="text" class="tera-input-field" required></div>
-                <div class="form-group"><label class="tera-label">المدينة</label><input type="text" class="tera-input-field" required></div>
+    function generateForeignAddress(container) {
+        container.innerHTML = `
+            <div class="row-group">
+                <div class="input-group" style="flex:1;"><label>الدولة</label><input type="text" required></div>
+                <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
             </div>
-            <div class="form-group"><label class="tera-label">الشارع / تفاصيل العنوان</label><input type="text" class="tera-input-field" required></div>
-        `;
+            <div class="row-group">
+                <div class="input-group" style="flex:1;"><label>المحافظة / الولاية</label><input type="text" required></div>
+                <div class="input-group" style="flex:1;"><label>الحي</label><input type="text" required></div>
+            </div>
+            <div class="row-group">
+                <div class="input-group" style="flex:1;"><label>الشارع</label><input type="text" required></div>
+                <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
+            </div>
+            <div class="input-group"><label>وصف إضافي للعنوان</label><input type="text"></div>`;
     }
+
+    // 4. الإقرارات النهائية والتسليم
+    document.getElementById('chkAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.agreements input[type="checkbox"]:not(#chkAll)');
+        checkboxes.forEach(chk => chk.checked = this.checked);
+    });
+
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // التسلسل المطلوب أسفل الصفحة
+        alert("يتم إنشاء الحساب...\nسيتم إرسال رمز تحقق إلى البريد الإلكتروني المسجل.");
+        
+        const otp = prompt("يرجى إدخال رمز التحقق (OTP):");
+        
+        if (otp) {
+            alert("تم تفعيل الحساب بنجاح!\n\nسيتم تحويلك إلى صفحة استكمال الملف الشخصي لاستكمال:\n- الحساب البنكي.\n- رقم الآيبان.\n- رفع مستندات الهوية/الإقامة/الجواز.\n- المستندات الإضافية المطلوبة.");
+            // التوجيه إلى صفحة استكمال الملف الشخصي
+            window.location.href = "../complete-profile.html";
+        }
+    });
 });
