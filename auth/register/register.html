@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب مستثمر | TERA</title>
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="register.css">
@@ -12,7 +13,10 @@
     <div class="glass-container">
         <header>
             <a href="../../index.html" class="back-link">← العودة للصفحة الرئيسية</a>
-            <div class="logo">TERA<br><span>بوابة المستثمر</span></div>
+            <div class="logo-wrapper">
+                <img src="../../images/logo.svg" alt="TERA" class="tera-logo">
+                <div class="sub-logo">بوابة المستثمر</div>
+            </div>
             <h1>إنشاء حساب مستثمر جديد</h1>
             <p>أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
         </header>
@@ -115,8 +119,7 @@
                 <div class="input-group">
                     <label>الجنسية</label>
                     <select id="nationality" required>
-                        <option value="">اختر الجنسية...</option>
-                        <option value="saudi">سعودي</option>
+                        <option value="saudi" selected>سعودي</option>
                         <option value="resident">مقيم</option>
                         <option value="gcc">مواطن خليجي</option>
                         <option value="foreign">أجنبي</option>
@@ -125,7 +128,12 @@
 
                 <div class="section-title">بيانات الهوية</div>
                 <div id="identity-dynamic-container">
+                    <div class="input-group"><label>رقم الهوية الوطنية</label><input type="text" required></div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
+                        <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
                     </div>
+                </div>
 
                 <div class="section-title">إقرارات إضافية</div>
                 <div class="declaration-box">
@@ -163,7 +171,25 @@
 
                 <div class="section-title">العنوان</div>
                 <div id="address-dynamic-container">
+                    <div class="address-header-status">بيانات العنوان الوطني</div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>الرقم المبنى</label><input type="text" required></div>
+                        <div class="input-group" style="flex:1;"><label>الرقم الفرعي</label><input type="text"></div>
                     </div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>اسم الشارع</label><input type="text" required></div>
+                        <div class="input-group" style="flex:1;"><label>الحي</label><input type="text" required></div>
+                    </div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
+                        <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
+                    </div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>الرقم الإضافي</label><input type="text"></div>
+                        <div class="input-group" style="flex:1;"><label>رقم الوحدة (اختياري)</label><input type="text"></div>
+                    </div>
+                    <div class="input-group"><label>الاسم المختصر للعنوان الوطني</label><input type="text"></div>
+                </div>
 
                 <div class="actions">
                     <button type="button" class="btn-prev">[ السابق ]</button>
@@ -191,7 +217,7 @@
                         <br>• أنظمة الحماية والمراقبة الأمنية وتحليل الأحداث الأمنية.</span>
                     </label>
 
-                    <label><input type="checkbox" required> أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة ودقيقة وتعود لي شخصياً، وأتحمل كامل المسؤولية النظامية والقانونية عن صحتها وعن حماية الحساب وبيانات الدخول والأجهزة المرتبطة به.</label>
+                    <label><input type="checkbox" required> أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة ودقيقة وتعود لي شخصياً، وأتحمل كامل المسؤولية النظامية القانونية عن صحتها وعن حماية الحساب وبيانات الدخول والأجهزة المرتبطة به.</label>
                     
                     <label><input type="checkbox" id="chkAll" required> <strong>قرأت جميع الإقرارات والاتفاقيات أعلاه وأوافق عليها بالكامل.</strong></label>
                 </div>
