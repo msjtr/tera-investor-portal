@@ -1,18 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. التنقل بين المراحل
+    // ==========================================
+    // 1. إدارة التنقل بين المراحل مع التحقق
+    // ==========================================
     let currentStep = 0;
     const steps = document.querySelectorAll('.step');
     const trackers = document.querySelectorAll('.step-node');
 
     document.querySelectorAll('.btn-next').forEach(btn => {
         btn.addEventListener('click', () => {
+            // التحقق من صحة حقول المرحلة الحالية قبل الانتقال
+            const currentInputs = steps[currentStep].querySelectorAll('input, select, textarea');
+            let isStepValid = true;
+
+            currentInputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity(); // إظهار تلميح الخطأ للمستخدم
+                    isStepValid = false;
+                }
+            });
+
+            if (!isStepValid) return; // منع الانتقال إذا كانت هناك حقول غير مكتملة
+
             if (currentStep < steps.length - 1) {
                 steps[currentStep].classList.remove('active');
                 trackers[currentStep].classList.remove('active');
                 currentStep++;
                 steps[currentStep].classList.add('active');
                 trackers[currentStep].classList.add('active');
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
     });
@@ -25,199 +40,248 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentStep--;
                 steps[currentStep].classList.add('active');
                 trackers[currentStep].classList.add('active');
-                window.scrollTo(0, 0);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
     });
 
-    // 2. دوال التحديث للشروط
+    // ==========================================
+    // 2. دوال فحص شروط المدخلات وقوتها
+    // ==========================================
     const toggleCondition = (id, isValid) => {
         const el = document.getElementById(id);
-        if(isValid) {
+        if (!el) return;
+        
+        if (isValid) {
             el.innerHTML = el.innerHTML.replace('☐', '☑');
-            el.style.color = 'green';
+            el.style.color = '#008080'; // لون تيرا النيلي للمؤشرات الصحيحة
+            el.style.fontWeight = '600';
         } else {
             el.innerHTML = el.innerHTML.replace('☑', '☐');
-            el.style.color = '#555';
+            el.style.color = '#64748b';
+            el.style.fontWeight = 'normal';
         }
     };
 
     // التحقق من اسم المستخدم
-    document.getElementById('username').addEventListener('input', function() {
-        const val = this.value;
-        const vLen = val.length >= 4 && val.length <= 20;
-        const vAlphaNum = /^[a-zA-Z0-9]+$/.test(val) && val.length > 0;
-        const vNoSpace = !/\s/.test(val) && val.length > 0;
-        const vNoSpec = !/[^a-zA-Z0-9\s]/.test(val) && val.length > 0;
-        // محاكاة (غير مستخدم مسبقاً) ستكون صحيحة دائماً في هذه الواجهة
-        const vUnique = val.length > 0;
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const val = this.value;
+            const vLen = val.length >= 4 && val.length <= 20;
+            const vAlphaNum = /^[a-zA-Z0-9]+$/.test(val);
+            const vNoSpace = !/\s/.test(val) && val.length > 0;
+            const vNoSpec = !/[^a-zA-Z0-9]/.test(val) && val.length > 0;
+            const vUnique = val.length > 0; // محاكاة فحص التوفر
 
-        toggleCondition('u-len', vLen);
-        toggleCondition('u-alphanum', vAlphaNum);
-        toggleCondition('u-nospace', vNoSpace);
-        toggleCondition('u-nospec', vNoSpec);
-        toggleCondition('u-unique', vUnique);
+            toggleCondition('u-len', vLen);
+            toggleCondition('u-alphanum', vAlphaNum);
+            toggleCondition('u-nospace', vNoSpace);
+            toggleCondition('u-nospec', vNoSpec);
+            toggleCondition('u-unique', vUnique);
 
-        const statusEl = document.getElementById('user-status');
-        if(vLen && vAlphaNum && vNoSpace && vNoSpec && vUnique) {
-            statusEl.innerText = '🟢 تم تحقيق الشرط';
-            statusEl.style.color = 'green';
-        } else {
-            statusEl.innerText = '🔴 لم يتم تحقيق الشرط';
-            statusEl.style.color = 'red';
-        }
-    });
+            const statusEl = document.getElementById('user-status');
+            if (statusEl) {
+                if (vLen && vAlphaNum && vNoSpace && vNoSpec && vUnique) {
+                    statusEl.innerText = '🟢 اسم المستخدم متاح ومطابق للشروط';
+                    statusEl.style.color = 'green';
+                } else {
+                    statusEl.innerText = '🔴 لم يتم تحقيق بعض الشروط أعلاه';
+                    statusEl.style.color = 'red';
+                }
+            }
+        });
+    }
 
-    // التحقق من البريد الإلكتروني
+    // التحقق من تطابق البريد الإلكتروني
+    const emailInput = document.getElementById('email');
+    const emailConfirmInput = document.getElementById('emailConfirm');
+    
     const checkEmailMatch = () => {
-        const e1 = document.getElementById('email').value;
-        const e2 = document.getElementById('emailConfirm').value;
+        if (!emailInput || !emailConfirmInput) return;
+        const e1 = emailInput.value;
+        const e2 = emailConfirmInput.value;
         const statusEl = document.getElementById('email-match');
-        if (e1 && e2 && e1 === e2) {
-            statusEl.innerText = '🟢 البريد الإلكتروني متطابق';
-            statusEl.style.color = 'green';
+        
+        if (!statusEl) return;
+        if (e1 && e2) {
+            if (e1 === e2) {
+                statusEl.innerText = '🟢 البريد الإلكتروني متطابق';
+                statusEl.style.color = 'green';
+            } else {
+                statusEl.innerText = '🔴 البريد الإلكتروني غير متطابق';
+                statusEl.style.color = 'red';
+            }
         } else {
-            statusEl.innerText = '🔴 البريد الإلكتروني غير متطابق';
-            statusEl.style.color = 'red';
+            statusEl.innerText = '';
         }
     };
-    document.getElementById('email').addEventListener('input', checkEmailMatch);
-    document.getElementById('emailConfirm').addEventListener('input', checkEmailMatch);
+    if (emailInput) emailInput.addEventListener('input', checkEmailMatch);
+    if (emailConfirmInput) emailConfirmInput.addEventListener('input', checkEmailMatch);
 
-    // التحقق من كلمة المرور
-    document.getElementById('password').addEventListener('input', function() {
-        const val = this.value;
-        const vLen = val.length >= 8;
-        const vUpper = /[A-Z]/.test(val);
-        const vLower = /[a-z]/.test(val);
-        const vNum = /[0-9]/.test(val);
-        const vSpec = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+    // التحقق من كلمة المرور وقوتها
+    const passwordInput = document.getElementById('password');
+    const passwordConfirmInput = document.getElementById('passwordConfirm');
 
-        toggleCondition('p-len', vLen);
-        toggleCondition('p-upper', vUpper);
-        toggleCondition('p-lower', vLower);
-        toggleCondition('p-num', vNum);
-        toggleCondition('p-spec', vSpec);
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const val = this.value;
+            const vLen = val.length >= 8;
+            const vUpper = /[A-Z]/.test(val);
+            const vLower = /[a-z]/.test(val);
+            const vNum = /[0-9]/.test(val);
+            const vSpec = /[!@#$%^&*(),.?":{}|<>]/.test(val);
 
-        let score = vLen + vUpper + vLower + vNum + vSpec;
-        const strengthEl = document.getElementById('strength-text');
-        if (score <= 2) { strengthEl.innerText = 'ضعيفة'; strengthEl.style.color = 'red'; }
-        else if (score === 3) { strengthEl.innerText = 'متوسطة'; strengthEl.style.color = 'orange'; }
-        else if (score === 4) { strengthEl.innerText = 'قوية'; strengthEl.style.color = 'blue'; }
-        else if (score === 5) { strengthEl.innerText = 'قوية جداً'; strengthEl.style.color = 'green'; }
-        
-        checkPassMatch();
-    });
+            toggleCondition('p-len', vLen);
+            toggleCondition('p-upper', vUpper);
+            toggleCondition('p-lower', vLower);
+            toggleCondition('p-num', vNum);
+            toggleCondition('p-spec', vSpec);
+
+            let score = vLen + vUpper + vLower + vNum + vSpec;
+            const strengthEl = document.getElementById('strength-text');
+            
+            if (strengthEl) {
+                if (val.length === 0) { strengthEl.innerText = ''; }
+                else if (score <= 2) { strengthEl.innerText = 'ضعيفة'; strengthEl.style.color = 'red'; }
+                else if (score === 3) { strengthEl.innerText = 'متوسطة'; strengthEl.style.color = 'orange'; }
+                else if (score === 4) { strengthEl.innerText = 'قوية'; strengthEl.style.color = '#2A52BE'; }
+                else if (score === 5) { strengthEl.innerText = 'قوية جداً'; strengthEl.style.color = 'green'; }
+            }
+            
+            checkPassMatch();
+        });
+    }
 
     const checkPassMatch = () => {
-        const p1 = document.getElementById('password').value;
-        const p2 = document.getElementById('passwordConfirm').value;
+        if (!passwordInput || !passwordConfirmInput) return;
+        const p1 = passwordInput.value;
+        const p2 = passwordConfirmInput.value;
         const statusEl = document.getElementById('pass-match');
-        if (p1 && p2 && p1 === p2) {
-            statusEl.innerText = '🟢 كلمة المرور متطابقة';
-            statusEl.style.color = 'green';
+        
+        if (!statusEl) return;
+        if (p1 && p2) {
+            if (p1 === p2) {
+                statusEl.innerText = '🟢 كلمة المرور متطابقة';
+                statusEl.style.color = 'green';
+            } else {
+                statusEl.innerText = '🔴 كلمة المرور غير متطابقة';
+                statusEl.style.color = 'red';
+            }
         } else {
-            statusEl.innerText = '🔴 كلمة المرور غير متطابقة';
-            statusEl.style.color = 'red';
+            statusEl.innerText = '';
         }
     };
-    document.getElementById('passwordConfirm').addEventListener('input', checkPassMatch);
+    if (passwordConfirmInput) passwordConfirmInput.addEventListener('input', checkPassMatch);
 
-    // 3. الحقول الديناميكية (الهوية والعنوان)
-    document.getElementById('nationality').addEventListener('change', function() {
-        const idContainer = document.getElementById('identity-dynamic-container');
-        const addrContainer = document.getElementById('address-dynamic-container');
-        const val = this.value;
+    // ==========================================
+    // 3. إدارة الحقول الديناميكية (الهوية والعنوان)
+    // ==========================================
+    const nationalitySelect = document.getElementById('nationality');
+    
+    if (nationalitySelect) {
+        nationalitySelect.addEventListener('change', function() {
+            const idContainer = document.getElementById('identity-dynamic-container');
+            const addrContainer = document.getElementById('address-dynamic-container');
+            const val = this.value;
 
-        if (val === 'saudi') {
-            idContainer.innerHTML = `
-                <div class="input-group"><label>رقم الهوية الوطنية</label><input type="text" required></div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
-                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
-                </div>`;
-            addrContainer.innerHTML = `
-                <div class="section-title">بيانات العنوان الوطني</div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>الرقم المبنى</label><input type="text" required></div>
-                    <div class="input-group" style="flex:1;"><label>الرقم الفرعي</label><input type="text"></div>
-                </div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>اسم الشارع</label><input type="text" required></div>
-                    <div class="input-group" style="flex:1;"><label>الحي</label><input type="text" required></div>
-                </div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
-                    <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
-                </div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>الرقم الإضافي</label><input type="text"></div>
-                    <div class="input-group" style="flex:1;"><label>رقم الوحدة (اختياري)</label><input type="text"></div>
-                </div>
-                <div class="input-group"><label>الاسم المختصر للعنوان الوطني</label><input type="text"></div>`;
-        } 
-        else if (val === 'resident') {
-            idContainer.innerHTML = `
-                <div class="input-group"><label>رقم الإقامة</label><input type="text" required></div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الإقامة</label><input type="date" required></div>
-                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الإقامة</label><input type="date" required></div>
-                </div>`;
-            generateForeignAddress(addrContainer);
-        }
-        else if (val === 'gcc') {
-            idContainer.innerHTML = `
-                <div class="input-group"><label>الدولة</label><input type="text" required></div>
-                <div class="input-group"><label>رقم الهوية الخليجية</label><input type="text" required></div>
-                <div class="row-group">
-                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
-                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
-                </div>`;
-            generateForeignAddress(addrContainer);
-        }
-        else if (val === 'foreign') {
-            idContainer.innerHTML = `
-                <div class="input-group">
-                    <label>نوع الوثيقة</label>
-                    <div class="radio-group">
-                        <label><input type="radio" name="docType" value="id" required> الهوية الوطنية لبلده</label>
-                        <label><input type="radio" name="docType" value="passport"> جواز السفر</label>
+            if (!idContainer || !addrContainer) return;
+
+            if (val === 'saudi') {
+                idContainer.innerHTML = `
+                    <div class="input-group"><label>رقم الهوية الوطنية</label><input type="text" pattern="[0-9]{10}" title="الهوية الوطنية يجب أن تتكون من 10 أرقام" required></div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
+                        <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
+                    </div>`;
+                addrContainer.innerHTML = `
+                    <div class="section-title">بيانات العنوان الوطني (السعودية)</div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>رقم المبنى</label><input type="text" pattern="[0-9]+" required></div>
+                        <div class="input-group" style="flex:1;"><label>الرقم الفرعي</label><input type="text"></div>
                     </div>
-                </div>
-                <div id="foreign-doc-details"></div>`;
-            
-            generateForeignAddress(addrContainer);
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>اسم الشارع</label><input type="text" required></div>
+                        <div class="input-group" style="flex:1;"><label>الحي</label><input type="text" required></div>
+                    </div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
+                        <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
+                    </div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>الرقم الإضافي</label><input type="text"></div>
+                        <div class="input-group" style="flex:1;"><label>رقم الوحدة (اختياري)</label><input type="text"></div>
+                    </div>
+                    <div class="input-group"><label>الاسم المختصر للعنوان الوطني</label><input type="text"></div>`;
+            } 
+            else if (val === 'resident') {
+                idContainer.innerHTML = `
+                    <div class="input-group"><label>رقم الإقامة</label><input type="text" pattern="[0-9]{10}" title="رقم الإقامة يجب أن يتكون من 10 أرقام" required></div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>تاريخ إصدار الإقامة</label><input type="date" required></div>
+                        <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الإقامة</label><input type="date" required></div>
+                    </div>`;
+                generateForeignAddress(addrContainer, "عنوان الإقامة داخل المملكة");
+            }
+            else if (val === 'gcc') {
+                idContainer.innerHTML = `
+                    <div class="input-group"><label>دولة مجلس التعاون</label><input type="text" required></div>
+                    <div class="input-group"><label>رقم الهوية الخليجية</label><input type="text" required></div>
+                    <div class="row-group">
+                        <div class="input-group" style="flex:1;"><label>تاريخ إصدار الهوية</label><input type="date" required></div>
+                        <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الهوية</label><input type="date" required></div>
+                    </div>`;
+                generateForeignAddress(addrContainer, "العنوان الوطني أو الدولي للمستثمر");
+            }
+            else if (val === 'foreign') {
+                idContainer.innerHTML = `
+                    <div class="input-group">
+                        <label>نوع الوثيقة الرسمية</label>
+                        <div class="radio-group" id="foreign-radio-group">
+                            <label><input type="radio" name="docType" value="id" required> الهوية الوطنية لبلده</label>
+                            <label><input type="radio" name="docType" value="passport"> جواز السفر الدولي</label>
+                        </div>
+                    </div>
+                    <div id="foreign-doc-details"></div>`;
+                
+                generateForeignAddress(addrContainer, "العنوان الدولي الدائم للمستثمر");
 
-            document.querySelectorAll('input[name="docType"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const docDetails = document.getElementById('foreign-doc-details');
-                    if (this.value === 'id') {
-                        docDetails.innerHTML = `
-                            <div class="input-group"><label>الدولة</label><input type="text" required></div>
-                            <div class="input-group"><label>رقم الهوية</label><input type="text" required></div>
-                            <div class="row-group">
-                                <div class="input-group" style="flex:1;"><label>تاريخ الإصدار</label><input type="date" required></div>
-                                <div class="input-group" style="flex:1;"><label>تاريخ الانتهاء</label><input type="date" required></div>
-                            </div>`;
-                    } else {
-                        docDetails.innerHTML = `
-                            <div class="input-group"><label>دولة الإصدار</label><input type="text" required></div>
-                            <div class="input-group"><label>رقم جواز السفر</label><input type="text" required></div>
-                            <div class="row-group">
-                                <div class="input-group" style="flex:1;"><label>تاريخ إصدار الجواز</label><input type="date" required></div>
-                                <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الجواز</label><input type="date" required></div>
-                            </div>`;
-                    }
-                });
-            });
-        } else {
-            idContainer.innerHTML = '';
-            addrContainer.innerHTML = '';
-        }
-    });
+                // استخدام Event Delegation لربط الأزرار المستحدثة بدقة وبدون تكرار في الذاكرة
+                const radioGroup = document.getElementById('foreign-radio-group');
+                if (radioGroup) {
+                    radioGroup.addEventListener('change', function(e) {
+                        const docDetails = document.getElementById('foreign-doc-details');
+                        if (!docDetails) return;
 
-    function generateForeignAddress(container) {
+                        if (e.target.value === 'id') {
+                            docDetails.innerHTML = `
+                                <div class="input-group"><label>الدولة المصدرة</label><input type="text" required></div>
+                                <div class="input-group"><label>رقم الهوية</label><input type="text" required></div>
+                                <div class="row-group">
+                                    <div class="input-group" style="flex:1;"><label>تاريخ الإصدار</label><input type="date" required></div>
+                                    <div class="input-group" style="flex:1;"><label>تاريخ الانتهاء</label><input type="date" required></div>
+                                </div>`;
+                        } else {
+                            docDetails.innerHTML = `
+                                <div class="input-group"><label>دولة إصدار الجواز</label><input type="text" required></div>
+                                <div class="input-group"><label>رقم جواز السفر</label><input type="text" required></div>
+                                <div class="row-group">
+                                    <div class="input-group" style="flex:1;"><label>تاريخ إصدار الجواز</label><input type="date" required></div>
+                                    <div class="input-group" style="flex:1;"><label>تاريخ انتهاء الجواز</label><input type="date" required></div>
+                                </div>`;
+                        }
+                    });
+                }
+            } else {
+                idContainer.innerHTML = '';
+                addrContainer.innerHTML = '';
+            }
+        });
+    }
+
+    function generateForeignAddress(container, titleText) {
         container.innerHTML = `
+            <div class="section-title">${titleText}</div>
             <div class="row-group">
                 <div class="input-group" style="flex:1;"><label>الدولة</label><input type="text" required></div>
                 <div class="input-group" style="flex:1;"><label>المدينة</label><input type="text" required></div>
@@ -230,27 +294,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="input-group" style="flex:1;"><label>الشارع</label><input type="text" required></div>
                 <div class="input-group" style="flex:1;"><label>الرمز البريدي</label><input type="text" required></div>
             </div>
-            <div class="input-group"><label>وصف إضافي للعنوان</label><input type="text"></div>`;
+            <div class="input-group"><label>وصف إضافي للعنوان (اختياري)</label><input type="text"></div>`;
     }
 
-    // 4. الإقرارات النهائية والتسليم
-    document.getElementById('chkAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.agreements input[type="checkbox"]:not(#chkAll)');
-        checkboxes.forEach(chk => chk.checked = this.checked);
-    });
+    // ==========================================
+    // 4. إدارة الإقرارات والتسليم النهائي
+    // ==========================================
+    const chkAll = document.getElementById('chkAll');
+    if (chkAll) {
+        const agreementCheckboxes = document.querySelectorAll('.agreements input[type="checkbox"]:not(#chkAll)');
+        
+        // عند تغيير زر "تحديد الكل"
+        chkAll.addEventListener('change', function() {
+            agreementCheckboxes.forEach(chk => chk.checked = this.checked);
+        });
 
-    document.getElementById('regForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // التسلسل المطلوب أسفل الصفحة
-        alert("يتم إنشاء الحساب...\nسيتم إرسال رمز تحقق إلى البريد الإلكتروني المسجل.");
-        
-        const otp = prompt("يرجى إدخال رمز التحقق (OTP):");
-        
-        if (otp) {
-            alert("تم تفعيل الحساب بنجاح!\n\nسيتم تحويلك إلى صفحة استكمال الملف الشخصي لاستكمال:\n- الحساب البنكي.\n- رقم الآيبان.\n- رفع مستندات الهوية/الإقامة/الجواز.\n- المستندات الإضافية المطلوبة.");
-            // التوجيه إلى صفحة استكمال الملف الشخصي
-            window.location.href = "../complete-profile.html";
-        }
-    });
-});
+        // متابعة الأزرار الفردية: إذا ألغى المستخدم أياً منها، يتم إلغاء تحديد الكل تلقائياً
+        agreementCheckboxes.forEach(chk => {
+            chk.addEventListener('change', function() {
+                if (!this.checked) {
+                    chkAll.checked = false;
+                } else {
+                    // إذا أصبحت كل الأزرار محددة، قم بتفعيل زر تحديد الكل
+                    const allChecked = Array.from(agreementCheckboxes).every(c => c.checked);
+                    chkAll.checked = allChecked;
+                }
+            });
+        });
+    }
+
+    const regForm = document.getElementById('regForm');
+    if (regForm) {
+        regForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // تسلسل تفعيل الحساب وتأكيد الـ OTP
+            alert("يتم معالجة البيانات وبناء حساب المستثمر...\nسيتم إرسال رمز التحقق الآمن (OTP) إلى بريدك الإلكتروني المسجل الآن.");
+            
+            const otp = prompt("يرجى إدخال رمز التحقق المستلم المكون من 4 أرقام (OTP):");
+            
+            if (otp && otp.trim() !== "") {
+                alert("تم
