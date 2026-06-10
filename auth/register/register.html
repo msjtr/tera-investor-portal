@@ -4,127 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب مستثمر | TERA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
     <link rel="stylesheet" href="register.css">
 </head>
 <body>
+    <div class="glass-container">
+        <header>
+            <a href="../../index.html" class="back-link">← العودة للصفحة الرئيسية</a>
+            <div class="logo-wrapper">
+                <img src="../../images/logo.svg" alt="TERA" class="tera-logo">
+            </div>
+            <h1>إنشاء حساب مستثمر جديد</h1>
+        </header>
 
-<div class="glass-container">
-    <header>
-        <a href="../../index.html" class="back-link">← العودة للصفحة الرئيسية</a>
-        <div class="logo-wrapper">
-            <img src="../../images/logo.svg" alt="TERA" class="tera-logo">
-            <div class="sub-logo">بوابة المستثمر</div>
+        <div class="tracker">
+            <div class="step-node active">① إنشاء الحساب</div>
+            <div class="step-node">② المعلومات الشخصية</div>
+            <div class="step-node">③ بيانات التواصل</div>
+            <div class="step-node">④ الإقرارات</div>
         </div>
-        <h1>إنشاء حساب مستثمر جديد</h1>
-        <p>أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
-    </header>
 
-    <div class="tracker">
-        <div class="step-node active">① إنشاء الحساب</div>
-        <div class="step-node">② المعلومات الشخصية والهوية</div>
-        <div class="step-node">③ بيانات التواصل والعنوان</div>
-        <div class="step-node">④ الإقرارات والاتفاقيات</div>
+        <form id="regForm">
+            </form>
     </div>
 
-    <form id="regForm">
-        
-        <div class="step active" id="step1">
-            <h3>المرحلة الأولى: إنشاء الحساب</h3>
-            <div class="input-group">
-                <label>اسم المستخدم</label>
-                <input type="text" placeholder="اسم المستخدم" required>
-                </div>
-            <div class="input-group">
-                <label>البريد الإلكتروني</label>
-                <input type="email" placeholder="البريد الإلكتروني" required>
-            </div>
-            <div class="input-group">
-                <label>تأكيد البريد الإلكتروني</label>
-                <input type="email" placeholder="تأكيد البريد الإلكتروني" required>
-            </div>
-            <div class="input-group">
-                <label>كلمة المرور</label>
-                <input type="password" placeholder="كلمة المرور" required>
-            </div>
-            <div class="input-group">
-                <label>تأكيد كلمة المرور</label>
-                <input type="password" placeholder="تأكيد كلمة المرور" required>
-            </div>
-        </div>
-
-        <div class="step" id="step2">
-            <h3>المرحلة الثانية: المعلومات الشخصية والهوية</h3>
-            <div class="input-group">
-                <label>الاسم الكامل (عربي)</label>
-                <input type="text" required>
-            </div>
-            <div class="input-group">
-                <label>الاسم الكامل (إنجليزي)</label>
-                <input type="text" required>
-            </div>
-            
-            <div class="input-group">
-                <label>الجنسية</label>
-                <select id="nationalitySelect" onchange="updateIdentityFields()">
-                    <option value="saudi">سعودي</option>
-                    <option value="resident">مقيم</option>
-                    <option value="gcc">مواطن خليجي</option>
-                    <option value="foreign">أجنبي</option>
-                </select>
-            </div>
-
-            <div id="identityFields">
-                </div>
-
-            <div class="checkbox-group">
-                <label><input type="checkbox" required> أقر بأن عمري 18 عاماً فأكثر.</label>
-                <label><input type="checkbox" required> أقر بأنني المستفيد الحقيقي من الحساب.</label>
-            </div>
-        </div>
-
-        <div class="step" id="step3">
-            <h3>المرحلة الثالثة: بيانات التواصل والعنوان</h3>
-            <div class="row">
-                <div class="input-group"><label>مفتاح الدولة</label><input type="text" value="+966"></div>
-                <div class="input-group"><label>رقم الجوال</label><input type="tel"></div>
-            </div>
-            
-            <div id="addressFields">
-                </div>
-        </div>
-
-        <div class="step" id="step4">
-            <h3>المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
-            <div class="agreements-box">
-                <label><input type="checkbox" required> أقر وأوافق على الشروط والأحكام...</label>
-                <label><input type="checkbox" required> أوافق على سياسة الخصوصية...</label>
-                <label><input type="checkbox" required> أقر بموافقتي على سياسة الاستخدام...</label>
-                <label><input type="checkbox" required> أوافق على إجراءات التحقق الأمني...</label>
-                <label><input type="checkbox" required> أقر بصحة البيانات والمستندات...</label>
-                <label><input type="checkbox" required> <strong>قرأت جميع الإقرارات وأوافق عليها.</strong></label>
-            </div>
-            
-            <div class="final-declaration">
-                <h4>الإقرار النهائي</h4>
-                <p>أتعهد بأن جميع البيانات والمعلومات المقدمة في هذا الطلب صحيحة وسارية المفعول...</p>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button type="button" class="btn-prev" onclick="changeStep(-1)">[ السابق ]</button>
-            <button type="button" class="btn-next" onclick="changeStep(1)">[ التالي ]</button>
-            <button type="submit" class="btn-submit" style="display:none;">[ إنشاء الحساب ]</button>
-        </div>
-    </form>
-
-    <div class="footer-links">
-        <p>لديك حساب مستثمر بالفعل؟ <br><a href="../login.html">تسجيل الدخول إلى حسابك</a></p>
-    </div>
-</div>
-
-<script src="register.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>
