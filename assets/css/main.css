@@ -1,25 +1,26 @@
 /* ==========================================================================
    TERA Investor Portal - Main Layout (Official Glassmorphism Identity)
    المسار: /assets/css/main.css
+   الإصدار: 2.0 - متكامل مع core.css و app.css
 ========================================================================== */
 
-/* 1. هيكل الصفحة: تضمن بقاء الفوتر في الأسفل دائماً مع خلفية بيضاء نقية */
+/* 1. هيكل الصفحة */
 .main-wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
     overflow-x: hidden;
-    background-color: var(--bg-body, #FFFFFF); /* تضمن أن الخلفية بيضاء دائمًا خلف الزجاج */
+    background-color: var(--bg-page, #FFFFFF);
 }
 
-/* 2. الهيدر: تأثير زجاجي أبيض ناصع وشفاف يبرز ألوان الشعار */
+/* 2. الهيدر الرئيسي (زجاجي) */
 .main-header {
     height: 70px;
-    background: rgba(255, 255, 255, 0.6); /* زجاج أبيض شفاف */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(11, 25, 44, 0.08); /* حدود ناعمة بلون كحلي خفيف جدًا */
+    background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+    backdrop-filter: var(--glass-blur, blur(16px));
+    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
+    border-bottom: var(--glass-border, 1px solid rgba(255, 255, 255, 0.3));
     position: fixed;
     top: 0;
     left: 0;
@@ -28,43 +29,162 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 40px;
-    box-sizing: border-box;
+    padding: 0 32px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 
-/* 3. الحاوية الأساسية للمحتوى */
+/* الشعار داخل الهيدر */
+.main-header .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.main-header .logo {
+    height: 36px;
+    width: auto;
+}
+
+.main-header .brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main, #1D1D1B);
+}
+
+/* قائمة التنقل العلوية */
+.main-nav {
+    display: flex;
+    gap: 28px;
+}
+
+.main-nav a {
+    color: var(--text-muted, #6B7280);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition, all 0.2s ease);
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+    color: var(--primary, #2AB8B6);
+}
+
+/* أيقونات الجانب الأيمن */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.notification-icon,
+.user-menu {
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.notification-icon:hover,
+.user-menu:hover {
+    color: var(--primary);
+}
+
+/* 3. حاوية المحتوى الرئيسي مع دعم القائمة الجانبية */
 .page-container {
-    padding: 30px;
-    margin-top: 70px; 
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    flex: 1; /* يدفع الفوتر للأسفل تلقائياً */
-    min-height: calc(100vh - 70px - 120px);
-    box-sizing: border-box;
+    display: flex;
+    margin-top: 70px;
+    min-height: calc(100vh - 70px);
+    flex: 1;
 }
 
-/* 4. البطاقات (Cards): تحويل كامل إلى تصميم الزجاج الأبيض الفاخر */
+/* القائمة الجانبية (Sidebar) */
+.main-sidebar {
+    width: 260px;
+    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border-color, #E2E8F0);
+    padding: 24px 16px;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.main-sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 8px;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: var(--radius-md, 10px);
+    color: var(--text-main);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+    background: rgba(42, 184, 182, 0.1);
+    color: var(--primary);
+}
+
+/* المحتوى الأساسي */
+.main-content {
+    flex: 1;
+    padding: 24px 32px;
+    max-width: calc(100% - 260px);
+}
+
+.main-sidebar.collapsed + .main-content {
+    max-width: calc(100% - 80px);
+}
+
+/* 4. البطاقات الزجاجية (Cards) */
 .card {
-    background: rgba(255, 255, 255, 0.5) !important; /* خلفية زجاجية نصف شفافة */
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.6) !important; /* حدود بيضاء مضيئة لإبراز حافة الزجاج */
-    border-radius: var(--radius-lg, 20px); /* انحناء دائري أنيق ومتناسق مع تصميم الهوية */
+    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.6));
+    border-radius: var(--radius-xl, 20px);
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 10px 30px rgba(11, 25, 44, 0.04); /* ظلال ناعمة للغاية لإعطاء عمق بصري رائع */
+    box-shadow: var(--shadow-glass, 0 10px 30px rgba(0, 0, 0, 0.04));
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 15px 35px rgba(11, 25, 44, 0.07);
-    border-color: rgba(42, 184, 182, 0.3) !important; /* إضاءة ناعمة بلون التيل عند التمرير بالماوس */
+    border-color: rgba(42, 184, 182, 0.3);
 }
 
-/* 5. شبكة العرض (Grid System) لبطاقات الاستثمار والأرباح */
+/* بطاقات الإحصائيات */
+.stats-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    padding: 20px;
+    border-radius: var(--radius-md, 12px);
+    text-align: center;
+    transition: all 0.25s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(42, 184, 182, 0.1);
+}
+
+/* 5. شبكة العرض (Grid) */
 .grid-system {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -72,42 +192,134 @@
     width: 100%;
 }
 
-/* 6. التذييل (Footer): متناسق مع النقاء العام وبخلفية شفافة خفيفة */
+/* 6. التذييل (Footer) */
 .main-footer {
-    padding: 40px;
+    padding: 32px 40px;
     text-align: center;
     border-top: 1px solid rgba(11, 25, 44, 0.06);
     color: var(--text-muted, #64748B);
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
+    font-size: 14px;
 }
 
-/* 7. بطاقات الإحصائيات (Stats Cards) الخاصة بالمحفظة والأرباح */
-.stats-card {
-    background: rgba(255, 255, 255, 0.6) !important;
-    backdrop-filter: blur(15px) !important;
-    -webkit-backdrop-filter: blur(15px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.7) !important;
-    padding: 20px;
-    border-radius: var(--radius-md, 12px);
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(11, 25, 44, 0.02);
-    transition: all 0.25s ease;
-    cursor: default;
+/* 7. فتات الخبز (Breadcrumb) */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
 }
 
-.stats-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(42, 184, 182, 0.1); /* توهج بلون سهم الاستثمار الفيروزي المضيء */
+.breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
 }
 
-/* 8. إصلاحات مرونة التجاوب مع الجوال (Responsive Fixes) */
+.breadcrumb a:hover {
+    color: var(--primary);
+}
+
+.breadcrumb .separator {
+    color: var(--border-color);
+}
+
+.breadcrumb .current {
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+/* 8. أزرار الإجراءات السريعة */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 40px;
+    padding: 4px 12px;
+}
+
+.search-box input {
+    border: none;
+    padding: 8px;
+    outline: none;
+    min-width: 200px;
+    background: transparent;
+}
+
+/* 9. تحسين التجاوب (Responsive) */
 @media (max-width: 992px) {
-    .page-container { padding: 20px; }
+    .main-header {
+        padding: 0 20px;
+    }
+    .main-nav {
+        display: none;
+    }
+    .main-sidebar {
+        position: fixed;
+        left: -260px;
+        top: 70px;
+        bottom: 0;
+        z-index: 1999;
+        transition: left 0.3s;
+        background: rgba(255, 255, 255, 0.95);
+    }
+    .main-sidebar.mobile-open {
+        left: 0;
+    }
+    .main-content {
+        max-width: 100% !important;
+        padding: 20px;
+    }
+    .page-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .grid-system {
+        grid-template-columns: 1fr;
+    }
+    .card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+    .action-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-box {
+        width: 100%;
+    }
+    .search-box input {
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
-    .main-header { padding: 0 20px; }
-    .grid-system { grid-template-columns: 1fr; }
-    .card { padding: 20px; border-radius: 16px; }
+    .main-header {
+        padding: 0 16px;
+    }
+    .main-header .brand-name {
+        font-size: 18px;
+    }
+    .stats-card {
+        padding: 16px;
+    }
+    .breadcrumb {
+        font-size: 12px;
+    }
 }
