@@ -1257,3 +1257,55 @@ body{
     line-height:2;
 
 }
+
+hr{
+
+    border:none;
+
+    height:1px;
+
+    background:#e5e7eb;
+
+    margin:35px 0;
+
+}
+
+textarea{
+
+    resize:vertical;
+
+    min-height:120px;
+
+}
+
+select{
+
+    cursor:pointer;
+
+    background:#fff;
+
+}
+
+input,
+select,
+textarea{
+
+    max-width:100%;
+
+}
+
+@media(max-width:768px){
+
+.register-banner h1{
+
+    font-size:28px;
+
+}
+
+.register-banner p{
+
+    font-size:14px;
+
+}
+
+}
