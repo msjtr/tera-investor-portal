@@ -1,64 +1,445 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <title>إنشاء حساب شريك - TERA</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>إنشاء حساب شريك | TERA</title>
+
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="register.css">
+
+    <link rel="icon" href="../../images/favicon.svg">
 </head>
+
 <body>
 
-<div class="register-container">
-    <header class="logo-header">
-        <img src="../../images/logo-full.svg.jpg" alt="TERA Logo" class="logo-img">
-        <h1>بوابة الشركاء - تيرا</h1>
-        <p>منصة رقمية متكاملة تتيح للشركاء إدارة حساباتهم والاستفادة من الخدمات الإلكترونية بكل سهولة وأمان.</p>
-    </header>
+<div class="register-page">
 
-    <main class="content-wrapper">
-        <div class="intro">
-            <h2>إنشاء حساب شريك</h2>
-            <p>مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
+    <!-- Logo -->
+
+    <div class="logo-section">
+        <img
+            src="../../images/logo.svg"
+            alt="TERA"
+            class="tera-logo">
+    </div>
+
+    <!-- Header -->
+
+    <div class="register-header">
+
+        <h1>
+            بوابة الشركاء - تيرا
+        </h1>
+
+        <p>
+            منصة رقمية متكاملة تتيح للشركاء إدارة حساباتهم
+            والاستفادة من الخدمات الإلكترونية بكل سهولة وأمان.
+        </p>
+
+    </div>
+
+    <!-- Progress -->
+
+    <div class="steps-wrapper">
+
+        <div class="step active">
+            <span>①</span>
+            <label>إنشاء الحساب</label>
         </div>
 
-        <div class="stepper">
-            <span class="step active">① إنشاء الحساب</span>
-            <span class="step">② المعلومات الشخصية والهوية</span>
-            <span class="step">③ بيانات التواصل والعنوان</span>
-            <span class="step">④ الإقرارات والاتفاقيات</span>
+        <div class="step">
+            <span>②</span>
+            <label>المعلومات الشخصية والهوية</label>
         </div>
 
-        <form id="partnerRegisterForm">
-            <section class="stage active" id="stage1">
-                <h3>المرحلة الأولى: إنشاء الحساب</h3>
-                
-                <div class="field-block">
-                    <label>اسم المستخدم</label>
-                    <input type="text" id="username" placeholder="tera2026">
-                    <ul class="check-list">
-                        <li data-rule="length">من 4 إلى 20 حرفاً</li>
-                        <li data-rule="english">أحرف إنجليزية فقط (A-Z)</li>
-                        <li data-rule="numbers">يسمح بالأرقام الإنجليزية (0-9)</li>
-                        <li data-rule="nospace">لا يحتوي على مسافات</li>
-                        <li data-rule="nosymbols">لا يحتوي على رموز خاصة</li>
-                    </ul>
-                </div>
-                
-                </section>
+        <div class="step">
+            <span>③</span>
+            <label>بيانات التواصل والعنوان</label>
+        </div>
 
-            <div class="nav-actions">
-                <button type="button" class="btn-sec" id="prevBtn" disabled>السابق</button>
-                <button type="button" class="btn-pri" id="nextBtn">التالي</button>
-                <button type="submit" class="btn-suc hidden" id="submitBtn">إنشاء حساب شريك</button>
+        <div class="step">
+            <span>④</span>
+            <label>الإقرارات والاتفاقيات</label>
+        </div>
+
+    </div>
+
+    <form id="partnerRegisterForm">
+
+        <!-- STEP 1 -->
+
+        <section
+            id="step1"
+            class="register-step active">
+
+            <h2>
+                معلومات الحساب
+            </h2>
+
+            <div class="form-group">
+
+                <label>
+                    اسم المستخدم
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="tera2026">
+
             </div>
-        </form>
-    </main>
 
-    <footer class="footer-area">
-        <p>لديك حساب شريك بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
-        <p><a href="../../index.html">العودة للصفحة الرئيسية</a></p>
-        <p>© TERA — بوابة الشركاء. جميع الحقوق محفوظة.</p>
+            <div class="requirements">
+
+                <div id="u1">☐ من 4 إلى 20 حرفاً</div>
+                <div id="u2">☐ أحرف إنجليزية فقط</div>
+                <div id="u3">☐ يسمح بالأرقام</div>
+                <div id="u4">☐ بدون مسافات</div>
+                <div id="u5">☐ بدون رموز خاصة</div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    البريد الإلكتروني
+                </label>
+
+                <input
+                    type="email"
+                    id="email">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    تأكيد البريد الإلكتروني
+                </label>
+
+                <input
+                    type="email"
+                    id="confirmEmail">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    كلمة المرور
+                </label>
+
+                <input
+                    type="password"
+                    id="password">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    تأكيد كلمة المرور
+                </label>
+
+                <input
+                    type="password"
+                    id="confirmPassword">
+
+            </div>
+
+            <div class="password-rules">
+
+                <div id="p1">
+                    ☐ 8 أحرف على الأقل
+                </div>
+
+                <div id="p2">
+                    ☐ حرف كبير
+                </div>
+
+                <div id="p3">
+                    ☐ حرف صغير
+                </div>
+
+                <div id="p4">
+                    ☐ رقم
+                </div>
+
+                <div id="p5">
+                    ☐ رمز خاص
+                </div>
+
+            </div>
+
+            <div class="strength-wrapper">
+
+                <label>
+                    قوة كلمة المرور
+                </label>
+
+                <div id="passwordStrength">
+                    ضعيفة
+                </div>
+
+            </div>
+
+            <div id="passwordMatch">
+                كلمة المرور غير متطابقة
+            </div>
+
+        </section>
+
+        <!-- STEP 2 -->
+
+        <section
+            id="step2"
+            class="register-step">
+
+            <h2>
+                المعلومات الشخصية والهوية
+            </h2>
+
+            <div class="form-group">
+
+                <label>
+                    الاسم الكامل بالعربية
+                </label>
+
+                <input
+                    type="text"
+                    id="arabicName">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    الاسم الكامل بالإنجليزية
+                </label>
+
+                <input
+                    type="text"
+                    id="englishName">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    الجنس
+                </label>
+
+                <select id="gender">
+
+                    <option value="">
+                        اختر
+                    </option>
+
+                    <option>
+                        ذكر
+                    </option>
+
+                    <option>
+                        أنثى
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    الفئة
+                </label>
+
+                <select id="category">
+
+                    <option value="">
+                        اختر
+                    </option>
+
+                    <option value="saudi">
+                        سعودي
+                    </option>
+
+                    <option value="resident">
+                        مقيم
+                    </option>
+
+                    <option value="gcc">
+                        مواطن خليجي
+                    </option>
+
+                    <option value="foreign">
+                        أجنبي
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div id="identityFields"></div>
+
+        </section>
+
+        <!-- STEP 3 -->
+
+        <section
+            id="step3"
+            class="register-step">
+
+            <h2>
+                بيانات التواصل والعنوان
+            </h2>
+
+            <div class="form-group">
+
+                <label>
+                    وسيلة التواصل المفضلة
+                </label>
+
+                <select id="contactMethod">
+
+                    <option>
+                        البريد الإلكتروني
+                    </option>
+
+                    <option>
+                        الجوال
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    مفتاح الدولة
+                </label>
+
+                <select id="countryCode"></select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    رقم الجوال
+                </label>
+
+                <input
+                    type="tel"
+                    id="mobile">
+
+            </div>
+
+            <div id="addressFields"></div>
+
+        </section>
+
+        <!-- STEP 4 -->
+
+        <section
+            id="step4"
+            class="register-step">
+
+            <h2>
+                الإقرارات والاتفاقيات
+            </h2>
+
+            <div class="checkbox-group">
+
+                <label>
+                    <input type="checkbox">
+                    أوافق على الشروط والأحكام
+                </label>
+
+                <label>
+                    <input type="checkbox">
+                    أوافق على سياسة الخصوصية
+                </label>
+
+                <label>
+                    <input type="checkbox">
+                    أوافق على سياسة الاستخدام
+                </label>
+
+                <label>
+                    <input type="checkbox">
+                    أتعهد بصحة البيانات
+                </label>
+
+                <label>
+                    <input type="checkbox">
+                    قرأت جميع الإقرارات وأوافق عليها
+                </label>
+
+            </div>
+
+        </section>
+
+        <!-- Navigation -->
+
+        <div class="step-actions">
+
+            <button
+                type="button"
+                id="prevBtn">
+
+                السابق
+
+            </button>
+
+            <button
+                type="button"
+                id="nextBtn">
+
+                التالي
+
+            </button>
+
+            <button
+                type="submit"
+                id="submitBtn">
+
+                إنشاء حساب شريك
+
+            </button>
+
+        </div>
+
+    </form>
+
+    <div class="bottom-links">
+
+        <a href="../login.html">
+            تسجيل الدخول
+        </a>
+
+        <a href="../../index.html">
+            العودة للصفحة الرئيسية
+        </a>
+
+    </div>
+
+    <footer>
+
+        © TERA — بوابة الشركاء
+
     </footer>
+
 </div>
-<script src="app.js"></script>
+
+<script src="register.js"></script>
+
 </body>
 </html>
+```
