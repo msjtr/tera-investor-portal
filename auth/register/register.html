@@ -2,294 +2,63 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب مستثمر - TERA</title>
-    
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-    
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/responsive.css">
-    <link rel="stylesheet" href="../../assets/css/auth.css">
-    
-    <link rel="stylesheet" href="register.css">
+    <title>إنشاء حساب شريك - TERA</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header class="top-navbar">
-        <div class="navbar-right">
-            <a href="../../index.html" class="btn-back">
-                <span class="arrow">←</span> العودة للصفحة الرئيسية
-            </a>
-        </div>
-        
-        <div class="navbar-center">
-            <div class="logo-wrapper">
-                <img src="../../images/logo.svg" alt="TERA Logo" class="logo-img">
-                <span class="logo-sub">بوابة المستثمر</span>
-            </div>
-        </div>
-        
-        <div class="navbar-left">
-            <h1 class="header-page-title">إستمارة تسجيل عميل جديد</h1>
-        </div>
+<div class="register-container">
+    <header class="logo-header">
+        <img src="../../images/logo-full.svg.jpg" alt="TERA Logo" class="logo-img">
+        <h1>بوابة الشركاء - تيرا</h1>
+        <p>منصة رقمية متكاملة تتيح للشركاء إدارة حساباتهم والاستفادة من الخدمات الإلكترونية بكل سهولة وأمان.</p>
     </header>
 
-    <div class="register-container">
-        <main class="register-content">
-            <div class="text-center intro-text">
-                <h2>إنشاء حساب مستثمر جديد</h2>
-                <p>أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
-            </div>
+    <main class="content-wrapper">
+        <div class="intro">
+            <h2>إنشاء حساب شريك</h2>
+            <p>مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
+        </div>
 
-            <div class="stepper">
-                <div class="step active" data-step="1">① إنشاء الحساب</div>
-                <div class="step" data-step="2">② المعلومات الشخصية والهوية</div>
-                <div class="step" data-step="3">③ بيانات التواصل والعنوان</div>
-                <div class="step" data-step="4">④ الإقرارات والاتفاقيات</div>
-            </div>
+        <div class="stepper">
+            <span class="step active">① إنشاء الحساب</span>
+            <span class="step">② المعلومات الشخصية والهوية</span>
+            <span class="step">③ بيانات التواصل والعنوان</span>
+            <span class="step">④ الإقرارات والاتفاقيات</span>
+        </div>
 
-            <form id="registerForm" class="register-form" novalidate>
+        <form id="partnerRegisterForm">
+            <section class="stage active" id="stage1">
+                <h3>المرحلة الأولى: إنشاء الحساب</h3>
                 
-                <section class="form-step active" id="step1">
-                    <h3>المرحلة الأولى: إنشاء الحساب</h3>
-                    
-                    <div class="form-group">
-                        <label for="username">اسم المستخدم *</label>
-                        <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
-                        <div class="validation-box">
-                            <span class="validation-title">شروط اسم المستخدم:</span>
-                            <ul class="validation-list" id="user-validation">
-                                <li class="invalid" data-rule="length">من 4 إلى 20 حرفاً</li>
-                                <li class="invalid" data-rule="chars">أحرف إنجليزية وأرقام فقط</li>
-                                <li class="invalid" data-rule="spaces">لا يحتوي على مسافات</li>
-                                <li class="invalid" data-rule="special">لا يحتوي على رموز خاصة</li>
-                                <li class="invalid" data-rule="ajax">غير مستخدم مسبقاً</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="email">البريد الإلكتروني *</label>
-                        <input type="email" id="email" placeholder="example@domain.com" required>
-                        
-                        <label for="confirm-email" class="mt-3">تأكيد البريد الإلكتروني *</label>
-                        <input type="email" id="confirm-email" placeholder="أعد إدخال البريد الإلكتروني" required>
-                        <div id="email-status" class="validation-msg"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password">كلمة المرور *</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
-                            <span class="toggle-password">إظهار</span>
-                        </div>
-                        
-                        <div class="password-strength-container">
-                            <span class="strength-label">مؤشر قوة كلمة المرور:</span>
-                            <div class="strength-meter">
-                                <span class="strength-bar"></span>
-                            </div>
-                            <span class="strength-text">ضعيفة</span>
-                        </div>
-
-                        <div class="validation-box">
-                            <span class="validation-title">شروط كلمة المرور:</span>
-                            <ul class="validation-list" id="pass-validation">
-                                <li class="invalid" data-rule="min">8 أحرف على الأقل</li>
-                                <li class="invalid" data-rule="upper">حرف كبير باللغة الإنجليزية</li>
-                                <li class="invalid" data-rule="lower">حرف صغير باللغة الإنجليزية</li>
-                                <li class="invalid" data-rule="number">رقم واحد على الأقل</li>
-                                <li class="invalid" data-rule="special">رمز خاص واحد على الأقل</li>
-                            </ul>
-                        </div>
-                        
-                        <label for="confirm-password" class="mt-3">تأكيد كلمة المرور *</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="confirm-password" placeholder="أعد إدخال كلمة المرور" required>
-                            <span class="toggle-password">إظهار</span>
-                        </div>
-                        <div id="password-status" class="validation-msg"></div>
-                    </div>
-                </section>
-
-                <section class="form-step" id="step2">
-                    <h3>المرحلة الثانية: المعلومات الشخصية والهوية</h3>
-                    
-                    <fieldset>
-                        <legend>المعلومات الشخصية</legend>
-                        <div class="form-group">
-                            <label>الاسم الكامل بالعربية كما هو مدون في الوثيقة الرسمية *</label>
-                            <input type="text" id="nameAr" required>
-                        </div>
-                        <div class="form-group">
-                            <label>الاسم الكامل بالإنجليزية كما هو مدون في الوثيقة الرسمية *</label>
-                            <input type="text" id="nameEn" required>
-                        </div>
-                        <div class="form-group">
-                            <label>الجنس *</label>
-                            <select id="gender" required>
-                                <option value="">اختر...</option>
-                                <option value="male">ذكر</option>
-                                <option value="female">أنثى</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>الجنسية *</label>
-                            <select id="nationalityType" required>
-                                <option value="">اختر الجنسية...</option>
-                                <option value="saudi">سعودي</option>
-                                <option value="resident">مقيم</option>
-                                <option value="gcc">مواطن خليجي</option>
-                                <option value="foreigner">أجنبي</option>
-                            </select>
-                        </div>
-                    </fieldset>
-
-                    <fieldset id="id-details-fieldset" class="hidden">
-                        <legend>بيانات الهوية</legend>
-                        <div id="id-details-container"></div>
-                    </fieldset>
-
-                    <fieldset>
-                        <legend>إقرارات إضافية</legend>
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="declare-age" required>
-                                <span class="checkmark"></span>
-                                أقر بأن عمري 18 عاماً فأكثر.
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="declare-beneficiary" required>
-                                <span class="checkmark"></span>
-                                أقر بأنني المستفيد الحقيقي من الحساب.
-                            </label>
-                        </div>
-                    </fieldset>
-                </section>
-
-                <section class="form-step" id="step3">
-                    <h3>المرحلة الثالثة: بيانات التواصل والعنوان</h3>
-                    
-                    <fieldset>
-                        <legend>بيانات التواصل</legend>
-                        <div class="form-group flex-group">
-                            <div class="half-width">
-                                <label>مفتاح الدولة *</label>
-                                <select id="phoneCode" required>
-                                    <option value="+966">+966 (السعودية)</option>
-                                    <option value="+965">+965 (الكويت)</option>
-                                    <option value="+971">+971 (الإمارات)</option>
-                                    <option value="+973">+973 (البحرين)</option>
-                                    <option value="+968">+968 (عمان)</option>
-                                    <option value="+974">+974 (قطر)</option>
-                                </select>
-                            </div>
-                            <div class="full-width">
-                                <label>رقم الجوال *</label>
-                                <input type="tel" id="phoneNumber" placeholder="5xxxxxxxx" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>وسيلة التواصل المفضلة *</label>
-                            <div class="radio-group">
-                                <label class="radio-container">
-                                    <input type="radio" name="contact_pref" value="email" checked>
-                                    <span class="radio-mark"></span> البريد الإلكتروني
-                                </label>
-                                <label class="radio-container">
-                                    <input type="radio" name="contact_pref" value="phone">
-                                    <span class="radio-mark"></span> الجوال
-                                </label>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <fieldset>
-                        <legend>العنوان</legend>
-                        <div id="address-container">
-                            <p class="text-muted text-center">يرجى تحديد الجنسية أولاً في المرحلة السابقة لتعبئة بيانات العنوان.</p>
-                        </div>
-                    </fieldset>
-                </section>
-
-                <section class="form-step" id="step4">
-                    <h3>المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
-                    
-                    <div class="agreements-list">
-                        <label class="checkbox-container align-start">
-                            <input type="checkbox" class="agree-check" required>
-                            <span class="checkmark"></span>
-                            <p>أقر وأوافق على الشروط والأحكام الخاصة ببوابة المستثمرين في منصة تيرا — عالمك بلا حدود، وأتعهد باستخدام المنصة والأنظمة والخدمات المرتبطة بها وفقاً للأنظمة والتعليمات واللوائح المعمول بها.</p>
-                        </label>
-                        
-                        <label class="checkbox-container align-start">
-                            <input type="checkbox" class="agree-check" required>
-                            <span class="checkmark"></span>
-                            <p>أوافق على سياسة الخصوصية الخاصة ببوابة المستثمرين في منصة تيرا — عالمك بلا حدود، وأفوض المنصة بجمع ومعالجة وحفظ واستخدام البيانات والمعلومات المسجلة لأغراض التحقق الأمني وحماية الحساب والامتثال للمتطلبات النظامية وتحسين الخدمات المقدمة.</p>
-                        </label>
-                        
-                        <label class="checkbox-container align-start">
-                            <input type="checkbox" class="agree-check" required>
-                            <span class="checkmark"></span>
-                            <p>أقر بموافقتي على سياسة الاستخدام، وأتعهد بعدم إساءة استخدام المنصة أو محاولة الوصول غير المصرح به أو مشاركة بيانات الدخول أو تنفيذ أي نشاط مخالف للأنظمة أو التعليمات.</p>
-                        </label>
-                        
-                        <div class="security-info-box">
-                            <label class="checkbox-container align-start">
-                                <input type="checkbox" class="agree-check" required>
-                                <span class="checkmark"></span>
-                                <strong>أوافق على إجراءات وأنظمة التحقق الأمني والحماية الإلكترونية المعتمدة داخل بوابة المستثمرين في منصة تيرا — عالمك بلا حدود، بما يشمل:</strong>
-                            </label>
-                            <ul class="security-bullets">
-                                <li>التحقق عبر البريد الإلكتروني.</li>
-                                <li>استخدام رموز التحقق OTP.</li>
-                                <li>التحقق الأمني الإضافي عند الحاجة.</li>
-                                <li>تسجيل بيانات الجهاز والمتصفح وعنوان IP وسجلات الدخول والخروج.</li>
-                                <li>تحليل المخاطر والأنشطة المشبوهة واكتشاف محاولات الاحتيال أو إساءة الاستخدام.</li>
-                                <li>أنظمة الحماية والمراقبة الأمنية وتحليل الأحداث الأمنية.</li>
-                            </ul>
-                        </div>
-
-                        <label class="checkbox-container align-start">
-                            <input type="checkbox" class="agree-check" required>
-                            <span class="checkmark"></span>
-                            <p>أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة ودقيقة وتعود لي شخصياً، وأتحمل كامل المسؤولية النظامية والقانونية عن صحتها وعن حماية الحساب وبيانات الدخول والأجهزة المرتبطة به.</p>
-                        </label>
-                        
-                        <label class="checkbox-container align-start highlight-agreement">
-                            <input type="checkbox" id="master-agree" required>
-                            <span class="checkmark"></span>
-                            <strong>قرأت جميع الإقرارات والاتفاقيات أعلاه وأوافق عليها بالكامل.</strong>
-                        </label>
-                    </div>
-
-                    <div class="final-declaration">
-                        <h5>الإقرار النهائي</h5>
-                        <p>أتعهد بأن جميع البيانات والمعلومات المقدمة في هذا الطلب صحيحة وسارية المفعول، وأوافق على الالتزام بجميع الأنظمة والسياسات والاتفاقيات المنظمة لاستخدام بوابة المستثمرين في منصة تيرا — عالمك بلا حدود.</p>
-                    </div>
-                </section>
-
-                <div class="form-controls">
-                    <button type="button" id="btn-prev" class="btn btn-secondary hidden">السابق</button>
-                    <div class="controls-right">
-                        <button type="button" id="btn-next" class="btn btn-primary">التالي</button>
-                        <button type="submit" id="btn-submit" class="btn btn-success hidden">إنشاء الحساب</button>
-                    </div>
+                <div class="field-block">
+                    <label>اسم المستخدم</label>
+                    <input type="text" id="username" placeholder="tera2026">
+                    <ul class="check-list">
+                        <li data-rule="length">من 4 إلى 20 حرفاً</li>
+                        <li data-rule="english">أحرف إنجليزية فقط (A-Z)</li>
+                        <li data-rule="numbers">يسمح بالأرقام الإنجليزية (0-9)</li>
+                        <li data-rule="nospace">لا يحتوي على مسافات</li>
+                        <li data-rule="nosymbols">لا يحتوي على رموز خاصة</li>
+                    </ul>
                 </div>
-            </form>
+                
+                </section>
 
-            <div class="footer-links text-center">
-                <p>لديك حساب مستثمر بالفعل؟ <a href="../login.html">تسجيل الدخول إلى حسابك</a></p>
+            <div class="nav-actions">
+                <button type="button" class="btn-sec" id="prevBtn" disabled>السابق</button>
+                <button type="button" class="btn-pri" id="nextBtn">التالي</button>
+                <button type="submit" class="btn-suc hidden" id="submitBtn">إنشاء حساب شريك</button>
             </div>
-        </main>
-    </div>
+        </form>
+    </main>
 
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/auth.js"></script>
-    
-    <script src="register.js"></script>
+    <footer class="footer-area">
+        <p>لديك حساب شريك بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
+        <p><a href="../../index.html">العودة للصفحة الرئيسية</a></p>
+        <p>© TERA — بوابة الشركاء. جميع الحقوق محفوظة.</p>
+    </footer>
+</div>
+<script src="app.js"></script>
 </body>
 </html>
