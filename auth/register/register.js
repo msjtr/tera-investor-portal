@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * TERA - Register Page Logic (Final Integrated & Fixed)
+ * TERA - Register Page Logic (Full Flow & Validation)
  * ==========================================================================
  */
 
@@ -14,90 +14,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const steps = document.querySelectorAll('.form-step');
     const stepIndicators = document.querySelectorAll('.step');
 
-    // 1. التنقل بين الخطوات
+    // 1. منطق التنقل بين المراحل
     function updateSteps() {
-        steps.forEach((step, index) => {
+        // إظهار/إخفاء الأقسام
+        steps.forEach((section, index) => {
+            section.classList.toggle('active', index + 1 === currentStep);
+        });
+
+        // تحديث المؤشرات (Stepper)
+        stepIndicators.forEach((step, index) => {
             step.classList.toggle('active', index + 1 === currentStep);
+            step.classList.toggle('completed', index + 1 < currentStep);
         });
 
-        stepIndicators.forEach((indicator, index) => {
-            indicator.classList.remove('active', 'completed');
-            if (index + 1 === currentStep) {
-                indicator.classList.add('active');
-            } else if (index + 1 < currentStep) {
-                indicator.classList.add('completed');
-            }
-        });
-
+        // إدارة ظهور الأزرار
         btnPrev.classList.toggle('hidden', currentStep === 1);
-        
-        if (currentStep === totalSteps) {
-            btnNext.classList.add('hidden');
-            btnSubmit.classList.remove('hidden');
-        } else {
-            btnNext.classList.remove('hidden');
-            btnSubmit.classList.add('hidden');
-        }
+        btnNext.classList.toggle('hidden', currentStep === totalSteps);
+        btnSubmit.classList.toggle('hidden', currentStep !== totalSteps);
     }
 
-    // 2. التحقق من الحقول الفارغة وتنبيه العميل
-    function showFieldAlert(input, message) {
-        let error = input.parentNode.querySelector('.input-error-msg');
-        if (!error) {
-            error = document.createElement('span');
-            error.className = 'input-error-msg';
-            input.parentNode.appendChild(error);
-        }
-        error.textContent = message;
-        input.style.borderColor = '#dc3545';
-    }
-
-    function clearFieldAlert(input) {
-        let error = input.parentNode.querySelector('.input-error-msg');
-        if (error) error.remove();
-        input.style.borderColor = '#d1d5db';
-    }
-
-    function validateCurrentStep() {
-        const currentSection = document.getElementById(`step${currentStep}`);
+    // 2. التحقق من الحقول (Validation)
+    function validateForm() {
+        const currentSection = document.querySelector('.form-step.active');
         const inputs = currentSection.querySelectorAll('input[required], select[required]');
         let isValid = true;
 
         inputs.forEach(input => {
-            if ((input.type !== 'checkbox' && input.value.trim() === '') || 
-                (input.type === 'checkbox' && !input.checked)) {
-                showFieldAlert(input, 'هذا الحقل مطلوب');
+            if (!input.value.trim()) {
+                input.style.borderColor = '#dc3545';
                 isValid = false;
             } else {
-                clearFieldAlert(input);
+                input.style.borderColor = '#d1d5db';
             }
         });
-
-        if (!isValid) return false;
-
-        // تحققات إضافية للمرحلة 1
-        if (currentStep === 1) {
-            if (currentSection.querySelectorAll('.invalid').length > 0) {
-                alert('يرجى التأكد من استيفاء جميع الشروط.');
-                return false;
-            }
-            if (document.getElementById('email').value !== document.getElementById('confirm-email').value) {
-                alert('البريد الإلكتروني غير متطابق.');
-                return false;
-            }
-            if (document.getElementById('password').value !== document.getElementById('confirm-password').value) {
-                alert('كلمة المرور غير متطابقة.');
-                return false;
-            }
-        }
-        return true;
+        return isValid;
     }
 
+    // 3. أوامر التنقل
     btnNext.addEventListener('click', () => {
-        if (validateCurrentStep() && currentStep < totalSteps) {
+        if (validateForm() && currentStep < totalSteps) {
             currentStep++;
             updateSteps();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (!validateForm()) {
+            alert('يرجى تعبئة الحقول المطلوبة في هذه المرحلة.');
         }
     });
 
@@ -105,74 +64,45 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentStep > 1) {
             currentStep--;
             updateSteps();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
 
-    // 3. منع اللغة العربية في حقول الإنجليزية
-    function preventArabicInput(e) {
-        const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
-        if (arabicRegex.test(e.target.value)) {
-            e.target.value = e.target.value.replace(arabicRegex, '');
-        }
-    }
-
-    const englishOnlyFields = [
-        document.getElementById('username'),
-        document.getElementById('email'),
-        document.getElementById('confirm-email'),
-        document.getElementById('password'),
-        document.getElementById('confirm-password'),
-        document.getElementById('nameEn')
-    ];
-
-    englishOnlyFields.forEach(field => {
-        if (field) field.addEventListener('input', preventArabicInput);
-    });
-
-    // 4. إظهار / إخفاء كلمة المرور
+    // 4. أوامر كلمة المرور (إظهار/قوة)
     document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', function() {
             const input = this.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.textContent = 'إخفاء';
-            } else {
-                input.type = 'password';
-                this.textContent = 'إظهار';
-            }
+            input.type = (input.type === 'password') ? 'text' : 'password';
+            this.textContent = (input.type === 'text') ? 'إخفاء' : 'إظهار';
         });
     });
 
-    // 5. التحقق الحي ومؤشر القوة
     const passInput = document.getElementById('password');
     if (passInput) {
-        passInput.addEventListener('input', (e) => {
-            const val = e.target.value;
+        passInput.addEventListener('input', function() {
+            const val = this.value;
             const bar = document.querySelector('.strength-bar');
             const text = document.querySelector('.strength-text');
-            const rules = document.querySelectorAll('#pass-validation li');
-            
-            // تحديث الشروط
-            rules[0].classList.toggle('valid', val.length >= 8);
-            rules[1].classList.toggle('valid', /[A-Z]/.test(val));
-            rules[2].classList.toggle('valid', /[a-z]/.test(val));
-            rules[3].classList.toggle('valid', /[0-9]/.test(val));
-            rules[4].classList.toggle('valid', /[!@#$%^&*(),.?":{}|<>]/.test(val));
-
-            // تحديث الشريط
             let score = (val.length >= 8) + (/[A-Z]/.test(val)) + (/[0-9]/.test(val));
             bar.className = 'strength-bar ' + (val.length === 0 ? '' : score === 1 ? 'weak' : score === 2 ? 'medium' : 'strong');
             text.textContent = 'مؤشر القوة: ' + (val.length === 0 ? 'ضعيفة' : score === 1 ? 'ضعيفة' : score === 2 ? 'متوسطة' : 'قوية');
         });
     }
 
-    // 6. الإرسال
+    // 5. أوامر منع العربية في الحقول الإنجليزية
+    const engFields = ['username', 'email', 'nameEn', 'password', 'confirm-password'];
+    engFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function() {
+                this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            });
+        }
+    });
+
+    // 6. أمر الإرسال النهائي
     document.getElementById('registerForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        if(validateCurrentStep()) {
-            alert('تم إنشاء الحساب بنجاح.');
-            window.location.href = '../verify-otp.html';
-        }
+        alert('تم تقديم الطلب بنجاح! سيتم تحويلك لصفحة التفعيل.');
+        window.location.href = '../verify-otp.html';
     });
 });
