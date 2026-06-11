@@ -1,276 +1,99 @@
-/* ==========================================
-   TERA Investor Portal - Auth Styles
-   الهوية: خلفية بيضاء زجاجية متناغمة مع app.css
-   المسار: /assets/css/auth.css
-========================================== */
+/* ==========================================================================
+   Auth Pages Styles (White Theme Based on Brand)
+   ========================================================================== */
 
-/* حاوية صفحة المصادقة الكاملة */
-.auth-container {
-    min-height: 100vh;
+/* إعداد خلفية صفحات المصادقة (بيضاء بالكامل) */
+body:has(.auth-wrapper),
+body:has(.register-container) {
+    background-color: var(--bg-main);
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 24px;
-    background: var(--bg-body, #FFFFFF);
-    position: relative;
-    overflow: hidden;
-}
-
-/* إضافة لمسة من عنصر التيل الخفيف كخلفية (اختياري) */
-.auth-container::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    right: -10%;
-    width: 400px;
-    height: 400px;
-    background: rgba(42, 184, 182, 0.08);
-    border-radius: 50%;
-    filter: blur(100px);
-    z-index: 0;
-}
-
-.auth-container::after {
-    content: '';
-    position: absolute;
-    bottom: -20%;
-    left: -10%;
-    width: 350px;
-    height: 350px;
-    background: rgba(42, 184, 182, 0.05);
-    border-radius: 50%;
-    filter: blur(120px);
-    z-index: 0;
-}
-
-/* بطاقة المصادقة (تتماشى مع نمط الزجاج الأبيض) */
-.auth-card {
-    width: 100%;
-    max-width: 460px;
-    background: var(--glass-bg, rgba(255, 255, 255, 0.7));
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.6));
-    border-radius: var(--radius-lg, 24px);
-    padding: 36px 32px;
-    box-shadow: var(--shadow-glass, 0 15px 35px rgba(11, 25, 44, 0.08));
-    text-align: center;
-    position: relative;
-    z-index: 2;
-    transition: transform 0.2s ease;
-}
-
-.auth-card:hover {
-    transform: translateY(-2px);
-}
-
-/* شعار المنصة */
-.auth-logo {
-    margin-bottom: 24px;
-}
-
-.auth-logo img {
-    height: 48px;
-    width: auto;
-    margin: 0 auto;
-}
-
-.auth-logo .brand-name {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-main, #0B192C);
-    display: block;
-    margin-top: 12px;
-}
-
-/* العناوين والنصوص */
-.auth-card h1 {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: var(--text-main, #0B192C);
-}
-
-.auth-card .subtitle {
-    font-size: 14px;
-    color: var(--text-muted, #64748B);
-    margin-bottom: 28px;
-    line-height: 1.5;
-}
-
-/* النموذج داخل بطاقة المصادقة */
-.auth-form {
-    text-align: right;
-}
-
-/* الحقول - نستخدم نفس تنسيق app.css مع إضافة تحسينات */
-.auth-form .form-group {
-    margin-bottom: 20px;
-    text-align: right;
-}
-
-.auth-form label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-muted, #64748B);
-}
-
-.auth-form input {
-    width: 100%;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid var(--border-color, rgba(11, 25, 44, 0.09));
-    border-radius: var(--radius-md, 12px);
-    font-size: 15px;
-    transition: all 0.2s;
-}
-
-.auth-form input:focus {
-    outline: none;
-    border-color: var(--primary, #2AB8B6);
-    box-shadow: 0 0 0 4px rgba(42, 184, 182, 0.12);
-    background: white;
-}
-
-.auth-form input.error {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.02);
-}
-
-/* زر الإرسال الرئيسي */
-.auth-btn {
-    width: 100%;
-    padding: 12px;
-    background: var(--primary, #2AB8B6);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md, 12px);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 8px;
-}
-
-.auth-btn:hover:not(:disabled) {
-    background: var(--primary-dark, #1F9D9C);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(42, 184, 182, 0.25);
-}
-
-.auth-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* الروابط الإضافية (نسيت كلمة المرور، إنشاء حساب) */
-.auth-links {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin: 16px 0 10px;
-    font-size: 13px;
+    min-height: 100vh;
+    padding: 20px;
+    background-image: radial-gradient(circle at top right, rgba(0, 180, 180, 0.03), transparent 40%),
+                      radial-gradient(circle at bottom left, rgba(10, 25, 64, 0.03), transparent 40%);
+    /* إضافة لمسة خفيفة جداً من ألوان الشعار في الزوايا لا تؤثر على بياض الخلفية */
 }
 
-.auth-links a {
-    color: var(--primary, #2AB8B6);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
+/* غلاف صفحات المصادقة (للدخول وغيرها) */
+.auth-wrapper {
+    width: 100%;
+    max-width: 450px;
+    background: var(--bg-surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+    padding: 40px 30px;
 }
 
-.auth-links a:hover {
-    color: var(--primary-dark, #1F9D9C);
-    text-decoration: underline;
+/* تعديل حاوية التسجيل لتطابق الهوية البيضاء */
+.register-container {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--box-shadow);
 }
 
-/* فصل بين الروابط */
-.divider {
-    color: var(--text-muted, #94A3B8);
+/* ترويسة المصادقة */
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-/* تذييل البطاقة (تسجيل الدخول / إنشاء حساب) */
+.auth-header .logo-img {
+    height: 55px; /* تكبير الشعار قليلاً ليكون أكثر وضوحاً */
+    margin-bottom: 15px;
+}
+
+.auth-header h1 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* تخصيص مؤشر الخطوات (Stepper) ليتناسب مع الشعار */
+.stepper {
+    background: #ffffff !important;
+    border: 1px solid var(--border-color);
+}
+
+.step.active {
+    color: var(--secondary-color) !important; /* اللون التركواز للخطوة النشطة */
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 5px;
+}
+
+/* تذييل المصادقة */
 .auth-footer {
-    margin-top: 28px;
+    text-align: center;
+    margin-top: 25px;
     padding-top: 20px;
-    border-top: 1px solid var(--border-color, rgba(11, 25, 44, 0.09));
-    font-size: 14px;
-    color: var(--text-muted, #64748B);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.95rem;
 }
 
 .auth-footer a {
-    color: var(--primary, #2AB8B6);
-    font-weight: 600;
-    text-decoration: none;
-    margin-right: 4px;
+    font-weight: bold;
 }
 
-.auth-footer a:hover {
-    text-decoration: underline;
-}
-
-/* رسائل الخطأ العامة */
-.auth-error {
-    background: rgba(239, 68, 68, 0.08);
-    border-right: 3px solid #ef4444;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: #b91c1c;
-    text-align: right;
-}
-
-.auth-success {
-    background: rgba(16, 185, 129, 0.08);
-    border-right: 3px solid #10b981;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    font-size: 13px;
-    color: #047857;
-    text-align: right;
-}
-
-/* إظهار/إخفاء كلمة المرور (اختياري) */
-.password-wrapper {
-    position: relative;
-}
-
-.password-toggle {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-muted, #64748B);
-    font-size: 14px;
-}
-
-/* تحسين التجاوب */
-@media (max-width: 560px) {
-    .auth-card {
-        padding: 28px 20px;
-        max-width: 95%;
+/* تخصيصات للشاشات الصغيرة (الجوال) */
+@media (max-width: 768px) {
+    .auth-wrapper,
+    .register-container {
+        padding: 20px;
+        box-shadow: none;
+        border: none;
+        background: transparent;
     }
-    .auth-card h1 {
-        font-size: 22px;
-    }
-    .auth-links {
-        flex-direction: column;
-        gap: 8px;
+    
+    body:has(.auth-wrapper),
+    body:has(.register-container) {
         align-items: flex-start;
-    }
-    .divider {
-        display: none;
-    }
-}
-
-@media (max-width: 380px) {
-    .auth-card {
-        padding: 24px 16px;
+        background-image: none;
     }
 }
