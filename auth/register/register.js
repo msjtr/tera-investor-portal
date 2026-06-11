@@ -118,10 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (field) field.addEventListener('input', preventArabicInput);
     });
 
-    // 4. إظهار / إخفاء كلمة المرور
-    document.querySelectorAll('.toggle-password').forEach(btn => {
+  // ==========================================
+    // زر الإظهار والإخفاء لكلمة المرور (مصلح)
+    // ==========================================
+    const togglePasswordBtns = document.querySelectorAll('.toggle-password');
+    
+    togglePasswordBtns.forEach(btn => {
         btn.addEventListener('click', function() {
-            const input = this.previousElementSibling;
+            // البحث عن أقرب حقل input داخل نفس الحاوية (password-wrapper)
+            const wrapper = this.closest('.password-wrapper');
+            const input = wrapper.querySelector('input');
+            
             if (input.type === 'password') {
                 input.type = 'text';
                 this.textContent = 'إخفاء';
@@ -131,7 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
     // 5. التحقق الحي (Live Validation)
     // ... [يتم وضع نفس كود التحقق الحي السابق هنا] ...
     
