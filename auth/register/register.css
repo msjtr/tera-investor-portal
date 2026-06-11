@@ -1,261 +1,195 @@
 /* ==========================================================================
-   TERA - Register Page Specific Styles
+   TERA - Register Page Specific Styles (Fixed Layout & RTL)
    ========================================================================== */
 
-/* تخصيص حاوية التسجيل لتكون أعرض من صفحة الدخول */
+/* الفئة الأهم لإخفاء الأزرار المزدوجة والمحتوى المخفي */
+.hidden {
+    display: none !important;
+}
+
 .register-container {
     max-width: 850px;
     width: 100%;
-    margin: 20px auto;
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(10, 25, 64, 0.08); /* ظل خفيف مستوحى من لون الشعار */
+    padding: 30px;
+    border: 1px solid #e5e7eb;
 }
 
+/* ==========================================
+   الترويسة والشعار (Header & Logo)
+   ========================================== */
 .register-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 80px; /* ضمان عدم انهيار الترويسة */
 }
 
-.intro-text {
-    margin-bottom: 30px;
+.btn-back {
+    color: #6b7280;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.btn-back:hover {
+    color: #0A1940;
+}
+
+.logo {
+    text-align: center;
+    flex: 1;
+}
+
+.logo-img {
+    height: 60px; /* تحديد ارتفاع ثابت للشعار */
+    width: auto;
+    object-fit: contain;
 }
 
 .intro-text h2 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
+    color: #0A1940; /* لون أزرق داكن من الشعار */
+    margin-bottom: 10px;
 }
 
 .intro-text p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
+    color: #6b7280;
 }
 
 /* ==========================================
-   مؤشر الخطوات (Stepper)
-   ========================================== */
-.stepper {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-    background: #f8fafc;
-    padding: 15px;
-    border-radius: var(--border-radius-md);
-    border: 1px solid var(--border-color);
-    position: relative;
-}
-
-.step {
-    flex: 1;
-    text-align: center;
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 0.9rem;
-    position: relative;
-    z-index: 2;
-    transition: color 0.3s ease;
-}
-
-.step.active {
-    color: var(--secondary-color); /* التركواز */
-}
-
-.step.completed {
-    color: var(--primary-color); /* الأزرق الداكن للخطوات المكتملة */
-}
-
-/* ==========================================
-   نماذج الخطوات (Form Steps)
-   ========================================== */
-.form-step {
-    display: none;
-    animation: slideUpFade 0.4s ease-out forwards;
-}
-
-.form-step.active {
-    display: block;
-}
-
-@keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.form-step h3 {
-    font-size: 1.2rem;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #f3f4f6;
-}
-
-/* ==========================================
-   قوائم التحقق (Validation Lists)
+   قوائم التحقق (Validation Lists - RTL Fixed)
    ========================================== */
 .validation-list {
     list-style: none;
-    padding: 10px;
-    margin-top: 5px;
+    padding: 0; /* إزالة الحشوة الافتراضية */
+    margin: 10px 0;
     background: #f8fafc;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.85rem;
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid #e5e7eb;
 }
 
 .validation-list li {
-    margin-bottom: 5px;
-    color: var(--text-muted);
-    transition: color 0.3s;
-}
-
-.validation-list li.invalid::before {
-    content: "🔴 ";
-    margin-left: 5px;
-}
-
-.validation-list li.valid::before {
-    content: "🟢 ";
-    margin-left: 5px;
-}
-
-.validation-list li.valid {
-    color: var(--success-color);
-}
-
-.validation-msg {
-    font-size: 0.85rem;
-    margin-top: 5px;
-    font-weight: bold;
-}
-
-.text-success { color: var(--success-color); }
-.text-danger { color: var(--danger-color); }
-
-/* ==========================================
-   قوة كلمة المرور (Password Strength)
-   ========================================== */
-.password-strength {
     display: flex;
-    align-items: center;
-    margin-top: 8px;
-    font-size: 0.85rem;
-    font-weight: bold;
-}
-
-.strength-bar {
-    display: inline-block;
-    height: 6px;
-    width: 120px;
-    background: #e5e7eb;
-    border-radius: 3px;
-    margin-left: 10px;
-    transition: all 0.3s ease;
-}
-
-.strength-bar.weak { background: var(--danger-color); width: 30%; }
-.strength-bar.medium { background: var(--warning-color); width: 60%; }
-.strength-bar.strong { background: var(--success-color); width: 100%; }
-
-/* ==========================================
-   تنسيقات هيكلية إضافية (Layout & Groups)
-   ========================================== */
-.flex-group {
-    display: flex;
-    gap: 15px;
-}
-
-.half-width { flex: 1; }
-.full-width { flex: 3; }
-
-.checkbox-group {
-    margin-top: 20px;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: var(--border-radius-md);
-}
-
-.radio-group {
-    display: flex;
-    gap: 20px;
-    margin-top: 10px;
-}
-
-/* ==========================================
-   الإقرارات (Agreements)
-   ========================================== */
-.agreements-list {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    padding: 20px;
-    border-radius: var(--border-radius-md);
-    margin-bottom: 20px;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 15px;
-    line-height: 1.6;
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-
-.checkbox-container input {
-    width: auto;
-    margin-top: 5px;
-}
-
-.security-info {
-    margin: 10px 40px 15px 0;
-    padding: 15px;
-    background: #f8fafc;
-    border-right: 3px solid var(--primary-color);
-    border-radius: var(--border-radius-sm);
+    align-items: center; /* محاذاة الدائرة مع النص */
+    margin-bottom: 8px;
+    color: #6b7280;
     font-size: 0.9rem;
 }
 
-.security-info ul {
-    margin-right: 20px;
-    margin-top: 10px;
+.validation-list li:last-child {
+    margin-bottom: 0;
 }
 
-.highlight {
-    font-weight: bold;
-    color: var(--primary-color);
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+/* إضافة الدائرة عبر CSS بدلاً من HTML لضمان الاتجاه */
+.validation-list li::before {
+    margin-left: 10px; /* مسافة يسار الدائرة لأن النص عربي يبدأ من اليمين */
+    font-size: 1.1rem;
 }
 
-.final-declaration {
-    background: rgba(0, 180, 180, 0.05); /* خلفية تركواز فاتحة جداً */
-    padding: 15px;
-    border-radius: var(--border-radius-md);
-    border: 1px solid rgba(0, 180, 180, 0.2);
-    color: var(--primary-color);
-    margin-bottom: 20px;
-    font-size: 0.95rem;
+.validation-list li.invalid::before {
+    content: "🔴";
+}
+
+.validation-list li.valid::before {
+    content: "🟢";
+}
+
+.validation-list li.valid {
+    color: #10b981; /* أخضر */
 }
 
 /* ==========================================
-   أزرار التحكم (Form Controls)
+   أزرار التحكم السفلية (Form Controls)
    ========================================== */
 .form-controls {
     display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
+    justify-content: space-between; /* "السابق" يمين، "التالي" يسار */
+    align-items: center;
+    margin-top: 40px;
     padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid #e5e7eb;
 }
 
-@media (max-width: 768px) {
-    .stepper {
-        flex-direction: column;
-        gap: 10px;
-        text-align: right;
-    }
-    .step {
-        text-align: right;
-        padding-right: 10px;
-        border-right: 2px solid transparent;
-    }
-    .step.active {
-        border-right-color: var(--secondary-color);
-    }
+.controls-right {
+    display: flex;
+    gap: 10px;
+}
+
+/* تنسيق الأزرار بشكل صريح لضمان ظهورها كأزرار */
+.btn {
+    padding: 10px 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #0A1940; /* أزرق داكن */
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #00B4B4; /* تركواز */
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-success {
+    background-color: #00B4B4; /* تركواز الشعار */
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #009696;
+}
+
+/* ==========================================
+   حقول الإدخال (Inputs)
+   ========================================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #0A1940;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    font-family: inherit;
+    box-sizing: border-box; /* لضمان عدم خروج الحقل عن الإطار */
+}
+
+input:focus {
+    outline: none;
+    border-color: #00B4B4;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1);
 }
