@@ -1,177 +1,153 @@
 /* ================================================= */
-/* LARGE SCREENS */
+/* LARGE SCREENS (شاشات كبيرة) */
 /* ================================================= */
-
-@media (max-width:1400px){
-
-.container{
-    max-width:1200px;
-}
-
+@media (max-width: 1400px) {
+    .container {
+        max-width: 1200px;
+    }
 }
 
 /* ================================================= */
-/* DESKTOP */
+/* DESKTOP (أجهزة سطح المكتب) */
 /* ================================================= */
-
-@media (max-width:1200px){
-
-.grid-4{
-    grid-template-columns:
-    repeat(3,1fr);
-}
-
-.stats-grid{
-    grid-template-columns:
-    repeat(2,1fr);
-}
-
+@media (max-width: 1200px) {
+    .grid-4 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* ================================================= */
-/* TABLET */
+/* TABLET (الأجهزة اللوحية) */
 /* ================================================= */
+@media (max-width: 992px) {
+    .page-wrapper {
+        padding: 20px;
+    }
 
-@media (max-width:992px){
+    .grid-4,
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-.page-wrapper{
-    padding:20px;
-}
+    .navbar-menu {
+        flex-wrap: wrap;
+    }
 
-.grid-4,
-.grid-3{
-    grid-template-columns:
-    repeat(2,1fr);
-}
+    .register-steps {
+        flex-direction: column;
+        gap: 15px; /* إضافة مسافة بين الخطوات عند تحويلها لعمود */
+    }
 
-.navbar-menu{
-    flex-wrap:wrap;
-}
+    .step {
+        width: 100%;
+    }
 
-.register-steps{
-    flex-direction:column;
-}
+    .sidebar {
+        width: 100%;
+    }
 
-.step{
-    width:100%;
-}
-
-.sidebar{
-    width:100%;
-}
-
-.dashboard-layout{
-    flex-direction:column;
-}
-
+    .dashboard-layout {
+        flex-direction: column;
+    }
 }
 
 /* ================================================= */
-/* MOBILE */
+/* MOBILE (الجوالات القياسية) */
 /* ================================================= */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
 
-@media (max-width:768px){
+    .page-title {
+        font-size: 24px;
+    }
 
-.container{
-    padding:0 15px;
-}
+    .grid-2,
+    .grid-3,
+    .grid-4,
+    .form-grid,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 
-.page-title{
-    font-size:24px;
-}
+    .card {
+        padding: 18px;
+    }
 
-.grid-2,
-.grid-3,
-.grid-4{
-    grid-template-columns:1fr;
-}
+    .btn {
+        width: 100%;
+    }
 
-.form-grid{
-    grid-template-columns:1fr;
-}
+    .form-actions {
+        flex-direction: column;
+        gap: 10px; /* إضافة مسافة بين الأزرار */
+    }
 
-.stats-grid{
-    grid-template-columns:1fr;
-}
+    .table {
+        min-width: 700px;
+    }
 
-.card{
-    padding:18px;
-}
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* تمرير سلس على أجهزة اللمس */
+    }
 
-.btn{
-    width:100%;
-}
-
-.form-actions{
-    flex-direction:column;
-}
-
-.table{
-    min-width:700px;
-}
-
-.table-wrapper{
-    overflow-x:auto;
-}
-
-.logo-wrapper img{
-    max-width:180px;
-}
-
+    .logo-wrapper img {
+        max-width: 180px;
+    }
 }
 
 /* ================================================= */
-/* SMALL MOBILE */
+/* SMALL MOBILE (الجوالات الصغيرة) */
 /* ================================================= */
+@media (max-width: 480px) {
+    .page-wrapper {
+        padding: 15px;
+    }
 
-@media (max-width:480px){
+    .page-title {
+        font-size: 20px;
+    }
 
-.page-wrapper{
-    padding:15px;
-}
+    .card {
+        padding: 15px;
+    }
 
-.page-title{
-    font-size:20px;
-}
+    .auth-card {
+        padding: 18px;
+    }
 
-.card{
-    padding:15px;
-}
+    .auth-title {
+        font-size: 22px;
+    }
 
-.auth-card{
-    padding:18px;
-}
+    .btn {
+        font-size: 14px;
+    }
 
-.auth-title{
-    font-size:22px;
-}
-
-.btn{
-    font-size:14px;
-}
-
-.form-control{
-    padding:10px;
-}
-
+    .form-control {
+        padding: 10px;
+    }
 }
 
 /* ================================================= */
-/* EXTRA SMALL */
+/* EXTRA SMALL (الشاشات الصغيرة جداً) */
 /* ================================================= */
+@media (max-width: 360px) {
+    .page-title {
+        font-size: 18px;
+    }
 
-@media (max-width:360px){
+    .auth-title {
+        font-size: 20px;
+    }
 
-.page-title{
-    font-size:18px;
-}
-
-.auth-title{
-    font-size:20px;
-}
-
-.logo-wrapper img{
-    max-width:140px;
-}
-
+    .logo-wrapper img {
+        max-width: 140px;
+    }
 }
