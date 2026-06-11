@@ -1,15 +1,18 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - CORE STYLES
+   TERA INVESTOR PORTAL - CORE STYLES (UPDATED & PREMIUM)
    ========================================================================== */
 
-/* نظام الألوان والمتغيرات المركزية المنبثقة من هوية تيرا */
+/* نظام الألوان والمتغيرات المركزية المنبثقة من الهوية الرقمية لمنصة تيرا */
 :root {
-    /* الألوان الأساسية */
-    --primary-color: #0d6efd;
-    --primary-hover: #0b5ed7;
-    --primary-light: rgba(13, 110, 253, 0.08);
+    /* الألوان الأساسية الحصرية لـ تيرا (Teal & Royal Blue Palette) */
+    --primary-color: #008080;        /* اللون البترولي/التيال الأساسي الفاخر */
+    --primary-hover: #006666;        /* بترولي داكن للتفاعلات */
+    --primary-light: rgba(0, 128, 128, 0.08); /* خلفيات خفيفة مريحة للعين */
     
-    /* ألوان الحالة النظمية */
+    --secondary-color: #4169e1;      /* الأزرق الملكي المكمل للهوية */
+    --secondary-hover: #3152b1;
+    
+    /* ألوان الحالة النظمية الموزونة لراحة العين */
     --success-color: #198754;
     --success-hover: #146c43;
     --success-light: #e8f5e9;
@@ -24,32 +27,37 @@
     
     --info-color: #0dcaf0;
     
-    /* الألوان المحايدة والخلفيات */
-    --neutral-dark: #212529;
+    /* الألوان المحايدة والتدرجات الفاخرة */
+    --neutral-dark: #1a1e21;         /* رمادي داكن يقارب الأسود الفاخر */
     --neutral-gray: #495057;
     --text-muted: #6c757d;
-    --bg-main: #f4f6f9;
+    --bg-main: #f4f6f9;              /* خلفية النظام المريحة */
     --bg-card: #ffffff;
     --border-color: #dee2e6;
-    --border-focus: #86b7fe;
+    --border-focus: #80c0c0;         /* متناسق تماماً مع توهج التيال الفاخر */
     
-    /* الخطوط والأبعاد */
-    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-    --border-radius-sm: 4px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
+    /* واجهات الزجاج الفاخر (Glassmorphism UI Elements) */
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-blur: blur(12px);
     
-    /* الظلال */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* الخطوط المنظمة للأعمال المالية والاستثمارية */
+    --font-sans: 'Cairo', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --border-radius-sm: 6px;         /* حواف أكثر عصرية من 4px القديمة */
+    --border-radius-md: 10px;
+    --border-radius-lg: 16px;        /* انحناءات بريميوم متناسقة مع عناصر الـ Glass */
     
-    /* التأثيرات الحركية */
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
+    /* الظلال الرقيقة العميقة */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.06);
+    
+    /* التأثيرات الحركية السلسة */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* إعادة ضبط المتصفح القياسي */
+/* إعادة ضبط المتصفح القياسي وبناء شبكة الأبعاد الأمنية */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -67,32 +75,36 @@ body {
     background-color: var(--bg-main);
     color: var(--neutral-dark);
     line-height: 1.6;
+    direction: rtl;               /* إعطاء الأولوية للتوجيه المنطقي للمتصفح بدلاً من text-align */
     text-align: right;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased; /* تحسين نعومة ومظهر الخطوط المكتوبة */
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* تحسينات الوسائط الافتراضية */
+/* تحسينات الوسائط الافتراضية لمنع التشوه */
 img, svg {
     vertical-align: middle;
     max-width: 100%;
     height: auto;
+    object-fit: contain;          /* يضمن عدم تمطط الشعار أو الصور التعبيرية */
 }
 
 /* روابط وتفاعلات أساسية موحدة */
 a {
     color: var(--primary-color);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    transition: color var(--transition-fast), opacity var(--transition-fast);
 }
 
 a:hover {
     color: var(--primary-hover);
 }
 
-/* تخصيص شريط التمرير (Scrollbar) لتجربة مستخدم فاخرة */
+/* تخصيص شريط التمرير (Scrollbar) لتجربة مستخدم ناعمة وفاخرة */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;                   /* سمك أكثر دقة ونعومة من 8px لتجنب تشتيت العين */
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -100,10 +112,10 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
+    background: rgba(0, 128, 128, 0.2); /* شريط تمرير متناسق مع لون الهوية بدلاً من الرمادي */
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: var(--primary-color);
 }
