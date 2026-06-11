@@ -1,5 +1,5 @@
 /* ================================================= */
-/* REGISTER PAGE */
+/* TERA REGISTER PAGE */
 /* ================================================= */
 
 :root{
@@ -16,10 +16,32 @@
 
 }
 
-html,
+*{
+
+    box-sizing:border-box;
+
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
 body{
 
+    margin:0;
+
+    padding:0;
+
+    background:var(--tera-bg);
+
     overflow-x:hidden;
+
+    font-family:
+    "Segoe UI",
+    Tahoma,
+    sans-serif;
 
 }
 
@@ -27,19 +49,15 @@ body{
 
     min-height:100vh;
 
-    background:var(--tera-bg);
-
     padding:40px 20px;
 
 }
 
 .register-card{
 
-    width:100%;
+    max-width:1200px;
 
-    max-width:1400px;
-
-    margin:0 auto;
+    margin:auto;
 
     background:#fff;
 
@@ -48,10 +66,12 @@ body{
     padding:40px;
 
     box-shadow:
-    0 10px 35px
+    0 10px 40px
     rgba(0,0,0,.08);
 
 }
+
+
 
 /* ================================================= */
 /* LOGO */
@@ -61,65 +81,54 @@ body{
 
     text-align:center;
 
-    margin-bottom:40px;
+    margin-bottom:30px;
 
 }
 
 .tera-logo{
 
-    width:100%;
+    max-width:260px;
 
-    max-width:320px;
+    width:100%;
 
     height:auto;
 
+}
+
+/* ================================================= */
+/* BANNER */
+/* ================================================= */
+
+.register-banner{
+
+    text-align:center;
+
+    margin-bottom:40px;
+
+}
+
+.register-banner h1{
+
+    color:var(--tera-primary);
+
+    font-size:36px;
+
+    margin-bottom:15px;
+
+}
+
+.register-banner p{
+
+    max-width:850px;
+
     margin:auto;
 
-    object-fit:contain;
+    line-height:2;
+
+    color:#6b7280;
 
 }
 
-/* ================================================= */
-/* INTRO */
-/* ================================================= */
-
-.register-intro{
-
-    text-align:center;
-
-    margin-bottom:35px;
-
-}
-
-.register-intro h1{
-
-    font-size:34px;
-
-    margin-bottom:10px;
-
-}
-
-.register-intro p{
-
-    color:#666;
-
-    line-height:1.9;
-
-}
-
-.card-header{
-
-    text-align:center;
-
-    margin-bottom:35px;
-
-}
-
-.card-header h2{
-
-    margin-bottom:10px;
-
-}
 
 /* ================================================= */
 /* STEPS */
@@ -127,33 +136,26 @@ body{
 
 .register-steps{
 
-    display:flex;
+    display:grid;
 
-    justify-content:space-between;
+    grid-template-columns:
+    repeat(4,1fr);
 
     gap:15px;
 
     margin-bottom:40px;
 
-    flex-wrap:wrap;
-
 }
 
 .step{
 
-    flex:1;
-
-    min-width:180px;
-
     background:#f3f4f6;
 
-    border-radius:12px;
+    border-radius:14px;
 
-    padding:15px;
+    padding:18px;
 
     text-align:center;
-
-    border:2px solid transparent;
 
     transition:.3s;
 
@@ -165,15 +167,11 @@ body{
 
     color:#fff;
 
-    border-color:var(--tera-primary);
-
 }
 
 .step-number{
 
-    font-size:22px;
-
-    font-weight:700;
+    font-size:24px;
 
     margin-bottom:8px;
 
@@ -183,49 +181,14 @@ body{
 
     font-size:14px;
 
-    line-height:1.6;
-
-    min-height:45px;
-
-}
-/* ================================================= */
-/* FORM STEPS */
-/* ================================================= */
-
-.form-step{
-
-    display:none;
-
-    animation:fadeIn .3s ease;
+    line-height:1.8;
 
 }
 
-.form-step.active{
 
-    display:block;
-
-}
-
-.form-step h3{
-
-    font-size:24px;
-
-    margin-bottom:25px;
-
-}
-
-.section-title{
-
-    font-size:18px;
-
-    font-weight:700;
-
-    margin-bottom:20px;
-
-}
 
 /* ================================================= */
-/* FORM GRID */
+/* GRID */
 /* ================================================= */
 
 .form-grid{
@@ -233,12 +196,9 @@ body{
     display:grid;
 
     grid-template-columns:
-    repeat(
-    auto-fit,
-    minmax(280px,1fr)
-    );
+    repeat(2,minmax(0,1fr));
 
-    gap:20px;
+    gap:25px;
 
     margin-bottom:25px;
 
@@ -246,15 +206,16 @@ body{
 
 .full-width{
 
-    grid-column:1 / -1;
+    grid-column:1/-1;
 
 }
+
 
 /* ================================================= */
 /* FORM GROUP */
 /* ================================================= */
 
-.register-card .form-group{
+.form-group{
 
     display:flex;
 
@@ -262,7 +223,7 @@ body{
 
 }
 
-.register-card .form-group label{
+.form-group label{
 
     margin-bottom:8px;
 
@@ -270,17 +231,19 @@ body{
 
 }
 
-.register-card .form-group input,
-.register-card .form-group select,
-.register-card .form-group textarea{
+.form-group input,
+.form-group select,
+.form-group textarea{
 
     width:100%;
 
-    border:1px solid #d6d6d6;
-
-    border-radius:10px;
+    min-height:54px;
 
     padding:14px;
+
+    border-radius:12px;
+
+    border:1px solid #d1d5db;
 
     font-size:15px;
 
@@ -288,9 +251,15 @@ body{
 
 }
 
-.register-card .form-group input:focus,
-.register-card .form-group select:focus,
-.register-card .form-group textarea:focus{
+.form-group textarea{
+
+    min-height:120px;
+
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
 
     outline:none;
 
@@ -302,25 +271,18 @@ body{
 
 }
 
-.register-card .form-group small{
-
-    margin-top:6px;
-
-    color:#777;
-
-}
 
 /* ================================================= */
-/* VALIDATION BOX */
+/* VALIDATION STATUS */
 /* ================================================= */
 
 .validation-box{
 
     background:#f8fafc;
 
-    border:1px solid var(--tera-border);
+    border:1px solid #e5e7eb;
 
-    border-radius:12px;
+    border-radius:14px;
 
     padding:20px;
 
@@ -328,203 +290,96 @@ body{
 
 }
 
-.validation-box h4{
-
-    margin-bottom:15px;
-
-    font-size:16px;
-
-    font-weight:700;
-
-}
-
 .validation-box ul{
+
+    list-style:none;
 
     margin:0;
 
-    padding-right:20px;
+    padding:0;
 
 }
 
 .validation-box li{
 
-    margin-bottom:10px;
+    padding:8px 0;
 
-    line-height:1.8;
-
-}
-
-/* ================================================= */
-/* VALID / INVALID */
-/* ================================================= */
-
-.valid{
-
-    color:var(--tera-success);
-
-    font-weight:700;
+    transition:.3s;
 
 }
 
-.invalid{
+/* ناجح */
 
-    color:var(--tera-danger);
-
-    font-weight:700;
-
-}
-
-.warning{
-
-    color:var(--tera-warning);
-
-}
-
-.info{
-
-    color:#2563eb;
-
-}
-
-/* ================================================= */
-/* ERROR MESSAGE */
-/* ================================================= */
-
-.error-message{
-
-    margin-top:15px;
-
-    padding:15px;
-
-    border-radius:10px;
-
-    background:#fef2f2;
-
-    border:1px solid #fecaca;
-
-    color:var(--tera-danger);
-
-    line-height:1.8;
-
-}
-
-.error-message a{
-
-    color:var(--tera-danger);
-
-    font-weight:700;
-
-}
-
-.error-message a:hover{
-
-    text-decoration:underline;
-
-}
-
-/* ================================================= */
-/* INFO */
-/* ================================================= */
-
-.info-text{
-
-    margin-top:15px;
-
-    color:#2563eb;
-
-    line-height:1.8;
-
-}
-
-.warning-text{
-
-    margin-top:20px;
-
-    color:#b45309;
-
-    line-height:1.8;
-
-}
-
-/* ================================================= */
-/* PASSWORD */
-/* ================================================= */
-
-.password-strength{
-
-    margin-top:20px;
-
-}
-
-#passwordStrength{
-
-    margin-top:10px;
-
-    padding:12px;
-
-    border-radius:10px;
-
-    background:#f3f4f6;
-
-    font-weight:700;
-
-}
-
-.match-status{
-
-    margin-top:15px;
-
-    font-weight:700;
-
-}
-
-.password-weak{
-
-    color:#dc2626;
-
-}
-
-.password-medium{
-
-    color:#f59e0b;
-
-}
-
-.password-strong{
+.validation-box li.valid{
 
     color:#16a34a;
 
-}
-
-.password-very-strong{
-
-    color:#15803d;
+    font-weight:700;
 
 }
+
+.validation-box li.valid::before{
+
+    content:"✔ ";
+
+}
+
+/* خطأ */
+
+.validation-box li.invalid{
+
+    color:#dc2626;
+
+    font-weight:700;
+
+}
+
+.validation-box li.invalid::before{
+
+    content:"✖ ";
+
+}
+
+/* افتراضي */
+
+.validation-box li.pending{
+
+    color:#6b7280;
+
+}
+
+.validation-box li.pending::before{
+
+    content:"☐ ";
+
+}
+
+/* INPUT STATUS */
+
+.valid-input{
+
+    border-color:#16a34a !important;
+
+    box-shadow:
+    0 0 0 4px
+    rgba(22,163,74,.12);
+
+}
+
+.invalid-input{
+
+    border-color:#dc2626 !important;
+
+    box-shadow:
+    0 0 0 4px
+    rgba(220,38,38,.12);
+
+}
+
 
 /* ================================================= */
 /* CHECKBOX */
 /* ================================================= */
-
-.checkbox-block{
-
-    display:flex;
-
-    align-items:flex-start;
-
-    gap:10px;
-
-    margin-bottom:15px;
-
-    line-height:1.8;
-
-}
-
-.checkbox-block input{
-
-    margin-top:4px;
-
-}
 
 .checkbox-inline{
 
@@ -532,15 +387,45 @@ body{
 
     align-items:center;
 
-    gap:8px;
+    gap:10px;
 
-    margin-top:10px;
+    margin-top:12px;
+
+    cursor:pointer;
 
 }
 
 .checkbox-inline input{
 
-    margin-top:0;
+    width:18px;
+
+    height:18px;
+
+}
+
+.checkbox-block{
+
+    display:flex;
+
+    align-items:flex-start;
+
+    gap:12px;
+
+    padding:10px 0;
+
+    cursor:pointer;
+
+    line-height:1.8;
+
+}
+
+.checkbox-block input{
+
+    width:18px;
+
+    height:18px;
+
+    margin-top:4px;
 
 }
 
@@ -566,13 +451,63 @@ body{
 
     align-items:center;
 
-    gap:8px;
+    gap:10px;
 
     cursor:pointer;
 
     font-weight:600;
 
 }
+
+
+
+/* ================================================= */
+/* PASSWORD */
+/* ================================================= */
+
+.password-strength{
+
+    margin-top:20px;
+
+}
+
+#passwordStrength{
+
+    margin-top:10px;
+
+    padding:14px;
+
+    border-radius:10px;
+
+    background:#f3f4f6;
+
+    font-weight:700;
+
+}
+
+.match-status{
+
+    margin-top:15px;
+
+    font-weight:700;
+
+    font-size:15px;
+
+}
+
+.match-status.valid{
+
+    color:#16a34a;
+
+}
+
+.match-status.invalid{
+
+    color:#dc2626;
+
+}
+
+
 
 /* ================================================= */
 /* AGREEMENTS */
@@ -582,17 +517,15 @@ body{
 
     background:#fafafa;
 
-    border:1px solid var(--tera-border);
+    border:1px solid #e5e7eb;
 
-    border-radius:12px;
+    border-radius:14px;
 
     padding:25px;
 
 }
 
 .agreement-box .checkbox-block{
-
-    padding-bottom:12px;
 
     border-bottom:1px dashed #e5e7eb;
 
@@ -602,710 +535,18 @@ body{
 
     border-bottom:none;
 
-    padding-bottom:0;
-
 }
-
-/* ================================================= */
-/* IMPORTANT NOTICE */
-/* ================================================= */
-
-.important-notice{
-
-    margin-top:25px;
-
-    padding:20px;
-
-    border-radius:12px;
-
-    background:#fff7ed;
-
-    border:1px solid #fdba74;
-
-}
-
-.important-notice h4{
-
-    margin-bottom:10px;
-
-    color:#9a3412;
-
-}
-
-/* ================================================= */
-/* FINAL DECLARATION */
-/* ================================================= */
 
 .final-declaration{
 
     margin-top:25px;
 
-    padding:20px;
-
-    border-radius:12px;
-
     background:#ecfdf5;
 
     border:1px solid #86efac;
 
-}
-
-.final-declaration h4{
-
-    margin-bottom:15px;
-
-    color:#166534;
-
-}
-
-/* ================================================= */
-/* IDENTITY BOXES */
-/* ================================================= */
-
-.identity-wrapper{
-
-    margin-top:25px;
+    border-radius:14px;
 
     padding:25px;
-
-    border-radius:12px;
-
-    border:1px solid #e5e7eb;
-
-    background:#fafafa;
-
-}
-
-.identity-wrapper h4{
-
-    margin-bottom:20px;
-
-    color:var(--tera-primary);
-
-}
-
-/* ================================================= */
-/* ADDRESS BOX */
-/* ================================================= */
-
-#nationalAddressWrapper,
-#internationalAddressWrapper{
-
-    margin-top:25px;
-
-    padding:25px;
-
-    border-radius:12px;
-
-    background:#fafafa;
-
-    border:1px solid #e5e7eb;
-
-}
-
-#nationalAddressWrapper h4,
-#internationalAddressWrapper h4{
-
-    margin-bottom:20px;
-
-    color:var(--tera-primary);
-
-}
-
-/* ================================================= */
-/* NATIONAL ADDRESS BUTTON */
-/* ================================================= */
-
-.national-address-action{
-
-    margin-top:20px;
-
-}
-
-.national-address-action button{
-
-    background:var(--tera-primary);
-
-    color:#fff;
-
-    border:none;
-
-    border-radius:10px;
-
-    padding:12px 20px;
-
-    cursor:pointer;
-
-    font-weight:600;
-
-    transition:.3s;
-
-}
-
-.national-address-action button:hover{
-
-    background:var(--tera-primary-dark);
-
-}
-
-/* ================================================= */
-/* EXAMPLES BOX */
-/* ================================================= */
-
-.examples-box{
-
-    margin-top:20px;
-
-    padding:20px;
-
-    border-radius:12px;
-
-    background:#eff6ff;
-
-    border:1px solid #bfdbfe;
-
-}
-
-.examples-box h4{
-
-    margin-bottom:10px;
-
-    color:#1d4ed8;
-
-}
-
-.examples-box p{
-
-    margin-bottom:8px;
-
-}
-
-/* ================================================= */
-/* COUNTRY CODE */
-/* ================================================= */
-
-#countryCode{
-
-    font-weight:600;
-
-}
-
-/* ================================================= */
-/* PROCESS BOX */
-/* ================================================= */
-
-.registration-process{
-
-    margin-top:50px;
-
-    padding:25px;
-
-    border-radius:12px;
-
-    background:#f9fafb;
-
-    border:1px solid #e5e7eb;
-
-}
-
-.registration-process h3{
-
-    margin-bottom:20px;
-
-}
-
-.registration-process ol{
-
-    padding-right:25px;
-
-}
-
-.registration-process li{
-
-    margin-bottom:10px;
-
-    line-height:1.8;
-
-}
-/* ================================================= */
-/* FORM ACTIONS */
-/* ================================================= */
-
-.form-actions{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    gap:15px;
-
-    flex-wrap:wrap;
-
-    margin-top:40px;
-
-}
-
-.form-actions .btn{
-
-    min-width:180px;
-
-}
-
-#submitBtn{
-
-    min-width:240px;
-
-}
-
-/* ================================================= */
-/* BUTTONS */
-/* ================================================= */
-
-.btn{
-
-    border:none;
-
-    border-radius:12px;
-
-    padding:14px 24px;
-
-    cursor:pointer;
-
-    font-size:15px;
-
-    font-weight:600;
-
-    transition:.3s;
-
-}
-
-.btn:hover{
-
-    transform:translateY(-2px);
-
-}
-
-.btn-primary{
-
-    background:var(--tera-primary);
-
-    color:#fff;
-
-}
-
-.btn-primary:hover{
-
-    background:var(--tera-primary-dark);
-
-}
-
-.btn-secondary{
-
-    background:#6b7280;
-
-    color:#fff;
-
-}
-
-.btn-secondary:hover{
-
-    background:#4b5563;
-
-}
-
-.btn-success{
-
-    background:var(--tera-success);
-
-    color:#fff;
-
-}
-
-.btn-success:hover{
-
-    background:#15803d;
-
-}
-
-/* ================================================= */
-/* LINKS */
-/* ================================================= */
-
-.bottom-links{
-
-    margin-top:40px;
-
-    text-align:center;
-
-}
-
-.bottom-links p{
-
-    margin-bottom:15px;
-
-}
-
-.login-link,
-.home-link{
-
-    display:inline-block;
-
-    margin:10px;
-
-    color:var(--tera-primary);
-
-    font-weight:700;
-
-    text-decoration:none;
-
-}
-
-.login-link:hover,
-.home-link:hover{
-
-    text-decoration:underline;
-
-}
-
-/* ================================================= */
-/* FOOTER */
-/* ================================================= */
-
-.site-footer,
-.footer-copy{
-
-    margin-top:50px;
-
-    text-align:center;
-
-    color:#6b7280;
-
-    font-size:14px;
-
-    line-height:1.8;
-
-}
-
-/* ================================================= */
-/* HELPERS */
-/* ================================================= */
-
-.d-none{
-
-    display:none !important;
-
-}
-
-.text-center{
-
-    text-align:center;
-
-}
-
-.text-right{
-
-    text-align:right;
-
-}
-
-.text-left{
-
-    text-align:left;
-
-}
-
-.mt-10{
-
-    margin-top:10px;
-
-}
-
-.mt-20{
-
-    margin-top:20px;
-
-}
-
-.mt-30{
-
-    margin-top:30px;
-
-}
-
-.mt-40{
-
-    margin-top:40px;
-
-}
-
-.mb-10{
-
-    margin-bottom:10px;
-
-}
-
-.mb-20{
-
-    margin-bottom:20px;
-
-}
-
-.mb-30{
-
-    margin-bottom:30px;
-
-}
-
-.w-100{
-
-    width:100%;
-
-}
-
-/* ================================================= */
-/* ANIMATION */
-/* ================================================= */
-
-.form-step{
-
-    animation:fadeIn .35s ease;
-
-}
-
-@keyframes fadeIn{
-
-    from{
-
-        opacity:0;
-
-        transform:translateY(10px);
-
-    }
-
-    to{
-
-        opacity:1;
-
-        transform:translateY(0);
-
-    }
-
-}
-
-/* ================================================= */
-/* RESPONSIVE */
-/* ================================================= */
-
-@media (max-width:1200px){
-
-    .register-card{
-
-        max-width:100%;
-
-    }
-
-}
-
-@media (max-width:992px){
-
-    .register-card{
-
-        padding:25px;
-
-    }
-
-    .register-steps{
-
-        flex-direction:column;
-
-    }
-
-    .step{
-
-        width:100%;
-
-    }
-
-}
-
-@media (max-width:768px){
-
-    .register-page{
-
-        padding:20px 10px;
-
-    }
-
-    .register-card{
-
-        padding:20px;
-
-        border-radius:15px;
-
-    }
-
-    .register-intro h1{
-
-        font-size:26px;
-
-    }
-
-    .form-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-    .form-actions{
-
-        flex-direction:column;
-
-    }
-
-    .btn{
-
-        width:100%;
-
-    }
-
-    #submitBtn{
-
-        width:100%;
-
-        min-width:100%;
-
-    }
-
-    .radio-group{
-
-        flex-direction:column;
-
-        gap:12px;
-
-    }
-
-}
-
-@media (max-width:480px){
-
-    .tera-logo{
-
-        max-width:180px;
-
-    }
-
-    .register-intro h1{
-
-        font-size:22px;
-
-    }
-
-    .step-title{
-
-        font-size:13px;
-
-    }
-
-    .register-card{
-
-        padding:15px;
-
-    }
-
-    .form-step h3{
-
-        font-size:20px;
-
-    }
-
-}
-
-/* ================================================= */
-/* REGISTER BANNER */
-/* ================================================= */
-
-.register-banner{
-
-    text-align:center;
-
-    margin-bottom:40px;
-
-}
-
-.register-banner h1{
-
-    font-size:38px;
-
-    font-weight:700;
-
-    margin-bottom:12px;
-
-    color:var(--tera-primary);
-
-}
-
-.register-banner p{
-
-    max-width:900px;
-
-    margin:auto;
-
-    color:#6b7280;
-
-    line-height:2;
-
-}
-
-hr{
-
-    border:none;
-
-    height:1px;
-
-    background:#e5e7eb;
-
-    margin:35px 0;
-
-}
-
-textarea{
-
-    resize:vertical;
-
-    min-height:120px;
-
-}
-
-select{
-
-    cursor:pointer;
-
-    background:#fff;
-
-}
-
-input,
-select,
-textarea{
-
-    max-width:100%;
-
-}
-
-@media(max-width:768px){
-
-.register-banner h1{
-
-    font-size:28px;
-
-}
-
-.register-banner p{
-
-    font-size:14px;
-
-}
 
 }
