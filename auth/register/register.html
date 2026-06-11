@@ -21,7 +21,7 @@
             <div class="logo text-center">
                 <img src="../../images/logo.svg" alt="TERA - عالمك بلا حدود" class="logo-img" style="max-height: 65px; width: auto; max-width: 100%;">
             </div>
-        </header>
+            <div style="width: 120px;"></div> </header>
 
         <main class="register-content">
             <div class="text-center intro-text">
@@ -43,41 +43,47 @@
                     
                     <div class="form-group">
                         <label>اسم المستخدم *</label>
-                        <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+                        <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
                         <ul class="validation-list" id="user-validation">
-                            <li class="invalid">☐ من 4 إلى 20 حرفاً</li>
-                            <li class="invalid">☐ أحرف إنجليزية وأرقام فقط</li>
-                            <li class="invalid">☐ لا يحتوي على مسافات</li>
-                            <li class="invalid">☐ لا يحتوي على رموز خاصة</li>
-                            <li class="invalid">☐ غير مستخدم مسبقاً</li>
+                            <li class="invalid">من 4 إلى 20 حرفاً</li>
+                            <li class="invalid">أحرف إنجليزية وأرقام فقط</li>
+                            <li class="invalid">لا يحتوي على مسافات</li>
+                            <li class="invalid">لا يحتوي على رموز خاصة</li>
+                            <li class="invalid">غير مستخدم مسبقاً</li>
                         </ul>
                     </div>
 
                     <div class="form-group">
                         <label>البريد الإلكتروني *</label>
-                        <input type="email" id="email" placeholder="example@domain.com">
-                        <label>تأكيد البريد الإلكتروني *</label>
-                        <input type="email" id="confirm-email" placeholder="example@domain.com">
+                        <input type="email" id="email" placeholder="example@domain.com" required>
+                        <label style="margin-top: 15px;">تأكيد البريد الإلكتروني *</label>
+                        <input type="email" id="confirm-email" placeholder="example@domain.com" required>
                         <div id="email-status" class="validation-msg"></div>
                     </div>
 
                     <div class="form-group">
                         <label>كلمة المرور *</label>
-                        <input type="password" id="password" placeholder="أدخل كلمة المرور">
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+                            <span class="toggle-password">إظهار</span>
+                        </div>
                         <div class="password-strength">
                             <span class="strength-bar"></span>
                             <span class="strength-text">مؤشر القوة: ضعيفة</span>
                         </div>
                         <ul class="validation-list" id="pass-validation">
-                            <li class="invalid">☐ 8 أحرف على الأقل</li>
-                            <li class="invalid">☐ حرف كبير باللغة الإنجليزية</li>
-                            <li class="invalid">☐ حرف صغير باللغة الإنجليزية</li>
-                            <li class="invalid">☐ رقم واحد على الأقل</li>
-                            <li class="invalid">☐ رمز خاص واحد على الأقل</li>
+                            <li class="invalid">8 أحرف على الأقل</li>
+                            <li class="invalid">حرف كبير باللغة الإنجليزية</li>
+                            <li class="invalid">حرف صغير باللغة الإنجليزية</li>
+                            <li class="invalid">رقم واحد على الأقل</li>
+                            <li class="invalid">رمز خاص واحد على الأقل</li>
                         </ul>
                         
-                        <label>تأكيد كلمة المرور *</label>
-                        <input type="password" id="confirm-password" placeholder="أعد إدخال كلمة المرور">
+                        <label style="margin-top: 15px;">تأكيد كلمة المرور *</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="confirm-password" placeholder="أعد إدخال كلمة المرور" required>
+                            <span class="toggle-password">إظهار</span>
+                        </div>
                         <div id="password-status" class="validation-msg"></div>
                     </div>
                 </section>
@@ -89,7 +95,7 @@
                         <label>الاسم الكامل بالعربية كما هو مدون في الوثيقة الرسمية *</label>
                         <input type="text" required>
                         <label>الاسم الكامل بالإنجليزية كما هو مدون في الوثيقة الرسمية *</label>
-                        <input type="text" required>
+                        <input type="text" id="nameEn" required>
                         
                         <label>الجنس</label>
                         <select required>
@@ -110,8 +116,8 @@
                     <div id="id-details-container"></div>
 
                     <div class="form-group checkbox-group">
-                        <label><input type="checkbox" required> أقر بأن عمري 18 عاماً فأكثر.</label>
-                        <label><input type="checkbox" required> أقر بأنني المستفيد الحقيقي من الحساب.</label>
+                        <label class="checkbox-container"><input type="checkbox" required> أقر بأن عمري 18 عاماً فأكثر.</label>
+                        <label class="checkbox-container"><input type="checkbox" required> أقر بأنني المستفيد الحقيقي من الحساب.</label>
                     </div>
                 </section>
 
@@ -137,8 +143,7 @@
                         </div>
                     </div>
 
-                    <div id="address-container">
-                        </div>
+                    <div id="address-container"></div>
                 </section>
 
                 <section class="form-step" id="step4">
@@ -149,8 +154,8 @@
                         <label class="checkbox-container"><input type="checkbox" required> أوافق على سياسة الخصوصية الخاصة ببوابة المستثمرين...</label>
                         <label class="checkbox-container"><input type="checkbox" required> أقر بموافقتي على سياسة الاستخدام...</label>
                         <div class="security-info">
-                            <label class="checkbox-container"><input type="checkbox" required> أوافق على إجراءات وأنظمة التحقق الأمني، بما يشمل:</label>
-                            <ul>
+                            <label class="checkbox-container" style="margin-bottom: 0;"><input type="checkbox" required> أوافق على إجراءات وأنظمة التحقق الأمني، بما يشمل:</label>
+                            <ul style="margin-right: 35px; margin-top: 10px; color: #6b7280; font-size: 0.9rem;">
                                 <li>التحقق عبر البريد الإلكتروني ورموز التحقق OTP.</li>
                                 <li>تسجيل بيانات الجهاز والمتصفح وعنوان IP.</li>
                                 <li>تحليل المخاطر والأنشطة المشبوهة.</li>
@@ -167,12 +172,14 @@
 
                 <div class="form-controls">
                     <button type="button" id="btn-prev" class="btn btn-secondary hidden">السابق</button>
-                    <button type="button" id="btn-next" class="btn btn-primary">التالي</button>
-                    <button type="submit" id="btn-submit" class="btn btn-success hidden">إنشاء الحساب</button>
+                    <div class="controls-right" style="display: flex; gap: 10px; margin-right: auto;">
+                        <button type="button" id="btn-next" class="btn btn-primary">التالي</button>
+                        <button type="submit" id="btn-submit" class="btn btn-success hidden">إنشاء الحساب</button>
+                    </div>
                 </div>
             </form>
 
-            <div class="footer-links text-center">
+            <div class="footer-links text-center" style="margin-top: 20px;">
                 <p>لديك حساب مستثمر بالفعل؟ <a href="../login.html">تسجيل الدخول إلى حسابك</a></p>
             </div>
         </main>
