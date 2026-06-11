@@ -1,155 +1,38 @@
-/* ==========================================================================
-   TERA Investor Portal - Main Layout Styles (Fixed & Optimized)
-   ========================================================================== */
-
-/* 1. هيكل الصفحة العام */
-.dashboard-wrapper {
-    display: flex;
-    min-height: 100vh;
-    background-color: #ffffff; /* تم التعديل لتكون الخلفية بيضاء كما طلبت */
-}
-
-/* ==========================================
-   2. القائمة الجانبية (Sidebar)
-   ========================================== */
-.main-sidebar {
-    width: 260px;
-    background-color: #ffffff;
-    border-left: 1px solid #e5e7eb; /* لون رمادي فاتح بدلاً من المتغير */
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    z-index: 1000;
-    overflow-y: auto;
-    transition: transform 0.3s ease;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05);
-}
-
-.sidebar-header {
-    padding: 25px 20px;
-    text-align: center;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.sidebar-header .logo-img {
-    height: 45px;
-    width: auto;
-}
-
-.sidebar-menu {
-    list-style: none;
-    padding: 20px 0;
-}
-
-.sidebar-menu li a {
-    display: flex;
-    align-items: center;
-    padding: 14px 20px;
-    color: #374151; /* لون النص الافتراضي */
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    border-right: 4px solid transparent;
-}
-
-.sidebar-menu li a:hover,
-.sidebar-menu li.active a {
-    background-color: rgba(0, 180, 180, 0.08); /* لون التركواز بنسبة شفافية */
-    color: #00B4B4; /* لون التركواز من الشعار */
-    border-right-color: #00B4B4;
-}
-
-.sidebar-menu li a i {
-    margin-left: 12px;
-    font-size: 1.25rem;
-    color: #9ca3af;
-}
-
-.sidebar-menu li.active a i {
-    color: #00B4B4;
-}
-
-/* ==========================================
-   3. منطقة المحتوى (Main Content Area)
-   ========================================== */
-.main-content {
-    flex: 1;
-    margin-right: 260px; 
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* الرأس العلوي (Header) */
+/* إصلاح الرأس العلوي (Header) لضمان ظهور الشعار والأيقونات */
 .main-header {
     background-color: #ffffff;
     height: 70px;
-    padding: 0 30px;
+    padding: 0 25px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* توزيع المسافات بين اللوغو والأكشن */
     border-bottom: 1px solid #e5e7eb;
     position: sticky;
     top: 0;
     z-index: 990;
+    width: 100%;
 }
 
-.page-content {
-    padding: 30px;
-    flex: 1;
-}
-
-/* ==========================================
-   4. البطاقات (Cards)
-   ========================================== */
-.card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
-    margin-bottom: 20px;
-}
-
-.card-header {
-    padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
+/* تنسيق اللوغو داخل الهيدر */
+.main-header .logo {
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
-.card-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #0A1940; /* أزرق داكن */
+.main-header .logo img {
+    height: 35px; /* ارتفاع مناسب */
+    width: auto;
+    display: block;
 }
 
-/* ==========================================
-   5. الجداول (Tables)
-   ========================================== */
-.table-responsive {
-    overflow-x: auto;
+/* تنسيق إجراءات الشريط العلوي */
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th, .table td {
-    padding: 15px;
-    text-align: right;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.table th {
-    background-color: #f9fafb;
-    color: #6b7280;
-    font-weight: 600;
-}
-
-/* زر التجاوب (يظهر في الجوال فقط) */
+/* زر القائمة في الجوال */
 .menu-toggle {
     display: none;
     background: none;
@@ -157,12 +40,32 @@
     font-size: 1.5rem;
     color: #0A1940;
     cursor: pointer;
+    margin-left: 15px; /* مسافة عن اللوغو في الـ RTL */
 }
 
-/* إصلاح التداخل في الشاشات الصغيرة */
+/* تنسيق البروفايل في الأعلى */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #00B4B4;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+/* إصلاح التجاوب للهيدر */
 @media (max-width: 768px) {
-    .main-content { margin-right: 0; }
-    .main-sidebar { transform: translateX(100%); }
-    .main-sidebar.active { transform: translateX(0); }
+    .main-header { padding: 0 15px; }
     .menu-toggle { display: block; }
 }
