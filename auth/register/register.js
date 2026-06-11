@@ -5,7 +5,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. إعدادات التنقل بين الخطوات
     let currentStep = 1;
     const totalSteps = 4;
 
@@ -16,12 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const stepIndicators = document.querySelectorAll('.step');
 
     function updateSteps() {
-        // تحديث النماذج
         steps.forEach((step, index) => {
             step.classList.toggle('active', index + 1 === currentStep);
         });
 
-        // تحديث المؤشر العلوي
         stepIndicators.forEach((indicator, index) => {
             indicator.classList.remove('active', 'completed');
             if (index + 1 === currentStep) {
@@ -31,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // تحديث الأزرار
         btnPrev.classList.toggle('hidden', currentStep === 1);
         
         if (currentStep === totalSteps) {
@@ -43,9 +39,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // دالة التحقق من الحقول الفارغة في الخطوة الحالية
+    function validateCurrentStep() {
+        const currentSection = document.getElementById(`step${currentStep}`);
+        const requiredInputs = currentSection.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+
+        requiredInputs.forEach(input => {
+            if ((input.type !== 'checkbox' && input.value.trim() === '') || 
+                (input.type === 'checkbox' && !input.checked)) {
+                isValid = false;
+                input.style.borderColor = '#dc3545'; // تلوين الحقل بالأحمر
+                input.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
+            } else {
+                input.style.borderColor = '#d1d5db'; // إعادة اللون الطبيعي
+                input.style.boxShadow = 'none';
+            }
+        });
+
+        if (!isValid) {
+            alert('يرجى تعبئة جميع الحقول المطلوبة (المظللة باللون الأحمر).');
+            return false;
+        }
+
+        // تحققات إضافية خاصة بالمرحلة الأولى
+        if (currentStep === 1) {
+            const invalidRules = currentSection.querySelectorAll('.invalid');
+            if (invalidRules.length > 0) {
+                alert('يرجى التأكد من استيفاء جميع شروط اسم المستخدم وكلمة المرور.');
+                return false;
+            }
+
+            const email = document.getElementById('email').value;
+            const confirmEmail = document.getElementById('confirm-email').value;
+            if (email !== confirmEmail) {
+                alert('البريد الإلكتروني غير متطابق.');
+                return false;
+            }
+
+            const pass = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirm-password').value;
+            if (pass !== confirmPass) {
+                alert('كلمة المرور غير متطابقة.');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     btnNext.addEventListener('click', () => {
-        // هنا يمكن إضافة التحقق من صحة الحقول (Validation) قبل الانتقال للخطوة التالية
-        if (currentStep < totalSteps) {
+        // فحص الحقول قبل الانتقال
+        if (validateCurrentStep() && currentStep < totalSteps) {
             currentStep++;
             updateSteps();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -61,43 +106,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 2. التحقق الحي من المدخلات (Live Validation)
+    // منع اللغة العربية
     // ==========================================
-    
-    // التحقق من اسم المستخدم
+    function preventArabicInput(e) {
+        const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
+        if (arabicRegex.test(e.target.value)) {
+            e.target.value = e.target.value.replace(arabicRegex, '');
+        }
+    }
+
+    const englishOnlyFields = [
+        document.getElementById('username'),
+        document.getElementById('email'),
+        document.getElementById('confirm-email'),
+        document.getElementById('password'),
+        document.getElementById('confirm-password'),
+        document.getElementById('nameEn')
+    ];
+
+    englishOnlyFields.forEach(field => {
+        if (field) { field.addEventListener('input', preventArabicInput); }
+    });
+
+    // ==========================================
+    // زر الإظهار والإخفاء لكلمة المرور
+    // ==========================================
+    const togglePasswordBtns = document.querySelectorAll('.toggle-password');
+    togglePasswordBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.previousElementSibling; // حقل input
+            if (input.type === 'password') {
+                input.type = 'text';
+                this.textContent = 'إخفاء';
+            } else {
+                input.type = 'password';
+                this.textContent = 'إظهار';
+            }
+        });
+    });
+
+    // ==========================================
+    // التحقق الحي من المدخلات (Live Validation)
+    // ==========================================
     const usernameInput = document.getElementById('username');
     const userRules = document.querySelectorAll('#user-validation li');
     
     if (usernameInput) {
         usernameInput.addEventListener('input', (e) => {
             const val = e.target.value;
-            // قاعدة 1: الطول
             toggleValid(userRules[0], val.length >= 4 && val.length <= 20);
-            // قاعدة 2: إنجليزي وأرقام فقط
             toggleValid(userRules[1], /^[a-zA-Z0-9]+$/.test(val) && val.length > 0);
-            // قاعدة 3: لا مسافات
             toggleValid(userRules[2], !/\s/.test(val) && val.length > 0);
-            // قاعدة 4: لا رموز خاصة
             toggleValid(userRules[3], !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(val) && val.length > 0);
-            // قاعدة 5: افتراضية (يتم فحصها عبر API لاحقاً)
             toggleValid(userRules[4], val.length > 3);
         });
     }
 
-    // التحقق من البريد الإلكتروني
     const emailInput = document.getElementById('email');
     const confirmEmailInput = document.getElementById('confirm-email');
     const emailStatus = document.getElementById('email-status');
 
     function checkEmailMatch() {
-        if (confirmEmailInput.value.length === 0) {
-            emailStatus.textContent = '';
-            return;
-        }
+        if (confirmEmailInput.value.length === 0) { emailStatus.textContent = ''; return; }
         if (emailInput.value === confirmEmailInput.value) {
-            emailStatus.innerHTML = '<span class="text-success">🟢 البريد الإلكتروني متطابق</span>';
+            emailStatus.innerHTML = '<span class="text-success" style="color:#10b981;">🟢 البريد الإلكتروني متطابق</span>';
         } else {
-            emailStatus.innerHTML = '<span class="text-danger">🔴 البريد الإلكتروني غير متطابق</span>';
+            emailStatus.innerHTML = '<span class="text-danger" style="color:#ef4444;">🔴 البريد الإلكتروني غير متطابق</span>';
         }
     }
     
@@ -106,7 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmEmailInput.addEventListener('input', checkEmailMatch);
     }
 
-    // التحقق من كلمة المرور
     const passInput = document.getElementById('password');
     const confirmPassInput = document.getElementById('confirm-password');
     const passRules = document.querySelectorAll('#pass-validation li');
@@ -125,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const r4 = /[0-9]/.test(val); toggleValid(passRules[3], r4); if(r4) score++;
             const r5 = /[!@#$%^&*(),.?":{}|<>]/.test(val); toggleValid(passRules[4], r5); if(r5) score++;
 
-            // تحديث شريط القوة
             strengthBar.className = 'strength-bar';
             if (val.length === 0) {
                 strengthText.textContent = 'مؤشر القوة: ضعيفة';
@@ -144,20 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function checkPassMatch() {
-        if (confirmPassInput.value.length === 0) {
-            passStatus.textContent = '';
-            return;
-        }
+        if (confirmPassInput.value.length === 0) { passStatus.textContent = ''; return; }
         if (passInput.value === confirmPassInput.value) {
-            passStatus.innerHTML = '<span class="text-success">🟢 كلمة المرور متطابقة</span>';
+            passStatus.innerHTML = '<span class="text-success" style="color:#10b981;">🟢 كلمة المرور متطابقة</span>';
         } else {
-            passStatus.innerHTML = '<span class="text-danger">🔴 كلمة المرور غير متطابقة</span>';
+            passStatus.innerHTML = '<span class="text-danger" style="color:#ef4444;">🔴 كلمة المرور غير متطابقة</span>';
         }
     }
 
-    if (confirmPassInput) {
-        confirmPassInput.addEventListener('input', checkPassMatch);
-    }
+    if (confirmPassInput) { confirmPassInput.addEventListener('input', checkPassMatch); }
 
     function toggleValid(element, isValid) {
         if (isValid) {
@@ -170,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 3. توليد حقول الهوية والعنوان ديناميكياً
+    // توليد حقول الهوية والعنوان
     // ==========================================
     const nationalitySelect = document.getElementById('nationalityType');
     const idContainer = document.getElementById('id-details-container');
@@ -236,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         idContainer.innerHTML = html;
 
-        // تبديل حقول الأجنبي
         if (type === 'foreigner') {
             const radios = idContainer.querySelectorAll('input[name="doc_type"]');
             radios.forEach(radio => {
@@ -245,4 +311,78 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (e.target.value === 'national') {
                         docDetails.innerHTML = `
                             <div class="form-group">
-                                <label>الدولة *</label><input
+                                <label>الدولة *</label><input type="text" required>
+                                <label>رقم الهوية *</label><input type="text" required>
+                            </div>
+                            <div class="form-group flex-group">
+                                <div class="half-width"><label>تاريخ الإصدار *</label><input type="date" required></div>
+                                <div class="half-width"><label>تاريخ الانتهاء *</label><input type="date" required></div>
+                            </div>`;
+                    } else {
+                        docDetails.innerHTML = `
+                            <div class="form-group">
+                                <label>دولة الإصدار *</label><input type="text" required>
+                                <label>رقم جواز السفر *</label><input type="text" required>
+                            </div>
+                            <div class="form-group flex-group">
+                                <div class="half-width"><label>تاريخ الإصدار *</label><input type="date" required></div>
+                                <div class="half-width"><label>تاريخ الانتهاء *</label><input type="date" required></div>
+                            </div>`;
+                    }
+                });
+            });
+        }
+    }
+
+    function renderAddressFields(type) {
+        let html = '';
+        if (type === 'saudi' || type === 'resident') {
+            html = `
+                <h4 style="margin-top: 20px; margin-bottom: 15px; color: #0A1940;">بيانات العنوان الوطني</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>رقم المبنى *</label><input type="text" required></div>
+                    <div><label>الرقم الفرعي *</label><input type="text" required></div>
+                    <div><label>اسم الشارع *</label><input type="text" required></div>
+                    <div><label>الحي *</label><input type="text" required></div>
+                    <div><label>المدينة *</label><input type="text" required></div>
+                    <div><label>الرمز البريدي *</label><input type="text" required></div>
+                    <div><label>الرقم الإضافي *</label><input type="text" required></div>
+                    <div><label>رقم الوحدة (اختياري)</label><input type="text"></div>
+                </div>
+                <div class="form-group" style="margin-top:15px;">
+                    <label>الاسم المختصر للعنوان الوطني *</label><input type="text" required>
+                </div>`;
+        } else if (type === 'gcc' || type === 'foreigner') {
+            html = `
+                <h4 style="margin-top: 20px; margin-bottom: 15px; color: #0A1940;">العنوان الدولي (خارج المملكة)</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>الدولة *</label><input type="text" required></div>
+                    <div><label>المدينة *</label><input type="text" required></div>
+                    <div><label>المحافظة / الولاية *</label><input type="text" required></div>
+                    <div><label>الحي *</label><input type="text" required></div>
+                    <div><label>الشارع *</label><input type="text" required></div>
+                    <div><label>الرمز البريدي *</label><input type="text" required></div>
+                </div>
+                <div class="form-group" style="margin-top:15px;">
+                    <label>وصف إضافي للعنوان</label><input type="text">
+                </div>`;
+        }
+        addressContainer.innerHTML = html;
+    }
+
+    // ==========================================
+    // الإرسال النهائي
+    // ==========================================
+    const form = document.getElementById('registerForm');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(validateCurrentStep()) {
+                alert('تم إنشاء الحساب بنجاح. سيتم تحويلك لصفحة التحقق.');
+                setTimeout(() => {
+                    window.location.href = '../verify-otp.html';
+                }, 1000);
+            }
+        });
+    }
+});
