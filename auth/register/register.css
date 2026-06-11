@@ -1,4 +1,6 @@
-/* تخصيصات واجهة التفاعل لصفحة التسجيل منصة تيرا */
+/* ==========================================================================
+   تخصيصات واجهة التفاعل لصفحة التسجيل - منصة تيرا (عالمك بلا حدود)
+   ========================================================================== */
 
 :root {
     --primary-color: #0d6efd;
@@ -13,9 +15,11 @@
 
 body {
     background-color: #f4f6f9;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--neutral-dark);
     direction: rtl; /* ضمان توجيه الصفحة بالكامل بشكل صحيح */
+    margin: 0;
+    padding: 0;
 }
 
 .auth-container {
@@ -24,49 +28,93 @@ body {
     padding: 0 20px;
 }
 
-.auth-header-navigation {
-    margin-bottom: 20px;
+/* ==========================================================================
+   الترويسة الأفقية المحدثة والمحاذاة الذكية
+   ========================================================================== */
+.auth-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
-.back-home-btn {
+/* الجانب الأيمن: الشعار والهوية */
+.header-brand-side {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.main-logo-updated {
+    width: 50px;
+    height: auto;
+    object-fit: contain;
+}
+
+.brand-text-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title-updated {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--neutral-dark);
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+
+.brand-subtitle-updated {
+    color: var(--text-muted);
+    margin: 2px 0 0 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* الجانب الأيسر: زر التحكم والرجوع */
+.header-actions-side {
+    display: flex;
+    align-items: center;
+}
+
+.back-home-btn-updated {
     text-decoration: none;
     color: var(--text-muted);
-    font-size: 0.95rem;
-    transition: color 0.2s;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: var(--neutral-light);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease-in-out;
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.back-home-btn:hover {
+.back-home-btn-updated i {
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+.back-home-btn-updated:hover {
     color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: rgba(13, 110, 253, 0.04);
 }
 
-.brand-wrapper {
-    text-align: center;
-    margin-bottom: 30px;
+.back-home-btn-updated:hover i {
+    transform: translateX(3px); /* حركة تفاعلية لطيفة للسهم جهة اليمين في الـ RTL */
 }
 
-.main-logo {
-    width: 70px;
-    height: auto;
-    margin-bottom: 10px;
-}
-
-.brand-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--neutral-dark);
-    letter-spacing: 1px;
-}
-
-.brand-subtitle {
-    color: var(--text-muted);
-    margin: 5px 0 0 0;
-    font-size: 1.1rem;
-}
-
+/* ==========================================================================
+   البطاقة الرئيسية ومراحل التسجيل
+   ========================================================================== */
 .form-card {
     background: #ffffff;
     border-radius: 12px;
@@ -93,6 +141,7 @@ body {
     margin: 30px 0;
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 15px;
+    gap: 10px;
 }
 
 .step-item {
@@ -295,7 +344,7 @@ body {
 }
 
 .nested-bullets {
-    margin: 10px 20px 0 0; /* تعديل الهامش لليمين بما يتوافق مع العربي */
+    margin: 10px 20px 0 0; /* متوافق بالكامل مع الهوية العربية */
     padding: 0;
     font-size: 0.85rem;
     color: #555;
@@ -303,7 +352,7 @@ body {
 
 .nested-bullets li {
     margin-bottom: 5px;
-    list-style-type: disc; /* مظهر افتراضي أكثر تناسقاً */
+    list-style-type: disc;
 }
 
 .master-agreement {
@@ -311,6 +360,12 @@ body {
     padding: 12px;
     border-radius: 6px;
     border: 1px solid #c8e6c9;
+}
+
+.master-agreement .highlight-text {
+    margin: 0;
+    font-weight: 700;
+    color: #1b5e20;
 }
 
 .final-pledge-box {
@@ -333,7 +388,7 @@ body {
     line-height: 1.5;
 }
 
-/* أزرار التنقل - إصلاح الهوامش المنطقية للغات */
+/* أزرار التنقل - الاعتماد على المحاذاة المنطقية الدقيقة */
 .form-navigation-actions {
     display: flex;
     justify-content: space-between;
@@ -356,7 +411,7 @@ body {
 }
 
 .btn-primary { background: var(--primary-color); color: white; }
-.btn-secondary { background: var(--text-muted); color: white; margin-inline-start: auto; } /* تم التعديل لتدعم الـ RTL بشكل تلقائي */
+.btn-secondary { background: var(--text-muted); color: white; margin-inline-end: auto; } /* تضمن بقاء زر السابق لليمين والتالي لليسار بذكاء */
 .btn-success { background: var(--success-color); color: white; }
 
 .auth-footer-redirect {
@@ -371,4 +426,47 @@ body {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: bold;
+}
+
+/* ==========================================================================
+   الاستجابة لشاشات الجوال والهواتف الصغيرة (Responsive)
+   ========================================================================== */
+@media (max-width: 576px) {
+    .auth-header-main {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 20px 15px;
+    }
+
+    .header-brand-side {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .header-actions-side {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .back-home-btn-updated {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-card {
+        padding: 20px 15px;
+    }
+
+    .registration-steps {
+        flex-wrap: wrap;
+    }
+
+    .step-text {
+        display: none; /* إخفاء النص الطويل للمراحل في الجوال والاعتماد على الأرقام لمنع التشوه */
+    }
+    
+    .step-number {
+        font-size: 1.5rem;
+    }
 }
