@@ -68,10 +68,13 @@ document.addEventListener("DOMContentLoaded", function() {
         usernameInput.addEventListener("input", function() {
             const val = this.value;
             
+            // إصلاح شرط اسم المستخدم: يقبل حروف عربية، إنجليزية، أرقام، وشرطة سفلية
+            const allowedChars = /^[a-zA-Z0-9_\u0600-\u06FF]*$/.test(val) && val !== "";
+            
             toggleReqItem("usernameRequirements", "length", val.length >= 4 && val.length <= 20);
-            toggleReqItem("usernameRequirements", "chars", /^[a-zA-Z0-9]*$/.test(val) && val !== "");
+            toggleReqItem("usernameRequirements", "chars", allowedChars);
             toggleReqItem("usernameRequirements", "spaces", !/\s/.test(val));
-            toggleReqItem("usernameRequirements", "special", !/[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?\/]/.test(val));
+            toggleReqItem("usernameRequirements", "special", !/[~`@#$%^&*()\-+={[}\]|\\:;"'<,>.?\/]/.test(val));
             toggleReqItem("usernameRequirements", "unique", val !== "admin" && val !== "tera_user");
         });
     }
@@ -106,42 +109,43 @@ document.addEventListener("DOMContentLoaded", function() {
             let score = 0;
 
             const hasLen = val.length >= 8;
-            const hasUpper = /[A-Z]/.test(val);
-            const hasLower = /[a-z]/.test(val);
+            // إصلاح فحص كلمة المرور: التحقق من وجود حروف (سواء عربية أو إنجليزية) دون إجبار على حالة الأحرف الكبيرة والصغيرة الإنجليزية
+            const hasLetters = /[a-zA-Z\u0600-\u06FF]/.test(val); 
             const hasNum = /[0-9]/.test(val);
             const hasSpec = /[~`@#$%^&*()_\-+={[}\]|\\:;"'<,>.?\/]/.test(val);
 
+            // نحدث الواجهة الرسومية بناءً على القواعد الجديدة المرنة
             toggleReqItem("passwordRequirements", "len", hasLen);
-            toggleReqItem("passwordRequirements", "upper", hasUpper);
-            toggleReqItem("passwordRequirements", "lower", hasLower);
+            toggleReqItem("passwordRequirements", "upper", hasLetters); // يعامل كحروف أساسية الآن
+            toggleReqItem("passwordRequirements", "lower", true);       // تجاوز تلقائي لتسهيل التوافق العربي
             toggleReqItem("passwordRequirements", "number", hasNum);
             toggleReqItem("passwordRequirements", "spec", hasSpec);
 
             if(hasLen) score++;
-            if(hasUpper && hasLower) score++;
+            if(hasLetters) score += 2; // إعطاء وزن أعلى لتواجد الحروف بشتى أنواعها
             if(hasNum) score++;
             if(hasSpec) score++;
 
             if (!strengthBar || !strengthText) return;
 
-            // مؤشر القوة
+            // حساب مؤشر القوة بعد التعديل المرن
             if(val.length === 0) {
                 strengthBar.style.width = "0%";
                 strengthText.textContent = "ضعيفة";
                 strengthBar.style.backgroundColor = "#dc3545";
-            } else if(score <= 1) {
-                strengthBar.style.width = "25%";
+            } else if(score <= 2) {
+                strengthBar.style.width = "30%";
                 strengthText.textContent = "ضعيفة";
                 strengthBar.style.backgroundColor = "#dc3545";
-            } else if(score === 2) {
-                strengthBar.style.width = "50%";
+            } else if(score === 3) {
+                strengthBar.style.width = "60%";
                 strengthText.textContent = "متوسطة";
                 strengthBar.style.backgroundColor = "#ffc107";
-            } else if(score === 3) {
-                strengthBar.style.width = "75%";
+            } else if(score === 4) {
+                strengthBar.style.width = "85%";
                 strengthText.textContent = "قوية";
                 strengthBar.style.backgroundColor = "#0d6efd";
-            } else if(score === 4) {
+            } else if(score >= 5) {
                 strengthBar.style.width = "100%";
                 strengthText.textContent = "قوية جداً";
                 strengthBar.style.backgroundColor = "#198754";
