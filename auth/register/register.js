@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * TERA - Register Page Logic (Full Integrated)
+ * TERA - Register Page Logic (Final Integrated & Fixed)
  * ==========================================================================
  */
 
@@ -40,32 +40,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 2. التحقق من الحقول الفارغة
+    // 2. التحقق من الحقول الفارغة وتنبيه العميل
+    function showFieldAlert(input, message) {
+        let error = input.parentNode.querySelector('.input-error-msg');
+        if (!error) {
+            error = document.createElement('span');
+            error.className = 'input-error-msg';
+            input.parentNode.appendChild(error);
+        }
+        error.textContent = message;
+        input.style.borderColor = '#dc3545';
+    }
+
+    function clearFieldAlert(input) {
+        let error = input.parentNode.querySelector('.input-error-msg');
+        if (error) error.remove();
+        input.style.borderColor = '#d1d5db';
+    }
+
     function validateCurrentStep() {
         const currentSection = document.getElementById(`step${currentStep}`);
-        const requiredInputs = currentSection.querySelectorAll('input[required], select[required]');
+        const inputs = currentSection.querySelectorAll('input[required], select[required]');
         let isValid = true;
 
-        requiredInputs.forEach(input => {
+        inputs.forEach(input => {
             if ((input.type !== 'checkbox' && input.value.trim() === '') || 
                 (input.type === 'checkbox' && !input.checked)) {
+                showFieldAlert(input, 'هذا الحقل مطلوب');
                 isValid = false;
-                input.style.borderColor = '#dc3545';
-                input.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
             } else {
-                input.style.borderColor = '#d1d5db';
-                input.style.boxShadow = 'none';
+                clearFieldAlert(input);
             }
         });
 
-        if (!isValid) {
-            alert('يرجى تعبئة جميع الحقول المطلوبة.');
-            return false;
-        }
+        if (!isValid) return false;
 
+        // تحققات إضافية للمرحلة 1
         if (currentStep === 1) {
             if (currentSection.querySelectorAll('.invalid').length > 0) {
-                alert('يرجى التأكد من استيفاء جميع شروط اسم المستخدم وكلمة المرور.');
+                alert('يرجى التأكد من استيفاء جميع الشروط.');
                 return false;
             }
             if (document.getElementById('email').value !== document.getElementById('confirm-email').value) {
@@ -96,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. منع اللغة العربية
+    // 3. منع اللغة العربية في حقول الإنجليزية
     function preventArabicInput(e) {
         const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
         if (arabicRegex.test(e.target.value)) {
@@ -117,11 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (field) field.addEventListener('input', preventArabicInput);
     });
 
-    // 4. زر الإظهار والإخفاء (مصلح)
+    // 4. إظهار / إخفاء كلمة المرور
     document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', function() {
-            const wrapper = this.closest('.password-wrapper');
-            const input = wrapper.querySelector('input');
+            const input = this.previousElementSibling;
             if (input.type === 'password') {
                 input.type = 'text';
                 this.textContent = 'إخفاء';
@@ -132,41 +144,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. التحقق الحي (Live Validation)
-    function toggleValid(element, isValid) {
-        element.classList.toggle('invalid', !isValid);
-        element.classList.toggle('valid', isValid);
-    }
-
-    const usernameInput = document.getElementById('username');
-    if (usernameInput) {
-        usernameInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            const rules = document.querySelectorAll('#user-validation li');
-            toggleValid(rules[0], val.length >= 4 && val.length <= 20);
-            toggleValid(rules[1], /^[a-zA-Z0-9]+$/.test(val));
-            toggleValid(rules[2], !/\s/.test(val) && val.length > 0);
-            toggleValid(rules[3], !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(val));
-            toggleValid(rules[4], val.length > 3);
-        });
-    }
-
+    // 5. التحقق الحي ومؤشر القوة
     const passInput = document.getElementById('password');
     if (passInput) {
         passInput.addEventListener('input', (e) => {
             const val = e.target.value;
+            const bar = document.querySelector('.strength-bar');
+            const text = document.querySelector('.strength-text');
             const rules = document.querySelectorAll('#pass-validation li');
-            const strengthBar = document.querySelector('.strength-bar');
             
-            toggleValid(rules[0], val.length >= 8);
-            toggleValid(rules[1], /[A-Z]/.test(val));
-            toggleValid(rules[2], /[a-z]/.test(val));
-            toggleValid(rules[3], /[0-9]/.test(val));
-            toggleValid(rules[4], /[!@#$%^&*(),.?":{}|<>]/.test(val));
+            // تحديث الشروط
+            rules[0].classList.toggle('valid', val.length >= 8);
+            rules[1].classList.toggle('valid', /[A-Z]/.test(val));
+            rules[2].classList.toggle('valid', /[a-z]/.test(val));
+            rules[3].classList.toggle('valid', /[0-9]/.test(val));
+            rules[4].classList.toggle('valid', /[!@#$%^&*(),.?":{}|<>]/.test(val));
+
+            // تحديث الشريط
+            let score = (val.length >= 8) + (/[A-Z]/.test(val)) + (/[0-9]/.test(val));
+            bar.className = 'strength-bar ' + (val.length === 0 ? '' : score === 1 ? 'weak' : score === 2 ? 'medium' : 'strong');
+            text.textContent = 'مؤشر القوة: ' + (val.length === 0 ? 'ضعيفة' : score === 1 ? 'ضعيفة' : score === 2 ? 'متوسطة' : 'قوية');
         });
     }
 
-    // 6. الإرسال النهائي
+    // 6. الإرسال
     document.getElementById('registerForm').addEventListener('submit', (e) => {
         e.preventDefault();
         if(validateCurrentStep()) {
