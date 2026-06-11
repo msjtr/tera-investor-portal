@@ -1,325 +1,161 @@
 /* ==========================================================================
-   TERA Investor Portal - Main Layout (Official Glassmorphism Identity)
-   المسار: /assets/css/main.css
-   الإصدار: 2.0 - متكامل مع core.css و app.css
-========================================================================== */
+   TERA INVESTOR PORTAL - MAIN STYLES (COMMON COMPONENTS)
+   ========================================================================== */
 
-/* 1. هيكل الصفحة */
-.main-wrapper {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+/* كتل التخطيط الجاهزة والحاويات العامة */
+.container {
     width: 100%;
-    overflow-x: hidden;
-    background-color: var(--bg-page, #FFFFFF);
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
 }
 
-/* 2. الهيدر الرئيسي (زجاجي) */
-.main-header {
-    height: 70px;
-    background: var(--glass-bg, rgba(255, 255, 255, 0.6));
-    backdrop-filter: var(--glass-blur, blur(16px));
-    -webkit-backdrop-filter: var(--glass-blur, blur(16px));
-    border-bottom: var(--glass-border, 1px solid rgba(255, 255, 255, 0.3));
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 2000;
-    display: flex;
+/* أزرار النظام القياسية */
+.btn {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 32px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-}
-
-/* الشعار داخل الهيدر */
-.main-header .logo-area {
-    display: flex;
-    align-items: center;
+    justify-content: center;
     gap: 8px;
-}
-
-.main-header .logo {
-    height: 36px;
-    width: auto;
-}
-
-.main-header .brand-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-main, #1D1D1B);
-}
-
-/* قائمة التنقل العلوية */
-.main-nav {
-    display: flex;
-    gap: 28px;
-}
-
-.main-nav a {
-    color: var(--text-muted, #6B7280);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition, all 0.2s ease);
-}
-
-.main-nav a:hover,
-.main-nav a.active {
-    color: var(--primary, #2AB8B6);
-}
-
-/* أيقونات الجانب الأيمن */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.notification-icon,
-.user-menu {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 24px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid transparent;
     cursor: pointer;
-    color: var(--text-muted);
-    transition: var(--transition);
+    transition: all var(--transition-fast);
+    user-select: none;
 }
 
-.notification-icon:hover,
-.user-menu:hover {
-    color: var(--primary);
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    color: #ffffff;
 }
 
-/* 3. حاوية المحتوى الرئيسي مع دعم القائمة الجانبية */
-.page-container {
-    display: flex;
-    margin-top: 70px;
-    min-height: calc(100vh - 70px);
-    flex: 1;
+.btn-secondary {
+    background-color: var(--text-muted);
+    color: #ffffff;
+}
+.btn-secondary:hover {
+    background-color: var(--neutral-gray);
+    color: #ffffff;
 }
 
-/* القائمة الجانبية (Sidebar) */
-.main-sidebar {
-    width: 260px;
-    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
-    backdrop-filter: blur(12px);
-    border-right: 1px solid var(--border-color, #E2E8F0);
-    padding: 24px 16px;
-    transition: var(--transition);
-    flex-shrink: 0;
+.btn-success {
+    background-color: var(--success-color);
+    color: #ffffff;
+}
+.btn-success:hover {
+    background-color: var(--success-hover);
+    color: #ffffff;
 }
 
-.main-sidebar.collapsed {
-    width: 80px;
+.btn-outline {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--neutral-gray);
+}
+.btn-outline:hover {
+    background-color: var(--neutral-light);
+    color: var(--neutral-dark);
 }
 
-.sidebar-menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+/* عناصر النماذج والمدخلات (Form Controls) */
+.form-group {
+    margin-bottom: 1.25rem;
 }
 
-.sidebar-menu li {
-    margin-bottom: 8px;
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--neutral-gray);
 }
 
-.sidebar-menu a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    border-radius: var(--radius-md, 10px);
-    color: var(--text-main);
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-.sidebar-menu a:hover,
-.sidebar-menu a.active {
-    background: rgba(42, 184, 182, 0.1);
-    color: var(--primary);
-}
-
-/* المحتوى الأساسي */
-.main-content {
-    flex: 1;
-    padding: 24px 32px;
-    max-width: calc(100% - 260px);
-}
-
-.main-sidebar.collapsed + .main-content {
-    max-width: calc(100% - 80px);
-}
-
-/* 4. البطاقات الزجاجية (Cards) */
-.card {
-    background: var(--glass-bg, rgba(255, 255, 255, 0.5));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.6));
-    border-radius: var(--radius-xl, 20px);
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: var(--shadow-glass, 0 10px 30px rgba(0, 0, 0, 0.04));
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(11, 25, 44, 0.07);
-    border-color: rgba(42, 184, 182, 0.3);
-}
-
-/* بطاقات الإحصائيات */
-.stats-card {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    padding: 20px;
-    border-radius: var(--radius-md, 12px);
-    text-align: center;
-    transition: all 0.25s ease;
-}
-
-.stats-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(42, 184, 182, 0.1);
-}
-
-/* 5. شبكة العرض (Grid) */
-.grid-system {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+.form-control {
+    display: block;
     width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--neutral-dark);
+    background-color: #ffffff;
+    background-clip: padding-box;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-/* 6. التذييل (Footer) */
-.main-footer {
-    padding: 32px 40px;
-    text-align: center;
-    border-top: 1px solid rgba(11, 25, 44, 0.06);
-    color: var(--text-muted, #64748B);
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
-    font-size: 14px;
+.form-control:focus {
+    color: var(--neutral-dark);
+    background-color: #ffffff;
+    border-color: var(--border-focus);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
 }
 
-/* 7. فتات الخبز (Breadcrumb) */
-.breadcrumb {
-    display: flex;
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* عناصر التحقق المخصصة للراديو وصناديق الاختيار */
+.radio-inline, .checkbox-inline {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 24px;
-    font-size: 14px;
-    color: var(--text-muted);
-    flex-wrap: wrap;
+    cursor: pointer;
+    font-size: 0.9rem;
+    user-select: none;
 }
 
-.breadcrumb a {
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: var(--transition);
+.radio-inline input[type="radio"], 
+.checkbox-inline input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
 }
 
-.breadcrumb a:hover {
-    color: var(--primary);
-}
-
-.breadcrumb .separator {
-    color: var(--border-color);
-}
-
-.breadcrumb .current {
-    color: var(--text-main);
-    font-weight: 500;
-}
-
-/* 8. أزرار الإجراءات السريعة */
-.action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.search-box {
-    display: flex;
-    align-items: center;
-    background: white;
+/* بطاقات النظام القياسية (Cards) */
+.card {
+    background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 40px;
-    padding: 4px 12px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.search-box input {
-    border: none;
-    padding: 8px;
-    outline: none;
-    min-width: 200px;
-    background: transparent;
+/* كتل التنبيهات الموحدة (Alerts) */
+.alert {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+}
+.alert-success {
+    background-color: var(--success-light);
+    border-color: #c3e6cb;
+    color: var(--success-hover);
+}
+.alert-danger {
+    background-color: var(--danger-light);
+    border-color: #f5c6cb;
+    color: var(--danger-hover);
 }
 
-/* 9. تحسين التجاوب (Responsive) */
-@media (max-width: 992px) {
-    .main-header {
-        padding: 0 20px;
-    }
-    .main-nav {
-        display: none;
-    }
-    .main-sidebar {
-        position: fixed;
-        left: -260px;
-        top: 70px;
-        bottom: 0;
-        z-index: 1999;
-        transition: left 0.3s;
-        background: rgba(255, 255, 255, 0.95);
-    }
-    .main-sidebar.mobile-open {
-        left: 0;
-    }
-    .main-content {
-        max-width: 100% !important;
-        padding: 20px;
-    }
-    .page-container {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 768px) {
-    .grid-system {
-        grid-template-columns: 1fr;
-    }
-    .card {
-        padding: 20px;
-        border-radius: 16px;
-    }
-    .action-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .search-box {
-        width: 100%;
-    }
-    .search-box input {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .main-header {
-        padding: 0 16px;
-    }
-    .main-header .brand-name {
-        font-size: 18px;
-    }
-    .stats-card {
-        padding: 16px;
-    }
-    .breadcrumb {
-        font-size: 12px;
-    }
-}
+/* كلاسات المساعدة المباشرة (Utility Classes) */
+.text-center { text-align: center !important; }
+.text-muted { color: var(--text-muted) !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.hidden { display: none !important; }
