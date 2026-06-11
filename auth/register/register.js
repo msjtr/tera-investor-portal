@@ -1,6 +1,6 @@
 /**
  * ==========================================================================
- * TERA - Register Page Logic (Fixed Validation, No Arabic, & Password Toggle)
+ * TERA - Register Page Logic (Full Integrated)
  * ==========================================================================
  */
 
@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
 
-        // تحقق إضافي للمرحلة 1
         if (currentStep === 1) {
             if (currentSection.querySelectorAll('.invalid').length > 0) {
                 alert('يرجى التأكد من استيفاء جميع شروط اسم المستخدم وكلمة المرور.');
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. منع اللغة العربية في حقول الإنجليزية
+    // 3. منع اللغة العربية
     function preventArabicInput(e) {
         const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g;
         if (arabicRegex.test(e.target.value)) {
@@ -118,17 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (field) field.addEventListener('input', preventArabicInput);
     });
 
-  // ==========================================
-    // زر الإظهار والإخفاء لكلمة المرور (مصلح)
-    // ==========================================
-    const togglePasswordBtns = document.querySelectorAll('.toggle-password');
-    
-    togglePasswordBtns.forEach(btn => {
+    // 4. زر الإظهار والإخفاء (مصلح)
+    document.querySelectorAll('.toggle-password').forEach(btn => {
         btn.addEventListener('click', function() {
-            // البحث عن أقرب حقل input داخل نفس الحاوية (password-wrapper)
             const wrapper = this.closest('.password-wrapper');
             const input = wrapper.querySelector('input');
-            
             if (input.type === 'password') {
                 input.type = 'text';
                 this.textContent = 'إخفاء';
@@ -138,9 +131,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
     // 5. التحقق الحي (Live Validation)
-    // ... [يتم وضع نفس كود التحقق الحي السابق هنا] ...
-    
+    function toggleValid(element, isValid) {
+        element.classList.toggle('invalid', !isValid);
+        element.classList.toggle('valid', isValid);
+    }
+
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            const rules = document.querySelectorAll('#user-validation li');
+            toggleValid(rules[0], val.length >= 4 && val.length <= 20);
+            toggleValid(rules[1], /^[a-zA-Z0-9]+$/.test(val));
+            toggleValid(rules[2], !/\s/.test(val) && val.length > 0);
+            toggleValid(rules[3], !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(val));
+            toggleValid(rules[4], val.length > 3);
+        });
+    }
+
+    const passInput = document.getElementById('password');
+    if (passInput) {
+        passInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            const rules = document.querySelectorAll('#pass-validation li');
+            const strengthBar = document.querySelector('.strength-bar');
+            
+            toggleValid(rules[0], val.length >= 8);
+            toggleValid(rules[1], /[A-Z]/.test(val));
+            toggleValid(rules[2], /[a-z]/.test(val));
+            toggleValid(rules[3], /[0-9]/.test(val));
+            toggleValid(rules[4], /[!@#$%^&*(),.?":{}|<>]/.test(val));
+        });
+    }
+
     // 6. الإرسال النهائي
     document.getElementById('registerForm').addEventListener('submit', (e) => {
         e.preventDefault();
