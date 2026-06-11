@@ -1,356 +1,792 @@
-/**
- * ==========================================================================
- * TERA - Register Page Complete Logic & Flow Control
- * ==========================================================================
- */
+/* ================================================= */
+/* TERA REGISTER PAGE */
+/* ================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
-    // 1. إعدادات التنقل بين المراحل (Stepper)
-    // ==========================================
-    let currentStep = 1;
-    const totalSteps = 4;
 
-    const btnNext = document.getElementById('btn-next');
-    const btnPrev = document.getElementById('btn-prev');
-    const btnSubmit = document.getElementById('btn-submit');
-    const steps = document.querySelectorAll('.form-step');
-    const stepIndicators = document.querySelectorAll('.step');
-    const form = document.getElementById('registerForm');
+let currentStep = 1;
+const totalSteps = 4;
 
-    function updateSteps() {
-        // تحديث الأقسام المعروضة
-        steps.forEach((step, idx) => {
-            step.classList.toggle('active', idx + 1 === currentStep);
-        });
+const nextBtn =
+document.getElementById('nextBtn');
 
-        // تحديث المؤشرات العلوية
-        stepIndicators.forEach((ind, idx) => {
-            ind.classList.toggle('active', idx + 1 === currentStep);
-            ind.classList.toggle('completed', idx + 1 < currentStep);
-        });
+const prevBtn =
+document.getElementById('prevBtn');
 
-        // تحديث حالة الأزرار
-        btnPrev.classList.toggle('hidden', currentStep === 1);
-        
-        if (currentStep === totalSteps) {
-            btnNext.classList.add('hidden');
-            btnSubmit.classList.remove('hidden');
-        } else {
-            btnNext.classList.remove('hidden');
-            btnSubmit.classList.add('hidden');
-        }
-    }
+const submitBtn =
+document.getElementById('submitBtn');
 
-    // ==========================================
-    // 2. التحقق من صحة البيانات (Validation)
-    // ==========================================
-    function validateCurrentStep() {
-        const activeSection = document.getElementById(`step${currentStep}`);
-        const requiredInputs = activeSection.querySelectorAll('input[required], select[required]');
-        let isValid = true;
+/* ================================================ */
+/* STEP CONTROL */
+/* ================================================ */
 
-        // فحص الحقول الفارغة أو الصناديق غير المحددة
-        requiredInputs.forEach(input => {
-            if ((input.type === 'checkbox' && !input.checked) || (input.type !== 'checkbox' && !input.value.trim())) {
-                isValid = false;
-                input.style.borderColor = '#ef4444';
-            } else {
-                input.style.borderColor = '#cbd5e1';
-            }
-        });
+function showStep(step){
 
-        if (!isValid) {
-            alert('يرجى تعبئة كافة الحقول الإلزامية لاستكمال هذه المرحلة.');
-            return false;
-        }
+document
+.querySelectorAll('.form-step')
+.forEach(section => {
 
-        // تحققات إضافية مخصصة للمرحلة الأولى (إنشاء الحساب)
-        if (currentStep === 1) {
-            const hasInvalidRules = activeSection.querySelectorAll('.validation-list .invalid').length > 0;
-            if (hasInvalidRules) {
-                alert('يرجى التأكد من استيفاء جميع شروط اسم المستخدم وكلمة المرور.');
-                return false;
-            }
+section.classList.remove('active');
 
-            const email = document.getElementById('email').value;
-            const confirmEmail = document.getElementById('confirm-email').value;
-            if (email !== confirmEmail) {
-                alert('البريد الإلكتروني المدخل وتأكيده غير متطابقين.');
-                return false;
-            }
+});
 
-            const pass = document.getElementById('password').value;
-            const confirmPass = document.getElementById('confirm-password').value;
-            if (pass !== confirmPass) {
-                alert('كلمة المرور وتأكيدها غير متطابقين.');
-                return false;
-            }
-        }
+document
+.getElementById(`step${step}`)
+.classList.add('active');
 
-        return true;
-    }
+document
+.querySelectorAll('.step')
+.forEach(item => {
 
-    // أزرار التنقل
-    btnNext.addEventListener('click', () => {
-        if (validateCurrentStep() && currentStep < totalSteps) {
-            currentStep++;
-            updateSteps();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    });
+item.classList.remove('active');
 
-    btnPrev.addEventListener('click', () => {
-        if (currentStep > 1) {
-            currentStep--;
-            updateSteps();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    });
+});
 
-    // ==========================================
-    // 3. التحقق الحي المباشر (Live Validation)
-    // ==========================================
-    
-    // منع إدخال اللغة العربية في الحقول المخصصة للإنجليزية فقط
-    function enforceEnglishOnly(e) {
-        const arabicPattern = /[\u0600-\u06FF\s]/g; // يمنع العربية والمسافات
-        if (arabicPattern.test(e.target.value) && e.target.id !== 'nameEn') {
-            e.target.value = e.target.value.replace(arabicPattern, '');
-        } else if (e.target.id === 'nameEn') {
-            // للسماح بالمسافات في الاسم الإنجليزي
-            e.target.value = e.target.value.replace(/[\u0600-\u06FF]/g, '');
-        }
-    }
+document
+.querySelector(`.step[data-step="${step}"]`)
+.classList.add('active');
 
-    ['username', 'email', 'confirm-email', 'password', 'confirm-password', 'nameEn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('input', enforceEnglishOnly);
-    });
+prevBtn.style.display =
+step === 1
+? 'none'
+: 'inline-flex';
 
-    // التحقق من اسم المستخدم
-    const userInput = document.getElementById('username');
-    if (userInput) {
-        userInput.addEventListener('input', function() {
-            const v = this.value;
-            const rules = document.querySelectorAll('#user-validation li');
-            
-            rules[0].className = (v.length >= 4 && v.length <= 20) ? 'valid' : 'invalid';
-            rules[1].className = (/^[a-zA-Z0-9]+$/.test(v) && v.length > 0) ? 'valid' : 'invalid';
-            rules[2].className = (!/\s/.test(v) && v.length > 0) ? 'valid' : 'invalid';
-            rules[3].className = (!/[~`!@#$%\^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g.test(v) && v.length > 0) ? 'valid' : 'invalid';
-            rules[4].className = (v.length >= 4) ? 'valid' : 'invalid'; // افتراضياً صحيح حتى يتم ربطه بقاعدة البيانات
-        });
-    }
+if(step === totalSteps){
 
-    // التحقق من تطابق البريد الإلكتروني
-    const emailInput = document.getElementById('email');
-    const confirmEmailInput = document.getElementById('confirm-email');
-    const emailStatus = document.getElementById('email-status');
+nextBtn.classList.add('d-none');
+submitBtn.classList.remove('d-none');
 
-    function verifyEmails() {
-        if (!confirmEmailInput.value) { emailStatus.textContent = ''; return; }
-        if (emailInput.value === confirmEmailInput.value) {
-            emailStatus.style.color = '#10b981'; emailStatus.textContent = '🟢 البريد الإلكتروني متطابق';
-        } else {
-            emailStatus.style.color = '#ef4444'; emailStatus.textContent = '🔴 البريد الإلكتروني غير متطابق';
-        }
-    }
-    if (emailInput && confirmEmailInput) {
-        emailInput.addEventListener('input', verifyEmails);
-        confirmEmailInput.addEventListener('input', verifyEmails);
-    }
+}else{
 
-    // إظهار/إخفاء كلمة المرور
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = this.previousElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.textContent = 'إخفاء';
-            } else {
-                input.type = 'password';
-                this.textContent = 'إظهار';
-            }
-        });
-    });
+nextBtn.classList.remove('d-none');
+submitBtn.classList.add('d-none');
 
-    // مؤشر قوة كلمة المرور والتحقق من الشروط
-    const passInput = document.getElementById('password');
-    const confirmPassInput = document.getElementById('confirm-password');
-    const passStatus = document.getElementById('password-status');
+}
 
-    if (passInput) {
-        passInput.addEventListener('input', function() {
-            const v = this.value;
-            const rules = document.querySelectorAll('#pass-validation li');
-            const bar = document.querySelector('.strength-bar');
-            const txt = document.querySelector('.strength-text');
+}
 
-            const c1 = v.length >= 8; rules[0].className = c1 ? 'valid' : 'invalid';
-            const c2 = /[A-Z]/.test(v); rules[1].className = c2 ? 'valid' : 'invalid';
-            const c3 = /[a-z]/.test(v); rules[2].className = c3 ? 'valid' : 'invalid';
-            const c4 = /[0-9]/.test(v); rules[3].className = c4 ? 'valid' : 'invalid';
-            const c5 = /[!@#$%^&*(),.?":{}|<>]/.test(v); rules[4].className = c5 ? 'valid' : 'invalid';
+showStep(currentStep);
 
-            let score = c1 + c2 + c3 + c4 + c5;
-            bar.className = 'strength-bar';
-            
-            if (v.length === 0) { txt.textContent = 'ضعيفة'; }
-            else if (score <= 2) { bar.classList.add('weak'); txt.textContent = 'ضعيفة'; }
-            else if (score === 3) { bar.classList.add('medium'); txt.textContent = 'متوسطة'; }
-            else if (score === 4) { bar.classList.add('strong'); txt.textContent = 'قوية'; }
-            else if (score === 5) { bar.classList.add('very-strong'); txt.textContent = 'قوية جداً'; }
-            
-            verifyPasswords();
-        });
-    }
+/* ================================================ */
+/* NEXT */
+/* ================================================ */
 
-    function verifyPasswords() {
-        if (!confirmPassInput.value) { passStatus.textContent = ''; return; }
-        if (passInput.value === confirmPassInput.value) {
-            passStatus.style.color = '#10b981'; passStatus.textContent = '🟢 كلمة المرور متطابقة';
-        } else {
-            passStatus.style.color = '#ef4444'; passStatus.textContent = '🔴 كلمة المرور غير متطابقة';
-        }
-    }
-    if (confirmPassInput) confirmPassInput.addEventListener('input', verifyPasswords);
+nextBtn.addEventListener('click', () => {
 
-    // ==========================================
-    // 4. توليد الحقول الديناميكية (الهوية والعنوان)
-    // ==========================================
-    const nationalitySelect = document.getElementById('nationalityType');
-    const idFieldset = document.getElementById('id-details-fieldset');
-    const idContainer = document.getElementById('id-details-container');
-    const addressContainer = document.getElementById('address-container');
+if(!validateStep(currentStep)){
+return;
+}
 
-    if (nationalitySelect) {
-        nationalitySelect.addEventListener('change', function() {
-            const type = this.value;
-            
-            if (!type) {
-                idFieldset.classList.add('hidden');
-                idContainer.innerHTML = '';
-                addressContainer.innerHTML = '<p class="text-muted text-center">يرجى تحديد الجنسية أولاً في المرحلة السابقة لتعبئة بيانات العنوان.</p>';
-                return;
-            }
+currentStep++;
 
-            idFieldset.classList.remove('hidden');
-            renderDynamicFields(type);
-        });
-    }
+if(currentStep > totalSteps){
+currentStep = totalSteps;
+}
 
-    function renderDynamicFields(type) {
-        let idHtml = '';
-        let addressHtml = '';
+showStep(currentStep);
 
-        // توليد حقول الهوية
-        if (type === 'saudi') {
-            idHtml = `
-                <div class="form-group"><label>رقم الهوية الوطنية *</label><input type="text" required></div>
-                <div class="form-group"><label>تاريخ إصدار الهوية *</label><input type="date" required></div>
-                <div class="form-group"><label>تاريخ انتهاء الهوية *</label><input type="date" required></div>`;
-            addressHtml = getNationalAddressTemplate();
-        } else if (type === 'resident') {
-            idHtml = `
-                <div class="form-group"><label>رقم الإقامة *</label><input type="text" required></div>
-                <div class="form-group"><label>تاريخ إصدار الإقامة *</label><input type="date" required></div>
-                <div class="form-group"><label>تاريخ انتهاء الإقامة *</label><input type="date" required></div>`;
-            addressHtml = getNationalAddressTemplate();
-        } else if (type === 'gcc') {
-            idHtml = `
-                <div class="form-group"><label>الدولة *</label><input type="text" required></div>
-                <div class="form-group"><label>رقم الهوية الخليجية *</label><input type="text" required></div>
-                <div class="form-group"><label>تاريخ إصدار الهوية *</label><input type="date" required></div>
-                <div class="form-group"><label>تاريخ انتهاء الهوية *</label><input type="date" required></div>`;
-            addressHtml = getInternationalAddressTemplate();
-        } else if (type === 'foreigner') {
-            idHtml = `
-                <div class="form-group">
-                    <label>نوع الوثيقة *</label>
-                    <div class="radio-group" id="foreign-doc-choice">
-                        <label class="radio-container"><input type="radio" name="foreign_doc" value="national" checked><span class="radio-mark"></span> الهوية الوطنية لبلده</label>
-                        <label class="radio-container"><input type="radio" name="foreign_doc" value="passport"><span class="radio-mark"></span> جواز السفر</label>
-                    </div>
-                </div>
-                <div id="dynamic-foreign-doc-fields"></div>`;
-            addressHtml = getInternationalAddressTemplate();
-        }
+});
 
-        idContainer.innerHTML = idHtml;
-        addressContainer.innerHTML = addressHtml;
+/* ================================================ */
+/* PREVIOUS */
+/* ================================================ */
 
-        // تشغيل مراقب التغيير للوثيقة الأجنبية إذا تم اختيارها
-        if (type === 'foreigner') {
-            setupForeignerDocToggle();
-        }
-    }
+prevBtn.addEventListener('click', () => {
 
-    function setupForeignerDocToggle() {
-        const container = document.getElementById('dynamic-foreign-doc-fields');
-        const radios = document.getElementsByName('foreign_doc');
-        
-        const renderSubFields = () => {
-            const selected = document.querySelector('input[name="foreign_doc"]:checked').value;
-            if (selected === 'national') {
-                container.innerHTML = `
-                    <div class="form-group"><label>الدولة *</label><input type="text" required></div>
-                    <div class="form-group"><label>رقم الهوية *</label><input type="text" required></div>
-                    <div class="form-group"><label>تاريخ الإصدار *</label><input type="date" required></div>
-                    <div class="form-group"><label>تاريخ الانتهاء *</label><input type="date" required></div>`;
-            } else {
-                container.innerHTML = `
-                    <div class="form-group"><label>دولة الإصدار *</label><input type="text" required></div>
-                    <div class="form-group"><label>رقم جواز السفر *</label><input type="text" required></div>
-                    <div class="form-group"><label>تاريخ إصدار الجواز *</label><input type="date" required></div>
-                    <div class="form-group"><label>تاريخ انتهاء الجواز *</label><input type="date" required></div>`;
-            }
-        };
+currentStep--;
 
-        radios.forEach(r => r.addEventListener('change', renderSubFields));
-        renderSubFields(); // تشغيل أولي
-    }
+if(currentStep < 1){
+currentStep = 1;
+}
 
-    function getNationalAddressTemplate() {
-        return `
-            <div class="text-center mb-3"><strong style="color: #0A1940;">بيانات العنوان الوطني</strong></div>
-            <div class="grid-address">
-                <div class="form-group"><label>رقم المبنى *</label><input type="text" required></div>
-                <div class="form-group"><label>الرقم الفرعي *</label><input type="text" required></div>
-                <div class="form-group"><label>اسم الشارع *</label><input type="text" required></div>
-                <div class="form-group"><label>الحي *</label><input type="text" required></div>
-                <div class="form-group"><label>المدينة *</label><input type="text" required></div>
-                <div class="form-group"><label>الرمز البريدي *</label><input type="text" required></div>
-                <div class="form-group"><label>الرقم الإضافي *</label><input type="text" required></div>
-                <div class="form-group"><label>رقم الوحدة (اختياري)</label><input type="text"></div>
-            </div>
-            <div class="form-group mt-2"><label>الاسم المختصر للعنوان الوطني *</label><input type="text" required></div>`;
-    }
+showStep(currentStep);
 
-    function getInternationalAddressTemplate() {
-        return `
-            <div class="grid-address">
-                <div class="form-group"><label>الدولة *</label><input type="text" required></div>
-                <div class="form-group"><label>المدينة *</label><input type="text" required></div>
-                <div class="form-group"><label>المحافظة / الولاية *</label><input type="text" required></div>
-                <div class="form-group"><label>الحي *</label><input type="text" required></div>
-                <div class="form-group"><label>الشارع *</label><input type="text" required></div>
-                <div class="form-group"><label>الرمز البريدي *</label><input type="text" required></div>
-            </div>
-            <div class="form-group"><label>وصف إضافي للعنوان</label><input type="text"></div>`;
-    }
+});
 
-    // ==========================================
-    // 5. إرسال النموذج (Submit)
-    // ==========================================
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (validateCurrentStep()) {
-                // إظهار رسالة النجاح والتحويل لصفحة التحقق من البريد
-                alert('تم تقديم طلب تسجيل الحساب بنجاح! سيتم إرسال رمز التحقق OTP إلى بريدك الإلكتروني.');
-                window.location.href = '../verify-otp.html';
-            }
-        });
-    }
+/* ================================================ */
+/* BASIC VALIDATION */
+/* ================================================ */
+
+function validateStep(step){
+
+if(step === 1){
+
+const username =
+document.getElementById('username');
+
+const email =
+document.getElementById('email');
+
+const confirmEmail =
+document.getElementById('confirmEmail');
+
+const password =
+document.getElementById('password');
+
+const confirmPassword =
+document.getElementById('confirmPassword');
+
+if(username.value.trim() === ''){
+alert('يرجى إدخال اسم المستخدم');
+username.focus();
+return false;
+}
+
+if(email.value.trim() === ''){
+alert('يرجى إدخال البريد الإلكتروني');
+email.focus();
+return false;
+}
+
+if(email.value !== confirmEmail.value){
+alert('البريد الإلكتروني غير متطابق');
+return false;
+}
+
+if(password.value !== confirmPassword.value){
+alert('كلمة المرور غير متطابقة');
+return false;
+}
+
+}
+
+if(step === 2){
+
+const fullNameAr =
+document.getElementById('fullNameAr');
+
+const fullNameEn =
+document.getElementById('fullNameEn');
+
+const category =
+document.getElementById('accountCategory');
+
+if(fullNameAr.value.trim() === ''){
+alert('أدخل الاسم بالعربية');
+return false;
+}
+
+if(fullNameEn.value.trim() === ''){
+alert('أدخل الاسم بالإنجليزية');
+return false;
+}
+
+if(category.value === ''){
+alert('اختر الفئة');
+return false;
+}
+
+}
+
+if(step === 3){
+
+const mobile =
+document.getElementById('mobileNumber');
+
+if(mobile.value.trim() === ''){
+alert('أدخل رقم الجوال');
+return false;
+}
+
+}
+
+return true;
+
+}
+
+/* ================================================ */
+/* PASSWORD SHOW / HIDE */
+/* ================================================ */
+
+const showPassword =
+document.getElementById('showPassword');
+
+const showConfirmPassword =
+document.getElementById('showConfirmPassword');
+
+showPassword?.addEventListener('change', () => {
+
+const password =
+document.getElementById('password');
+
+password.type =
+showPassword.checked
+? 'text'
+: 'password';
+
+});
+
+showConfirmPassword?.addEventListener('change', () => {
+
+const confirmPassword =
+document.getElementById('confirmPassword');
+
+confirmPassword.type =
+showConfirmPassword.checked
+? 'text'
+: 'password';
+
+});
+    /* ================================================ */
+/* PASSWORD STRENGTH */
+/* ================================================ */
+
+const passwordInput =
+document.getElementById('password');
+
+const confirmPasswordInput =
+document.getElementById('confirmPassword');
+
+const passwordStrength =
+document.getElementById('passwordStrength');
+
+const passwordMatchStatus =
+document.getElementById('passwordMatchStatus');
+
+passwordInput?.addEventListener('input', () => {
+
+const value = passwordInput.value;
+
+let score = 0;
+
+if(value.length >= 8){
+score++;
+document.getElementById('passRule1')
+?.classList.add('valid');
+}
+
+if(/[A-Z]/.test(value)){
+score++;
+document.getElementById('passRule2')
+?.classList.add('valid');
+}
+
+if(/[a-z]/.test(value)){
+score++;
+document.getElementById('passRule3')
+?.classList.add('valid');
+}
+
+if(/[0-9]/.test(value)){
+score++;
+document.getElementById('passRule4')
+?.classList.add('valid');
+}
+
+if(/[^A-Za-z0-9]/.test(value)){
+score++;
+document.getElementById('passRule5')
+?.classList.add('valid');
+}
+
+/* Strength */
+
+passwordStrength.className = '';
+
+if(score <= 2){
+
+passwordStrength.innerHTML =
+'🔴 ضعيفة';
+
+passwordStrength.classList
+.add('password-weak');
+
+}
+
+else if(score === 3){
+
+passwordStrength.innerHTML =
+'🟠 متوسطة';
+
+passwordStrength.classList
+.add('password-medium');
+
+}
+
+else if(score === 4){
+
+passwordStrength.innerHTML =
+'🟢 قوية';
+
+passwordStrength.classList
+.add('password-strong');
+
+}
+
+else{
+
+passwordStrength.innerHTML =
+'🟢 قوية جداً';
+
+passwordStrength.classList
+.add('password-very-strong');
+
+}
+
+checkPasswordMatch();
+
+});
+
+/* ================================================ */
+/* PASSWORD MATCH */
+/* ================================================ */
+
+confirmPasswordInput?.addEventListener(
+'input',
+checkPasswordMatch
+);
+
+function checkPasswordMatch(){
+
+if(
+passwordInput.value === '' ||
+confirmPasswordInput.value === ''
+){
+return;
+}
+
+if(
+passwordInput.value ===
+confirmPasswordInput.value
+){
+
+passwordMatchStatus.innerHTML =
+'✔ كلمة المرور متطابقة';
+
+passwordMatchStatus.className =
+'match-status valid';
+
+}else{
+
+passwordMatchStatus.innerHTML =
+'✖ كلمة المرور غير متطابقة';
+
+passwordMatchStatus.className =
+'match-status invalid';
+
+}
+
+}
+
+/* ================================================ */
+/* USERNAME VALIDATION */
+/* ================================================ */
+
+const username =
+document.getElementById('username');
+
+username?.addEventListener('input', () => {
+
+let value =
+username.value.trim();
+
+value =
+value.replace(/[^a-zA-Z0-9]/g,'');
+
+username.value = value;
+
+const validLength =
+value.length >= 4 &&
+value.length <= 20;
+
+const validChars =
+/^[A-Za-z0-9]+$/.test(value);
+
+document
+.getElementById('userRule1')
+?.classList.toggle(
+'valid',
+validLength
+);
+
+document
+.getElementById('userRule2')
+?.classList.toggle(
+'valid',
+validChars
+);
+
+document
+.getElementById('userRule3')
+?.classList.toggle(
+'valid',
+validChars
+);
+
+document
+.getElementById('userRule4')
+?.classList.add('valid');
+
+document
+.getElementById('userRule5')
+?.classList.add('valid');
+
+});
+
+/* ================================================ */
+/* EMAIL VALIDATION */
+/* ================================================ */
+
+const email =
+document.getElementById('email');
+
+const confirmEmail =
+document.getElementById('confirmEmail');
+
+confirmEmail?.addEventListener('input', () => {
+
+if(
+email.value &&
+confirmEmail.value
+){
+
+if(
+email.value ===
+confirmEmail.value
+){
+
+confirmEmail.style.borderColor =
+'#16a34a';
+
+}else{
+
+confirmEmail.style.borderColor =
+'#dc2626';
+
+}
+
+}
+
+});
+
+/* ================================================ */
+/* MOBILE CLEANUP */
+/* ================================================ */
+
+const mobileNumber =
+document.getElementById('mobileNumber');
+
+mobileNumber?.addEventListener(
+'input',
+() => {
+
+let value =
+mobileNumber.value;
+
+value =
+value.replace(/\D/g,'');
+
+if(value.startsWith('0')){
+value = value.substring(1);
+}
+
+mobileNumber.value = value;
+
+}
+);
+
+                          /* ================================================ */
+/* CATEGORY SWITCHING */
+/* ================================================ */
+
+const accountCategory =
+document.getElementById('accountCategory');
+
+const saudiFields =
+document.getElementById('saudiFields');
+
+const residentFields =
+document.getElementById('residentFields');
+
+const gccFields =
+document.getElementById('gccFields');
+
+const foreignFields =
+document.getElementById('foreignFields');
+
+const nationalAddressWrapper =
+document.getElementById('nationalAddressWrapper');
+
+const internationalAddressWrapper =
+document.getElementById('internationalAddressWrapper');
+
+accountCategory?.addEventListener(
+'change',
+() => {
+
+hideAllIdentitySections();
+
+const category =
+accountCategory.value;
+
+switch(category){
+
+case 'saudi':
+
+saudiFields.classList.remove('d-none');
+
+nationalAddressWrapper
+.classList.remove('d-none');
+
+internationalAddressWrapper
+.classList.add('d-none');
+
+setSaudiCode();
+
+break;
+
+case 'resident':
+
+residentFields.classList.remove('d-none');
+
+nationalAddressWrapper
+.classList.remove('d-none');
+
+internationalAddressWrapper
+.classList.add('d-none');
+
+setSaudiCode();
+
+break;
+
+case 'gcc':
+
+gccFields.classList.remove('d-none');
+
+nationalAddressWrapper
+.classList.add('d-none');
+
+internationalAddressWrapper
+.classList.remove('d-none');
+
+break;
+
+case 'foreign':
+
+foreignFields.classList.remove('d-none');
+
+nationalAddressWrapper
+.classList.add('d-none');
+
+internationalAddressWrapper
+.classList.remove('d-none');
+
+break;
+
+}
+
+}
+);
+
+function hideAllIdentitySections(){
+
+saudiFields?.classList.add('d-none');
+
+residentFields?.classList.add('d-none');
+
+gccFields?.classList.add('d-none');
+
+foreignFields?.classList.add('d-none');
+
+}
+
+/* ================================================ */
+/* FOREIGN DOCUMENT TYPE */
+/* ================================================ */
+
+const documentType =
+document.getElementById('documentType');
+
+const foreignNationalIdFields =
+document.getElementById(
+'foreignNationalIdFields'
+);
+
+const passportFields =
+document.getElementById(
+'passportFields'
+);
+
+documentType?.addEventListener(
+'change',
+() => {
+
+foreignNationalIdFields
+?.classList.add('d-none');
+
+passportFields
+?.classList.add('d-none');
+
+if(documentType.value === 'nid'){
+
+foreignNationalIdFields
+?.classList.remove('d-none');
+
+}
+
+if(documentType.value === 'passport'){
+
+passportFields
+?.classList.remove('d-none');
+
+}
+
+}
+);
+
+/* ================================================ */
+/* COUNTRY CODE */
+/* ================================================ */
+
+function setSaudiCode(){
+
+const countryCode =
+document.getElementById('countryCode');
+
+if(countryCode){
+
+countryCode.value = '+966';
+
+}
+
+}
+
+/* ================================================ */
+/* NATIONAL ADDRESS BUTTON */
+/* ================================================ */
+
+const fetchNationalAddress =
+document.getElementById(
+'fetchNationalAddress'
+);
+
+fetchNationalAddress
+?.addEventListener(
+'click',
+() => {
+
+alert(
+'سيتم ربط خدمة العنوان الوطني مستقبلاً عبر API'
+);
+
+}
+);
+
+/* ================================================ */
+/* FORM SUBMIT */
+/* ================================================ */
+
+const registerForm =
+document.getElementById(
+'partnerRegisterForm'
+);
+
+registerForm?.addEventListener(
+'submit',
+(e) => {
+
+e.preventDefault();
+
+/* Final Agreement */
+
+const finalAgreement =
+document.getElementById(
+'finalAgreement'
+);
+
+if(
+finalAgreement &&
+!finalAgreement.checked
+){
+
+alert(
+'يجب الموافقة على الإقرار النهائي'
+);
+
+return;
+
+}
+
+/* Here API Request */
+
+alert(
+'تم إنشاء حساب الشريك بنجاح'
+);
+
+/* Redirect To OTP */
+
+window.location.href =
+'../verify-otp.html';
+
+}
+);
+
+/* ================================================ */
+/* LOAD SHARED COMPONENTS */
+/* ================================================ */
+
+const headerContainer =
+document.getElementById(
+'header-container'
+);
+
+if(headerContainer){
+
+fetch(
+'../../components/header.html'
+)
+
+.then(response => response.text())
+
+.then(html => {
+
+headerContainer.innerHTML =
+html;
+
+})
+
+.catch(error => {
+
+console.error(error);
+
+});
+
+}
+
+const footerContainer =
+document.getElementById(
+'footer-container'
+);
+
+if(footerContainer){
+
+fetch(
+'../../components/footer.html'
+)
+
+.then(response => response.text())
+
+.then(html => {
+
+footerContainer.innerHTML =
+html;
+
+})
+
+.catch(error => {
+
+console.error(error);
+
+});
+
+}
+
+/* ================================================ */
+/* INIT */
+/* ================================================ */
+
+hideAllIdentitySections();
+
+prevBtn.style.display = 'none';
+
 });
