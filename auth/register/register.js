@@ -327,3 +327,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
+    }
+
+    // --- هذا هو الجزء الذي كان مفقوداً في الكود الذي أرسلته ---
+    if(submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if(validateCurrentStep()) {
+                alert('✅ تم اكتمال البيانات الجاهزة للتسجيل!');
+            }
+        });
+    }
+
+    updateFormSteps();
+});
