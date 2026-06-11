@@ -29,7 +29,7 @@ body {
 }
 
 /* ==========================================================================
-   الترويسة الأفقية المحدثة والمحاذاة الذكية
+   الترويسة الأفقية المحدثة والمحاذاة الذكية (التوسيط المطلق للشعار)
    ========================================================================== */
 .auth-header-main {
     display: flex;
@@ -40,13 +40,19 @@ body {
     border-radius: 12px;
     margin-bottom: 25px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    position: relative; /* ضروري لعمل التموضع المطلق للشعار في المنتصف */
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* الجانب الأيمن: الشعار والهوية */
+/* الجانب الأيمن (الشعار والهوية) - متموضع بدقة في منتصف الترويسة */
 .header-brand-side {
     display: flex;
     align-items: center;
     gap: 15px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* يضمن توسيط الشعار بدقة هندسية 100% */
 }
 
 .main-logo-updated {
@@ -80,6 +86,13 @@ body {
 .header-actions-side {
     display: flex;
     align-items: center;
+    margin-right: auto; /* يدفع الزر لأقصى اليسار بشكل مرن */
+    z-index: 10; /* يضمن بقاء الزر قابلاً للضغط فوق طبقة التوسيط */
+}
+
+/* مساحة وهمية موازنة لجهة اليمين لضمان بقاء الشعار في المنتصف دون انحراف */
+.header-spacer-right {
+    width: 80px; 
 }
 
 .back-home-btn-updated {
@@ -431,7 +444,7 @@ body {
 /* ==========================================================================
    الاستجابة لشاشات الجوال والهواتف الصغيرة (Responsive)
    ========================================================================== */
-@media (max-width: 576px) {
+@media (max-width: 768px) {
     .auth-header-main {
         flex-direction: column;
         gap: 15px;
@@ -439,7 +452,11 @@ body {
         padding: 20px 15px;
     }
 
+    /* إلغاء التموضع المطلق في الشاشات الصغيرة لمنع التداخل والانهيار */
     .header-brand-side {
+        position: static;
+        transform: none;
+        justify-content: center;
         flex-direction: column;
         gap: 8px;
     }
@@ -447,6 +464,11 @@ body {
     .header-actions-side {
         width: 100%;
         justify-content: center;
+        margin-right: 0;
+    }
+
+    .header-spacer-right {
+        display: none; /* إخفاء المساحة الوهمية لعدم الحاجة لها في الوضع الرأسي */
     }
 
     .back-home-btn-updated {
