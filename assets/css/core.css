@@ -1,155 +1,104 @@
 /* ==========================================================================
-   TERA Investor Portal - Core Styles (Brand Identity)
+   TERA Investor Portal - Core Styles (Fixed & Optimized)
    ========================================================================== */
 
-/* 1. المتغيرات الأساسية (CSS Variables) بناءً على الشعار */
 :root {
-    /* ألوان هوية TERA */
-    --brand-dark-blue: #0A1940; /* الأزرق الداكن من الشعار */
-    --brand-teal: #00B4B4;      /* التركواز/الأخضر المزرق من السهم */
-    
-    /* الألوان الأساسية للنظام */
-    --primary-color: var(--brand-dark-blue);
-    --secondary-color: var(--brand-teal);
-    --primary-hover: #07122b;
-    --secondary-hover: #009696;
-
-    /* ألوان النصوص والخلفيات */
+    --brand-dark-blue: #0A1940;
+    --brand-teal: #00B4B4;
+    --primary-color: #0A1940;
+    --secondary-color: #00B4B4;
     --text-main: #1f2937;
-    --text-muted: #6b7280;
-    --bg-main: #ffffff;         /* خلفية بيضاء بالكامل كما هو مطلوب */
-    --bg-surface: #ffffff;      /* خلفية البطاقات */
-    
-    /* ألوان الحالات */
-    --success-color: #10b981;
-    --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --info-color: #3b82f6;
-
-    /* الحدود والظلال */
     --border-color: #e5e7eb;
-    --border-radius-sm: 6px;
-    --border-radius-md: 10px;
-    --border-radius-lg: 16px;
-    --box-shadow: 0 4px 24px rgba(10, 25, 64, 0.06); /* ظل خفيف يميل للأزرق الداكن */
-
-    /* الخطوط */
-    --font-family-arabic: 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif;
 }
 
-/* 2. إعادة تعيين العناصر (Reset) */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
-    height: 100%;
-}
+html, body { height: 100%; width: 100%; }
 
 body {
-    font-family: var(--font-family-arabic);
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    font-family: 'Tajawal', sans-serif;
+    background-color: #ffffff !important; /* فرض الخلفية البيضاء */
+    color: #1f2937;
     line-height: 1.6;
     font-size: 16px;
-    direction: rtl; 
+    direction: rtl;
 }
 
+/* روابط أكثر وضوحاً */
 a {
-    color: var(--secondary-color); /* استخدام التركواز للروابط */
+    color: #00B4B4;
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: 0.3s;
 }
 
-a:hover {
-    color: var(--primary-color);
-}
+a:hover { color: #0A1940; }
 
-/* 3. التنسيقات العامة (Typography) */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-    font-weight: 700;
-}
+h1, h2, h3, h4 { color: #0A1940; margin-bottom: 0.5rem; font-weight: 700; }
 
-/* 4. النماذج الأساسية (Forms) */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="tel"],
-input[type="date"],
-select,
-textarea {
+/* 4. النماذج (تحسين الرؤية) */
+input[type="text"], input[type="email"], input[type="password"], 
+input[type="tel"], input[type="date"], select {
     width: 100%;
     padding: 12px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    background-color: #fcfcfc; /* لون رمادي فاتح جداً لتمييز حقل الإدخال عن الخلفية البيضاء */
-    font-family: inherit;
-    font-size: 0.95rem;
-    color: var(--text-main);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #ffffff; /* جعل الخلفية بيضاء صريحة */
+    font-size: 1rem;
+    color: #1f2937;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus {
     outline: none;
-    border-color: var(--secondary-color);
-    background-color: var(--bg-main);
-    box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1); /* توهج بلون التركواز عند التحديد */
+    border-color: #00B4B4;
+    box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1);
 }
 
 label {
-    display: inline-block;
-    margin-bottom: 0.5rem;
+    display: block;
+    margin-bottom: 8px;
     font-weight: 600;
-    color: var(--primary-color);
-    font-size: 0.9rem;
+    color: #0A1940;
 }
 
-/* 5. الأزرار (Buttons) */
+/* 5. الأزرار (تنسيق قوي) */
 .btn {
     display: inline-block;
     font-weight: 600;
     text-align: center;
-    vertical-align: middle;
-    user-select: none;
-    padding: 0.75rem 2rem;
+    padding: 12px 24px;
     font-size: 1rem;
-    line-height: 1.5;
-    border-radius: var(--border-radius-md);
-    border: 1px solid transparent;
+    border-radius: 8px;
+    border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-family: inherit;
 }
 
-/* الزر الأساسي (يعتمد التدرج اللوني للشعار أو التركواز) */
 .btn-primary {
-    color: #fff;
-    background: linear-gradient(45deg, var(--brand-dark-blue), var(--brand-teal));
-    border: none;
+    background-color: #0A1940;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(45deg, var(--primary-hover), var(--secondary-hover));
-    box-shadow: 0 4px 12px rgba(0, 180, 180, 0.3);
+    background-color: #00B4B4;
 }
 
 .btn-secondary {
-    color: var(--primary-color);
-    background-color: var(--bg-main);
-    border-color: var(--border-color);
-}
-
-.btn-secondary:hover {
     background-color: #f3f4f6;
-    border-color: #d1d5db;
+    color: #374151;
+    border: 1px solid #d1d5db;
 }
 
 .btn-success {
-    color: #fff;
-    background-color: var(--success-color);
+    background-color: #00B4B4;
+    color: #ffffff;
 }
+
+.btn-success:hover {
+    background-color: #008888;
+}
+
+/* فئات مساعدة للحل السريع */
+.text-center { text-align: center; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.hidden { display: none !important; }
