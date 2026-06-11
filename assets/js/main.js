@@ -1,141 +1,117 @@
 /**
  * ==========================================================================
- * TERA INVESTOR PORTAL - UI & UTILITIES (main.js)
+ * TERA Investor Portal - Main UI Interactions (main.js)
  * ==========================================================================
- * يتحكم هذا الملف في السلوك الحركي لعناصر واجهة المستخدم المشتركة بالبوابة.
  */
 
-document.addEventListener('DOMContentLoaded', function () {
-    'use strict';
-
-    // تهيئة ميزات واجهات الاستخدام بأمان
-    TeraUI.initLoader();
-    TeraUI.initDropdowns();
-    TeraUI.initAlertAutoClose();
-    TeraUI.initFormPlaceholders();
-});
-
-const TeraUI = {
-    /**
-     * إخفاء شاشة الانتظار (Loader) بعد اكتمال تحميل الصفحة
-     */
-    initLoader: function () {
-        const loader = document.querySelector('.tera-loader-wrapper');
-        if (loader) {
-            setTimeout(() => {
-                loader.style.opacity = '0';
-                loader.style.visibility = 'hidden';
-            }, 300);
-        }
-    },
-
-    /**
-     * نظام إطلاق التنبيهات الديناميكي في الواجهة (Alerts System)
-     * @param {string} message - نص الرسالة
-     * @param {string} type - نوع التنبيه ('success', 'danger', 'warning', 'info')
-     */
-    showAlert: function (message, type = 'info') {
-        let alertContainer = document.getElementById('global-alert-container');
-        
-        if (!alertContainer) {
-            // إنشاء حاوية التنبيهات إن لم تكن موجودة بداخل الصفحة
-            alertContainer = document.createElement('div');
-            alertContainer.id = 'global-alert-container';
-            // تم التعديل: التموضع الآن في اليمين (right: 20px) ليتناسب تماماً مع الواجهة العربية RTL
-            alertContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 350px; width: 100%;';
-            document.body.appendChild(alertContainer);
-        }
-
-        const alertId = 'alert-' + Date.now();
-        
-        // استخدام الألوان والحدود المتناسقة مع هوية تيرا من اليمين
-        const alertHtml = `
-            <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show mb-2" role="alert" style="box-shadow: 0 4px 15px rgba(0,0,0,0.06); border-right: 4px solid var(--${type}-color); background-color: var(--${type}-light, #ffffff); padding: 1rem 1.25rem;">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 15px;">
-                    <span style="font-size: 0.9rem; font-weight: 500;">${message}</span>
-                    <button type="button" class="btn-close-style" onclick="document.getElementById('${alertId}').remove()" style="background:none; border:none; cursor:pointer; color:inherit; font-weight:bold; font-size: 1.2rem; line-height: 1;">&times;</button>
-                </div>
-            </div>
-        `;
-
-        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
-
-        // تدمير التنبيه تلقائياً بعد 5 ثوانٍ بشكل ناعم
-        setTimeout(() => {
-            const targetAlert = document.getElementById(alertId);
-            if (targetAlert) {
-                targetAlert.style.transition = 'opacity 0.3s ease';
-                targetAlert.style.opacity = '0';
-                setTimeout(() => targetAlert.remove(), 300);
-            }
-        }, 5000);
-    },
-
-    /**
-     * إغلاق التنبيهات الثابتة المكتوبة في الـ HTML تلقائياً بشكل ناعم
-     */
-    initAlertAutoClose: function () {
-        document.querySelectorAll('.alert-dismissible').forEach(alert => {
-            setTimeout(() => {
-                alert.style.transition = 'opacity 0.3s ease';
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 300);
-            }, 6000);
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // ==========================================
+    // 1. التحكم في القائمة الجانبية (Sidebar Toggle) للشاشات الصغيرة
+    // ==========================================
+    const menuToggleBtn = document.querySelector('.menu-toggle');
+    const mainSidebar = document.querySelector('.main-sidebar');
+    
+    if (menuToggleBtn && mainSidebar) {
+        menuToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // منع انتقال الحدث للـ document
+            mainSidebar.classList.toggle('active');
         });
-    },
 
-    /**
-     * تشغيل القوائم المنسدلة (Dropdowns) لملفات الحساب الشخصي أو اللغات بأمان تام
-     */
-    initDropdowns: function () {
-        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-        
-        dropdownToggles.forEach(toggle => {
-            toggle.addEventListener('click', function (e) {
-                e.stopPropagation();
-                
-                const menu = this.nextElementSibling;
-                // حماية أمنية: التحقق من وجود القائمة لمنع كسر السكربت في الكونسول
-                if (menu && (menu.classList.contains('dropdown-menu') || menu.tagName === 'DIV' || menu.tagName === 'UL')) {
-                    
-                    // إغلاق أي قائمة منسدلة أخرى مفتوحة أولاً لمنع التداخل البصري
-                    document.querySelectorAll('.dropdown-menu.show, .dropdown-toggle-menu.show').forEach(openMenu => {
-                        if (openMenu !== menu) openMenu.classList.remove('show');
-                    });
-                    
-                    menu.classList.toggle('show');
+        // إغلاق القائمة عند النقر خارجها (في الشاشات الصغيرة)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!mainSidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
+                    mainSidebar.classList.remove('active');
                 }
-            });
-        });
-
-        // إغلاق كافة القوائم عند النقر في أي مكان خارجها بداخل الصفحة
-        document.addEventListener('click', function () {
-            document.querySelectorAll('.dropdown-menu.show, .dropdown-toggle-menu.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        });
-    },
-
-    /**
-     * إضفاء تأثير تفاعلي على حقول الإدخال لتتبع وجود البيانات بداخلها (أثناء التحميل وعند المغادرة)
-     */
-    initFormPlaceholders: function () {
-        const inputs = document.querySelectorAll('.form-control');
-        
-        inputs.forEach(input => {
-            // فحص فوري لحالة الحقل عند التحميل (في حال كان المتصفح قد قام بملء الحقول تلقائياً)
-            if (input.value.trim() !== '') {
-                input.classList.add('has-value');
             }
-
-            // فحص الحقل عند مغادرته (Blur)
-            input.addEventListener('blur', function () {
-                if (this.value.trim() !== '') {
-                    this.classList.add('has-value');
-                } else {
-                    this.classList.remove('has-value');
-                }
-            });
         });
     }
-};
+
+    // ==========================================
+    // 2. التحكم في القوائم المنسدلة (Dropdowns)
+    // ==========================================
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const parent = this.parentElement;
+            const menu = parent.querySelector('.dropdown-menu');
+            
+            // إغلاق أي قائمة منسدلة أخرى مفتوحة
+            document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+                if (openMenu !== menu) {
+                    openMenu.classList.remove('show');
+                }
+            });
+
+            // فتح/إغلاق القائمة الحالية
+            if (menu) {
+                menu.classList.toggle('show');
+            }
+        });
+    });
+
+    // إغلاق القوائم المنسدلة عند النقر في أي مكان آخر
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+
+    // ==========================================
+    // 3. نظام التبويبات المشترك (Tabs System)
+    // ==========================================
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // الحصول على الحاوية الأب للتبويبات
+            const tabsContainer = button.closest('.tabs-wrapper');
+            if (!tabsContainer) return;
+
+            const targetId = button.getAttribute('data-target');
+            
+            // إزالة الكلاس active من جميع الأزرار والمحتويات في نفس الحاوية
+            tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            tabsContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            // إضافة الكلاس active للزر المنقور والمحتوى المستهدف
+            button.classList.add('active');
+            const targetPane = tabsContainer.querySelector(`#${targetId}`);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+        });
+    });
+
+    // ==========================================
+    // 4. النوافذ المنبثقة المشتركة (Modals)
+    // ==========================================
+    const modalTriggers = document.querySelectorAll('[data-toggle="modal"]');
+    const modalCloseBtns = document.querySelectorAll('.modal-close, [data-dismiss="modal"]');
+
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetModalId = trigger.getAttribute('data-target');
+            const targetModal = document.querySelector(targetModalId);
+            if (targetModal) {
+                targetModal.style.display = 'flex'; // أو إضافة كلاس active
+            }
+        });
+    });
+
+    modalCloseBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+});
