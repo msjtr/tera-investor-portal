@@ -1,194 +1,352 @@
-/* register.css - تنسيقات خاصة بصفحة التسجيل */
-.register-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 24px;
-    box-shadow: 0 20px 35px -8px rgba(0,0,0,0.1);
-    padding: 2rem;
+/* تخصيصات واجهة التفاعل لصفحة التسجيل منصة تيرا */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --neutral-dark: #212529;
+    --neutral-light: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-muted: #6c757d;
 }
-.auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
+
+body {
+    background-color: #f4f6f9;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--neutral-dark);
 }
-.logo-area {
-    display: flex;
+
+.auth-container {
+    max-width: 750px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.auth-header-navigation {
+    margin-bottom: 20px;
+}
+
+.back-home-btn {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    transition: color 0.2s;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 8px;
 }
-.logo {
-    height: 48px;
+
+.back-home-btn:hover {
+    color: var(--primary-color);
 }
-.brand-name {
+
+.brand-wrapper {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.main-logo {
+    width: 70px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.brand-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--neutral-dark);
+    letter-spacing: 1px;
+}
+
+.brand-subtitle {
+    color: var(--text-muted);
+    margin: 5px 0 0 0;
+    font-size: 1.1rem;
+}
+
+.form-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 35px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.form-instruction h2 {
     font-size: 1.5rem;
-    font-weight: bold;
-    color: #1e3a8a;
+    margin-bottom: 10px;
+    color: var(--neutral-dark);
 }
-.steps-indicator {
+
+.form-instruction p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* خط تتبع المراحل */
+.registration-steps {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 1rem;
+    margin: 30px 0;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 15px;
 }
-.step {
-    text-align: center;
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     flex: 1;
-    opacity: 0.5;
+    text-align: center;
+    opacity: 0.4;
+    transition: opacity 0.3s;
 }
-.step.active {
+
+.step-item.active {
     opacity: 1;
     font-weight: bold;
+    color: var(--primary-color);
 }
-.step-num {
+
+.step-number {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+}
+
+.step-text {
+    font-size: 0.85rem;
+}
+
+/* هيكلة عناصر المدخلات */
+.form-step-content {
+    display: none;
+}
+
+.form-step-content.active {
     display: block;
+}
+
+.step-section-title {
     font-size: 1.2rem;
+    border-right: 4px solid var(--primary-color);
+    padding-right: 10px;
+    margin-bottom: 25px;
+    color: var(--neutral-dark);
 }
-.form-step-section {
-    display: none;
+
+.sub-section {
+    background: var(--neutral-light);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
 }
-.form-step-section.active {
-    display: block;
-    animation: fade 0.3s ease;
+
+.sub-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.05rem;
+    color: #495057;
 }
-@keyframes fade {
-    from { opacity: 0; transform: translateY(10px);}
-    to { opacity: 1; transform: translateY(0);}
-}
+
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;
 }
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+
+.required-label::after {
+    content: " *";
+    color: var(--danger-color);
 }
-input, select, textarea {
+
+.form-control {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: 0.2s;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
 }
-input:focus, select:focus {
+
+.form-control:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
 }
-.validation-box {
-    background: #f8fafc;
-    padding: 0.75rem;
-    border-radius: 12px;
-    margin-top: 0.5rem;
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
 }
-.validation-box ul {
-    margin: 0.5rem 0 0 1.5rem;
-}
-.validation-box li {
+
+/* شروط التحقق ومؤشرات القوة */
+.validation-requirements {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 8px;
     font-size: 0.85rem;
 }
-.validation-box li.valid {
-    color: #16a34a;
-}
-.validation-box li.invalid {
-    color: #dc2626;
-}
-.password-wrapper {
-    display: flex;
-    gap: 0.5rem;
-}
-.password-wrapper input {
-    flex: 1;
-}
-.toggle-password {
-    background: #e2e8f0;
-    border: none;
-    border-radius: 12px;
-    padding: 0 1rem;
-    cursor: pointer;
-}
-.password-strength-container {
-    margin-top: 0.5rem;
-}
-.strength-bar {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 3px;
-    margin-top: 0.25rem;
-    overflow: hidden;
-}
-#strength-bar-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.2s;
-}
-.form-row {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-.flex-1 {
-    flex: 1;
-}
-.status-msg {
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
-}
-.agreements-container {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 1rem;
-}
-.agreement-item {
-    margin-bottom: 1rem;
-}
-.master-agreement {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 1rem;
-    margin-top: 1rem;
-}
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 40px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.btn-primary {
-    background: #1e3a8a;
-    color: white;
-}
-.btn-secondary {
-    background: #e2e8f0;
-    color: #1e293b;
-}
-.btn-success {
-    background: #16a34a;
-    color: white;
-}
-.hidden {
-    display: none;
-}
-.modal-overlay {
-    position: fixed;
-    top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.5);
+
+.req-item {
+    margin: 5px 0;
+    color: var(--danger-color);
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 1000;
+    gap: 8px;
 }
-.modal-box {
-    background: white;
-    max-width: 400px;
-    width: 90%;
-    padding: 2rem;
-    border-radius: 24px;
+
+.req-item.valid {
+    color: var(--success-color);
+}
+
+.match-feedback {
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.match-feedback.valid { color: var(--success-color); }
+.match-feedback.invalid { color: var(--danger-color); }
+
+.password-strength-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+.strength-meter {
+    flex-grow: 1;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.meter-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.radio-group-flex, .checkbox-wrapper {
+    display: flex;
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.placeholder-text {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* الإقرارات والاتفاقيات */
+.agreements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.agreement-item {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+.checkbox-custom {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.nested-info {
+    background: #fffdf5;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #ffeeba;
+}
+
+.nested-bullets {
+    margin: 10px 25px 0 0;
+    padding: 0;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.nested-bullets li {
+    margin-bottom: 5px;
+    list-style-type: square;
+}
+
+.master-agreement {
+    background: #e8f5e9;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #c8e6c9;
+}
+
+.final-pledge-box {
+    margin-top: 25px;
+    background: #fff3cd;
+    border-right: 4px solid var(--warning-color);
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.final-pledge-box h5 {
+    margin: 0 0 5px 0;
+    color: #856404;
+}
+
+.final-pledge-box p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #856404;
+    line-height: 1.5;
+}
+
+/* أزرار التنقل */
+.form-navigation-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-primary { background: var(--primary-color); color: white; }
+.btn-secondary { background: var(--text-muted); color: white; margin-left: auto;}
+.btn-success { background: var(--success-color); color: white; }
+
+.auth-footer-redirect {
     text-align: center;
+    margin-top: 25px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+    font-size: 0.9rem;
+}
+
+.login-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: bold;
 }
