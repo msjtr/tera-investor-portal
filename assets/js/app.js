@@ -165,3 +165,150 @@ App.initializeProfile = function(){
     }
 
 };
+
+/* ================================================= */
+/* NOTIFICATIONS */
+/* ================================================= */
+
+App.initializeNotifications =
+function(){
+
+    const badge =
+    document.getElementById(
+    'notificationCount'
+    );
+
+    if(!badge){
+        return;
+    }
+
+    badge.textContent =
+    App.notifications.length;
+
+};
+
+App.addNotification =
+function(notification){
+
+    App.notifications.push(
+    notification
+    );
+
+    App.initializeNotifications();
+
+};
+
+App.clearNotifications =
+function(){
+
+    App.notifications = [];
+
+    App.initializeNotifications();
+
+};
+
+/* ================================================= */
+/* ROUTES */
+/* ================================================= */
+
+const Router = {
+
+    go(url){
+
+        window.location.href =
+        url;
+
+    },
+
+    dashboard(){
+
+        this.go(
+        '/pages/dashboard/index.html'
+        );
+
+    },
+
+    investments(){
+
+        this.go(
+        '/pages/investments/opportunities.html'
+        );
+
+    },
+
+    portfolio(){
+
+        this.go(
+        '/pages/portfolio/portfolio-overview.html'
+        );
+
+    },
+
+    reports(){
+
+        this.go(
+        '/pages/reports/reports-dashboard.html'
+        );
+
+    },
+
+    profile(){
+
+        this.go(
+        '/pages/profile/personal-information.html'
+        );
+
+    }
+
+};
+
+
+/* ================================================= */
+/* SESSION TIMEOUT */
+/* ================================================= */
+
+let sessionTimer;
+
+function startSessionTimer(){
+
+    clearTimeout(
+    sessionTimer
+    );
+
+    sessionTimer =
+    setTimeout(() => {
+
+        warningAlert(
+        'انتهت الجلسة'
+        );
+
+        logout();
+
+    }, 3600000);
+
+}
+
+document.addEventListener(
+'click',
+startSessionTimer
+);
+
+document.addEventListener(
+'keypress',
+startSessionTimer
+);
+
+startSessionTimer();
+
+/* ================================================= */
+/* START APP */
+/* ================================================= */
+
+document.addEventListener(
+'DOMContentLoaded',
+() => {
+
+    App.init();
+
+});
+
