@@ -1,14 +1,38 @@
 /* ==========================================================================
-   TERA - Register Page Specific Styles
+   TERA - Register Page Specific Styles (Fixed Layout)
    ========================================================================== */
 
-.hidden {
-    display: none !important;
+.hidden { display: none !important; }
+
+/* إصلاح الترويسة لضمان ظهور الشعار */
+.register-header {
+    display: flex !important; /* فرض الفليكس */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 80px; /* ضمان مساحة كافية */
+    width: 100%;
+}
+
+/* ضمان ظهور الشعار */
+.logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
+
+.logo-img {
+    max-height: 65px !important; 
+    width: auto !important;
+    display: block;
 }
 
 .register-container {
     max-width: 850px;
-    width: 100%;
+    width: 95%; /* استخدام نسبة مئوية لضمان عدم خروج المحتوى في الشاشات الصغيرة */
     margin: 40px auto;
     background: #ffffff;
     border-radius: 12px;
@@ -17,20 +41,11 @@
     border: 1px solid #e5e7eb;
 }
 
-.register-header {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.btn-back {
-    color: #6b7280;
-    font-weight: 600;
-    text-decoration: none;
-}
-
+/* باقي التنسيقات */
+.btn-back { color: #6b7280; font-weight: 600; text-decoration: none; }
 .btn-back:hover { color: #0A1940; }
 
+.intro-text { margin-bottom: 30px; }
 .intro-text h2 { color: #0A1940; margin-bottom: 10px; }
 .intro-text p { color: #6b7280; }
 
@@ -48,70 +63,52 @@
 .step.active { color: #00B4B4; }
 .step.completed { color: #0A1940; }
 
-.form-step { display: none; animation: fadeIn 0.4s; }
-.form-step.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.form-step { display: none; }
+.form-step.active { display: block; animation: fadeIn 0.4s; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0A1940; }
 
-input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"], select {
+input[type="text"], input[type="email"], input[type="password"], 
+input[type="tel"], input[type="date"], select {
     width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 8px;
-    background-color: #f9fafb; font-family: inherit; box-sizing: border-box; transition: 0.3s;
+    background-color: #f9fafb; box-sizing: border-box;
 }
 
-input:focus, select:focus { outline: none; border-color: #00B4B4; background-color: #fff; box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1); }
+input:focus { border-color: #00B4B4; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1); }
 
-/* تنسيقات حقل الإظهار والإخفاء */
-.password-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.password-wrapper input {
-    padding-left: 60px !important; /* مساحة للنص في اليسار */
-}
-
+/* إصلاح تداخل زر الإظهار */
+.password-wrapper { position: relative; display: flex; align-items: center; }
+.password-wrapper input { padding-left: 60px !important; }
 .toggle-password {
-    position: absolute;
-    left: 15px; /* الجهة اليسرى للحقل */
-    color: #00B4B4;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9rem;
-    user-select: none;
-    transition: color 0.3s ease;
-    background: transparent;
-    z-index: 2;
+    position: absolute; left: 15px; color: #00B4B4; cursor: pointer;
+    font-weight: bold; font-size: 0.9rem; z-index: 5;
 }
-.toggle-password:hover { color: #0A1940; }
 
-.validation-list { list-style: none; padding: 15px; margin: 10px 0; background: #f8fafc; border-radius: 6px; border: 1px solid #e5e7eb; }
-.validation-list li { display: flex; align-items: center; margin-bottom: 8px; color: #6b7280; font-size: 0.9rem; }
-.validation-list li::before { margin-left: 10px; font-size: 1.1rem; }
+.validation-list { list-style: none; padding: 15px; margin: 10px 0; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; }
+.validation-list li { display: flex; align-items: center; margin-bottom: 5px; color: #6b7280; font-size: 0.9rem; }
+.validation-list li::before { margin-left: 10px; }
 .validation-list li.invalid::before { content: "🔴"; }
 .validation-list li.valid::before { content: "🟢"; }
 .validation-list li.valid { color: #10b981; }
 
-.password-strength { display: flex; align-items: center; margin-top: 8px; font-size: 0.85rem; font-weight: bold; }
-.strength-bar { display: inline-block; height: 6px; width: 120px; background: #e5e7eb; border-radius: 3px; margin-left: 10px; transition: 0.3s; }
-.strength-bar.weak { background: #ef4444; width: 30%; }
-.strength-bar.medium { background: #f59e0b; width: 60%; }
-.strength-bar.strong { background: #10b981; width: 100%; }
+/* تحسين الأزرار في الجوال */
+.form-controls { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-top: 30px; 
+    padding-top: 20px; 
+    border-top: 1px solid #e5e7eb; 
+}
 
-.flex-group { display: flex; gap: 15px; }
-.half-width { flex: 1; }
-.full-width { flex: 3; }
+.controls-right { display: flex; gap: 10px; }
 
-.agreements-list { background: #fff; border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-.checkbox-container { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px; cursor: pointer; }
-.security-info { margin: 10px 40px 15px 0; padding: 15px; background: #f8fafc; border-right: 3px solid #0A1940; border-radius: 6px; }
-.final-declaration { background: rgba(0, 180, 180, 0.05); padding: 15px; border-radius: 8px; border: 1px solid rgba(0, 180, 180, 0.2); color: #0A1940; }
-
-.form-controls { display: flex; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-.btn { padding: 10px 30px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; transition: 0.3s; }
-.btn-primary { background: #0A1940; color: #fff; }
-.btn-primary:hover { background: #00B4B4; }
-.btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
-.btn-success { background: #00B4B4; color: #fff; }
+@media (max-width: 600px) {
+    .register-header { flex-direction: column; gap: 15px; }
+    .form-controls { flex-direction: column; gap: 15px; }
+    .btn { width: 100%; }
+    .controls-right { width: 100%; flex-direction: column; }
+}
