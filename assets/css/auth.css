@@ -1,99 +1,501 @@
-/* ==========================================================================
-   Auth Pages Styles (White Theme Based on Brand)
-   ========================================================================== */
+/* ================================================= */
+/* AUTH PAGES */
+/* ================================================= */
 
-/* إعداد خلفية صفحات المصادقة (بيضاء بالكامل) */
-body:has(.auth-wrapper),
-body:has(.register-container) {
-    background-color: var(--bg-main);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    background-image: radial-gradient(circle at top right, rgba(0, 180, 180, 0.03), transparent 40%),
-                      radial-gradient(circle at bottom left, rgba(10, 25, 64, 0.03), transparent 40%);
-    /* إضافة لمسة خفيفة جداً من ألوان الشعار في الزوايا لا تؤثر على بياض الخلفية */
+.auth-page{
+
+    min-height:100vh;
+
+    background:
+    linear-gradient(
+    135deg,
+    #f7f9fc,
+    #eef5f4
+    );
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:40px 20px;
+
 }
 
-/* غلاف صفحات المصادقة (للدخول وغيرها) */
-.auth-wrapper {
-    width: 100%;
-    max-width: 450px;
-    background: var(--bg-surface);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--box-shadow);
-    border: 1px solid var(--border-color);
-    padding: 40px 30px;
+/* ================================================= */
+/* AUTH CARD */
+/* ================================================= */
+
+.auth-card{
+
+    width:100%;
+
+    max-width:650px;
+
+    background:#fff;
+
+    border-radius:24px;
+
+    padding:40px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.08);
+
 }
 
-/* تعديل حاوية التسجيل لتطابق الهوية البيضاء */
-.register-container {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--box-shadow);
+.auth-card-lg{
+
+    max-width:1200px;
+
 }
 
-/* ترويسة المصادقة */
-.auth-header {
-    text-align: center;
-    margin-bottom: 30px;
+/* ================================================= */
+/* AUTH HEADER */
+/* ================================================= */
+
+.auth-header{
+
+    text-align:center;
+
+    margin-bottom:30px;
+
 }
 
-.auth-header .logo-img {
-    height: 55px; /* تكبير الشعار قليلاً ليكون أكثر وضوحاً */
-    margin-bottom: 15px;
+.auth-logo{
+
+    max-width:220px;
+
+    margin:auto;
+
+    margin-bottom:25px;
+
 }
 
-.auth-header h1 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-bottom: 5px;
+.auth-title{
+
+    font-size:32px;
+
+    font-weight:700;
+
+    margin-bottom:10px;
+
 }
 
-.auth-header p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
+.auth-description{
+
+    color:#6b7280;
+
+    line-height:1.8;
+
 }
 
-/* تخصيص مؤشر الخطوات (Stepper) ليتناسب مع الشعار */
-.stepper {
-    background: #ffffff !important;
-    border: 1px solid var(--border-color);
+/* ================================================= */
+/* AUTH FORM */
+/* ================================================= */
+
+.auth-form{
+
+    width:100%;
+
 }
 
-.step.active {
-    color: var(--secondary-color) !important; /* اللون التركواز للخطوة النشطة */
-    border-bottom: 2px solid var(--secondary-color);
-    padding-bottom: 5px;
+.auth-form .form-group{
+
+    margin-bottom:20px;
+
 }
 
-/* تذييل المصادقة */
-.auth-footer {
-    text-align: center;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.95rem;
+.auth-form label{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    font-weight:600;
+
 }
 
-.auth-footer a {
-    font-weight: bold;
+.auth-form input,
+.auth-form select,
+.auth-form textarea{
+
+    width:100%;
+
+    border:1px solid #d1d5db;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    transition:.3s;
+
 }
 
-/* تخصيصات للشاشات الصغيرة (الجوال) */
-@media (max-width: 768px) {
-    .auth-wrapper,
-    .register-container {
-        padding: 20px;
-        box-shadow: none;
-        border: none;
-        background: transparent;
-    }
-    
-    body:has(.auth-wrapper),
-    body:has(.register-container) {
-        align-items: flex-start;
-        background-image: none;
-    }
+.auth-form input:focus,
+.auth-form select:focus,
+.auth-form textarea:focus{
+
+    border-color:#0f766e;
+
+}
+
+/* ================================================= */
+/* PASSWORD FIELD */
+/* ================================================= */
+
+.password-wrapper{
+
+    position:relative;
+
+}
+
+.password-toggle{
+
+    position:absolute;
+
+    left:15px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    cursor:pointer;
+
+    color:#6b7280;
+
+}
+
+/* ================================================= */
+/* OTP */
+/* ================================================= */
+
+.otp-wrapper{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:12px;
+
+    margin-top:20px;
+
+}
+
+.otp-input{
+
+    width:60px !important;
+
+    height:60px;
+
+    text-align:center;
+
+    font-size:22px;
+
+    font-weight:700;
+
+    border-radius:12px;
+
+}
+
+/* ================================================= */
+/* LOGIN OPTIONS */
+/* ================================================= */
+
+.auth-options{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-top:15px;
+
+    margin-bottom:20px;
+
+}
+
+.auth-link{
+
+    color:#0f766e;
+
+    font-weight:600;
+
+}
+
+.auth-link:hover{
+
+    text-decoration:underline;
+
+}
+
+/* ================================================= */
+/* AUTH BUTTONS */
+/* ================================================= */
+
+.auth-btn{
+
+    width:100%;
+
+    background:#0f766e;
+
+    color:#fff;
+
+    border:none;
+
+    border-radius:12px;
+
+    padding:15px;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.auth-btn:hover{
+
+    background:#115e59;
+
+}
+
+.auth-btn-secondary{
+
+    background:#6b7280;
+
+}
+
+.auth-btn-success{
+
+    background:#16a34a;
+
+}
+
+.auth-btn-danger{
+
+    background:#dc2626;
+
+}
+
+/* ================================================= */
+/* AUTH FOOTER */
+/* ================================================= */
+
+.auth-footer{
+
+    margin-top:30px;
+
+    text-align:center;
+
+}
+
+.auth-footer p{
+
+    margin-bottom:10px;
+
+}
+
+.auth-footer a{
+
+    color:#0f766e;
+
+    font-weight:700;
+
+}
+
+/* ================================================= */
+/* VERIFY EMAIL */
+/* ================================================= */
+
+.verify-email-box{
+
+    text-align:center;
+
+    padding:25px;
+
+    background:#f8fafc;
+
+    border-radius:16px;
+
+    border:1px solid #e5e7eb;
+
+}
+
+.verify-email-icon{
+
+    font-size:60px;
+
+    margin-bottom:15px;
+
+}
+
+/* ================================================= */
+/* SUCCESS PAGE */
+/* ================================================= */
+
+.success-box{
+
+    text-align:center;
+
+    padding:40px;
+
+}
+
+.success-icon{
+
+    font-size:70px;
+
+    color:#16a34a;
+
+    margin-bottom:20px;
+
+}
+
+/* ================================================= */
+/* FORGOT PASSWORD */
+/* ================================================= */
+
+.forgot-password-box{
+
+    text-align:center;
+
+}
+
+.forgot-password-box p{
+
+    margin-top:15px;
+
+    color:#6b7280;
+
+}
+
+/* ================================================= */
+/* SECURITY */
+/* ================================================= */
+
+.security-notice{
+
+    margin-top:20px;
+
+    background:#eff6ff;
+
+    border:1px solid #bfdbfe;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    color:#1e40af;
+
+}
+
+.security-warning{
+
+    margin-top:20px;
+
+    background:#fff7ed;
+
+    border:1px solid #fdba74;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    color:#9a3412;
+
+}
+
+/* ================================================= */
+/* REGISTER STEP HEADER */
+/* ================================================= */
+
+.register-step-header{
+
+    text-align:center;
+
+    margin-bottom:30px;
+
+}
+
+.register-step-header h2{
+
+    margin-bottom:10px;
+
+}
+
+.register-step-header p{
+
+    color:#6b7280;
+
+}
+
+/* ================================================= */
+/* RESPONSIVE */
+/* ================================================= */
+
+@media(max-width:768px){
+
+.auth-card{
+
+    padding:25px;
+
+}
+
+.auth-title{
+
+    font-size:26px;
+
+}
+
+.auth-options{
+
+    flex-direction:column;
+
+    gap:10px;
+
+}
+
+.otp-wrapper{
+
+    gap:6px;
+
+}
+
+.otp-input{
+
+    width:45px !important;
+
+    height:45px;
+
+    font-size:18px;
+
+}
+
+}
+
+@media(max-width:480px){
+
+.auth-card{
+
+    padding:20px;
+
+}
+
+.auth-logo{
+
+    max-width:160px;
+
+}
+
+.auth-title{
+
+    font-size:22px;
+
+}
+
 }
