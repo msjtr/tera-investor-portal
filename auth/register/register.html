@@ -2,62 +2,182 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>إنشاء حساب مستثمر - منصة TERA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب مستثمر - TERA</title>
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/auth.css">
     <link rel="stylesheet" href="register.css">
 </head>
 <body>
 
-    <div data-include="../../components/header.html"></div>
+    <div class="register-container">
+        <header class="register-header">
+            <a href="../../index.html" class="btn-back">← العودة للصفحة الرئيسية</a>
+            <div class="logo">
+                <img src="../../images/logo.svg" alt="TERA - عالمك بلا حدود" class="logo-img">
+                <h1>TERA<br><span>بوابة المستثمر</span></h1>
+            </div>
+        </header>
 
-    <main class="auth-container">
-        <h1>إنشاء حساب مستثمر جديد</h1>
-        <p class="description">أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
+        <main class="register-content">
+            <div class="text-center intro-text">
+                <h2>إنشاء حساب مستثمر جديد</h2>
+                <p>أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
+            </div>
 
-        <div class="stepper">
-            <div class="step active" id="step1-tab">① إنشاء الحساب</div>
-            <div class="step" id="step2-tab">② الهوية</div>
-            <div class="step" id="step3-tab">③ التواصل</div>
-            <div class="step" id="step4-tab">④ الإقرارات</div>
-        </div>
+            <div class="stepper">
+                <div class="step active" data-step="1">① إنشاء الحساب</div>
+                <div class="step" data-step="2">② المعلومات الشخصية والهوية</div>
+                <div class="step" data-step="3">③ بيانات التواصل والعنوان</div>
+                <div class="step" data-step="4">④ الإقرارات والاتفاقيات</div>
+            </div>
 
-        <form id="registerForm">
-            <section class="form-step active" id="step1">
-                <h3>المرحلة الأولى: إنشاء الحساب</h3>
-                <div class="input-group">
-                    <label>اسم المستخدم</label>
-                    <input type="text" id="username" placeholder="اسم المستخدم">
-                    <div class="validation-checks" id="username-checks">
-                        <p id="check-length">☐ من 4 إلى 20 حرفاً</p>
-                        <p id="check-chars">☐ أحرف إنجليزية وأرقام فقط</p>
+            <form id="registerForm" class="register-form">
+                
+                <section class="form-step active" id="step1">
+                    <h3>المرحلة الأولى: إنشاء الحساب</h3>
+                    
+                    <div class="form-group">
+                        <label>اسم المستخدم *</label>
+                        <input type="text" id="username" placeholder="أدخل اسم المستخدم">
+                        <ul class="validation-list" id="user-validation">
+                            <li class="invalid">☐ من 4 إلى 20 حرفاً</li>
+                            <li class="invalid">☐ أحرف إنجليزية وأرقام فقط</li>
+                            <li class="invalid">☐ لا يحتوي على مسافات</li>
+                            <li class="invalid">☐ لا يحتوي على رموز خاصة</li>
+                            <li class="invalid">☐ غير مستخدم مسبقاً</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group">
+                        <label>البريد الإلكتروني *</label>
+                        <input type="email" id="email" placeholder="example@domain.com">
+                        <label>تأكيد البريد الإلكتروني *</label>
+                        <input type="email" id="confirm-email" placeholder="example@domain.com">
+                        <div id="email-status" class="validation-msg"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>كلمة المرور *</label>
+                        <input type="password" id="password" placeholder="أدخل كلمة المرور">
+                        <div class="password-strength">
+                            <span class="strength-bar"></span>
+                            <span class="strength-text">مؤشر القوة: ضعيفة</span>
                         </div>
-                </div>
+                        <ul class="validation-list" id="pass-validation">
+                            <li class="invalid">☐ 8 أحرف على الأقل</li>
+                            <li class="invalid">☐ حرف كبير باللغة الإنجليزية</li>
+                            <li class="invalid">☐ حرف صغير باللغة الإنجليزية</li>
+                            <li class="invalid">☐ رقم واحد على الأقل</li>
+                            <li class="invalid">☐ رمز خاص واحد على الأقل</li>
+                        </ul>
+                        
+                        <label>تأكيد كلمة المرور *</label>
+                        <input type="password" id="confirm-password" placeholder="أعد إدخال كلمة المرور">
+                        <div id="password-status" class="validation-msg"></div>
+                    </div>
                 </section>
 
-            <section class="form-step" id="step2">
-                <h3>المرحلة الثانية: المعلومات الشخصية والهوية</h3>
-                <select id="nationality" onchange="handleNationalityChange()">
-                    <option value="saudi">سعودي</option>
-                    <option value="resident">مقيم</option>
-                    <option value="gcc">مواطن خليجي</option>
-                    <option value="foreign">أجنبي</option>
-                </select>
-                <div id="dynamic-identity-fields">
+                <section class="form-step" id="step2">
+                    <h3>المرحلة الثانية: المعلومات الشخصية والهوية</h3>
+                    
+                    <div class="form-group">
+                        <label>الاسم الكامل بالعربية كما هو مدون في الوثيقة الرسمية *</label>
+                        <input type="text" required>
+                        <label>الاسم الكامل بالإنجليزية كما هو مدون في الوثيقة الرسمية *</label>
+                        <input type="text" required>
+                        
+                        <label>الجنس</label>
+                        <select required>
+                            <option value="male">ذكر</option>
+                            <option value="female">أنثى</option>
+                        </select>
+
+                        <label>الجنسية</label>
+                        <select id="nationalityType" required>
+                            <option value="">اختر الجنسية...</option>
+                            <option value="saudi">سعودي</option>
+                            <option value="resident">مقيم</option>
+                            <option value="gcc">مواطن خليجي</option>
+                            <option value="foreigner">أجنبي</option>
+                        </select>
                     </div>
-            </section>
 
-            <div class="controls">
-                <button type="button" class="btn-prev" onclick="prevStep()" disabled>السابق</button>
-                <button type="button" class="btn-next" onclick="nextStep()">التالي</button>
-                <button type="submit" class="btn-submit" id="submitBtn" style="display:none;">إنشاء الحساب</button>
+                    <div id="id-details-container"></div>
+
+                    <div class="form-group checkbox-group">
+                        <label><input type="checkbox" required> أقر بأن عمري 18 عاماً فأكثر.</label>
+                        <label><input type="checkbox" required> أقر بأنني المستفيد الحقيقي من الحساب.</label>
+                    </div>
+                </section>
+
+                <section class="form-step" id="step3">
+                    <h3>المرحلة الثالثة: بيانات التواصل والعنوان</h3>
+                    
+                    <div class="form-group flex-group">
+                        <div class="half-width">
+                            <label>مفتاح الدولة *</label>
+                            <select required><option value="+966">+966 (السعودية)</option></select>
+                        </div>
+                        <div class="full-width">
+                            <label>رقم الجوال *</label>
+                            <input type="tel" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>وسيلة التواصل المفضلة</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="contact_pref" value="email" checked> البريد الإلكتروني</label>
+                            <label><input type="radio" name="contact_pref" value="phone"> الجوال</label>
+                        </div>
+                    </div>
+
+                    <div id="address-container">
+                        </div>
+                </section>
+
+                <section class="form-step" id="step4">
+                    <h3>المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
+                    
+                    <div class="agreements-list">
+                        <label class="checkbox-container"><input type="checkbox" required> أقر وأوافق على الشروط والأحكام الخاصة ببوابة المستثمرين...</label>
+                        <label class="checkbox-container"><input type="checkbox" required> أوافق على سياسة الخصوصية الخاصة ببوابة المستثمرين...</label>
+                        <label class="checkbox-container"><input type="checkbox" required> أقر بموافقتي على سياسة الاستخدام...</label>
+                        <div class="security-info">
+                            <label class="checkbox-container"><input type="checkbox" required> أوافق على إجراءات وأنظمة التحقق الأمني، بما يشمل:</label>
+                            <ul>
+                                <li>التحقق عبر البريد الإلكتروني ورموز التحقق OTP.</li>
+                                <li>تسجيل بيانات الجهاز والمتصفح وعنوان IP.</li>
+                                <li>تحليل المخاطر والأنشطة المشبوهة.</li>
+                            </ul>
+                        </div>
+                        <label class="checkbox-container"><input type="checkbox" required> أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة...</label>
+                        <label class="checkbox-container highlight"><input type="checkbox" required> قرأت جميع الإقرارات والاتفاقيات أعلاه وأوافق عليها بالكامل.</label>
+                    </div>
+
+                    <div class="final-declaration">
+                        <p><strong>الإقرار النهائي:</strong> أتعهد بأن جميع البيانات والمعلومات المقدمة في هذا الطلب صحيحة وسارية المفعول...</p>
+                    </div>
+                </section>
+
+                <div class="form-controls">
+                    <button type="button" id="btn-prev" class="btn btn-secondary hidden">السابق</button>
+                    <button type="button" id="btn-next" class="btn btn-primary">التالي</button>
+                    <button type="submit" id="btn-submit" class="btn btn-success hidden">إنشاء الحساب</button>
+                </div>
+            </form>
+
+            <div class="footer-links text-center">
+                <p>لديك حساب مستثمر بالفعل؟ <a href="../login.html">تسجيل الدخول إلى حسابك</a></p>
             </div>
-        </form>
-    </main>
+        </main>
+    </div>
 
-    <div data-include="../../components/footer.html"></div>
-    
     <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/auth.js"></script>
     <script src="register.js"></script>
 </body>
 </html>
