@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب مستثمر جديد | منصة تيرا</title>
-    <!-- ربط الأيقونات (FontAwesome كمثال للتصميم الاحترافي) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ربط ملفات التنسيق العامة والخاصة بالترتيب الصحيح -->
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/auth.css">
@@ -19,14 +17,12 @@
 <body>
 
     <div class="auth-container">
-        <!-- أعلى الصفحة -->
         <div class="auth-header-navigation">
             <a href="../../index.html" class="back-home-btn">
                 <i class="fas fa-arrow-right"></i> العودة للصفحة الرئيسية
             </a>
         </div>
 
-        <!-- الشعار والهوية -->
         <div class="brand-wrapper">
             <img src="../../images/logo.svg" alt="TERA Logo" class="main-logo">
             <h1 class="brand-title">TERA</h1>
@@ -39,7 +35,6 @@
                 <p>أكمل البيانات التالية لإنشاء حسابك في بوابة المستثمر والاستفادة من الخدمات الاستثمارية المقدمة عبر منصة تيرا — عالمك بلا حدود.</p>
             </div>
 
-            <!-- مراحل التسجيل (المؤشر) -->
             <div class="registration-steps">
                 <div class="step-item active" data-step="1">
                     <span class="step-number">①</span>
@@ -59,14 +54,11 @@
                 </div>
             </div>
 
-            <!-- نموذج التسجيل الموحد -->
             <form id="registerMultiStepForm" novalidate>
                 
-                <!-- ================= المرحلة الأولى ================= -->
                 <div class="form-step-content active" id="step1">
                     <h3 class="step-section-title">المرحلة الأولى: إنشاء الحساب</h3>
                     
-                    <!-- اسم المستخدم -->
                     <div class="form-group">
                         <label for="username" class="required-label">اسم المستخدم</label>
                         <input type="text" id="username" name="username" class="form-control" placeholder="أدخل اسم المستخدم">
@@ -79,18 +71,16 @@
                         </div>
                     </div>
 
-                    <!-- البريد الإلكتروني -->
                     <div class="form-group">
                         <label for="email" class="required-label">البريد الإلكتروني</label>
                         <input type="email" id="email" name="email" class="form-control" placeholder="example@domain.com">
                     </div>
                     <div class="form-group">
                         <label for="confirmEmail" class="required-label">تأكيد البريد الإلكتروني</label>
-                        <input type="email" id="confirmEmail" class="form-control" placeholder="أعد إدخال البريد الإلكتروني">
+                        <input type="email" id="confirmEmail" name="confirmEmail" class="form-control" placeholder="أعد إدخال البريد الإلكتروني">
                         <div class="match-feedback" id="emailMatchFeedback"></div>
                     </div>
 
-                    <!-- كلمة المرور -->
                     <div class="form-group">
                         <label for="password" class="required-label">كلمة المرور</label>
                         <input type="password" id="password" name="password" class="form-control" placeholder="••••••••">
@@ -114,12 +104,11 @@
                     
                     <div class="form-group">
                         <label for="confirmPassword" class="required-label">تأكيد كلمة المرور</label>
-                        <input type="password" id="confirmPassword" class="form-control" placeholder="أعد إدخال كلمة المرور">
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="أعد إدخال كلمة المرور">
                         <div class="match-feedback" id="passwordMatchFeedback"></div>
                     </div>
                 </div>
 
-                <!-- ================= المرحلة الثانية ================= -->
                 <div class="form-step-content" id="step2">
                     <h3 class="step-section-title">المرحلة الثانية: المعلومات الشخصية والهوية</h3>
                     
@@ -155,52 +144,48 @@
                         </div>
                     </div>
 
-                    <!-- حقول الهوية الديناميكية بناءً على الجنسية ونوع الاختيار -->
                     <div class="sub-section" id="identitySection">
                         <h4>بيانات الهوية</h4>
-                        <p class="placeholder-text">الرجاء اختيار الجنسية أولاً لتحديد وثائق الهوية المطلوبة.</p>
+                        <p class="placeholder-text" id="identityPlaceholder">الرجاء اختيار الجنسية أولاً لتحديد وثائق الهوية المطلوبة.</p>
                         
-                        <!-- كتلة السعودي -->
                         <div class="identity-block hidden" id="idBlockSaudi">
                             <div class="form-group">
-                                <label class="required-label">رقم الهوية الوطنية</label>
-                                <input type="text" class="form-control" maxlength="10">
+                                <label for="saudiIdNumber" class="required-label">رقم الهوية الوطنية</label>
+                                <input type="text" id="saudiIdNumber" name="saudiIdNumber" class="form-control" maxlength="10">
                             </div>
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ إصدار الهوية</label>
-                                    <input type="date" class="form-control">
+                                    <label for="saudiIdIssueDate" class="required-label">تاريخ إصدار الهوية</label>
+                                    <input type="date" id="saudiIdIssueDate" name="saudiIdIssueDate" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ انتهاء الهوية</label>
-                                    <input type="date" class="form-control">
+                                    <label for="saudiIdExpiryDate" class="required-label">تاريخ انتهاء الهوية</label>
+                                    <input type="date" id="saudiIdExpiryDate" name="saudiIdExpiryDate" class="form-control">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- كتلة المقيم -->
                         <div class="identity-block hidden" id="idBlockResident">
                             <div class="form-group">
-                                <label class="required-label">رقم الإقامة</label>
-                                <input type="text" class="form-control" maxlength="10">
+                                <label for="residentIdNumber" class="required-label">رقم الإقامة</label>
+                                <input type="text" id="residentIdNumber" name="residentIdNumber" class="form-control" maxlength="10">
                             </div>
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ إصدار الإقامة</label>
-                                    <input type="date" class="form-control">
+                                    <label for="residentIdIssueDate" class="required-label">تاريخ إصدار الإقامة</label>
+                                    <input type="date" id="residentIdIssueDate" name="residentIdIssueDate" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ انتهاء الإقامة</label>
-                                    <input type="date" class="form-control">
+                                    <label for="residentIdExpiryDate" class="required-label">تاريخ انتهاء الإقامة</label>
+                                    <input type="date" id="residentIdExpiryDate" name="residentIdExpiryDate" class="form-control">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- كتلة الخليجي -->
                         <div class="identity-block hidden" id="idBlockGcc">
                             <div class="form-group">
-                                <label class="required-label">الدولة</label>
-                                <select class="form-control">
+                                <label for="gccCountry" class="required-label">الدولة</label>
+                                <select id="gccCountry" name="gccCountry" class="form-control">
                                     <option value="">اختر الدولة الخليجية</option>
                                     <option value="AE">الإمارات</option>
                                     <option value="KW">الكويت</option>
@@ -210,22 +195,21 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="required-label">رقم الهوية الخليجية</label>
-                                <input type="text" class="form-control">
+                                <label for="gccIdNumber" class="required-label">رقم الهوية الخليجية</label>
+                                <input type="text" id="gccIdNumber" name="gccIdNumber" class="form-control">
                             </div>
                             <div class="form-grid">
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ إصدار الهوية</label>
-                                    <input type="date" class="form-control">
+                                    <label for="gccIdIssueDate" class="required-label">تاريخ إصدار الهوية</label>
+                                    <input type="date" id="gccIdIssueDate" name="gccIdIssueDate" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <label class="required-label">تاريخ انتهاء الهوية</label>
-                                    <input type="date" class="form-control">
+                                    <label for="gccIdExpiryDate" class="required-label">تاريخ انتهاء الهوية</label>
+                                    <input type="date" id="gccIdExpiryDate" name="gccIdExpiryDate" class="form-control">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- كتلة الأجنبي -->
                         <div class="identity-block hidden" id="idBlockForeign">
                             <div class="form-group">
                                 <label class="required-label">نوع الوثيقة</label>
@@ -235,46 +219,44 @@
                                 </div>
                             </div>
                             
-                            <!-- الفرع أ: الهوية الوطنية للأجنبي -->
                             <div class="foreign-sub-block hidden" id="foreignIdSubBlock">
                                 <div class="form-group">
-                                    <label class="required-label">الدولة</label>
-                                    <input type="text" class="form-control" placeholder="دولة الهوية">
+                                    <label for="foreignIdCountry" class="required-label">الدولة</label>
+                                    <input type="text" id="foreignIdCountry" name="foreignIdCountry" class="form-control" placeholder="دولة الهوية">
                                 </div>
                                 <div class="form-group">
-                                    <label class="required-label">رقم الهوية</label>
-                                    <input type="text" class="form-control">
+                                    <label for="foreignIdNumber" class="required-label">رقم الهوية</label>
+                                    <input type="text" id="foreignIdNumber" name="foreignIdNumber" class="form-control">
                                 </div>
                                 <div class="form-grid">
                                     <div class="form-group">
-                                        <label class="required-label">تاريخ الإصدار</label>
-                                        <input type="date" class="form-control">
+                                        <label for="foreignIdIssueDate" class="required-label">تاريخ الإصدار</label>
+                                        <input type="date" id="foreignIdIssueDate" name="foreignIdIssueDate" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label class="required-label">تاريخ الانتهاء</label>
-                                        <input type="date" class="form-control">
+                                        <label for="foreignIdExpiryDate" class="required-label">تاريخ الانتهاء</label>
+                                        <input type="date" id="foreignIdExpiryDate" name="foreignIdExpiryDate" class="form-control">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- الفرع ب: جواز السفر للأجنبي -->
                             <div class="foreign-sub-block hidden" id="foreignPassportSubBlock">
                                 <div class="form-group">
-                                    <label class="required-label">دولة الإصدار</label>
-                                    <input type="text" class="form-control" placeholder="دولة إصدار الجواز">
+                                    <label for="foreignPassportCountry" class="required-label">دولة الإصدار</label>
+                                    <input type="text" id="foreignPassportCountry" name="foreignPassportCountry" class="form-control" placeholder="دولة إصدار الجواز">
                                 </div>
                                 <div class="form-group">
-                                    <label class="required-label">رقم جواز السفر</label>
-                                    <input type="text" class="form-control">
+                                    <label for="foreignPassportNumber" class="required-label">رقم جواز السفر</label>
+                                    <input type="text" id="foreignPassportNumber" name="foreignPassportNumber" class="form-control">
                                 </div>
                                 <div class="form-grid">
                                     <div class="form-group">
-                                        <label class="required-label">تاريخ إصدار الجواز</label>
-                                        <input type="date" class="form-control">
+                                        <label for="foreignPassportIssueDate" class="required-label">تاريخ إصدار الجواز</label>
+                                        <input type="date" id="foreignPassportIssueDate" name="foreignPassportIssueDate" class="form-control">
                                     </div>
                                     <div class="form-group">
-                                        <label class="required-label">تاريخ انتهاء الجواز</label>
-                                        <input type="date" class="form-control">
+                                        <label for="foreignPassportExpiryDate" class="required-label">تاريخ انتهاء الجواز</label>
+                                        <input type="date" id="foreignPassportExpiryDate" name="foreignPassportExpiryDate" class="form-control">
                                     </div>
                                 </div>
                             </div>
@@ -285,18 +267,17 @@
                         <h4>إقرارات إضافية</h4>
                         <div class="checkbox-wrapper">
                             <label class="checkbox-inline">
-                                <input type="checkbox" id="declarationAge" required> أقر بأن عمري 18 عاماً فأكثر.
+                                <input type="checkbox" id="declarationAge" name="declarationAge" required> أقر بأن عمري 18 عاماً فأكثر.
                             </label>
                         </div>
                         <div class="checkbox-wrapper">
                             <label class="checkbox-inline">
-                                <input type="checkbox" id="declarationBeneficiary" required> أقر بأنني المستفيد الحقيقي من الحساب.
+                                <input type="checkbox" id="declarationBeneficiary" name="declarationBeneficiary" required> أقر بأنني المستفيد الحقيقي من الحساب.
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- ================= المرحلة الثالثة ================= -->
                 <div class="form-step-content" id="step3">
                     <h3 class="step-section-title">المرحلة الثالثة: بيانات التواصل والعنوان</h3>
                     
@@ -305,7 +286,7 @@
                         <div class="form-grid" style="grid-template-columns: 1fr 3fr;">
                             <div class="form-group">
                                 <label for="countryCode" class="required-label">مفتاح الدولة</label>
-                                <select id="countryCode" class="form-control">
+                                <select id="countryCode" name="countryCode" class="form-control">
                                     <option value="+966">+966 (السعودية)</option>
                                     <option value="+971">+971 (الإمارات)</option>
                                     <option value="+965">+965 (الكويت)</option>
@@ -331,55 +312,52 @@
                     <div class="sub-section" id="addressSection">
                         <h4>العنوان</h4>
                         
-                        <!-- واجهة محددة للعنوان الوطني (للسعودي والمقيم) -->
                         <div id="nationalAddressBlock" class="address-block hidden">
                             <h5 class="address-title">بيانات العنوان الوطني</h5>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">رقم المبنى</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">الرقم الفرعي</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="natBuildingNo" class="required-label">رقم المبنى</label><input type="text" id="natBuildingNo" name="natBuildingNo" class="form-control"></div>
+                                <div class="form-group"><label for="natAdditionalNo" class="required-label">الرقم الفرعي</label><input type="text" id="natAdditionalNo" name="natAdditionalNo" class="form-control"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">اسم الشارع</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">الحي</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="natStreet" class="required-label">اسم الشارع</label><input type="text" id="natStreet" name="natStreet" class="form-control"></div>
+                                <div class="form-group"><label for="natDistrict" class="required-label">الحي</label><input type="text" id="natDistrict" name="natDistrict" class="form-control"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">المدينة</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">الرمز البريدي</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="natCity" class="required-label">المدينة</label><input type="text" id="natCity" name="natCity" class="form-control"></div>
+                                <div class="form-group"><label for="natZipCode" class="required-label">الرمز البريدي</label><input type="text" id="natZipCode" name="natZipCode" class="form-control"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">الرقم الإضافي</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label>رقم الوحدة (اختياري)</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="natExtNumber" class="required-label">الرقم الإضافي</label><input type="text" id="natExtNumber" name="natExtNumber" class="form-control"></div>
+                                <div class="form-group"><label for="natUnitNo">رقم الوحدة (اختياري)</label><input type="text" id="natUnitNo" name="natUnitNo" class="form-control"></div>
                             </div>
                             <div class="form-group">
-                                <label class="required-label">الاسم المختصر للعنوان الوطني</label>
-                                <input type="text" class="form-control">
+                                <label for="natShortName" class="required-label">الاسم المختصر للعنوان الوطني</label>
+                                <input type="text" id="natShortName" name="natShortName" class="form-control">
                             </div>
                         </div>
 
-                        <!-- واجهة محددة للعنوان الدولي (للخليجي والأجنبي) -->
                         <div id="internationalAddressBlock" class="address-block hidden">
                             <h5 class="address-title">بيانات العنوان الدولي</h5>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">الدولة</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">المدينة</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="interCountry" class="required-label">الدولة</label><input type="text" id="interCountry" name="interCountry" class="form-control"></div>
+                                <div class="form-group"><label for="interCity" class="required-label">المدينة</label><input type="text" id="interCity" name="interCity" class="form-control"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">المحافظة / الولاية</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">الحي</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="interState" class="required-label">المحافظة / الولاية</label><input type="text" id="interState" name="interState" class="form-control"></div>
+                                <div class="form-group"><label for="interDistrict" class="required-label">الحي</label><input type="text" id="interDistrict" name="interDistrict" class="form-control"></div>
                             </div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="required-label">الشارع</label><input type="text" class="form-control"></div>
-                                <div class="form-group"><label class="required-label">الرمز البريدي</label><input type="text" class="form-control"></div>
+                                <div class="form-group"><label for="interStreet" class="required-label">الشارع</label><input type="text" id="interStreet" name="interStreet" class="form-control"></div>
+                                <div class="form-group"><label for="interZip" class="required-label">الرمز البريدي</label><input type="text" id="interZip" name="interZip" class="form-control"></div>
                             </div>
                             <div class="form-group">
-                                <label class="required-label">وصف إضافي للعنوان</label>
-                                <textarea class="form-control" rows="2"></textarea>
+                                <label for="interDesc" class="required-label">وصف إضافي للعنوان</label>
+                                <textarea id="interDesc" name="interDesc" class="form-control" rows="2"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ================= المرحلة الرابعة ================= -->
                 <div class="form-step-content" id="step4">
                     <h3 class="step-section-title">المرحلة الرابعة: الإقرارات والاتفاقيات</h3>
                     
@@ -442,12 +420,11 @@
                     </div>
 
                     <div class="final-pledge-box">
-                        <h5>الإقرارات النهائي</h5>
+                        <h5>الإقرار النهائي</h5>
                         <p>أتعهد بأن جميع البيانات والمعلومات المقدمة في هذا الطلب صحيحة وسارية المفعول، وأوافق على الالتزام بجميع الأنظمة والسياسات والاتفاقيات المنظمة لاستخدام بوابة المستثمرين في منصة تيرا — عالمك بلا حدود.</p>
                     </div>
                 </div>
 
-                <!-- أزرار التحكم بالنظام المتعدد الخطوات -->
                 <div class="form-navigation-actions">
                     <button type="button" id="btnPrev" class="btn btn-secondary hidden">السابق</button>
                     <button type="button" id="btnNext" class="btn btn-primary">التالي</button>
@@ -455,15 +432,14 @@
                 </div>
             </form>
 
-            <!-- أسفل الصفحة -->
             <div class="auth-footer-redirect">
                 <p>لديك حساب مستثمر بالفعل؟ <a href="../login.html" class="login-link">تسجيل الدخول إلى حسابك</a></p>
             </div>
         </div>
     </div>
 
-    <!-- ربط ملف الأوامر والتحققات المشتركة والخلفية البرمجية -->
     <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/auth.js"></script>
     <script src="register.js"></script>
 </body>
