@@ -1,55 +1,47 @@
 /* ==========================================================================
-   TERA Investor Portal - Global Responsive Styles
+   TERA Investor Portal - Global Responsive Styles (Fixed)
    ========================================================================== */
 
-/* ==========================================
-   الأجهزة اللوحية (Tablets)
-   ========================================== */
+/* 1. الأجهزة اللوحية (Tablets) */
 @media (max-width: 992px) {
-    /* تصغير المساحات في منطقة المحتوى */
-    .page-content {
-        padding: 20px;
-    }
-
-    /* تكديس العناصر التي تستخدم Flexbox إذا لزم الأمر */
+    .page-content { padding: 20px; }
+    
     .flex-group {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
     }
 }
 
-/* ==========================================
-   الهواتف الذكية (Mobile)
-   ========================================== */
+/* 2. الهواتف الذكية (Mobile) */
 @media (max-width: 768px) {
-    /* 1. إخفاء القائمة الجانبية افتراضياً وإظهار زر القائمة */
+    
+    /* إصلاح حركة القائمة الجانبية - استخدام العرض أفضل من التحويل في بعض الحالات */
     .main-sidebar {
-        transform: translateX(100%); /* سحبها لليمين (لأننا في RTL) لإخفائها */
+        width: 280px;
+        right: -280px; /* إخفاؤها تماماً خارج الشاشة من اليمين */
+        transition: right 0.3s ease;
     }
 
     .main-sidebar.active {
-        transform: translateX(0); /* إظهارها عند إضافة كلاس active */
-        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        right: 0; /* سحبها لتظهر */
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
     }
 
-    .menu-toggle {
-        display: block; /* إظهار زر الهمبرغر (الخاص بالقائمة) */
-    }
+    .menu-toggle { display: block !important; }
 
-    /* 2. توسيع منطقة المحتوى لتأخذ الشاشة كاملة */
     .main-content {
-        margin-right: 0;
+        margin-right: 0 !important; /* السماح للمحتوى بأخذ كامل العرض */
+        width: 100%;
     }
 
-    /* 3. تعديل الرأس (Header) */
+    /* إصلاح ترويسة الجوال */
     .main-header {
         padding: 0 15px;
+        justify-content: space-between;
     }
 
-    /* 4. تعديل البطاقات والمحتوى */
-    .page-content {
-        padding: 15px;
-    }
+    /* إصلاح البطاقات في الجوال */
+    .page-content { padding: 15px; }
 
     .card-header {
         flex-direction: column;
@@ -57,19 +49,41 @@
         gap: 10px;
     }
 
-    /* 5. النماذج والأزرار */
+    /* إصلاح الأزرار - جعلها تأخذ العرض الكامل للمساحة المتاحة */
     .form-controls {
-        flex-direction: column-reverse;
-        gap: 10px;
+        flex-direction: column !important;
+        gap: 12px;
+        border-top: none;
+    }
+
+    .controls-right {
+        width: 100%;
+        flex-direction: column;
+        margin-right: 0 !important;
     }
 
     .btn {
-        width: 100%;
-        margin-bottom: 10px;
+        width: 100% !important;
+        padding: 12px !important;
     }
 
-    /* 6. إعدادات الجداول للشاشات الصغيرة */
-    .table th, .table td {
-        white-space: nowrap; /* منع النص من الالتفاف لضمان إمكانية التمرير الأفقي */
+    /* إصلاح الجداول - تفعيل التمرير الأفقي بدقة */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
+
+    .table { width: 100%; min-width: 500px; } /* ضمان الحد الأدنى للعرض */
+}
+
+/* إصلاح إضافي: التأكد من عدم خروج النصوص أو الصور عن الشاشة */
+@media (max-width: 480px) {
+    .register-container {
+        margin: 10px !important;
+        padding: 15px !important;
+    }
+    
+    h2 { font-size: 1.25rem !important; }
 }
