@@ -1,121 +1,155 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - CORE STYLES (UPDATED & PREMIUM)
+   TERA Investor Portal - Core Styles (Brand Identity)
    ========================================================================== */
 
-/* نظام الألوان والمتغيرات المركزية المنبثقة من الهوية الرقمية لمنصة تيرا */
+/* 1. المتغيرات الأساسية (CSS Variables) بناءً على الشعار */
 :root {
-    /* الألوان الأساسية الحصرية لـ تيرا (Teal & Royal Blue Palette) */
-    --primary-color: #008080;        /* اللون البترولي/التيال الأساسي الفاخر */
-    --primary-hover: #006666;        /* بترولي داكن للتفاعلات */
-    --primary-light: rgba(0, 128, 128, 0.08); /* خلفيات خفيفة مريحة للعين */
+    /* ألوان هوية TERA */
+    --brand-dark-blue: #0A1940; /* الأزرق الداكن من الشعار */
+    --brand-teal: #00B4B4;      /* التركواز/الأخضر المزرق من السهم */
     
-    --secondary-color: #4169e1;      /* الأزرق الملكي المكمل للهوية */
-    --secondary-hover: #3152b1;
+    /* الألوان الأساسية للنظام */
+    --primary-color: var(--brand-dark-blue);
+    --secondary-color: var(--brand-teal);
+    --primary-hover: #07122b;
+    --secondary-hover: #009696;
+
+    /* ألوان النصوص والخلفيات */
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --bg-main: #ffffff;         /* خلفية بيضاء بالكامل كما هو مطلوب */
+    --bg-surface: #ffffff;      /* خلفية البطاقات */
     
-    /* ألوان الحالة النظمية الموزونة لراحة العين */
-    --success-color: #198754;
-    --success-hover: #146c43;
-    --success-light: #e8f5e9;
-    
-    --danger-color: #dc3545;
-    --danger-hover: #bb2d3b;
-    --danger-light: #f8d7da;
-    
-    --warning-color: #ffc107;
-    --warning-hover: #e0a800;
-    --warning-light: #fff3cd;
-    
-    --info-color: #0dcaf0;
-    
-    /* الألوان المحايدة والتدرجات الفاخرة */
-    --neutral-dark: #1a1e21;         /* رمادي داكن يقارب الأسود الفاخر */
-    --neutral-gray: #495057;
-    --text-muted: #6c757d;
-    --bg-main: #f4f6f9;              /* خلفية النظام المريحة */
-    --bg-card: #ffffff;
-    --border-color: #dee2e6;
-    --border-focus: #80c0c0;         /* متناسق تماماً مع توهج التيال الفاخر */
-    
-    /* واجهات الزجاج الفاخر (Glassmorphism UI Elements) */
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --glass-blur: blur(12px);
-    
-    /* الخطوط المنظمة للأعمال المالية والاستثمارية */
-    --font-sans: 'Cairo', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --border-radius-sm: 6px;         /* حواف أكثر عصرية من 4px القديمة */
+    /* ألوان الحالات */
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+
+    /* الحدود والظلال */
+    --border-color: #e5e7eb;
+    --border-radius-sm: 6px;
     --border-radius-md: 10px;
-    --border-radius-lg: 16px;        /* انحناءات بريميوم متناسقة مع عناصر الـ Glass */
-    
-    /* الظلال الرقيقة العميقة */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.06);
-    
-    /* التأثيرات الحركية السلسة */
-    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --border-radius-lg: 16px;
+    --box-shadow: 0 4px 24px rgba(10, 25, 64, 0.06); /* ظل خفيف يميل للأزرق الداكن */
+
+    /* الخطوط */
+    --font-family-arabic: 'Tajawal', 'Cairo', system-ui, -apple-system, sans-serif;
 }
 
-/* إعادة ضبط المتصفح القياسي وبناء شبكة الأبعاد الأمنية */
-*, *::before, *::after {
+/* 2. إعادة تعيين العناصر (Reset) */
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html {
-    scroll-behavior: smooth;
-    font-size: 16px;
-    -webkit-text-size-adjust: 100%;
+html, body {
+    height: 100%;
 }
 
 body {
-    font-family: var(--font-sans);
+    font-family: var(--font-family-arabic);
     background-color: var(--bg-main);
-    color: var(--neutral-dark);
+    color: var(--text-main);
     line-height: 1.6;
-    direction: rtl;               /* إعطاء الأولوية للتوجيه المنطقي للمتصفح بدلاً من text-align */
-    text-align: right;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased; /* تحسين نعومة ومظهر الخطوط المكتوبة */
-    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+    direction: rtl; 
 }
 
-/* تحسينات الوسائط الافتراضية لمنع التشوه */
-img, svg {
-    vertical-align: middle;
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;          /* يضمن عدم تمطط الشعار أو الصور التعبيرية */
-}
-
-/* روابط وتفاعلات أساسية موحدة */
 a {
-    color: var(--primary-color);
+    color: var(--secondary-color); /* استخدام التركواز للروابط */
     text-decoration: none;
-    transition: color var(--transition-fast), opacity var(--transition-fast);
+    transition: color 0.3s ease;
 }
 
 a:hover {
-    color: var(--primary-hover);
+    color: var(--primary-color);
 }
 
-/* تخصيص شريط التمرير (Scrollbar) لتجربة مستخدم ناعمة وفاخرة */
-::-webkit-scrollbar {
-    width: 6px;                   /* سمك أكثر دقة ونعومة من 8px لتجنب تشتيت العين */
-    height: 6px;
+/* 3. التنسيقات العامة (Typography) */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-main);
+/* 4. النماذج الأساسية (Forms) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    background-color: #fcfcfc; /* لون رمادي فاتح جداً لتمييز حقل الإدخال عن الخلفية البيضاء */
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-::-webkit-scrollbar-thumb {
-    background: rgba(0, 128, 128, 0.2); /* شريط تمرير متناسق مع لون الهوية بدلاً من الرمادي */
-    border-radius: 10px;
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    background-color: var(--bg-main);
+    box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1); /* توهج بلون التركواز عند التحديد */
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color);
+label {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+/* 5. الأزرار (Buttons) */
+.btn {
+    display: inline-block;
+    font-weight: 600;
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: var(--border-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+/* الزر الأساسي (يعتمد التدرج اللوني للشعار أو التركواز) */
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(45deg, var(--brand-dark-blue), var(--brand-teal));
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, var(--primary-hover), var(--secondary-hover));
+    box-shadow: 0 4px 12px rgba(0, 180, 180, 0.3);
+}
+
+.btn-secondary {
+    color: var(--primary-color);
+    background-color: var(--bg-main);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: var(--success-color);
 }
