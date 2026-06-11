@@ -1,121 +1,75 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - RESPONSIVE STYLES (UPDATED)
+   TERA Investor Portal - Global Responsive Styles
    ========================================================================== */
 
-/* 1. الشاشات العريضة جداً والكبيرة */
-@media (min-width: 1200px) {
-    .container { max-width: 1140px; }
-}
-
-/* 2. الشاشات المتوسطة والكبيرة (أجهزة الكمبيوتر العادية) */
-@media (min-width: 992px) and (max-width: 1199.98px) {
-    .container { max-width: 960px; }
-}
-
-/* 3. الأجهزة اللوحية والشاشات المتوسطة (Tablets) */
-@media (max-width: 991.98px) {
-    .container { max-width: 720px; }
-    
-    /* تبسيط شريط تتبع المراحل وتحويله إلى سحب أفقي ناعم لمنع انضغاط النصوص */
-    .registration-steps {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 12px;
-        justify-content: flex-start;
-        gap: 20px;
-        -webkit-overflow-scrolling: touch; /* سحب سلس للغاية في أجهزة آيفون وآيباد */
+/* ==========================================
+   الأجهزة اللوحية (Tablets)
+   ========================================== */
+@media (max-width: 992px) {
+    /* تصغير المساحات في منطقة المحتوى */
+    .page-content {
+        padding: 20px;
     }
-    
-    /* إخفاء شريط التمرير الافتراضي لشريط الخطوات للحفاظ على جمالية المظهر */
-    .registration-steps::-webkit-scrollbar {
-        display: none;
-    }
-    
-    .step-item {
-        flex: 0 0 auto;
-        min-width: 130px;
+
+    /* تكديس العناصر التي تستخدم Flexbox إذا لزم الأمر */
+    .flex-group {
+        flex-direction: column;
+        gap: 10px;
     }
 }
 
-/* 4. شاشات الجوال والهواتف الذكية (Smartphones) */
-@media (max-width: 767.98px) {
-    .container { 
-        max-width: 100%; 
-        padding-right: 15px;
-        padding-left: 15px; 
+/* ==========================================
+   الهواتف الذكية (Mobile)
+   ========================================== */
+@media (max-width: 768px) {
+    /* 1. إخفاء القائمة الجانبية افتراضياً وإظهار زر القائمة */
+    .main-sidebar {
+        transform: translateX(100%); /* سحبها لليمين (لأننا في RTL) لإخفائها */
     }
 
-    /* مواءمة حاوية المصادقة والتسجيل لجعلها مريحة للعين فوق شاشات الهاتف */
-    .auth-container {
-        margin: 20px auto;
-        padding: 0 10px;
+    .main-sidebar.active {
+        transform: translateX(0); /* إظهارها عند إضافة كلاس active */
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
     }
 
-    .form-card {
-        padding: 25px 16px; /* تقليص الحشو الداخلي لربح مساحة عرض أكبر للبيانات */
-        border-radius: var(--border-radius-md, 10px);
-        box-shadow: var(--shadow-sm);
+    .menu-toggle {
+        display: block; /* إظهار زر الهمبرغر (الخاص بالقائمة) */
     }
 
-    /* تحويل الشبكات الثنائية الأعمدة إلى عمود واحد شاقولي تلقائياً */
-    .form-grid {
-        grid-template-columns: 1fr !important;
-        gap: 12px;
+    /* 2. توسيع منطقة المحتوى لتأخذ الشاشة كاملة */
+    .main-content {
+        margin-right: 0;
     }
 
-    /* إعادة ترتيب الأزرار شاقولياً (زر التالي بالأعلى، وزر السابق بالأسفل لسهولة التحكم بالإبهام) */
-    .form-navigation-actions {
-        flex-direction: column-reverse; /* يضع الزر الأساسي (التالي) في الأعلى ليكون الأقرب للضغط */
-        gap: 12px;
+    /* 3. تعديل الرأس (Header) */
+    .main-header {
+        padding: 0 15px;
     }
 
-    .form-navigation-actions .btn {
-        width: 100%;
-        padding: 12px;
-    }
-    
-    /* إلغاء الـ margin-inline الذكي أثناء الوضع الشاقولي لضمان التمدد الكامل */
-    .btn-secondary {
-        margin-inline-end: 0 !important; 
+    /* 4. تعديل البطاقات والمحتوى */
+    .page-content {
+        padding: 15px;
     }
 
-    /* مرونة خيارات الراديو وصناديق التحقق بداخل النماذج في الجوال */
-    .radio-group-flex, .checkbox-wrapper {
+    .card-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
     }
 
-    /* تكييف النصوص والمربعات التنبيهية لتسهيل القراءة على الهاتف */
-    .validation-requirements, .nested-info {
-        padding: 12px;
-        font-size: 0.85rem;
-    }
-    
-    .brand-title-updated {
-        font-size: 1.25rem;
-    }
-    
-    .brand-subtitle-updated {
-        font-size: 0.8rem;
-    }
-}
-
-/* 5. الهواتف الصغيرة جداً (مثل iPhone SE والشاشات الضيقة) */
-@media (max-width: 480px) {
-    html {
-        font-size: 15px; /* خفض طفيف للخط العام لمنع خروج الكلمات من البطاقة */
-    }
-    
-    .form-instruction h2 {
-        font-size: 1.3rem;
+    /* 5. النماذج والأزرار */
+    .form-controls {
+        flex-direction: column-reverse;
+        gap: 10px;
     }
 
-    .form-instruction p {
-        font-size: 0.88rem;
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
     }
-    
-    .step-number {
-        font-size: 1.1rem;
+
+    /* 6. إعدادات الجداول للشاشات الصغيرة */
+    .table th, .table td {
+        white-space: nowrap; /* منع النص من الالتفاف لضمان إمكانية التمرير الأفقي */
     }
 }
