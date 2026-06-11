@@ -51,18 +51,28 @@ const TeraCore = (function () {
                 }, config.sessionTimeout);
             };
 
-            // مراقبة نشاط المستخدم لإعادة تعيين مؤقت الجلسة
-            window.onload = resetTimer;
-            document.onmousemove = resetTimer;
-            document.onkeydown = resetTimer;
-            document.onclick = resetTimer;
-            document.onscroll = resetTimer;
+            // تم الإصلاح: استخدام addEventListener بدلاً من تصفير الخصائص المباشرة لضمان عدم تعارض السكربتات
+            const activityEvents = ['load', 'mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+            activityEvents.forEach(event => {
+                window.addEventListener(event, resetTimer, { passive: true });
+            });
+            
+            // تشغيل أولي للمؤقت
+            resetTimer();
         },
         logoutExpired() {
-            if (Storage.get('user_token', false)) {
+            // فحص وجود التوكن في الـ Local أو الـ Session لمنع التكرار
+            if (Storage.get('user_token', false) || Storage.get('user_token', true)) {
                 Storage.remove('user_token');
-                alert('انتهت جلسة العمل الحالية لدواعي الأمان. يرجى تسجيل الدخول مجدداً.');
-                window.location.href = '/auth/login.html';
+                
+                // تم الإصلاح: استدعاء التنبيه الراقي المعتمد بملف الواجهات بدلاً من الـ alert التقليدية المزعجة
+                if (typeof TeraUI !== 'undefined' && TeraUI.showAlert) {
+                    TeraUI.showAlert('انتهت جلسة العمل الحالية لدواعي الأمان. يرجى تسجيل الدخول مجدداً.', 'warning');
+                }
+                
+                setTimeout(() => {
+                    window.location.href = '/auth/login.html';
+                }, 2000); // تأخير بسيط ليتمكن المستثمر من قراءة رسالة التنبيه المريحة
             }
         }
     };
@@ -71,14 +81,19 @@ const TeraCore = (function () {
      * محرك طلبات الـ API المشترك (Fetch Wrapper)
      */
     const Api = async function (endpoint, options = {}) {
-        const token = Storage.get('user_token', false);
+        // فحص التوكن من كلا المخزنين لضمان التحقق الآمن
+        const token = Storage.get('user_token', false) || Storage.get('user_token', true);
         
         const headers = {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Accept-Language': 'ar',
             ...options.headers
         };
+
+        // تم الإصلاح: عدم فرض Content-Type إذا كان الـ body عبارة عن FormData (مثل رفع مستندات المستثمر)
+        if (options.body && !(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
@@ -90,17 +105,31 @@ const TeraCore = (function () {
             ...options
         };
 
-        if (options.body && typeof options.body === 'object') {
+        // تحويل البيانات المرسلة إلى JSON فقط إذا لم تكن FormData أو نصوصاً جاهزة
+        if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
             configFetch.body = JSON.stringify(options.body);
         }
 
         try {
             const response = await fetch(`${config.apiBaseUrl}${endpoint}`, configFetch);
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'حدث خطأ ما في الخادم.');
+            
+            // التعامل الذكي مع الردود الفارغة (مثل 204 No Content)
+            const isJson = response.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await response.json() : null;
+
+            // إذا انتهت صلاحية التوكن من جهة السيرفر (401 Unauthorized) يتم إنهاء الجلسة فوراً
+            if (response.status === 401) {
+                Session.logoutExpired();
+                throw new Error('جلسة العمل غير مصرح بها أو منتهية.');
+            }
+
+            if (!response.ok) {
+                throw new Error(data?.message || `خطأ في النظام: ${response.status}`);
+            }
+            
             return data;
         } catch (error) {
-            console.error('API Error:', error.message);
+            console.error('API Engine Error:', error.message);
             throw error;
         }
     };
@@ -108,16 +137,24 @@ const TeraCore = (function () {
     // التشغيل التلقائي عند تضمين الملف
     const init = function () {
         console.log('✔ تم تحميل نواة تيرا البرمجية بنجاح.');
-        Session.initTimeout();
+        // تشغيل مراقبة الجلسة فقط إذا كان المستثمر مسجلاً لدخوله بالفعل
+        if (Storage.get('user_token', false) || Storage.get('user_token', true)) {
+            Session.initTimeout();
+        }
     };
 
-    // إطلاق التهيئة
-    init();
+    // حماية تنفيذ التهيأة للتأكد من جاهزية مستندات الـ DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     // تصدير الدوال والموديولات للوصول إليها من الملفات الأخرى
     return {
         config,
         storage: Storage,
-        api: Api
+        api: Api,
+        logout: Session.logoutExpired.bind(Session)
     };
 })();
