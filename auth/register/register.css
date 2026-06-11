@@ -1,15 +1,212 @@
-/* تنسيق المراحل */
-.stepper { display: flex; justify-content: space-around; margin-bottom: 20px; }
-.step { color: #888; font-weight: bold; }
-.step.active { color: #2C3E50; border-bottom: 2px solid #2C3E50; }
+/* إعدادات المتغيرات الأساسية للمشروع مفترضة في core.css، هنا تخصيص لصفحة التسجيل */
 
-/* إخفاء الأقسام */
-.form-step { display: none; }
-.form-step.active { display: block; animation: fadeIn 0.5s; }
+.register-container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    padding: 30px;
+}
 
-/* تنسيق حالات التحقق */
-.status-green { color: green; }
-.status-red { color: red; }
+.register-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
 
-/* الحقول الديناميكية */
-.identity-section { margin-top: 15px; padding: 15px; border: 1px solid #ddd; }
+.btn-back {
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+}
+
+.logo {
+    text-align: center;
+}
+
+.logo-img {
+    height: 40px;
+}
+
+.logo h1 {
+    font-size: 1.2rem;
+    margin: 5px 0 0;
+    color: #1a237e; /* لون تيرا الافتراضي */
+}
+
+.logo h1 span {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Stepper */
+.stepper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.step {
+    color: #999;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.step.active {
+    color: #1a237e;
+}
+
+.step.completed {
+    color: #28a745;
+}
+
+/* Forms */
+.form-step {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="tel"],
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-family: inherit;
+}
+
+/* Validations Lists */
+.validation-list {
+    list-style: none;
+    padding: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.validation-list li.invalid::before {
+    content: "🔴 ";
+}
+
+.validation-list li.valid::before {
+    content: "🟢 ";
+}
+
+.validation-list li.valid { color: #28a745; }
+
+/* Password Strength */
+.password-strength {
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+.strength-bar {
+    display: inline-block;
+    height: 6px;
+    width: 100px;
+    background: #eee;
+    border-radius: 3px;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.strength-bar.weak { background: #dc3545; }
+.strength-bar.medium { background: #ffc107; }
+.strength-bar.strong { background: #28a745; }
+
+/* Flex group */
+.flex-group {
+    display: flex;
+    gap: 15px;
+}
+.half-width { flex: 1; }
+.full-width { flex: 3; }
+
+/* Agreements */
+.agreements-list {
+    background: #fcfcfc;
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.checkbox-container {
+    display: block;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.security-info {
+    margin: 10px 30px;
+    padding: 15px;
+    background: #fff;
+    border-right: 3px solid #1a237e;
+}
+
+.final-declaration {
+    background: #e8eaf6;
+    padding: 15px;
+    border-radius: 6px;
+    color: #1a237e;
+    margin-bottom: 20px;
+}
+
+/* Controls */
+.form-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.btn-primary { background: #1a237e; color: #fff; }
+.btn-primary:hover { background: #121858; }
+.btn-secondary { background: #e0e0e0; color: #333; }
+.btn-success { background: #28a745; color: #fff; }
+.hidden { display: none !important; }
+
+.footer-links {
+    margin-top: 20px;
+    padding-top: 20px;
+}
