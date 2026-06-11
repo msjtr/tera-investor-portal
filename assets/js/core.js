@@ -19,7 +19,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => document.querySelectorAll(selector);
 
 /* ================================================= */
-/* MISSING UTILITIES (تمت إضافتها لمنع الأخطاء) */
+/* UTILITIES & ALERTS (الدوال المساعدة والتنبيهات) */
 /* ================================================= */
 const Storage = {
     set(key, value) {
@@ -38,13 +38,15 @@ const Storage = {
 };
 
 function successAlert(message) {
-    // يمكنك لاحقاً ربطها بمكتبة تنبيهات مخصصة
     alert('✅ ' + message);
 }
 
 function errorAlert(message) {
-    // يمكنك لاحقاً ربطها بمكتبة تنبيهات مخصصة
     alert('❌ ' + message);
+}
+
+function warningAlert(message) {
+    alert('⚠️ ' + message);
 }
 
 function initializeAlerts() {
@@ -97,7 +99,7 @@ function loadComponent(selector, path) {
             element.innerHTML = html;
         })
         .catch(error => {
-            console.error(error);
+            console.error('Error loading component:', error);
         });
 }
 
