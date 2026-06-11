@@ -1,58 +1,71 @@
 /* ==========================================================================
-   TERA INVESTOR PORTAL - RESPONSIVE STYLES
+   TERA INVESTOR PORTAL - RESPONSIVE STYLES (UPDATED)
    ========================================================================== */
 
-/* الشاشات الكبيرة (أجهزة الكمبيوتر المكتبية والشاشات العريضة) */
+/* 1. الشاشات العريضة جداً والكبيرة */
 @media (min-width: 1200px) {
     .container { max-width: 1140px; }
 }
 
+/* 2. الشاشات المتوسطة والكبيرة (أجهزة الكمبيوتر العادية) */
 @media (min-width: 992px) and (max-width: 1199.98px) {
     .container { max-width: 960px; }
 }
 
-/* الشاشات المتوسطة والأجهزة اللوحية (Tablets) */
+/* 3. الأجهزة اللوحية والشاشات المتوسطة (Tablets) */
 @media (max-width: 991.98px) {
     .container { max-width: 720px; }
     
-    /* تبسيط شبكة الخطوات العلوية */
+    /* تبسيط شريط تتبع المراحل وتحويله إلى سحب أفقي ناعم لمنع انضغاط النصوص */
     .registration-steps {
         overflow-x: auto;
-        padding-bottom: 10px;
+        white-space: nowrap;
+        padding-bottom: 12px;
         justify-content: flex-start;
-        gap: 15px;
+        gap: 20px;
+        -webkit-overflow-scrolling: touch; /* سحب سلس للغاية في أجهزة آيفون وآيباد */
+    }
+    
+    /* إخفاء شريط التمرير الافتراضي لشريط الخطوات للحفاظ على جمالية المظهر */
+    .registration-steps::-webkit-scrollbar {
+        display: none;
     }
     
     .step-item {
-        flex: none;
-        min-width: 120px;
+        flex: 0 0 auto;
+        min-width: 130px;
     }
 }
 
-/* الشاشات الصغيرة وأجهزة الجوال (Smartphones) */
+/* 4. شاشات الجوال والهواتف الذكية (Smartphones) */
 @media (max-width: 767.98px) {
-    .container { max-width: 100%; padding: 0 15px; }
+    .container { 
+        max-width: 100%; 
+        padding-right: 15px;
+        padding-left: 15px; 
+    }
 
-    /* مواءمة حاوية المصادقة والتسجيل لجعلها مريحة للعين */
+    /* مواءمة حاوية المصادقة والتسجيل لجعلها مريحة للعين فوق شاشات الهاتف */
     .auth-container {
-        margin: 15px auto;
+        margin: 20px auto;
         padding: 0 10px;
     }
 
     .form-card {
-        padding: 20px 15px;
-        border-radius: var(--border-radius-md);
+        padding: 25px 16px; /* تقليص الحشو الداخلي لربح مساحة عرض أكبر للبيانات */
+        border-radius: var(--border-radius-md, 10px);
+        box-shadow: var(--shadow-sm);
     }
 
-    /* تحويل الشبكات الثنائية الأعمدة إلى عمود واحد تلقائياً */
+    /* تحويل الشبكات الثنائية الأعمدة إلى عمود واحد شاقولي تلقائياً */
     .form-grid {
         grid-template-columns: 1fr !important;
-        gap: 10px;
+        gap: 12px;
     }
 
-    /* تكييف الأزرار لتأخذ المساحة الكاملة لسهولة الضغط بالإصبع */
+    /* إعادة ترتيب الأزرار شاقولياً (زر التالي بالأعلى، وزر السابق بالأسفل لسهولة التحكم بالإبهام) */
     .form-navigation-actions {
-        flex-direction: column-reverse;
+        flex-direction: column-reverse; /* يضع الزر الأساسي (التالي) في الأعلى ليكون الأقرب للضغط */
         gap: 12px;
     }
 
@@ -61,38 +74,48 @@
         padding: 12px;
     }
     
+    /* إلغاء الـ margin-inline الذكي أثناء الوضع الشاقولي لضمان التمدد الكامل */
     .btn-secondary {
-        margin-left: 0; /* إلغاء المحاذاة الجانبية للتحويل الشاقولي */
+        margin-inline-end: 0 !important; 
     }
 
-    /* مرونة الخيارات بداخل النماذج */
-    .radio-group-flex {
+    /* مرونة خيارات الراديو وصناديق التحقق بداخل النماذج في الجوال */
+    .radio-group-flex, .checkbox-wrapper {
         flex-direction: column;
-        gap: 10px;
+        align-items: flex-start;
+        gap: 12px;
     }
 
-    /* تكبير حجم الخطوط التنبيهية لتسهيل القراءة */
+    /* تكييف النصوص والمربعات التنبيهية لتسهيل القراءة على الهاتف */
     .validation-requirements, .nested-info {
-        padding: 10px;
-        font-size: 0.8rem;
+        padding: 12px;
+        font-size: 0.85rem;
     }
     
-    .brand-title {
-        font-size: 1.6rem;
+    .brand-title-updated {
+        font-size: 1.25rem;
+    }
+    
+    .brand-subtitle-updated {
+        font-size: 0.8rem;
     }
 }
 
-/* الشاشات الصغيرة جداً (Very Small Screen Devices) */
+/* 5. الهواتف الصغيرة جداً (مثل iPhone SE والشاشات الضيقة) */
 @media (max-width: 480px) {
-    body {
-        font-size: 14px;
-    }
-    
-    .step-text {
-        font-size: 0.75rem;
+    html {
+        font-size: 15px; /* خفض طفيف للخط العام لمنع خروج الكلمات من البطاقة */
     }
     
     .form-instruction h2 {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
+    }
+
+    .form-instruction p {
+        font-size: 0.88rem;
+    }
+    
+    .step-number {
+        font-size: 1.1rem;
     }
 }
