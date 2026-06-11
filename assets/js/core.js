@@ -1,69 +1,164 @@
-/**
- * ==========================================================================
- * TERA Investor Portal - Core Utilities (core.js)
- * ==========================================================================
- */
+/* ================================================= */
+/* TERA CORE */
+/* ================================================= */
 
-const TeraCore = {
-    // 1. الإعدادات العامة
-    config: {
-        apiUrl: 'https://api.tera-invest.com/v1', // رابط الـ API الافتراضي (مثال)
-        language: 'ar',
-        currency: 'SAR'
-    },
+'use strict';
 
-    // 2. تنسيق المبالغ المالية (مثال: 1,500,000.00 ر.س)
-    formatCurrency: function(amount) {
-        return new Intl.NumberFormat('ar-SA', {
-            style: 'currency',
-            currency: this.config.currency,
-            minimumFractionDigits: 2
-        }).format(amount);
-    },
+/* ================================================= */
+/* APP CONFIG */
+/* ================================================= */
 
-    // 3. تنسيق التواريخ
-    formatDate: function(dateString) {
-        if (!dateString) return '-';
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('ar-SA', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }).format(date);
-    },
+const TERA = {
 
-    // 4. نظام التنبيهات المنبثقة (Toast Alerts)
-    showAlert: function(message, type = 'info') {
-        // إنشاء عنصر التنبيه
-        const alertBox = document.createElement('div');
-        alertBox.className = `alert-msg alert-${type} toast-animation`;
-        alertBox.style.position = 'fixed';
-        alertBox.style.top = '20px';
-        alertBox.style.left = '20px'; // في الزاوية العلوية اليسرى (لأن الاتجاه RTL)
-        alertBox.style.zIndex = '9999';
-        alertBox.style.minWidth = '250px';
-        alertBox.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-        
-        alertBox.innerHTML = `<span>${message}</span>`;
-        
-        document.body.appendChild(alertBox);
+    version: '1.0.0',
 
-        // إخفاء التنبيه بعد 3 ثوانٍ
-        setTimeout(() => {
-            alertBox.style.opacity = '0';
-            setTimeout(() => alertBox.remove(), 300); // الانتظار حتى تنتهي حركة الاختفاء
-        }, 3000);
-    },
+    apiUrl: '/api',
 
-    // 5. التحقق من صحة المدخلات العامة (Validation Helpers)
-    isValidEmail: function(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    },
+    debug: true
 
-    isValidPassword: function(password) {
-        // على الأقل 8 أحرف، حرف كبير، حرف صغير، رقم، ورمز خاص
-        const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-        return re.test(password);
-    }
 };
+
+/* ================================================= */
+/* SELECTORS */
+/* ================================================= */
+
+const $ = (selector) => {
+
+    return document.querySelector(selector);
+
+};
+
+const $$ = (selector) => {
+
+    return document.querySelectorAll(selector);
+
+};
+
+/* ================================================= */
+/* DOM READY */
+/* ================================================= */
+
+document.addEventListener(
+'DOMContentLoaded',
+() => {
+
+    initializeCore();
+
+}
+);
+
+/* ================================================= */
+/* INITIALIZE */
+/* ================================================= */
+
+function initializeCore(){
+
+    loadComponents();
+
+    initializeTooltips();
+
+    initializeAlerts();
+
+    initializeModals();
+
+}
+
+/* ================================================= */
+/* COMPONENTS */
+/* ================================================= */
+
+function loadComponents(){
+
+    loadComponent(
+        '#header-container',
+        '../../components/header.html'
+    );
+
+    loadComponent(
+        '#footer-container',
+        '../../components/footer.html'
+    );
+
+    loadComponent(
+        '#sidebar-container',
+        '../../components/sidebar.html'
+    );
+
+    loadComponent(
+        '#alerts-container',
+        '../../components/alerts.html'
+    );
+
+}
+
+function loadComponent(
+selector,
+path
+){
+
+    const element =
+    document.querySelector(selector);
+
+    if(!element){
+        return;
+    }
+
+    fetch(path)
+
+    .then(response => {
+
+        if(!response.ok){
+
+            throw new Error(
+            'Failed to load component'
+            );
+
+        }
+
+        return response.text();
+
+    })
+
+    .then(html => {
+
+        element.innerHTML = html;
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+    });
+
+}
+
+/* ================================================= */
+/* LOADER */
+/* ================================================= */
+
+function showLoader(){
+
+    const loader =
+    document.getElementById('loader');
+
+    if(loader){
+
+        loader.style.display = 'flex';
+
+    }
+
+}
+
+function hideLoader(){
+
+    const loader =
+    document.getElementById('loader');
+
+    if(loader){
+
+        loader.style.display = 'none';
+
+    }
+
+}
