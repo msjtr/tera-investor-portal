@@ -11,7 +11,201 @@
 .container {
     width: 100%;
     padding-right: 15px;
+    padding-left: 15px;/* ==========================================================================
+   TERA INVESTOR PORTAL - MAIN STYLES (COMMON COMPONENTS)
+   ========================================================================== */
+
+/* ضبط صندوق الحجم لكافة العناصر لضمان دقة الأبعاد ومنع تمدد الحاويات */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* كتل التخطيط الجاهزة والحاويات العامة */
+.container {
+    width: 100%;
+    padding-right: 15px;
     padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* شاشات العرض المتجاوبة للحاوية القياسية */
+@media (min-width: 576px)  { .container { max-width: 540px; } }
+@media (min-width: 768px)  { .container { max-width: 720px; } }
+@media (min-width: 992px)  { .container { max-width: 960px; } }
+@media (min-width: 1200px) { .container { max-width: 1140px; } }
+
+/* ==========================================================================
+   أزرار النظام القياسية (Buttons)
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 10px 24px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.2s) ease-in-out;
+    user-select: none;
+    text-decoration: none; /* تضمن سلامة المظهر إذا تم استخدام الكلاس على وسم <a> */
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    color: #ffffff;
+}
+
+/* إصلاح مرن لزر السابق: يدفع نفسه لأقصى الجانب المقابل ذكياً في الـ RTL والـ LTR */
+.btn-secondary {
+    background-color: var(--text-muted);
+    color: #ffffff;
+    margin-inline-end: auto; 
+}
+.btn-secondary:hover {
+    background-color: var(--neutral-gray);
+    color: #ffffff;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: #ffffff;
+}
+.btn-success:hover {
+    background-color: var(--success-hover);
+    color: #ffffff;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--neutral-gray);
+}
+.btn-outline:hover {
+    background-color: var(--neutral-light);
+    color: var(--neutral-dark);
+    border-color: var(--neutral-gray);
+}
+
+/* ==========================================================================
+   عناصر النماذج والمدخلات (Form Controls)
+   ========================================================================== */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--neutral-gray);
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--neutral-dark);
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
+}
+
+.form-control:focus {
+    color: var(--neutral-dark);
+    background-color: #ffffff;
+    border-color: var(--border-focus);
+    outline: 0;
+    /* تم التعديل: التوهج اللوني الآن متوافق تماماً مع لون تيرا البترولي الأساسي (Teal) */
+    box-shadow: 0 0 0 0.25rem rgba(0, 128, 128, 0.15); 
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* عناصر التحقق المخصصة للراديو وصناديق الاختيار */
+.radio-inline, .checkbox-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    user-select: none;
+    vertical-align: middle;
+}
+
+.radio-inline input[type="radio"], 
+.checkbox-inline input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+    margin: 0; /* التخلص من الهوامش الافتراضية للمتصفحات لضمان استواء السطر */
+}
+
+/* ==========================================================================
+   بطاقات النظام القياسية (Cards)
+   ========================================================================== */
+.card {
+    background-color: var(--bg-card, #ffffff);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   كتل التنبيهات الموحدة (Alerts)
+   ========================================================================== */
+.alert {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-md);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.alert-success {
+    background-color: var(--success-light, #e8f5e9);
+    border-color: #c8e6c9;
+    color: var(--success-hover, #1b5e20);
+}
+.alert-danger {
+    background-color: var(--danger-light, #ffebee);
+    border-color: #ffcdd2;
+    color: var(--danger-hover, #b71c1c);
+}
+
+/* ==========================================================================
+   كلاسات المساعدة المباشرة (Utility Classes)
+   ========================================================================== */
+.text-center { text-align: center !important; }
+.text-muted { color: var(--text-muted) !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.hidden { display: none !important; }
     margin-right: auto;
     margin-left: auto;
 }
