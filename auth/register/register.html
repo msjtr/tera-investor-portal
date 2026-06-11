@@ -30,7 +30,7 @@ href="../../assets/css/auth.css">
 <link rel="stylesheet"
 href="../../assets/css/responsive.css">
 
-<!-- Page CSS -->
+<!-- Register CSS -->
 
 <link rel="stylesheet"
 href="register.css">
@@ -38,10 +38,6 @@ href="register.css">
 </head>
 
 <body>
-
-<!-- Header Component -->
-
-<div id="header-container"></div>
 
 <main class="register-page">
 
@@ -56,36 +52,46 @@ class="tera-logo">
 
 </section>
 
-<!-- Hero -->
+<!-- Banner -->
 
-<section class="register-intro">
+<section class="register-banner">
 
 <h1>
+
 بوابة الشركاء - تيرا
+
 </h1>
 
 <p>
-منصة رقمية متكاملة تتيح للشركاء إدارة حساباتهم والاستفادة من الخدمات الإلكترونية بكل سهولة وأمان.
+
+منصة رقمية متكاملة لإدارة الحسابات والاستثمارات والخدمات الإلكترونية للشركاء بكل سهولة وأمان.
+
 </p>
 
 </section>
 
-<!-- Card -->
+<!-- Register Card -->
 
 <section class="register-card">
 
 <div class="card-header">
 
 <h2>
+
 إنشاء حساب شريك
+
 </h2>
 
 <p>
-مرحباً بك في بوابة الشركاء
+
+مرحباً بك في بوابة الشركاء - تيرا
+
 </p>
 
 <p>
-يرجى استكمال البيانات التالية لإنشاء حساب جديد
+
+يرجى استكمال جميع البيانات المطلوبة لإنشاء حساب جديد.
+
 </p>
 
 </div>
@@ -94,50 +100,82 @@ class="tera-logo">
 
 <div class="register-steps">
 
-<div class="step active" data-step="1">
+<div
+class="step active"
+data-step="1">
 
 <div class="step-number">
+
 ①
+
 </div>
 
 <div class="step-title">
+
+المرحلة الأولى
+<br>
 إنشاء الحساب
-</div>
 
 </div>
 
-<div class="step" data-step="2">
+</div>
+
+<div
+class="step"
+data-step="2">
 
 <div class="step-number">
+
 ②
+
 </div>
 
 <div class="step-title">
-المعلومات الشخصية والهوية
-</div>
+
+المرحلة الثانية
+<br>
+المعلومات الشخصية
 
 </div>
 
-<div class="step" data-step="3">
+</div>
+
+<div
+class="step"
+data-step="3">
 
 <div class="step-number">
+
 ③
+
 </div>
 
 <div class="step-title">
-بيانات التواصل والعنوان
-</div>
+
+المرحلة الثالثة
+<br>
+التواصل والعنوان
 
 </div>
 
-<div class="step" data-step="4">
+</div>
+
+<div
+class="step"
+data-step="4">
 
 <div class="step-number">
+
 ④
+
 </div>
 
 <div class="step-title">
-الإقرارات والاتفاقيات
+
+المرحلة الرابعة
+<br>
+الإقرارات
+
 </div>
 
 </div>
@@ -146,8 +184,10 @@ class="tera-logo">
 
 <form id="partnerRegisterForm">
 
-<!-- ================================================= -->
+
+    <!-- ================================================= -->
 <!-- STEP 1 -->
+<!-- إنشاء الحساب -->
 <!-- ================================================= -->
 
 <section
@@ -155,65 +195,94 @@ id="step1"
 class="form-step active">
 
 <h3>
+
 معلومات الحساب
+
 </h3>
 
 <div class="form-grid">
 
 <div class="form-group">
 
-<label>
+<label for="username">
+
 اسم المستخدم
+
 </label>
 
 <input
 type="text"
 id="username"
 name="username"
+maxlength="20"
+autocomplete="off"
 placeholder="tera2026">
 
 <small>
-مثال: tera2026 أو partner01
+
+مثال:
+tera2026
+أو
+partner01
+
 </small>
 
 </div>
 
 </div>
 
+<!-- شروط اسم المستخدم -->
+
 <div class="validation-box">
 
 <h4>
+
 شروط اسم المستخدم
+
 </h4>
 
 <ul>
 
 <li id="userRule1">
+
 ☐ من 4 إلى 20 حرفاً
+
 </li>
 
 <li id="userRule2">
+
 ☐ أحرف إنجليزية فقط (A-Z)
+
 </li>
 
 <li id="userRule3">
+
 ☐ يسمح بالأرقام الإنجليزية (0-9)
+
 </li>
 
 <li id="userRule4">
+
 ☐ لا يحتوي على مسافات
+
 </li>
 
 <li id="userRule5">
+
 ☐ لا يحتوي على رموز خاصة
+
 </li>
 
 <li id="userRule6">
+
 ☐ غير مستخدم مسبقاً
+
 </li>
 
 <li id="userRule7">
+
 ☐ يتم التحقق أثناء الكتابة
+
 </li>
 
 </ul>
@@ -234,32 +303,40 @@ class="error-message d-none">
 
 <hr>
 
+<!-- البريد الإلكتروني -->
+
 <div class="form-grid">
 
 <div class="form-group">
 
-<label>
+<label for="email">
+
 البريد الإلكتروني
+
 </label>
 
 <input
 type="email"
 id="email"
 name="email"
+autocomplete="email"
 placeholder="name@example.com">
 
 </div>
 
 <div class="form-group">
 
-<label>
+<label for="confirmEmail">
+
 تأكيد البريد الإلكتروني
+
 </label>
 
 <input
 type="email"
 id="confirmEmail"
 name="confirmEmail"
+autocomplete="email"
 placeholder="name@example.com">
 
 </div>
@@ -269,32 +346,42 @@ placeholder="name@example.com">
 <div class="validation-box">
 
 <h4>
+
 شروط البريد الإلكتروني
+
 </h4>
 
 <ul>
 
 <li>
+
 ☐ بريد إلكتروني صحيح
+
 </li>
 
 <li>
+
 ☐ البريد الإلكتروني غير مستخدم مسبقاً
+
 </li>
 
 <li>
+
 ☐ البريد الإلكتروني مطابق لحقل التأكيد
+
 </li>
 
 <li>
+
 ☐ يتم التحقق أثناء الكتابة
+
 </li>
 
 </ul>
 
 <p class="info-text">
 
-سيتم إرسال رمز التحقق إلى البريد الإلكتروني المسجل
+سيتم إرسال رمز التحقق إلى البريد الإلكتروني المسجل.
 
 </p>
 
@@ -311,7 +398,9 @@ class="error-message d-none">
 <br><br>
 
 <a href="../login.html">
+
 تسجيل الدخول
+
 </a>
 
 </div>
@@ -320,18 +409,23 @@ class="error-message d-none">
 
 <hr>
 
+<!-- كلمة المرور -->
+
 <div class="form-grid">
 
 <div class="form-group">
 
-<label>
+<label for="password">
+
 كلمة المرور
+
 </label>
 
 <input
 type="password"
 id="password"
-name="password">
+name="password"
+autocomplete="new-password">
 
 <label class="checkbox-inline">
 
@@ -347,14 +441,17 @@ id="showPassword">
 
 <div class="form-group">
 
-<label>
+<label for="confirmPassword">
+
 تأكيد كلمة المرور
+
 </label>
 
 <input
 type="password"
 id="confirmPassword"
-name="confirmPassword">
+name="confirmPassword"
+autocomplete="new-password">
 
 <label class="checkbox-inline">
 
@@ -370,32 +467,46 @@ id="showConfirmPassword">
 
 </div>
 
+<!-- شروط كلمة المرور -->
+
 <div class="validation-box">
 
 <h4>
+
 شروط كلمة المرور
+
 </h4>
 
 <ul>
 
 <li id="passRule1">
+
 ☐ 8 أحرف على الأقل
+
 </li>
 
 <li id="passRule2">
+
 ☐ حرف كبير باللغة الإنجليزية
+
 </li>
 
 <li id="passRule3">
+
 ☐ حرف صغير باللغة الإنجليزية
+
 </li>
 
 <li id="passRule4">
+
 ☐ رقم واحد على الأقل
+
 </li>
 
 <li id="passRule5">
+
 ☐ رمز خاص واحد على الأقل
+
 </li>
 
 </ul>
@@ -405,7 +516,9 @@ id="showConfirmPassword">
 <div class="password-strength">
 
 <strong>
+
 مؤشر قوة كلمة المرور
+
 </strong>
 
 <div id="passwordStrength">
@@ -420,8 +533,6 @@ id="showConfirmPassword">
 id="passwordMatchStatus"
 class="match-status">
 
-✖ كلمة المرور غير متطابقة
-
 </div>
 
 <p class="warning-text">
@@ -434,6 +545,7 @@ class="match-status">
 
     <!-- ================================================= -->
 <!-- STEP 2 -->
+<!-- المعلومات الشخصية والهوية -->
 <!-- ================================================= -->
 
 <section
@@ -441,7 +553,9 @@ id="step2"
 class="form-step">
 
 <h3>
+
 المعلومات الشخصية والهوية
+
 </h3>
 
 <!-- المعلومات الشخصية -->
@@ -456,44 +570,58 @@ class="form-step">
 
 <div class="form-group">
 
-<label>
+<label for="fullNameAr">
+
 الاسم الكامل بالعربية
+
 </label>
 
 <input
 type="text"
 id="fullNameAr"
-name="fullNameAr">
+name="fullNameAr"
+placeholder="الاسم كما هو في الهوية">
 
 <small>
+
 كما هو مدون في الوثيقة الرسمية
+
 </small>
 
 </div>
 
 <div class="form-group">
 
-<label>
+<label for="fullNameEn">
+
 الاسم الكامل بالإنجليزية
+
 </label>
 
 <input
 type="text"
 id="fullNameEn"
-name="fullNameEn">
+name="fullNameEn"
+placeholder="Full Name">
 
 <small>
+
 كما هو مدون في الوثيقة الرسمية
+
 </small>
 
 </div>
 
 </div>
 
+<!-- شروط الأسماء -->
+
 <div class="validation-box">
 
 <h4>
+
 شروط الاسم بالعربية
+
 </h4>
 
 <ul>
@@ -517,7 +645,9 @@ name="fullNameEn">
 <div class="validation-box">
 
 <h4>
+
 شروط الاسم بالإنجليزية
+
 </h4>
 
 <ul>
@@ -544,8 +674,10 @@ name="fullNameEn">
 
 <div class="form-group">
 
-<label>
+<label for="gender">
+
 الجنس
+
 </label>
 
 <select
@@ -553,7 +685,7 @@ id="gender"
 name="gender">
 
 <option value="">
-اختر
+اختر الجنس
 </option>
 
 <option value="male">
@@ -570,8 +702,10 @@ name="gender">
 
 <div class="form-group">
 
-<label>
+<label for="accountCategory">
+
 الفئة
+
 </label>
 
 <select
@@ -605,7 +739,7 @@ name="accountCategory">
 </div>
 
 <!-- ================================================= -->
-<!-- SAUDI -->
+<!-- سعودي -->
 <!-- ================================================= -->
 
 <div
@@ -613,7 +747,9 @@ id="saudiFields"
 class="identity-wrapper d-none">
 
 <h4>
+
 بيانات الهوية الوطنية
+
 </h4>
 
 <div class="form-grid">
@@ -621,19 +757,24 @@ class="identity-wrapper d-none">
 <div class="form-group">
 
 <label>
+
 رقم الهوية الوطنية
+
 </label>
 
 <input
 type="text"
-id="nationalId">
+id="nationalId"
+maxlength="10">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 تاريخ إصدار الهوية
+
 </label>
 
 <input
@@ -645,7 +786,9 @@ id="nationalIssueDate">
 <div class="form-group">
 
 <label>
+
 تاريخ انتهاء الهوية
+
 </label>
 
 <input
@@ -659,7 +802,7 @@ id="nationalExpiryDate">
 </div>
 
 <!-- ================================================= -->
-<!-- RESIDENT -->
+<!-- مقيم -->
 <!-- ================================================= -->
 
 <div
@@ -667,7 +810,9 @@ id="residentFields"
 class="identity-wrapper d-none">
 
 <h4>
+
 بيانات الإقامة
+
 </h4>
 
 <div class="form-grid">
@@ -675,7 +820,9 @@ class="identity-wrapper d-none">
 <div class="form-group">
 
 <label>
+
 الجنسية
+
 </label>
 
 <input
@@ -687,7 +834,9 @@ id="residentNationality">
 <div class="form-group">
 
 <label>
+
 المهنة
+
 </label>
 
 <input
@@ -699,7 +848,9 @@ id="residentJob">
 <div class="form-group">
 
 <label>
+
 جهة العمل (اختياري)
+
 </label>
 
 <input
@@ -711,7 +862,9 @@ id="residentEmployer">
 <div class="form-group">
 
 <label>
+
 رقم الإقامة
+
 </label>
 
 <input
@@ -723,7 +876,9 @@ id="iqamaNumber">
 <div class="form-group">
 
 <label>
+
 تاريخ إصدار الإقامة
+
 </label>
 
 <input
@@ -735,7 +890,9 @@ id="iqamaIssueDate">
 <div class="form-group">
 
 <label>
+
 تاريخ انتهاء الإقامة
+
 </label>
 
 <input
@@ -748,8 +905,8 @@ id="iqamaExpiryDate">
 
 </div>
 
-<!-- ================================================= -->
-<!-- GCC -->
+    <!-- ================================================= -->
+<!-- مواطن خليجي -->
 <!-- ================================================= -->
 
 <div
@@ -757,7 +914,9 @@ id="gccFields"
 class="identity-wrapper d-none">
 
 <h4>
+
 بيانات الهوية الخليجية
+
 </h4>
 
 <div class="form-grid">
@@ -765,7 +924,9 @@ class="identity-wrapper d-none">
 <div class="form-group">
 
 <label>
+
 الدولة
+
 </label>
 
 <select id="gccCountry">
@@ -774,27 +935,27 @@ class="identity-wrapper d-none">
 اختر الدولة
 </option>
 
-<option>
+<option value="sa">
 السعودية
 </option>
 
-<option>
+<option value="ae">
 الإمارات
 </option>
 
-<option>
+<option value="kw">
 الكويت
 </option>
 
-<option>
+<option value="bh">
 البحرين
 </option>
 
-<option>
+<option value="om">
 عمان
 </option>
 
-<option>
+<option value="qa">
 قطر
 </option>
 
@@ -805,7 +966,9 @@ class="identity-wrapper d-none">
 <div class="form-group">
 
 <label>
+
 رقم الهوية الخليجية
+
 </label>
 
 <input
@@ -817,7 +980,9 @@ id="gccIdentity">
 <div class="form-group">
 
 <label>
+
 تاريخ الإصدار
+
 </label>
 
 <input
@@ -829,7 +994,9 @@ id="gccIssueDate">
 <div class="form-group">
 
 <label>
+
 تاريخ الانتهاء
+
 </label>
 
 <input
@@ -843,7 +1010,7 @@ id="gccExpiryDate">
 </div>
 
 <!-- ================================================= -->
-<!-- FOREIGN -->
+<!-- أجنبي -->
 <!-- ================================================= -->
 
 <div
@@ -851,19 +1018,23 @@ id="foreignFields"
 class="identity-wrapper d-none">
 
 <h4>
+
 بيانات الوثيقة
+
 </h4>
 
 <div class="form-group">
 
 <label>
+
 نوع الوثيقة
+
 </label>
 
 <select id="documentType">
 
 <option value="">
-اختر
+اختر نوع الوثيقة
 </option>
 
 <option value="nid">
@@ -889,7 +1060,9 @@ class="d-none">
 <div class="form-group">
 
 <label>
+
 الدولة
+
 </label>
 
 <input
@@ -901,7 +1074,9 @@ id="foreignCountry">
 <div class="form-group">
 
 <label>
+
 رقم الهوية
+
 </label>
 
 <input
@@ -913,7 +1088,9 @@ id="foreignIdentity">
 <div class="form-group">
 
 <label>
+
 تاريخ الإصدار
+
 </label>
 
 <input
@@ -925,7 +1102,9 @@ id="foreignIssueDate">
 <div class="form-group">
 
 <label>
+
 تاريخ الانتهاء
+
 </label>
 
 <input
@@ -949,7 +1128,9 @@ class="d-none">
 <div class="form-group">
 
 <label>
+
 دولة الإصدار
+
 </label>
 
 <input
@@ -961,7 +1142,9 @@ id="passportCountry">
 <div class="form-group">
 
 <label>
+
 رقم جواز السفر
+
 </label>
 
 <input
@@ -973,7 +1156,9 @@ id="passportNumber">
 <div class="form-group">
 
 <label>
+
 تاريخ إصدار الجواز
+
 </label>
 
 <input
@@ -985,7 +1170,9 @@ id="passportIssueDate">
 <div class="form-group">
 
 <label>
+
 تاريخ انتهاء الجواز
+
 </label>
 
 <input
@@ -998,12 +1185,16 @@ id="passportExpiryDate">
 
 </div>
 
+<!-- بيانات إضافية -->
+
 <div class="form-grid">
 
 <div class="form-group">
 
 <label>
+
 الجنسية
+
 </label>
 
 <input
@@ -1015,7 +1206,9 @@ id="foreignNationality">
 <div class="form-group">
 
 <label>
+
 المهنة
+
 </label>
 
 <input
@@ -1028,14 +1221,16 @@ id="foreignOccupation">
 
 </div>
 
-<!-- ================================================= -->
-<!-- DOCUMENT VALIDATION -->
+    <!-- ================================================= -->
+<!-- التحقق من الوثائق -->
 <!-- ================================================= -->
 
 <div class="validation-box">
 
 <h4>
+
 التحقق من الوثائق
+
 </h4>
 
 <ul>
@@ -1080,14 +1275,12 @@ class="error-message d-none">
 
 </div>
 
-<!-- ================================================= -->
-<!-- ADDITIONAL DECLARATIONS -->
-<!-- ================================================= -->
-
-<div class="validation-box">
+    <div class="validation-box">
 
 <h4>
+
 إقرارات إضافية
+
 </h4>
 
 <label class="checkbox-block">
@@ -1096,7 +1289,7 @@ class="error-message d-none">
 type="checkbox"
 id="adultDeclaration">
 
-أقر بأن عمري 18 عاماً فأكثر
+أقر بأن عمري 18 عاماً فأكثر.
 
 </label>
 
@@ -1106,15 +1299,14 @@ id="adultDeclaration">
 type="checkbox"
 id="beneficiaryDeclaration">
 
-أقر بأنني المستفيد الحقيقي من الحساب
+أقر بأنني المستفيد الحقيقي من الحساب.
 
 </label>
 
 </div>
 
 </section>
-
-    <!-- ================================================= -->
+<!-- ================================================= -->
 <!-- STEP 3 -->
 <!-- بيانات التواصل والعنوان -->
 <!-- ================================================= -->
@@ -1124,10 +1316,14 @@ id="step3"
 class="form-step">
 
 <h3>
+
 بيانات التواصل والعنوان
+
 </h3>
 
+<!-- ================================================= -->
 <!-- وسيلة التواصل -->
+<!-- ================================================= -->
 
 <div class="section-title">
 
@@ -1163,31 +1359,27 @@ value="mobile">
 
 <hr>
 
+<!-- ================================================= -->
 <!-- مفتاح الدولة -->
-
-<div class="section-title">
-
-مفتاح الدولة
-
-</div>
+<!-- ================================================= -->
 
 <div class="form-grid">
 
 <div class="form-group">
 
 <label>
+
 مفتاح الدولة
+
 </label>
 
-<select id="countryCode">
-
-<!-- سعودي -->
+<select
+id="countryCode"
+name="countryCode">
 
 <option value="+966">
 🇸🇦 السعودية +966
 </option>
-
-<!-- خليجي -->
 
 <option value="+971">
 🇦🇪 الإمارات +971
@@ -1209,8 +1401,6 @@ value="mobile">
 🇶🇦 قطر +974
 </option>
 
-<!-- عربي -->
-
 <option value="+20">
 🇪🇬 مصر +20
 </option>
@@ -1223,7 +1413,8 @@ value="mobile">
 🇮🇶 العراق +964
 </option>
 
-<option value="+961">
+<option
+    <option value="+961">
 🇱🇧 لبنان +961
 </option>
 
@@ -1246,77 +1437,75 @@ value="mobile">
 <div class="form-group">
 
 <label>
+
 رقم الجوال
+
 </label>
 
 <input
-type="tel"
+type="text"
 id="mobileNumber"
+name="mobileNumber"
+maxlength="15"
 placeholder="512345678">
 
-</div>
+<small>
+
+يمنع إدخال الصفر الأول وسيتم حذفه تلقائياً
+
+</small>
 
 </div>
 
-<!-- شروط الجوال -->
-
-<div class="validation-box">
-
-<h4>
-شروط رقم الجوال
-</h4>
-
-<ul>
-
-<li>
-☐ أرقام فقط
-</li>
-
-<li>
-☐ يمنع إدخال الصفر الأول
-</li>
-
-<li>
-☐ يتم حذف الصفر الأول تلقائياً
-</li>
-
-</ul>
-
 </div>
 
+<!-- ================================================= -->
 <!-- أمثلة -->
+<!-- ================================================= -->
 
 <div class="examples-box">
 
 <h4>
-أمثلة
+
+أمثلة أرقام الجوال
+
 </h4>
 
 <p>
-السعودية : 512345678
+
+🇸🇦 السعودية:
+512345678
+
 </p>
 
 <p>
-الإمارات : 501234567
+
+🇦🇪 الإمارات:
+501234567
+
 </p>
 
 <p>
-مصر : 1012345678
+
+🇪🇬 مصر:
+1012345678
+
 </p>
 
 </div>
 
-<hr>
-
 <!-- ================================================= -->
-<!-- عنوان سعودي أو مقيم -->
+<!-- العنوان الوطني -->
 <!-- ================================================= -->
 
 <div
-id="nationalAddressWrapper">
+id="nationalAddressWrapper"
+class="d-none">
 
 <h4>
+
 بيانات العنوان الوطني
+
 </h4>
 
 <div class="form-grid">
@@ -1324,7 +1513,9 @@ id="nationalAddressWrapper">
 <div class="form-group">
 
 <label>
+
 رقم المبنى
+
 </label>
 
 <input
@@ -1336,7 +1527,9 @@ id="buildingNumber">
 <div class="form-group">
 
 <label>
+
 الرقم الفرعي
+
 </label>
 
 <input
@@ -1348,7 +1541,9 @@ id="secondaryNumber">
 <div class="form-group">
 
 <label>
+
 اسم الشارع
+
 </label>
 
 <input
@@ -1360,7 +1555,9 @@ id="streetName">
 <div class="form-group">
 
 <label>
+
 الحي
+
 </label>
 
 <input
@@ -1372,7 +1569,9 @@ id="district">
 <div class="form-group">
 
 <label>
+
 المدينة
+
 </label>
 
 <input
@@ -1384,7 +1583,9 @@ id="city">
 <div class="form-group">
 
 <label>
+
 الرمز البريدي
+
 </label>
 
 <input
@@ -1396,7 +1597,9 @@ id="postalCode">
 <div class="form-group">
 
 <label>
+
 الرقم الإضافي
+
 </label>
 
 <input
@@ -1408,7 +1611,9 @@ id="additionalNumber">
 <div class="form-group">
 
 <label>
+
 رقم الوحدة (اختياري)
+
 </label>
 
 <input
@@ -1417,10 +1622,12 @@ id="unitNumber">
 
 </div>
 
-<div class="form-group">
+<div class="form-group full-width">
 
 <label>
+
 الاسم المختصر
+
 </label>
 
 <input
@@ -1446,7 +1653,7 @@ id="fetchNationalAddress">
 </div>
 
 <!-- ================================================= -->
-<!-- عنوان خليجي أو أجنبي -->
+<!-- العنوان الدولي -->
 <!-- ================================================= -->
 
 <div
@@ -1454,7 +1661,9 @@ id="internationalAddressWrapper"
 class="d-none">
 
 <h4>
-بيانات العنوان الدولي
+
+بيانات العنوان
+
 </h4>
 
 <div class="form-grid">
@@ -1462,19 +1671,23 @@ class="d-none">
 <div class="form-group">
 
 <label>
+
 الدولة
+
 </label>
 
 <input
 type="text"
-id="country">
+id="addressCountry">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 المنطقة
+
 </label>
 
 <input
@@ -1486,67 +1699,79 @@ id="region">
 <div class="form-group">
 
 <label>
+
 المحافظة
+
 </label>
 
 <input
 type="text"
-id="province">
+id="governorate">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 المدينة
+
 </label>
 
 <input
 type="text"
-id="internationalCity">
+id="addressCity">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 الحي
+
 </label>
 
 <input
 type="text"
-id="internationalDistrict">
+id="addressDistrict">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 الشارع
+
 </label>
 
 <input
 type="text"
-id="internationalStreet">
+id="addressStreet">
 
 </div>
 
 <div class="form-group">
 
 <label>
+
 الرمز البريدي
+
 </label>
 
 <input
 type="text"
-id="internationalPostalCode">
+id="addressPostalCode">
 
 </div>
 
 <div class="form-group full-width">
 
 <label>
+
 وصف إضافي للعنوان
+
 </label>
 
 <textarea
@@ -1566,7 +1791,9 @@ rows="4"></textarea>
 <div class="validation-box">
 
 <h4>
+
 شروط المرحلة الثالثة
+
 </h4>
 
 <ul>
@@ -1602,7 +1829,9 @@ id="step4"
 class="form-step">
 
 <h3>
+
 الإقرارات والاتفاقيات
+
 </h3>
 
 <div class="agreement-box">
@@ -1611,7 +1840,7 @@ class="form-step">
 
 <input
 type="checkbox"
-id="termsAgreement">
+id="agreement1">
 
 أقر وأوافق على الشروط والأحكام الخاصة ببوابة الشركاء في منصة تيرا — عالمك بلا حدود.
 
@@ -1621,7 +1850,7 @@ id="termsAgreement">
 
 <input
 type="checkbox"
-id="privacyAgreement">
+id="agreement2">
 
 أوافق على سياسة الخصوصية الخاصة بالمنصة.
 
@@ -1631,7 +1860,7 @@ id="privacyAgreement">
 
 <input
 type="checkbox"
-id="usageAgreement">
+id="agreement3">
 
 أوافق على سياسة الاستخدام.
 
@@ -1641,7 +1870,7 @@ id="usageAgreement">
 
 <input
 type="checkbox"
-id="securityAgreement">
+id="agreement4">
 
 أوافق على إجراءات وأنظمة التحقق الأمني والحماية الإلكترونية.
 
@@ -1651,7 +1880,7 @@ id="securityAgreement">
 
 <input
 type="checkbox"
-id="emailNotificationsAgreement">
+id="agreement5">
 
 أوافق على استخدام البريد الإلكتروني المسجل لإرسال رموز التحقق والإشعارات والتنبيهات الخاصة بالحساب.
 
@@ -1661,7 +1890,7 @@ id="emailNotificationsAgreement">
 
 <input
 type="checkbox"
-id="dataAccuracyAgreement">
+id="agreement6">
 
 أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة وتعود لي شخصياً.
 
@@ -1671,7 +1900,7 @@ id="dataAccuracyAgreement">
 
 <input
 type="checkbox"
-id="credentialsAgreement">
+id="agreement7">
 
 أتعهد بالمحافظة على سرية بيانات الدخول وعدم مشاركتها مع أي طرف آخر.
 
@@ -1681,7 +1910,7 @@ id="credentialsAgreement">
 
 <input
 type="checkbox"
-id="updateDataAgreement">
+id="agreement8">
 
 أتعهد بتحديث بياناتي عند حدوث أي تغيير عليها.
 
@@ -1691,7 +1920,7 @@ id="updateDataAgreement">
 
 <input
 type="checkbox"
-id="unauthorizedAccessAgreement">
+id="agreement9">
 
 أتعهد بإبلاغ المنصة فوراً عند الاشتباه بأي استخدام غير مصرح به للحساب.
 
@@ -1701,7 +1930,7 @@ id="unauthorizedAccessAgreement">
 
 <input
 type="checkbox"
-id="benefitsAgreement">
+id="agreement10">
 
 أقر بأن إنشاء الحساب لا يمنح أي حقوق أو مزايا تلقائية إلا وفق الأنظمة والسياسات المعتمدة.
 
@@ -1709,12 +1938,16 @@ id="benefitsAgreement">
 
 </div>
 
+<!-- ================================================= -->
 <!-- تنبيه مهم -->
+<!-- ================================================= -->
 
 <div class="important-notice">
 
 <h4>
+
 تنبيه مهم
+
 </h4>
 
 <p>
@@ -1725,20 +1958,23 @@ id="benefitsAgreement">
 
 </div>
 
+<!-- ================================================= -->
 <!-- الإقرار النهائي -->
+<!-- ================================================= -->
 
 <div class="final-declaration">
 
 <h4>
+
 الإقرار النهائي
+
 </h4>
 
 <label class="checkbox-block">
 
 <input
 type="checkbox"
-id="finalAgreement"
-required>
+id="finalAgreement">
 
 قرأت جميع الإقرارات والاتفاقيات والشروط والأحكام وسياسة الخصوصية وأوافق عليها بالكامل.
 
@@ -1746,10 +1982,47 @@ required>
 
 </div>
 
-</section>
-
 <!-- ================================================= -->
-<!-- BUTTONS -->
+<!-- بعد إنشاء الحساب -->
+<!-- ================================================= -->
+
+<div class="registration-process">
+
+<h3>
+
+بعد إنشاء الحساب
+
+</h3>
+
+<ol>
+
+<li>
+إنشاء الحساب.
+</li>
+
+<li>
+إرسال رمز تحقق إلى البريد الإلكتروني.
+</li>
+
+<li>
+إدخال رمز التحقق.
+</li>
+
+<li>
+تفعيل الحساب.
+</li>
+
+<li>
+تسجيل الدخول إلى بوابة الشركاء.
+</li>
+
+</ol>
+
+</div>
+
+</section>
+<!-- ================================================= -->
+<!-- ACTIONS -->
 <!-- ================================================= -->
 
 <div class="form-actions">
@@ -1786,43 +2059,7 @@ class="btn btn-success d-none">
 </form>
 
 <!-- ================================================= -->
-<!-- AFTER REGISTRATION INFO -->
-<!-- ================================================= -->
-
-<div class="registration-process">
-
-<h3>
-بعد إنشاء الحساب
-</h3>
-
-<ol>
-
-<li>
-إنشاء الحساب
-</li>
-
-<li>
-إرسال رمز تحقق إلى البريد الإلكتروني
-</li>
-
-<li>
-إدخال رمز التحقق
-</li>
-
-<li>
-تفعيل الحساب
-</li>
-
-<li>
-تسجيل الدخول إلى بوابة الشركاء
-</li>
-
-</ol>
-
-</div>
-
-<!-- ================================================= -->
-<!-- LOGIN / HOME LINKS -->
+<!-- LINKS -->
 <!-- ================================================= -->
 
 <div class="bottom-links">
@@ -1841,8 +2078,10 @@ class="login-link">
 
 </a>
 
+<br>
+
 <a
-href="../../index.html"
+href="/index.html"
 class="home-link">
 
 العودة للصفحة الرئيسية
@@ -1851,13 +2090,19 @@ class="home-link">
 
 </div>
 
+<footer class="footer-copy">
+
+© TERA — بوابة الشركاء
+
+<br>
+
+جميع الحقوق محفوظة
+
+</footer>
+
 </section>
 
 </main>
-
-<!-- Footer Component -->
-
-<div id="footer-container"></div>
 
 <!-- Shared JS -->
 
@@ -1865,45 +2110,10 @@ class="home-link">
 
 <script src="../../assets/js/app.js"></script>
 
-<script src="../../assets/js/auth.js"></script>
-
-<script src="../../assets/js/main.js"></script>
-
-<!-- Register Page JS -->
+<!-- Register JS -->
 
 <script src="register.js"></script>
 
-<script>
-
-document.addEventListener('DOMContentLoaded', function(){
-
-if(document.getElementById('header-container')){
-
-fetch('../../components/header.html')
-.then(response => response.text())
-.then(data => {
-
-document.getElementById('header-container').innerHTML = data;
-
-});
-
-}
-
-if(document.getElementById('footer-container')){
-
-fetch('../../components/footer.html')
-.then(response => response.text())
-.then(data => {
-
-document.getElementById('footer-container').innerHTML = data;
-
-});
-
-}
-
-});
-
-</script>
-
 </body>
+
 </html>
