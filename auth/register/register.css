@@ -1,114 +1,33 @@
-/* ==========================================================================
-   TERA - Register Page Specific Styles (Fixed Layout)
-   ========================================================================== */
-
-.hidden { display: none !important; }
-
-/* إصلاح الترويسة لضمان ظهور الشعار */
-.register-header {
-    display: flex !important; /* فرض الفليكس */
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e5e7eb;
-    min-height: 80px; /* ضمان مساحة كافية */
-    width: 100%;
-}
-
-/* ضمان ظهور الشعار */
-.logo {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex: 1;
-}
-
-.logo-img {
-    max-height: 65px !important; 
-    width: auto !important;
-    display: block;
+/* إصلاح ارتفاع الصفحة لتملأ الشاشة */
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow-x: hidden;
 }
 
 .register-container {
-    max-width: 850px;
-    width: 95%; /* استخدام نسبة مئوية لضمان عدم خروج المحتوى في الشاشات الصغيرة */
-    margin: 40px auto;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(10, 25, 64, 0.08);
-    padding: 30px;
-    border: 1px solid #e5e7eb;
-}
-
-/* باقي التنسيقات */
-.btn-back { color: #6b7280; font-weight: 600; text-decoration: none; }
-.btn-back:hover { color: #0A1940; }
-
-.intro-text { margin-bottom: 30px; }
-.intro-text h2 { color: #0A1940; margin-bottom: 10px; }
-.intro-text p { color: #6b7280; }
-
-.stepper {
+    min-height: 90vh; /* يضمن مساحة كافية للمحتوى */
     display: flex;
+    flex-direction: column;
+    padding: 30px;
+}
+
+/* إصلاح الترويسة */
+.register-header {
+    display: flex !important;
     justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 20px;
     margin-bottom: 30px;
-    background: #f8fafc;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
 }
 
-.step { flex: 1; text-align: center; color: #6b7280; font-weight: bold; font-size: 0.9rem; }
-.step.active { color: #00B4B4; }
-.step.completed { color: #0A1940; }
+.logo-img { max-height: 60px; width: auto; }
 
-.form-step { display: none; }
-.form-step.active { display: block; animation: fadeIn 0.4s; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0A1940; }
-
-input[type="text"], input[type="email"], input[type="password"], 
-input[type="tel"], input[type="date"], select {
-    width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 8px;
-    background-color: #f9fafb; box-sizing: border-box;
-}
-
-input:focus { border-color: #00B4B4; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(0, 180, 180, 0.1); }
-
-/* إصلاح تداخل زر الإظهار */
-.password-wrapper { position: relative; display: flex; align-items: center; }
-.password-wrapper input { padding-left: 60px !important; }
-.toggle-password {
-    position: absolute; left: 15px; color: #00B4B4; cursor: pointer;
-    font-weight: bold; font-size: 0.9rem; z-index: 5;
-}
-
-.validation-list { list-style: none; padding: 15px; margin: 10px 0; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; }
-.validation-list li { display: flex; align-items: center; margin-bottom: 5px; color: #6b7280; font-size: 0.9rem; }
-.validation-list li::before { margin-left: 10px; }
-.validation-list li.invalid::before { content: "🔴"; }
-.validation-list li.valid::before { content: "🟢"; }
-.validation-list li.valid { color: #10b981; }
-
-/* تحسين الأزرار في الجوال */
-.form-controls { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    margin-top: 30px; 
-    padding-top: 20px; 
-    border-top: 1px solid #e5e7eb; 
-}
-
-.controls-right { display: flex; gap: 10px; }
-
-@media (max-width: 600px) {
-    .register-header { flex-direction: column; gap: 15px; }
-    .form-controls { flex-direction: column; gap: 15px; }
-    .btn { width: 100%; }
-    .controls-right { width: 100%; flex-direction: column; }
+/* تنسيق تنبيه الخطأ (يظهر تحت الحقل) */
+.input-error-msg {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: block;
 }
