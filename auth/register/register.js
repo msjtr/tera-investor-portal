@@ -1,24 +1,35 @@
+'use strict';
+
 /* ================================================= */
 /* TERA REGISTER PAGE */
 /* ================================================= */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener(
+'DOMContentLoaded',
+() => {
 
 let currentStep = 1;
+
 const totalSteps = 4;
 
 const nextBtn =
-document.getElementById('nextBtn');
+document.getElementById(
+'nextBtn'
+);
 
 const prevBtn =
-document.getElementById('prevBtn');
+document.getElementById(
+'prevBtn'
+);
 
 const submitBtn =
-document.getElementById('submitBtn');
+document.getElementById(
+'submitBtn'
+);
 
-/* ================================================ */
+/* ================================================= */
 /* STEP CONTROL */
-/* ================================================ */
+/* ================================================= */
 
 function showStep(step){
 
@@ -26,126 +37,235 @@ document
 .querySelectorAll('.form-step')
 .forEach(section => {
 
-section.classList.remove('active');
+section.classList.remove(
+'active'
+);
 
 });
 
-document
-.getElementById(`step${step}`)
-.classList.add('active');
+const currentSection =
+document.getElementById(
+`step${step}`
+);
+
+if(currentSection){
+
+currentSection.classList.add(
+'active'
+);
+
+}
 
 document
 .querySelectorAll('.step')
 .forEach(item => {
 
-item.classList.remove('active');
+item.classList.remove(
+'active'
+);
 
 });
 
-document
-.querySelector(`.step[data-step="${step}"]`)
-.classList.add('active');
+const currentStepElement =
+document.querySelector(
+`.step[data-step="${step}"]`
+);
+
+if(currentStepElement){
+
+currentStepElement.classList.add(
+'active'
+);
+
+}
+
+if(prevBtn){
 
 prevBtn.style.display =
 step === 1
 ? 'none'
 : 'inline-flex';
 
-if(step === totalSteps){
+}
 
-nextBtn.classList.add('d-none');
-submitBtn.classList.remove('d-none');
+if(
+step === totalSteps
+){
+
+nextBtn?.classList.add(
+'d-none'
+);
+
+submitBtn?.classList.remove(
+'d-none'
+);
 
 }else{
 
-nextBtn.classList.remove('d-none');
-submitBtn.classList.add('d-none');
+nextBtn?.classList.remove(
+'d-none'
+);
+
+submitBtn?.classList.add(
+'d-none'
+);
 
 }
 
 }
+
+/* ================================================= */
+/* INITIAL STEP */
+/* ================================================= */
 
 showStep(currentStep);
 
-/* ================================================ */
+/* ================================================= */
 /* NEXT */
-/* ================================================ */
+/* ================================================= */
 
-nextBtn.addEventListener('click', () => {
+nextBtn?.addEventListener(
+'click',
+() => {
 
-if(!validateStep(currentStep)){
+if(
+!validateStep(
+currentStep
+)
+){
 return;
 }
 
 currentStep++;
 
-if(currentStep > totalSteps){
-currentStep = totalSteps;
+if(
+currentStep >
+totalSteps
+){
+
+currentStep =
+totalSteps;
+
 }
 
-showStep(currentStep);
+showStep(
+currentStep
+);
 
-});
+}
+);
 
-/* ================================================ */
+/* ================================================= */
 /* PREVIOUS */
-/* ================================================ */
+/* ================================================= */
 
-prevBtn.addEventListener('click', () => {
+prevBtn?.addEventListener(
+'click',
+() => {
 
 currentStep--;
 
-if(currentStep < 1){
+if(
+currentStep < 1
+){
+
 currentStep = 1;
+
 }
 
-showStep(currentStep);
+showStep(
+currentStep
+);
 
-});
-
-/* ================================================ */
-/* BASIC VALIDATION */
-/* ================================================ */
+}
+);
+    /* ================================================= */
+/* VALIDATION */
+/* ================================================= */
 
 function validateStep(step){
 
 if(step === 1){
 
 const username =
-document.getElementById('username');
+document.getElementById(
+'username'
+);
 
-const email =
-document.getElementById('email');
+const emailField =
+document.getElementById(
+'email'
+);
 
-const confirmEmail =
-document.getElementById('confirmEmail');
+const confirmEmailField =
+document.getElementById(
+'confirmEmail'
+);
 
-const password =
-document.getElementById('password');
+const passwordField =
+document.getElementById(
+'password'
+);
 
-const confirmPassword =
-document.getElementById('confirmPassword');
+const confirmPasswordField =
+document.getElementById(
+'confirmPassword'
+);
 
-if(username.value.trim() === ''){
-alert('يرجى إدخال اسم المستخدم');
-username.focus();
+if(
+!username ||
+username.value.trim() === ''
+){
+
+alert(
+'يرجى إدخال اسم المستخدم'
+);
+
+username?.focus();
+
 return false;
+
 }
 
-if(email.value.trim() === ''){
-alert('يرجى إدخال البريد الإلكتروني');
-email.focus();
+if(
+!emailField ||
+emailField.value.trim() === ''
+){
+
+alert(
+'يرجى إدخال البريد الإلكتروني'
+);
+
+emailField?.focus();
+
 return false;
+
 }
 
-if(email.value !== confirmEmail.value){
-alert('البريد الإلكتروني غير متطابق');
+if(
+emailField.value !==
+confirmEmailField.value
+){
+
+alert(
+'البريد الإلكتروني غير متطابق'
+);
+
 return false;
+
 }
 
-if(password.value !== confirmPassword.value){
-alert('كلمة المرور غير متطابقة');
+if(
+passwordField.value !==
+confirmPasswordField.value
+){
+
+alert(
+'كلمة المرور غير متطابقة'
+);
+
 return false;
+
 }
 
 }
@@ -153,27 +273,57 @@ return false;
 if(step === 2){
 
 const fullNameAr =
-document.getElementById('fullNameAr');
+document.getElementById(
+'fullNameAr'
+);
 
 const fullNameEn =
-document.getElementById('fullNameEn');
+document.getElementById(
+'fullNameEn'
+);
 
 const category =
-document.getElementById('accountCategory');
+document.getElementById(
+'accountCategory'
+);
 
-if(fullNameAr.value.trim() === ''){
-alert('أدخل الاسم بالعربية');
+if(
+!fullNameAr ||
+fullNameAr.value.trim() === ''
+){
+
+alert(
+'أدخل الاسم بالعربية'
+);
+
 return false;
+
 }
 
-if(fullNameEn.value.trim() === ''){
-alert('أدخل الاسم بالإنجليزية');
+if(
+!fullNameEn ||
+fullNameEn.value.trim() === ''
+){
+
+alert(
+'أدخل الاسم بالإنجليزية'
+);
+
 return false;
+
 }
 
-if(category.value === ''){
-alert('اختر الفئة');
+if(
+!category ||
+category.value === ''
+){
+
+alert(
+'اختر الفئة'
+);
+
 return false;
+
 }
 
 }
@@ -181,11 +331,21 @@ return false;
 if(step === 3){
 
 const mobile =
-document.getElementById('mobileNumber');
+document.getElementById(
+'mobileNumber'
+);
 
-if(mobile.value.trim() === ''){
-alert('أدخل رقم الجوال');
+if(
+!mobile ||
+mobile.value.trim() === ''
+){
+
+alert(
+'أدخل رقم الجوال'
+);
+
 return false;
+
 }
 
 }
@@ -194,142 +354,381 @@ return true;
 
 }
 
-/* ================================================ */
+/* ================================================= */
+/* USERNAME VALIDATION */
+/* ================================================= */
+
+const usernameField =
+document.getElementById(
+'username'
+);
+
+usernameField?.addEventListener(
+'input',
+() => {
+
+let value =
+usernameField.value;
+
+value =
+value.replace(
+/[^A-Za-z0-9]/g,
+''
+);
+
+usernameField.value =
+value;
+
+const validLength =
+value.length >= 4 &&
+value.length <= 20;
+
+const validChars =
+/^[A-Za-z0-9]*$/.test(
+value
+);
+
+document
+.getElementById(
+'userRule1'
+)
+?.classList.toggle(
+'valid',
+validLength
+);
+
+document
+.getElementById(
+'userRule2'
+)
+?.classList.toggle(
+'valid',
+validChars
+);
+
+document
+.getElementById(
+'userRule3'
+)
+?.classList.toggle(
+'valid',
+validChars
+);
+
+document
+.getElementById(
+'userRule4'
+)
+?.classList.add(
+'valid'
+);
+
+document
+.getElementById(
+'userRule5'
+)
+?.classList.add(
+'valid'
+);
+
+}
+);
+
+/* ================================================= */
+/* EMAIL VALIDATION */
+/* ================================================= */
+
+const emailField =
+document.getElementById(
+'email'
+);
+
+const confirmEmailField =
+document.getElementById(
+'confirmEmail'
+);
+
+confirmEmailField?.addEventListener(
+'input',
+() => {
+
+if(
+!emailField.value ||
+!confirmEmailField.value
+){
+return;
+}
+
+if(
+emailField.value ===
+confirmEmailField.value
+){
+
+confirmEmailField.style.borderColor =
+'#16a34a';
+
+}else{
+
+confirmEmailField.style.borderColor =
+'#dc2626';
+
+}
+
+}
+);
+
+/* ================================================= */
+/* MOBILE CLEANUP */
+/* ================================================= */
+
+const mobileField =
+document.getElementById(
+'mobileNumber'
+);
+
+mobileField?.addEventListener(
+'input',
+() => {
+
+let value =
+mobileField.value;
+
+value =
+value.replace(
+/\D/g,
+''
+);
+
+value =
+value.replace(
+/^0+/,
+''
+);
+
+mobileField.value =
+value;
+
+}
+);
+    /* ================================================= */
 /* PASSWORD SHOW / HIDE */
-/* ================================================ */
+/* ================================================= */
+
+const passwordInput =
+document.getElementById(
+'password'
+);
+
+const confirmPasswordInput =
+document.getElementById(
+'confirmPassword'
+);
 
 const showPassword =
-document.getElementById('showPassword');
+document.getElementById(
+'showPassword'
+);
 
 const showConfirmPassword =
-document.getElementById('showConfirmPassword');
+document.getElementById(
+'showConfirmPassword'
+);
 
-showPassword?.addEventListener('change', () => {
+showPassword?.addEventListener(
+'change',
+() => {
 
-const password =
-document.getElementById('password');
+if(!passwordInput){
+return;
+}
 
-password.type =
+passwordInput.type =
 showPassword.checked
 ? 'text'
 : 'password';
 
-});
+}
+);
 
-showConfirmPassword?.addEventListener('change', () => {
+showConfirmPassword?.addEventListener(
+'change',
+() => {
 
-const confirmPassword =
-document.getElementById('confirmPassword');
+if(!confirmPasswordInput){
+return;
+}
 
-confirmPassword.type =
+confirmPasswordInput.type =
 showConfirmPassword.checked
 ? 'text'
 : 'password';
 
-});
-    /* ================================================ */
+}
+);
+
+/* ================================================= */
 /* PASSWORD STRENGTH */
-/* ================================================ */
-
-const passwordInput =
-document.getElementById('password');
-
-const confirmPasswordInput =
-document.getElementById('confirmPassword');
+/* ================================================= */
 
 const passwordStrength =
-document.getElementById('passwordStrength');
+document.getElementById(
+'passwordStrength'
+);
 
 const passwordMatchStatus =
-document.getElementById('passwordMatchStatus');
+document.getElementById(
+'passwordMatchStatus'
+);
 
-passwordInput?.addEventListener('input', () => {
+passwordInput?.addEventListener(
+'input',
+() => {
 
-const value = passwordInput.value;
+const value =
+passwordInput.value;
 
 let score = 0;
 
-if(value.length >= 8){
+/* Length */
+
+const rule1 =
+value.length >= 8;
+
+document
+.getElementById('passRule1')
+?.classList.toggle(
+'valid',
+rule1
+);
+
+if(rule1){
 score++;
-document.getElementById('passRule1')
-?.classList.add('valid');
 }
 
-if(/[A-Z]/.test(value)){
+/* Uppercase */
+
+const rule2 =
+/[A-Z]/.test(value);
+
+document
+.getElementById('passRule2')
+?.classList.toggle(
+'valid',
+rule2
+);
+
+if(rule2){
 score++;
-document.getElementById('passRule2')
-?.classList.add('valid');
 }
 
-if(/[a-z]/.test(value)){
+/* Lowercase */
+
+const rule3 =
+/[a-z]/.test(value);
+
+document
+.getElementById('passRule3')
+?.classList.toggle(
+'valid',
+rule3
+);
+
+if(rule3){
 score++;
-document.getElementById('passRule3')
-?.classList.add('valid');
 }
 
-if(/[0-9]/.test(value)){
+/* Number */
+
+const rule4 =
+/[0-9]/.test(value);
+
+document
+.getElementById('passRule4')
+?.classList.toggle(
+'valid',
+rule4
+);
+
+if(rule4){
 score++;
-document.getElementById('passRule4')
-?.classList.add('valid');
 }
 
-if(/[^A-Za-z0-9]/.test(value)){
+/* Special Character */
+
+const rule5 =
+/[^A-Za-z0-9]/.test(
+value
+);
+
+document
+.getElementById('passRule5')
+?.classList.toggle(
+'valid',
+rule5
+);
+
+if(rule5){
 score++;
-document.getElementById('passRule5')
-?.classList.add('valid');
 }
 
-/* Strength */
+/* Strength Indicator */
 
-passwordStrength.className = '';
+if(passwordStrength){
+
+passwordStrength.className =
+'';
 
 if(score <= 2){
 
 passwordStrength.innerHTML =
 '🔴 ضعيفة';
 
-passwordStrength.classList
-.add('password-weak');
+passwordStrength.classList.add(
+'password-weak'
+);
 
 }
-
 else if(score === 3){
 
 passwordStrength.innerHTML =
 '🟠 متوسطة';
 
-passwordStrength.classList
-.add('password-medium');
+passwordStrength.classList.add(
+'password-medium'
+);
 
 }
-
 else if(score === 4){
 
 passwordStrength.innerHTML =
 '🟢 قوية';
 
-passwordStrength.classList
-.add('password-strong');
+passwordStrength.classList.add(
+'password-strong'
+);
 
 }
-
 else{
 
 passwordStrength.innerHTML =
 '🟢 قوية جداً';
 
-passwordStrength.classList
-.add('password-very-strong');
+passwordStrength.classList.add(
+'password-very-strong'
+);
+
+}
 
 }
 
 checkPasswordMatch();
 
-});
+}
+);
 
-/* ================================================ */
+/* ================================================= */
 /* PASSWORD MATCH */
-/* ================================================ */
+/* ================================================= */
 
 confirmPasswordInput?.addEventListener(
 'input',
@@ -339,10 +738,25 @@ checkPasswordMatch
 function checkPasswordMatch(){
 
 if(
+!passwordInput ||
+!confirmPasswordInput
+){
+return;
+}
+
+if(
 passwordInput.value === '' ||
 confirmPasswordInput.value === ''
 ){
+
+if(passwordMatchStatus){
+
+passwordMatchStatus.innerHTML = '';
+
+}
+
 return;
+
 }
 
 if(
@@ -356,7 +770,8 @@ passwordMatchStatus.innerHTML =
 passwordMatchStatus.className =
 'match-status valid';
 
-}else{
+}
+else{
 
 passwordMatchStatus.innerHTML =
 '✖ كلمة المرور غير متطابقة';
@@ -368,234 +783,165 @@ passwordMatchStatus.className =
 
 }
 
-/* ================================================ */
-/* USERNAME VALIDATION */
-/* ================================================ */
-
-const username =
-document.getElementById('username');
-
-username?.addEventListener('input', () => {
-
-let value =
-username.value.trim();
-
-value =
-value.replace(/[^a-zA-Z0-9]/g,'');
-
-username.value = value;
-
-const validLength =
-value.length >= 4 &&
-value.length <= 20;
-
-const validChars =
-/^[A-Za-z0-9]+$/.test(value);
-
-document
-.getElementById('userRule1')
-?.classList.toggle(
-'valid',
-validLength
-);
-
-document
-.getElementById('userRule2')
-?.classList.toggle(
-'valid',
-validChars
-);
-
-document
-.getElementById('userRule3')
-?.classList.toggle(
-'valid',
-validChars
-);
-
-document
-.getElementById('userRule4')
-?.classList.add('valid');
-
-document
-.getElementById('userRule5')
-?.classList.add('valid');
-
-});
-
-/* ================================================ */
-/* EMAIL VALIDATION */
-/* ================================================ */
-
-const email =
-document.getElementById('email');
-
-const confirmEmail =
-document.getElementById('confirmEmail');
-
-confirmEmail?.addEventListener('input', () => {
-
-if(
-email.value &&
-confirmEmail.value
-){
-
-if(
-email.value ===
-confirmEmail.value
-){
-
-confirmEmail.style.borderColor =
-'#16a34a';
-
-}else{
-
-confirmEmail.style.borderColor =
-'#dc2626';
-
-}
-
-}
-
-});
-
-/* ================================================ */
-/* MOBILE CLEANUP */
-/* ================================================ */
-
-const mobileNumber =
-document.getElementById('mobileNumber');
-
-mobileNumber?.addEventListener(
-'input',
-() => {
-
-let value =
-mobileNumber.value;
-
-value =
-value.replace(/\D/g,'');
-
-if(value.startsWith('0')){
-value = value.substring(1);
-}
-
-mobileNumber.value = value;
-
-}
-);
-
-                          /* ================================================ */
+    /* ================================================= */
 /* CATEGORY SWITCHING */
-/* ================================================ */
+/* ================================================= */
 
 const accountCategory =
-document.getElementById('accountCategory');
+document.getElementById(
+'accountCategory'
+);
 
 const saudiFields =
-document.getElementById('saudiFields');
+document.getElementById(
+'saudiFields'
+);
 
 const residentFields =
-document.getElementById('residentFields');
+document.getElementById(
+'residentFields'
+);
 
 const gccFields =
-document.getElementById('gccFields');
+document.getElementById(
+'gccFields'
+);
 
 const foreignFields =
-document.getElementById('foreignFields');
+document.getElementById(
+'foreignFields'
+);
 
 const nationalAddressWrapper =
-document.getElementById('nationalAddressWrapper');
+document.getElementById(
+'nationalAddressWrapper'
+);
 
 const internationalAddressWrapper =
-document.getElementById('internationalAddressWrapper');
+document.getElementById(
+'internationalAddressWrapper'
+);
+
+function hideAllIdentitySections(){
+
+    saudiFields?.classList.add(
+    'd-none'
+    );
+
+    residentFields?.classList.add(
+    'd-none'
+    );
+
+    gccFields?.classList.add(
+    'd-none'
+    );
+
+    foreignFields?.classList.add(
+    'd-none'
+    );
+
+}
 
 accountCategory?.addEventListener(
 'change',
 () => {
 
-hideAllIdentitySections();
+    hideAllIdentitySections();
 
-const category =
-accountCategory.value;
+    const category =
+    accountCategory.value;
 
-switch(category){
+    switch(category){
 
-case 'saudi':
+        case 'saudi':
 
-saudiFields.classList.remove('d-none');
+            saudiFields?.classList.remove(
+            'd-none'
+            );
 
-nationalAddressWrapper
-.classList.remove('d-none');
+            nationalAddressWrapper
+            ?.classList.remove(
+            'd-none'
+            );
 
-internationalAddressWrapper
-.classList.add('d-none');
+            internationalAddressWrapper
+            ?.classList.add(
+            'd-none'
+            );
 
-setSaudiCode();
+            setSaudiCode();
 
-break;
+        break;
 
-case 'resident':
+        case 'resident':
 
-residentFields.classList.remove('d-none');
+            residentFields?.classList.remove(
+            'd-none'
+            );
 
-nationalAddressWrapper
-.classList.remove('d-none');
+            nationalAddressWrapper
+            ?.classList.remove(
+            'd-none'
+            );
 
-internationalAddressWrapper
-.classList.add('d-none');
+            internationalAddressWrapper
+            ?.classList.add(
+            'd-none'
+            );
 
-setSaudiCode();
+            setSaudiCode();
 
-break;
+        break;
 
-case 'gcc':
+        case 'gcc':
 
-gccFields.classList.remove('d-none');
+            gccFields?.classList.remove(
+            'd-none'
+            );
 
-nationalAddressWrapper
-.classList.add('d-none');
+            nationalAddressWrapper
+            ?.classList.add(
+            'd-none'
+            );
 
-internationalAddressWrapper
-.classList.remove('d-none');
+            internationalAddressWrapper
+            ?.classList.remove(
+            'd-none'
+            );
 
-break;
+        break;
 
-case 'foreign':
+        case 'foreign':
 
-foreignFields.classList.remove('d-none');
+            foreignFields?.classList.remove(
+            'd-none'
+            );
 
-nationalAddressWrapper
-.classList.add('d-none');
+            nationalAddressWrapper
+            ?.classList.add(
+            'd-none'
+            );
 
-internationalAddressWrapper
-.classList.remove('d-none');
+            internationalAddressWrapper
+            ?.classList.remove(
+            'd-none'
+            );
 
-break;
+        break;
 
-}
+    }
 
 }
 );
 
-function hideAllIdentitySections(){
-
-saudiFields?.classList.add('d-none');
-
-residentFields?.classList.add('d-none');
-
-gccFields?.classList.add('d-none');
-
-foreignFields?.classList.add('d-none');
-
-}
-
-/* ================================================ */
+/* ================================================= */
 /* FOREIGN DOCUMENT TYPE */
-/* ================================================ */
+/* ================================================= */
 
 const documentType =
-document.getElementById('documentType');
+document.getElementById(
+'documentType'
+);
 
 const foreignNationalIdFields =
 document.getElementById(
@@ -611,49 +957,66 @@ documentType?.addEventListener(
 'change',
 () => {
 
-foreignNationalIdFields
-?.classList.add('d-none');
+    foreignNationalIdFields
+    ?.classList.add(
+    'd-none'
+    );
 
-passportFields
-?.classList.add('d-none');
+    passportFields
+    ?.classList.add(
+    'd-none'
+    );
 
-if(documentType.value === 'nid'){
+    if(
+    documentType.value ===
+    'nid'
+    ){
 
-foreignNationalIdFields
-?.classList.remove('d-none');
+        foreignNationalIdFields
+        ?.classList.remove(
+        'd-none'
+        );
 
-}
+    }
 
-if(documentType.value === 'passport'){
+    if(
+    documentType.value ===
+    'passport'
+    ){
 
-passportFields
-?.classList.remove('d-none');
+        passportFields
+        ?.classList.remove(
+        'd-none'
+        );
 
-}
+    }
 
 }
 );
 
-/* ================================================ */
+/* ================================================= */
 /* COUNTRY CODE */
-/* ================================================ */
+/* ================================================= */
 
 function setSaudiCode(){
 
-const countryCode =
-document.getElementById('countryCode');
+    const countryCode =
+    document.getElementById(
+    'countryCode'
+    );
 
-if(countryCode){
+    if(countryCode){
 
-countryCode.value = '+966';
+        countryCode.value =
+        '+966';
+
+    }
 
 }
 
-}
-
-/* ================================================ */
-/* NATIONAL ADDRESS BUTTON */
-/* ================================================ */
+/* ================================================= */
+/* NATIONAL ADDRESS */
+/* ================================================= */
 
 const fetchNationalAddress =
 document.getElementById(
@@ -665,16 +1028,29 @@ fetchNationalAddress
 'click',
 () => {
 
-alert(
-'سيتم ربط خدمة العنوان الوطني مستقبلاً عبر API'
-);
+    if(
+    typeof infoAlert ===
+    'function'
+    ){
+
+        infoAlert(
+        'سيتم ربط خدمة العنوان الوطني مستقبلاً'
+        );
+
+    }else{
+
+        alert(
+        'سيتم ربط خدمة العنوان الوطني مستقبلاً'
+        );
+
+    }
 
 }
 );
 
-/* ================================================ */
+/* ================================================= */
 /* FORM SUBMIT */
-/* ================================================ */
+/* ================================================= */
 
 const registerForm =
 document.getElementById(
@@ -685,108 +1061,64 @@ registerForm?.addEventListener(
 'submit',
 (e) => {
 
-e.preventDefault();
+    e.preventDefault();
 
-/* Final Agreement */
+    const finalAgreement =
+    document.getElementById(
+    'finalAgreement'
+    );
 
-const finalAgreement =
-document.getElementById(
-'finalAgreement'
-);
+    if(
+    finalAgreement &&
+    !finalAgreement.checked
+    ){
 
-if(
-finalAgreement &&
-!finalAgreement.checked
-){
+        alert(
+        'يجب الموافقة على الإقرار النهائي'
+        );
 
-alert(
-'يجب الموافقة على الإقرار النهائي'
-);
+        return;
 
-return;
+    }
 
-}
+    if(
+    typeof successAlert ===
+    'function'
+    ){
 
-/* Here API Request */
+        successAlert(
+        'تم إنشاء حساب الشريك بنجاح'
+        );
 
-alert(
-'تم إنشاء حساب الشريك بنجاح'
-);
+    }else{
 
-/* Redirect To OTP */
+        alert(
+        'تم إنشاء حساب الشريك بنجاح'
+        );
 
-window.location.href =
-'../verify-otp.html';
+    }
 
-}
-);
+    setTimeout(() => {
 
-/* ================================================ */
-/* LOAD SHARED COMPONENTS */
-/* ================================================ */
+        window.location.href =
+        '../verify-otp.html';
 
-const headerContainer =
-document.getElementById(
-'header-container'
-);
-
-if(headerContainer){
-
-fetch(
-'../../components/header.html'
-)
-
-.then(response => response.text())
-
-.then(html => {
-
-headerContainer.innerHTML =
-html;
-
-})
-
-.catch(error => {
-
-console.error(error);
-
-});
+    },1500);
 
 }
-
-const footerContainer =
-document.getElementById(
-'footer-container'
 );
 
-if(footerContainer){
-
-fetch(
-'../../components/footer.html'
-)
-
-.then(response => response.text())
-
-.then(html => {
-
-footerContainer.innerHTML =
-html;
-
-})
-
-.catch(error => {
-
-console.error(error);
-
-});
-
-}
-
-/* ================================================ */
-/* INIT */
-/* ================================================ */
+/* ================================================= */
+/* INITIALIZE */
+/* ================================================= */
 
 hideAllIdentitySections();
 
-prevBtn.style.display = 'none';
+if(prevBtn){
+
+    prevBtn.style.display =
+    'none';
+
+}
 
 });
