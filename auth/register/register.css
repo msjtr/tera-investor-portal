@@ -1,5 +1,5 @@
 /* ================================================= */
-/* TERA REGISTRATION SYSTEM - FINAL VERSION */
+/* TERA REGISTRATION SYSTEM - STABLE VERSION */
 /* ================================================= */
 
 :root {
@@ -12,116 +12,71 @@
     --border-color: #E2E8F0;
     --success: #10B981;
     --error: #EF4444;
-    --shadow-soft: 0 10px 25px -5px rgba(10, 27, 63, 0.1);
 }
 
 * { box-sizing: border-box; }
 
-body { 
-    background: var(--bg-main); 
-    color: var(--text-main); 
-    font-family: 'Tajawal', 'Cairo', sans-serif; 
-    min-height: 100vh; 
-    margin: 0; 
-    direction: rtl;
-    text-align: right;
-}
+body { background: var(--bg-main); color: var(--text-main); font-family: 'Tajawal', 'Cairo', sans-serif; min-height: 100vh; margin: 0; direction: rtl; text-align: right; }
 
-/* التخطيط العام */
-.register-page {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
+.register-page { width: 100%; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 
 .register-card { 
     background: var(--card-bg); 
     border-radius: 28px; 
-    box-shadow: var(--shadow-soft); 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
     padding: 3rem; 
     border: 1px solid var(--border-color);
+    width: 100%;
 }
 
-/* الشعار */
-.logo-section { text-align: center; margin-bottom: 2.5rem; }
-.tera-logo { max-width: 180px; }
+/* الشعار والخطوات */
+.logo-section { text-align: center; margin-bottom: 2rem; }
+.tera-logo { max-width: 150px; }
 
-/* خطوات التسجيل */
-.register-steps { display: flex; justify-content: space-between; margin-bottom: 3rem; }
-.step { flex: 1; text-align: center; }
-.step-number { 
-    width: 48px; height: 48px; background: #F1F5F9; border-radius: 14px; 
-    display: flex; align-items: center; justify-content: center; 
-    margin: 0 auto 10px; font-weight: 800; color: var(--text-muted);
-}
+.register-steps { display: flex; justify-content: space-between; margin-bottom: 3rem; overflow-x: auto; padding-bottom: 10px; }
+.step { flex: 1; min-width: 100px; text-align: center; }
+.step-number { width: 45px; height: 45px; background: #F1F5F9; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; color: var(--text-muted); }
 .step.active .step-number { background: var(--tera-cyan); color: #fff; }
-.step-title { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
 
-/* نظام الشبكة لمنع التداخل */
+/* إصلاح التداخل في الشبكة */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-    align-items: start;
+    gap: 20px;
     width: 100%;
 }
 
-.form-group {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    min-width: 0; 
-}
+.form-group { width: 100%; display: flex; flex-direction: column; }
+.full-width { grid-column: span 2; }
 
-.full-width { grid-column: 1 / -1; }
-
-label { font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
-
+/* الحقول */
 input, select, textarea { 
-    width: 100%;
-    padding: 1rem; 
-    border: 2px solid var(--border-color); 
-    border-radius: 12px; 
-    background: #fff;
-    transition: all 0.3s ease;
+    width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 10px; 
+    font-size: 1rem; transition: border-color 0.3s;
 }
+input:focus { border-color: var(--tera-cyan); outline: none; }
 
-input:focus { border-color: var(--tera-cyan); outline: none; box-shadow: 0 0 0 4px rgba(0,194,199,0.1); }
-
-/* التحقق */
+/* نظام التحقق (ثابت الترتيب) */
 .validation-box { 
-    background: #F8FAFC; 
-    border: 1px solid var(--border-color); 
-    border-radius: 16px; 
-    padding: 1.5rem; 
-    margin: 1.5rem 0; 
+    background: #F8FAFC; border: 1px solid var(--border-color); 
+    border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;
 }
-.validation-box ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; padding: 0; }
-.validation-box li { font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
-.validation-box li.valid { color: var(--success); }
+.validation-box ul { 
+    list-style: none; padding: 0; margin: 0; 
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; 
+}
+.validation-box li { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.validation-box li.valid { color: var(--success); font-weight: 600; }
 .validation-box li.invalid { color: var(--error); }
 
 /* الأزرار */
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.btn { padding: 1rem 2.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; border: none; }
+.form-actions { display: flex; justify-content: space-between; margin-top: 30px; gap: 15px; }
+.btn { padding: 12px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; }
 .btn-primary { background: var(--tera-navy); color: #fff; }
 .btn-success { background: var(--tera-cyan); color: #fff; }
 
-/* التجاوب */
-@media (max-width: 768px) {
-    .register-card { padding: 1.5rem; }
+@media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
-    .form-actions { flex-direction: column-reverse; width: 100%; }
-    .btn { width: 100%; }
+    .full-width { grid-column: span 1; }
+    .validation-box ul { grid-template-columns: 1fr; }
 }
