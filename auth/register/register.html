@@ -4,231 +4,107 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب شريك | بوابة تيرا</title>
-    
-    <meta name="description" content="إنشاء حساب شريك جديد في بوابة تيرا - عالمك بلا حدود.">
-    <meta property="og:image" content="../../images/share-thumb.png">
-
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/auth.css">
-
     <link rel="stylesheet" href="register.css">
 </head>
 <body>
 <main class="register-page">
-    <section class="register-banner" style="text-align: center;">
-        <img src="../../images/logo.svg" alt="شعار بوابة تيرا" class="tera-logo" style="max-width: 180px; margin-bottom: 1rem;">
-        <h1>بوابة الشركاء - تيرا</h1>
-        <p>عالمك بلا حدود</p>
-    </section>
-
     <section class="register-card">
         <div class="register-steps">
-            <div class="step active" data-step="0"><div class="step-number">①</div><div class="step-title">الحساب</div></div>
-            <div class="step" data-step="1"><div class="step-number">②</div><div class="step-title">الهوية</div></div>
-            <div class="step" data-step="2"><div class="step-number">③</div><div class="step-title">التواصل</div></div>
-            <div class="step" data-step="3"><div class="step-number">④</div><div class="step-title">الإقرارات</div></div>
+            <div class="step active" data-step="0">① الحساب</div>
+            <div class="step" data-step="1">② الهوية</div>
+            <div class="step" data-step="2">③ التواصل</div>
+            <div class="step" data-step="3">④ الإقرارات</div>
         </div>
 
         <form id="partnerRegisterForm">
             <section id="step0" class="form-step active">
                 <h3>معلومات الحساب</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>اسم المستخدم</label>
-                        <input type="text" id="username" maxlength="20" placeholder="tera2026">
-                        <div id="err_username" class="error-msg d-none">❌ يرجى تصحيح الأخطاء في المتطلبات أدناه.</div>
+                <div class="split-section">
+                    <div class="input-side">
+                        <div class="form-group"><label>اسم المستخدم</label><input type="text" id="username" maxlength="20"></div>
+                        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="email"></div>
+                        <div class="form-group"><label>تأكيد البريد</label><input type="email" id="confirmEmail"></div>
+                        <div class="form-group"><label>كلمة المرور</label><input type="password" id="password"></div>
+                        <div class="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="confirmPassword"></div>
+                    </div>
+                    <div class="validation-side">
+                        <ul class="rule-list" id="rules0">
+                            <li id="rule_u_len">☐ 4-20 خانة</li>
+                            <li id="rule_u_start">☐ يبدأ بحرف إنجليزي</li>
+                            <li id="rule_p_match">☐ تطابق كلمة المرور</li>
+                        </ul>
                     </div>
                 </div>
-                <div class="validation-box">
-                    <ul>
-                        <li id="rule_u_len">☐ من 4 إلى 20 خانة</li>
-                        <li id="rule_u_start">☐ يبدأ بحرف إنجليزي</li>
-                        <li id="rule_u_num">☐ يسمح بالأرقام</li>
-                        <li id="rule_u_space">☐ لا يحتوي على مسافات</li>
-                        <li id="rule_u_spec">☐ لا يحتوي على رموز خاصة</li>
-                        <li id="rule_u_avail" class="valid">✅ غير مستخدم مسبقاً</li>
-                    </ul>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>البريد الإلكتروني</label>
-                        <input type="email" id="email" placeholder="name@example.com">
-                        <div id="err_email" class="error-msg d-none">❌ بريد إلكتروني غير صحيح.</div>
-                    </div>
-                    <div class="form-group">
-                        <label>تأكيد البريد الإلكتروني</label>
-                        <input type="email" id="confirmEmail" placeholder="name@example.com">
-                        <div id="err_email_match" class="error-msg d-none">❌ البريد الإلكتروني غير متطابق.</div>
-                    </div>
-                </div>
-                <div class="validation-box">
-                    <ul>
-                        <li id="rule_e_valid">☐ بريد إلكتروني صحيح</li>
-                        <li id="rule_e_avail" class="valid">✅ غير مستخدم مسبقاً</li>
-                        <li id="rule_e_match">☐ البريدان متطابقان</li>
-                    </ul>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>كلمة المرور</label>
-                        <input type="password" id="password">
-                    </div>
-                    <div class="form-group">
-                        <label>تأكيد كلمة المرور</label>
-                        <input type="password" id="confirmPassword">
-                    </div>
-                </div>
-                <div class="validation-box">
-                    <ul>
-                        <li id="rule_p_len">☐ 8 أحرف على الأقل</li>
-                        <li id="rule_p_up">☐ حرف كبير (A-Z)</li>
-                        <li id="rule_p_low">☐ حرف صغير (a-z)</li>
-                        <li id="rule_p_num">☐ رقم (0-9)</li>
-                        <li id="rule_p_spec">☐ رمز خاص</li>
-                        <li id="rule_p_space">☐ لا يحتوي على مسافات</li>
-                        <li id="rule_p_repeat">☐ لا يحتوي على 3 أحرف متتالية</li>
-                        <li id="rule_p_match">☐ متطابقان</li>
-                    </ul>
-                </div>
-                <div class="password-strength">القوة: <span id="passwordStrength">🔴 ضعيفة</span></div>
             </section>
 
             <section id="step1" class="form-step d-none">
-                <h3>المعلومات الشخصية والهوية</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>الاسم بالعربية</label><input type="text" id="fullNameAr" required></div>
-                    <div class="form-group"><label>الاسم بالإنجليزية</label><input type="text" id="fullNameEn" required></div>
-                    <div class="form-group">
-                        <label>الجنس</label>
-                        <select id="gender" required><option value="">اختر</option><option value="m">ذكر</option><option value="f">أنثى</option></select>
+                <div class="split-section">
+                    <div class="input-side">
+                        <h3>بيانات الهوية</h3>
+                        <div class="form-group"><label>الاسم بالعربية</label><input type="text" id="fullNameAr"></div>
+                        <div class="form-group"><label>الاسم بالإنجليزية</label><input type="text" id="fullNameEn"></div>
+                        <div class="form-group"><label>الفئة</label>
+                            <select id="accountCategory">
+                                <option value="saudi">سعودي</option><option value="resident">مقيم</option>
+                                <option value="gcc">خليجي</option><option value="foreign">أجنبي</option>
+                            </select>
+                        </div>
+                        <div id="identityFields">
+                            <div class="form-group"><label>رقم الوثيقة</label><input type="text" id="docNum"></div>
+                            <div class="form-group"><label>تاريخ الإصدار</label><input type="date" id="issueDate"></div>
+                            <div class="form-group"><label>تاريخ الانتهاء</label><input type="date" id="expiryDate"></div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>الفئة</label>
-                        <select id="accountCategory" required>
-                            <option value="">اختر الفئة</option>
-                            <option value="saudi">سعودي</option><option value="resident">مقيم</option>
-                            <option value="gcc">خليجي</option><option value="foreign">أجنبي</option>
-                        </select>
+                    <div class="validation-side">
+                        <ul class="rule-list"><li id="rule_id">☐ اكتمال وصلاحية الوثيقة</li></ul>
                     </div>
-                </div>
-
-                <div id="saudiFields" class="identity-wrapper d-none">
-                    <div class="form-grid">
-                        <div class="form-group"><label>رقم الهوية</label><input type="text" id="nid" class="req-field num-only" maxlength="10"></div>
-                        <div class="form-group"><label>تاريخ الإصدار</label><input type="date" id="nidIssue" class="req-field"></div>
-                        <div class="form-group"><label>تاريخ الانتهاء</label><input type="date" id="nidExp" class="req-field doc-date"></div>
-                    </div>
-                </div>
-                <div id="residentFields" class="identity-wrapper d-none">
-                    <div class="form-grid">
-                        <div class="form-group"><label>الجنسية</label><select id="resNat" class="req-field"></select></div>
-                        <div class="form-group"><label>رقم الإقامة</label><input type="text" id="iqama" class="req-field num-only" maxlength="10"></div>
-                        <div class="form-group"><label>تاريخ الانتهاء</label><input type="date" id="iqamaExp" class="req-field doc-date"></div>
-                    </div>
-                </div>
-                <div id="gccFields" class="identity-wrapper d-none">
-                    <div class="form-grid">
-                        <div class="form-group"><label>الدولة</label><select id="gccCountry" class="req-field"><option value="">اختر</option><option value="ae">الإمارات</option><option value="kw">الكويت</option><option value="bh">البحرين</option><option value="om">عمان</option><option value="qa">قطر</option></select></div>
-                        <div class="form-group"><label>رقم الهوية</label><input type="text" id="gccId" class="req-field num-only"></div>
-                        <div class="form-group"><label>تاريخ الانتهاء</label><input type="date" id="gccExp" class="req-field doc-date"></div>
-                    </div>
-                </div>
-                <div id="foreignFields" class="identity-wrapper d-none">
-                    <div class="form-grid">
-                        <div class="form-group"><label>الجنسية</label><select id="forNat" class="req-field"></select></div>
-                        <div class="form-group"><label>رقم الوثيقة</label><input type="text" id="forId" class="req-field"></div>
-                        <div class="form-group"><label>تاريخ الانتهاء</label><input type="date" id="forExp" class="req-field doc-date"></div>
-                    </div>
-                </div>
-                
-                <div class="validation-box">
-                    <ul>
-                        <li id="rule_id_fill">☐ إكمال بيانات الهوية</li>
-                        <li id="rule_id_date">☐ الوثيقة سارية المفعول</li>
-                    </ul>
                 </div>
             </section>
 
             <section id="step2" class="form-step d-none">
-                <h3>التواصل والعنوان</h3>
-                <div class="form-grid">
-                    <div class="form-group"><label>مفتاح الدولة</label><select id="countryCode"></select></div>
-                    <div class="form-group">
-                        <label>رقم الجوال</label>
-                        <input type="text" id="mobile" class="num-only" maxlength="15" placeholder="512345678">
-                        <div id="err_mobile" class="error-msg d-none">❌ أدخل رقم الجوال بدون صفر أول.</div>
+                <div class="split-section">
+                    <div class="input-side">
+                        <h3>التواصل والعنوان</h3>
+                        <div class="form-group"><label>رقم الجوال (بدون صفر)</label><input type="text" id="mobile" class="num-only"></div>
+                        <div id="nationalAddr" class="addr-group">
+                            <div class="form-group"><label>رقم المبنى</label><input type="text" class="num-only" id="bldgNum"></div>
+                            <div class="form-group"><label>الشارع</label><input type="text" id="street"></div>
+                            <div class="form-group"><label>الحي</label><input type="text" id="district"></div>
+                            <div class="form-group"><label>المدينة</label><input type="text" id="city"></div>
+                            <div class="form-group"><label>الرمز البريدي</label><input type="text" class="num-only" id="zip"></div>
+                            <div class="form-group"><label>الرقم الإضافي</label><input type="text" class="num-only" id="addNum"></div>
+                            <div class="form-group"><label>الاسم المختصر</label><input type="text" id="shortAddr"></div>
+                        </div>
                     </div>
-                </div>
-                
-                <div id="nationalAddress" class="addr-wrapper d-none">
-                    <h4>العنوان الوطني (للسعودي والمقيم)</h4>
-                    <div class="form-grid">
-                        <div class="form-group"><label>رقم المبنى</label><input type="text" class="req-addr num-only" maxlength="4"></div>
-                        <div class="form-group"><label>الشارع</label><input type="text" class="req-addr text-only"></div>
-                        <div class="form-group"><label>الحي</label><input type="text" class="req-addr text-only"></div>
-                        <div class="form-group"><label>المدينة</label><input type="text" class="req-addr text-only"></div>
-                        <div class="form-group"><label>الرمز البريدي</label><input type="text" class="req-addr num-only" maxlength="5"></div>
-                        <div class="form-group"><label>المختصر</label><input type="text" class="req-addr"></div>
+                    <div class="validation-side">
+                        <ul class="rule-list"><li id="rule_contact">☐ صحة رقم الجوال والعنوان</li></ul>
                     </div>
-                </div>
-
-                <div id="internationalAddress" class="addr-wrapper d-none">
-                    <h4>العنوان الدولي (للخليجي والأجنبي)</h4>
-                    <div class="form-grid">
-                        <div class="form-group"><label>الدولة</label><input type="text" class="req-addr text-only"></div>
-                        <div class="form-group"><label>المدينة</label><input type="text" class="req-addr text-only"></div>
-                        <div class="form-group"><label>الشارع</label><input type="text" class="req-addr text-only"></div>
-                    </div>
-                </div>
-
-                <div class="validation-box">
-                    <ul>
-                        <li id="rule_contact_mob">☐ رقم جوال صحيح</li>
-                        <li id="rule_contact_addr">☐ إكمال حقول العنوان الإلزامية</li>
-                    </ul>
                 </div>
             </section>
 
             <section id="step3" class="form-step d-none">
-                <h3>الإقرارات والاتفاقيات</h3>
-                <div class="validation-box" style="display: block;">
-                    <label style="display: block; margin-bottom: 10px;"><input type="checkbox" class="agreement-chk"> أقر بأن عمري 18 عاماً فأكثر.</label>
-                    <label style="display: block; margin-bottom: 10px;"><input type="checkbox" class="agreement-chk"> أوافق على شروط تيرا وسياسة الخصوصية.</label>
-                    <label style="display: block; margin-bottom: 10px;"><input type="checkbox" class="agreement-chk"> أقر بصحة البيانات المقدمة.</label>
-                </div>
-                <div class="validation-box">
-                    <ul><li id="rule_agreements">☐ الموافقة على جميع الإقرارات</li></ul>
-                </div>
-                <hr>
-                <div>
-                    <label style="font-weight: bold; color: var(--tera-blue);">
-                        <input type="checkbox" id="finalAgreement"> أوافق على الإقرار النهائي لإنشاء الحساب.
-                    </label>
+                <div class="split-section">
+                    <div class="input-side">
+                        <h3>الإقرارات</h3>
+                        <label><input type="checkbox" class="agreement-chk"> أقر بأن عمري 18+</label><br>
+                        <label><input type="checkbox" class="agreement-chk"> أقر بأنني المستفيد الحقيقي</label><br>
+                        <label><input type="checkbox" class="agreement-chk"> أوافق على شروط تيرا</label><br>
+                        <label><input type="checkbox" id="finalAgreement"> **أوافق على الإقرار النهائي**</label>
+                    </div>
+                    <div class="validation-side">
+                        <ul class="rule-list"><li id="rule_agreements">☐ الموافقة على كافة الشروط</li></ul>
+                    </div>
                 </div>
             </section>
 
             <div class="form-actions">
                 <button type="button" id="prevBtn" class="btn btn-secondary d-none">السابق</button>
                 <button type="button" id="nextBtn" class="btn btn-primary">التالي</button>
-                <button type="button" id="submitBtn" class="btn btn-success d-none">إنشاء حساب</button>
+                <button type="button" id="submitBtn" class="btn btn-success d-none">إنشاء الحساب</button>
             </div>
         </form>
     </section>
-
-    <footer class="tera-footer">
-        <p>© 2026 جميع الحقوق محفوظة لمنصة تيرا</p>
-    </footer>
 </main>
-
-<script src="../../assets/js/core.js"></script>
-<script src="../../assets/js/auth.js"></script>
-<script src="../../assets/js/app.js"></script>
-
 <script src="register.js"></script>
 </body>
 </html>
