@@ -1,13 +1,10 @@
-/* =========================================
-   TERA DESIGN SYSTEM - CREATIVE & CLEAN
-   ========================================= */
+/* ================================================= */
+/* TERA REGISTRATION SYSTEM - FINAL VERSION */
+/* ================================================= */
+
 :root {
-    /* ألوان الهوية المستوحاة من الشعار */
-    --tera-navy: #0A1B3F;       /* الكحلي الداكن للشعار */
-    --tera-cyan: #00C2C7;       /* الفيروزي الساطع للسهم */
-    --tera-cyan-hover: #009CA0; 
-    
-    /* ألوان عامة */
+    --tera-navy: #0A1B3F;
+    --tera-cyan: #00C2C7;
     --bg-main: #F8FAFC;
     --card-bg: #FFFFFF;
     --text-main: #1E293B;
@@ -15,10 +12,10 @@
     --border-color: #E2E8F0;
     --success: #10B981;
     --error: #EF4444;
-    
-    /* تأثيرات بصرية */
     --shadow-soft: 0 10px 25px -5px rgba(10, 27, 63, 0.1);
 }
+
+* { box-sizing: border-box; }
 
 body { 
     background: var(--bg-main); 
@@ -26,11 +23,17 @@ body {
     font-family: 'Tajawal', 'Cairo', sans-serif; 
     min-height: 100vh; 
     margin: 0; 
+    direction: rtl;
+    text-align: right;
 }
 
-/* الشعار والبطاقة */
-.logo-section { text-align: center; margin-bottom: 2.5rem; }
-.tera-logo { max-width: 180px; }
+/* التخطيط العام */
+.register-page {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
 
 .register-card { 
     background: var(--card-bg); 
@@ -40,37 +43,53 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.card-header h2 { 
-    color: var(--tera-navy); 
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
+/* الشعار */
+.logo-section { text-align: center; margin-bottom: 2.5rem; }
+.tera-logo { max-width: 180px; }
 
-/* خطوات التسجيل (الإبداعية) */
-.register-steps { display: flex; justify-content: space-between; margin-bottom: 4rem; }
-.step { flex: 1; text-align: center; position: relative; }
+/* خطوات التسجيل */
+.register-steps { display: flex; justify-content: space-between; margin-bottom: 3rem; }
+.step { flex: 1; text-align: center; }
 .step-number { 
-    width: 48px; height: 48px; 
-    background: #F1F5F9; 
-    border-radius: 14px; 
+    width: 48px; height: 48px; background: #F1F5F9; border-radius: 14px; 
     display: flex; align-items: center; justify-content: center; 
     margin: 0 auto 10px; font-weight: 800; color: var(--text-muted);
 }
-.step.active .step-number { background: var(--tera-cyan); color: #fff; box-shadow: 0 4px 10px rgba(0,194,199,0.3); }
+.step.active .step-number { background: var(--tera-cyan); color: #fff; }
 .step-title { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
-.step.active .step-title { color: var(--tera-navy); }
 
-/* تنسيق النماذج */
-input[type="text"], input[type="email"], input[type="password"], input[type="date"], select { 
+/* نظام الشبكة لمنع التداخل */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+}
+
+.form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; 
+}
+
+.full-width { grid-column: 1 / -1; }
+
+label { font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
+
+input, select, textarea { 
+    width: 100%;
     padding: 1rem; 
     border: 2px solid var(--border-color); 
     border-radius: 12px; 
     background: #fff;
     transition: all 0.3s ease;
 }
-input:focus { border-color: var(--tera-cyan); box-shadow: 0 0 0 4px rgba(0,194,199,0.1); }
 
-/* صناديق التحقق الإبداعية */
+input:focus { border-color: var(--tera-cyan); outline: none; box-shadow: 0 0 0 4px rgba(0,194,199,0.1); }
+
+/* التحقق */
 .validation-box { 
     background: #F8FAFC; 
     border: 1px solid var(--border-color); 
@@ -78,33 +97,31 @@ input:focus { border-color: var(--tera-cyan); box-shadow: 0 0 0 4px rgba(0,194,1
     padding: 1.5rem; 
     margin: 1.5rem 0; 
 }
-.validation-box ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.validation-box li { 
-    font-size: 0.85rem; 
-    display: flex; align-items: center; gap: 8px; 
-}
+.validation-box ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; padding: 0; }
+.validation-box li { font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
 .validation-box li.valid { color: var(--success); }
 .validation-box li.invalid { color: var(--error); }
 
 /* الأزرار */
-.btn { padding: 1rem 2.5rem; border-radius: 12px; font-weight: 700; font-size: 1rem; }
-.btn-primary { background: var(--tera-navy); color: #fff; }
-.btn-primary:hover { background: #1a3672; }
-.btn-success { background: var(--tera-cyan); color: #fff; }
-
-/* رسائل الخطأ */
-.error-message { 
-    color: var(--error); 
-    font-size: 0.8rem; 
-    background: #FEF2F2; 
-    padding: 8px 12px; 
-    border-radius: 6px; 
-    margin-top: 5px;
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-/* تجاوب الشاشات */
+.btn { padding: 1rem 2.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; border: none; }
+.btn-primary { background: var(--tera-navy); color: #fff; }
+.btn-success { background: var(--tera-cyan); color: #fff; }
+
+/* التجاوب */
 @media (max-width: 768px) {
     .register-card { padding: 1.5rem; }
-    .validation-box ul { grid-template-columns: 1fr; }
-    .form-actions { flex-direction: column; gap: 15px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-actions { flex-direction: column-reverse; width: 100%; }
+    .btn { width: 100%; }
 }
