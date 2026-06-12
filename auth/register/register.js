@@ -1,3 +1,14 @@
+// أضف هذا الجزء في بداية ملف register.js لضمان ترتيب الحاويات
+document.querySelectorAll('.validation-box').forEach(box => {
+    box.style.display = 'block'; // تأكد أن الحاوية لا تنكمش
+});
+
+// تأكد من أن كل form-step لديه مساحة كافية
+document.querySelectorAll('.form-step').forEach(step => {
+    step.style.width = '100%';
+});
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const gcc = [{ code: 'sa', name: 'السعودية', dial: '+966' }, { code: 'ae', name: 'الإمارات', dial: '+971' }, { code: 'kw', name: 'الكويت', dial: '+965' }, { code: 'bh', name: 'البحرين', dial: '+973' }, { code: 'om', name: 'عمان', dial: '+968' }, { code: 'qa', name: 'قطر', dial: '+974' }];
