@@ -22,7 +22,7 @@
 body {
     background: var(--bg-gradient);
     color: var(--text-main);
-    font-family: 'Tajawal', 'Cairo', sans-serif; /* يفضل استخدام خطوط جوجل العربية */
+    font-family: 'Tajawal', 'Cairo', sans-serif;
     min-height: 100vh;
     margin: 0;
 }
@@ -237,7 +237,18 @@ small {
 }
 
 /* =========================================
-   صناديق التحقق (Validation Boxes)
+   رسائل الخطأ اللحظية (Error Messages)
+   ========================================= */
+.error-message {
+    color: var(--error);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    animation: fadeIn 0.3s ease;
+    display: block;
+}
+
+/* =========================================
+   صناديق وشروط التحقق (Validation Boxes)
    ========================================= */
 .validation-box {
     background: rgba(13, 148, 136, 0.05);
@@ -259,12 +270,15 @@ small {
 .validation-box li {
     font-size: 0.9rem;
     color: var(--text-muted);
-    transition: color 0.3s;
+    transition: all 0.3s ease;
 }
 
+/* الألوان الخاصة بالشروط عند التحقق */
 .validation-box li.valid {
     color: var(--success);
+    font-weight: 600;
 }
+
 .validation-box li.invalid {
     color: var(--error);
 }
@@ -275,6 +289,11 @@ small {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+#passwordStrength {
+    font-weight: bold;
+    transition: color 0.3s ease;
 }
 
 /* =========================================
@@ -374,7 +393,7 @@ small {
 }
 
 /* =========================================
-   التجاوب (Responsive)
+   التجاوب للشاشات الصغيرة (Responsive)
    ========================================= */
 @media (max-width: 768px) {
     .register-steps::before { display: none; }
@@ -382,4 +401,8 @@ small {
     .step { display: flex; align-items: center; gap: 10px; text-align: right; background: transparent;}
     .step-number { margin: 0; }
     .register-card { padding: 1.5rem; }
+    
+    .validation-box ul {
+        grid-template-columns: 1fr; /* جعل الشروط عمودية في الجوال */
+    }
 }
