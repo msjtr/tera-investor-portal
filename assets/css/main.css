@@ -1,286 +1,90 @@
 /* ================================================= */
-/* TERA DESIGN SYSTEM */
+/* TERA DESIGN SYSTEM - UPDATED */
 /* ================================================= */
 
-:root{
+/* استيراد الخطوط */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
-    --tera-primary:#0f766e;
-    --tera-primary-dark:#115e59;
+:root {
+    /* ألوان الهوية البصرية الجديدة - مستخرجة من الشعار */
+    --tera-primary: #0A1B3F;       /* كحلي داكن (Tera Navy) */
+    --tera-secondary: #00C2C7;     /* سماوي ساطع (Tera Cyan - لون السهم) */
+    
+    --tera-primary-dark: #07132B;  /* درجة أغمق للكحلي */
+    --tera-cyan-dark: #009CA0;     /* درجة أغمق للسماوي */
 
-    --tera-success:#16a34a;
-    --tera-danger:#dc2626;
-    --tera-warning:#f59e0b;
-    --tera-info:#2563eb;
+    --tera-success: #10B981;
+    --tera-danger: #DC2626;
+    --tera-warning: #F59E0B;
+    --tera-info: #3B82F6;
 
-    --tera-white:#ffffff;
+    --tera-white: #ffffff;
+    --tera-bg: #F8FAFC;          /* خلفية بيضاء مائلة للرمادي الفاتح جداً */
 
-    --tera-bg:#f7f9fc;
+    --tera-border: #E2E8F0;
+    --tera-text: #1E293B;        /* نص داكن مريح للعين */
+    --tera-text-light: #64748B;  /* نص فرعي */
 
-    --tera-border:#e5e7eb;
+    --tera-shadow: 0 4px 20px rgba(10, 27, 63, 0.08);
 
-    --tera-text:#111827;
-    --tera-text-light:#6b7280;
-
-    --tera-shadow:
-    0 10px 30px rgba(0,0,0,.08);
-
+    /* الخطوط */
+    --font-heading: 'Tajawal', sans-serif;
+    --font-body: 'Cairo', sans-serif;
 }
 
 /* ================================================= */
 /* BODY */
 /* ================================================= */
+body {
+    background: var(--tera-bg);
+    color: var(--tera-text);
+    font-family: var(--font-body);
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+}
 
-body{
-
-    background:var(--tera-bg);
-
-    color:var(--tera-text);
-
+h1, h2, h3, h4, h5, h6, .page-title, .section-title {
+    font-family: var(--font-heading);
+    color: var(--tera-primary);
+    font-weight: 800;
 }
 
 /* ================================================= */
-/* PAGE */
+/* COMPONENTS */
 /* ================================================= */
+.page-wrapper { min-height: 100vh; padding: 30px; }
+.page-header { margin-bottom: 30px; }
+.page-subtitle { color: var(--tera-text-light); margin-top: 8px; font-family: var(--font-body); }
 
-.page-wrapper{
-
-    min-height:100vh;
-
-    padding:30px;
-
-}
-
-.page-header{
-
-    margin-bottom:30px;
-
-}
-
-.page-title{
-
-    font-size:30px;
-
-    font-weight:700;
-
-}
-
-.page-subtitle{
-
-    color:var(--tera-text-light);
-
-    margin-top:8px;
-
-}
-
-/* ================================================= */
-/* LOGO */
-/* ================================================= */
-
-.logo-wrapper{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    padding:30px;
-
-}
-
-.logo-wrapper img{
-
-    max-width:250px;
-
-    height:auto;
-
-}
-
-/* ================================================= */
 /* NAVBAR */
-/* ================================================= */
-
-.navbar{
-
-    background:#fff;
-
-    border-radius:16px;
-
-    padding:15px 25px;
-
-    box-shadow:var(--tera-shadow);
-
+.navbar { 
+    background: var(--tera-white); 
+    border-radius: 12px; 
+    padding: 15px 25px; 
+    box-shadow: var(--tera-shadow);
+    border: 1px solid var(--tera-border);
 }
+.navbar-link { color: var(--tera-text); font-weight: 600; font-family: var(--font-heading); }
+.navbar-link:hover { color: var(--tera-secondary); }
 
-.navbar-menu{
-
-    display:flex;
-
-    gap:20px;
-
+/* STATS CARDS */
+.stat-card { 
+    background: var(--tera-white); 
+    border-radius: 16px; 
+    padding: 25px; 
+    box-shadow: var(--tera-shadow);
+    border-right: 4px solid var(--tera-secondary); /* لمسة هوية */
 }
+.stat-value { color: var(--tera-primary); font-size: 30px; font-weight: 700; }
 
-.navbar-link{
-
-    color:var(--tera-text);
-
-    font-weight:600;
-
-}
-
-.navbar-link:hover{
-
-    color:var(--tera-primary);
-
-}
-
-/* ================================================= */
-/* SECTION */
-/* ================================================= */
-
-.section{
-
-    margin-bottom:35px;
-
-}
-
-.section-title{
-
-    font-size:22px;
-
-    margin-bottom:20px;
-
-    font-weight:700;
-
-}
-
-/* ================================================= */
 /* TABLE */
-/* ================================================= */
+.table th { background: #F1F5F9; padding: 16px; font-family: var(--font-heading); color: var(--tera-primary); }
+.table td { padding: 16px; border-bottom: 1px solid var(--tera-border); }
 
-.table-wrapper{
-
-    overflow:auto;
-
-}
-
-.table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-}
-
-.table th{
-
-    background:#f3f4f6;
-
-    padding:14px;
-
-    text-align:right;
-
-}
-
-.table td{
-
-    padding:14px;
-
-    border-bottom:1px solid #eee;
-
-}
-
-.table tr:hover{
-
-    background:#fafafa;
-
-}
-
-/* ================================================= */
-/* STATISTICS */
-/* ================================================= */
-
-.stats-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
-
-    gap:20px;
-
-}
-
-.stat-card{
-
-    background:#fff;
-
-    border-radius:16px;
-
-    padding:25px;
-
-    box-shadow:var(--tera-shadow);
-
-}
-
-.stat-title{
-
-    color:#6b7280;
-
-}
-
-.stat-value{
-
-    margin-top:10px;
-
-    font-size:30px;
-
-    font-weight:700;
-
-}
-
-/* ================================================= */
 /* LOADER */
-/* ================================================= */
+.loader { border: 4px solid var(--tera-border); border-top-color: var(--tera-secondary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.loader{
-
-    width:50px;
-
-    height:50px;
-
-    border:4px solid #eee;
-
-    border-top-color:var(--tera-primary);
-
-    border-radius:50%;
-
-    animation:spin 1s linear infinite;
-
-}
-
-@keyframes spin{
-
-    to{
-
-        transform:rotate(360deg);
-
-    }
-
-}
-
-/* ================================================= */
 /* FOOTER */
-/* ================================================= */
-
-.site-footer{
-
-    text-align:center;
-
-    margin-top:50px;
-
-    padding:25px;
-
-    color:#6b7280;
-
-}
+.site-footer { text-align: center; margin-top: 50px; padding: 25px; color: var(--tera-text-light); font-size: 0.9rem; }
