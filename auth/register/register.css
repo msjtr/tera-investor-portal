@@ -1,256 +1,194 @@
-/* =========================================
-   الخطوط والألوان الأساسية (هوية تيرا الرسمية)
-   ========================================= */
+/* إعدادات المتغيرات والألوان الرئيسية المتوافقة مع تيرا */
+:root {
+    --primary-color: #0A2540;
+    --secondary-color: #635BFF;
+    --success-color: #00D46A;
+    --danger-color: #E25950;
+    --warning-color: #FFC000;
+    --border-color: #E6E8EB;
+    --bg-color: #F7F9FC;
+    --text-main: #333333;
+}
+
 body {
-    background-color: #f3f4f6; /* لون الخلفية الرمادي الفاتح كما في الصور */
-    color: #1f2937;
-    font-family: 'Tajawal', 'Cairo', Tahoma, sans-serif;
-    margin: 0;
+    background-color: var(--bg-color);
+    font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+}
+
+.auth-layout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     padding: 2rem 1rem;
-    direction: rtl;
 }
 
-.d-none {
-    display: none !important;
-}
-
-.register-page {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-/* =========================================
-   الترويسة والبطاقة البيضاء
-   ========================================= */
-.logo-section {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.tera-logo {
-    max-width: 180px;
-}
-
-.register-card {
+.auth-container {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+    width: 100%;
+    max-width: 800px;
 }
 
-.card-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #f3f4f6;
+.logo {
+    max-width: 150px;
 }
 
-.card-header h2 {
-    color: #1e3a8a; /* أزرق داكن رسمي */
-    margin-bottom: 0.5rem;
-}
-
-/* =========================================
-   شريط المراحل (مربع أو دوائر كما في صورتك)
-   ========================================= */
-.register-steps {
+/* Stepper (مراحل التسجيل) */
+.stepper {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 3rem;
-    background: #f8fafc;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1rem;
 }
 
 .step {
-    text-align: center;
     flex: 1;
-    color: #9ca3af;
-    font-weight: 600;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+    position: relative;
+    font-weight: bold;
 }
 
 .step.active {
-    color: #0d9488;
+    color: var(--secondary-color);
 }
 
-.step-number {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    color: #6b7280;
-    margin-bottom: 5px;
+.step.active::after {
+    content: '';
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 4px;
+    background-color: var(--secondary-color);
+    border-radius: 2px;
 }
 
-.step.active .step-number {
-    background: #0d9488;
-    color: #ffffff;
+/* Form Sections */
+.form-section {
+    display: none;
+    animation: fadeIn 0.4s;
 }
 
-/* =========================================
-   تنسيق الحقول (جانب بجانب كما في صورتك)
-   ========================================= */
-.form-step {
-    animation: fadeIn 0.3s ease;
+.form-section.active {
+    display: block;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+.section-title {
+    font-size: 1.25rem;
+    color: var(--primary-color);
     margin-bottom: 1.5rem;
+    border-right: 4px solid var(--secondary-color);
+    padding-right: 10px;
 }
 
-.form-col {
-    flex: 1;
-    min-width: 280px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-    font-size: 0.95rem;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
+/* Validation Boxes */
+.validation-box {
+    background: #F8F9FA;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
     border-radius: 6px;
-    font-size: 1rem;
-    background-color: #f9fafb;
-    transition: border-color 0.2s;
-    box-sizing: border-box;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #0d9488;
-    background-color: #ffffff;
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
-}
-
-.checkbox-inline {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
+    margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: #4b5563;
-    cursor: pointer;
 }
 
-/* =========================================
-   الشروط (مرتبة كشبكة بدون صناديق كما في صورتك)
-   ========================================= */
-.validation-rules-container {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 15px;
-    margin-top: -5px;
-    margin-bottom: 20px;
-}
-
-.validation-rules-container h4 {
-    margin: 0 0 10px 0;
-    font-size: 0.95rem;
-    color: #1e3a8a;
-}
-
-.validation-rules {
-    list-style: none;
+.validation-box ul {
+    list-style-type: none;
     padding: 0;
     margin: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* عمودين كما في صورتك */
-    gap: 12px 20px;
 }
 
-.validation-rules li {
-    font-size: 0.85rem;
-    color: #6b7280;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.validation-box li {
+    margin-bottom: 0.3rem;
 }
 
-.validation-rules li.valid {
-    color: #059669; /* أخضر */
-    font-weight: bold;
+/* Alerts */
+.alert-info {
+    background-color: #E3F2FD;
+    border-right: 4px solid #2196F3;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
 }
 
-.validation-rules li.invalid {
-    color: #dc2626; /* أحمر */
+/* Agreements */
+.agreements-box {
+    background: #fdfdfd;
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-/* =========================================
-   الأزرار والإقرارات
-   ========================================= */
+.agreements-box label {
+    display: block;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
 .form-actions {
     display: flex;
     justify-content: space-between;
-    margin-top: 2rem;
+    border-top: 1px solid var(--border-color);
     padding-top: 1.5rem;
-    border-top: 1px solid #e5e7eb;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
+}
+
+.radio-group label {
+    margin-left: 1.5rem;
+    cursor: pointer;
 }
 
 .btn {
-    padding: 10px 24px;
-    border: none;
+    padding: 0.6rem 2rem;
     border-radius: 6px;
-    font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    font-family: inherit;
-    transition: background-color 0.2s;
+    border: none;
+    transition: background 0.3s;
 }
 
-.btn-primary {
-    background-color: #0d9488;
-    color: #ffffff;
-}
+.btn-primary { background: var(--secondary-color); color: #fff; }
+.btn-primary:hover { background: #4e46e5; }
+.btn-secondary { background: #e0e0e0; color: #333; }
+.btn-success { background: var(--success-color); color: #fff; }
 
-.btn-primary:hover {
-    background-color: #0f766e;
-}
-
-.btn-secondary {
-    background-color: #e5e7eb;
-    color: #374151;
-}
-
-.btn-secondary:hover {
-    background-color: #d1d5db;
-}
-
-.error-message {
-    color: #dc2626;
-    font-size: 0.85rem;
-    margin-top: 5px;
-    display: block;
-}
-
-@media (max-width: 768px) {
-    .validation-rules {
-        grid-template-columns: 1fr; /* عمود واحد في الجوال */
-    }
-    .form-row {
-        flex-direction: column;
-        gap: 15px;
-    }
+.auth-footer a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: bold;
 }
