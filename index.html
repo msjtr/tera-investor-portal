@@ -1,26 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta http-equiv="X-UA-Compatible"
-          content="IE=edge">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>تيرا | بوابة المستثمر</title>
-
-    <meta name="description"
-          content="منصة تيرا للاستثمار وإدارة المحافظ الاستثمارية">
-
-    <meta name="keywords"
-          content="تيرا, استثمار, محافظ استثمارية, تمويل">
-
-    <meta name="author"
-          content="TERA">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تيرا | بوابة المستثمر وإدارة المحافظ</title>
+    
+    <meta name="description" content="منصة تيرا للاستثمار وإدارة المحافظ الاستثمارية وتحقيق العوائد المستدامة">
+    <meta name="keywords" content="تيرا, استثمار, محافظ استثمارية, تمويل, عوائد مالية">
+    <meta name="author" content="TERA">
 
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
@@ -32,259 +20,109 @@
     <link rel="stylesheet" href="/assets/css/main.css">
 
     <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:'Tajawal',sans-serif;
-        }
-
-        body{
-            background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
-            min-height:100vh;
-        }
-
-        .hero{
-            min-height:100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:40px;
-        }
-
-        /* تصميم عصري بلمسة Glassmorphic فاخرة */
+        *{ margin:0; padding:0; box-sizing:border-box; font-family:'Tajawal',sans-serif; }
+        body{ background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%); min-height:100vh; color: #0A2540; }
+        .hero{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:50px 20px; }
+        
+        /* كارد الشاشة الرئيسية المتباعد المحتوي للشعار بالداخل بامتياز */
         .hero-card{
-            width:100%;
-            max-width:1200px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius:24px;
-            padding:60px;
-            text-align:center;
+            width:100%; max-width:1200px;
+            background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px);
+            border-radius:24px; padding:60px; text-align:center;
             box-shadow: 0 20px 50px rgba(15, 23, 42, 0.04);
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
-
-        .logo{
-            margin-bottom:30px;
-        }
-
-        .logo img{
-            width:150px;
-            height:auto;
-        }
-
-        h1{
-            font-size:38px;
-            color:#0f172a;
-            margin-bottom:15px;
-            font-weight: 800;
-        }
-
-        .subtitle{
-            font-size:18px;
-            color:#475569;
-            margin-bottom:40px;
-            line-height:1.8;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .actions{
-            display:flex;
-            justify-content:center;
-            gap:15px;
-            flex-wrap:wrap;
-            margin-bottom:50px;
-        }
-
-        .btn{
-            text-decoration:none;
-            padding:14px 35px;
-            border-radius:12px;
-            font-weight:700;
-            transition:.3s ease-in-out;
-        }
-
-        /* تدرج لوني مميز يجمع بين الأزرق الملكي والتيل الفاخر */
-        .btn-primary{
-            background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
-            color:#fff;
-            box-shadow: 0 4px 15px rgba(30, 58, 138, 0.25);
-        }
-
-        .btn-primary:hover{
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
-            opacity: 0.95;
-        }
-
-        .btn-secondary{
-            background:#f1f5f9;
-            color:#1e293b;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-secondary:hover{
-            background:#e2e8f0;
-            transform: translateY(-2px);
-        }
-
-        .stats{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-            gap:20px;
-            margin-top:40px;
-        }
-
-        .card{
-            background:#fff;
-            border:1px solid #e2e8f0;
-            border-radius:16px;
-            padding:25px;
-            text-align: right;
-            transition: .3s;
-        }
-
-        .card:hover {
-            border-color: #0d9488; /* تمييز البطاقات بلون التيل عند التمرير */
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.02);
-        }
-
-        .card h3{
-            margin-bottom:10px;
-            color:#0f172a;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .card p{
-            color:#64748b;
-            line-height:1.7;
-            font-size: 14px;
-        }
-
-        .quick-links{
-            margin-top:50px;
-            border-top: 1px dashed #e2e8f0;
-            padding-top: 40px;
-        }
-
-        .quick-links h2{
-            margin-bottom:25px;
-            color:#0f172a;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .links-grid{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-            gap:15px;
-        }
-
-        .links-grid a{
-            text-decoration:none;
-            color:#334155;
-            background:#f8fafc;
-            padding:16px;
-            border-radius:12px;
-            border:1px solid #e2e8f0;
-            font-weight: 500;
-            transition:.3s;
-        }
-
-        .links-grid a:hover{
-            background:#eff6ff;
-            color: #1e40af;
-            border-color: #bfdbfe;
-        }
-
-        footer{
-            margin-top:60px;
-            color:#94a3b8;
-            font-size:14px;
-        }
+        .logo{ margin-bottom:35px; display: flex; justify-content: center; }
+        .logo img{ width:155px; height:auto; }
+        h1{ font-size:38px; color:#0f172a; margin-bottom:18px; font-weight: 800; }
+        .subtitle{ font-size:18px; color:#475569; margin-bottom:45px; line-height:1.8; max-width: 720px; margin-left: auto; margin-right: auto; }
+        
+        .actions{ display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:55px; }
+        .btn{ text-decoration:none; padding:15px 38px; border-radius:12px; font-weight:700; transition:.3s ease-in-out; font-size: 15px; }
+        .btn-primary{ background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%); color:#fff; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.25); }
+        .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35); opacity: 0.95; }
+        .btn-secondary{ background:#f1f5f9; color:#1e293b; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover{ background:#e2e8f0; transform: translateY(-2px); }
+        
+        .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:25px; margin-top:45px; }
+        .card{ background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:30px; text-align: right; transition: .3s ease; }
+        .card:hover { border-color: #0d9488; transform: translateY(-4px); box-shadow: 0 12px 25px rgba(10, 37, 64, 0.03); }
+        .card h3{ margin-bottom:12px; color:#0f172a; font-size: 19px; font-weight: 700; border-right: 4px solid #1e3a8a; padding-right: 10px; }
+        .card p{ color:#64748b; line-height:1.7; font-size: 14.5px; }
+        
+        .quick-links{ margin-top:55px; border-top: 1px dashed #e2e8f0; padding-top: 45px; }
+        .quick-links h2{ margin-bottom:30px; color:#0f172a; font-size: 22px; font-weight: 800; text-align: right; padding-right: 5px; }
+        .links-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+        .links-grid a{ text-decoration:none; color:#334155; background:#f8fafc; padding:16px 20px; border-radius:12px; border:1px solid #e2e8f0; font-weight: 700; font-size:14px; transition:.25s ease; text-align: right; display: flex; justify-content: space-between; align-items: center; }
+        .links-grid a:hover{ background:#eff6ff; color: #1e40af; border-color: #bfdbfe; transform: translateX(-3px); }
+        .links-grid a::after { content: "←"; font-weight: bold; color: #0d9488; }
+        
+        footer{ margin-top:65px; color:#94a3b8; font-size:14px; border-top: 1px solid #f1f5f9; padding-top: 20px; }
     </style>
-
 </head>
-
 <body>
 
 <section class="hero">
-
     <div class="hero-card">
-
         <div class="logo">
             <img src="/images/logo.svg" alt="TERA">
         </div>
 
-        <h1>مرحباً بك في منصة تيرا</h1>
-
+        <h1>مرحباً بك في منصة تيرا الرقمية</h1>
         <p class="subtitle">
-            منصة متكاملة لإدارة الاستثمارات والمحافظ الاستثمارية
-            ومتابعة الأرباح والتقارير وإدارة الحسابات الذكية.
+            منظومة متكاملة لخدمة وإدارة المحافظ والاستثمارات الذكية، تتيح لك متابعة الأرباح الدورية والتقارير المالية الموثقة وتحليل الأصول بدقة وأمان مرن.
         </p>
 
         <div class="actions">
-            <a href="/auth/auth/login/login.html" class="btn btn-primary">تسجيل الدخول</a>
-            <a href="/auth/register/register.html" class="btn btn-secondary">إنشاء حساب جديد</a>
+            <a href="/auth/auth/login/login.html" class="btn btn-primary">تسجيل الدخول الآمن</a>
+            <a href="/auth/register/register.html" class="btn btn-secondary">طلب إنشاء حساب مستثمر</a>
         </div>
 
         <div class="stats">
             <div class="card">
                 <h3>الفرص الاستثمارية</h3>
-                <p>استعراض الفرص المتاحة وإدارة الطلبات الاستثمارية وعوائدها التنافسية.</p>
+                <p>استكشف واكتشف الفرص التمويلية المتاحة، وتابع طلباتك الاستثمارية النشطة ومعدلات نمو عوائدها بذكاء هندسي.</p>
             </div>
-
             <div class="card">
-                <h3>المحفظة الاستثمارية</h3>
-                <p>متابعة فورية للأصول، الأرباح المستحقة، السحوبات، والعمليات المالية بدقة.</p>
+                <h3>المحفظة والأصول</h3>
+                <p>مراقبة فورية حية وشاملة للأصول المالية والأرباح المستحقة والعمليات والسحوبات الجارية بكشوفات معتمدة.</p>
             </div>
-
             <div class="card">
-                <h3>التقارير المالية</h3>
-                <p>تقارير تفصيلية، كشوفات حساب موثقة، وتحليلات دورية مخصصة للمستثمر.</p>
+                <h3>التقارير التحليلية</h3>
+                <p>تصدير واستعراض كشوفات الحساب والرسوم البيانية والتحليلات الربع سنوية المخصصة للمستثمرين Primary Stakeholders.</p>
             </div>
         </div>
 
         <div class="quick-links">
-            <h2>روابط الوصول السريع</h2>
-
+            <h2>روابط الوصول السريع لأقسام المحفظة</h2>
             <div class="links-grid">
-                <a href="/pages/dashboard/index.html">لوحة التحكم</a>
-                <a href="/pages/investments/opportunities.html">الفرص الاستثمارية</a>
-                <a href="/pages/portfolio/portfolio-overview.html">المحفظة الاستثمارية</a>
-                <a href="/pages/reports/reports-dashboard.html">التقارير المالية</a>
-                <a href="/pages/profile/personal-information.html">الملف الشخصي</a>
-                <a href="/pages/support/help-center.html">مركز المساعدة</a>
+                <a href="/pages/dashboard/index.html">لوحة التحكم الرئيسية</a>
+                <a href="/pages/investments/opportunities.html">فرص الاستثمار الحالية</a>
+                <a href="/pages/portfolio/portfolio-overview.html">نظرة عامة على المحفظة</a>
+                <a href="/pages/portfolio/account-statement.html">كشف الحساب المالي</a>
+                <a href="/pages/portfolio/profits.html">سجل الأرباح الدورية</a>
+                <a href="/pages/profile/personal-information.html">الملف الشخصي للمستثمر</a>
+                <a href="/pages/security/two-factor-authentication.html">الأمان والتحقق الثنائي</a>
+                <a href="/pages/support/help-center.html">مركز المساعدة والدعم</a>
             </div>
         </div>
 
         <footer>
-            © 2026 TERA Investor Portal. جميع الحقوق محفوظة.
+            © 2026 TERA Investor Portal. جميع الحقوق محفوظة لشركة تيرا للاستثمار.
         </footer>
-
     </div>
-
 </section>
 
 <script type="module" src="/assets/js/main.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // التحقق الآمن من جلسة المستثمر المفتوحة مسبقاً
-    const tokenKey = window.TERA_AUTH_TOKEN || 'tera_token';
-    const token = localStorage.getItem(tokenKey);
-
+    // التحقق التلقائي الآمن لمنع إعادة تسجيل الدخول في حال وجود جلسة نشطة
+    const token = localStorage.getItem('tera_token');
     if(token){
         window.location.href = '/pages/dashboard/index.html';
     }
 });
 </script>
-
 </body>
-
 </html>
