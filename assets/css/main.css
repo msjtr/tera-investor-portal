@@ -1,61 +1,68 @@
 /* ================================================= */
-/* TERA DESIGN SYSTEM - النُسخة النهائية المستقرة */
+/* TERA DESIGN SYSTEM - النُسخة النهائية (LAYOUT FIXED) */
 /* ================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-    /* ألوان الهوية البصرية */
     --tera-primary: #0A1B3F;
     --tera-secondary: #00C2C7;
     --tera-primary-dark: #07132B;
-    --tera-cyan-dark: #009CA0;
-
-    --tera-success: #10B981;
-    --tera-danger: #DC2626;
-    --tera-warning: #F59E0B;
-    --tera-info: #3B82F6;
-
-    --tera-white: #ffffff;
     --tera-bg: #F8FAFC;
+    --tera-white: #ffffff;
     --tera-border: #E2E8F0;
     --tera-text: #1E293B;
     --tera-text-light: #64748B;
-
     --tera-shadow: 0 4px 20px rgba(10, 27, 63, 0.08);
     --tera-radius: 16px;
-
-    /* الخطوط */
     --font-heading: 'Tajawal', sans-serif;
     --font-body: 'Cairo', sans-serif;
 }
 
 /* ================================================= */
-/* GLOBAL RESET & BODY */
+/* LAYOUT STRUCTURE (إصلاح تداخل العناصر) */
 /* ================================================= */
+/* نجعل الصفحة كاملة الارتفاع ونوزعها بنظام Flex */
 body {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
     background: var(--tera-bg);
     color: var(--tera-text);
     font-family: var(--font-body);
     direction: rtl;
     text-align: right;
-    line-height: 1.6;
-    margin: 0;
-    -webkit-font-smoothing: antialiased;
 }
 
+/* القائمة الجانبية ثابتة العرض */
+#sidebar-container {
+    width: 280px;
+    flex-shrink: 0;
+}
+
+/* المحتوى الرئيسي يملأ المساحة المتبقية */
+.tera-main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 280px);
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* الهيدر والمحتوى والفوتر داخل الماين */
+#header-container { width: 100%; flex-shrink: 0; }
+.page-wrapper { flex-grow: 1; padding: 20px; }
+#footer-container { width: 100%; flex-shrink: 0; margin-top: auto; }
+
+/* ================================================= */
+/* GLOBAL ELEMENTS */
+/* ================================================= */
 h1, h2, h3, h4, h5, h6, .page-title {
     font-family: var(--font-heading);
     color: var(--tera-primary);
     font-weight: 800;
 }
-
-/* ================================================= */
-/* COMPONENTS */
-/* ================================================= */
-
-/* الصفحة الرئيسية والالتفاف */
-.page-wrapper { min-height: 100vh; padding: 20px; }
 
 /* البطاقات (Stat Cards) */
 .stat-card { 
@@ -74,16 +81,6 @@ h1, h2, h3, h4, h5, h6, .page-title {
 .tera-table th { background: #F1F5F9; padding: 18px; text-align: right; font-family: var(--font-heading); color: var(--tera-primary); }
 .tera-table td { padding: 18px; border-bottom: 1px solid var(--tera-border); }
 
-/* اللودر (Loader) */
-.loader-container { display: flex; justify-content: center; align-items: center; min-height: 200px; }
-.loader { 
-    border: 4px solid var(--tera-border); 
-    border-top: 4px solid var(--tera-secondary); 
-    border-radius: 50%; width: 40px; height: 40px; 
-    animation: spin 1s linear infinite; 
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
 /* الأزرار (Buttons) */
 .btn {
     padding: 12px 24px;
@@ -97,8 +94,9 @@ h1, h2, h3, h4, h5, h6, .page-title {
 .btn-primary { background: var(--tera-primary); color: white; }
 .btn-primary:hover { background: var(--tera-primary-dark); }
 
-/* التذييل */
-.site-footer { 
-    text-align: center; margin-top: 50px; padding: 25px; 
-    color: var(--tera-text-light); border-top: 1px solid var(--tera-border);
+/* التجاوب */
+@media (max-width: 992px) {
+    body { flex-direction: column; }
+    #sidebar-container { width: 100%; }
+    .tera-main-content { width: 100%; }
 }
