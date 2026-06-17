@@ -9,14 +9,14 @@
     --tera-teal-light: #e6f2f4;
     --tera-gold: #D4AF37;
     --tera-bg: #f4f7fa;
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --shadow-soft: 0 10px 30px rgba(10, 37, 64, 0.05);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --shadow-soft: 0 8px 32px rgba(10, 37, 64, 0.08);
 }
 
 body.dashboard-body {
     background-color: var(--tera-bg);
-    background-image: radial-gradient(circle at top right, rgba(2, 128, 144, 0.05), transparent 400px);
+    background-image: radial-gradient(circle at top right, rgba(2, 128, 144, 0.05), transparent 600px);
     display: flex;
     min-height: 100vh;
     margin: 0;
@@ -24,17 +24,17 @@ body.dashboard-body {
     color: var(--tera-navy);
 }
 
-/* تأثير الزجاج الفاخر */
+/* تحسين تأثير الزجاج */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-soft);
-    border-radius: 20px;
+    border-radius: 24px;
 }
 
-/* الشريط الجانبي */
+/* الشريط الجانبي - تم إصلاح الهيكل */
 .tera-sidebar {
     width: 280px;
     margin: 20px 20px 20px 0;
@@ -44,74 +44,79 @@ body.dashboard-body {
     position: sticky;
     top: 20px;
     height: calc(100vh - 40px);
-    z-index: 1000;
+    z-index: 100;
 }
 
 .sidebar-logo { text-align: center; margin-bottom: 40px; }
-.sidebar-logo img { width: 130px; }
+.sidebar-logo img { width: 140px; }
 
-.sidebar-menu { flex-grow: 1; display: flex; flex-direction: column; gap: 12px; }
+.sidebar-menu { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
 
 .menu-item {
     display: flex; align-items: center; gap: 15px; padding: 16px 20px;
     color: #475569; text-decoration: none; font-weight: 700;
-    border-radius: 14px; transition: all 0.3s ease;
+    border-radius: 16px; transition: all 0.3s ease;
 }
 
-.menu-item i { font-size: 18px; width: 24px; text-align: center; }
+.menu-item i { font-size: 20px; width: 24px; text-align: center; }
 
 .menu-item:hover, .menu-item.active {
     background: var(--tera-teal);
     color: #FFFFFF;
-    box-shadow: 0 4px 15px rgba(2, 128, 144, 0.2);
-    transform: translateX(-5px);
+    box-shadow: 0 6px 15px rgba(2, 128, 144, 0.3);
 }
 
-/* المحتوى الرئيسي */
+/* المحتوى الرئيسي - تم إصلاح العرض */
 .tera-main-content {
     flex-grow: 1;
     padding: 20px;
-    width: calc(100% - 320px);
+    max-width: calc(100% - 300px);
+    display: flex;
+    flex-direction: column;
 }
 
-.dashboard-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 25px 40px; margin-bottom: 30px;
+/* الإحصائيات - توزيع مرن */
+.stats-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 25px; 
+    margin-bottom: 30px; 
 }
 
-.greeting-title { font-size: 24px; font-weight: 800; margin: 0 0 8px 0; }
-.investor-name { color: var(--tera-teal); }
-.greeting-subtitle { color: #64748b; font-size: 15px; margin: 0; }
-
-/* الإحصائيات */
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
-.stat-card { padding: 30px; display: flex; align-items: center; gap: 20px; }
-
-.stat-icon {
-    width: 65px; height: 65px; border-radius: 18px; display: flex;
-    align-items: center; justify-content: center; font-size: 24px; color: #FFF;
+.stat-card { 
+    padding: 25px; 
+    display: flex; 
+    align-items: center; 
+    gap: 20px;
+    border-right: 5px solid transparent; 
 }
 
-.navy-bg { background: linear-gradient(135deg, var(--tera-navy-light), var(--tera-navy)); }
-.teal-bg { background: linear-gradient(135deg, #0ba3b5, var(--tera-teal)); }
-.gold-bg { background: linear-gradient(135deg, #ebd171, var(--tera-gold)); }
+.stat-label { color: #64748b; font-size: 13px; font-weight: 700; margin: 0 0 5px 0; }
+.stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); }
 
-.stat-label { color: #64748b; font-size: 14px; font-weight: 700; margin: 0 0 8px 0; }
-.stat-value { font-size: 26px; font-weight: 800; margin: 0; color: var(--tera-navy); }
-
-/* الجداول والتخطيط */
-.middle-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-.tera-table { width: 100%; border-collapse: collapse; text-align: right; }
-.tera-table th { padding: 15px; color: #64748b; font-size: 14px; border-bottom: 2px solid #e2e8f0; }
-.tera-table td { padding: 18px 15px; font-size: 15px; border-bottom: 1px solid #f1f5f9; font-weight: 500; }
-
-.status-badge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; }
-.status-badge.success { background: #F6FFF9; color: #00D46A; border: 1px solid #bbf7d0; }
+/* تحسينات الجداول */
+.tera-table { 
+    width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 0 10px; 
+}
+.tera-table th { color: #64748b; font-size: 14px; padding: 15px; }
+.tera-table td { background: white; padding: 20px; }
+.tera-table td:first-child { border-radius: 12px 0 0 12px; }
+.tera-table td:last-child { border-radius: 0 12px 12px 0; }
 
 /* استجابة الشاشات */
+@media (max-width: 1200px) {
+    .tera-main-content { max-width: 100%; }
+}
+
 @media (max-width: 992px) {
     body.dashboard-body { flex-direction: column; }
-    .tera-sidebar { width: auto; height: auto; position: relative; margin: 20px; }
-    .tera-main-content { max-width: 100%; width: 100%; padding: 20px; }
-    .stats-grid, .middle-grid { grid-template-columns: 1fr; }
+    .tera-sidebar { 
+        width: 100%; 
+        height: auto; 
+        position: relative; 
+        margin: 0; 
+        padding: 20px; 
+    }
 }
