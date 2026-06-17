@@ -1,110 +1,141 @@
 /**
- * بوابة الشركاء - منصة تيرا
- * محرك فحص ومصادقة صفحة الدخول - الحساب المشروط الثابت حياً
+ * بوابة المستثمر - منصة تيرا
+ * محرك فحص الدخول الثلاثي الذكي وجدولة التحويل السينمائي بالعبارات الإبداعية
  */
 
-// بيانات الحساب المحددة والمطلوبة نظامياً من العميل
-const secureCredentials = {
+// حساب المستثمر المطلق المطلوب والافتراضي
+const targetAccount = {
     username: "106",
+    email: "investor106@tera.sa",
+    mobile: "506060606",
     password: "123"
 };
 
+// قائمة العبارات المالية الاستثمارية الملهمة والإبداعية التي تدور تلقائياً كل ثانية أثناء الـ 3 ثوانٍ
+const creativeQuotes = [
+    "جاري تهيئة بيئتك المالية الفاخرة... أهلاً بك في تيرا 🌌",
+    "نصنع مستقبلك الاستثماري المالي الواعد بثقة وأمان وثبات 📈",
+    "جاري استدعاء وتحليل أصول محفظتك الاستثمارية الذكية الآن 💼",
+    "تجهيز تقاريرك الدورية وعوائدك التنافسية الفورية بامتياز... ✨"
+];
+
 document.addEventListener("DOMContentLoaded", function() {
-    bindLoginInputRestrictions();
-    bindPasswordVisibility();
+    bindInputFilters();
+    bindPasswordToggle();
 });
 
-// منع اللغة العربية تماماً حياً من حقول المصادقة لضمان دقة الإدخال بالإنجليزية/الأرقام
-function bindLoginInputRestrictions() {
-    const usernameInput = document.getElementById("login_username");
-    const passwordInput = document.getElementById("login_password");
+function bindInputFilters() {
+    const identInput = document.getElementById("login_identifier");
+    const passInput = document.getElementById("login_password");
 
-    if (usernameInput) {
-        usernameInput.addEventListener("input", function() {
-            this.value = this.value.replace(/[\u0600-\u06FF]/g, ''); // طرد الحروف العربية حياً فوراً
-            clearFieldStatus(this, "username-field-error");
+    if (identInput) {
+        identInput.addEventListener("input", function() {
+            // منع الحروف العربية تماماً لحماية دقة المدخلات حياً
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            resetFieldMarkers(this, "identifier-error");
         });
     }
-
-    if (passwordInput) {
-        passwordInput.addEventListener("input", function() {
-            this.value = this.value.replace(/[\u0600-\u06FF]/g, ''); // طرد الحروف العربية حياً فوراً
-            clearFieldStatus(this, "password-field-error");
-        });
-    }
-}
-
-// تشغيل ميزة إظهار وإخفاء كلمات المرور عند النقر على المربع المشروط
-function bindPasswordVisibility() {
-    const showPasswordCheck = document.getElementById("show_login_password");
-    const passwordInput = document.getElementById("login_password");
-
-    if (showPasswordCheck && passwordInput) {
-        showPasswordCheck.addEventListener("change", function() {
-            passwordInput.type = this.checked ? "text" : "password";
+    if (passInput) {
+        passInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            resetFieldMarkers(this, "password-error");
         });
     }
 }
 
-// تنظيف أطر الحقول الملونة عند بدء تعديل الكتابة تلقائياً
-function clearFieldStatus(inputEl, errorId) {
+function bindPasswordToggle() {
+    const checkToggle = document.getElementById("show_login_password");
+    const passInput = document.getElementById("login_password");
+    if (checkToggle && passInput) {
+        checkToggle.addEventListener("change", function() {
+            passInput.type = this.checked ? "text" : "password";
+        });
+    }
+}
+
+function resetFieldMarkers(inputEl, errId) {
     inputEl.classList.remove("is-invalid-active");
-    const errDiv = document.getElementById(errorId);
-    if (errDiv) errDiv.textContent = "";
-    
-    const globalErrorBox = document.getElementById("loginErrorBox");
-    if (globalErrorBox) globalErrorBox.style.display = "none";
+    const errText = document.getElementById(errId);
+    if (errText) errText.textContent = "";
+    const globalErr = document.getElementById("loginErrorBox");
+    if (globalErr) globalErr.style.display = "none";
 }
 
-// دالة التحقق والمصادقة الكلية عند إرسال النموذج (Submit)
-function handleLoginValidation() {
-    const usernameInput = document.getElementById("login_username");
-    const passwordInput = document.getElementById("login_password");
-    const globalErrorBox = document.getElementById("loginErrorBox");
-    const errorBoxText = document.getElementById("errorBoxText");
+// دالة التحقق الثلاثية الاستراتيجية وقفل التحويل الإبداعي لمدة 3 ثوانٍ
+function executeInvestorLoginAuth() {
+    const identInput = document.getElementById("login_identifier");
+    const passInput = document.getElementById("login_password");
+    const globalErr = document.getElementById("loginErrorBox");
 
-    const enteredUser = usernameInput.value.trim();
-    const enteredPass = passwordInput.value;
+    const userVal = identInput.value.trim();
+    const passVal = passInput.value;
 
-    let hasError = false;
+    let localError = false;
 
-    // 1. الفحص الأولي للحقول الفارغة وتلوين الإطار بالأحمر
-    if (enteredUser === "") {
-        usernameInput.classList.add("is-invalid-active");
-        document.getElementById("username-field-error").textContent = "يرجى إدخال اسم المستخدم أو البريد الإلكتروني بشكل صحيح.";
-        hasError = true;
+    if (userVal === "") {
+        identInput.classList.add("is-invalid-active");
+        document.getElementById("identifier-error").textContent = "يرجى إدخال اسم المستخدم، البريد، أو رقم الجوال بشكل صحيح.";
+        localError = true;
+    }
+    if (passVal === "") {
+        passInput.classList.add("is-invalid-active");
+        document.getElementById("password-error").textContent = "يرجى إدخال كلمة المرور الخاصة بحسابك.";
+        localError = true;
     }
 
-    if (enteredPass === "") {
-        passwordInput.classList.add("is-invalid-active");
-        document.getElementById("password-field-error").textContent = "يرجى إدخال كلمة المرور الخاصة بحسابك.";
-        hasError = true;
-    }
+    if (localError) return;
 
-    if (hasError) return;
+    // فحص مطابقة المدخلات الذكية: إذا طابق اسم المستخدم أو البريد أو الجوال مع الباسورد الثابت
+    const matchIdentifier = (userVal === targetAccount.username || userVal.toLowerCase() === targetAccount.email || userVal === targetAccount.mobile);
+    const matchPassword = (passVal === targetAccount.password);
 
-    // 2. مطابقة البيانات مع شروط العميل الفورية والمحددة (106 / 123)
-    if (enteredUser === secureCredentials.username && enteredPass === secureCredentials.password) {
-        // في حال النجاح الكلي: تلوين الأطر بالأخضر وتأكيد الدخول
-        usernameInput.classList.remove("is-invalid-active");
-        passwordInput.classList.remove("is-invalid-active");
-        usernameInput.classList.add("is-valid-active");
-        passwordInput.classList.add("is-valid-active");
+    if (matchIdentifier && matchPassword) {
+        // نجاح الفحص: تلوين الأطر بالأخضر الفاخر
+        identInput.classList.add("is-valid-active");
+        passInput.classList.add("is-valid-active");
+        if (globalErr) globalErr.style.display = "none";
 
-        if (globalErrorBox) globalErrorBox.style.display = "none";
-        
-        alert("🎉 تم تسجيل الدخول بنجاح! جاري توجيهك إلى لوحة تحكم بوابة الشركاء لتيرا...");
-        
-        // التوجيه الفعلي إلى لوحة تحكم الشركاء
-        // window.location.href = "../dashboard/index.html";
+        // إخفاء الكارد الأساسي برفق وتدشين شاشة التحويل الإبداعية الدوارة فوراً
+        document.getElementById("loginCardBlock").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("loginCardBlock").style.display = "none";
+            const loaderOverlay = document.getElementById("creativeLoaderScreen");
+            loaderOverlay.style.display = "flex";
+            
+            // بدء دوران وتبديل العبارات الاستثمارية الملهمة حياً كل ثانية
+            startCreativeQuotesCycle();
+        }, 200);
+
+        // حفظ رمز التوكن محلياً لخدمة بقية كود لوحة التحكم للمستثمر
+        localStorage.setItem('tera_token', 'secure_investor_session_106');
+
+        // قفل توقيت التحويل الإبداعي لمدة 3 ثوانٍ (3000ms) ثم النقل الفعلي للـ Dashboard
+        setTimeout(() => {
+            window.location.href = "/pages/dashboard/index.html";
+        }, 3000);
+
     } else {
-        // في حال فشل المطابقة: تلوين الأطر بالأحمر وإظهار صندوق التنبيه التكتيكي الفوري
-        usernameInput.classList.add("is-invalid-active");
-        passwordInput.classList.add("is-invalid-active");
-        
-        if (globalErrorBox && errorBoxText) {
-            errorBoxText.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى.";
-            globalErrorBox.style.display = "flex";
-        }
+        // فشل الفحص: تلوين الأطر بالأحمر التنبيهي وتفعيل كادر الخطأ
+        identInput.classList.add("is-invalid-active");
+        passInput.classList.add("is-invalid-active");
+        if (globalErr) globalErr.style.display = "flex";
     }
+}
+
+// دالة تدوير العبارات المالية الإبداعية حياً كل ثانية لإضفاء مظهر سينمائي مبهر للمستثمر
+function startCreativeQuotesCycle() {
+    const quoteEl = document.getElementById("creativeQuoteText");
+    let quoteIndex = 0;
+    
+    setInterval(() => {
+        quoteIndex = (quoteIndex + 1) % creativeQuotes.length;
+        if(quoteEl) {
+            quoteEl.style.opacity = "0";
+            setTimeout(() => {
+                quoteEl.textContent = creativeQuotes[quoteIndex];
+                quoteEl.style.opacity = "1";
+                quoteEl.style.transition = "opacity 0.25s ease";
+            }, 150);
+        }
+    }, 900); // تغيير مبهج كل 900 ملي ثانية ليتناسق مع شريط التقدم كاملاً
 }
