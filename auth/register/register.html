@@ -1,324 +1,283 @@
-/* الألوان والتنسيقات الفاخرة المستوحاة من هوية تيرا الرقمية العميقة والتباعد الاحترافي */
-:root {
-    --tera-navy-primary: #0A2540;
-    --tera-teal-accent: #028090;
-    --tera-teal-light: #F0F9F9;
-    --tera-success-green: #00D46A;
-    --tera-danger-red: #E25950;
-    --tera-warning-gold: #FFC000;
-    --tera-gray-light-bg: #F8F9FA;
-    --tera-border-color: #E2E8F0;
-}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب شريك | بوابة الشركاء - تيرا</title>
+    
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
+    <link rel="stylesheet" href="register.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-container">
+            <div class="text-center mb-5">
+                <img src="../../images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
+                <h3 class="page-subtitle">إنشاء حساب شريك</h3>
+                <p class="welcome-text">مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
+            </div>
 
-body {
-    background-color: #F4F7FA;
-    color: var(--tera-navy-primary);
-    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
-}
+            <div class="stepper">
+                <div class="step active" id="step-1">① إنشاء الحساب والبيانات الأساسية</div>
+                <div class="step" id="step-2">② الإقرارات والاتفاقيات</div>
+            </div>
 
-.auth-layout {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 50px 20px;
-}
+            <div class="alert-info-box">
+                <h4 class="alert-title">🔔 ملاحظة مهمة</h4>
+                <ul class="alert-list">
+                    <li>🔔 يتم التحقق من جميع الحقول والمتطلبات بشكل فوري أثناء الإدخال.</li>
+                    <li>✅ ظهور علامة خضراء يعني أن المتطلب تم استيفاؤه بنجاح.</li>
+                    <li>❌ ظهور علامة حمراء يعني أن المتطلب غير مستوفى أو يحتوي على خطأ.</li>
+                    <li>⚠️ لا يمكن الانتقال إلى المرحلة التالية حتى تتحول جميع المتطلبات الإلزامية إلى اللون الأخضر.</li>
+                    <li>🔄 يتم تحديث حالة التحقق تلقائياً عند تعديل البيانات.</li>
+                    <li>📋 يتم عرض سبب الخطأ أسفل الحقل مباشرة لمساعدة المستخدم على تصحيحه.</li>
+                </ul>
+            </div>
 
-.auth-container {
-    background: #FFFFFF;
-    border-radius: 16px;
-    box-shadow: 0 15px 45px rgba(10, 37, 64, 0.04);
-    width: 100%;
-    max-width: 840px;
-    padding: 50px;
-}
+            <form id="teraRegisterForm" onsubmit="event.preventDefault();">
+                
+                <div class="form-stage-section active" id="stage-1-content">
+                    <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
+                    
+                    <div class="form-field-group">
+                        <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
+                            <span class="field-status-icon" id="name_ar-status">❌</span>
+                        </div>
+                        <div class="error-feedback-msg" id="name_ar-error"></div>
+                        <div class="realtime-validation-box-mini">
+                            <ul>
+                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
+                            </ul>
+                        </div>
+                    </div>
 
-.logo-img {
-    height: 58px;
-    object-fit: contain;
-}
+                    <div class="row-flex container-grid">
+                        <div class="col-inline-5">
+                            <div class="form-field-group">
+                                <label class="field-label">مفتاح الدولة <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <select id="country_code_select" class="form-input-control">
+                                        <optgroup label="دول الخليج العربي">
+                                            <option value="+966" selected>🇸🇦 السعودية +966</option>
+                                            <option value="+971">🇦🇪 الإمارات +971</option>
+                                            <option value="+965">🇰🇼 الكويت +965</option>
+                                            <option value="+973">🇧🇭 البحرين +973</option>
+                                            <option value="+968">🇴🇲 عمان +968</option>
+                                            <option value="+974">🇶🇦 قطر +974</option>
+                                        </optgroup>
+                                        <optgroup label="الدول العربية">
+                                            <option value="+20">🇪🇬 مصر +20</option>
+                                            <option value="+962">🇯🇴 الأردن +962</option>
+                                            <option value="+964">🇮🇶 العراق +964</option>
+                                            <option value="+961">🇱🇧 لبنان +961</option>
+                                            <option value="+212">🇲🇦 المغرب +212</option>
+                                            <option value="+213">🇩🇿 الجزائر +213</option>
+                                            <option value="+216">🇹🇳 تونس +216</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-inline-7">
+                            <div class="form-field-group">
+                                <label class="field-label">رقم الجوال <span class="required">*</span></label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
+                                    <span class="field-status-icon" id="mobile-status">❌</span>
+                                </div>
+                                <div class="error-feedback-msg" id="mobile-error"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="realtime-validation-box-mini mb-4">
+                        <ul>
+                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
+                        </ul>
+                    </div>
 
-.portal-title {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--tera-navy-primary);
-}
+                    <div class="form-field-group">
+                        <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
+                            <span class="field-status-icon" id="email-status">❌</span>
+                        </div>
+                        <div class="error-feedback-msg" id="email-error"></div>
+                    </div>
 
-.page-subtitle {
-    font-size: 19px;
-    color: var(--tera-teal-accent);
-    margin-top: 6px;
-    font-weight: 700;
-}
+                    <div class="form-field-group">
+                        <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
+                            <span class="field-status-icon" id="cemail-status">❌</span>
+                        </div>
+                        <div class="error-feedback-msg" id="cemail-error"></div>
+                        
+                        <div class="realtime-validation-box">
+                            <h5>التحقق من البريد الإلكتروني</h5>
+                            <ul class="validation-rule-list">
+                                <li id="e-rule-valid"><span class="icon-marker">❌</span> بريد إلكتروني صحيح</li>
+                                <li id="e-rule-unique"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
+                                <li id="e-rule-match"><span class="icon-marker">❌</span> البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
+                            </ul>
+                        </div>
+                    </div>
 
-.welcome-text {
-    font-size: 14px;
-    color: #6A7C92;
-}
+                    <div class="form-field-group">
+                        <label class="field-label">اسم المستخدم <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
+                            <span class="field-status-icon" id="username-status">❌</span>
+                        </div>
+                        <div class="error-feedback-msg" id="username-error"></div>
+                        
+                        <div class="realtime-validation-box">
+                            <h5>التحقق من اسم المستخدم</h5>
+                            <ul class="validation-rule-list" id="username-rules">
+                                <li id="u-rule-len"><span class="icon-marker">❌</span> يتكون من 4 إلى 20 خانة</li>
+                                <li id="u-rule-start"><span class="icon-marker">❌</span> يبدأ بحرف إنجليزي</li>
+                                <li id="u-rule-char"><span class="icon-marker">❌</span> يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
+                                <li id="u-rule-num"><span class="icon-marker">✅</span> يسمح بالأرقام (0-9)</li>
+                                <li id="u-rule-case"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
+                                <li id="u-rule-space"><span class="icon-marker">❌</span> لا يحتوي على مسافات</li>
+                                <li id="u-rule-special"><span class="icon-marker">❌</span> لا يحتوي على رموز خاصة</li>
+                                <li id="u-rule-unique"><span class="icon-marker">❌</span> غير مستخدم مسبقاً</li>
+                            </ul>
+                        </div>
+                    </div>
 
-.stepper {
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
-    margin: 40px 0;
-    border-bottom: 2px solid var(--tera-border-color);
-    padding-bottom: 20px;
-}
+                    <div class="form-field-group">
+                        <label class="field-label">كلمة المرور <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
+                            <span class="field-status-icon" id="password-status">❌</span>
+                        </div>
+                        <label class="checkbox-toggle-label"><input type="checkbox" id="show-password"> إظهار كلمة المرور</label>
+                        <div class="error-feedback-msg" id="password-error"></div>
+                    </div>
 
-.step {
-    flex: 1;
-    text-align: center;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #A3B1C2;
-    padding: 5px;
-}
+                    <div class="form-field-group">
+                        <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
+                            <span class="field-status-icon" id="cpassword-status">❌</span>
+                        </div>
+                        <label class="checkbox-toggle-label"><input type="checkbox" id="show-cpassword"> إظهار تأكيد كلمة المرور</label>
+                        <div class="error-feedback-msg" id="cpassword-error"></div>
+                        
+                        <div class="realtime-validation-box">
+                            <h5>التحقق من كلمة المرور</h5>
+                            <ul class="validation-rule-list" id="password-rules">
+                                <li id="p-rule-len"><span class="icon-marker">❌</span> 8 أحرف على الأقل</li>
+                                <li id="p-rule-upper"><span class="icon-marker">❌</span> تحتوي على حرف كبير واحد على الأقل (A-Z)</li>
+                                <li id="p-rule-lower"><span class="icon-marker">❌</span> تحتوي على حرف صغير واحد على الأقل (a-z)</li>
+                                <li id="p-rule-num"><span class="icon-marker">❌</span> تحتوي على رقم واحد على الأقل (0-9)</li>
+                                <li id="p-rule-special"><span class="icon-marker">❌</span> تحتوي على رمز خاص واحد على الأقل</li>
+                                <li id="p-rule-space"><span class="icon-marker">❌</span> لا تحتوي على مسافات</li>
+                                <li id="p-rule-user"><span class="icon-marker">❌</span> لا تحتوي على اسم المستخدم</li>
+                                <li id="p-rule-email"><span class="icon-marker">❌</span> لا تحتوي على البريد الإلكتروني</li>
+                                <li id="p-rule-repeat"><span class="icon-marker">❌</span> لا تحتوي على أكثر من 3 أحرف أو أرقام متكررة متتالية</li>
+                                <li id="p-rule-weak"><span class="icon-marker">❌</span> لا تكون من الكلمات الشائعة أو الضعيفة</li>
+                            </ul>
+                            
+                            <div class="password-strength-container mt-3">
+                                <strong>مؤشر قوة كلمة المرور:</strong>
+                                <span id="strength-indicator-text" class="strength-red">🔴 ضعيفة</span>
+                                <div class="strength-bar-meter"><div id="strength-bar-fill"></div></div>
+                            </div>
 
-.step.active { color: var(--tera-teal-accent); }
-.step.completed-green { color: var(--tera-success-green); }
+                            <h5 class="mt-4">التحقق من المطابقة</h5>
+                            <ul class="validation-rule-list">
+                                <li id="p-rule-match"><span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
 
-.alert-info-box {
-    background: #F0F4F8;
-    border-right: 5px solid var(--tera-teal-accent);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 40px;
-}
+                <div class="form-stage-section" id="stage-2-content">
+                    <h4 class="stage-header-title">المرحلة الثانية: الإقرارات والاتفاقيات</h4>
+                    
+                    <div class="agreements-scroll-container">
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-1"> أقر بأن عمري 18 عاماً فأكثر وأن لدي الأهلية النظامية لإنشاء الحساب.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-2"> أقر بأنني المستفيد الحقيقي والمالك الفعلي لهذا الحساب.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-3"> أوافق على الشروط والأحكام الخاصة ببوابة الشركاء في منصة تيرا.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-4"> أوافق على سياسة الخصوصية.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-5"> أوافق على سياسة الاستخدام.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-6"> أوافق على إجراءات وأنظمة التحقق الأمني والحماية الإلكترونية.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-7"> أوافق على استخدام البريد الإلكتروني المسجل لإرسال رموز التحقق والإشعارات والتنبيهات الخاصة بالحساب.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-8"> أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة وتعود لي شخصياً.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-9"> أتعهد بالمحافظة على سرية بيانات الدخول وعدم مشاركتها مع أي طرف آخر.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-10"> أتعهد بتحديث بياناتي عند حدوث أي تغيير عليها.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-11"> أتعهد بإبلاغ المنصة فوراً عند الاشتباه بأي استخدام غير مصرح به للحساب.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-12"> أوافق على استقبال الإشعارات والتنبيهات المتعلقة بالحساب عبر البريد الإلكتروني المسجل.</label>
+                        </div>
+                        <div class="agreement-item">
+                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-13"> أقر بأن إنشاء الحساب لا يمنح أي حقوق أو مزايا تلقائية إلا وفق الأنظمة والسياسات المعتمدة.</label>
+                        </div>
+                        
+                        <div class="agreement-item master-agree-box">
+                            <label><input type="checkbox" id="master-global-agree"> <strong>قرأت جميع الإقرارات والاتفاقيات والشروط والأحكام وسياسة الخصوصية وأوافق عليها بالكامل.</strong></label>
+                        </div>
+                    </div>
 
-.alert-title {
-    margin: 0 0 12px 0;
-    font-size: 15px;
-    color: var(--tera-navy-primary);
-    font-weight: 700;
-}
+                    <div class="realtime-validation-box mt-4">
+                        <h5>التحقق النهائي</h5>
+                        <ul class="validation-rule-list" id="final-summary-rules">
+                            <li id="f-rule-stages"><span class="icon-marker">❌</span> جميع المراحل مكتملة</li>
+                            <li id="f-rule-reqs"><span class="icon-marker">❌</span> جميع المتطلبات محققة</li>
+                            <li id="f-rule-email"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
+                            <li id="f-rule-user"><span class="icon-marker">❌</span> اسم المستخدم غير مستخدم مسبقاً</li>
+                            <li id="f-rule-errors"><span class="icon-marker">❌</span> لا توجد أخطاء في البيانات</li>
+                            <li id="f-rule-ready"><span class="icon-marker">❌</span> جاهز لإنشاء الحساب</li>
+                            <li id="f-rule-otp"><span class="icon-marker">❌</span> جاهز لإرسال رمز التحقق إلى البريد الإلكتروني</li>
+                        </ul>
+                    </div>
+                </div>
 
-.alert-list li {
-    font-size: 13.5px;
-    margin-bottom: 8px;
-    color: #334155;
-}
+                <div class="form-navigation-actions-bar">
+                    <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
+                    <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
+                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled onclick="submitForm()">إنشاء حساب شريك</button>
+                </div>
+            </form>
 
-.form-stage-section { display: none; }
-.form-stage-section.active { display: block; }
-
-.stage-header-title {
-    font-size: 17px;
-    color: var(--tera-navy-primary);
-    border-right: 4px solid var(--tera-teal-accent);
-    padding-right: 12px;
-    margin-bottom: 35px;
-    font-weight: 700;
-}
-
-.form-field-group {
-    margin-bottom: 32px;
-}
-
-.field-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: var(--tera-navy-primary);
-}
-
-.required { color: var(--tera-danger-red); }
-
-/* الحاوية الذكية الجديدة لحبس الأيقونة داخل الصندوق تماماً */
-.input-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.form-input-control {
-    width: 100%;
-    padding: 14px 18px 14px 45px; /* زيادة الحشوة من اليسار لترك مساحة مريحة للأيقونة */
-    font-size: 14.5px;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    box-sizing: border-box;
-    background: #FFFFFF;
-    transition: all 0.25s ease;
-}
-
-.form-input-control:focus {
-    border-color: var(--tera-teal-accent);
-    box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.12);
-    outline: none;
-}
-
-/* سنترة أيقونة حقل الإدخال عمودياً بشكل هندسي ثابت لا يتأثر بالالتفاف */
-.field-status-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 15px;
-    pointer-events: none;
-    z-index: 2;
-    display: inline-block;
-    line-height: 1;
-}
-
-.checkbox-toggle-label {
-    display: inline-block;
-    font-size: 12.5px;
-    margin-top: 8px;
-    cursor: pointer;
-    color: #475569;
-}
-
-/* تنسيق صناديق التحقق المباشر للحفاظ على خط مستقيم للأيقونات */
-.realtime-validation-box {
-    background: #FAFBFB;
-    border: 1px solid var(--tera-border-color);
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 15px;
-}
-
-.realtime-validation-box h5 {
-    margin: 0 0 12px 0;
-    font-size: 13.5px;
-    color: #475569;
-    font-weight: 700;
-}
-
-.realtime-validation-box-mini {
-    background: var(--tera-teal-light);
-    padding: 10px 15px;
-    border-radius: 6px;
-    margin-top: 8px;
-    font-size: 12.5px;
-}
-
-.validation-rule-list li, .realtime-validation-box-mini li {
-    font-size: 13px;
-    margin-bottom: 8px;
-    color: #475569;
-    display: block; /* التغيير إلى block لمنع مشاكل التحجيم */
-    text-align: right;
-}
-
-/* تنسيق إطار علامة الماركر (الصح أو الخطأ) لمنع خروجها من السطر */
-.icon-marker {
-    display: inline-block;
-    width: 22px;
-    text-align: center;
-    margin-left: 6px;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.validation-rule-list li.invalid, .realtime-validation-box-mini li.invalid { color: var(--tera-danger-red); }
-.validation-rule-list li.valid, .realtime-validation-box-mini li.valid { color: var(--tera-success-green); }
-
-.error-feedback-msg {
-    color: var(--tera-danger-red);
-    font-size: 12.5px;
-    margin-top: 6px;
-    display: block;
-    font-weight: 500;
-}
-
-.password-strength-container { font-size: 12.5px; }
-.strength-red { color: var(--tera-danger-red); font-weight: bold; }
-.strength-orange { color: var(--tera-warning-gold); font-weight: bold; }
-.strength-green { color: #00AA50; font-weight: bold; }
-.strength-double-green { color: var(--tera-success-green); font-weight: bold; }
-
-.strength-bar-meter {
-    background: #E2E8F0;
-    height: 6px;
-    border-radius: 3px;
-    margin-top: 8px;
-    overflow: hidden;
-}
-
-#strength-bar-fill {
-    height: 100%;
-    width: 25%;
-    background: var(--tera-danger-red);
-    transition: width 0.3s ease, background 0.3s ease;
-}
-
-.row-flex { display: flex; gap: 20px; }
-.col-inline-5 { flex: 5; }
-.col-inline-7 { flex: 7; }
-
-/* تنسيق الإقرارات والاتفاقيات المتباعد الفخم */
-.agreements-scroll-container {
-    background: #FFFFFF;
-    border: 1px solid var(--tera-border-color);
-    border-radius: 10px;
-    max-height: 380px;
-    overflow-y: auto;
-    padding: 10px 20px;
-}
-
-.agreement-item {
-    padding: 18px 12px;
-    border-bottom: 1px solid #F1F5F9;
-    font-size: 13.5px;
-    line-height: 1.7;
-}
-
-.agreement-item label {
-    cursor: pointer;
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.agreement-item input[type="checkbox"] {
-    margin-top: 4px;
-    transform: scale(1.1);
-    cursor: pointer;
-}
-
-.master-agree-box {
-    background: rgba(2, 128, 144, 0.05);
-    border-radius: 8px;
-    border-bottom: none;
-    margin-top: 15px;
-    border: 1px dashed rgba(2, 128, 144, 0.2);
-}
-
-.form-navigation-actions-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 45px;
-    padding-top: 25px;
-    border-top: 1px solid var(--tera-border-color);
-}
-
-.btn-action-nav {
-    padding: 14px 35px;
-    font-size: 15px;
-    font-weight: 700;
-    border-radius: 8px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.25s ease;
-}
-
-.btn-style-primary { background: var(--tera-teal-accent); color: #FFFFFF; }
-.btn-style-primary:hover { background: #026A78; }
-.btn-style-secondary { background: #E2E8F0; color: #475569; }
-.btn-style-secondary:hover { background: #CBD5E1; }
-.btn-style-success { background: var(--tera-success-green); color: #FFFFFF; }
-.btn-style-success:hover { background: #00B85C; }
-.btn-style-success:disabled { background: #94A3B8; cursor: not-allowed; }
-
-.bottom-routing-footer-links { font-size: 13.5px; }
-.routing-link { color: var(--tera-teal-accent); text-decoration: none; font-weight: bold; }
-.routing-link-secondary { color: #64748B; text-decoration: none; }
-
-@media (max-width: 768px) {
-    .row-flex { flex-direction: column; gap: 0; }
-    .stepper { flex-direction: column; align-items: flex-start; gap: 8px; }
-}
+            <div class="bottom-routing-footer-links mt-5 text-center">
+                <p>لديك حساب بالفعل؟ <a href="../login.html" class="routing-link">تسجيل الدخول</a></p>
+                <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
