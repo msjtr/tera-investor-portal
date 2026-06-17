@@ -1,42 +1,32 @@
 /**
  * ==========================================================================
  * TERA Investor Portal - Main UI Interactions (main.js)
- * المكون التفاعلي المشترك - معزز ومحمي للعمل أونلاين
+ * المكون التفاعلي المشترك - نسخة مستقرة ومحسنة
  * ==========================================================================
  */
+'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // ==========================================
-    // 1. التحكم في القائمة الجانبية (Sidebar Toggle) للشاشات الصغيرة
-    // يدعم الفئات القديمة والجديدة (.tera-sidebar & .main-sidebar) لمنع الـ 404 والأخطاء
-    // ==========================================
+
+    // 1. التحكم في القائمة الجانبية (Sidebar Toggle)
     const menuToggleBtn = document.querySelector('.menu-toggle');
-    // البحث عن القائمة الجانبية بالاسمين لضمان التوافق الكامل عبر جميع الصفحات
     const mainSidebar = document.querySelector('.tera-sidebar') || document.querySelector('.main-sidebar');
     
     if (menuToggleBtn && mainSidebar) {
         menuToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // منع انتقال الحدث للـ document
+            e.stopPropagation();
             mainSidebar.classList.toggle('active');
         });
 
-        // إغلاق القائمة تلقائياً عند النقر في أي مكان خارجها (في الشاشات الصغيرة)
         document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 992) { // تم تحديث الأبعاد لتشمل الأجهزة اللوحية أيضاً
-                if (!mainSidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
-                    mainSidebar.classList.remove('active');
-                }
+            if (window.innerWidth <= 992 && !mainSidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
+                mainSidebar.classList.remove('active');
             }
         });
     }
 
-    // ==========================================
     // 2. التحكم في القوائم المنسدلة (Dropdowns)
-    // ==========================================
-    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
-    
-    dropdownToggles.forEach(toggle => {
+    document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
         toggle.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -44,77 +34,64 @@ document.addEventListener('DOMContentLoaded', () => {
             const parent = this.parentElement;
             const menu = parent.querySelector('.dropdown-menu');
             
-            // إغلاق أي قائمة منسدلة أخرى مفتوحة مسبقاً لمنع التداخل البصري
             document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
-                if (openMenu !== menu) {
-                    openMenu.classList.remove('show');
-                }
+                if (openMenu !== menu) openMenu.classList.remove('show');
             });
 
-            // فتح أو إغلاق القائمة الحالية بنعومة
-            if (menu) {
-                menu.classList.toggle('show');
-            }
+            if (menu) menu.classList.toggle('show');
         });
     });
 
-    // إغلاق جميع القوائم المنسدلة فوراً عند النقر في أي مكان فارغ بالشاشة
     document.addEventListener('click', () => {
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => menu.classList.remove('show'));
     });
 
-    // ==========================================
-    // 3. نظام التبويبات المشترك الفاخر (Tabs System)
-    // ==========================================
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    
-    tabButtons.forEach(button => {
+    // 3. نظام التبويبات المشترك (Tabs System)
+    // يدعم حاويات متعددة في صفحة واحدة بفضل استخدام closest()
+    document.querySelectorAll('.tab-btn').forEach(button => {
         button.addEventListener('click', () => {
-            // الحصول على الحاوية الأب للتبويبات لضمان عزل العمليات
             const tabsContainer = button.closest('.tabs-wrapper');
             if (!tabsContainer) return;
 
             const targetId = button.getAttribute('data-target');
             
-            // إزالة الكلاس active من جميع الأزرار والمحتويات داخل نفس الحاوية فقط
             tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             tabsContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             
-            // إضافة الكلاس active للزر المستهدف لتنشيط العرض
             button.classList.add('active');
             const targetPane = tabsContainer.querySelector(`#${targetId}`);
-            if (targetPane) {
-                targetPane.classList.add('active');
-            }
+            if (targetPane) targetPane.classList.add('active');
         });
     });
 
-    // ==========================================
-    // 4. النوافذ المنبثقة المشتركة الفاخرة (Modals)
-    // ==========================================
-    const modalTriggers = document.querySelectorAll('[data-toggle="modal"]');
-    const modalCloseBtns = document.querySelectorAll('.modal-close, [data-dismiss="modal"]');
+    // 4. النوافذ المنبثقة (Modals)
+    const openModal = (modalId) => {
+        const modal = document.querySelector(modalId);
+        if (modal) modal.style.display = 'flex';
+    };
 
-    modalTriggers.forEach(trigger => {
+    const closeModal = (modal) => {
+        if (modal) modal.style.display = 'none';
+    };
+
+    document.querySelectorAll('[data-toggle="modal"]').forEach(trigger => {
         trigger.addEventListener('click', (e) => {
             e.preventDefault();
-            const targetModalId = trigger.getAttribute('data-target');
-            const targetModal = document.querySelector(targetModalId);
-            if (targetModal) {
-                targetModal.style.display = 'flex'; // دعم الظهور المرن المتباعد فوق الواجهات
-            }
+            openModal(trigger.getAttribute('data-target'));
         });
     });
 
-    modalCloseBtns.forEach(btn => {
+    document.querySelectorAll('.modal-close, [data-dismiss="modal"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            const modal = btn.closest('.modal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            closeModal(btn.closest('.modal'));
         });
+    });
+
+    // إغلاق المودال عند النقر خارج المحتوى
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            closeModal(e.target);
+        }
     });
 });
