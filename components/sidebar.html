@@ -1,17 +1,86 @@
-<!-- القائمة الجانبية الموحدة -->
 <aside class="tera-sidebar glass-panel" id="sidebar">
     <div class="sidebar-logo">
         <img src="../../images/logo.svg" alt="تيرا">
     </div>
+    
     <nav class="sidebar-menu">
-        <a href="../dashboard/index.html" class="menu-item"><i class="fa-solid fa-chart-pie"></i> لوحة التحكم</a>
-        <a href="../portfolio/portfolio-overview.html" class="menu-item"><i class="fa-solid fa-wallet"></i> محفظتي</a>
-        <a href="../investments/opportunities.html" class="menu-item"><i class="fa-solid fa-briefcase"></i> الفرص</a>
-        <a href="../profile/personal-information.html" class="menu-item"><i class="fa-solid fa-user"></i> الملف الشخصي</a>
-        <a href="../security/change-password.html" class="menu-item"><i class="fa-solid fa-shield-halved"></i> الأمان</a>
-        <a href="../support/notifications.html" class="menu-item"><i class="fa-solid fa-bell"></i> الإشعارات</a>
+        <a href="../dashboard/index.html" class="menu-item" data-page="dashboard">
+            <i class="fa-solid fa-chart-pie"></i> نظرة عامة
+        </a>
+        <a href="../investments/opportunities.html" class="menu-item" data-page="investments">
+            <i class="fa-solid fa-briefcase"></i> الفرص الاستثمارية
+        </a>
+        <a href="../portfolio/portfolio-overview.html" class="menu-item" data-page="portfolio">
+            <i class="fa-solid fa-wallet"></i> المحفظة والأصول
+        </a>
+        <a href="../reports/reports-dashboard.html" class="menu-item" data-page="reports">
+            <i class="fa-solid fa-file-invoice-dollar"></i> التقارير المالية
+        </a>
+        <a href="../profile/personal-information.html" class="menu-item" data-page="profile">
+            <i class="fa-solid fa-user-shield"></i> الملف الشخصي
+        </a>
+        <a href="../security/change-password.html" class="menu-item" data-page="security">
+            <i class="fa-solid fa-lock"></i> الأمان
+        </a>
+        <a href="../support/notifications.html" class="menu-item" data-page="support">
+            <i class="fa-solid fa-bell"></i> الإشعارات
+        </a>
     </nav>
+
     <div class="sidebar-footer">
-        <button class="btn-logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+        <button class="btn-logout" id="btn-logout">
+            <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+        </button>
     </div>
 </aside>
+
+<style>
+    .tera-sidebar {
+        width: 280px;
+        min-height: 100vh;
+        padding: 30px 20px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s ease;
+    }
+    .sidebar-logo { text-align: center; margin-bottom: 40px; }
+    .sidebar-logo img { width: 140px; }
+    
+    .sidebar-menu { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+    .menu-item {
+        display: flex; align-items: center; gap: 15px; padding: 15px 20px;
+        text-decoration: none; color: #475569; border-radius: 12px;
+        font-weight: 600; transition: 0.3s;
+    }
+    .menu-item:hover, .menu-item.active {
+        background: var(--tera-teal);
+        color: white;
+    }
+    .menu-item i { width: 20px; text-align: center; }
+
+    .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+    .btn-logout {
+        width: 100%; border: none; background: transparent; color: #ef4444;
+        padding: 15px; display: flex; align-items: center; gap: 15px;
+        font-weight: 700; cursor: pointer; border-radius: 12px; transition: 0.3s;
+    }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.05); }
+</style>
+
+<script>
+    // تفعيل الرابط الحالي بناءً على المسار
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.menu-item').forEach(item => {
+        if (currentPath.includes(item.getAttribute('data-page'))) {
+            item.classList.add('active');
+        }
+    });
+
+    // ربط زر الخروج
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+            localStorage.clear();
+            window.location.href = '../../index.html';
+        }
+    });
+</script>
