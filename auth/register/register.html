@@ -47,7 +47,7 @@
                 <div class="form-stage-section active" id="stage-1-content">
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-fullname_ar">
                         <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
@@ -56,7 +56,7 @@
                         <div class="error-feedback-msg" id="name_ar-error"></div>
                         <div class="realtime-validation-box-mini">
                             <ul>
-                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
+                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط (لا يقبل الأرقام والرموز والأحرف الإنجليزية)</li>
                             </ul>
                         </div>
                     </div>
@@ -89,7 +89,7 @@
                             </div>
                         </div>
                         <div class="col-inline-7">
-                            <div class="form-field-group">
+                            <div class="form-field-group" id="group-mobile_number">
                                 <label class="field-label">رقم الجوال <span class="required">*</span></label>
                                 <div class="input-wrapper">
                                     <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
@@ -101,11 +101,11 @@
                     </div>
                     <div class="realtime-validation-box-mini mb-4">
                         <ul>
-                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
+                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول نهائياً (يُحذف فورا).</li>
                         </ul>
                     </div>
 
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-email">
                         <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
@@ -114,7 +114,7 @@
                         <div class="error-feedback-msg" id="email-error"></div>
                     </div>
 
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-confirm_email">
                         <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
 
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-username">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
@@ -155,7 +155,7 @@
                         </div>
                     </div>
 
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-password">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
@@ -165,7 +165,7 @@
                         <div class="error-feedback-msg" id="password-error"></div>
                     </div>
 
-                    <div class="form-field-group">
+                    <div class="form-field-group" id="group-confirm_password">
                         <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
@@ -279,5 +279,28 @@
             </div>
         </div>
     </div>
+
+    <div class="central-modal-overlay" id="centralErrorModal">
+        <div class="central-modal-card">
+            <div class="central-modal-header">
+                <span class="central-modal-icon">⚠️</span>
+                <h4>متطلبات غير مكتملة</h4>
+            </div>
+            <div class="central-modal-body">
+                <p>لا يمكن الانتقال للمرحلة التالية بسبب وجود أخطاء أو حقول غير مكتملة. يرجى مراجعة الحقول الحمراء التالية وتصحيحها:</p>
+                <ul id="centralModalErrorList">
+                    </ul>
+            </div>
+            <div class="central-modal-footer">
+                <button type="button" class="central-modal-btn" onclick="closeCentralModal()">حسناً، فهمت</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>
