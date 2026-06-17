@@ -1,7 +1,42 @@
-<div class="footer-content">
+<footer class="tera-footer">
+    <div class="footer-content">
+        <div class="footer-info">
+            <p>&copy; 2026 جميع الحقوق محفوظة لشركة تيرا للاستثمار</p>
+        </div>
+        <div class="footer-links">
+            <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
+            <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
+            <a href="../support/help-center.html">مركز المساعدة</a>
+        </div>
+    </div>
+</footer>
 
-    <p>
-        © 2026 TERA - جميع الحقوق محفوظة
-    </p>
+<style>
+    .tera-footer {
+        margin-top: auto;
+        padding: 30px 40px;
+        border-top: 1px solid rgba(226, 232, 240, 0.8);
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(10px);
+    }
+    .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .footer-info p { color: #64748b; font-size: 14px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { 
+        color: #64748b; 
+        text-decoration: none; 
+        font-size: 14px; 
+        transition: 0.3s;
+    }
+    .footer-links a:hover { color: var(--tera-teal); }
 
-</div>
+    @media (max-width: 768px) {
+        .footer-content { flex-direction: column; gap: 15px; text-align: center; }
+    }
+</style>
