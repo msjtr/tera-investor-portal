@@ -41,12 +41,13 @@
         padding: 30px 20px;
         display: flex;
         flex-direction: column;
-        transition: all 0.3s ease;
+        flex-shrink: 0; /* منع انضغاط القائمة */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .sidebar-logo { text-align: center; margin-bottom: 40px; }
     .sidebar-logo img { width: 140px; }
     
-    .sidebar-menu { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+    .sidebar-menu { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
     .menu-item {
         display: flex; align-items: center; gap: 15px; padding: 15px 20px;
         text-decoration: none; color: #475569; border-radius: 12px;
@@ -66,15 +67,18 @@
     }
     .btn-logout:hover { background: rgba(239, 68, 68, 0.05); }
 
-    /* تحسين إضافي للشاشات الصغيرة */
+    /* التجاوب */
     @media (max-width: 992px) {
-        .tera-sidebar { position: fixed; right: -280px; top: 0; background: white; z-index: 1000; }
+        .tera-sidebar { 
+            position: fixed; right: -280px; top: 0; height: 100vh; 
+            z-index: 1000; background: white; box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+        }
         .tera-sidebar.active { right: 0; }
     }
 </style>
 
 <script>
-    // 1. تفعيل الرابط النشط تلقائياً
+    // تفعيل الرابط النشط
     const path = window.location.pathname;
     document.querySelectorAll('.menu-item').forEach(item => {
         if (path.includes(item.getAttribute('data-page'))) {
@@ -82,12 +86,11 @@
         }
     });
 
-    // 2. ربط زر الخروج بالدالة المركزية (Session.logout)
+    // تفعيل زر الخروج
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-                // نستخدم الدالة المركزية الموجودة في core.js
                 if(typeof Session !== 'undefined') {
                     Session.logout();
                 } else {
@@ -95,6 +98,15 @@
                     window.location.href = '/auth/auth/login/login.html';
                 }
             }
+        });
+    }
+
+    // تفعيل زر التبديل في الهيدر (إذا ضغط المستخدم عليه)
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
         });
     }
 </script>
