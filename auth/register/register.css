@@ -14,56 +14,24 @@ body {
     background-color: #F4F7FA;
     color: var(--tera-navy-primary);
     font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
+    margin: 0; padding: 0; line-height: 1.6;
 }
 
-.auth-layout {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 50px 20px;
-}
-
-.auth-container {
-    background: #FFFFFF;
-    border-radius: 16px;
-    box-shadow: 0 15px 45px rgba(10, 37, 64, 0.04);
-    width: 100%;
-    max-width: 840px;
-    padding: 50px;
-}
-
+.auth-layout { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 50px 20px; }
+.auth-container { background: #FFFFFF; border-radius: 16px; box-shadow: 0 15px 45px rgba(10, 37, 64, 0.04); width: 100%; max-width: 840px; padding: 50px; }
 .logo-img { height: 58px; object-fit: contain; }
 .portal-title { font-size: 26px; font-weight: 800; color: var(--tera-navy-primary); }
 .page-subtitle { font-size: 19px; color: var(--tera-teal-accent); margin-top: 6px; font-weight: 700; }
 .welcome-text { font-size: 14px; color: #6A7C92; }
 
-.stepper {
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
-    margin: 40px 0;
-    border-bottom: 2px solid var(--tera-border-color);
-    padding-bottom: 20px;
-}
-
+.stepper { display: flex; justify-content: space-between; gap: 30px; margin: 40px 0; border-bottom: 2px solid var(--tera-border-color); padding-bottom: 20px; }
 .step { flex: 1; text-align: center; font-size: 14.5px; font-weight: 700; color: #A3B1C2; padding: 5px; }
 .step.active { color: var(--tera-teal-accent); }
 .step.completed-green { color: var(--tera-success-green); }
 
-.alert-info-box {
-    background: #F0F4F8;
-    border-right: 5px solid var(--tera-teal-accent);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 40px;
-}
-
+.alert-info-box { background: #F0F4F8; border-right: 5px solid var(--tera-teal-accent); border-radius: 8px; padding: 20px; margin-bottom: 40px; }
 .alert-title { margin: 0 0 12px 0; font-size: 15px; color: var(--tera-navy-primary); font-weight: 700; }
-.alert-list li { font-size: 13.5px; margin-bottom: 8px; color: #334155; }
+.alert-list li { font-size: 13.5px; margin-bottom: 8px; color: #334155; list-style: none; }
 
 .form-stage-section { display: none; }
 .form-stage-section.active { display: block; }
@@ -75,48 +43,32 @@ body {
 
 .input-wrapper { position: relative; width: 100%; }
 
-/* التنسيق الأساسي لحقول الإدخال مع الحشوة الآمنة للأيقونات */
 .form-input-control {
-    width: 100%;
-    padding: 14px 18px 14px 45px;
-    font-size: 14.5px;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    box-sizing: border-box;
-    background: #FFFFFF;
-    transition: all 0.25s ease;
+    width: 100%; padding: 14px 18px 14px 45px; font-size: 14.5px;
+    border: 1px solid #CBD5E1; border-radius: 8px; box-sizing: border-box;
+    background: #FFFFFF; transition: all 0.25s ease;
 }
 
-/* فئات التلوين الذكية للأطر والحقول بناءً على طلبك */
+/* تنسيق ألوان أطر الحقول للتوضيح البصري المباشر للمستخدم */
 .form-input-control.is-field-invalid {
     border-color: var(--tera-danger-red) !important;
     background-color: #FFF5F5 !important;
     box-shadow: 0 0 0 3px rgba(226, 89, 80, 0.1) !important;
 }
-
 .form-input-control.is-field-valid {
     border-color: var(--tera-success-green) !important;
     background-color: #F6FFF9 !important;
     box-shadow: 0 0 0 3px rgba(0, 212, 106, 0.08) !important;
 }
 
-.field-status-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 15px;
-    pointer-events: none;
-    z-index: 2;
-}
-
-.checkbox-toggle-label { display: inline-block; font-size: 12.5px; margin-top: 8px; cursor: pointer; color: #475569; margin-left: 15px;}
+.field-status-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; z-index: 2; }
+.checkbox-toggle-label { display: inline-block; font-size: 12.5px; margin-top: 8px; cursor: pointer; color: #475569; margin-left: 15px; }
 
 .realtime-validation-box { background: #FAFBFB; border: 1px solid var(--tera-border-color); border-radius: 8px; padding: 20px; margin-top: 15px; }
 .realtime-validation-box h5 { margin: 0 0 12px 0; font-size: 13.5px; color: #475569; font-weight: 700; }
 .realtime-validation-box-mini { background: var(--tera-teal-light); padding: 10px 15px; border-radius: 6px; margin-top: 8px; font-size: 12.5px; }
 
-.validation-rule-list li, .realtime-validation-box-mini li { font-size: 13px; margin-bottom: 8px; color: #475569; text-align: right; list-style: none;}
+.validation-rule-list li, .realtime-validation-box-mini li { font-size: 13px; margin-bottom: 8px; color: #475569; text-align: right; list-style: none; }
 .icon-marker { display: inline-block; width: 22px; text-align: center; margin-left: 6px; font-size: 13px; vertical-align: middle; }
 
 .validation-rule-list li.invalid, .realtime-validation-box-mini li.invalid { color: var(--tera-danger-red); }
@@ -154,37 +106,26 @@ body {
 .routing-link { color: var(--tera-teal-accent); text-decoration: none; font-weight: bold; }
 .routing-link-secondary { color: #64748B; text-decoration: none; }
 
-/* تصميم لوحة الإشعار التنبيهية المركزية (Sleek Central Modal) */
+/* تصميم نافذة التنبيهات المركزية المتواجدة في المنتصف تماماً */
 .central-modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 37, 64, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 10000;
-    display: none;
-    justify-content: center;
-    align-items: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 37, 64, 0.4); backdrop-filter: blur(4px);
+    z-index: 10000; display: none; justify-content: center; align-items: center;
 }
 .central-modal-card {
-    background: #FFFFFF;
-    width: 90%; max-width: 500px;
-    border-radius: 12px;
-    box-shadow: 0 20px 50px rgba(10, 37, 64, 0.15);
-    padding: 25px;
-    animation: modalSlideUp 0.3s ease-out;
+    background: #FFFFFF; width: 90%; max-width: 520px;
+    border-radius: 12px; box-shadow: 0 20px 50px rgba(10, 37, 64, 0.15);
+    padding: 25px; animation: modalSlideUp 0.3s ease-out;
 }
-@keyframes modalSlideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
+@keyframes modalSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .central-modal-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--tera-border-color); padding-bottom: 12px; }
 .central-modal-icon { font-size: 22px; }
 .central-modal-header h4 { margin: 0; font-size: 16px; color: var(--tera-navy-primary); font-weight: 800; }
 .central-modal-body { padding: 15px 0; font-size: 14px; color: #475569; }
-.central-modal-body ul { padding-right: 20px; color: var(--tera-danger-red); margin-top: 10px; font-weight: bold;}
-.central-modal-body li { margin-bottom: 6px; }
+.central-modal-body ul { padding-right: 20px; color: var(--tera-danger-red); margin-top: 10px; font-weight: bold; text-align: right; }
+.central-modal-body li { margin-bottom: 8px; list-style: none; }
 .central-modal-footer { display: flex; justify-content: flex-end; border-top: 1px solid var(--tera-border-color); padding-top: 12px; }
-.central-modal-btn { background: var(--tera-navy-primary); color: #FFFFFF; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: inherit;}
+.central-modal-btn { background: var(--tera-navy-primary); color: #FFFFFF; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .central-modal-btn:hover { background: var(--tera-teal-accent); }
 
 @media (max-width: 768px) { .row-flex { flex-direction: column; gap: 0; } .stepper { flex-direction: column; align-items: flex-start; gap: 8px; } }
