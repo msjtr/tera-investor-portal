@@ -1,5 +1,6 @@
 /* ================================================= */
 /* TERA DASHBOARD - تصميم الزجاج الفاخر (Glassmorphism) */
+/* تم تحديث الهيكل ليتوافق مع Flexbox بالكامل */
 /* ================================================= */
 
 :root {
@@ -14,17 +15,29 @@
     --shadow-soft: 0 8px 32px rgba(10, 37, 64, 0.08);
 }
 
+/* استخدام الهيكل المرن لمنع التداخل */
 body.dashboard-body {
     background-color: var(--tera-bg);
     background-image: radial-gradient(circle at top right, rgba(2, 128, 144, 0.05), transparent 600px);
-    display: flex;
+    display: flex; /* يجعل السايدبار والمحتوى جنباً لجنب */
     min-height: 100vh;
     margin: 0;
     font-family: 'Tajawal', sans-serif;
     color: var(--tera-navy);
 }
 
-/* تحسين تأثير الزجاج */
+/* تنسيق عام للحاويات */
+#sidebar-container { flex-shrink: 0; }
+
+.tera-main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* إصلاح مشكلة التمدد في Flexbox */
+    padding: 20px;
+}
+
+/* تأثير الزجاج الفاخر */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
@@ -34,17 +47,15 @@ body.dashboard-body {
     border-radius: 24px;
 }
 
-/* الشريط الجانبي - تم إصلاح الهيكل */
+/* القائمة الجانبية داخل الحاوية */
 .tera-sidebar {
     width: 280px;
-    margin: 20px 20px 20px 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 20px;
-    height: calc(100vh - 40px);
-    z-index: 100;
 }
 
 .sidebar-logo { text-align: center; margin-bottom: 40px; }
@@ -58,65 +69,37 @@ body.dashboard-body {
     border-radius: 16px; transition: all 0.3s ease;
 }
 
-.menu-item i { font-size: 20px; width: 24px; text-align: center; }
-
 .menu-item:hover, .menu-item.active {
     background: var(--tera-teal);
     color: #FFFFFF;
     box-shadow: 0 6px 15px rgba(2, 128, 144, 0.3);
 }
 
-/* المحتوى الرئيسي - تم إصلاح العرض */
-.tera-main-content {
-    flex-grow: 1;
-    padding: 20px;
-    max-width: calc(100% - 300px);
-    display: flex;
-    flex-direction: column;
-}
-
-/* الإحصائيات - توزيع مرن */
+/* الإحصائيات */
 .stats-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
     gap: 25px; 
     margin-bottom: 30px; 
 }
 
 .stat-card { 
     padding: 25px; 
-    display: flex; 
-    align-items: center; 
-    gap: 20px;
     border-right: 5px solid transparent; 
 }
 
-.stat-label { color: #64748b; font-size: 13px; font-weight: 700; margin: 0 0 5px 0; }
-.stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); }
+.stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); margin-top: 5px; }
 
-/* تحسينات الجداول */
-.tera-table { 
-    width: 100%; 
-    border-collapse: separate; 
-    border-spacing: 0 10px; 
-}
-.tera-table th { color: #64748b; font-size: 14px; padding: 15px; }
+/* الجداول */
+.tera-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
 .tera-table td { background: white; padding: 20px; }
 .tera-table td:first-child { border-radius: 12px 0 0 12px; }
 .tera-table td:last-child { border-radius: 0 12px 12px 0; }
 
-/* استجابة الشاشات */
-@media (max-width: 1200px) {
-    .tera-main-content { max-width: 100%; }
-}
-
+/* إصلاح التجاوب */
 @media (max-width: 992px) {
     body.dashboard-body { flex-direction: column; }
-    .tera-sidebar { 
-        width: 100%; 
-        height: auto; 
-        position: relative; 
-        margin: 0; 
-        padding: 20px; 
-    }
+    #sidebar-container { width: 100%; }
+    .tera-sidebar { width: 100%; height: auto; position: relative; }
+    .tera-main-content { width: 100%; padding: 15px; }
 }
