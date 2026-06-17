@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <script>
+        const checkToken = localStorage.getItem('tera_token');
+        if (checkToken) {
+            // توجيه صارم بالامتداد الكامل لكسر حلقة الـ 404 في سيرفر Render
+            window.location.replace('./pages/dashboard/index.html');
+        }
+    </script>
+
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,12 +59,15 @@
         .brand-logo img { width: 160px !important; height: auto !important; object-fit: contain !important; }
         .main-title { font-size: 36px !important; color: #0A2540 !important; margin-bottom: 20px !important; font-weight: 800 !important; }
         .main-subtitle { font-size: 18px !important; color: #475569 !important; margin-bottom: 50px !important; line-height: 1.8 !important; max-width: 750px !important; margin-left: auto !important; margin-right: auto !important; }
+        
         .auth-actions { display: flex !important; justify-content: center !important; gap: 20px !important; flex-wrap: wrap !important; margin-bottom: 60px !important; }
         .btn-action { display: inline-block !important; text-decoration: none !important; padding: 16px 45px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 16px !important; transition: all 0.3s ease !important; }
         .btn-login { background: linear-gradient(135deg, #0A2540 0%, #028090 100%) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25) !important; }
         .btn-login:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35) !important; }
+        
         .btn-register { background: #f8fafc !important; color: #0A2540 !important; border: 2px solid #e2e8f0 !important; }
         .btn-register:hover { background: #e2e8f0 !important; transform: translateY(-3px) !important; }
+        
         .features-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important; gap: 25px !important; margin-top: 20px !important; }
         .feature-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important; padding: 30px !important; text-align: right !important; transition: all 0.3s ease !important; }
         .feature-card h3 { margin-bottom: 15px !important; color: #0A2540 !important; font-size: 19px !important; font-weight: 700 !important; border-right: 4px solid #028090 !important; padding-right: 12px !important; }
@@ -104,15 +115,5 @@
     </main>
 
     <script type="module" src="./assets/js/main.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // التوجيه الصارم والكامل للملف عند وجود جلسة لمنع أخطاء الـ 404
-            const sessionToken = localStorage.getItem('tera_token');
-            if (sessionToken) {
-                window.location.replace('./pages/dashboard/index.html');
-            }
-        });
-    </script>
 </body>
 </html>
