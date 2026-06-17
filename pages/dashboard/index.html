@@ -6,26 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | لوحة تحكم المستثمر</title>
     
-    <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- التنسيقات -->
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
 <body class="dashboard-body">
 
-    <!-- الحاويات التي يتم حقن المكونات فيها -->
     <div id="loader-container"></div>
     <div id="sidebar-container"></div>
 
     <main class="tera-main-content">
-        <!-- الهيدر يتم حقنه برمجياً -->
         <div id="header-container"></div>
 
-        <!-- المحتوى الرئيسي -->
         <section class="stats-grid">
             <div class="stat-card glass-panel" style="border-right-color: var(--tera-navy);">
                 <p class="stat-label">إجمالي قيمة المحفظة</p>
@@ -47,7 +42,6 @@
                     <h2>تحليل الأداء المالي</h2>
                 </div>
                 <div class="mock-chart">
-                    <!-- تمثيل بياني بسيط -->
                     <div class="bar" style="height: 60%"></div>
                     <div class="bar" style="height: 80%"></div>
                     <div class="bar" style="height: 45%"></div>
@@ -71,15 +65,13 @@
             </div>
         </section>
 
-        <!-- الفوتر يتم حقنه -->
         <div id="footer-container"></div>
     </main>
 
-    <!-- الجافاسكربت الأساسي لربط المكونات -->
     <script>
-        // دالة ربط المكونات (موجودة هنا لضمان عملها الفوري)
         async function loadComponents() {
             const comps = [
+                { id: 'loader-container', path: '../../components/loader.html' },
                 { id: 'sidebar-container', path: '../../components/sidebar.html' },
                 { id: 'header-container', path: '../../components/header.html' },
                 { id: 'footer-container', path: '../../components/footer.html' }
@@ -88,14 +80,20 @@
             for(const c of comps) {
                 const el = document.getElementById(c.id);
                 if(el) {
-                    const res = await fetch(c.path);
-                    if(res.ok) el.innerHTML = await res.text();
+                    try {
+                        const res = await fetch(c.path);
+                        if(res.ok) el.innerHTML = await res.text();
+                    } catch (err) {
+                        console.error('Error loading component:', c.path, err);
+                    }
                 }
             }
         }
         window.addEventListener('DOMContentLoaded', loadComponents);
     </script>
+    
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/dashboard.js"></script>
 </body>
 </html>
