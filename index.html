@@ -23,6 +23,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/core.css">
@@ -59,13 +61,20 @@
         .main-title { font-size: 36px !important; color: #0A2540 !important; margin-bottom: 20px !important; font-weight: 800 !important; }
         .main-subtitle { font-size: 18px !important; color: #475569 !important; margin-bottom: 50px !important; line-height: 1.8 !important; max-width: 750px !important; margin-left: auto !important; margin-right: auto !important; }
         
-        .auth-actions { display: flex !important; justify-content: center !important; gap: 20px !important; flex-wrap: wrap !important; margin-bottom: 60px !important; }
-        .btn-action { display: inline-block !important; text-decoration: none !important; padding: 16px 45px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 16px !important; transition: all 0.3s ease !important; }
+        /* تعديل حاوية الأزرار لتستوعب الزر الجديد */
+        .auth-actions { display: flex !important; justify-content: center !important; gap: 15px !important; flex-wrap: wrap !important; margin-bottom: 60px !important; }
+        .primary-buttons { display: flex !important; gap: 15px !important; justify-content: center !important; width: 100% !important; flex-wrap: wrap !important; }
+        
+        .btn-action { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; text-decoration: none !important; padding: 16px 45px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 16px !important; transition: all 0.3s ease !important; }
         .btn-login { background: linear-gradient(135deg, #0A2540 0%, #028090 100%) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25) !important; }
         .btn-login:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35) !important; }
         
         .btn-register { background: #f8fafc !important; color: #0A2540 !important; border: 2px solid #e2e8f0 !important; }
         .btn-register:hover { background: #e2e8f0 !important; transform: translateY(-3px) !important; }
+        
+        /* تنسيق زر لوحة التحكم الجديد */
+        .btn-dashboard { background: #0A2540 !important; color: #ffffff !important; width: 100% !important; max-width: 550px !important; margin-top: 10px !important; }
+        .btn-dashboard:hover { background: #028090 !important; transform: translateY(-3px) !important; color: #ffffff !important; }
         
         .features-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important; gap: 25px !important; margin-top: 20px !important; }
         .feature-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important; padding: 30px !important; text-align: right !important; transition: all 0.3s ease !important; }
@@ -88,8 +97,14 @@
             </p>
 
             <div class="auth-actions">
-                <a href="/auth/auth/login/login.html" class="btn-action btn-login">تسجيل الدخول الآمن</a>
-                <a href="/auth/register/register.html" class="btn-action btn-register">إنشاء حساب مستثمر</a>
+                <div class="primary-buttons">
+                    <a href="/auth/auth/login/login.html" class="btn-action btn-login"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</a>
+                    <a href="/auth/register/register.html" class="btn-action btn-register"><i class="fa-solid fa-user-plus"></i> إنشاء حساب مستثمر</a>
+                </div>
+                
+                <a href="/pages/dashboard/index.html" class="btn-action btn-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> الانتقال المباشر إلى لوحة التحكم
+                </a>
             </div>
 
             <div class="features-grid">
