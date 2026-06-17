@@ -1,14 +1,16 @@
-/* ==========================================
-   TERA Investor Portal - Support & Ticketing Engine
-========================================== */
+/* ================================================= */
+/* TERA Investor Portal - Support & Ticketing Engine */
+/* إصدار مستقر متوافق مع هوية تيرا */
+/* ================================================= */
 
-/* كروت الأسئلة الشائعة القابلة للطي (Accordion FAQ) */
+/* كروت الأسئلة الشائعة (FAQ Accordion) */
 .faq-accordion-item {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    background: var(--tera-white, #ffffff);
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
     margin-bottom: 12px;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .faq-trigger-header {
@@ -17,31 +19,33 @@
     background: none;
     border: none;
     text-align: right;
-    font-size: 15px;
+    font-size: 0.95rem;
     font-weight: 700;
-    color: var(--secondary-dark);
+    color: var(--tera-primary, #0A1B3F);
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-family: var(--font-heading, 'Tajawal', sans-serif);
 }
 
 .faq-panel-content {
     padding: 0 20px 20px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
+    color: var(--tera-text-light, #64748B);
+    font-size: 0.9rem;
     line-height: 1.7;
-    display: none; /* يتم إظهاره عبر جافا سكريبت الدعم */
+    display: none;
 }
 
-/* صندوق تذاكر الدعم والدردشة الداخلي */
+/* صندوق تذاكر الدعم والدردشة */
 .ticket-chat-container {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    background: var(--tera-white, #ffffff);
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
     display: flex;
     flex-direction: column;
     height: 500px;
+    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
 }
 
 .ticket-chat-history {
@@ -57,29 +61,29 @@
 .chat-message-bubble {
     max-width: 70%;
     padding: 14px 18px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
+    border-radius: var(--tera-radius, 16px);
+    font-size: 0.9rem;
     font-weight: 600;
     line-height: 1.5;
 }
 
 .chat-message-bubble.investor {
-    background: var(--primary-teal);
+    background: var(--tera-secondary, #00C2C7);
     color: #ffffff;
     align-self: flex-start;
-    border-top-right-radius: 0;
+    border-top-right-radius: 4px;
 }
 
 .chat-message-bubble.agent {
-    background: var(--bg-global);
-    color: var(--secondary-dark);
+    background: #F1F5F9;
+    color: var(--tera-primary, #0A1B3F);
     align-self: flex-end;
-    border-top-left-radius: 0;
+    border-top-left-radius: 4px;
 }
 
 .ticket-input-footer {
     padding: 16px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--tera-border, #E2E8F0);
     display: flex;
     gap: 12px;
 }
