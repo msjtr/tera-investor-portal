@@ -1,17 +1,15 @@
 /* ================================================= */
-/* TERA DESIGN SYSTEM - UPDATED */
+/* TERA DESIGN SYSTEM - النُسخة النهائية المستقرة */
 /* ================================================= */
 
-/* استيراد الخطوط */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-    /* ألوان الهوية البصرية الجديدة - مستخرجة من الشعار */
-    --tera-primary: #0A1B3F;       /* كحلي داكن (Tera Navy) */
-    --tera-secondary: #00C2C7;     /* سماوي ساطع (Tera Cyan - لون السهم) */
-    
-    --tera-primary-dark: #07132B;  /* درجة أغمق للكحلي */
-    --tera-cyan-dark: #009CA0;     /* درجة أغمق للسماوي */
+    /* ألوان الهوية البصرية */
+    --tera-primary: #0A1B3F;
+    --tera-secondary: #00C2C7;
+    --tera-primary-dark: #07132B;
+    --tera-cyan-dark: #009CA0;
 
     --tera-success: #10B981;
     --tera-danger: #DC2626;
@@ -19,13 +17,13 @@
     --tera-info: #3B82F6;
 
     --tera-white: #ffffff;
-    --tera-bg: #F8FAFC;          /* خلفية بيضاء مائلة للرمادي الفاتح جداً */
-
+    --tera-bg: #F8FAFC;
     --tera-border: #E2E8F0;
-    --tera-text: #1E293B;        /* نص داكن مريح للعين */
-    --tera-text-light: #64748B;  /* نص فرعي */
+    --tera-text: #1E293B;
+    --tera-text-light: #64748B;
 
     --tera-shadow: 0 4px 20px rgba(10, 27, 63, 0.08);
+    --tera-radius: 16px;
 
     /* الخطوط */
     --font-heading: 'Tajawal', sans-serif;
@@ -33,7 +31,7 @@
 }
 
 /* ================================================= */
-/* BODY */
+/* GLOBAL RESET & BODY */
 /* ================================================= */
 body {
     background: var(--tera-bg);
@@ -42,9 +40,11 @@ body {
     direction: rtl;
     text-align: right;
     line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6, .page-title, .section-title {
+h1, h2, h3, h4, h5, h6, .page-title {
     font-family: var(--font-heading);
     color: var(--tera-primary);
     font-weight: 800;
@@ -53,38 +53,52 @@ h1, h2, h3, h4, h5, h6, .page-title, .section-title {
 /* ================================================= */
 /* COMPONENTS */
 /* ================================================= */
-.page-wrapper { min-height: 100vh; padding: 30px; }
-.page-header { margin-bottom: 30px; }
-.page-subtitle { color: var(--tera-text-light); margin-top: 8px; font-family: var(--font-body); }
 
-/* NAVBAR */
-.navbar { 
-    background: var(--tera-white); 
-    border-radius: 12px; 
-    padding: 15px 25px; 
-    box-shadow: var(--tera-shadow);
-    border: 1px solid var(--tera-border);
-}
-.navbar-link { color: var(--tera-text); font-weight: 600; font-family: var(--font-heading); }
-.navbar-link:hover { color: var(--tera-secondary); }
+/* الصفحة الرئيسية والالتفاف */
+.page-wrapper { min-height: 100vh; padding: 20px; }
 
-/* STATS CARDS */
+/* البطاقات (Stat Cards) */
 .stat-card { 
     background: var(--tera-white); 
-    border-radius: 16px; 
+    border-radius: var(--tera-radius); 
     padding: 25px; 
     box-shadow: var(--tera-shadow);
-    border-right: 4px solid var(--tera-secondary); /* لمسة هوية */
+    border-right: 4px solid var(--tera-secondary);
+    transition: transform 0.3s ease;
 }
-.stat-value { color: var(--tera-primary); font-size: 30px; font-weight: 700; }
+.stat-card:hover { transform: translateY(-5px); }
+.stat-value { color: var(--tera-primary); font-size: 28px; font-weight: 800; margin-top: 10px; }
 
-/* TABLE */
-.table th { background: #F1F5F9; padding: 16px; font-family: var(--font-heading); color: var(--tera-primary); }
-.table td { padding: 16px; border-bottom: 1px solid var(--tera-border); }
+/* الجداول (Tables) */
+.tera-table { width: 100%; border-collapse: collapse; background: var(--tera-white); border-radius: var(--tera-radius); overflow: hidden; }
+.tera-table th { background: #F1F5F9; padding: 18px; text-align: right; font-family: var(--font-heading); color: var(--tera-primary); }
+.tera-table td { padding: 18px; border-bottom: 1px solid var(--tera-border); }
 
-/* LOADER */
-.loader { border: 4px solid var(--tera-border); border-top-color: var(--tera-secondary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+/* اللودر (Loader) */
+.loader-container { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+.loader { 
+    border: 4px solid var(--tera-border); 
+    border-top: 4px solid var(--tera-secondary); 
+    border-radius: 50%; width: 40px; height: 40px; 
+    animation: spin 1s linear infinite; 
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* FOOTER */
-.site-footer { text-align: center; margin-top: 50px; padding: 25px; color: var(--tera-text-light); font-size: 0.9rem; }
+/* الأزرار (Buttons) */
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+.btn-primary { background: var(--tera-primary); color: white; }
+.btn-primary:hover { background: var(--tera-primary-dark); }
+
+/* التذييل */
+.site-footer { 
+    text-align: center; margin-top: 50px; padding: 25px; 
+    color: var(--tera-text-light); border-top: 1px solid var(--tera-border);
+}
