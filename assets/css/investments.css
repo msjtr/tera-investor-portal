@@ -1,28 +1,30 @@
-/* ==========================================
-   TERA Investor Portal - Investments & Deals Grid
-========================================== */
+/* ================================================= */
+/* TERA Investor Portal - Investments & Deals Grid */
+/* إصدار مستقر ومتوافق مع الهوية البصرية */
+/* ================================================= */
 
-/* شبكة توزيع الفرص الاستثمارية الفاخرة */
 .opportunities-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 28px;
+    padding: 10px;
 }
 
 .opportunity-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    background: #ffffff;
+    border: 1px solid var(--border-color, #E2E8F0);
+    border-radius: var(--radius-lg, 16px);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: var(--transition-smooth);
+    transition: var(--transition, all 0.3s ease);
+    position: relative; /* ضروري لتموضع الـ Badge */
 }
 
 .opportunity-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-    border-color: rgba(13, 148, 136, 0.3);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(10, 27, 63, 0.1);
+    border-color: var(--tera-cyan, #00C2C7);
 }
 
 .opp-badge-status {
@@ -30,19 +32,21 @@
     top: 16px;
     right: 16px;
     padding: 6px 14px;
-    border-radius: var(--radius-xl);
+    border-radius: 20px;
     font-size: 11px;
     font-weight: 800;
     color: #ffffff;
     z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.opp-badge-status.available { background: var(--primary-teal); }
-.opp-badge-status.filled { background: var(--text-muted); }
+.opp-badge-status.available { background: var(--tera-cyan, #00C2C7); }
+.opp-badge-status.filled { background: var(--text-muted, #64748B); }
 
 .opp-cover {
     height: 180px;
-    background-color: var(--secondary-blue);
+    background-color: var(--tera-navy, #0A1B3F);
     position: relative;
     overflow: hidden;
 }
@@ -56,60 +60,59 @@
 }
 
 .opp-title {
-    font-size: 18px;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: var(--secondary-dark);
+    color: var(--tera-navy, #0A1B3F);
+    margin: 0;
 }
 
-/* شريط معالجة اكتمال التمويل اللحظي */
+/* شريط معالجة اكتمال التمويل */
 .funding-progress-wrap {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     margin: 8px 0;
 }
 
 .progress-meta {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text-muted, #64748B);
 }
 
 .progress-track {
     height: 8px;
-    background: #e2e8f0;
-    border-radius: var(--radius-xl);
+    background: #E2E8F0;
+    border-radius: 10px;
     overflow: hidden;
 }
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-teal) 0%, #2dd4bf 100%);
-    border-radius: var(--radius-xl);
+    background: linear-gradient(90deg, var(--tera-cyan, #00C2C7) 0%, #16d1d4 100%);
+    border-radius: 10px;
     transition: width 0.5s ease-out;
 }
 
-/* جدول عوائد الفرصة الاستثمارية الداخلي */
+/* بيانات الفرصة الاستثمارية */
 .opp-data-row {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
-    border-bottom: 1px dashed var(--border);
-    font-size: 13px;
+    border-bottom: 1px dashed var(--border-color, #E2E8F0);
+    font-size: 0.85rem;
 }
 
-.opp-data-row:last-child {
-    border-bottom: none;
-}
+.opp-data-row:last-child { border-bottom: none; }
 
 .opp-data-label {
-    color: var(--text-muted);
+    color: var(--text-muted, #64748B);
     font-weight: 600;
 }
 
 .opp-data-value {
-    color: var(--secondary-dark);
+    color: var(--tera-navy, #0A1B3F);
     font-weight: 800;
 }
