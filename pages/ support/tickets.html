@@ -1,47 +1,78 @@
-<section class="support-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تذاكر الدعم | تيرا</title>
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+</head>
+<body class="dashboard-body">
 
-    <h1>الدعم الفني</h1>
+    <div id="loader-container"></div>
+    <div id="sidebar-container"></div>
 
-    <form>
+    <main class="tera-main-content">
+        <div id="header-container"></div>
 
-        <label>نوع التذكرة</label>
+        <section class="tickets-wrapper">
+            <div class="glass-panel" style="padding: 30px; margin-bottom: 25px;">
+                <div class="section-header" style="margin-bottom: 20px;">
+                    <h2>فتح تذكرة دعم جديدة</h2>
+                </div>
+                <form class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <input type="text" class="tera-input-field" placeholder="موضوع التذكرة...">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <select class="tera-input-field">
+                            <option>مشكلة تقنية</option>
+                            <option>استفسار مالي</option>
+                            <option>اقتراح</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="height: 48px; width: 150px;">إرسال</button>
+                </form>
+            </div>
 
-        <select>
-            <option>استفسار</option>
-            <option>مشكلة تقنية</option>
-            <option>مشكلة مالية</option>
-            <option>اقتراح</option>
-        </select>
+            <div class="glass-panel" style="padding: 30px;">
+                <div class="section-header">
+                    <h2>سجل التذاكر</h2>
+                </div>
+                <table class="tera-table">
+                    <thead>
+                        <tr>
+                            <th>رقم التذكرة</th>
+                            <th>الموضوع</th>
+                            <th>القسم</th>
+                            <th>الحالة</th>
+                            <th>آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#TER-9921</td>
+                            <td>مشكلة في تسجيل الدخول</td>
+                            <td>تقني</td>
+                            <td><span class="status-badge success">مغلقة</span></td>
+                            <td>12 يونيو 2026</td>
+                        </tr>
+                        <tr>
+                            <td>#TER-9945</td>
+                            <td>استفسار عن توزيعات الأرباح</td>
+                            <td>مالي</td>
+                            <td><span class="status-badge" style="background: #FFFBEB; color: #F59E0B; border: 1px solid #FDE68A;">قيد المعالجة</span></td>
+                            <td>15 يونيو 2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-        <label>عنوان التذكرة</label>
+        <div id="footer-container"></div>
+    </main>
 
-        <input type="text">
-
-        <label>وصف المشكلة</label>
-
-        <textarea rows="6"></textarea>
-
-        <button type="submit">
-            إرسال التذكرة
-        </button>
-
-    </form>
-
-</section>
-<section class="tickets-table">
-
-    <h2>التذاكر السابقة</h2>
-
-    <table>
-
-        <tr>
-            <th>رقم التذكرة</th>
-            <th>العنوان</th>
-            <th>الحالة</th>
-            <th>التاريخ</th>
-        </tr>
-
-    </table>
-
-</section>
-
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/app.js"></script>
+</body>
+</html>
