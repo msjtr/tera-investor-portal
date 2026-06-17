@@ -1,294 +1,106 @@
 /* ================================================= */
-/* TERA CORE - مصحح ومحمي للعمل أونلاين */
+/* TERA CORE - النسخة المستقرة والمحمية */
 /* ================================================= */
 'use strict';
 
-/* ================================================= */
-/* APP CONFIG */
-/* ================================================= */
 const TERA = {
     version: '1.0.0',
-    apiUrl: '/api',
     debug: true
 };
 
 /* ================================================= */
-/* SELECTORS */
-/* ================================================= */
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => document.querySelectorAll(selector);
-
-/* ================================================= */
-/* UTILITIES & ALERTS (الدوال المساعدة والتنبيهات) */
+/* CORE STORAGE (إدارة البيانات المحلية) */
 /* ================================================= */
 const Storage = {
-    set(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-    },
-    get(key) {
+    set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+    get: (key) => {
         const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : null;
+        try { return item ? JSON.parse(item) : null; } catch { return item; }
     },
-    remove(key) {
-        localStorage.removeItem(key);
-    },
-    clear() {
-        localStorage.clear();
-    }
+    remove: (key) => localStorage.removeItem(key),
+    clear: () => localStorage.clear()
 };
 
-function successAlert(message) {
-    alert('✅ ' + message);
-}
-
-function errorAlert(message) {
-    alert('❌ ' + message);
-}
-
-function warningAlert(message) {
-    alert('⚠️ ' + message);
-}
-
-function initializeAlerts() {
-    if (TERA.debug) console.log('Alerts Initialized');
-}
-
-function initializeModals() {
-    if (TERA.debug) console.log('Modals Initialized');
-}
-
 /* ================================================= */
-/* DOM READY */
+/* UI FEEDBACK (التنبيهات واللودر) */
 /* ================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-    initializeCore();
-});
+function successAlert(msg) { console.log('Success:', msg); alert('✅ ' + msg); }
+function errorAlert(msg) { console.error('Error:', msg); alert('❌ ' + msg); }
 
-/* ================================================= */
-/* INITIALIZE */
-/* ================================================= */
-function initializeCore() {
-    loadComponents();
-    initializeTooltips();
-    initializeAlerts();
-    initializeModals();
-}
-
-/* ================================================= */
-/* COMPONENTS */
-/* ================================================= */
-function loadComponents() {
-    // 🎯 تم تعديل المسارات لتكون مطلقة (تبدأ بـ /) لتعمل من أي صفحة بدون خطأ 404
-    loadComponent('#header-container', '/components/header.html');
-    loadComponent('#footer-container', '/components/footer.html');
-    loadComponent('#sidebar-container', '/components/sidebar.html');
-    loadComponent('#alerts-container', '/components/alerts.html');
-}
-
-function loadComponent(selector, path) {
-    const element = document.querySelector(selector);
-    if (!element) return;
-
-    fetch(path)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load component: ' + path);
-            }
-            return response.text();
-        })
-        .then(html => {
-            element.innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Error loading component:', error);
-        });
-}
-
-/* ================================================= */
-/* LOADER */
-/* ================================================= */
 function showLoader() {
-    const loader = document.getElementById('loader');
+    const loader = document.getElementById('tera-loader');
     if (loader) loader.style.display = 'flex';
 }
 
 function hideLoader() {
-    const loader = document.getElementById('loader');
+    const loader = document.getElementById('tera-loader');
     if (loader) loader.style.display = 'none';
 }
 
 /* ================================================= */
-/* DATE HELPERS */
+/* DYNAMIC COMPONENT LOADER (ربط المكونات) */
 /* ================================================= */
-const DateHelper = {
-    now() {
-        return new Date();
-    },
-    today() {
-        return new Date().toISOString().split('T')[0];
-    },
-    format(date) {
-        return new Intl.DateTimeFormat('ar-SA').format(new Date(date));
-    }
-};
+/**
+ * يقوم بجلب المكونات من مجلد /components باستخدام المسارات المطلقة
+ */
+async function loadComponents() {
+    const components = [
+        { selector: '#header-container', path: '/components/header.html' },
+        { selector: '#footer-container', path: '/components/footer.html' },
+        { selector: '#sidebar-container', path: '/components/sidebar.html' },
+        { selector: '#loader-container', path: '/components/loader.html' }
+    ];
 
-/* ================================================= */
-/* API */
-/* ================================================= */
-const API = {
-    async get(endpoint) {
-        try {
-            showLoader();
-            const response = await fetch(`${TERA.apiUrl}${endpoint}`);
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-            throw error;
-        } finally {
-            hideLoader();
+    for (const comp of components) {
+        const element = document.querySelector(comp.selector);
+        if (element) {
+            try {
+                const res = await fetch(comp.path);
+                if (res.ok) {
+                    element.innerHTML = await res.text();
+                }
+            } catch (err) {
+                console.warn(`Could not load ${comp.path}`, err);
+            }
         }
-    },
-
-    async post(endpoint, data) {
-        try {
-            showLoader();
-            const response = await fetch(`${TERA.apiUrl}${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-            throw error;
-        } finally {
-            hideLoader();
-        }
-    }
-};
-
-/* ================================================= */
-/* FETCH WRAPPER */
-/* ================================================= */
-async function request(url, options = {}) {
-    try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-            throw new Error(response.statusText);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error(error);
-        throw error;
     }
 }
 
 /* ================================================= */
-/* USER SESSION */
+/* SESSION MANAGEMENT (إدارة الجلسة) */
 /* ================================================= */
 const Session = {
-    setUser(user) {
-        Storage.set('tera_user', user);
-    },
-    getUser() {
-        return Storage.get('tera_user');
-    },
-    removeUser() {
-        Storage.remove('tera_user');
-    },
-    isLoggedIn() {
-        // 🎯 دعم توافقي ذكي: يتحقق من وجود النظام القديم أو توكن المصادقة الجديد
-        return !!Storage.get('tera_user') || !!localStorage.getItem('tera_token');
+    setUser: (user) => Storage.set('tera_user', user),
+    getUser: () => Storage.get('tera_user'),
+    isLoggedIn: () => !!localStorage.getItem('tera_token'),
+    logout: () => {
+        Storage.clear();
+        localStorage.removeItem('tera_token');
+        window.location.replace('/auth/auth/login/login.html');
     }
 };
 
 /* ================================================= */
-/* PERMISSIONS */
+/* FORMATTERS (تنسيق العملات والأرقام) */
 /* ================================================= */
-function hasPermission(permission) {
-    const user = Session.getUser();
-    if (!user || !user.permissions) {
-        return false;
+const Format = {
+    currency: (val) => new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(val),
+    date: (date) => new Intl.DateTimeFormat('ar-SA').format(new Date(date))
+};
+
+/* ================================================= */
+/* INITIALIZATION */
+/* ================================================= */
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. تحميل المكونات أولاً
+    await loadComponents();
+    
+    // 2. حماية الصفحات
+    const protectedPaths = ['/pages/dashboard', '/pages/portfolio', '/pages/investments', '/pages/profile', '/pages/security', '/pages/reports'];
+    if (protectedPaths.some(path => window.location.pathname.includes(path)) && !Session.isLoggedIn()) {
+        window.location.replace('/auth/auth/login/login.html');
     }
-    return user.permissions.includes(permission);
-}
 
-/* ================================================= */
-/* LOGOUT */
-/* ================================================= */
-function logout() {
-    // 🎯 تنظيف شامل وحماية مطلقة لمسار التوجيه
-    Storage.clear();
-    localStorage.removeItem('tera_token');
-    window.location.replace('/auth/auth/login/login.html');
-}
-
-/* ================================================= */
-/* COPY */
-/* ================================================= */
-function copyText(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => {
-            successAlert('تم النسخ بنجاح');
-        })
-        .catch(() => {
-            errorAlert('فشل النسخ');
-        });
-}
-
-/* ================================================= */
-/* NUMBER FORMAT */
-/* ================================================= */
-function formatCurrency(value) {
-    return new Intl.NumberFormat('ar-SA', {
-        style: 'currency',
-        currency: 'SAR'
-    }).format(value);
-}
-
-/* ================================================= */
-/* PERCENTAGE */
-/* ================================================= */
-function formatPercentage(value) {
-    return `${value}%`;
-}
-
-/* ================================================= */
-/* DOWNLOAD */
-/* ================================================= */
-function downloadFile(url) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-}
-
-/* ================================================= */
-/* TOOLTIP */
-/* ================================================= */
-function initializeTooltips() {
-    document.querySelectorAll('[data-tooltip]').forEach(element => {
-        element.title = element.dataset.tooltip;
-    });
-}
-
-/* ================================================= */
-/* SCROLL */
-/* ================================================= */
-function scrollTopSmooth() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
-
-/* ================================================= */
-/* DEBUG */
-/* ================================================= */
-if (TERA.debug) {
-    console.log('TERA Core Loaded Successfully');
-}
+    // 3. تفعيل الأدوات
+    console.log('TERA Core System Active');
+});
