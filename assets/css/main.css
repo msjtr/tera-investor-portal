@@ -1,5 +1,6 @@
 /* ================================================= */
 /* TERA DESIGN SYSTEM - النُسخة النهائية (LAYOUT FIXED) */
+/* تم ضبط التباعد (Spacing) وتثبيت الحاويات */
 /* ================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -17,12 +18,14 @@
     --tera-radius: 16px;
     --font-heading: 'Tajawal', sans-serif;
     --font-body: 'Cairo', sans-serif;
+    /* متغيرات المسافات */
+    --gap-md: 24px;
+    --gap-lg: 32px;
 }
 
 /* ================================================= */
 /* LAYOUT STRUCTURE (إصلاح تداخل العناصر) */
 /* ================================================= */
-/* نجعل الصفحة كاملة الارتفاع ونوزعها بنظام Flex */
 body {
     display: flex;
     min-height: 100vh;
@@ -34,69 +37,73 @@ body {
     text-align: right;
 }
 
-/* القائمة الجانبية ثابتة العرض */
 #sidebar-container {
     width: 280px;
     flex-shrink: 0;
+    background: var(--tera-white);
+    border-left: 1px solid var(--tera-border);
 }
 
-/* المحتوى الرئيسي يملأ المساحة المتبقية */
 .tera-main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     width: calc(100% - 280px);
-    padding: 0;
     min-height: 100vh;
 }
 
-/* الهيدر والمحتوى والفوتر داخل الماين */
-#header-container { width: 100%; flex-shrink: 0; }
-.page-wrapper { flex-grow: 1; padding: 20px; }
-#footer-container { width: 100%; flex-shrink: 0; margin-top: auto; }
+/* التباعد داخل المحتوى */
+.page-wrapper {
+    flex-grow: 1;
+    padding: var(--gap-lg); /* تباعد ثابت للحواف */
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md); /* تباعد عمودي بين الأقسام */
+}
 
 /* ================================================= */
-/* GLOBAL ELEMENTS */
+/* GLOBAL ELEMENTS & COMPONENTS */
 /* ================================================= */
-h1, h2, h3, h4, h5, h6, .page-title {
+h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     color: var(--tera-primary);
     font-weight: 800;
+    margin-bottom: 0.5em;
 }
 
-/* البطاقات (Stat Cards) */
+/* البطاقات (Stat Cards) مع تباعد محسّن */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--gap-md);
+}
+
 .stat-card { 
     background: var(--tera-white); 
     border-radius: var(--tera-radius); 
-    padding: 25px; 
+    padding: 24px; 
     box-shadow: var(--tera-shadow);
     border-right: 4px solid var(--tera-secondary);
-    transition: transform 0.3s ease;
 }
-.stat-card:hover { transform: translateY(-5px); }
-.stat-value { color: var(--tera-primary); font-size: 28px; font-weight: 800; margin-top: 10px; }
 
 /* الجداول (Tables) */
-.tera-table { width: 100%; border-collapse: collapse; background: var(--tera-white); border-radius: var(--tera-radius); overflow: hidden; }
-.tera-table th { background: #F1F5F9; padding: 18px; text-align: right; font-family: var(--font-heading); color: var(--tera-primary); }
-.tera-table td { padding: 18px; border-bottom: 1px solid var(--tera-border); }
-
-/* الأزرار (Buttons) */
-.btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
+.table-responsive {
+    background: var(--tera-white);
+    border-radius: var(--tera-radius);
+    padding: 20px;
+    box-shadow: var(--tera-shadow);
 }
-.btn-primary { background: var(--tera-primary); color: white; }
-.btn-primary:hover { background: var(--tera-primary-dark); }
 
-/* التجاوب */
+.tera-table { width: 100%; border-collapse: collapse; }
+.tera-table th { padding: 20px; text-align: right; border-bottom: 2px solid var(--tera-bg); color: var(--tera-primary); }
+.tera-table td { padding: 20px; border-bottom: 1px solid var(--tera-border); }
+
+/* ================================================= */
+/* RESPONSIVE & SPACING FIX */
+/* ================================================= */
 @media (max-width: 992px) {
     body { flex-direction: column; }
-    #sidebar-container { width: 100%; }
+    #sidebar-container { width: 100%; border-left: none; border-bottom: 1px solid var(--tera-border); }
     .tera-main-content { width: 100%; }
+    .page-wrapper { padding: 15px; }
 }
