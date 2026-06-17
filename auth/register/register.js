@@ -1,9 +1,9 @@
 /**
  * بوابة الشركاء - منصة تيرا
- * نظام التحقق الفوري الصارم وقفل الأقسام البرمجي (مرحلتين فقط)
+ * نظام التحقق الفوري الصارم وقفل الأقسام البرمجي المتوافق مع الترتيب والمراحل الجديدة
  */
 
-// محاكاة البيانات المستخدمة مسبقاً لمنع التكرار الفوري حيّاً
+// محاكاة البيانات المستخدمة مسبقاً في قواعد بيانات تيرا لضمان الفحص الفوري حيّاً
 const mockedUsedData = {
     usernames: ['mohammed', 'tera_partner', 'admin_saleh'],
     emails: ['test@tera.sa', 'info@itqan.plus']
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     bindRealtimeStage1();
     bindStage2Agreements();
     
-    // فحص أولي لتثبيت قفل النظام
+    // تشغيل القفل الصارم في البداية لمنع التخطي التلقائي
     executeGlobalStageValidator();
 });
 
@@ -109,7 +109,7 @@ function isCurrentStageValid(stage) {
 }
 
 // -------------------------------------------------------------
-// محرك وتدقيق المرحلة الأولى بالبيانات المضافة (الاسم والجوال العربي والخليجي)
+// محرك وتدقيق المرحلة الأولى بالبيانات المحدثة والترتيب الجغرافي الحرفي
 // -------------------------------------------------------------
 function bindRealtimeStage1() {
     const nameArInput = document.getElementById("fullname_ar");
@@ -127,11 +127,11 @@ function bindRealtimeStage1() {
     passwordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); });
     cpasswordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); });
 
-    // تصفية وتنسيق رقم الجوال فورياً ومنع الصفر الأول وحذفه تلقائياً
+    // تنظيف وحذف الصفر الأول تلقائياً وقبول أرقام فقط حياً
     mobileInput.addEventListener("input", function() {
         let val = mobileInput.value.replace(/\D/g, ''); // أرقام فقط
         if (val.startsWith('0')) {
-            val = val.substring(1); // حذف الصفر الأول تلقائياً
+            val = val.substring(1); // حذف الصفر الأول تلقائياً عند الإدخال
         }
         mobileInput.value = val;
         
@@ -156,7 +156,7 @@ function validateArabicName() {
     const status = document.getElementById("name_ar-status");
     const err = document.getElementById("name_ar-error");
 
-    // قبول الأحرف العربية والمسافات فقط ومنع الرموز والأرقام تماماً
+    // التحقق الصارم من قبول الأحرف العربية والمسافات فقط وحظر الأرقام والرموز
     const isArabicOnly = /^[\u0600-\u06FF\s]+$/.test(val) && !/[0-9]/.test(val);
     
     if (isArabicOnly && val.trim().length > 3) {
@@ -164,7 +164,7 @@ function validateArabicName() {
         return true;
     } else {
         rule.className = "invalid"; rule.innerHTML = "❌ أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)"; status.textContent = "❌";
-        if(val.length > 0) err.textContent = "يجب إدخال الاسم باللغة العربية فقط بدون أرقام أو رموز.";
+        if(val.length > 0) err.textContent = "يجب إدخال الاسم باللغة العربية الصحيحة فقط كما هو مدون في وثائقك الرسمية.";
         return false;
     }
 }
@@ -361,6 +361,6 @@ function triggerStageVisualErrors(stage) {
 
 function submitForm() {
     if (validateStage1Logic() && validateStage2Logic()) {
-        alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني.");
+        alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني المسجل.");
     }
 }
