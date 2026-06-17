@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | بوابة الشركاء - تيرا</title>
+    
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
+    <link rel="stylesheet" href="login.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+</head>
+<body>
+    <div class="auth-layout">
+        <div class="auth-container">
+            <div class="text-center mb-5">
+                <img src="../../images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
+                <h3 class="page-subtitle">تسجيل الدخول</h3>
+                <p class="welcome-text">مرحباً بك مجدداً. يرجى إدخال بيانات الحساب للوصول إلى لوحة التحكم.</p>
+            </div>
+
+            <div class="error-summary-box id="loginErrorBox" style="display: none;">
+                <span class="error-box-icon">❌</span>
+                <span id="errorBoxText">اسم المستخدم أو كلمة المرور غير صحيحة.</span>
+            </div>
+
+            <form id="teraLoginForm" onsubmit="event.preventDefault(); handleLoginValidation();">
+                
+                <div class="form-field-group">
+                    <label class="field-label">اسم المستخدم أو البريد الإلكتروني <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" id="login_username" class="form-input-control" placeholder="أدخل اسم المستخدم أو البريد" autocomplete="off" required>
+                    </div>
+                    <div class="error-feedback-msg" id="username-field-error"></div>
+                </div>
+
+                <div class="form-field-group">
+                    <div class="field-label-flex">
+                        <label class="field-label">كلمة المرور <span class="required">*</span></label>
+                        <a href="../forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور" required>
+                    </div>
+                    <div class="checkbox-options-container mt-2">
+                        <label class="checkbox-toggle-label"><input type="checkbox" id="show_login_password"> إظهار كلمة المرور</label>
+                    </div>
+                    <div class="error-feedback-msg" id="password-field-error"></div>
+                </div>
+
+                <div class="form-field-group remember-me-box">
+                    <label class="checkbox-toggle-label">
+                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
+                    </label>
+                </div>
+
+                <div class="form-actions-block mt-4">
+                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">تسجيل الدخول</button>
+                </div>
+            </form>
+
+            <div class="bottom-routing-footer-links mt-5 text-center">
+                <p>ليس لديك حساب شريك؟ <a href="../register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
+                <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
