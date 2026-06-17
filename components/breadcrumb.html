@@ -1,1 +1,24 @@
+<nav class="tera-breadcrumb" aria-label="Breadcrumb">
+    <ol class="breadcrumb-list">
+        <li class="breadcrumb-item">
+            <a href="../dashboard/index.html"><i class="fa-solid fa-house"></i></a>
+        </li>
+        <li class="breadcrumb-separator"><i class="fa-solid fa-chevron-left"></i></li>
+        <li class="breadcrumb-item active" id="breadcrumb-current">نظرة عامة</li>
+    </ol>
+</nav>
 
+<style>
+    .tera-breadcrumb { margin-bottom: 20px; }
+    .breadcrumb-list { list-style: none; display: flex; align-items: center; gap: 10px; }
+    .breadcrumb-item a { color: #64748b; text-decoration: none; font-size: 14px; transition: 0.3s; }
+    .breadcrumb-item a:hover { color: var(--tera-teal); }
+    .breadcrumb-separator { color: #cbd5e1; font-size: 12px; }
+    .breadcrumb-item.active { color: var(--tera-navy); font-weight: 700; font-size: 14px; }
+</style>
+
+<script>
+    // تحديث النص في الـ breadcrumb تلقائياً بناءً على عنوان الصفحة
+    const pageTitle = document.title.split('|')[0].trim();
+    document.getElementById('breadcrumb-current').textContent = pageTitle;
+</script>
