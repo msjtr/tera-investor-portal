@@ -1,6 +1,6 @@
 /**
  * بوابة الشركاء - منصة تيرا
- * نظام التحقق الفوري الحصري والمعزز بقنوات تنبيه مركزية لمنع التخطي التلقائي
+ * محرك التحقق اللحظي الصارم وحظر الملاحة التلقائي
  */
 
 const mockedUsedData = {
@@ -15,36 +15,45 @@ document.addEventListener("DOMContentLoaded", function() {
     initStageNavigation();
     bindRealtimeStage1();
     bindStage2Agreements();
-    bindPasswordVisibilityToggle(); // إظهار الكلمات بشكل مضمون وموثوق
+    bindPasswordVisibilityToggle();
     
-    // تشغيل أولي لمنع التخطي العشوائي للأزرار
+    // تشغيل أولي لقفل وحماية الأزرار من الكبس العشوائي
     executeGlobalStageValidator();
 });
 
 function initStageNavigation() {
     const nextBtn = document.getElementById("action-next-btn");
     const prevBtn = document.getElementById("action-prev-btn");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
 
-    nextBtn.addEventListener("click", function() {
-        if (currentStage === 1) {
-            // فحص إجباري وصارم وصريح للمرحلة الأولى
-            const isS1Valid = validateStage1Logic();
-            if (isS1Valid) {
-                currentStage = 2;
-                renderStageView(currentStage);
-            } else {
-                // إطلاق التنبيه المركزي وقنوات التظليل للأطر فورا
-                triggerStageVisualErrors(1);
+    if (nextBtn) {
+        nextBtn.addEventListener("click", function() {
+            if (currentStage === 1) {
+                const isS1Valid = validateStage1Logic();
+                if (isS1Valid) {
+                    currentStage = 2;
+                    renderStageView(currentStage);
+                } else {
+                    triggerStageVisualErrors(1);
+                }
             }
-        }
-    });
+        });
+    }
 
-    prevBtn.addEventListener("click", function() {
-        if (currentStage > 1) {
-            currentStage = 1;
-            renderStageView(currentStage);
-        }
-    });
+    if (prevBtn) {
+        prevBtn.addEventListener("click", function() {
+            if (currentStage > 1) {
+                currentStage = 1;
+                renderStageView(currentStage);
+            }
+        });
+    }
+
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", function() {
+            document.getElementById("centralErrorModal").style.display = "none";
+        });
+    }
 }
 
 function renderStageView(stage) {
@@ -68,23 +77,23 @@ function renderStageView(stage) {
     }
 
     const prevBtn = document.getElementById("action-prev-btn");
-    prevBtn.style.visibility = stage === 1 ? "hidden" : "visible";
+    if(prevBtn) prevBtn.style.visibility = stage === 1 ? "hidden" : "visible";
 
     const nextBtn = document.getElementById("action-next-btn");
     const submitBtn = document.getElementById("action-submit-btn");
 
-    if (stage === totalStages) {
-        nextBtn.style.display = "none";
-        submitBtn.style.display = "inline-block";
-    } else {
-        nextBtn.style.display = "inline-block";
-        submitBtn.style.display = "none";
+    if(nextBtn && submitBtn) {
+        if (stage === totalStages) {
+            nextBtn.style.display = "none";
+            submitBtn.style.display = "inline-block";
+        } else {
+            nextBtn.style.display = "inline-block";
+            submitBtn.style.display = "none";
+        }
     }
-
     executeGlobalStageValidator();
 }
 
-// معالجة وإظهار كلمات المرور بشكل منفصل ومحمي من الانهيار
 function bindPasswordVisibilityToggle() {
     const showPasswordCheck = document.getElementById("show-password");
     const showCPasswordCheck = document.getElementById("show-cpassword");
@@ -92,13 +101,12 @@ function bindPasswordVisibilityToggle() {
     const confirmPasswordInput = document.getElementById("confirm_password");
 
     if (showPasswordCheck && passwordInput) {
-        showPasswordCheck.addEventListener("click", function() {
+        showPasswordCheck.addEventListener("change", function() {
             passwordInput.type = this.checked ? "text" : "password";
         });
     }
-
     if (showCPasswordCheck && confirmPasswordInput) {
-        showCPasswordCheck.addEventListener("click", function() {
+        showCPasswordCheck.addEventListener("change", function() {
             confirmPasswordInput.type = this.checked ? "text" : "password";
         });
     }
@@ -117,10 +125,12 @@ function executeGlobalStageValidator() {
     updateRuleMarker('f-rule-otp', isS1Valid && isS2Valid);
 
     const submitBtn = document.getElementById("action-submit-btn");
-    if (isS1Valid && isS2Valid) {
-        submitBtn.removeAttribute("disabled");
-    } else {
-        submitBtn.setAttribute("disabled", "true");
+    if (submitBtn) {
+        if (isS1Valid && isS2Valid) {
+            submitBtn.removeAttribute("disabled");
+        } else {
+            submitBtn.setAttribute("disabled", "true");
+        }
     }
 }
 
@@ -133,47 +143,43 @@ function bindRealtimeStage1() {
     const passwordInput = document.getElementById("password");
     const cpasswordInput = document.getElementById("confirm_password");
 
-    // فحص وتطهير حقل الاسم العربي حياً ومنع الأحرف الإنجليزية والرموز فوراً
-    nameArInput.addEventListener("input", function() {
-        let cleanVal = this.value.replace(/[a-zA-Z0-90-9~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/g, '');
-        if (this.value !== cleanVal) {
-            this.value = cleanVal; // مسح وإزالة الحرف الإنجليزي أو الرقم في نفس اللحظة
-        }
-        validateArabicName();
-        executeGlobalStageValidator();
-    });
+    if (nameArInput) {
+        nameArInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[a-zA-Z0-9~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/g, '');
+            validateArabicName();
+            executeGlobalStageValidator();
+        });
+    }
 
-    usernameInput.addEventListener("input", () => { validateUsernameField(); executeGlobalStageValidator(); });
-    emailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); });
-    cemailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); });
-    passwordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); });
-    cpasswordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); });
+    if (mobileInput) {
+        mobileInput.addEventListener("input", function() {
+            let val = this.value.replace(/\D/g, '');
+            while (val.startsWith('0')) { val = val.substring(1); }
+            this.value = val;
+            
+            const isMobValid = val.length >= 8 && val.length <= 11;
+            updateRuleMarker('mob-rule-format', isMobValid);
+            document.getElementById("mobile-status").textContent = isMobValid ? "✅" : "❌";
+            
+            if(isMobValid) {
+                this.classList.remove("is-field-invalid"); this.classList.add("is-field-valid");
+            } else {
+                this.classList.remove("is-field-valid"); this.classList.add("is-field-invalid");
+            }
+            executeGlobalStageValidator();
+        });
+    }
 
-    // الفحص الصارم لرقم الجوال وحظر وحذف الصفر الأول تلقائياً حياً
-    mobileInput.addEventListener("input", function() {
-        let val = this.value.replace(/\D/g, ''); // أرقام فقط
-        while (val.startsWith('0')) {
-            val = val.substring(1); // طرد وحذف الصفر الأول تماماً ومباشرة
-        }
-        this.value = val;
-        
-        const isMobValid = val.length >= 8 && val.length <= 11;
-        updateRuleMarker('mob-rule-format', isMobValid);
-        document.getElementById("mobile-status").textContent = isMobValid ? "✅" : "❌";
-        
-        const inputControl = document.getElementById("mobile_number");
-        if(isMobValid) {
-            inputControl.classList.remove("is-field-invalid"); inputControl.classList.add("is-field-valid");
-        } else {
-            inputControl.classList.remove("is-field-valid"); inputControl.classList.add("is-field-invalid");
-        }
-        
-        executeGlobalStageValidator();
-    });
+    if (usernameInput) { usernameInput.addEventListener("input", () => { validateUsernameField(); executeGlobalStageValidator(); }); }
+    if (emailInput) { emailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); }); }
+    if (cemailInput) { cemailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); }); }
+    if (passwordInput) { passwordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); }); }
+    if (cpasswordInput) { cpasswordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); }); }
 }
 
 function validateArabicName() {
     const inputControl = document.getElementById("fullname_ar");
+    if (!inputControl) return false;
     const val = inputControl.value;
     const rule = document.getElementById("nar-rule-char");
     const status = document.getElementById("name_ar-status");
@@ -181,22 +187,23 @@ function validateArabicName() {
 
     const isArabicOnly = /^[\u0600-\u06FF\s]+$/.test(val);
     
-    if (isArabicOnly && val.trim().length > 3) {
+    if (isArabicOnly && val.trim().length >= 4) {
         if (rule) { rule.className = "valid"; const mk = rule.querySelector('.icon-marker'); if(mk) mk.innerHTML = "✅"; }
-        status.textContent = "✅"; err.textContent = "";
+        if (status) status.textContent = "✅"; if (err) err.textContent = "";
         inputControl.classList.remove("is-field-invalid"); inputControl.classList.add("is-field-valid");
         return true;
     } else {
         if (rule) { rule.className = "invalid"; const mk = rule.querySelector('.icon-marker'); if(mk) mk.innerHTML = "❌"; }
-        status.textContent = "❌";
+        if (status) status.textContent = "❌";
         inputControl.classList.remove("is-field-valid"); inputControl.classList.add("is-field-invalid");
-        if(val.length > 0) err.textContent = "يجب إدخال الاسم باللغة العربية فقط (4 خانات فأكثر) بدون أرقام أو رموز.";
+        if(val.length > 0 && err) err.textContent = "الاسم يجب أن يكون باللغة العربية ومطابقًا للوثائق الرسمية (4 خانات فأكثر).";
         return false;
     }
 }
 
 function validateUsernameField() {
     const inputControl = document.getElementById("username");
+    if (!inputControl) return false;
     const val = inputControl.value;
     const err = document.getElementById("username-error");
     const status = document.getElementById("username-status");
@@ -212,19 +219,21 @@ function validateUsernameField() {
     updateRuleMarker('u-rule-len', rLen);
     updateRuleMarker('u-rule-start', rStart);
     updateRuleMarker('u-rule-char', rChar);
-    updateRuleMarker('u-rule-num', rNum);
+    updateRuleMarker('u-rule-num', /[0-9]/.test(val));
+    updateRuleMarker('u-rule-upper', /[A-Z]/.test(val));
+    updateRuleMarker('u-rule-lower', /[a-z]/.test(val));
     updateRuleMarker('u-rule-space', rSpace);
     updateRuleMarker('u-rule-special', rSpecial);
     updateRuleMarker('u-rule-unique', rUnique && val.length > 0);
 
-    if (rLen && rStart && rChar && rNum && rSpace && rSpecial && rUnique) {
-        err.textContent = ""; status.textContent = "✅";
+    if (rLen && rStart && rChar && rSpace && rSpecial && rUnique && rNum) {
+        if(err) err.textContent = ""; if(status) status.textContent = "✅";
         inputControl.classList.remove("is-field-invalid"); inputControl.classList.add("is-field-valid");
         return true;
     } else {
-        status.textContent = "❌";
+        if(status) status.textContent = "❌";
         inputControl.classList.remove("is-field-valid"); inputControl.classList.add("is-field-invalid");
-        if (!rUnique && val.length > 0) err.textContent = "اسم المستخدم مستخدم مسبقاً.";
+        if (!rUnique && val.length > 0 && err) err.textContent = "اسم المستخدم مستخدم مسبقاً.";
         return false;
     }
 }
@@ -232,6 +241,8 @@ function validateUsernameField() {
 function validateEmailFields() {
     const emailControl = document.getElementById("email");
     const cemailControl = document.getElementById("confirm_email");
+    if (!emailControl || !cemailControl) return false;
+    
     const email = emailControl.value;
     const cemail = cemailControl.value;
     const emailStatus = document.getElementById("email-status");
@@ -247,18 +258,18 @@ function validateEmailFields() {
     updateRuleMarker('e-rule-unique', rUnique && email.length > 0);
     updateRuleMarker('e-rule-match', rMatch);
 
-    emailStatus.textContent = (rValid && rUnique) ? "✅" : "❌";
+    if(emailStatus) emailStatus.textContent = (rValid && rUnique) ? "✅" : "❌";
     if(rValid && rUnique) { emailControl.classList.add("is-field-valid"); emailControl.classList.remove("is-field-invalid"); }
     else { emailControl.classList.add("is-field-invalid"); emailControl.classList.remove("is-field-valid"); }
     
     if (rValid && rUnique && rMatch) {
-        cemailStatus.textContent = "✅"; cemailError.textContent = "";
+        if(cemailStatus) cemailStatus.textContent = "✅"; if(cemailError) cemailError.textContent = "";
         cemailControl.classList.remove("is-field-invalid"); cemailControl.classList.add("is-field-valid");
         return true;
     } else {
-        cemailStatus.textContent = "❌";
+        if(cemailStatus) cemailStatus.textContent = "❌";
         cemailControl.classList.remove("is-field-valid"); cemailControl.classList.add("is-field-invalid");
-        if (cemail.length > 0 && !rMatch) cemailError.textContent = "البريد الإلكتروني وتأكيد البريد الإلكتروني غير متطابقين.";
+        if (cemail.length > 0 && !rMatch && cemailError) cemailError.textContent = "البريد الإلكتروني وتأكيد البريد الإلكتروني غير متطابقين.";
         return false;
     }
 }
@@ -266,10 +277,12 @@ function validateEmailFields() {
 function validatePasswordFields() {
     const passControl = document.getElementById("password");
     const cpassControl = document.getElementById("confirm_password");
+    if(!passControl || !cpassControl) return false;
+
     const p = passControl.value;
     const cp = cpassControl.value;
-    const u = document.getElementById("username").value;
-    const e = document.getElementById("email").value;
+    const u = document.getElementById("username") ? document.getElementById("username").value : "";
+    const e = document.getElementById("email") ? document.getElementById("email").value : "";
 
     const pStatus = document.getElementById("password-status");
     const cpStatus = document.getElementById("cpassword-status");
@@ -310,29 +323,42 @@ function validatePasswordFields() {
     const strengthText = document.getElementById("strength-indicator-text");
     const strengthFill = document.getElementById("strength-bar-fill");
 
-    if (p.length === 0 || score <= 1) {
-        strengthText.className = "strength-red"; strengthText.textContent = "🔴 ضعيفة"; strengthFill.style.width = "25%"; strengthFill.style.background = "#E25950";
-    } else if (score === 2) {
-        strengthText.className = "strength-orange"; strengthText.textContent = "🟠 متوسطة"; strengthFill.style.width = "50%"; strengthFill.style.background = "#FFC000";
-    } else if (score === 3) {
-        strengthText.className = "strength-green"; strengthText.textContent = "🟢 قوية"; strengthFill.style.width = "75%"; strengthFill.style.background = "#00AA50";
-    } else if (score === 4) {
-        strengthText.className = "strength-double-green"; strengthText.textContent = "🟢🟢 قوية جداً"; strengthFill.style.width = "100%"; strengthFill.style.background = "#00D46A";
+    if (strengthText && strengthFill) {
+        if (p.length === 0 || score <= 1) {
+            strengthText.className = "strength-red"; strengthText.textContent = "🔴 ضعيفة"; strengthFill.style.width = "25%"; strengthFill.style.background = "#E25950";
+        } else if (score === 2) {
+            strengthText.className = "strength-orange"; strengthText.textContent = "🟠 متوسطة"; strengthFill.style.width = "50%"; strengthFill.style.background = "#FFC000";
+        } else if (score === 3) {
+            strengthText.className = "strength-green"; strengthText.textContent = "🟢 قوية"; strengthFill.style.width = "75%"; strengthFill.style.background = "#00AA50";
+        } else if (score === 4) {
+            strengthText.className = "strength-double-green"; strengthText.textContent = "🟢🟢 قوية جداً"; strengthFill.style.width = "100%"; strengthFill.style.background = "#00D46A";
+        }
     }
 
     const rMatch = (p === cp) && cp.length > 0;
-    updateRuleMarker('p-rule-match', rMatch);
+    
+    // محاكاة المطابقة والتغيير الحرفي للنص البرمجي حسب متطلبات البوابة والنموذج المشروط
+    const matchLi = document.getElementById("p-rule-match");
+    if(matchLi) {
+        if(rMatch) {
+            matchLi.className = "valid";
+            matchLi.innerHTML = `<span class="icon-marker">✅</span> كلمة المرور وتأكيد كلمة المرور متطابقان`;
+        } else {
+            matchLi.className = "invalid";
+            matchLi.innerHTML = `<span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين`;
+        }
+    }
 
-    pStatus.textContent = (score >= 3) ? "✅" : "❌";
+    if(pStatus) pStatus.textContent = (score >= 3) ? "✅" : "❌";
     if(score >= 3) { passControl.classList.add("is-field-valid"); passControl.classList.remove("is-field-invalid"); }
     else { passControl.classList.add("is-field-invalid"); passControl.classList.remove("is-field-valid"); }
 
     if (rMatch && score >= 3) {
-        cpStatus.textContent = "✅"; cpError.textContent = "";
+        if(cpStatus) cpStatus.textContent = "✅"; if(cpError) cpError.textContent = "";
         cpassControl.classList.remove("is-field-invalid"); cpassControl.classList.add("is-field-valid");
         return true;
     } else {
-        cpStatus.textContent = "❌";
+        if(cpStatus) cpStatus.textContent = "❌";
         cpassControl.classList.remove("is-field-valid"); cpassControl.classList.add("is-field-invalid");
         return false;
     }
@@ -343,7 +369,7 @@ function validateStage1Logic() {
     const u = validateUsernameField();
     const e = validateEmailFields();
     const p = validatePasswordFields();
-    const m = document.getElementById("mobile_number").value.length >= 8;
+    const m = document.getElementById("mobile_number") ? document.getElementById("mobile_number").value.length >= 8 : false;
     return n && u && e && p && m;
 }
 
@@ -384,25 +410,21 @@ function updateRuleMarker(elementId, isValid) {
     }
 }
 
-// بناء وتفعيل لوحة الإشعار التنبيهية في منتصف الشاشة وتظليل النواقص بالأحمر
 function triggerStageVisualErrors(stage) {
     if (stage === 1) {
         const errorList = document.getElementById("centralModalErrorList");
-        errorList.innerHTML = ""; // تصفية السجل القديم
+        if(!errorList) return;
+        errorList.innerHTML = "";
         
-        if (!validateArabicName()) errorList.innerHTML += "<li>الاسم الكامل (يجب أن يكون باللغة العربية وصحيحًا)</li>";
-        if (document.getElementById("mobile_number").value.length < 8) errorList.innerHTML += "<li>رقم الجوال (تأكد من إدخال رقم صحيح بدون الصفر الأول)</li>";
-        if (!validateEmailFields()) errorList.innerHTML += "<li>البريد الإلكتروني وتأكيد المطابقة</li>";
-        if (!validateUsernameField()) errorList.innerHTML += "<li>اسم المستخدم (أحرف إنجليزية، من 4 إلى 20 خانة)</li>";
-        if (!validatePasswordFields()) errorList.innerHTML += "<li>كلمة المرور (تأكد من قوتها ومطابقتها التامة)</li>";
+        if (!validateArabicName()) errorList.innerHTML += "<li>الاسم الكامل (يجب أن يكون باللغة العربية فقط ومكتملًا)</li>";
+        if (document.getElementById("mobile_number") && document.getElementById("mobile_number").value.length < 8) errorList.innerHTML += "<li>رقم الجوال (تأكد من إدخال رقم صحيح دون الصفر الأول)</li>";
+        if (!validateEmailFields()) errorList.innerHTML += "<li>البريد الإلكتروني وتأكيد المطابقة والامتثال</li>";
+        if (!validateUsernameField()) errorList.innerHTML += "<li>اسم المستخدم (يجب استيفاء شروط الأحرف الإنجليزية والرقابة حياً)</li>";
+        if (!validatePasswordFields()) errorList.innerHTML += "<li>كلمة المرور وتأكيد المطابقة وقوتها</li>";
         
-        // إظهار المودال بالمنتصف تماماً
-        document.getElementById("centralErrorModal").style.display = "flex";
+        const modal = document.getElementById("centralErrorModal");
+        if(modal) modal.style.display = "flex";
     }
-}
-
-function closeCentralModal() {
-    document.getElementById("centralErrorModal").style.display = "none";
 }
 
 function submitForm() {
