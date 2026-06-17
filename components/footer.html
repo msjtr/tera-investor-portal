@@ -13,12 +13,14 @@
 
 <style>
     .tera-footer {
-        margin-top: auto;
+        width: 100%;
+        margin-top: auto; /* هذا هو مفتاح دفع الفوتر للأسفل دائماً */
         padding: 30px 40px;
-        border-top: 1px solid rgba(226, 232, 240, 0.8);
-        background: rgba(255, 255, 255, 0.5);
+        border-top: 1px solid var(--tera-border);
+        background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(10px);
     }
+
     .footer-content {
         display: flex;
         justify-content: space-between;
@@ -26,17 +28,33 @@
         max-width: 1200px;
         margin: 0 auto;
     }
-    .footer-info p { color: #64748b; font-size: 14px; }
-    .footer-links { display: flex; gap: 20px; }
+
+    .footer-info p { 
+        color: var(--tera-text-light); 
+        font-size: 14px; 
+        font-family: var(--font-body);
+    }
+
+    .footer-links { display: flex; gap: 25px; }
+
     .footer-links a { 
-        color: #64748b; 
+        color: var(--tera-text-light); 
         text-decoration: none; 
         font-size: 14px; 
-        transition: 0.3s;
+        font-family: var(--font-heading);
+        transition: 0.3s ease;
     }
-    .footer-links a:hover { color: var(--tera-teal); }
+
+    .footer-links a:hover { 
+        color: var(--tera-secondary); /* لون السهم في شعار تيرا */
+    }
 
     @media (max-width: 768px) {
-        .footer-content { flex-direction: column; gap: 15px; text-align: center; }
+        .tera-footer { padding: 20px; }
+        .footer-content { 
+            flex-direction: column; 
+            gap: 15px; 
+            text-align: center; 
+        }
     }
 </style>
