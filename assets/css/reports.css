@@ -1,18 +1,20 @@
-/* ==========================================
-   TERA Investor Portal - Advanced Reports & Filters
-========================================== */
+/* ================================================= */
+/* TERA Investor Portal - Advanced Reports & Filters */
+/* إصدار مستقر متوافق مع نظام الهوية البصرية */
+/* ================================================= */
 
-/* شريط تصفية وفرز البيانات العلوي */
+/* شريط تصفية وفرز البيانات */
 .filter-bar-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
+    background: var(--tera-white, #ffffff);
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
+    padding: 24px;
     margin-bottom: 24px;
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 20px;
     align-items: flex-end;
+    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
 }
 
 .filter-control-group {
@@ -20,55 +22,59 @@
     flex-direction: column;
     gap: 8px;
     flex-grow: 1;
-    min-width: 180px;
+    min-width: 200px;
 }
 
-.filter-select, .filter-date-input {
+.filter-select, 
+.filter-date-input {
     width: 100%;
-    padding: 10px 14px;
-    background: var(--bg-global);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
+    padding: 12px 16px;
+    background: #F8FAFC;
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-main);
+    color: var(--tera-text, #1E293B);
     outline: none;
+    transition: all 0.3s ease;
 }
 
-.filter-select:focus, .filter-date-input:focus {
-    border-color: var(--primary-teal);
+.filter-select:focus, 
+.filter-date-input:focus {
+    border-color: var(--tera-secondary, #00C2C7);
+    box-shadow: 0 0 0 3px rgba(0, 194, 199, 0.1);
 }
 
-/* الجداول المالية المخصصة للتقارير الضخمة */
+/* الجداول المالية المخصصة للتقارير */
 .reports-table-wrapper {
     width: 100%;
     overflow-x: auto;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-smooth);
+    background: var(--tera-white, #ffffff);
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
+    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
 }
 
 .tera-table {
     width: 100%;
     border-collapse: collapse;
     text-align: right;
-    font-size: 14px;
+    font-size: 0.9rem;
 }
 
 .tera-table th {
-    background: #f1f5f9;
-    padding: 16px;
+    background: #F1F5F9;
+    padding: 18px;
     font-weight: 800;
-    color: var(--secondary-dark);
-    border-bottom: 2px solid var(--border);
+    color: var(--tera-primary, #0A1B3F);
+    border-bottom: 2px solid var(--tera-border, #E2E8F0);
     white-space: nowrap;
 }
 
 .tera-table td {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-main);
+    padding: 18px;
+    border-bottom: 1px solid var(--tera-border, #E2E8F0);
+    color: var(--tera-text, #1E293B);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -77,24 +83,29 @@
     background: rgba(248, 250, 252, 0.8);
 }
 
-/* أزرار تصدير البيانات (PDF / Excel) */
+/* أزرار تصدير البيانات */
 .export-actions-wrap {
     display: flex;
-    gap: 10px;
+    gap: 12px;
 }
 
 .btn-export-trigger {
-    padding: 10px 18px;
-    font-size: 13px;
+    padding: 12px 20px;
+    font-size: 0.85rem;
     font-weight: 700;
-    border-radius: var(--radius-sm);
+    border-radius: var(--tera-radius, 16px);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--tera-border, #E2E8F0);
     background: #ffffff;
+    transition: all 0.3s ease;
 }
 
-.btn-export-trigger.pdf { color: var(--danger); border-color: rgba(239, 68, 68, 0.2); }
-.btn-export-trigger.excel { color: #16a34a; border-color: rgba(22, 163, 74, 0.2); }
+.btn-export-trigger:hover {
+    background: #F8FAFC;
+}
+
+.btn-export-trigger.pdf { color: #EF4444; border-color: rgba(239, 68, 68, 0.2); }
+.btn-export-trigger.excel { color: #16A34A; border-color: rgba(22, 163, 74, 0.2); }
