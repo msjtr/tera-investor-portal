@@ -5,58 +5,56 @@
 
 const TERA = {
     version: '1.0.0',
-    debug: true
+    debug: true,
+    // تحديد المسار الأساسي للمشروع لضمان عمل المكونات من أي مكان
+    baseURL: window.location.origin + '/tera-investor-portal-main'
 };
 
 /* ================================================= */
-/* UI FEEDBACK - (إصلاح اللودر) */
+/* UI FEEDBACK */
 /* ================================================= */
 function showLoader() {
     let loader = document.getElementById('tera-loader');
-    if (loader) {
-        loader.style.display = 'flex';
-    }
+    if (loader) loader.style.display = 'flex';
 }
 
 function hideLoader() {
     let loader = document.getElementById('tera-loader');
-    if (loader) {
-        loader.style.display = 'none';
-    }
+    if (loader) loader.style.display = 'none';
 }
 
 /* ================================================= */
 /* DYNAMIC COMPONENT LOADER */
 /* ================================================= */
 async function loadComponents() {
-    // تحديد المسار النسبي الصحيح بناءً على عمق المجلدات
-    const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
-    const depth = pathParts.length > 1 ? '../..' : '.';
-    
+    // نستخدم المسارات المطلوبة من جذر المشروع لضمان الاستقرار
     const components = [
-        { selector: '#header-container', path: `${depth}/components/header.html` },
-        { selector: '#footer-container', path: `${depth}/components/footer.html` },
-        { selector: '#sidebar-container', path: `${depth}/components/sidebar.html` },
-        { selector: '#loader-container', path: `${depth}/components/loader.html` },
-        { selector: '#alerts-container', path: `${depth}/components/alerts.html` }
+        { selector: '#header-container', path: '/components/header.html' },
+        { selector: '#footer-container', path: '/components/footer.html' },
+        { selector: '#sidebar-container', path: '/components/sidebar.html' },
+        { selector: '#loader-container', path: '/components/loader.html' },
+        { selector: '#alerts-container', path: '/components/alerts.html' }
     ];
 
     for (const comp of components) {
         const element = document.querySelector(comp.selector);
         if (element) {
             try {
+                // محاولة جلب المكون
                 const res = await fetch(comp.path);
                 if (res.ok) {
                     element.innerHTML = await res.text();
+                } else {
+                    console.warn(`فشل تحميل المكون: ${comp.path} - حالة: ${res.status}`);
                 }
             } catch (err) {
-                console.warn(`خطأ في تحميل المكون: ${comp.path}`);
+                console.error(`خطأ في الاتصال بالمكون: ${comp.path}`, err);
             }
         }
     }
     
-    // تأخير بسيط لضمان ظهور المحتوى بسلاسة بعد إخفاء اللودر
-    setTimeout(hideLoader, 500);
+    // إخفاء اللودر بعد اكتمال التحميل
+    setTimeout(hideLoader, 300);
 }
 
 /* ================================================= */
@@ -64,10 +62,21 @@ async function loadComponents() {
 /* ================================================= */
 const Session = {
     isLoggedIn: () => !!localStorage.getItem('tera_token'),
+    
     logout: () => {
         localStorage.clear();
-        // التأكد من توجيه المستخدم لمسار تسجيل الدخول الصحيح
         window.location.href = '/auth/auth/login/login.html';
+    },
+
+    checkAuth: () => {
+        const protectedPaths = ['/dashboard', '/portfolio', '/investments', '/profile', '/security', '/reports'];
+        const currentPath = window.location.pathname;
+        
+        const isProtected = protectedPaths.some(path => currentPath.includes(path));
+        
+        if (isProtected && !Session.isLoggedIn()) {
+            window.location.replace('/auth/auth/login/login.html');
+        }
     }
 };
 
@@ -75,19 +84,14 @@ const Session = {
 /* INITIALIZATION */
 /* ================================================= */
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. إظهار اللودر فوراً
+    // 1. فحص الجلسة أولاً
+    Session.checkAuth();
+
+    // 2. إظهار اللودر
     showLoader();
 
-    // 2. تحميل المكونات
+    // 3. تحميل المكونات
     await loadComponents();
     
-    // 3. حماية الصفحات
-    const protectedPaths = ['/pages/dashboard', '/pages/portfolio', '/pages/investments', '/pages/profile', '/pages/security', '/pages/reports'];
-    const currentPath = window.location.pathname;
-    
-    if (protectedPaths.some(path => currentPath.includes(path)) && !Session.isLoggedIn()) {
-        window.location.replace('/auth/auth/login/login.html');
-    }
-
-    console.log('TERA Core System Active');
+    console.log('TERA Core System Initialized Successfully.');
 });
