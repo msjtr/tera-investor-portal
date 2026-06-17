@@ -65,22 +65,36 @@
         font-weight: 700; cursor: pointer; border-radius: 12px; transition: 0.3s;
     }
     .btn-logout:hover { background: rgba(239, 68, 68, 0.05); }
+
+    /* تحسين إضافي للشاشات الصغيرة */
+    @media (max-width: 992px) {
+        .tera-sidebar { position: fixed; right: -280px; top: 0; background: white; z-index: 1000; }
+        .tera-sidebar.active { right: 0; }
+    }
 </style>
 
 <script>
-    // تفعيل الرابط الحالي بناءً على المسار
-    const currentPath = window.location.pathname;
+    // 1. تفعيل الرابط النشط تلقائياً
+    const path = window.location.pathname;
     document.querySelectorAll('.menu-item').forEach(item => {
-        if (currentPath.includes(item.getAttribute('data-page'))) {
+        if (path.includes(item.getAttribute('data-page'))) {
             item.classList.add('active');
         }
     });
 
-    // ربط زر الخروج
-    document.getElementById('btn-logout').addEventListener('click', () => {
-        if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-            localStorage.clear();
-            window.location.href = '../../index.html';
-        }
-    });
+    // 2. ربط زر الخروج بالدالة المركزية (Session.logout)
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                // نستخدم الدالة المركزية الموجودة في core.js
+                if(typeof Session !== 'undefined') {
+                    Session.logout();
+                } else {
+                    localStorage.clear();
+                    window.location.href = '/auth/auth/login/login.html';
+                }
+            }
+        });
+    }
 </script>
