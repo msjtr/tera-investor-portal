@@ -49,12 +49,14 @@
                     
                     <div class="form-field-group">
                         <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
-                        <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
-                        <span class="field-status-icon" id="name_ar-status">❌</span>
+                        <div class="input-wrapper">
+                            <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
+                            <span class="field-status-icon" id="name_ar-status">❌</span>
+                        </div>
                         <div class="error-feedback-msg" id="name_ar-error"></div>
                         <div class="realtime-validation-box-mini">
                             <ul>
-                                <li id="nar-rule-char">❌ أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
+                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
                             </ul>
                         </div>
                     </div>
@@ -63,89 +65,99 @@
                         <div class="col-inline-5">
                             <div class="form-field-group">
                                 <label class="field-label">مفتاح الدولة <span class="required">*</span></label>
-                                <select id="country_code_select" class="form-input-control">
-                                    <optgroup label="دول الخليج العربي">
-                                        <option value="+966" selected>🇸🇦 السعودية +966</option>
-                                        <option value="+971">🇦🇪 الإمارات +971</option>
-                                        <option value="+965">🇰🇼 الكويت +965</option>
-                                        <option value="+973">🇧🇭 البحرين +973</option>
-                                        <option value="+968">🇴🇲 عمان +968</option>
-                                        <option value="+974">🇶🇦 قطر +974</option>
-                                    </optgroup>
-                                    <optgroup label="الدول العربية">
-                                        <option value="+20">🇪🇬 مصر +20</option>
-                                        <option value="+962">🇯🇴 الأردن +962</option>
-                                        <option value="+964">🇮🇶 العراق +964</option>
-                                        <option value="+961">🇱🇧 لبنان +961</option>
-                                        <option value="+212">🇲🇦 المغرب +212</option>
-                                        <option value="+213">🇩🇿 الجزائر +213</option>
-                                        <option value="+216">🇹🇳 تونس +216</option>
-                                    </optgroup>
-                                </select>
+                                <div class="input-wrapper">
+                                    <select id="country_code_select" class="form-input-control">
+                                        <optgroup label="دول الخليج العربي">
+                                            <option value="+966" selected>🇸🇦 السعودية +966</option>
+                                            <option value="+971">🇦🇪 الإمارات +971</option>
+                                            <option value="+965">🇰🇼 الكويت +965</option>
+                                            <option value="+973">🇧🇭 البحرين +973</option>
+                                            <option value="+968">🇴🇲 عمان +968</option>
+                                            <option value="+974">🇶🇦 قطر +974</option>
+                                        </optgroup>
+                                        <optgroup label="الدول العربية">
+                                            <option value="+20">🇪🇬 مصر +20</option>
+                                            <option value="+962">🇯🇴 الأردن +962</option>
+                                            <option value="+964">🇮🇶 العراق +964</option>
+                                            <option value="+961">🇱🇧 لبنان +961</option>
+                                            <option value="+212">🇲🇦 المغرب +212</option>
+                                            <option value="+213">🇩🇿 الجزائر +213</option>
+                                            <option value="+216">🇹🇳 تونس +216</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div class="col-inline-7">
                             <div class="form-field-group">
                                 <label class="field-label">رقم الجوال <span class="required">*</span></label>
-                                <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
-                                <span class="field-status-icon" id="mobile-status">❌</span>
+                                <div class="input-wrapper">
+                                    <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
+                                    <span class="field-status-icon" id="mobile-status">❌</span>
+                                </div>
                                 <div class="error-feedback-msg" id="mobile-error"></div>
                             </div>
                         </div>
                     </div>
                     <div class="realtime-validation-box-mini mb-4">
                         <ul>
-                            <li id="mob-rule-format">❌ أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
+                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
                         </ul>
                     </div>
 
                     <div class="form-field-group">
                         <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
-                        <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
-                        <span class="field-status-icon" id="email-status">❌</span>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
+                            <span class="field-status-icon" id="email-status">❌</span>
+                        </div>
                         <div class="error-feedback-msg" id="email-error"></div>
                     </div>
 
                     <div class="form-field-group">
                         <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
-                        <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
-                        <span class="field-status-icon" id="cemail-status">❌</span>
+                        <div class="input-wrapper">
+                            <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
+                            <span class="field-status-icon" id="cemail-status">❌</span>
+                        </div>
                         <div class="error-feedback-msg" id="cemail-error"></div>
                         
                         <div class="realtime-validation-box">
                             <h5>التحقق من البريد الإلكتروني</h5>
                             <ul class="validation-rule-list">
-                                <li id="e-rule-valid" class="invalid">❌ بريد إلكتروني صحيح</li>
-                                <li id="e-rule-unique" class="invalid">❌ البريد الإلكتروني غير مستخدم مسبقاً</li>
-                                <li id="e-rule-match" class="invalid">❌ البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
+                                <li id="e-rule-valid"><span class="icon-marker">❌</span> بريد إلكتروني صحيح</li>
+                                <li id="e-rule-unique"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
+                                <li id="e-rule-match"><span class="icon-marker">❌</span> البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="form-field-group">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
-                        <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
-                        <span class="field-status-icon" id="username-status">❌</span>
+                        <div class="input-wrapper">
+                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
+                            <span class="field-status-icon" id="username-status">❌</span>
+                        </div>
                         <div class="error-feedback-msg" id="username-error"></div>
                         
                         <div class="realtime-validation-box">
                             <h5>التحقق من اسم المستخدم</h5>
                             <ul class="validation-rule-list" id="username-rules">
-                                <li id="u-rule-len" class="invalid">❌ يتكون من 4 إلى 20 خانة</li>
-                                <li id="u-rule-start" class="invalid">❌ يبدأ بحرف إنجليزي</li>
-                                <li id="u-rule-char" class="invalid">❌ يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
-                                <li id="u-rule-num" class="valid">✅ يسمح بالأرقام (0-9)</li>
-                                <li id="u-rule-case" class="valid">✅ يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
-                                <li id="u-rule-space" class="invalid">❌ لا يحتوي على مسافات</li>
-                                <li id="u-rule-special" class="invalid">❌ لا يحتوي على رموز خاصة</li>
-                                <li id="u-rule-unique" class="invalid">❌ غير مستخدم مسبقاً</li>
+                                <li id="u-rule-len"><span class="icon-marker">❌</span> يتكون من 4 إلى 20 خانة</li>
+                                <li id="u-rule-start"><span class="icon-marker">❌</span> يبدأ بحرف إنجليزي</li>
+                                <li id="u-rule-char"><span class="icon-marker">❌</span> يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
+                                <li id="u-rule-num"><span class="icon-marker">✅</span> يسمح بالأرقام (0-9)</li>
+                                <li id="u-rule-case"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
+                                <li id="u-rule-space"><span class="icon-marker">❌</span> لا يحتوي على مسافات</li>
+                                <li id="u-rule-special"><span class="icon-marker">❌</span> لا يحتوي على رموز خاصة</li>
+                                <li id="u-rule-unique"><span class="icon-marker">❌</span> غير مستخدم مسبقاً</li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="form-field-group">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <div class="password-wrapper">
+                        <div class="input-wrapper">
                             <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
                             <span class="field-status-icon" id="password-status">❌</span>
                         </div>
@@ -155,7 +167,7 @@
 
                     <div class="form-field-group">
                         <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
-                        <div class="password-wrapper">
+                        <div class="input-wrapper">
                             <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
                             <span class="field-status-icon" id="cpassword-status">❌</span>
                         </div>
@@ -165,16 +177,16 @@
                         <div class="realtime-validation-box">
                             <h5>التحقق من كلمة المرور</h5>
                             <ul class="validation-rule-list" id="password-rules">
-                                <li id="p-rule-len" class="invalid">❌ 8 أحرف على الأقل</li>
-                                <li id="p-rule-upper" class="invalid">❌ تحتوي على حرف كبير واحد على الأقل (A-Z)</li>
-                                <li id="p-rule-lower" class="invalid">❌ تحتوي على حرف صغير واحد على الأقل (a-z)</li>
-                                <li id="p-rule-num" class="invalid">❌ تحتوي على رقم واحد على الأقل (0-9)</li>
-                                <li id="p-rule-special" class="invalid">❌ تحتوي على رمز خاص واحد على الأقل</li>
-                                <li id="p-rule-space" class="invalid">❌ لا تحتوي على مسافات</li>
-                                <li id="p-rule-user" class="invalid">❌ لا تحتوي على اسم المستخدم</li>
-                                <li id="p-rule-email" class="invalid">❌ لا تحتوي على البريد الإلكتروني</li>
-                                <li id="p-rule-repeat" class="invalid">❌ لا تحتوي على أكثر من 3 أحرف أو أرقام متكررة متتالية</li>
-                                <li id="p-rule-weak" class="invalid">❌ لا تكون من الكلمات الشائعة أو الضعيفة</li>
+                                <li id="p-rule-len"><span class="icon-marker">❌</span> 8 أحرف على الأقل</li>
+                                <li id="p-rule-upper"><span class="icon-marker">❌</span> تحتوي على حرف كبير واحد على الأقل (A-Z)</li>
+                                <li id="p-rule-lower"><span class="icon-marker">❌</span> تحتوي على حرف صغير واحد على الأقل (a-z)</li>
+                                <li id="p-rule-num"><span class="icon-marker">❌</span> تحتوي على رقم واحد على الأقل (0-9)</li>
+                                <li id="p-rule-special"><span class="icon-marker">❌</span> تحتوي على رمز خاص واحد على الأقل</li>
+                                <li id="p-rule-space"><span class="icon-marker">❌</span> لا تحتوي على مسافات</li>
+                                <li id="p-rule-user"><span class="icon-marker">❌</span> لا تحتوي على اسم المستخدم</li>
+                                <li id="p-rule-email"><span class="icon-marker">❌</span> لا تحتوي على البريد الإلكتروني</li>
+                                <li id="p-rule-repeat"><span class="icon-marker">❌</span> لا تحتوي على أكثر من 3 أحرف أو أرقام متكررة متتالية</li>
+                                <li id="p-rule-weak"><span class="icon-marker">❌</span> لا تكون من الكلمات الشائعة أو الضعيفة</li>
                             </ul>
                             
                             <div class="password-strength-container mt-3">
@@ -185,7 +197,7 @@
 
                             <h5 class="mt-4">التحقق من المطابقة</h5>
                             <ul class="validation-rule-list">
-                                <li id="p-rule-match" class="invalid">❌ كلمة المرور وتأكيد كلمة المرور غير متطابقين</li>
+                                <li id="p-rule-match"><span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين</li>
                             </ul>
                         </div>
                     </div>
@@ -243,35 +255,17 @@
                     <div class="realtime-validation-box mt-4">
                         <h5>التحقق النهائي</h5>
                         <ul class="validation-rule-list" id="final-summary-rules">
-                            <li id="f-rule-stages" class="invalid">❌ جميع المراحل مكتملة</li>
-                            <li id="f-rule-reqs" class="invalid">❌ جميع المتطلبات محققة</li>
-                            <li id="f-rule-email" class="invalid">❌ البريد الإلكتروني غير مستخدم مسبقاً</li>
-                            <li id="f-rule-user" class="invalid">❌ اسم المستخدم غير مستخدم مسبقاً</li>
-                            <li id="f-rule-errors" class="invalid">❌ لا توجد أخطاء في البيانات</li>
-                            <li id="f-rule-ready" class="invalid">❌ جاهز لإنشاء الحساب</li>
-                            <li id="f-rule-otp" class="invalid">❌ جاهز لإرسال رمز التحقق إلى البريد الإلكتروني</li>
+                            <li id="f-rule-stages"><span class="icon-marker">❌</span> جميع المراحل مكتملة</li>
+                            <li id="f-rule-reqs"><span class="icon-marker">❌</span> جميع المتطلبات محققة</li>
+                            <li id="f-rule-email"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
+                            <li id="f-rule-user"><span class="icon-marker">❌</span> اسم المستخدم غير مستخدم مسبقاً</li>
+                            <li id="f-rule-errors"><span class="icon-marker">❌</span> لا توجد أخطاء في البيانات</li>
+                            <li id="f-rule-ready"><span class="icon-marker">❌</span> جاهز لإنشاء الحساب</li>
+                            <li id="f-rule-otp"><span class="icon-marker">❌</span> جاهز لإرسال رمز التحقق إلى البريد الإلكتروني</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="form-navigation-actions-bar">
                     <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
-                    <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
-                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled onclick="submitForm()">إنشاء حساب شريك</button>
-                </div>
-            </form>
-
-            <div class="bottom-routing-footer-links mt-5 text-center">
-                <p>لديك حساب بالفعل؟ <a href="../login.html" class="routing-link">تسجيل الدخول</a></p>
-                <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
-            </div>
-        </div>
-    </div>
-
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/auth.js"></script>
-    <script src="register.js"></script>
-</body>
-</html>
+                    <button type="button" class="btn-action-nav btn-style-primary" id="action-next
