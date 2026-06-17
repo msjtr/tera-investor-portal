@@ -1,1 +1,48 @@
+<div class="tera-card glass-panel" id="stat-card">
+    <div class="card-icon" id="card-icon-wrapper">
+        <i class="fa-solid fa-chart-line" id="card-icon"></i>
+    </div>
+    <div class="card-body">
+        <p class="card-label" id="card-label">العنوان</p>
+        <h3 class="card-value" id="card-value">0.00 ر.س</h3>
+    </div>
+</div>
 
+<style>
+    .tera-card {
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: transform 0.3s ease;
+        border-right: 4px solid var(--tera-teal);
+    }
+    .tera-card:hover { transform: translateY(-5px); }
+    
+    .card-icon {
+        width: 55px;
+        height: 55px;
+        border-radius: 15px;
+        background: rgba(2, 128, 144, 0.1);
+        color: var(--tera-teal);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+    }
+    
+    .card-label { color: #64748b; font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+    .card-value { color: var(--tera-navy); font-size: 24px; font-weight: 800; }
+</style>
+
+<script>
+    // دالة لتعبئة البطاقة برمجياً عند الاستدعاء
+    function fillCard(elementId, label, value, iconClass) {
+        const card = document.getElementById(elementId);
+        if(!card) return;
+        
+        card.querySelector('#card-label').textContent = label;
+        card.querySelector('#card-value').textContent = value;
+        card.querySelector('#card-icon').className = `fa-solid ${iconClass}`;
+    }
+</script>
