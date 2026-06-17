@@ -18,7 +18,7 @@
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <div class="text-center mb-4">
+            <div class="text-center mb-5">
                 <img src="../../images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
                 <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
                 <h3 class="page-subtitle">إنشاء حساب شريك</h3>
@@ -30,7 +30,7 @@
                 <div class="step" id="step-2">② الإقرارات والاتفاقيات</div>
             </div>
 
-            <div class="alert-info-box mb-4">
+            <div class="alert-info-box">
                 <h4 class="alert-title">🔔 ملاحظة مهمة</h4>
                 <ul class="alert-list">
                     <li>🔔 يتم التحقق من جميع الحقول والمتطلبات بشكل فوري أثناء الإدخال.</li>
@@ -48,57 +48,13 @@
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
                     <div class="form-field-group">
-                        <label class="field-label">اسم العميل (بالعربية فقط) <span class="required">*</span></label>
+                        <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
                         <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
                         <span class="field-status-icon" id="name_ar-status">❌</span>
                         <div class="error-feedback-msg" id="name_ar-error"></div>
                         <div class="realtime-validation-box-mini">
                             <ul>
                                 <li id="nar-rule-char">❌ أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">اسم المستخدم <span class="required">*</span></label>
-                        <input type="text" id="username" class="form-input-control" placeholder="اسم المستخدم" autocomplete="off">
-                        <span class="field-status-icon" id="username-status">❌</span>
-                        <div class="error-feedback-msg" id="username-error"></div>
-                        
-                        <div class="realtime-validation-box">
-                            <h5>التحقق من اسم المستخدم</h5>
-                            <ul class="validation-rule-list" id="username-rules">
-                                <li id="u-rule-len" class="invalid">❌ يتكون من 4 إلى 20 خانة</li>
-                                <li id="u-rule-start" class="invalid">❌ يبدأ بحرف إنجليزي</li>
-                                <li id="u-rule-char" class="invalid">❌ يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
-                                <li id="u-rule-num" class="valid">✅ يسمح بالأرقام (0-9)</li>
-                                <li id="u-rule-case" class="valid">✅ يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
-                                <li id="u-rule-space" class="invalid">❌ لا يحتوي على مسافات</li>
-                                <li id="u-rule-special" class="invalid">❌ لا يحتوي على رموز خاصة</li>
-                                <li id="u-rule-unique" class="invalid">❌ غير مستخدم مسبقاً</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
-                        <input type="email" id="email" class="form-input-control" placeholder="البريد الإلكتروني" autocomplete="off">
-                        <span class="field-status-icon" id="email-status">❌</span>
-                        <div class="error-feedback-msg" id="email-error"></div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
-                        <input type="email" id="confirm_email" class="form-input-control" placeholder="تأكيد البريد الإلكتروني" autocomplete="off">
-                        <span class="field-status-icon" id="cemail-status">❌</span>
-                        <div class="error-feedback-msg" id="cemail-error"></div>
-                        
-                        <div class="realtime-validation-box">
-                            <h5>التحقق من البريد الإلكتروني</h5>
-                            <ul class="validation-rule-list">
-                                <li id="e-rule-valid" class="invalid">❌ بريد إلكتروني صحيح</li>
-                                <li id="e-rule-unique" class="invalid">❌ البريد الإلكتروني غير مستخدم مسبقاً</li>
-                                <li id="e-rule-match" class="invalid">❌ البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
                             </ul>
                         </div>
                     </div>
@@ -137,16 +93,60 @@
                             </div>
                         </div>
                     </div>
-                    <div class="realtime-validation-box-mini mb-3">
+                    <div class="realtime-validation-box-mini mb-4">
                         <ul>
                             <li id="mob-rule-format">❌ أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
                         </ul>
                     </div>
 
                     <div class="form-field-group">
+                        <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
+                        <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
+                        <span class="field-status-icon" id="email-status">❌</span>
+                        <div class="error-feedback-msg" id="email-error"></div>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
+                        <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
+                        <span class="field-status-icon" id="cemail-status">❌</span>
+                        <div class="error-feedback-msg" id="cemail-error"></div>
+                        
+                        <div class="realtime-validation-box">
+                            <h5>التحقق من البريد الإلكتروني</h5>
+                            <ul class="validation-rule-list">
+                                <li id="e-rule-valid" class="invalid">❌ بريد إلكتروني صحيح</li>
+                                <li id="e-rule-unique" class="invalid">❌ البريد الإلكتروني غير مستخدم مسبقاً</li>
+                                <li id="e-rule-match" class="invalid">❌ البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label class="field-label">اسم المستخدم <span class="required">*</span></label>
+                        <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
+                        <span class="field-status-icon" id="username-status">❌</span>
+                        <div class="error-feedback-msg" id="username-error"></div>
+                        
+                        <div class="realtime-validation-box">
+                            <h5>التحقق من اسم المستخدم</h5>
+                            <ul class="validation-rule-list" id="username-rules">
+                                <li id="u-rule-len" class="invalid">❌ يتكون من 4 إلى 20 خانة</li>
+                                <li id="u-rule-start" class="invalid">❌ يبدأ بحرف إنجليزي</li>
+                                <li id="u-rule-char" class="invalid">❌ يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
+                                <li id="u-rule-num" class="valid">✅ يسمح بالأرقام (0-9)</li>
+                                <li id="u-rule-case" class="valid">✅ يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
+                                <li id="u-rule-space" class="invalid">❌ لا يحتوي على مسافات</li>
+                                <li id="u-rule-special" class="invalid">❌ لا يحتوي على رموز خاصة</li>
+                                <li id="u-rule-unique" class="invalid">❌ غير مستخدم مسبقاً</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="form-field-group">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <div class="password-wrapper">
-                            <input type="password" id="password" class="form-input-control" placeholder="كلمة المرور">
+                            <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
                             <span class="field-status-icon" id="password-status">❌</span>
                         </div>
                         <label class="checkbox-toggle-label"><input type="checkbox" id="show-password"> إظهار كلمة المرور</label>
@@ -156,7 +156,7 @@
                     <div class="form-field-group">
                         <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
                         <div class="password-wrapper">
-                            <input type="password" id="confirm_password" class="form-input-control" placeholder="تأكيد كلمة المرور">
+                            <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
                             <span class="field-status-icon" id="cpassword-status">❌</span>
                         </div>
                         <label class="checkbox-toggle-label"><input type="checkbox" id="show-cpassword"> إظهار تأكيد كلمة المرور</label>
@@ -177,13 +177,13 @@
                                 <li id="p-rule-weak" class="invalid">❌ لا تكون من الكلمات الشائعة أو الضعيفة</li>
                             </ul>
                             
-                            <div class="password-strength-container mt-2">
+                            <div class="password-strength-container mt-3">
                                 <strong>مؤشر قوة كلمة المرور:</strong>
                                 <span id="strength-indicator-text" class="strength-red">🔴 ضعيفة</span>
                                 <div class="strength-bar-meter"><div id="strength-bar-fill"></div></div>
                             </div>
 
-                            <h5 class="mt-3">التحقق من المطابقة</h5>
+                            <h5 class="mt-4">التحقق من المطابقة</h5>
                             <ul class="validation-rule-list">
                                 <li id="p-rule-match" class="invalid">❌ كلمة المرور وتأكيد كلمة المرور غير متطابقين</li>
                             </ul>
@@ -254,14 +254,14 @@
                     </div>
                 </div>
 
-                <div class="form-navigation-actions-bar mt-4">
+                <div class="form-navigation-actions-bar">
                     <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
                     <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
                     <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled onclick="submitForm()">إنشاء حساب شريك</button>
                 </div>
             </form>
 
-            <div class="bottom-routing-footer-links mt-4 text-center">
+            <div class="bottom-routing-footer-links mt-5 text-center">
                 <p>لديك حساب بالفعل؟ <a href="../login.html" class="routing-link">تسجيل الدخول</a></p>
                 <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
             </div>
