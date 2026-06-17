@@ -1,6 +1,6 @@
 /**
  * بوابة المستثمر - منصة تيرا
- * محرك لوحة التحكم الرئيسية (Dashboard) - نسخة الاستقرار المطلق
+ * محرك لوحة التحكم الرئيسية (Dashboard) - نسخة الاستقرار المطلق (Relative Paths)
  */
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -21,15 +21,17 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function verifyInvestorSession() {
-    // نستخدم setTimeout بسيطة جداً (0ms) لضمان تنفيذ التحقق بعد انتهاء المتصفح من معالجة أي أكواد أخرى
+    // تأخير بسيط لضمان تحميل المتصفح للذاكرة المحلية
     setTimeout(() => {
         const sessionToken = localStorage.getItem('tera_token');
         
-        // التحقق من المسار الحالي لمنع التوجيه اللانهائي (Infinite Loop)
+        // المسار النسبي: الخروج من مجلد dashboard ثم pages للوصول لـ auth
+        // وهذا يضمن عمله حتى لو لم يكن السيرفر يقرأ الجذر بشكل صحيح
+        const loginPath = "../../auth/auth/login/login.html";
         const currentPath = window.location.pathname;
-        const loginPath = "/auth/auth/login/login.html";
 
-        if (!sessionToken && currentPath !== loginPath) {
+        // إذا لم يوجد توكن ونحن لسنا في صفحة الدخول، يتم الطرد للمسار الصحيح
+        if (!sessionToken && !currentPath.includes("login.html")) {
             console.log("Session invalid: Redirecting to login.");
             window.location.replace(loginPath);
         }
@@ -40,13 +42,13 @@ function executeLogout() {
     const confirmExit = confirm("هل أنت متأكد من رغبتك في تسجيل الخروج من البوابة؟");
     
     if (confirmExit) {
-        // مسح الجلسة
+        // مسح الجلسة تماماً
         localStorage.removeItem('tera_token');
         localStorage.removeItem('tera_user');
         sessionStorage.clear();
         
-        // التوجيه المباشر
-        window.location.replace("/auth/auth/login/login.html");
+        // التوجيه للمسار النسبي المحدث
+        window.location.replace("../../auth/auth/login/login.html");
     }
 }
 
