@@ -1,8 +1,9 @@
 /**
  * بوابة الشركاء - منصة تيرا
- * محرك التحقق اللحظي الصارم وحظر الملاحة التلقائي
+ * محرك التحقق اللحظي الصارم وحظر الملاحة وتصفية اللغات (مرحلتين فقط)
  */
 
+// محاكاة البيانات المستخدمة مسبقاً في نظام تيرا لمنع التكرار حياً
 const mockedUsedData = {
     usernames: ['mohammed', 'tera_partner', 'admin_saleh'],
     emails: ['test@tera.sa', 'info@itqan.plus']
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
     bindStage2Agreements();
     bindPasswordVisibilityToggle();
     
-    // تشغيل أولي لقفل وحماية الأزرار من الكبس العشوائي
+    // تشغيل فحص أولي لتثبيت الأيقونات كلها على الحمراء (❌) في البداية
     executeGlobalStageValidator();
 });
 
@@ -145,8 +146,52 @@ function bindRealtimeStage1() {
 
     if (nameArInput) {
         nameArInput.addEventListener("input", function() {
+            // منع الحروف الإنجليزية والأرقام والرموز في الاسم العربي حيا
             this.value = this.value.replace(/[a-zA-Z0-9~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/g, '');
             validateArabicName();
+            executeGlobalStageValidator();
+        });
+    }
+
+    if (usernameInput) {
+        usernameInput.addEventListener("input", function() {
+            // طرد ومنع الأحرف العربية تماماً من حقل اسم المستخدم حياً
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            validateUsernameField();
+            executeGlobalStageValidator();
+        });
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener("input", function() {
+            // طرد ومنع الأحرف العربية تماماً من حقل البريد حياً
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            validateEmailFields();
+            executeGlobalStageValidator();
+        });
+    }
+
+    if (cemailInput) {
+        cemailInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            validateEmailFields();
+            executeGlobalStageValidator();
+        });
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener("input", function() {
+            // طرد ومنع الأحرف العربية تماماً من حقل كلمة المرور حياً
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            validatePasswordFields();
+            executeGlobalStageValidator();
+        });
+    }
+
+    if (cpasswordInput) {
+        cpasswordInput.addEventListener("input", function() {
+            this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
+            validatePasswordFields();
             executeGlobalStageValidator();
         });
     }
@@ -154,7 +199,7 @@ function bindRealtimeStage1() {
     if (mobileInput) {
         mobileInput.addEventListener("input", function() {
             let val = this.value.replace(/\D/g, '');
-            while (val.startsWith('0')) { val = val.substring(1); }
+            while (val.startsWith('0')) { val = val.substring(1); } // حذف وإلغاء الصفر الأول حيا فوراً
             this.value = val;
             
             const isMobValid = val.length >= 8 && val.length <= 11;
@@ -169,12 +214,6 @@ function bindRealtimeStage1() {
             executeGlobalStageValidator();
         });
     }
-
-    if (usernameInput) { usernameInput.addEventListener("input", () => { validateUsernameField(); executeGlobalStageValidator(); }); }
-    if (emailInput) { emailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); }); }
-    if (cemailInput) { cemailInput.addEventListener("input", () => { validateEmailFields(); executeGlobalStageValidator(); }); }
-    if (passwordInput) { passwordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); }); }
-    if (cpasswordInput) { cpasswordInput.addEventListener("input", () => { validatePasswordFields(); executeGlobalStageValidator(); }); }
 }
 
 function validateArabicName() {
@@ -208,25 +247,30 @@ function validateUsernameField() {
     const err = document.getElementById("username-error");
     const status = document.getElementById("username-status");
 
-    const rLen = val.length >= 4 && val.length <= 20;
-    const rStart = /^[a-zA-Z]/.test(val);
-    const rChar = /[a-zA-Z]/.test(val);
-    const rNum = /^[a-zA-Z0-9]*$/.test(val); 
-    const rSpace = !/\s/.test(val);
-    const rSpecial = !/[~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/.test(val);
-    const rUnique = !mockedUsedData.usernames.includes(val.toLowerCase());
+    const isEmpty = val.length === 0;
+
+    // إلزامية أن يكون الحقل غير فارغ لتفعيل التحقق الأخضر
+    const rLen = !isEmpty && val.length >= 4 && val.length <= 20;
+    const rStart = !isEmpty && /^[a-zA-Z]/.test(val);
+    const rChar = !isEmpty && /[a-zA-Z]/.test(val);
+    const rNum = !isEmpty && /[0-9]/.test(val);
+    const rUpper = !isEmpty && /[A-Z]/.test(val);
+    const rLower = !isEmpty && /[a-z]/.test(val);
+    const rSpace = !isEmpty && !/\s/.test(val);
+    const rSpecial = !isEmpty && !/[~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/.test(val);
+    const rUnique = !isEmpty && !mockedUsedData.usernames.includes(val.toLowerCase());
 
     updateRuleMarker('u-rule-len', rLen);
     updateRuleMarker('u-rule-start', rStart);
     updateRuleMarker('u-rule-char', rChar);
-    updateRuleMarker('u-rule-num', /[0-9]/.test(val));
-    updateRuleMarker('u-rule-upper', /[A-Z]/.test(val));
-    updateRuleMarker('u-rule-lower', /[a-z]/.test(val));
+    updateRuleMarker('u-rule-num', rNum || !isEmpty); // متاح ومسموح
+    updateRuleMarker('u-rule-upper', rUpper || !isEmpty);
+    updateRuleMarker('u-rule-lower', rLower || !isEmpty);
     updateRuleMarker('u-rule-space', rSpace);
     updateRuleMarker('u-rule-special', rSpecial);
     updateRuleMarker('u-rule-unique', rUnique && val.length > 0);
 
-    if (rLen && rStart && rChar && rSpace && rSpecial && rUnique && rNum) {
+    if (rLen && rStart && rChar && rSpace && rSpecial && rUnique) {
         if(err) err.textContent = ""; if(status) status.textContent = "✅";
         inputControl.classList.remove("is-field-invalid"); inputControl.classList.add("is-field-valid");
         return true;
@@ -249,13 +293,16 @@ function validateEmailFields() {
     const cemailStatus = document.getElementById("cemail-status");
     const cemailError = document.getElementById("cemail-error");
 
+    const isEmpty = email.length === 0;
+    const isCEmpty = cemail.length === 0;
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const rValid = emailRegex.test(email);
-    const rUnique = !mockedUsedData.emails.includes(email.toLowerCase());
-    const rMatch = (email === cemail) && cemail.length > 0;
+    const rValid = !isEmpty && emailRegex.test(email);
+    const rUnique = !isEmpty && !mockedUsedData.emails.includes(email.toLowerCase());
+    const rMatch = !isEmpty && !isCEmpty && (email === cemail);
 
     updateRuleMarker('e-rule-valid', rValid);
-    updateRuleMarker('e-rule-unique', rUnique && email.length > 0);
+    updateRuleMarker('e-rule-unique', rUnique);
     updateRuleMarker('e-rule-match', rMatch);
 
     if(emailStatus) emailStatus.textContent = (rValid && rUnique) ? "✅" : "❌";
@@ -288,20 +335,24 @@ function validatePasswordFields() {
     const cpStatus = document.getElementById("cpassword-status");
     const cpError = document.getElementById("cpassword-error");
 
-    const rLen = p.length >= 8;
-    const rUpper = /[A-Z]/.test(p);
-    const rLower = /[a-z]/.test(p);
-    const rNum = /[0-9]/.test(p);
-    const rSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p);
-    const rSpace = !/\s/.test(p);
-    const rUser = u.length > 0 ? !p.includes(u) : true;
-    const rEmail = e.length > 0 ? !p.includes(e.split('@')[0]) : true;
+    const isEmpty = p.length === 0;
+
+    const rLen = !isEmpty && p.length >= 8;
+    const rUpper = !isEmpty && /[A-Z]/.test(p);
+    const rLower = !isEmpty && /[a-z]/.test(p);
+    const rNum = !isEmpty && /[0-9]/.test(p);
+    const rSpecial = !isEmpty && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p);
+    const rSpace = !isEmpty && !/\s/.test(p);
+    const rUser = !isEmpty && (u.length > 0 ? !p.includes(u) : true);
+    const rEmail = !isEmpty && (e.length > 0 ? !p.includes(e.split('@')[0]) : true);
     
-    let rRepeat = true;
-    for (let i = 0; i < p.length - 3; i++) {
-        if (p[i] === p[i+1] && p[i] === p[i+2] && p[i] === p[i+3]) { rRepeat = false; break; }
+    let rRepeat = !isEmpty;
+    if (!isEmpty) {
+        for (let i = 0; i < p.length - 3; i++) {
+            if (p[i] === p[i+1] && p[i] === p[i+2] && p[i] === p[i+3]) { rRepeat = false; break; }
+        }
     }
-    const rWeak = !['12345678', 'password', 'qwerty'].includes(p.toLowerCase());
+    const rWeak = !isEmpty && !['12345678', 'password', 'qwerty'].includes(p.toLowerCase());
 
     updateRuleMarker('p-rule-len', rLen);
     updateRuleMarker('p-rule-upper', rUpper);
@@ -324,7 +375,7 @@ function validatePasswordFields() {
     const strengthFill = document.getElementById("strength-bar-fill");
 
     if (strengthText && strengthFill) {
-        if (p.length === 0 || score <= 1) {
+        if (isEmpty || score <= 1) {
             strengthText.className = "strength-red"; strengthText.textContent = "🔴 ضعيفة"; strengthFill.style.width = "25%"; strengthFill.style.background = "#E25950";
         } else if (score === 2) {
             strengthText.className = "strength-orange"; strengthText.textContent = "🟠 متوسطة"; strengthFill.style.width = "50%"; strengthFill.style.background = "#FFC000";
@@ -335,22 +386,21 @@ function validatePasswordFields() {
         }
     }
 
-    const rMatch = (p === cp) && cp.length > 0;
+    const rMatch = !isEmpty && cp.length > 0 && (p === cp);
     
-    // محاكاة المطابقة والتغيير الحرفي للنص البرمجي حسب متطلبات البوابة والنموذج المشروط
     const matchLi = document.getElementById("p-rule-match");
     if(matchLi) {
-        if(rMatch) {
-            matchLi.className = "valid";
-            matchLi.innerHTML = `<span class="icon-marker">✅</span> كلمة المرور وتأكيد كلمة المرور متطابقان`;
+        if (isEmpty && cp.length === 0) {
+            matchLi.className = "invalid"; matchLi.innerHTML = `<span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين`;
+        } else if(rMatch) {
+            matchLi.className = "valid"; matchLi.innerHTML = `<span class="icon-marker">✅</span> كلمة المرور وتأكيد كلمة المرور متطابقان`;
         } else {
-            matchLi.className = "invalid";
-            matchLi.innerHTML = `<span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين`;
+            matchLi.className = "invalid"; matchLi.innerHTML = `<span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين`;
         }
     }
 
     if(pStatus) pStatus.textContent = (score >= 3) ? "✅" : "❌";
-    if(score >= 3) { passControl.classList.add("is-field-valid"); passControl.classList.remove("is-field-invalid"); }
+    if(score >= 3 && !isEmpty) { passControl.classList.add("is-field-valid"); passControl.classList.remove("is-field-invalid"); }
     else { passControl.classList.add("is-field-invalid"); passControl.classList.remove("is-field-valid"); }
 
     if (rMatch && score >= 3) {
@@ -419,7 +469,7 @@ function triggerStageVisualErrors(stage) {
         if (!validateArabicName()) errorList.innerHTML += "<li>الاسم الكامل (يجب أن يكون باللغة العربية فقط ومكتملًا)</li>";
         if (document.getElementById("mobile_number") && document.getElementById("mobile_number").value.length < 8) errorList.innerHTML += "<li>رقم الجوال (تأكد من إدخال رقم صحيح دون الصفر الأول)</li>";
         if (!validateEmailFields()) errorList.innerHTML += "<li>البريد الإلكتروني وتأكيد المطابقة والامتثال</li>";
-        if (!validateUsernameField()) errorList.innerHTML += "<li>اسم المستخدم (يجب استيفاء شروط الأحرف الإنجليزية والرقابة حياً)</li>";
+        if (!validateUsernameField()) errorList.innerHTML += "<li>اسم المستخدم (تأكد من استيفاء جميع الشروط بالإنجليزية)</li>";
         if (!validatePasswordFields()) errorList.innerHTML += "<li>كلمة المرور وتأكيد المطابقة وقوتها</li>";
         
         const modal = document.getElementById("centralErrorModal");
