@@ -1,19 +1,55 @@
-<header class="main-header">
-    <button class="menu-toggle" aria-label="فتح القائمة">☰</button>
-
-    <div class="logo">
-        <img src="../../images/logo.svg" alt="TERA Logo" style="height: 35px; width: auto;">
-    </div>
-
-    <div class="topbar-actions">
-        <button class="notification-btn" aria-label="الإشعارات">
-            <span class="icon">🔔</span>
-            <span class="badge"></span>
+<header class="tera-header glass-panel">
+    <div class="header-left">
+        <button class="menu-toggle" id="sidebarToggle">
+            <i class="fa-solid fa-bars"></i>
         </button>
-
-        <div class="user-profile">
-            <div class="user-avatar">م</div>
-            <span class="user-name">المستثمر</span>
+        <div class="header-welcome">
+            <h1 class="greeting-title">حياك الله، <span class="investor-name">شريك تيرا</span> 👋</h1>
+            <p class="greeting-subtitle">إليك ملخص أداء محفظتك الاستثمارية اليوم.</p>
+        </div>
+    </div>
+    
+    <div class="header-right">
+        <a href="../support/notifications.html" class="icon-btn notification-btn">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge" id="notificationCount" style="display: none;">0</span>
+        </a>
+        
+        <div class="user-profile-menu">
+            <div class="avatar-small">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="user-info">
+                <span class="user-name investor-name">شريك تيرا</span>
+            </div>
         </div>
     </div>
 </header>
+
+<style>
+    .tera-header {
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 20px; }
+    .header-welcome h1 { font-size: 20px; font-weight: 800; color: var(--tera-navy); margin-bottom: 4px; }
+    .header-welcome p { color: #64748b; font-size: 13px; }
+    
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .icon-btn { 
+        position: relative; width: 45px; height: 45px; border-radius: 12px; 
+        background: #fff; display: flex; justify-content: center; align-items: center;
+        color: var(--tera-navy); text-decoration: none; border: 1px solid rgba(0,0,0,0.05);
+    }
+    .badge {
+        position: absolute; top: -5px; right: -5px; background: #ef4444; color: white;
+        font-size: 10px; width: 18px; height: 18px; border-radius: 50%;
+        display: flex; justify-content: center; align-items: center; font-weight: bold;
+    }
+    .user-profile-menu { display: flex; align-items: center; gap: 10px; padding: 5px 15px 5px 5px; border-radius: 50px; background: rgba(2, 128, 144, 0.05); }
+    .avatar-small { width: 35px; height: 35px; border-radius: 50%; background: var(--tera-navy); color: white; display: flex; justify-content: center; align-items: center; font-size: 14px; }
+</style>
