@@ -1,11 +1,11 @@
 /* =========================================
-   ملف الإعدادات العامة (core.css) - نسخة مستقرة
+   ملف الإعدادات العامة (core.css) - نسخة مستقرة ومحدثة
    ========================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-    /* الألوان الأساسية - هوية تيرا */
+    /* الألوان الأساسية */
     --tera-navy: #0A1B3F;
     --tera-navy-light: #162d5e;
     --tera-cyan: #00C2C7;
@@ -35,13 +35,11 @@
     --shadow-md: 0 4px 6px -1px rgba(10, 27, 63, 0.1);
 }
 
-/* الضبط الأساسي (Reset) */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+/* الضبط الأساسي */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-    background-color: var(--bg-white);
+    background-color: var(--bg-light);
     color: var(--text-main);
     font-family: var(--font-body);
     line-height: 1.6;
@@ -49,26 +47,47 @@ body {
     direction: rtl;
     text-align: right;
     margin: 0;
-    -webkit-font-smoothing: antialiased; /* تحسين مظهر الخطوط */
 }
 
-/* العناوين والخطوط */
-h1, h2, h3, h4, h5, h6, .btn, label {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    color: var(--tera-navy);
+/* العناوين والروابط */
+h1, h2, h3, h4, h5, h6, .btn, label { font-family: var(--font-heading); font-weight: 700; color: var(--tera-navy); }
+a { color: var(--tera-navy); text-decoration: none; transition: all 0.3s ease; }
+a:hover { color: var(--tera-cyan-dark); }
+
+/* تنسيق القائمة الجانبية (Sidebar) */
+.tera-sidebar {
+    width: 260px;
+    background: var(--bg-white);
+    border-left: 1px solid var(--border-color);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    overflow-y: auto;
+    z-index: 1000;
 }
 
-/* تحسين الروابط */
-a {
-    color: var(--tera-cyan-dark);
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
+.sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color); }
+.sidebar-logo { width: 120px; }
 
-a:hover {
-    color: var(--tera-cyan);
+.sidebar-menu { list-style: none; padding: 0; margin-top: 20px; }
+.sidebar-menu li a { 
+    display: flex; 
+    align-items: center; 
+    padding: 15px 20px; 
+    color: var(--text-muted); 
+    font-size: 0.95rem; 
+    transition: 0.3s;
 }
+.sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--tera-cyan-light); color: var(--tera-navy); }
+.sidebar-menu li a i { margin-left: 12px; width: 20px; text-align: center; font-size: 1.1rem; }
+
+/* القوائم المنسدلة */
+.submenu { display: none; background: #F8FAFC; padding-right: 30px; }
+.has-submenu.active .submenu { display: block; }
+.submenu-toggle { justify-content: space-between; }
+.arrow { font-size: 0.8rem; transition: transform 0.3s; }
+.has-submenu.active .arrow { transform: rotate(180deg); }
 
 /* النماذج (Forms) */
 .form-group { margin-bottom: 1.5rem; }
@@ -78,30 +97,13 @@ a:hover {
     padding: 0.85rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background-color: var(--bg-light);
-    font-family: var(--font-body);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--tera-cyan);
-    box-shadow: 0 0 0 3px var(--tera-cyan-light);
-}
-
-/* البطاقات العامة */
-.card {
     background-color: var(--bg-white);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    box-shadow: var(--shadow-sm);
+    font-size: 1rem;
 }
 
-/* فئات مساعدة (Utility Classes) */
+.form-control:focus { outline: none; border-color: var(--tera-cyan); box-shadow: 0 0 0 3px var(--tera-cyan-light); }
+
+/* فئات مساعدة */
+.card { background-color: var(--bg-white); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); }
 .text-muted { color: var(--text-muted); }
-.w-100 { width: 100%; }
-.mt-10 { margin-top: 10px; }
-.mt-20 { margin-top: 20px; }
 .text-center { text-align: center; }
