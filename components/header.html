@@ -1,6 +1,6 @@
 <header class="tera-header glass-panel">
     <div class="header-left">
-        <button class="menu-toggle" id="sidebarToggle">
+        <button class="menu-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
             <i class="fa-solid fa-bars"></i>
         </button>
         
@@ -28,16 +28,17 @@
 </header>
 
 <style>
+    /* تنسيق الهيدر الأساسي - مُصلح لضمان عدم التداخل */
     .tera-header {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 20px 30px;
+        position: relative;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 15px 30px;
         margin-bottom: 25px;
-        z-index: 100;
-        /* نعتمد على تنسيق glass-panel من ملف dashboard.css */
+        border-radius: 20px; /* ضمان توافق مع الـ glass-panel */
+        min-height: 80px;
+        flex-shrink: 0;
     }
     
     .header-left { display: flex; align-items: center; gap: 20px; }
@@ -46,42 +47,49 @@
         display: none;
         background: transparent;
         border: none;
-        font-size: 24px;
+        font-size: 20px;
         color: var(--tera-navy);
         cursor: pointer;
-        padding: 5px;
+        padding: 10px;
+        transition: 0.3s;
     }
     
-    .header-welcome h1 { font-size: 20px; font-weight: 800; color: var(--tera-navy); margin: 0 0 4px 0; }
-    .header-welcome p { color: #64748b; font-size: 13px; margin: 0; }
+    .header-welcome { display: flex; flex-direction: column; }
+    .greeting-title { font-size: 18px !important; font-weight: 800; color: var(--tera-navy); margin: 0; }
+    .greeting-subtitle { color: #64748b; font-size: 12px; margin: 0; }
     
-    .header-right { display: flex; align-items: center; gap: 20px; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
     
     .icon-btn { 
-        position: relative; width: 45px; height: 45px; border-radius: 12px; 
-        background: #fff; display: flex; justify-content: center; align-items: center;
+        position: relative; width: 40px; height: 40px; border-radius: 10px; 
+        background: rgba(255,255,255,0.5); display: flex; justify-content: center; align-items: center;
         color: var(--tera-navy); text-decoration: none; border: 1px solid rgba(0,0,0,0.05);
+        transition: 0.3s;
     }
     
     .badge {
         position: absolute; top: -5px; right: -5px; background: #ef4444; color: white;
-        font-size: 10px; width: 18px; height: 18px; border-radius: 50%;
+        font-size: 10px; width: 16px; height: 16px; border-radius: 50%;
         display: flex; justify-content: center; align-items: center; font-weight: bold;
     }
     
     .user-profile-menu { 
-        display: flex; align-items: center; gap: 10px; padding: 5px 15px 5px 5px; 
+        display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; 
         border-radius: 50px; background: rgba(2, 128, 144, 0.05); cursor: pointer;
     }
     
     .avatar-small { 
-        width: 35px; height: 35px; border-radius: 50%; background: var(--tera-navy); 
-        color: white; display: flex; justify-content: center; align-items: center; font-size: 14px; 
+        width: 32px; height: 32px; border-radius: 50%; background: var(--tera-navy); 
+        color: white; display: flex; justify-content: center; align-items: center; font-size: 12px; 
     }
     
+    .user-name { font-size: 14px; font-weight: 700; }
+    
+    /* التجاوب */
     @media (max-width: 992px) {
         .menu-toggle { display: block; }
-        .header-welcome p { display: none; }
+        .greeting-subtitle { display: none; }
         .user-info { display: none; }
+        .tera-header { padding: 10px 15px; }
     }
 </style>
