@@ -6,16 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | لوحة تحكم المستثمر</title>
     
-    <!-- مسارات نسبية لضمان عمل الملفات من داخل مجلد pages/dashboard -->
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/tera-investor-portal-main/images/favicon.svg">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- المسارات النسبية تبدأ بـ ../../ للخروج من مجلد dashboard ثم pages للوصول لـ assets -->
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="/tera-investor-portal-main/assets/css/main.css">
+    <link rel="stylesheet" href="/tera-investor-portal-main/assets/css/dashboard.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -23,26 +21,26 @@
 
     <aside class="tera-sidebar glass-panel" id="sidebar">
         <div class="sidebar-logo">
-            <img src="../../images/logo.svg" alt="تيرا الاستثمارية">
+            <img src="/tera-investor-portal-main/images/logo.svg" alt="تيرا الاستثمارية">
         </div>
         
         <nav class="sidebar-menu">
-            <a href="index.html" class="menu-item active">
+            <a href="/tera-investor-portal-main/pages/dashboard/index.html" class="menu-item active">
                 <i class="fa-solid fa-chart-pie"></i> نظرة عامة
             </a>
-            <a href="../investments/opportunities.html" class="menu-item">
+            <a href="/tera-investor-portal-main/pages/investments/opportunities.html" class="menu-item">
                 <i class="fa-solid fa-briefcase"></i> الفرص الاستثمارية
             </a>
-            <a href="../portfolio/portfolio-overview.html" class="menu-item">
+            <a href="/tera-investor-portal-main/pages/portfolio/portfolio-overview.html" class="menu-item">
                 <i class="fa-solid fa-wallet"></i> المحفظة والأصول
             </a>
-            <a href="../reports/reports-dashboard.html" class="menu-item">
+            <a href="/tera-investor-portal-main/pages/reports/reports-dashboard.html" class="menu-item">
                 <i class="fa-solid fa-file-invoice-dollar"></i> التقارير المالية
             </a>
-            <a href="../profile/personal-information.html" class="menu-item">
+            <a href="/tera-investor-portal-main/pages/profile/personal-information.html" class="menu-item">
                 <i class="fa-solid fa-user-shield"></i> الملف الشخصي
             </a>
-            <a href="../support/help-center.html" class="menu-item">
+            <a href="/tera-investor-portal-main/pages/support/help-center.html" class="menu-item">
                 <i class="fa-solid fa-headset"></i> الدعم الفني
             </a>
         </nav>
@@ -55,88 +53,24 @@
     </aside>
 
     <main class="tera-main-content">
-        
         <header class="dashboard-header glass-panel">
-            <div class="header-greeting" style="display: flex; align-items: center; gap: 15px;">
-                <button class="icon-btn menu-toggle" id="sidebarToggle" style="display: none;">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <div>
-                    <h1 class="greeting-title">حياك الله، <span class="investor-name">المستثمر 106</span> 👋</h1>
-                    <p class="greeting-subtitle">إليك ملخص أداء محفظتك الاستثمارية لهذا اليوم.</p>
-                </div>
-            </div>
-            
-            <div class="header-actions">
-                <button class="icon-btn notification-btn">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="badge" id="notificationCount" style="display: none;">3</span>
-                </button>
-                <div class="user-profile-menu">
-                    <div class="avatar">
-                        <i class="fa-solid fa-user-tie"></i>
-                    </div>
-                </div>
+            <div class="header-greeting">
+                <h1 class="greeting-title">حياك الله، <span class="investor-name">المستثمر 106</span> 👋</h1>
+                <p class="greeting-subtitle">إليك ملخص أداء محفظتك الاستثمارية لهذا اليوم.</p>
             </div>
         </header>
 
         <div class="stats-grid">
-            <div class="stat-card glass-panel">
-                <div class="stat-icon navy-bg"><i class="fa-solid fa-sack-dollar"></i></div>
-                <div class="stat-details">
-                    <p class="stat-label">إجمالي قيمة المحفظة</p>
-                    <h3 class="stat-value">245,500 <span class="currency">ر.س</span></h3>
-                </div>
             </div>
-            <div class="stat-card glass-panel">
-                <div class="stat-icon teal-bg"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                <div class="stat-details">
-                    <p class="stat-label">إجمالي الأرباح الموزعة</p>
-                    <h3 class="stat-value">18,250 <span class="currency">ر.س</span></h3>
-                </div>
-            </div>
-            <div class="stat-card glass-panel">
-                <div class="stat-icon gold-bg"><i class="fa-solid fa-layer-group"></i></div>
-                <div class="stat-details">
-                    <p class="stat-label">الاستثمارات النشطة</p>
-                    <h3 class="stat-value">4 <span class="currency">فرص</span></h3>
-                </div>
-            </div>
-        </div>
-
-        <div class="middle-grid">
-            <div class="chart-section glass-panel">
-                <div class="section-header"><h2>نمو المحفظة الاستثمارية</h2></div>
-                <div class="chart-placeholder">
-                    <div class="mock-chart">
-                        <div class="bar" style="height: 40%;"></div>
-                        <div class="bar" style="height: 55%;"></div>
-                        <div class="bar" style="height: 30%;"></div>
-                        <div class="bar" style="height: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="quick-actions-section glass-panel">
-                <div class="section-header"><h2>إجراءات سريعة</h2></div>
-                <div class="actions-list">
-                    <a href="../portfolio/withdraw-request.html" class="action-card">
-                        <i class="fa-solid fa-money-bill-transfer"></i> <span>طلب سحب أرباح</span>
-                    </a>
-                </div>
-            </div>
-        </div>
     </main>
 
-    <!-- تحميل السكربتات بمسارات نسبية -->
-    <script src="../../assets/js/auth.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/dashboard.js"></script>
+    <script src="/tera-investor-portal-main/assets/js/auth.js"></script>
+    <script src="/tera-investor-portal-main/assets/js/app.js"></script>
+    <script src="/tera-investor-portal-main/assets/js/main.js"></script>
+    <script src="/tera-investor-portal-main/assets/js/dashboard.js"></script>
 
     <style>
-        @media (max-width: 992px) {
-            #sidebarToggle { display: inline-flex !important; }
-        }
+        @media (max-width: 992px) { #sidebarToggle { display: inline-flex !important; } }
     </style>
 </body>
 </html>
