@@ -1,78 +1,53 @@
 /* ==========================================================================
    TERA Investor Portal - Global App Styles (Official Identity Style)
    المسار: /assets/css/app.css
-   الإصدار: 2.0
+   الإصدار: 2.1 (مُحسّن ومستقر)
 ========================================================================== */
 
 :root {
-    /* لوحة الألوان المحدثة بناءً على الشعار الجديد والخلفية البيضاء الزجاجية */
-    --primary: #2AB8B6;         /* لون التيل المضيء من سهم الشعار */
-    --primary-dark: #1F9D9C;    /* درجة أغمق للـ Hover والتفاعل */
-    --primary-light: #7CD4D2;   /* درجة فاتحة للخلفيات */
-    --bg-body: #FFFFFF;         /* خلفية بيضاء نقية للموقع بالكامل */
+    --primary: #2AB8B6;
+    --primary-dark: #1F9D9C;
+    --primary-light: #7CD4D2;
+    --bg-body: #FFFFFF;
     
-    /* لون النص الأساسي (كحلي داكن جداً مستخرج من كلمة TERA باللوجو) */
-    --text-main: #0B192C;       
-    --text-muted: #64748B;      /* لون رمادي احترافي للنصوص الثانوية والتلميحات */
-    --text-light: #94A3B8;      /* نصوص مساعدة إضافية */
+    --text-main: #0B192C;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
     
-    /* تأثيرات الزجاج الأبيض (White Glassmorphism) */
     --glass-bg: rgba(255, 255, 255, 0.45);
-    --glass-blur: blur(20px);
     --glass-border: 1px solid rgba(255, 255, 255, 0.6);
-    --shadow-glass: 0 15px 35px rgba(11, 25, 44, 0.05); /* ظل ناعم للغاية بلون النص */
+    --shadow-glass: 0 15px 35px rgba(11, 25, 44, 0.05);
 
-    /* الحواف والحدود القياسية */
-    --border-color: rgba(11, 25, 44, 0.09); /* حدود ناعمة تناسب الخلفية البيضاء */
-    --border-focus: rgba(42, 184, 182, 0.4);
+    --border-color: rgba(11, 25, 44, 0.09);
     --radius-sm: 8px;
-    --radius-md: 10px;          /* انحناء الحقول والأزرار القياسي */
-    --radius-lg: 20px;          /* انحناء البطاقات الكبيرة */
-    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-md: 10px;
+    --radius-lg: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* ألوان الحالة */
     --success: #10B981;
     --danger: #EF4444;
     --warning: #F59E0B;
     --info: #3B82F6;
 }
 
-/* ==========================================
-   1. تهيئة عامة وإعادة تعيين (Reset & Global)
-========================================== */
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+/* 1. Global Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     background-color: var(--bg-body);
     color: var(--text-main);
-    font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
+    font-family: 'Tajawal', sans-serif;
     line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
     direction: rtl;
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ==========================================
-   2. عناصر النماذج والحقول (Form Elements)
-========================================== */
-input, select, textarea {
-    font-family: inherit;
-    font-size: 15px;
-}
-
-.tera-input-field,
-input:not([type="checkbox"]):not([type="radio"]),
-select,
-textarea {
+/* 2. Inputs & Forms */
+.tera-input-field, input, select, textarea {
     width: 100%;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.8);
+    background: #F8FAFC;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     color: var(--text-main);
@@ -81,507 +56,63 @@ textarea {
     transition: var(--transition);
 }
 
-.tera-input-field:focus,
-input:not([type="checkbox"]):not([type="radio"]):focus,
-select:focus,
-textarea:focus {
+.tera-input-field:focus {
     border-color: var(--primary);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(42, 184, 182, 0.12);
+    box-shadow: 0 0 0 4px rgba(42, 184, 182, 0.1);
 }
 
-/* حالة الخطأ في الحقول */
-.tera-input-field.error,
-input.error, select.error, textarea.error {
-    border-color: var(--danger);
-    background: rgba(239, 68, 68, 0.02);
-}
+.tera-input-field.error { border-color: var(--danger); }
 
-.form-group {
-    margin-bottom: 22px;
-    width: 100%;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-/* مجموعات الحقول المتجاورة */
-.form-row {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.form-row .form-group {
-    flex: 1;
-    min-width: 150px;
-}
-
-/* ==========================================
-   3. الأزرار القياسية (Buttons)
-========================================== */
+/* 3. Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: var(--radius-md);
     font-weight: 600;
-    font-size: 14px;
     cursor: pointer;
     transition: var(--transition);
     border: none;
-    background: transparent;
 }
 
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); }
 
-.btn-primary:hover:not(:disabled) {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(42, 184, 182, 0.25);
-}
-
-.btn-secondary {
-    background: rgba(11, 25, 44, 0.05);
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: rgba(11, 25, 44, 0.1);
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-}
-
-.btn-success:hover:not(:disabled) {
-    background: #0E9F6E;
-    transform: translateY(-1px);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-/* ==========================================
-   4. الشعار والهيدر (Logo & Header)
-========================================== */
-.auth-header {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.logo-area {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.logo {
-    height: 48px;
-    width: auto;
-}
-
-.brand-name {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--text-main);
-    letter-spacing: -0.5px;
-}
-
-.back-home-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--primary);
-    text-decoration: none;
-    font-size: 14px;
-    margin-bottom: 20px;
-    transition: var(--transition);
-}
-
-.back-home-btn:hover {
-    gap: 12px;
-    color: var(--primary-dark);
-}
-
-/* ==========================================
-   5. مؤشر الخطوات (Steps Indicator)
-========================================== */
+/* 4. Steps Indicator */
 .steps-indicator {
     display: flex;
     justify-content: space-between;
     margin-bottom: 40px;
+    padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 16px;
 }
 
-.step {
-    flex: 1;
-    text-align: center;
-    opacity: 0.5;
-    transition: var(--transition);
-    cursor: default;
-}
+.step { flex: 1; text-align: center; opacity: 0.4; transition: var(--transition); }
+.step.active { opacity: 1; }
+.step-num { display: block; font-size: 20px; font-weight: 700; color: var(--primary); }
+.step-text { font-size: 13px; color: var(--text-muted); }
 
-.step.active {
-    opacity: 1;
-}
-
-.step-num {
-    display: block;
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.step-text {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.step.active .step-text {
-    color: var(--primary);
-    font-weight: 500;
-}
-
-/* ==========================================
-   6. أقسام خطوات النموذج (Form Sections)
-========================================== */
-.form-step-section {
-    display: none;
-    animation: fadeIn 0.3s ease;
-}
-
-.form-step-section.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-fieldset {
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 20px 24px;
-    margin-bottom: 28px;
-    background: white;
-}
-
-legend {
-    font-weight: 600;
-    color: var(--text-main);
-    padding: 0 12px;
-    width: auto;
-    font-size: 16px;
-}
-
-/* ==========================================
-   7. صناديق التحقق والتأكيدات (Checkboxes & Agreements)
-========================================== */
-.checkbox-group,
-.agreement-item {
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.checkbox-group label,
-.agreement-item label {
-    margin: 0;
-    font-weight: normal;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.agreement-item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary);
-}
-
-.agreements-container {
-    max-height: 450px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 18px;
-    background: #F9FAFB;
-}
-
-.master-agreement {
-    border-top: 1px solid var(--border-color);
-    padding-top: 16px;
-    margin-top: 16px;
-    font-weight: bold;
-}
-
-.nested-list {
-    margin: 8px 0 0 28px;
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-/* ==========================================
-   8. صناديق التحقق الفوري (Validation Boxes)
-========================================== */
-.validation-box {
-    background: #F8FAFC;
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    margin-top: 10px;
-    font-size: 13px;
-    border-right: 3px solid var(--primary-light);
-}
-
-.validation-box ul {
-    margin: 8px 0 0 20px;
-    list-style: none;
-}
-
-.validation-box li {
-    padding: 3px 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.validation-box li::before {
-    content: "✗";
-    color: var(--danger);
-    font-weight: bold;
-}
-
-.validation-box li.valid::before {
-    content: "✓";
-    color: var(--success);
-}
-
-.status-msg {
-    font-size: 13px;
-    margin-top: 6px;
-    font-weight: 500;
-}
-
-/* ==========================================
-   9. قوة كلمة المرور (Password Strength)
-========================================== */
-.password-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.password-wrapper input {
-    flex: 1;
-}
-
-.toggle-password {
-    background: var(--border-color);
-    border: none;
-    padding: 0 16px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.toggle-password:hover {
-    background: rgba(11, 25, 44, 0.12);
-}
-
-.password-strength-container {
-    margin-top: 12px;
-}
-
-.strength-bar {
-    height: 6px;
-    background: #E2E8F0;
-    border-radius: 6px;
-    overflow: hidden;
-    margin: 8px 0 4px;
-}
-
-#strength-bar-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 0.2s, background-color 0.2s;
-}
-
-.strength-weak { color: var(--danger); }
-.strength-medium { color: var(--warning); }
-.strength-strong { color: var(--success); }
-
-/* ==========================================
-   10. الحقول الديناميكية (Dynamic Identity Fields)
-========================================== */
-.nationality-fields,
-.address-fields,
-.sub-fields {
-    transition: var(--transition);
-}
-
-.hidden {
-    display: none !important;
-}
-
-.section-notice {
-    background: #F1F5F9;
-    padding: 8px 12px;
-    border-radius: var(--radius-md);
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: var(--primary-dark);
-}
-
-/* ==========================================
-   11. نافذة OTP المنبثقة (Modal)
-========================================== */
+/* 5. Modals & Notifications */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(11, 25, 44, 0.6);
+    position: fixed; inset: 0;
+    background: rgba(11, 25, 44, 0.5);
     backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     z-index: 2000;
 }
 
-.modal-box {
-    background: white;
-    max-width: 450px;
-    width: 90%;
-    padding: 30px;
-    border-radius: var(--radius-lg);
-    text-align: center;
-    box-shadow: var(--shadow-glass);
-    animation: fadeIn 0.2s ease;
-}
-
-.modal-box h3 {
-    margin-bottom: 12px;
-}
-
-.modal-box input {
-    text-align: center;
-    font-size: 24px;
-    letter-spacing: 8px;
-    padding: 12px;
-}
-
-/* ==========================================
-   12. إشعارات وتنبيهات (Notifications)
-========================================== */
 .notification {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 10000;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-    border-right: 4px solid;
-    font-size: 14px;
-    max-width: 350px;
-    animation: slideIn 0.3s ease;
+    position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+    padding: 16px 24px; border-radius: var(--radius-md);
+    background: white; box-shadow: var(--shadow-glass);
+    border-right: 5px solid;
 }
 
-.notification-success { border-right-color: var(--success); }
-.notification-error { border-right-color: var(--danger); }
-.notification-info { border-right-color: var(--info); }
-.notification-warning { border-right-color: var(--warning); }
-
-@keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* ==========================================
-   13. أزرار التنقل بين الخطوات (Navigation)
-========================================== */
-.form-navigation-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-    gap: 16px;
-}
-
-/* ==========================================
-   14. التجاوب مع الشاشات الصغيرة (Responsive)
-========================================== */
+/* 6. Responsive */
 @media (max-width: 768px) {
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-    
-    .steps-indicator {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .step {
-        min-width: 80px;
-    }
-    
-    .modal-box {
-        padding: 20px;
-        width: 95%;
-    }
-    
-    .form-navigation-buttons {
-        flex-direction: column;
-    }
-    
-    .btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .step-text {
-        display: none;
-    }
-    
-    .step-num {
-        font-size: 22px;
-    }
-    
-    .logo-area {
-        flex-direction: column;
-    }
+    .form-row { flex-direction: column; gap: 0; }
+    .btn { width: 100%; }
 }
