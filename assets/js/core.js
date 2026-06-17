@@ -9,45 +9,36 @@ const TERA = {
 };
 
 /* ================================================= */
-/* CORE STORAGE */
-/* ================================================= */
-const Storage = {
-    set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
-    get: (key) => {
-        const item = localStorage.getItem(key);
-        try { return item ? JSON.parse(item) : null; } catch { return item; }
-    },
-    remove: (key) => localStorage.removeItem(key),
-    clear: () => localStorage.clear()
-};
-
-/* ================================================= */
-/* UI FEEDBACK */
+/* UI FEEDBACK - (إصلاح اللودر) */
 /* ================================================= */
 function showLoader() {
-    const loader = document.getElementById('tera-loader');
-    if (loader) loader.style.display = 'flex';
+    let loader = document.getElementById('tera-loader');
+    if (loader) {
+        loader.style.display = 'flex';
+    }
 }
 
 function hideLoader() {
-    const loader = document.getElementById('tera-loader');
-    if (loader) loader.style.display = 'none';
+    let loader = document.getElementById('tera-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
 }
 
 /* ================================================= */
-/* DYNAMIC COMPONENT LOADER (المسارات الذكية) */
+/* DYNAMIC COMPONENT LOADER */
 /* ================================================= */
 async function loadComponents() {
-    // تحديد المسار الصحيح بناءً على موقع الصفحة الحالي
-    const isRoot = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
-    const prefix = isRoot ? '.' : '../..';
+    // تحديد المسار النسبي الصحيح بناءً على عمق المجلدات
+    const pathParts = window.location.pathname.split('/').filter(p => p.length > 0);
+    const depth = pathParts.length > 1 ? '../..' : '.';
     
     const components = [
-        { selector: '#header-container', path: `${prefix}/components/header.html` },
-        { selector: '#footer-container', path: `${prefix}/components/footer.html` },
-        { selector: '#sidebar-container', path: `${prefix}/components/sidebar.html` },
-        { selector: '#loader-container', path: `${prefix}/components/loader.html` },
-        { selector: '#alerts-container', path: `${prefix}/components/alerts.html` }
+        { selector: '#header-container', path: `${depth}/components/header.html` },
+        { selector: '#footer-container', path: `${depth}/components/footer.html` },
+        { selector: '#sidebar-container', path: `${depth}/components/sidebar.html` },
+        { selector: '#loader-container', path: `${depth}/components/loader.html` },
+        { selector: '#alerts-container', path: `${depth}/components/alerts.html` }
     ];
 
     for (const comp of components) {
@@ -64,8 +55,8 @@ async function loadComponents() {
         }
     }
     
-    // ضمان إخفاء اللودر دائماً بعد محاولة تحميل المكونات
-    hideLoader();
+    // تأخير بسيط لضمان ظهور المحتوى بسلاسة بعد إخفاء اللودر
+    setTimeout(hideLoader, 500);
 }
 
 /* ================================================= */
@@ -74,8 +65,9 @@ async function loadComponents() {
 const Session = {
     isLoggedIn: () => !!localStorage.getItem('tera_token'),
     logout: () => {
-        Storage.clear();
-        window.location.replace('/auth/auth/login/login.html');
+        localStorage.clear();
+        // التأكد من توجيه المستخدم لمسار تسجيل الدخول الصحيح
+        window.location.href = '/auth/auth/login/login.html';
     }
 };
 
@@ -91,7 +83,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // 3. حماية الصفحات
     const protectedPaths = ['/pages/dashboard', '/pages/portfolio', '/pages/investments', '/pages/profile', '/pages/security', '/pages/reports'];
-    if (protectedPaths.some(path => window.location.pathname.includes(path)) && !Session.isLoggedIn()) {
+    const currentPath = window.location.pathname;
+    
+    if (protectedPaths.some(path => currentPath.includes(path)) && !Session.isLoggedIn()) {
         window.location.replace('/auth/auth/login/login.html');
     }
 
