@@ -1,112 +1,67 @@
-<aside class="tera-sidebar glass-panel" id="sidebar">
-    <div class="sidebar-logo">
-        <img src="../../images/logo.svg" alt="تيرا">
+<nav class="tera-sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <img src="/images/logo.svg" alt="Logo" class="sidebar-logo">
     </div>
-    
-    <nav class="sidebar-menu">
-        <a href="../dashboard/index.html" class="menu-item" data-page="dashboard">
-            <i class="fa-solid fa-chart-pie"></i> نظرة عامة
-        </a>
-        <a href="../investments/opportunities.html" class="menu-item" data-page="investments">
-            <i class="fa-solid fa-briefcase"></i> الفرص الاستثمارية
-        </a>
-        <a href="../portfolio/portfolio-overview.html" class="menu-item" data-page="portfolio">
-            <i class="fa-solid fa-wallet"></i> المحفظة والأصول
-        </a>
-        <a href="../reports/reports-dashboard.html" class="menu-item" data-page="reports">
-            <i class="fa-solid fa-file-invoice-dollar"></i> التقارير المالية
-        </a>
-        <a href="../profile/personal-information.html" class="menu-item" data-page="profile">
-            <i class="fa-solid fa-user-shield"></i> الملف الشخصي
-        </a>
-        <a href="../security/change-password.html" class="menu-item" data-page="security">
-            <i class="fa-solid fa-lock"></i> الأمان
-        </a>
-        <a href="../support/notifications.html" class="menu-item" data-page="support">
-            <i class="fa-solid fa-bell"></i> الإشعارات
-        </a>
-    </nav>
 
-    <div class="sidebar-footer">
-        <button class="btn-logout" id="btn-logout">
-            <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-        </button>
-    </div>
-</aside>
+    <ul class="sidebar-menu">
+        <li>
+            <a href="/pages/dashboard/index.html"><i class="fa-solid fa-gauge"></i> <span>لوحة التحكم</span></a>
+        </li>
 
-<style>
-    .tera-sidebar {
-        width: 280px;
-        min-height: 100vh;
-        padding: 30px 20px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0; /* منع انضغاط القائمة */
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .sidebar-logo { text-align: center; margin-bottom: 40px; }
-    .sidebar-logo img { width: 140px; }
-    
-    .sidebar-menu { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
-    .menu-item {
-        display: flex; align-items: center; gap: 15px; padding: 15px 20px;
-        text-decoration: none; color: #475569; border-radius: 12px;
-        font-weight: 600; transition: 0.3s;
-    }
-    .menu-item:hover, .menu-item.active {
-        background: var(--tera-teal);
-        color: white;
-    }
-    .menu-item i { width: 20px; text-align: center; }
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span>الاستثمارات</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/investments/opportunities.html">الفرص المتاحة</a></li>
+                <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
+                <li><a href="/pages/investments/completed-investments.html">الاستثمارات المكتملة</a></li>
+                <li><a href="/pages/investments/cancelled-investments.html">الاستثمارات الملغاة</a></li>
+            </ul>
+        </li>
 
-    .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
-    .btn-logout {
-        width: 100%; border: none; background: transparent; color: #ef4444;
-        padding: 15px; display: flex; align-items: center; gap: 15px;
-        font-weight: 700; cursor: pointer; border-radius: 12px; transition: 0.3s;
-    }
-    .btn-logout:hover { background: rgba(239, 68, 68, 0.05); }
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-briefcase"></i> <span>المحفظة</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                <li><a href="/pages/portfolio/transactions.html">العمليات</a></li>
+                <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
+                <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
+            </ul>
+        </li>
 
-    /* التجاوب */
-    @media (max-width: 992px) {
-        .tera-sidebar { 
-            position: fixed; right: -280px; top: 0; height: 100vh; 
-            z-index: 1000; background: white; box-shadow: 2px 0 20px rgba(0,0,0,0.1);
-        }
-        .tera-sidebar.active { right: 0; }
-    }
-</style>
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-file-invoice"></i> <span>التقارير</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
+                <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
+                <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
+            </ul>
+        </li>
 
-<script>
-    // تفعيل الرابط النشط
-    const path = window.location.pathname;
-    document.querySelectorAll('.menu-item').forEach(item => {
-        if (path.includes(item.getAttribute('data-page'))) {
-            item.classList.add('active');
-        }
-    });
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-user"></i> <span>الملف الشخصي</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
+                <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
+            </ul>
+        </li>
 
-    // تفعيل زر الخروج
-    const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if(confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-                if(typeof Session !== 'undefined') {
-                    Session.logout();
-                } else {
-                    localStorage.clear();
-                    window.location.href = '/auth/auth/login/login.html';
-                }
-            }
-        });
-    }
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-shield-halved"></i> <span>الأمان</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
+                <li><a href="/pages/security/two-factor-authentication.html">التحقق الثنائي</a></li>
+                <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
+            </ul>
+        </li>
 
-    // تفعيل زر التبديل في الهيدر (إذا ضغط المستخدم عليه)
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-    }
-</script>
+        <li class="has-submenu">
+            <a href="#" class="submenu-toggle"><i class="fa-solid fa-headset"></i> <span>الدعم الفني</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+            <ul class="submenu">
+                <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
+                <li><a href="/pages/support/tickets.html">التذاكر</a></li>
+                <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
+            </ul>
+        </li>
+    </ul>
+</nav>
