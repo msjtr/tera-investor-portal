@@ -1,45 +1,43 @@
 /* =========================================
-   ملف الإعدادات العامة (core.css)
+   ملف الإعدادات العامة (core.css) - نسخة مستقرة
    ========================================= */
 
-/* استيراد الخطوط من جوجل */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-    /* الألوان الأساسية المستوحاة من شعار تيرا */
-    --tera-navy: #0A1B3F;       /* اللون الداكن الرئيسي */
-    --tera-cyan: #00C2C7;       /* اللون السماوي الساطع (السهم) */
-    --tera-cyan-dark: #009CA0;  /* للتحويم (Hover) */
-    --tera-cyan-light: #E6FAFA; /* خلفيات خفيفة */
+    /* الألوان الأساسية - هوية تيرا */
+    --tera-navy: #0A1B3F;
+    --tera-navy-light: #162d5e;
+    --tera-cyan: #00C2C7;
+    --tera-cyan-dark: #009CA0;
+    --tera-cyan-light: #E6FAFA;
     
-    /* ألوان الحالة والنصوص */
-    --bg-white: #FFFFFF;
-    --bg-light: #F8FAFC;
-    --text-main: #1E293B;       
-    --text-muted: #64748B;      
-    
+    /* ألوان الحالة */
     --success: #10B981;
     --error: #EF4444;
     --warning: #F59E0B;
     --info: #3B82F6;
 
-    /* الخطوط */
-    --font-heading: 'Tajawal', sans-serif; /* للعناوين */
-    --font-body: 'Cairo', sans-serif;      /* للنصوص والفقرات */
+    /* الخلفيات والخطوط */
+    --bg-white: #FFFFFF;
+    --bg-light: #F8FAFC;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    
+    --font-heading: 'Tajawal', sans-serif;
+    --font-body: 'Cairo', sans-serif;
     
     /* الحواف والظلال */
     --border-color: #E2E8F0;
-    --shadow-sm: 0 1px 2px 0 rgba(10, 27, 63, 0.05);
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(10, 27, 63, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(10, 27, 63, 0.1);
 }
 
-/* =========================================
-   الضبط الأساسي (Reset)
-   ========================================= */
+/* الضبط الأساسي (Reset) */
 *, *::before, *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
@@ -50,44 +48,36 @@ body {
     min-height: 100vh;
     direction: rtl;
     text-align: right;
+    margin: 0;
+    -webkit-font-smoothing: antialiased; /* تحسين مظهر الخطوط */
 }
 
-/* تطبيق الخطوط */
-h1, h2, h3, h4, h5, h6, .step-title, .card-header h2, .btn, label {
+/* العناوين والخطوط */
+h1, h2, h3, h4, h5, h6, .btn, label {
     font-family: var(--font-heading);
     font-weight: 700;
-}
-
-/* روابط الموقع */
-a {
-    color: var(--tera-cyan-dark);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-a:hover {
     color: var(--tera-navy);
 }
 
-ul {
-    list-style: none;
+/* تحسين الروابط */
+a {
+    color: var(--tera-cyan-dark);
+    text-decoration: none;
+    transition: all 0.3s ease;
 }
 
-/* فئات مساعدة (Utility Classes) */
-.d-none { display: none !important; }
-.mt-10 { margin-top: 10px; }
-.mt-20 { margin-top: 20px; }
-.mb-20 { margin-bottom: 20px; }
-.text-center { text-align: center; }
+a:hover {
+    color: var(--tera-cyan);
+}
 
-/* عناصر النماذج العامة */
+/* النماذج (Forms) */
 .form-group { margin-bottom: 1.5rem; }
 .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--tera-navy); }
 .form-control {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     background-color: var(--bg-light);
     font-family: var(--font-body);
     font-size: 1rem;
@@ -104,6 +94,14 @@ ul {
 .card {
     background-color: var(--bg-white);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 2rem;
+    box-shadow: var(--shadow-sm);
 }
+
+/* فئات مساعدة (Utility Classes) */
+.text-muted { color: var(--text-muted); }
+.w-100 { width: 100%; }
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.text-center { text-align: center; }
