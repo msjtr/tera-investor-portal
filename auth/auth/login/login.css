@@ -1,132 +1,144 @@
-/* التنسيقات الفاخرة المعتمدة لمنصة تيرا المتوافقة مع أحجام الشاشات والتباعد */
-:root {
-    --tera-navy-primary: #0A2540;
-    --tera-teal-accent: #028090;
-    --tera-success-green: #00D46A;
-    --tera-danger-red: #E25950;
-    --tera-border-color: #E2E8F0;
-    --tera-gray-muted: #64748B;
-}
-
-body {
-    background-color: #F4F7FA;
-    color: var(--tera-navy-primary);
-    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
-    margin: 0; padding: 0; line-height: 1.6;
-}
-
+/* تنسيقات بوابة المستثمر لمنصة تيرا - التباعد الفاخر والتحكم في الأيقونات والشعار */
 .auth-layout {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 40px 20px;
+    background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
+    padding: 60px 20px;
 }
 
+/* الكارد الزجاجي المتناسق والمتباعد بالكامل وحبس الشعار بالداخل */
 .auth-container {
     background: #FFFFFF;
-    border-radius: 16px;
-    box-shadow: 0 15px 45px rgba(10, 37, 64, 0.04);
+    border-radius: 24px;
+    box-shadow: 0 25px 55px rgba(15, 23, 42, 0.05);
     width: 100%;
-    max-width: 520px; /* حجم مثالي ومدمج لصفحات الدخول */
-    padding: 50px;
+    max-width: 540px;
+    padding: 55px; /* حشوة داخلية كبيرة لمنع التكدس */
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.logo-img { height: 58px; object-fit: contain; }
-.portal-title { font-size: 26px; font-weight: 800; color: var(--tera-navy-primary); }
-.page-subtitle { font-size: 19px; color: var(--tera-teal-accent); margin-top: 6px; font-weight: 700; }
-.welcome-text { font-size: 14px; color: var(--tera-gray-muted); margin-top: 8px; }
+.text-center { text-align: center; }
+.mb-5 { margin-bottom: 3.5rem; }
+.mt-3 { margin-top: 1.2rem; }
 
-/* صندوق التنبيه الفوري للأخطاء التكتيكية */
-.error-summary-box {
-    background-color: #FFF5F5;
-    border-right: 4px solid var(--tera-danger-red);
-    padding: 14px 18px;
-    border-radius: 8px;
+/* صندوق تنسيق الشعار المحبوس داخل الكارد ليعطي فخامة مطلقة */
+.brand-logo-box {
     margin-bottom: 30px;
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
-    font-size: 13.5px;
-    color: var(--tera-danger-red);
-    font-weight: 700;
-    animation: shakeAnim 0.3s ease-in-out;
 }
 
-@keyframes shakeAnim {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
+.enclosed-logo-img {
+    width: 145px;
+    height: auto;
+    object-fit: contain;
 }
 
-.form-field-group { margin-bottom: 28px; }
+.portal-title { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.page-subtitle { font-size: 18px; color: #0d9488; font-weight: 700; margin-bottom: 12px; }
+.welcome-text { font-size: 14px; color: #475569; line-height: 1.6; }
 
-.field-label-flex {
+/* لوحة التنبيه للأخطاء التكتيكية */
+.error-summary-box {
+    background-color: #FFF5F5;
+    border-right: 4px solid #E25950;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 35px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-}
-
-.field-label { font-size: 14px; font-weight: 700; color: var(--tera-navy-primary); margin: 0; }
-.required { color: var(--tera-danger-red); }
-
-.forgot-pass-link {
-    font-size: 12.5px;
-    color: var(--tera-teal-accent);
-    text-decoration: none;
+    gap: 12px;
+    font-size: 13.5px;
+    color: #E25950;
     font-weight: 700;
 }
+
+/* زيادة تباعد الحقول والمسافات (طلب العميل للتباعد) */
+.form-field-group { 
+    margin-bottom: 34px; /* زيادة التباعد بين الحقول براحة تامة */
+    text-align: right; 
+}
+
+.field-label-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.field-label { font-size: 14.5px; font-weight: 700; color: #0f172a; }
+.required { color: #E25950; }
+
+.forgot-pass-link { font-size: 13px; color: #1e3a8a; text-decoration: none; font-weight: 700; }
 .forgot-pass-link:hover { text-decoration: underline; }
 
 .input-wrapper { position: relative; width: 100%; }
 
 .form-input-control {
-    width: 100%; padding: 14px 18px; font-size: 14.5px;
-    border: 1px solid #CBD5E1; border-radius: 8px; box-sizing: border-box;
+    width: 100%; padding: 15px 20px; font-size: 14.5px;
+    border: 1px solid #CBD5E1; border-radius: 12px; box-sizing: border-box;
     background: #FFFFFF; transition: all 0.25s ease;
 }
-
 .form-input-control:focus {
-    border-color: var(--tera-teal-accent);
-    box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.12);
+    border-color: #0d9488;
+    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
     outline: none;
 }
 
-/* الأطر الذكية الملونة عند التحقق */
-.form-input-control.is-invalid-active {
-    border-color: var(--tera-danger-red) !important;
-    background-color: #FFF5F5 !important;
-    box-shadow: 0 0 0 3px rgba(226, 89, 80, 0.1) !important;
-}
+/* الأطر الذكية الملونة للتحقق الفوري البصري */
+.form-input-control.is-invalid-active { border-color: #E25950 !important; background-color: #FFF5F5 !important; }
+.form-input-control.is-valid-active { border-color: #00D46A !important; background-color: #F6FFF9 !important; }
 
-.form-input-control.is-valid-active {
-    border-color: var(--tera-success-green) !important;
-    background-color: #F6FFF9 !important;
-    box-shadow: 0 0 0 3px rgba(0, 212, 106, 0.08) !important;
-}
+.checkbox-toggle-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: #475569; }
+.remember-me-box { margin-top: -10px; margin-bottom: 35px; }
+.error-feedback-msg { color: #E25950; font-size: 12.5px; margin-top: 8px; display: block; font-weight: 500; }
 
-.checkbox-options-container { display: flex; justify-content: flex-start; }
-.checkbox-toggle-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #475569; }
-.checkbox-toggle-label input[type="checkbox"] { transform: scale(1.05); cursor: pointer; }
-
-.remember-me-box { margin-top: -10px; margin-bottom: 30px; }
-
-.error-feedback-msg { color: var(--tera-danger-red); font-size: 12.5px; margin-top: 6px; display: block; font-weight: 500; }
-
-/* زر الإرسال الفاخر */
+/* زر الإرسال المتناسق مع تدرج تيرا الفاخر */
 .btn-submit-login {
-    width: 100%; padding: 14px; font-size: 15px; font-weight: 700;
-    background-color: var(--tera-navy-primary); color: #FFFFFF;
-    border: none; border-radius: 8px; cursor: pointer;
-    transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(10, 37, 64, 0.08);
+    width: 100%; padding: 15px; font-size: 15px; font-weight: 700;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%); color: #FFFFFF;
+    border: none; border-radius: 12px; cursor: pointer;
+    transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.25);
 }
-.btn-submit-login:hover { background-color: var(--tera-teal-accent); transform: translateY(-1px); }
-.btn-submit-login:active { transform: translateY(0); }
+.btn-submit-login:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(13, 148, 136, 0.35); opacity: 0.95; }
 
-.bottom-routing-footer-links { font-size: 13.5px; border-top: 1px solid var(--tera-border-color); padding-top: 25px; }
-.routing-link { color: var(--tera-teal-accent); text-decoration: none; font-weight: bold; }
-.routing-link-secondary { color: var(--tera-gray-muted); text-decoration: none; }
+.bottom-routing-footer-links { font-size: 14px; border-top: 1px dashed #e2e8f0; padding-top: 30px; margin-top: 40px; }
+.routing-link { color: #1e3a8a; text-decoration: none; font-weight: bold; }
+.routing-link-secondary { color: #64748b; text-decoration: none; }
 .routing-link:hover, .routing-link-secondary:hover { text-decoration: underline; }
 
-@media (max-width: 576px) { .auth-container { padding: 35px 20px; } }
+/* 🌌 لوحة التحويل السينمائية والعبارات الإبداعية الشاملة للأبعاد */
+.tera-loader-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(10, 37, 64, 0.5); backdrop-filter: blur(8px);
+    z-index: 20000; display: none; justify-content: center; align-items: center;
+}
+
+.loader-content-card {
+    background: #FFFFFF; border-radius: 24px; padding: 50px;
+    width: 90%; max-width: 480px; text-align: center;
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.18);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    animation: modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScaleUp { from { transform: scale(0.9) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+/* حلقة الدوران السينمائية اللطيفة المعززة لـ تيرا */
+.spinning-infinity-ring {
+    width: 65px; height: 65px;
+    border: 4px solid #F1F5F9; border-top: 4px solid #1e3a8a; border-bottom: 4px solid #0d9488;
+    border-radius: 50%; margin: 0 auto 25px auto;
+    animation: spinRing 1s linear infinite;
+}
+
+@keyframes spinRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.loader-primary-heading { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+.creative-motivational-text { font-size: 14.5px; color: #0d9488; font-weight: 700; min-height: 44px; line-height: 1.6; }
+
+/* شريط التقدم السريع في الأسفل */
+.loading-progress-track { background: #F1F5F9; height: 5px; border-radius: 3px; width: 100%; margin-top: 25px; overflow: hidden; }
+.progress-fill-bar { background: linear-gradient(90deg, #1e3a8a, #0d9488); height: 100%; width: 0%; animation: fillBarProgress 3s linear forwards; }
+
+@keyframes fillBarProgress { from { width: 0%; } to { width: 100%; } }
+
+@media (max-width: 576px) { .auth-container { padding: 35px 20px; } .loader-content-card { padding: 35px 20px; } }
