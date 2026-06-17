@@ -1,5 +1,5 @@
 /* ================================================= */
-/* TERA APPLICATION (app.js) - نسخة الاستقرار المطلق */
+/* TERA APPLICATION (app.js) - نسخة متكاملة وشاملة */
 /* ================================================= */
 'use strict';
 
@@ -12,7 +12,7 @@ const App = {
     notifications: [],
 
     init() {
-        console.log('TERA App Started');
+        console.log('TERA App Initializing...');
         this.loadUser();
         this.checkAuth();
         this.initializeSidebar();
@@ -22,12 +22,9 @@ const App = {
     },
 
     loadUser() {
-        // التحقق من وجود بيانات المستخدم في التخزين المحلي
-        if (typeof Session !== 'undefined' && Session.getUser()) {
-            this.user = Session.getUser();
-        } else if (localStorage.getItem('tera_token')) {
-            this.user = { fullName: 'المستثمر 106', email: 'investor106@tera.sa' };
-        }
+        // جلب بيانات المستخدم من التخزين المحلي
+        const userData = localStorage.getItem('tera_user');
+        this.user = userData ? JSON.parse(userData) : { fullName: 'المستثمر', email: 'investor@tera.sa' };
     },
 
     checkAuth() {
@@ -37,7 +34,6 @@ const App = {
         const hasToken = localStorage.getItem('tera_token');
 
         if (requiresAuth && !hasToken) {
-            // التوجيه للمسار الكامل لضمان عدم حدوث خطأ 404
             window.location.replace('/auth/auth/login/login.html');
         }
     },
@@ -45,42 +41,53 @@ const App = {
     initializeSidebar() {
         const toggleBtn = document.querySelector('.menu-toggle') || document.getElementById('sidebarToggle');
         const sidebar = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
-
         if (!toggleBtn || !sidebar) return;
-
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-        });
+        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
     },
 
     initializeProfile() {
         const profileName = document.querySelector('.investor-name');
         if (this.user && profileName) {
-            profileName.textContent = this.user.fullName || 'المستثمر 106';
+            profileName.textContent = this.user.fullName;
         }
     },
 
     initializeNotifications() {
         const badge = document.getElementById('notificationCount');
+        // محاكاة جلب الإشعارات
+        this.notifications = JSON.parse(localStorage.getItem('tera_notifications') || '[]');
         if (badge && this.notifications.length > 0) {
             badge.textContent = this.notifications.length;
             badge.style.display = 'flex';
         }
+    },
+
+    /* دوال التحكم في الحساب */
+    logout() {
+        localStorage.removeItem('tera_token');
+        localStorage.removeItem('tera_user');
+        window.location.replace('/auth/auth/login/login.html');
+    },
+
+    updateProfile(newName, newEmail) {
+        this.user.fullName = newName;
+        this.user.email = newEmail;
+        localStorage.setItem('tera_user', JSON.stringify(this.user));
+        alert('تم تحديث البيانات الشخصية بنجاح');
     }
 };
 
 /* ================================================= */
-/* ROUTER (توجيه المسارات الثابت) */
+/* ROUTER (توجيه المسارات المحدث) */
 /* ================================================= */
 const Router = {
-    go(url) {
-        window.location.href = url;
-    },
+    go(url) { window.location.href = url; },
     dashboard() { this.go('/pages/dashboard/index.html'); },
     investments() { this.go('/pages/investments/opportunities.html'); },
     portfolio() { this.go('/pages/portfolio/portfolio-overview.html'); },
     reports() { this.go('/pages/reports/reports-dashboard.html'); },
-    profile() { this.go('/pages/profile/personal-information.html'); }
+    profile() { this.go('/pages/profile/personal-information.html'); },
+    security() { this.go('/pages/security/change-password.html'); }
 };
 
 /* ================================================= */
@@ -90,19 +97,22 @@ let sessionTimer;
 function startSessionTimer() {
     clearTimeout(sessionTimer);
     sessionTimer = setTimeout(() => {
-        alert('⚠️ انتهت الجلسة بسبب الخمول. جاري تسجيل الخروج.');
-        localStorage.removeItem('tera_token');
-        window.location.replace('/auth/auth/login/login.html');
-    }, 3600000); 
+        alert('⚠️ انتهت الجلسة بسبب الخمول.');
+        App.logout();
+    }, 3600000); // ساعة واحدة
 }
 
 document.addEventListener('click', startSessionTimer);
 document.addEventListener('keypress', startSessionTimer);
 
 /* ================================================= */
-/* START APP */
+/* INITIALIZATION */
 /* ================================================= */
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     startSessionTimer();
+    
+    // ربط زر تسجيل الخروج عالمياً إذا وجد
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => App.logout());
 });
