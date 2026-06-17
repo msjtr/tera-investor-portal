@@ -13,46 +13,43 @@
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
-
-    <style>
-        :root { --tera-navy: #0A2540; --tera-teal: #028090; }
-        body { background: #f4f7fa; margin: 0; font-family: 'Tajawal', sans-serif; display: flex; color: var(--tera-navy); }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 20px; box-shadow: 0 8px 32px 0 rgba(10, 37, 64, 0.05); }
-        .sidebar { width: 280px; padding: 30px 20px; display: flex; flex-direction: column; min-height: 100vh; }
-        .brand-logo img { width: 140px; display: block; margin: 0 auto 40px auto; }
-        .nav-menu { display: flex; flex-direction: column; gap: 10px; }
-        .nav-item { display: flex; align-items: center; gap: 15px; padding: 15px; text-decoration: none; color: #475569; border-radius: 12px; font-weight: 500; transition: 0.3s; }
-        .nav-item:hover, .nav-item.active { background: var(--tera-teal); color: white; }
-        .main-content { flex: 1; padding: 30px; }
-    </style>
 </head>
 <body>
 
-    <aside class="sidebar glass-panel">
-        <div class="brand-logo">
-            <img src="../../images/logo.svg" alt="تيرا">
-        </div>
-        
-        <nav class="nav-menu">
-            <a href="../dashboard/index.html" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> نظرة عامة</a>
-            <a href="../investments/opportunities.html" class="nav-item"><i class="fa-solid fa-briefcase"></i> الفرص الاستثمارية</a>
-            <a href="../portfolio/portfolio-overview.html" class="nav-item"><i class="fa-solid fa-wallet"></i> المحفظة والأصول</a>
-            <a href="../reports/reports-dashboard.html" class="nav-item"><i class="fa-solid fa-file-invoice-dollar"></i> التقارير المالية</a>
-            <a href="../profile/personal-information.html" class="nav-item"><i class="fa-solid fa-user"></i> الملف الشخصي</a>
-            <a href="../security/change-password.html" class="nav-item"><i class="fa-solid fa-shield-halved"></i> الأمان</a>
-            <a href="../support/notifications.html" class="nav-item"><i class="fa-solid fa-bell"></i> الإشعارات</a>
-        </nav>
-        
-        <button onclick="App.logout()" class="nav-item" style="margin-top: auto; color: #ef4444; border: none; background: transparent; cursor: pointer;">
-            <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-        </button>
-    </aside>
+    <div id="loader-container"></div>
+    
+    <div id="alerts-container"></div>
+
+    <div id="sidebar-container"></div>
 
     <main class="main-content">
-        <h1>مرحباً بك في لوحة تحكم تيرا</h1>
+        <div id="header-container"></div>
+
+        <div class="stats-grid">
+            <div class="stat-card glass-panel" style="border-right-color: var(--tera-navy);">
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">إجمالي قيمة المحفظة</p>
+                <h3 style="font-size: 28px; color: var(--tera-navy);">245,500 <span style="font-size: 16px;">ر.س</span></h3>
+            </div>
+            <div class="stat-card glass-panel">
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">إجمالي الأرباح الموزعة</p>
+                <h3 style="font-size: 28px; color: var(--tera-teal);">18,250 <span style="font-size: 16px;">ر.س</span></h3>
+            </div>
+            <div class="stat-card glass-panel" style="border-right-color: #D4AF37;">
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">الاستثمارات النشطة</p>
+                <h3 style="font-size: 28px; color: #D4AF37;">4 <span style="font-size: 16px;">فرص</span></h3>
+            </div>
+        </div>
     </main>
 
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/app.js"></script>
+    
+    <script>
+        // تفعيل الربط التلقائي للمكونات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            // ملاحظة: دالة loadComponents الموجودة في core.js ستقوم بملء الحاويات أعلاه
+            // تأكد من أن مسارات ملفات HTML في core.js تبدأ بـ /components/
+        });
+    </script>
 </body>
 </html>
