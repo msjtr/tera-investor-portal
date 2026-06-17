@@ -1,5 +1,6 @@
 /* ================================================= */
-/* TERA APPLICATION */
+/* TERA APPLICATION (app.js) */
+/* محرك التطبيق الأساسي - مصحح ومحمي لمسارات البوابة */
 /* ================================================= */
 'use strict';
 
@@ -27,40 +28,51 @@ const App = {
         // نتحقق من وجود Session (الموجودة في core.js) لتفادي الأخطاء
         if (typeof Session !== 'undefined') {
             this.user = Session.getUser();
+        } else if (localStorage.getItem('tera_token')) {
+            // مستخدم افتراضي في حال غياب ملف core.js ولكن الجلسة نشطة (نظامنا الذكي)
+            this.user = { fullName: 'المستثمر 106', email: 'investor106@tera.sa' };
         }
     },
 
     checkAuth() {
         const protectedPages = [
-            '/pages/dashboard/',
-            '/pages/investments/',
-            '/pages/portfolio/',
-            '/pages/profile/',
-            '/pages/reports/',
-            '/pages/security/'
+            '/pages/dashboard',
+            '/pages/investments',
+            '/pages/portfolio',
+            '/pages/profile',
+            '/pages/reports',
+            '/pages/security'
         ];
 
         const currentPath = window.location.pathname;
         const requiresAuth = protectedPages.some(path => currentPath.includes(path));
 
-        if (requiresAuth && typeof Session !== 'undefined' && !Session.isLoggedIn()) {
-            window.location.href = '/auth/login.html';
+        // 🎯 التعديل الجوهري: الاعتماد على التوكن الفعلي الذي تم توليده في صفحة الدخول
+        const hasToken = localStorage.getItem('tera_token');
+
+        if (requiresAuth && !hasToken) {
+            // توجيه صارم للمسار المتعمق المحدث لمنع خطأ 404
+            window.location.replace('/auth/auth/login/login.html');
         }
     },
 
     initializeSidebar() {
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
+        // توافق مع الأسماء الجديدة في لوحة التحكم لمنع تعارض الأكواد
+        const toggleBtn = document.getElementById('sidebarToggle') || document.querySelector('.menu-toggle');
+        const sidebar = document.getElementById('sidebar') || document.querySelector('.tera-sidebar');
 
         if (!toggleBtn || !sidebar) return;
 
         toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
+            if (sidebar.id === 'sidebar') {
+                sidebar.classList.toggle('collapsed');
+            }
         });
     },
 
     initializeProfile() {
-        const profileName = document.getElementById('profileName');
+        // تحديث اسم المستثمر في الـ Header للوحة التحكم
+        const profileName = document.getElementById('profileName') || document.querySelector('.investor-name');
         const profileEmail = document.getElementById('profileEmail');
 
         if (!this.user) return;
@@ -75,10 +87,13 @@ const App = {
     },
 
     initializeNotifications() {
-        const badge = document.getElementById('notificationCount');
+        const badge = document.getElementById('notificationCount') || document.querySelector('.badge');
         if (!badge) return;
         
-        badge.textContent = this.notifications.length;
+        if (this.notifications.length > 0) {
+            badge.textContent = this.notifications.length;
+            badge.style.display = 'flex';
+        }
     },
 
     addNotification(notification) {
@@ -93,7 +108,7 @@ const App = {
 };
 
 /* ================================================= */
-/* ROUTES */
+/* ROUTES (التوجيه الآمن بالامتدادات الكاملة) */
 /* ================================================= */
 const Router = {
     go(url) {
@@ -125,17 +140,20 @@ function startSessionTimer() {
     clearTimeout(sessionTimer);
     
     sessionTimer = setTimeout(() => {
-        // نتحقق من وجود دالة التنبيه قبل استدعائها
         if (typeof warningAlert !== 'undefined') {
-            warningAlert('انتهت الجلسة بسبب الخمول');
+            warningAlert('انتهت الجلسة بسبب الخمول، يرجى تسجيل الدخول لحماية أصولك.');
         } else {
-            alert('⚠️ انتهت الجلسة بسبب الخمول');
+            alert('⚠️ انتهت الجلسة بسبب الخمول. جاري تسجيل الخروج لحماية حسابك الاستثماري.');
         }
+
+        // 🎯 مسح التوكن أمنياً لضمان عدم وجود جلسات شبحية
+        localStorage.removeItem('tera_token');
 
         if (typeof logout !== 'undefined') {
             logout();
         } else {
-            window.location.href = '/auth/login.html';
+            // 🎯 توجيه جذري للمسار المتعمق الصحيح
+            window.location.replace('/auth/auth/login/login.html');
         }
     }, 3600000); 
 }
