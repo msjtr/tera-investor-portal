@@ -1,84 +1,70 @@
 /* ================================================= */
-/* TERA RESPONSIVE SYSTEM - UPDATED */
+/* TERA RESPONSIVE SYSTEM - UPDATED & STABLE */
 /* ================================================= */
 
-/* LARGE SCREENS (شاشات كبيرة) */
+/* 1. LARGE SCREENS */
 @media (max-width: 1400px) {
     .container { max-width: 1140px; }
 }
 
-/* DESKTOP (أجهزة سطح المكتب) */
+/* 2. DESKTOP (أجهزة سطح المكتب) */
 @media (max-width: 1200px) {
     .grid-4 { grid-template-columns: repeat(3, 1fr); }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* TABLET (الأجهزة اللوحية) */
+/* 3. TABLET (الأجهزة اللوحية) */
 @media (max-width: 992px) {
-    .page-wrapper { padding: 25px; }
+    .page-wrapper { padding: 20px; }
     .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
     
-    .navbar-menu { flex-wrap: wrap; justify-content: center; gap: 15px; }
+    /* إصلاح السايدبار للتابلت - إخفاء النص وإظهار الأيقونات فقط */
+    #sidebar-container { width: 80px; }
+    .tera-main-content { width: calc(100% - 80px); }
     
-    .register-steps { flex-direction: column; gap: 20px; align-items: flex-start; }
-    .step { width: 100%; text-align: right; display: flex; align-items: center; gap: 15px; }
-    
-    .sidebar { width: 80px; } /* تصغير السايدبار في التابلت */
-    .dashboard-layout { flex-direction: column; }
+    .register-steps { flex-direction: column; gap: 15px; }
+    .step { width: 100%; display: flex; align-items: center; gap: 10px; }
 }
 
-/* MOBILE (الجوالات القياسية) */
+/* 4. MOBILE (الجوالات) */
 @media (max-width: 768px) {
-    .container { padding: 0 20px; }
+    .container { padding: 0 15px; }
     
-    /* تحسين الخطوط للجوال */
-    .page-title { font-size: 22px !important; }
+    /* تفعيل التصميم الرأسي الكامل */
+    body { flex-direction: column; }
+    #sidebar-container { width: 100%; height: auto; }
+    .tera-main-content { width: 100%; }
     
-    .grid-2, .grid-3, .grid-4, .form-grid, .stats-grid { 
-        grid-template-columns: 1fr; 
-        gap: 15px; 
+    /* الشبكات تصبح عموداً واحداً */
+    .grid-2, .grid-3, .grid-4, .form-grid, .stats-grid, .profile-form-body { 
+        grid-template-columns: 1fr !important; 
+        gap: 15px !important; 
     }
 
-    .card { padding: 20px; border-radius: 12px; }
+    .card, .auth-card { padding: 20px; border-radius: 16px; }
     
-    /* الأزرار تأخذ العرض الكامل لسهولة اللمس */
-    .btn { width: 100%; padding: 0.8rem 1rem; }
+    /* الأزرار تأخذ العرض الكامل */
+    .btn { width: 100%; padding: 14px 20px; }
     
-    .form-actions { 
-        flex-direction: column-reverse; /* السابق دائماً تحت التالي */
-        gap: 12px; 
-    }
+    .form-actions { flex-direction: column-reverse; gap: 12px; }
 
-    /* تحسين الجداول للهواتف */
-    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table { min-width: 600px; }
-
-    .logo-wrapper img { max-width: 180px; }
+    /* الجداول */
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tera-table { min-width: 600px; }
     
-    /* ضبط الخطوط للمساحات الصغيرة */
-    h1 { font-size: 1.8rem; }
-    h2 { font-size: 1.5rem; }
+    /* الخطوط */
+    .page-title { font-size: 20px !important; }
 }
 
-/* SMALL MOBILE (الجوالات الصغيرة) */
+/* 5. SMALL MOBILE & EXTRA SMALL */
 @media (max-width: 480px) {
     .page-wrapper { padding: 15px; }
-    .page-title { font-size: 18px !important; }
-    .card, .auth-card { padding: 15px; }
-    
-    .auth-title { font-size: 20px; }
-    
+    .auth-title { font-size: 1.5rem; }
     .form-control { padding: 12px; font-size: 14px; }
-    
-    /* زيادة حجم خط الأزرار قليلاً لضمان سهولة الضغط */
     .btn { font-size: 15px; }
 }
 
-/* EXTRA SMALL (الشاشات الصغيرة جداً) */
 @media (max-width: 360px) {
+    .logo-wrapper img { max-width: 130px; }
     .page-title { font-size: 16px !important; }
-    .logo-wrapper img { max-width: 140px; }
-    
-    /* تقليل الهوامش الإضافية */
-    .section { margin-bottom: 25px; }
 }
