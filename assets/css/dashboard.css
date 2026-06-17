@@ -1,6 +1,6 @@
 /* ================================================= */
 /* TERA DASHBOARD - تصميم الزجاج الفاخر (Glassmorphism) */
-/* تم تحديث الهيكل ليتوافق مع Flexbox بالكامل */
+/* إصدار مستقر: متوافق مع Flexbox وتصميم تيرا */
 /* ================================================= */
 
 :root {
@@ -11,7 +11,7 @@
     --tera-gold: #D4AF37;
     --tera-bg: #f4f7fa;
     --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.4);
     --shadow-soft: 0 8px 32px rgba(10, 37, 64, 0.08);
 }
 
@@ -19,37 +19,42 @@
 body.dashboard-body {
     background-color: var(--tera-bg);
     background-image: radial-gradient(circle at top right, rgba(2, 128, 144, 0.05), transparent 600px);
-    display: flex; /* يجعل السايدبار والمحتوى جنباً لجنب */
+    display: flex;
     min-height: 100vh;
     margin: 0;
     font-family: 'Tajawal', sans-serif;
     color: var(--tera-navy);
+    overflow-x: hidden;
 }
 
-/* تنسيق عام للحاويات */
-#sidebar-container { flex-shrink: 0; }
+/* الحاويات */
+#sidebar-container { 
+    flex-shrink: 0; 
+    width: 280px;
+}
 
 .tera-main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* إصلاح مشكلة التمدد في Flexbox */
-    padding: 20px;
+    min-width: 0; /* إصلاح جوهري: يمنع تمدد العناصر داخل الفليكس */
+    padding: 30px;
+    gap: 25px;
 }
 
 /* تأثير الزجاج الفاخر */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
     box-shadow: var(--shadow-soft);
     border-radius: 24px;
+    padding: 25px;
 }
 
-/* القائمة الجانبية داخل الحاوية */
+/* القائمة الجانبية (تصحيح المسارات) */
 .tera-sidebar {
-    width: 280px;
     height: 100vh;
     position: sticky;
     top: 0;
@@ -58,48 +63,51 @@ body.dashboard-body {
     flex-direction: column;
 }
 
-.sidebar-logo { text-align: center; margin-bottom: 40px; }
-.sidebar-logo img { width: 140px; }
-
-.sidebar-menu { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+.sidebar-menu { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    list-style: none;
+    padding: 0;
+}
 
 .menu-item {
     display: flex; align-items: center; gap: 15px; padding: 16px 20px;
     color: #475569; text-decoration: none; font-weight: 700;
-    border-radius: 16px; transition: all 0.3s ease;
+    border-radius: 16px; transition: var(--transition, all 0.3s ease);
 }
 
 .menu-item:hover, .menu-item.active {
     background: var(--tera-teal);
     color: #FFFFFF;
-    box-shadow: 0 6px 15px rgba(2, 128, 144, 0.3);
 }
 
 /* الإحصائيات */
 .stats-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
     gap: 25px; 
-    margin-bottom: 30px; 
 }
 
-.stat-card { 
-    padding: 25px; 
-    border-right: 5px solid transparent; 
+.stat-card { border-right: 5px solid transparent; }
+.stat-value { font-size: 28px; font-weight: 800; color: var(--tera-navy); margin-top: 5px; }
+
+/* تحسين الجداول داخل اللوحة */
+.tera-table { 
+    width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 0 10px; 
 }
 
-.stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); margin-top: 5px; }
-
-/* الجداول */
-.tera-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-.tera-table td { background: white; padding: 20px; }
-.tera-table td:first-child { border-radius: 12px 0 0 12px; }
-.tera-table td:last-child { border-radius: 0 12px 12px 0; }
+.tera-table th { padding: 15px; color: var(--tera-navy-light); text-align: right; }
+.tera-table td { background: rgba(255,255,255,0.5); padding: 20px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; }
 
 /* إصلاح التجاوب */
 @media (max-width: 992px) {
     body.dashboard-body { flex-direction: column; }
-    #sidebar-container { width: 100%; }
-    .tera-sidebar { width: 100%; height: auto; position: relative; }
-    .tera-main-content { width: 100%; padding: 15px; }
+    #sidebar-container { width: 100%; height: auto; }
+    .tera-sidebar { height: auto; position: relative; }
+    .tera-main-content { padding: 15px; }
+    .stats-grid { grid-template-columns: 1fr; }
 }
