@@ -1,15 +1,81 @@
-<section class="faq-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الأسئلة الشائعة | تيرا</title>
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/support.css"> </head>
+<body class="dashboard-body">
 
-    <h1>الأسئلة الشائعة</h1>
+    <div id="loader-container"></div>
+    <div id="sidebar-container"></div>
 
-    <details>
-        <summary>كيف أبدأ الاستثمار؟</summary>
-        <p>يمكنك استعراض الفرص الاستثمارية واختيار الفرصة المناسبة.</p>
-    </details>
+    <main class="tera-main-content">
+        <div id="header-container"></div>
 
-    <details>
-        <summary>متى يتم توزيع الأرباح؟</summary>
-        <p>حسب جدول التوزيعات الخاص بكل فرصة استثمارية.</p>
-    </details>
+        <section class="faq-section glass-panel" style="padding: 40px;">
+            <div class="section-header" style="margin-bottom: 40px;">
+                <h1>الأسئلة الشائعة</h1>
+                <p>كل ما تحتاج لمعرفته حول منصة تيرا للاستثمار.</p>
+            </div>
 
-</section>
+            <div class="faq-accordion">
+                <div class="faq-item">
+                    <button class="faq-question">كيف يمكنني البدء في الاستثمار مع تيرا؟</button>
+                    <div class="faq-answer">
+                        <p>يمكنك البدء من خلال التسجيل في المنصة، إكمال ملفك الشخصي، ثم اختيار الفرصة الاستثمارية المناسبة لك وتحديد المبلغ المطلوب.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">ما هي طرق الدفع المتاحة؟</button>
+                    <div class="faq-answer">
+                        <p>ندعم التحويل البنكي المباشر، ونعمل على إضافة المزيد من قنوات الدفع الإلكتروني قريباً لتسهيل عمليات الإيداع.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">هل الاستثمار في تيرا متوافق مع الشريعة؟</button>
+                    <div class="faq-answer">
+                        <p>جميع الفرص الاستثمارية لدينا تمر بمرحلة فحص دقيقة لضمان توافقها مع الضوابط الشرعية للاستثمار.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="footer-container"></div>
+    </main>
+
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        // تفعيل عمل الأسئلة (Accordion)
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const answer = button.nextElementSibling;
+                button.classList.toggle('active');
+                if (button.classList.contains('active')) {
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                } else {
+                    answer.style.maxHeight = 0;
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .faq-item { border-bottom: 1px solid var(--tera-border); }
+        .faq-question {
+            width: 100%; padding: 20px 0; border: none; background: none;
+            text-align: right; font-weight: 700; font-size: 16px; cursor: pointer;
+            display: flex; justify-content: space-between;
+        }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--tera-text-light); }
+        .faq-answer p { padding-bottom: 20px; }
+        .faq-question::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
+        .faq-question.active::after { transform: rotate(180deg); }
+    </style>
+</body>
+</html>
