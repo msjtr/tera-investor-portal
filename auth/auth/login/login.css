@@ -1,0 +1,132 @@
+/* التنسيقات الفاخرة المعتمدة لمنصة تيرا المتوافقة مع أحجام الشاشات والتباعد */
+:root {
+    --tera-navy-primary: #0A2540;
+    --tera-teal-accent: #028090;
+    --tera-success-green: #00D46A;
+    --tera-danger-red: #E25950;
+    --tera-border-color: #E2E8F0;
+    --tera-gray-muted: #64748B;
+}
+
+body {
+    background-color: #F4F7FA;
+    color: var(--tera-navy-primary);
+    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+    margin: 0; padding: 0; line-height: 1.6;
+}
+
+.auth-layout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.auth-container {
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 15px 45px rgba(10, 37, 64, 0.04);
+    width: 100%;
+    max-width: 520px; /* حجم مثالي ومدمج لصفحات الدخول */
+    padding: 50px;
+}
+
+.logo-img { height: 58px; object-fit: contain; }
+.portal-title { font-size: 26px; font-weight: 800; color: var(--tera-navy-primary); }
+.page-subtitle { font-size: 19px; color: var(--tera-teal-accent); margin-top: 6px; font-weight: 700; }
+.welcome-text { font-size: 14px; color: var(--tera-gray-muted); margin-top: 8px; }
+
+/* صندوق التنبيه الفوري للأخطاء التكتيكية */
+.error-summary-box {
+    background-color: #FFF5F5;
+    border-right: 4px solid var(--tera-danger-red);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--tera-danger-red);
+    font-weight: 700;
+    animation: shakeAnim 0.3s ease-in-out;
+}
+
+@keyframes shakeAnim {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.form-field-group { margin-bottom: 28px; }
+
+.field-label-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.field-label { font-size: 14px; font-weight: 700; color: var(--tera-navy-primary); margin: 0; }
+.required { color: var(--tera-danger-red); }
+
+.forgot-pass-link {
+    font-size: 12.5px;
+    color: var(--tera-teal-accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+.forgot-pass-link:hover { text-decoration: underline; }
+
+.input-wrapper { position: relative; width: 100%; }
+
+.form-input-control {
+    width: 100%; padding: 14px 18px; font-size: 14.5px;
+    border: 1px solid #CBD5E1; border-radius: 8px; box-sizing: border-box;
+    background: #FFFFFF; transition: all 0.25s ease;
+}
+
+.form-input-control:focus {
+    border-color: var(--tera-teal-accent);
+    box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.12);
+    outline: none;
+}
+
+/* الأطر الذكية الملونة عند التحقق */
+.form-input-control.is-invalid-active {
+    border-color: var(--tera-danger-red) !important;
+    background-color: #FFF5F5 !important;
+    box-shadow: 0 0 0 3px rgba(226, 89, 80, 0.1) !important;
+}
+
+.form-input-control.is-valid-active {
+    border-color: var(--tera-success-green) !important;
+    background-color: #F6FFF9 !important;
+    box-shadow: 0 0 0 3px rgba(0, 212, 106, 0.08) !important;
+}
+
+.checkbox-options-container { display: flex; justify-content: flex-start; }
+.checkbox-toggle-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #475569; }
+.checkbox-toggle-label input[type="checkbox"] { transform: scale(1.05); cursor: pointer; }
+
+.remember-me-box { margin-top: -10px; margin-bottom: 30px; }
+
+.error-feedback-msg { color: var(--tera-danger-red); font-size: 12.5px; margin-top: 6px; display: block; font-weight: 500; }
+
+/* زر الإرسال الفاخر */
+.btn-submit-login {
+    width: 100%; padding: 14px; font-size: 15px; font-weight: 700;
+    background-color: var(--tera-navy-primary); color: #FFFFFF;
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(10, 37, 64, 0.08);
+}
+.btn-submit-login:hover { background-color: var(--tera-teal-accent); transform: translateY(-1px); }
+.btn-submit-login:active { transform: translateY(0); }
+
+.bottom-routing-footer-links { font-size: 13.5px; border-top: 1px solid var(--tera-border-color); padding-top: 25px; }
+.routing-link { color: var(--tera-teal-accent); text-decoration: none; font-weight: bold; }
+.routing-link-secondary { color: var(--tera-gray-muted); text-decoration: none; }
+.routing-link:hover, .routing-link-secondary:hover { text-decoration: underline; }
+
+@media (max-width: 576px) { .auth-container { padding: 35px 20px; } }
