@@ -1,5 +1,5 @@
 /* ================================================= */
-/* TERA CORE */
+/* TERA CORE - مصحح ومحمي للعمل أونلاين */
 /* ================================================= */
 'use strict';
 
@@ -78,10 +78,11 @@ function initializeCore() {
 /* COMPONENTS */
 /* ================================================= */
 function loadComponents() {
-    loadComponent('#header-container', '../../components/header.html');
-    loadComponent('#footer-container', '../../components/footer.html');
-    loadComponent('#sidebar-container', '../../components/sidebar.html');
-    loadComponent('#alerts-container', '../../components/alerts.html');
+    // 🎯 تم تعديل المسارات لتكون مطلقة (تبدأ بـ /) لتعمل من أي صفحة بدون خطأ 404
+    loadComponent('#header-container', '/components/header.html');
+    loadComponent('#footer-container', '/components/footer.html');
+    loadComponent('#sidebar-container', '/components/sidebar.html');
+    loadComponent('#alerts-container', '/components/alerts.html');
 }
 
 function loadComponent(selector, path) {
@@ -198,7 +199,8 @@ const Session = {
         Storage.remove('tera_user');
     },
     isLoggedIn() {
-        return !!Storage.get('tera_user');
+        // 🎯 دعم توافقي ذكي: يتحقق من وجود النظام القديم أو توكن المصادقة الجديد
+        return !!Storage.get('tera_user') || !!localStorage.getItem('tera_token');
     }
 };
 
@@ -217,8 +219,10 @@ function hasPermission(permission) {
 /* LOGOUT */
 /* ================================================= */
 function logout() {
+    // 🎯 تنظيف شامل وحماية مطلقة لمسار التوجيه
     Storage.clear();
-    window.location.href = '/auth/login.html';
+    localStorage.removeItem('tera_token');
+    window.location.replace('/auth/auth/login/login.html');
 }
 
 /* ================================================= */
