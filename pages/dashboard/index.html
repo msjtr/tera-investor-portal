@@ -7,49 +7,72 @@
     <title>تيرا | لوحة تحكم المستثمر</title>
     
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
 </head>
-<body>
+<body class="dashboard-body">
 
     <div id="loader-container"></div>
-    
     <div id="alerts-container"></div>
-
     <div id="sidebar-container"></div>
 
-    <main class="main-content">
+    <main class="tera-main-content">
         <div id="header-container"></div>
 
-        <div class="stats-grid">
+        <div id="breadcrumb-container"></div>
+
+        <section class="stats-grid">
             <div class="stat-card glass-panel" style="border-right-color: var(--tera-navy);">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">إجمالي قيمة المحفظة</p>
-                <h3 style="font-size: 28px; color: var(--tera-navy);">245,500 <span style="font-size: 16px;">ر.س</span></h3>
+                <p class="stat-label">إجمالي قيمة المحفظة</p>
+                <h3 class="stat-value">245,500 <span class="currency">ر.س</span></h3>
             </div>
-            <div class="stat-card glass-panel">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">إجمالي الأرباح الموزعة</p>
-                <h3 style="font-size: 28px; color: var(--tera-teal);">18,250 <span style="font-size: 16px;">ر.س</span></h3>
+            <div class="stat-card glass-panel" style="border-right-color: var(--tera-teal);">
+                <p class="stat-label">إجمالي الأرباح الموزعة</p>
+                <h3 class="stat-value" style="color: var(--tera-teal);">18,250 <span class="currency">ر.س</span></h3>
             </div>
-            <div class="stat-card glass-panel" style="border-right-color: #D4AF37;">
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 5px;">الاستثمارات النشطة</p>
-                <h3 style="font-size: 28px; color: #D4AF37;">4 <span style="font-size: 16px;">فرص</span></h3>
+            <div class="stat-card glass-panel" style="border-right-color: var(--tera-gold);">
+                <p class="stat-label">الاستثمارات النشطة</p>
+                <h3 class="stat-value" style="color: var(--tera-gold);">4 <span class="currency">فرص</span></h3>
             </div>
-        </div>
+        </section>
+
+        <section class="middle-grid">
+            <div class="chart-section glass-panel">
+                <div class="section-header">
+                    <h2>تحليل الأداء المالي</h2>
+                </div>
+                <div class="mock-chart">
+                    <div class="bar" style="height: 60%"></div>
+                    <div class="bar" style="height: 80%"></div>
+                    <div class="bar" style="height: 45%"></div>
+                    <div class="bar" style="height: 90%"></div>
+                    <div class="bar" style="height: 70%"></div>
+                </div>
+            </div>
+
+            <div class="quick-actions-section glass-panel">
+                <div class="section-header">
+                    <h2>إجراءات سريعة</h2>
+                </div>
+                <div class="actions-list">
+                    <a href="../portfolio/withdraw-request.html" class="action-card">
+                        <i class="fa-solid fa-money-bill-transfer"></i> طلب سحب
+                    </a>
+                    <a href="../investments/opportunities.html" class="action-card">
+                        <i class="fa-solid fa-plus-circle"></i> استثمار جديد
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <div id="footer-container"></div>
     </main>
 
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/app.js"></script>
-    
-    <script>
-        // تفعيل الربط التلقائي للمكونات عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', () => {
-            // ملاحظة: دالة loadComponents الموجودة في core.js ستقوم بملء الحاويات أعلاه
-            // تأكد من أن مسارات ملفات HTML في core.js تبدأ بـ /components/
-        });
-    </script>
 </body>
 </html>
