@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا | تسجيل الدخول - بوابة المستثمر</title>
+    <title>تيرا بوابة المستثمر | تسجيل الدخول الذكي</title>
     
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
@@ -20,29 +20,29 @@
 </head>
 <body>
     <div class="auth-layout">
-        <div class="auth-container">
-            <div class="text-center mb-5">
-                <div class="logo">
-                    <img src="/images/logo.svg" alt="TERA">
+        <div class="auth-container" id="loginCardBlock">
+            <div class="auth-card-header text-center">
+                <div class="brand-logo-box">
+                    <img src="/images/logo.svg" alt="TERA" class="enclosed-logo-img">
                 </div>
-                <h2 class="portal-title mt-3">بوابة المستثمر - تيرا</h2>
-                <h3 class="page-subtitle">تسجيل الدخول</h3>
-                <p class="welcome-text">مرحباً بك مجدداً. يرجى إدخال بيانات الحساب للوصول إلى محفظتك الاستثمارية.</p>
+                <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
+                <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
+                <p class="welcome-text">مرحباً بك مجدداً في عالم الاستثمار الذكي. يرجى إدخال بياناتك للوصول إلى محفظتك المالية.</p>
             </div>
 
             <div class="error-summary-box" id="loginErrorBox" style="display: none;">
                 <span class="error-box-icon">❌</span>
-                <span id="errorBoxText">اسم المستخدم أو كلمة المرور غير صحيحة.</span>
+                <span id="errorBoxText">البيانات المدخلة غير متطابقة مع سجلات المستثمرين.</span>
             </div>
 
-            <form id="teraLoginForm" onsubmit="event.preventDefault(); handleLoginValidation();">
+            <form id="teraLoginForm" onsubmit="event.preventDefault(); executeInvestorLoginAuth();">
                 
                 <div class="form-field-group">
-                    <label class="field-label">اسم المستخدم أو البريد الإلكتروني <span class="required">*</span></label>
+                    <label class="field-label">بيانات الدخول (اسم المستخدم، البريد، أو رقم الجوال) <span class="required">*</span></label>
                     <div class="input-wrapper">
-                        <input type="text" id="login_username" class="form-input-control" placeholder="أدخل اسم المستخدم (106)" autocomplete="off" required>
+                        <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم (106)، البريد، أو الجوال" autocomplete="off" required>
                     </div>
-                    <div class="error-feedback-msg" id="username-field-error"></div>
+                    <div class="error-feedback-msg" id="identifier-error"></div>
                 </div>
 
                 <div class="form-field-group">
@@ -51,30 +51,43 @@
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور (123)" required>
+                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور الخاصة بك (123)" required>
                     </div>
-                    <div class="checkbox-options-container mt-2">
+                    <div class="checkbox-options-container mt-3">
                         <label class="checkbox-toggle-label">
                             <input type="checkbox" id="show_login_password"> إظهار كلمة المرور
                         </label>
                     </div>
-                    <div class="error-feedback-msg" id="password-field-error"></div>
+                    <div class="error-feedback-msg" id="password-error"></div>
                 </div>
 
                 <div class="form-field-group remember-me-box">
                     <label class="checkbox-toggle-label">
-                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
+                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز الآمن
                     </label>
                 </div>
 
-                <div class="form-actions-block mt-4">
-                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">تسجيل الدخول</button>
+                <div class="form-actions-block">
+                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">تسجيل الدخول الآمن</button>
                 </div>
             </form>
 
-            <div class="bottom-routing-footer-links mt-5 text-center">
+            <div class="bottom-routing-footer-links text-center">
                 <p>ليس لديك حساب مستثمر؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="/index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
+                <p><a href="/index.html" class="routing-link-secondary">العودة للشاشة الرئيسية</a></p>
+            </div>
+        </div>
+
+        <div class="tera-loader-overlay" id="creativeLoaderScreen">
+            <div class="loader-content-card">
+                <div class="spinning-infinity-ring">
+                    <div class="ring-core"></div>
+                </div>
+                <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
+                <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة مفاتيح حسابك الاستثماري الفاخر...</p>
+                <div class="loading-progress-track">
+                    <div class="progress-fill-bar"></div>
+                </div>
             </div>
         </div>
     </div>
