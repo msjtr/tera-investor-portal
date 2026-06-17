@@ -26,10 +26,8 @@
             </div>
 
             <div class="stepper">
-                <div class="step active" id="step-1">① إنشاء الحساب</div>
-                <div class="step" id="step-2">② المعلومات الشخصية والهوية</div>
-                <div class="step" id="step-3">③ بيانات التواصل والعنوان</div>
-                <div class="step" id="step-4">④ الإقرارات والاتفاقيات</div>
+                <div class="step active" id="step-1">① إنشاء الحساب والبيانات الأساسية</div>
+                <div class="step" id="step-2">② الإقرارات والاتفاقيات</div>
             </div>
 
             <div class="alert-info-box mb-4">
@@ -47,8 +45,20 @@
             <form id="teraRegisterForm" onsubmit="event.preventDefault();">
                 
                 <div class="form-stage-section active" id="stage-1-content">
-                    <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب</h4>
+                    <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
+                    <div class="form-field-group">
+                        <label class="field-label">اسم العميل (بالعربية فقط) <span class="required">*</span></label>
+                        <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
+                        <span class="field-status-icon" id="name_ar-status">❌</span>
+                        <div class="error-feedback-msg" id="name_ar-error"></div>
+                        <div class="realtime-validation-box-mini">
+                            <ul>
+                                <li id="nar-rule-char">❌ أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
+                            </ul>
+                        </div>
+                    </div>
+
                     <div class="form-field-group">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
                         <input type="text" id="username" class="form-input-control" placeholder="اسم المستخدم" autocomplete="off">
@@ -91,6 +101,46 @@
                                 <li id="e-rule-match" class="invalid">❌ البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
                             </ul>
                         </div>
+                    </div>
+
+                    <div class="row-flex container-grid">
+                        <div class="col-inline-5">
+                            <div class="form-field-group">
+                                <label class="field-label">مفتاح الدولة <span class="required">*</span></label>
+                                <select id="country_code_select" class="form-input-control">
+                                    <optgroup label="دول الخليج العربي">
+                                        <option value="+966" selected>🇸🇦 السعودية +966</option>
+                                        <option value="+971">🇦🇪 الإمارات +971</option>
+                                        <option value="+965">🇰🇼 الكويت +965</option>
+                                        <option value="+973">🇧🇭 البحرين +973</option>
+                                        <option value="+968">🇴🇲 عمان +968</option>
+                                        <option value="+974">🇶🇦 قطر +974</option>
+                                    </optgroup>
+                                    <optgroup label="الدول العربية">
+                                        <option value="+20">🇪🇬 مصر +20</option>
+                                        <option value="+962">🇯🇴 الأردن +962</option>
+                                        <option value="+964">🇮🇶 العراق +964</option>
+                                        <option value="+961">🇱🇧 لبنان +961</option>
+                                        <option value="+212">🇲🇦 المغرب +212</option>
+                                        <option value="+213">🇩🇿 الجزائر +213</option>
+                                        <option value="+216">🇹🇳 تونس +216</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-inline-7">
+                            <div class="form-field-group">
+                                <label class="field-label">رقم الجوال <span class="required">*</span></label>
+                                <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
+                                <span class="field-status-icon" id="mobile-status">❌</span>
+                                <div class="error-feedback-msg" id="mobile-error"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="realtime-validation-box-mini mb-3">
+                        <ul>
+                            <li id="mob-rule-format">❌ أرقام فقط، ويمنع إدخال الصفر الأول (يتم حذفه تلقائياً).</li>
+                        </ul>
                     </div>
 
                     <div class="form-field-group">
@@ -142,121 +192,7 @@
                 </div>
 
                 <div class="form-stage-section" id="stage-2-content">
-                    <h4 class="stage-header-title">المرحلة الثانية: المعلومات الشخصية والهوية</h4>
-                    
-                    <h5 class="subsection-title">المعلومات الشخصية</h5>
-                    
-                    <div class="form-field-group">
-                        <label class="field-label">الالسم الكامل بالعربية (كما هو مدون في الوثيقة الرسمية) <span class="required">*</span></label>
-                        <input type="text" id="fullname_ar" class="form-input-control" placeholder="الاسم الكامل بالعربية">
-                        <span class="field-status-icon" id="name_ar-status">❌</span>
-                        <div class="error-feedback-msg" id="name_ar-error"></div>
-                        <div class="realtime-validation-box-mini">
-                            <ul>
-                                <li id="nar-rule-char">❌ أحرف عربية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">الاسم الكامل بالإنجليزية (كما هو مدون في الوثيقة الرسمية) <span class="required">*</span></label>
-                        <input type="text" id="fullname_en" class="form-input-control" placeholder="Full English Name">
-                        <span class="field-status-icon" id="name_en-status">❌</span>
-                        <div class="error-feedback-msg" id="name_en-error"></div>
-                        <div class="realtime-validation-box-mini">
-                            <ul>
-                                <li id="nen-rule-char">❌ أحرف إنجليزية فقط (لا يقبل الأرقام والرموز الخاصة)</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">الجنس <span class="required">*</span></label>
-                        <div class="radio-options-flex">
-                            <label class="radio-inline"><input type="radio" name="gender" value="ذكر"> ذكر</label>
-                            <label class="radio-inline"><input type="radio" name="gender" value="أنثى"> أنثى</label>
-                        </div>
-                        <span class="field-status-icon" id="gender-status">❌</span>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">الفئة <span class="required">*</span></label>
-                        <div class="radio-options-flex">
-                            <label class="radio-inline"><input type="radio" name="category" value="saudi"> سعودي</label>
-                            <label class="radio-inline"><input type="radio" name="category" value="resident"> مقيم</label>
-                            <label class="radio-inline"><input type="radio" name="category" value="gcc"> مواطن خليجي</label>
-                            <label class="radio-inline"><input type="radio" name="category" value="foreigner"> أجنبي</label>
-                        </div>
-                        <span class="field-status-icon" id="category-status">❌</span>
-                    </div>
-
-                    <h5 class="subsection-title mt-4">بيانات الهوية</h5>
-                    <div id="dynamic-identity-container" class="dynamic-injected-box">
-                        <p class="text-muted text-center">يرجى تحديد الفئة أولاً لعرض الحقول المطلوبة.</p>
-                    </div>
-
-                    <div class="realtime-validation-box mt-3" id="identity-validation-summary-box" style="display:none;">
-                        <h5>التحقق من الهوية</h5>
-                        <ul class="validation-rule-list">
-                            <li id="id-rule-valid" class="invalid">❌ رقم الوثيقة صحيح (أرقام فقط وحسب الطول النظامي)</li>
-                            <li id="id-rule-dates" class="invalid">❌ تاريخ الإصدار وتاريخ الانتهاء صحيحان</li>
-                            <li id="id-rule-expiry" class="invalid">❌ الوثيقة سارية المفعول (تاريخ الانتهاء أكبر من تاريخ اليوم)</li>
-                            <li id="id-rule-unique" class="invalid">❌ رقم الهوية / الإقامة / الجواز غير مستخدم مسبقاً</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="form-stage-section" id="stage-3-content">
-                    <h4 class="stage-header-title">المرحلة الثالثة: بيانات التواصل والعنوان</h4>
-                    
-                    <div class="row-flex container-grid">
-                        <div class="col-inline-4">
-                            <div class="form-field-group">
-                                <label class="field-label">مفتاح الدولة</label>
-                                <input type="text" id="country_code_display" class="form-input-control field-disabled" readonly value="+966">
-                                <select id="country_code_select" class="form-input-control" style="display:none;"></select>
-                            </div>
-                        </div>
-                        <div class="col-inline-8">
-                            <div class="form-field-group">
-                                <label class="field-label">رقم الجوال <span class="required">*</span></label>
-                                <input type="text" id="mobile_number" class="form-input-control" placeholder="أدخل رقم الجوال">
-                                <span class="field-status-icon" id="mobile-status">❌</span>
-                                <div class="error-feedback-msg" id="mobile-error"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="realtime-validation-box-mini mb-3">
-                        <ul>
-                            <li id="mob-rule-format">❌ أرقام فقط، يمنع إدخال الصفر الأول ويتم حذفه تلقائياً.</li>
-                        </ul>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">وسيلة التواصل المفضلة <span class="required">*</span></label>
-                        <div class="radio-options-flex">
-                            <label class="radio-inline"><input type="radio" name="contact_method" value="البريد الإلكتروني"> البريد الإلكتروني</label>
-                            <label class="radio-inline"><input type="radio" name="contact_method" value="الجوال"> الجوال</label>
-                        </div>
-                        <span class="field-status-icon" id="contact-pref-status">❌</span>
-                    </div>
-
-                    <h5 class="subsection-title mt-4" id="address-section-title">العنوان</h5>
-                    <div id="dynamic-address-container" class="dynamic-injected-box">
-                        <p class="text-muted text-center">يرجى تحديد الفئة في المرحلة السابقة لتهيئة نموذج العنوان المتوافق.</p>
-                    </div>
-
-                    <div class="realtime-validation-box mt-3">
-                        <h5>التحقق من العنوان</h5>
-                        <ul class="validation-rule-list">
-                            <li id="addr-rule-fields" class="invalid">❌ جميع الحقول المطلوبة مكتملة والعنوان مكتمل</li>
-                            <li id="addr-rule-pref" class="invalid">❌ تم اختيار وسيلة التواصل المفضلة</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="form-stage-section" id="stage-4-content">
-                    <h4 class="stage-header-title">المرحلة الرابعة: الإقرارات والاتفاقيات</h4>
+                    <h4 class="stage-header-title">المرحلة الثانية: الإقرارات والاتفاقيات</h4>
                     
                     <div class="agreements-scroll-container">
                         <div class="agreement-item">
@@ -311,7 +247,6 @@
                             <li id="f-rule-reqs" class="invalid">❌ جميع المتطلبات محققة</li>
                             <li id="f-rule-email" class="invalid">❌ البريد الإلكتروني غير مستخدم مسبقاً</li>
                             <li id="f-rule-user" class="invalid">❌ اسم المستخدم غير مستخدم مسبقاً</li>
-                            <li id="f-rule-id" class="invalid">❌ رقم الهوية / الإقامة / الجواز غير مستخدم مسبقاً</li>
                             <li id="f-rule-errors" class="invalid">❌ لا توجد أخطاء في البيانات</li>
                             <li id="f-rule-ready" class="invalid">❌ جاهز لإنشاء الحساب</li>
                             <li id="f-rule-otp" class="invalid">❌ جاهز لإرسال رمز التحقق إلى البريد الإلكتروني</li>
@@ -322,11 +257,11 @@
                 <div class="form-navigation-actions-bar mt-4">
                     <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
                     <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
-                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled>إنشاء حساب شريك</button>
+                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled onclick="submitForm()">إنشاء حساب شريك</button>
                 </div>
             </form>
 
-            <div class="bottom-routing-footer-links mt-4">
+            <div class="bottom-routing-footer-links mt-4 text-center">
                 <p>لديك حساب بالفعل؟ <a href="../login.html" class="routing-link">تسجيل الدخول</a></p>
                 <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
             </div>
