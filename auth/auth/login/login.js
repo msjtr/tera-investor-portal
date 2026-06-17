@@ -11,7 +11,6 @@ const targetAccount = {
     password: "123"
 };
 
-// قائمة العبارات المالية الاستثمارية الملهمة والإبداعية التي تدور تلقائياً كل ثانية أثناء الـ 3 ثوانٍ
 const creativeQuotes = [
     "جاري تهيئة بيئتك المالية الفاخرة... أهلاً بك في تيرا 🌌",
     "نصنع مستقبلك الاستثماري المالي الواعد بثقة وأمان وثبات 📈",
@@ -30,7 +29,6 @@ function bindInputFilters() {
 
     if (identInput) {
         identInput.addEventListener("input", function() {
-            // منع الحروف العربية تماماً لحماية دقة المدخلات حياً
             this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
             resetFieldMarkers(this, "identifier-error");
         });
@@ -61,7 +59,6 @@ function resetFieldMarkers(inputEl, errId) {
     if (globalErr) globalErr.style.display = "none";
 }
 
-// دالة التحقق الثلاثية الاستراتيجية وقفل التحويل الإبداعي لمدة 3 ثوانٍ
 function executeInvestorLoginAuth() {
     const identInput = document.getElementById("login_identifier");
     const passInput = document.getElementById("login_password");
@@ -70,59 +67,46 @@ function executeInvestorLoginAuth() {
     const userVal = identInput.value.trim();
     const passVal = passInput.value;
 
-    let localError = false;
-
-    if (userVal === "") {
+    if (userVal === "" || passVal === "") {
         identInput.classList.add("is-invalid-active");
-        document.getElementById("identifier-error").textContent = "يرجى إدخال اسم المستخدم، البريد، أو رقم الجوال بشكل صحيح.";
-        localError = true;
-    }
-    if (passVal === "") {
         passInput.classList.add("is-invalid-active");
-        document.getElementById("password-error").textContent = "يرجى إدخال كلمة المرور الخاصة بحسابك.";
-        localError = true;
+        if (globalErr) globalErr.style.display = "flex";
+        document.getElementById("errorBoxText").textContent = "يرجى تعبئة جميع الحقول المطلوبة.";
+        return;
     }
 
-    if (localError) return;
-
-    // فحص مطابقة المدخلات الذكية: إذا طابق اسم المستخدم أو البريد أو الجوال مع الباسورد الثابت
     const matchIdentifier = (userVal === targetAccount.username || userVal.toLowerCase() === targetAccount.email || userVal === targetAccount.mobile);
     const matchPassword = (passVal === targetAccount.password);
 
     if (matchIdentifier && matchPassword) {
-        // نجاح الفحص: تلوين الأطر بالأخضر الفاخر
         identInput.classList.add("is-valid-active");
         passInput.classList.add("is-valid-active");
         if (globalErr) globalErr.style.display = "none";
 
-        // إخفاء الكارد الأساسي برفق وتدشين شاشة التحويل الإبداعية الدوارة فوراً
         document.getElementById("loginCardBlock").style.opacity = "0";
         setTimeout(() => {
             document.getElementById("loginCardBlock").style.display = "none";
             const loaderOverlay = document.getElementById("creativeLoaderScreen");
-            loaderOverlay.style.display = "flex";
-            
-            // بدء دوران وتبديل العبارات الاستثمارية الملهمة حياً كل ثانية
+            if(loaderOverlay) loaderOverlay.style.display = "flex";
             startCreativeQuotesCycle();
         }, 200);
 
-        // حفظ رمز التوكن محلياً لخدمة بقية كود لوحة التحكم للمستثمر
         localStorage.setItem('tera_token', 'secure_investor_session_106');
 
-        // قفل توقيت التحويل الإبداعي لمدة 3 ثوانٍ (3000ms) ثم النقل الفعلي للـ Dashboard
+        // 🎯 التوجيه النهائي المحكم:
+        // نستخدم المسار المطلق بالكامل وبدون إمكانية العودة (replace) لضمان عدم تكرار المشاكل
         setTimeout(() => {
-            window.location.href = "/pages/dashboard/index.html";
+            window.location.replace("/pages/dashboard/index.html");
         }, 3000);
 
     } else {
-        // فشل الفحص: تلوين الأطر بالأحمر التنبيهي وتفعيل كادر الخطأ
         identInput.classList.add("is-invalid-active");
         passInput.classList.add("is-invalid-active");
         if (globalErr) globalErr.style.display = "flex";
+        document.getElementById("errorBoxText").textContent = "البيانات المدخلة غير متطابقة مع سجلات المستثمرين.";
     }
 }
 
-// دالة تدوير العبارات المالية الإبداعية حياً كل ثانية لإضفاء مظهر سينمائي مبهر للمستثمر
 function startCreativeQuotesCycle() {
     const quoteEl = document.getElementById("creativeQuoteText");
     let quoteIndex = 0;
@@ -134,8 +118,7 @@ function startCreativeQuotesCycle() {
             setTimeout(() => {
                 quoteEl.textContent = creativeQuotes[quoteIndex];
                 quoteEl.style.opacity = "1";
-                quoteEl.style.transition = "opacity 0.25s ease";
             }, 150);
         }
-    }, 900); // تغيير مبهج كل 900 ملي ثانية ليتناسق مع شريط التقدم كاملاً
+    }, 900);
 }
