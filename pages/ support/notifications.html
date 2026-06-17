@@ -5,7 +5,84 @@
     <ul>
 
         <li>
-            تم إيداع أرباح الاستثمار رقم #125
+            <!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإشعارات | تيرا</title>
+    
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+
+    <div id="loader-container"></div>
+    <div id="sidebar-container"></div>
+
+    <main class="tera-main-content">
+        <div id="header-container"></div>
+
+        <section class="notifications-wrapper">
+            <div class="glass-panel" style="padding: 30px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h1>الإشعارات</h1>
+                    <button class="btn btn-primary" onclick="markAllAsRead()" style="background: var(--tera-teal);">تحديد الكل كمقروء</button>
+                </div>
+
+                <div class="notification-list" id="notificationList">
+                    <div class="notify-item unread">
+                        <div class="notify-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                        <div class="notify-body">
+                            <h4>تم إيداع الأرباح</h4>
+                            <p>لقد تم إيداع أرباح محفظتك عن الربع الثاني في حسابك الاستثماري بنجاح.</p>
+                            <span class="notify-time">منذ ساعتين</span>
+                        </div>
+                    </div>
+
+                    <div class="notify-item">
+                        <div class="notify-icon"><i class="fa-solid fa-briefcase"></i></div>
+                        <div class="notify-body">
+                            <h4>فرصة استثمارية جديدة</h4>
+                            <p>تم طرح فرصة استثمارية جديدة في قطاع التقنية، يمكنك الاطلاع عليها الآن.</p>
+                            <span class="notify-time">منذ يوم واحد</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div id="footer-container"></div>
+    </main>
+
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        function markAllAsRead() {
+            document.querySelectorAll('.notify-item').forEach(item => {
+                item.classList.remove('unread');
+            });
+        }
+    </script>
+
+    <style>
+        .notification-list { display: flex; flex-direction: column; gap: 15px; }
+        .notify-item { 
+            display: flex; align-items: flex-start; gap: 20px; 
+            padding: 20px; border-radius: 16px; background: white;
+            border-right: 4px solid var(--tera-teal);
+            transition: 0.3s;
+        }
+        .notify-item.unread { background: var(--tera-teal-light); }
+        .notify-icon { font-size: 20px; color: var(--tera-teal); margin-top: 5px; }
+        .notify-body h4 { font-size: 16px; margin-bottom: 5px; color: var(--tera-navy); }
+        .notify-body p { color: #64748b; font-size: 14px; }
+        .notify-time { font-size: 12px; color: #94a3b8; margin-top: 8px; display: block; }
+    </style>
+</body>
+</html>تم إيداع أرباح الاستثمار رقم #125
         </li>
 
         <li>
