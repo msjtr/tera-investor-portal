@@ -47,7 +47,7 @@
                 <div class="form-stage-section active" id="stage-1-content">
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
-                    <div class="form-field-group" id="group-fullname_ar">
+                    <div class="form-field-group">
                         <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
@@ -89,7 +89,7 @@
                             </div>
                         </div>
                         <div class="col-inline-7">
-                            <div class="form-field-group" id="group-mobile_number">
+                            <div class="form-field-group">
                                 <label class="field-label">رقم الجوال <span class="required">*</span></label>
                                 <div class="input-wrapper">
                                     <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
@@ -101,11 +101,11 @@
                     </div>
                     <div class="realtime-validation-box-mini mb-4">
                         <ul>
-                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول نهائياً (يُحذف فورا).</li>
+                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول نهائياً (يتم حذفه تلقائياً).</li>
                         </ul>
                     </div>
 
-                    <div class="form-field-group" id="group-email">
+                    <div class="form-field-group">
                         <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
@@ -114,7 +114,7 @@
                         <div class="error-feedback-msg" id="email-error"></div>
                     </div>
 
-                    <div class="form-field-group" id="group-confirm_email">
+                    <div class="form-field-group">
                         <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
 
-                    <div class="form-field-group" id="group-username">
+                    <div class="form-field-group">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
@@ -142,12 +142,13 @@
                         
                         <div class="realtime-validation-box">
                             <h5>التحقق من اسم المستخدم</h5>
-                            <ul class="validation-rule-list" id="username-rules">
+                            <ul class="validation-rule-list">
                                 <li id="u-rule-len"><span class="icon-marker">❌</span> يتكون من 4 إلى 20 خانة</li>
                                 <li id="u-rule-start"><span class="icon-marker">❌</span> يبدأ بحرف إنجليزي</li>
                                 <li id="u-rule-char"><span class="icon-marker">❌</span> يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
                                 <li id="u-rule-num"><span class="icon-marker">✅</span> يسمح بالأرقام (0-9)</li>
-                                <li id="u-rule-case"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف كبيرة (A-Z) أو صغيرة (a-z)</li>
+                                <li id="u-rule-upper"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف كبيرة (A-Z)</li>
+                                <li id="u-rule-lower"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف صغيرة (a-z)</li>
                                 <li id="u-rule-space"><span class="icon-marker">❌</span> لا يحتوي على مسافات</li>
                                 <li id="u-rule-special"><span class="icon-marker">❌</span> لا يحتوي على رموز خاصة</li>
                                 <li id="u-rule-unique"><span class="icon-marker">❌</span> غير مستخدم مسبقاً</li>
@@ -155,7 +156,7 @@
                         </div>
                     </div>
 
-                    <div class="form-field-group" id="group-password">
+                    <div class="form-field-group">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
@@ -165,7 +166,7 @@
                         <div class="error-feedback-msg" id="password-error"></div>
                     </div>
 
-                    <div class="form-field-group" id="group-confirm_password">
+                    <div class="form-field-group">
                         <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
@@ -176,7 +177,7 @@
                         
                         <div class="realtime-validation-box">
                             <h5>التحقق من كلمة المرور</h5>
-                            <ul class="validation-rule-list" id="password-rules">
+                            <ul class="validation-rule-list">
                                 <li id="p-rule-len"><span class="icon-marker">❌</span> 8 أحرف على الأقل</li>
                                 <li id="p-rule-upper"><span class="icon-marker">❌</span> تحتوي على حرف كبير واحد على الأقل (A-Z)</li>
                                 <li id="p-rule-lower"><span class="icon-marker">❌</span> تحتوي على حرف صغير واحد على الأقل (a-z)</li>
@@ -287,12 +288,11 @@
                 <h4>متطلبات غير مكتملة</h4>
             </div>
             <div class="central-modal-body">
-                <p>لا يمكن الانتقال للمرحلة التالية بسبب وجود أخطاء أو حقول غير مكتملة. يرجى مراجعة الحقول الحمراء التالية وتصحيحها:</p>
-                <ul id="centralModalErrorList">
-                    </ul>
+                <p>لا يمكن الانتقال للمرحلة التالية بسبب وجود أخطاء أو حقول غير مكتملة. يرجى مراجعة الحقول الحمراء وتصحيحها:</p>
+                <ul id="centralModalErrorList"></ul>
             </div>
             <div class="central-modal-footer">
-                <button type="button" class="central-modal-btn" onclick="closeCentralModal()">حسناً، فهمت</button>
+                <button type="button" class="central-modal-btn" id="modalCloseBtn">حسناً، فهمت</button>
             </div>
         </div>
     </div>
