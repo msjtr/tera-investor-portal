@@ -1,5 +1,5 @@
 /* ================================================= */
-/* TERA APPLICATION (app.js) - نسخة متكاملة وشاملة */
+/* TERA APPLICATION (app.js) - نسخة متكاملة ومحدثة للمسارات */
 /* ================================================= */
 'use strict';
 
@@ -22,27 +22,31 @@ const App = {
     },
 
     loadUser() {
-        // جلب بيانات المستخدم من التخزين المحلي
         const userData = localStorage.getItem('tera_user');
         this.user = userData ? JSON.parse(userData) : { fullName: 'المستثمر', email: 'investor@tera.sa' };
     },
 
     checkAuth() {
-        const protectedPages = ['/pages/dashboard', '/pages/investments', '/pages/portfolio', '/pages/profile', '/pages/reports', '/pages/security'];
+        // التحقق من المسارات المحمية
         const currentPath = window.location.pathname;
-        const requiresAuth = protectedPages.some(path => currentPath.includes(path));
+        const isAuthPage = currentPath.includes('/auth/');
         const hasToken = localStorage.getItem('tera_token');
 
-        if (requiresAuth && !hasToken) {
+        if (!hasToken && !isAuthPage) {
+            // توجيه لصفحة تسجيل الدخول باستخدام المسار الصحيح بناءً على الهيكلية
             window.location.replace('/auth/auth/login/login.html');
         }
     },
 
     initializeSidebar() {
-        const toggleBtn = document.querySelector('.menu-toggle') || document.getElementById('sidebarToggle');
-        const sidebar = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
-        if (!toggleBtn || !sidebar) return;
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+        // استخدام event delegation لضمان عمل الزر حتى بعد حقن الـ HTML
+        document.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('.menu-toggle, #sidebarToggle');
+            const sidebar = document.querySelector('.tera-sidebar, #sidebar');
+            if (toggleBtn && sidebar) {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
     },
 
     initializeProfile() {
@@ -54,7 +58,6 @@ const App = {
 
     initializeNotifications() {
         const badge = document.getElementById('notificationCount');
-        // محاكاة جلب الإشعارات
         this.notifications = JSON.parse(localStorage.getItem('tera_notifications') || '[]');
         if (badge && this.notifications.length > 0) {
             badge.textContent = this.notifications.length;
@@ -62,10 +65,10 @@ const App = {
         }
     },
 
-    /* دوال التحكم في الحساب */
     logout() {
         localStorage.removeItem('tera_token');
         localStorage.removeItem('tera_user');
+        // المسار المحدث لصفحة تسجيل الدخول
         window.location.replace('/auth/auth/login/login.html');
     },
 
@@ -78,7 +81,7 @@ const App = {
 };
 
 /* ================================================= */
-/* ROUTER (توجيه المسارات المحدث) */
+/* ROUTER (توجيه المسارات المحدث للمجلدات) */
 /* ================================================= */
 const Router = {
     go(url) { window.location.href = url; },
@@ -112,7 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
     App.init();
     startSessionTimer();
     
-    // ربط زر تسجيل الخروج عالمياً إذا وجد
+    // ربط زر تسجيل الخروج عالمياً
     const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) logoutBtn.addEventListener('click', () => App.logout());
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            App.logout();
+        });
+    }
 });
