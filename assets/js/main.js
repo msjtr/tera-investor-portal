@@ -1,6 +1,7 @@
 /**
  * ==========================================================================
  * TERA Investor Portal - Main UI Interactions (main.js)
+ * المكون التفاعلي المشترك - معزز ومحمي للعمل أونلاين
  * ==========================================================================
  */
 
@@ -8,9 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ==========================================
     // 1. التحكم في القائمة الجانبية (Sidebar Toggle) للشاشات الصغيرة
+    // يدعم الفئات القديمة والجديدة (.tera-sidebar & .main-sidebar) لمنع الـ 404 والأخطاء
     // ==========================================
     const menuToggleBtn = document.querySelector('.menu-toggle');
-    const mainSidebar = document.querySelector('.main-sidebar');
+    // البحث عن القائمة الجانبية بالاسمين لضمان التوافق الكامل عبر جميع الصفحات
+    const mainSidebar = document.querySelector('.tera-sidebar') || document.querySelector('.main-sidebar');
     
     if (menuToggleBtn && mainSidebar) {
         menuToggleBtn.addEventListener('click', (e) => {
@@ -18,9 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
             mainSidebar.classList.toggle('active');
         });
 
-        // إغلاق القائمة عند النقر خارجها (في الشاشات الصغيرة)
+        // إغلاق القائمة تلقائياً عند النقر في أي مكان خارجها (في الشاشات الصغيرة)
         document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 992) { // تم تحديث الأبعاد لتشمل الأجهزة اللوحية أيضاً
                 if (!mainSidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
                     mainSidebar.classList.remove('active');
                 }
@@ -41,21 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const parent = this.parentElement;
             const menu = parent.querySelector('.dropdown-menu');
             
-            // إغلاق أي قائمة منسدلة أخرى مفتوحة
+            // إغلاق أي قائمة منسدلة أخرى مفتوحة مسبقاً لمنع التداخل البصري
             document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
                 if (openMenu !== menu) {
                     openMenu.classList.remove('show');
                 }
             });
 
-            // فتح/إغلاق القائمة الحالية
+            // فتح أو إغلاق القائمة الحالية بنعومة
             if (menu) {
                 menu.classList.toggle('show');
             }
         });
     });
 
-    // إغلاق القوائم المنسدلة عند النقر في أي مكان آخر
+    // إغلاق جميع القوائم المنسدلة فوراً عند النقر في أي مكان فارغ بالشاشة
     document.addEventListener('click', () => {
         document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
             menu.classList.remove('show');
@@ -63,23 +66,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 3. نظام التبويبات المشترك (Tabs System)
+    // 3. نظام التبويبات المشترك الفاخر (Tabs System)
     // ==========================================
     const tabButtons = document.querySelectorAll('.tab-btn');
     
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // الحصول على الحاوية الأب للتبويبات
+            // الحصول على الحاوية الأب للتبويبات لضمان عزل العمليات
             const tabsContainer = button.closest('.tabs-wrapper');
             if (!tabsContainer) return;
 
             const targetId = button.getAttribute('data-target');
             
-            // إزالة الكلاس active من جميع الأزرار والمحتويات في نفس الحاوية
+            // إزالة الكلاس active من جميع الأزرار والمحتويات داخل نفس الحاوية فقط
             tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             tabsContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             
-            // إضافة الكلاس active للزر المنقور والمحتوى المستهدف
+            // إضافة الكلاس active للزر المستهدف لتنشيط العرض
             button.classList.add('active');
             const targetPane = tabsContainer.querySelector(`#${targetId}`);
             if (targetPane) {
@@ -89,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==========================================
-    // 4. النوافذ المنبثقة المشتركة (Modals)
+    // 4. النوافذ المنبثقة المشتركة الفاخرة (Modals)
     // ==========================================
     const modalTriggers = document.querySelectorAll('[data-toggle="modal"]');
     const modalCloseBtns = document.querySelectorAll('.modal-close, [data-dismiss="modal"]');
@@ -100,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetModalId = trigger.getAttribute('data-target');
             const targetModal = document.querySelector(targetModalId);
             if (targetModal) {
-                targetModal.style.display = 'flex'; // أو إضافة كلاس active
+                targetModal.style.display = 'flex'; // دعم الظهور المرن المتباعد فوق الواجهات
             }
         });
     });
