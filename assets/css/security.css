@@ -1,17 +1,19 @@
-/* ==========================================
-   TERA Investor Portal - Security & Session Hardening
-========================================== */
+/* ================================================= */
+/* TERA Investor Portal - Security & Session Hardening */
+/* إصدار مستقر متوافق مع هوية تيرا */
+/* ================================================= */
 
-/* كروت تنشيط الأمان الثنائي (2FA Toggle Card) */
+/* كروت تنشيط الأمان الثنائي */
 .security-status-hero {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 24px;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    background: var(--tera-white, #ffffff);
+    border: 1px solid var(--tera-border, #E2E8F0);
+    border-radius: var(--tera-radius, 16px);
     margin-bottom: 24px;
+    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
 }
 
 .security-badge-indicator {
@@ -34,8 +36,8 @@
     position: absolute;
     cursor: pointer;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #cbd5e1;
-    transition: .3s;
+    background-color: #CBD5E1;
+    transition: 0.3s ease;
     border-radius: 34px;
 }
 
@@ -45,20 +47,20 @@
     height: 18px; width: 18px;
     left: 4px; bottom: 4px;
     background-color: white;
-    transition: .3s;
+    transition: 0.3s ease;
     border-radius: 50%;
 }
 
-input:checked + .slider-knob { background-color: var(--primary-teal); }
+input:checked + .slider-knob { background-color: var(--tera-secondary, #00C2C7); }
 input:checked + .slider-knob:before { transform: translateX(24px); }
 
-/* جدول سجل الأجهزة المتصلة بحساب المستثمر */
+/* جدول سجل الأجهزة المتصلة */
 .session-device-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--tera-border, #E2E8F0);
 }
 
 .session-device-card:last-child { border-bottom: none; }
@@ -70,10 +72,18 @@ input:checked + .slider-knob:before { transform: translateX(24px); }
 }
 
 .device-status-active {
-    font-size: 11px;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--success);
+    color: #10B981; /* Success Green */
     background: rgba(16, 185, 129, 0.1);
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* تنسيق إضافي لعنوان قسم الأمان */
+.security-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--tera-primary, #0A1B3F);
+    margin-bottom: 15px;
 }
