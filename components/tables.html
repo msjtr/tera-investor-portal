@@ -1,1 +1,71 @@
+<style>
+    /* حاوية الجدول (لتوفير التجاوب للأجهزة الصغيرة) */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        background: var(--tera-white, #ffffff);
+        border-radius: var(--tera-radius, 16px);
+        box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
+        border: 1px solid var(--tera-border, #E2E8F0);
+        margin-bottom: 24px;
+    }
 
+    /* تنسيق الجدول */
+    .tera-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: right;
+        min-width: 600px; /* لضمان عدم تداخل الأعمدة في الجوال */
+    }
+
+    .tera-table thead th {
+        background: #F1F5F9;
+        padding: 18px 24px;
+        color: var(--tera-primary, #0A1B3F);
+        font-weight: 800;
+        font-size: 0.9rem;
+        border-bottom: 2px solid var(--tera-border, #E2E8F0);
+        white-space: nowrap;
+    }
+
+    .tera-table tbody td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--tera-border, #E2E8F0);
+        color: var(--tera-text, #1E293B);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .tera-table tbody tr:hover {
+        background: rgba(0, 194, 199, 0.03);
+        transition: 0.3s;
+    }
+
+    /* تصنيف الحالة (Badges) */
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .status-success { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .status-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+</style>
+
+<template id="tera-table-template">
+    <div class="table-container">
+        <table class="tera-table">
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>العملية</th>
+                    <th>المبلغ</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                </tbody>
+        </table>
+    </div>
+</template>
