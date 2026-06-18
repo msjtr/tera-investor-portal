@@ -1,67 +1,100 @@
-<nav class="tera-sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <img src="/images/logo.svg" alt="Logo" class="sidebar-logo">
+<style>
+    .tera-sidebar {
+        width: 280px;
+        height: 100vh;
+        background: var(--tera-white, #ffffff);
+        border-left: 1px solid var(--tera-border, #E2E8F0);
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 800;
+    }
+
+    /* حالة التصغير (Collapsed) */
+    .tera-sidebar.collapsed { width: 80px; }
+    .tera-sidebar.collapsed .menu-text, 
+    .tera-sidebar.collapsed .logo-text { display: none; }
+    .tera-sidebar.collapsed .submenu { display: none !important; }
+
+    .sidebar-logo {
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--tera-border);
+    }
+
+    .sidebar-menu {
+        flex-grow: 1;
+        padding: 20px 10px;
+        list-style: none;
+    }
+
+    .menu-item {
+        margin-bottom: 5px;
+    }
+
+    .menu-link {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        color: var(--tera-text-light);
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+    }
+
+    .menu-link:hover, .menu-link.active {
+        background: rgba(0, 194, 199, 0.1);
+        color: var(--tera-secondary);
+    }
+
+    /* القوائم المنسدلة */
+    .submenu {
+        padding-right: 40px;
+        display: none;
+        list-style: none;
+    }
+    .has-submenu.active .submenu { display: block; }
+</style>
+
+<aside class="tera-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <i class="fa-solid fa-cube" style="color: var(--tera-secondary); font-size: 1.5rem;"></i>
+        <span class="logo-text" style="font-weight: 800; font-size: 1.2rem; color: var(--tera-primary);">تيرا للاستثمار</span>
     </div>
 
     <ul class="sidebar-menu">
-        <li>
-            <a href="/pages/dashboard/index.html"><i class="fa-solid fa-gauge"></i> <span>لوحة التحكم</span></a>
-        </li>
-
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span>الاستثمارات</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
+        <li class="menu-item"><a href="/pages/dashboard/index.html" class="menu-link"><i class="fa-solid fa-gauge"></i> <span class="menu-text">الرئيسية</span></a></li>
+        
+        <li class="menu-item has-submenu">
+            <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span class="menu-text">الاستثمارات</span> <i class="fa-solid fa-chevron-down" style="margin-right: auto; font-size: 0.8rem;"></i></a>
             <ul class="submenu">
-                <li><a href="/pages/investments/opportunities.html">الفرص المتاحة</a></li>
-                <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                <li><a href="/pages/investments/completed-investments.html">الاستثمارات المكتملة</a></li>
-                <li><a href="/pages/investments/cancelled-investments.html">الاستثمارات الملغاة</a></li>
+                <li><a href="/pages/investments/opportunities.html" class="menu-link">الفرص المتاحة</a></li>
+                <li><a href="/pages/portfolio/portfolio-overview.html" class="menu-link">محفظتي</a></li>
             </ul>
         </li>
 
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-briefcase"></i> <span>المحفظة</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-            <ul class="submenu">
-                <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                <li><a href="/pages/portfolio/transactions.html">العمليات</a></li>
-                <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
-                <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-            </ul>
-        </li>
-
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-file-invoice"></i> <span>التقارير</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-            <ul class="submenu">
-                <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
-                <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
-            </ul>
-        </li>
-
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-user"></i> <span>الملف الشخصي</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-            <ul class="submenu">
-                <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
-            </ul>
-        </li>
-
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-shield-halved"></i> <span>الأمان</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-            <ul class="submenu">
-                <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                <li><a href="/pages/security/two-factor-authentication.html">التحقق الثنائي</a></li>
-                <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
-            </ul>
-        </li>
-
-        <li class="has-submenu">
-            <a href="#" class="submenu-toggle"><i class="fa-solid fa-headset"></i> <span>الدعم الفني</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-            <ul class="submenu">
-                <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
-                <li><a href="/pages/support/tickets.html">التذاكر</a></li>
-                <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
-            </ul>
-        </li>
+        <li class="menu-item"><a href="/pages/profile/personal-information.html" class="menu-link"><i class="fa-solid fa-user"></i> <span class="menu-text">الملف الشخصي</span></a></li>
+        <li class="menu-item"><a href="#" class="menu-link btn-logout"><i class="fa-solid fa-right-from-bracket"></i> <span class="menu-text">تسجيل الخروج</span></a></li>
     </ul>
-</nav>
+</aside>
+
+<script>
+    // ربط زر الهيدر بالسايدبار (يعمل لأننا استخدمنا نفس الـ ID)
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebarToggle');
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // إرسال إشارة للمحتوى الرئيسي لتوسيع العرض إذا لزم الأمر
+            const mainContent = document.querySelector('.tera-main-content');
+            if (mainContent) mainContent.style.transition = '0.3s';
+        });
+    }
+</script>
