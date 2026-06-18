@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
+    <!-- أيقونة الموقع (حل مشكلة 404) -->
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
+
+    <!-- الملفات المشتركة CSS -->
     <link rel="stylesheet" href="../../assets/css/core.css" />
     <link rel="stylesheet" href="../../assets/css/main.css" />
     <link rel="stylesheet" href="../../assets/css/dashboard.css" />
@@ -174,14 +178,14 @@
                         <div class="stat-icon"><i class="fas fa-coins"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">إجمالي الاستثمارات</span>
-                            <span class="stat-value">ر.س 124,500</span> <!-- تم التعديل -->
+                            <span class="stat-value">ر.س 124,500</span>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">الأرباح المحققة</span>
-                            <span class="stat-value">ر.س 18,200</span> <!-- تم التعديل -->
+                            <span class="stat-value">ر.س 18,200</span>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -208,6 +212,7 @@
                             <span class="card-subtitle">آخر 30 يوماً</span>
                         </div>
                         <div class="card-body">
+                            <!-- عنصر الرسم البياني -->
                             <canvas id="performanceChart" height="150"></canvas>
                         </div>
                     </div>
@@ -317,54 +322,9 @@
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // تفعيل القائمة الجانبية
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('sidebar-open');
-        });
 
-        // تفعيل القوائم الفرعية
-        document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const parent = this.parentElement;
-                parent.classList.toggle('submenu-open');
-            });
-        });
+    <!-- تم إزالة الكود المكرر للرسم البياني من هنا -->
+    <!-- يتم الاعتماد على dashboard.js بالكامل -->
 
-        // رسم بياني بالريال
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['1', '5', '10', '15', '20', '25', '30'],
-                datasets: [{
-                    label: 'قيمة المحفظة (ر.س)',
-                    data: [12000, 12500, 12300, 13000, 12800, 13500, 14000],
-                    borderColor: '#0D6EFD',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            callback: function(value) {
-                                return 'ر.س ' + value.toLocaleString();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    </script>
 </body>
 </html>
