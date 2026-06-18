@@ -1,14 +1,16 @@
 /**
  * ==========================================================================
  * TERA Investor Portal - Shared Auth Utilities (auth.js)
- * محرك المصادقة والحماية - مصحح ومحكم لمسارات منصة تيرا
+ * محرك المصادقة والحماية - نسخة مصححة ومحكمة
  * ==========================================================================
+ * الموقع: /assets/js/auth.js
+ * 
  * هذا الملف مسؤول عن:
- * 1. التحقق من حالة تسجيل الدخول
+ * 1. التحقق من حالة تسجيل الدخول مع منع الحلقات اللانهائية
  * 2. توجيه المستخدم تلقائياً (الصفحات المحمية/العامة)
  * 3. إدارة جلسة المستخدم (تسجيل الدخول/الخروج)
  * 4. تفعيل أزرار إظهار/إخفاء كلمة المرور
- * 5. منع الحلقات اللانهائية (إعادة التوجيه المتكرر)
+ * 5. توفير دوال مساعدة للتحقق من الجلسة
  * ==========================================================================
  * تم توحيد أسماء المفاتيح في التخزين المحلي:
  * - tera_token : لتخزين رمز المصادقة
@@ -68,13 +70,15 @@ const resolvePath = (relativePath) => {
 
 const TeraAuth = {
     basePath: getBasePath(),
-    _isChecking: false, // منع التوجيه المتكرر
-    _lastCheckTime: 0, // منع التوجيه المتكرر
+    _isChecking: false,        // منع التوجيه المتكرر
+    _lastCheckTime: 0,         // منع التوجيه المتكرر
+    _isLoginPage: false,       // تحديد إذا كنا في صفحة تسجيل الدخول
 
     /**
      * التحقق من الجلسة وتوجيه المستخدم تلقائياً
      * - إذا كان المستخدم مسجل الدخول (يوجد توكن) وفي صفحة عامة -> يوجه للوحة التحكم
      * - إذا لم يكن مسجل الدخول وفي صفحة محمية -> يوجه لتسجيل الدخول
+     * - إذا كان في صفحة تسجيل الدخول -> لا يقوم بأي توجيه (منع الحلقات)
      */
     checkSession: function() {
         // منع التنفيذ المتكرر (للحماية من الحلقات اللانهائية)
@@ -87,9 +91,20 @@ const TeraAuth = {
         this._lastCheckTime = now;
 
         try {
+            // تحديد إذا كنا في صفحة تسجيل الدخول
+            const currentPage = window.location.pathname;
+            this._isLoginPage = /\/auth\/.*login/.test(currentPage) || 
+                                currentPage.includes('login.html') ||
+                                currentPage.endsWith('/login');
+
+            // إذا كنا في صفحة تسجيل الدخول، لا نقوم بأي توجيه (منع الحلقات)
+            if (this._isLoginPage) {
+                console.log('🔒 [Auth] صفحة تسجيل الدخول: تخطي التوجيه');
+                return;
+            }
+
             // استخدام المفتاح الموحد tera_token
             const token = localStorage.getItem('tera_token');
-            const currentPage = window.location.pathname;
             
             // تحديد نوع الصفحة الحالية
             const isAuthPage = /\/auth\//.test(currentPage);
@@ -121,6 +136,22 @@ const TeraAuth = {
         } finally {
             this._isChecking = false;
         }
+    },
+
+    /**
+     * تعطيل التوجيه التلقائي مؤقتاً (لصفحات المصادقة)
+     */
+    disableAutoRedirect: function() {
+        this._isChecking = true;
+        console.log('🔒 [Auth] تم تعطيل التوجيه التلقائي مؤقتاً');
+    },
+
+    /**
+     * إعادة تفعيل التوجيه التلقائي
+     */
+    enableAutoRedirect: function() {
+        this._isChecking = false;
+        console.log('🔓 [Auth] تم إعادة تفعيل التوجيه التلقائي');
     },
 
     /**
@@ -167,7 +198,6 @@ const TeraAuth = {
                 }
                 
                 // بيانات اختبارية للتحقق (للتجربة فقط)
-                // في التطبيق الحقيقي، سيتم الاتصال بالخادم
                 const mockUsers = [
                     { username: '106', email: 'investor106@tera.sa', mobile: '506060606', password: '123' },
                     { username: 'admin', email: 'admin@tera.sa', mobile: '500000000', password: 'admin123' }
@@ -279,19 +309,17 @@ const TeraAuth = {
     },
 
     /**
-     * تعطيل التوجيه التلقائي مؤقتاً (لصفحات المصادقة)
+     * إعادة توجيه المستخدم إلى لوحة التحكم (إذا كان مسجلاً)
+     * @returns {boolean} تم التوجيه أم لا
      */
-    disableAutoRedirect: function() {
-        this._isChecking = true;
-        console.log('🔒 [Auth] تم تعطيل التوجيه التلقائي مؤقتاً');
-    },
-
-    /**
-     * إعادة تفعيل التوجيه التلقائي
-     */
-    enableAutoRedirect: function() {
-        this._isChecking = false;
-        console.log('🔓 [Auth] تم إعادة تفعيل التوجيه التلقائي');
+    redirectToDashboardIfLoggedIn: function() {
+        if (this.isLoggedIn()) {
+            const dashboardUrl = resolvePath('/pages/dashboard/index.html');
+            console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
+            window.location.replace(dashboardUrl);
+            return true;
+        }
+        return false;
     }
 };
 
@@ -305,7 +333,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // التحقق مما إذا كنا في صفحة تسجيل الدخول
     const currentPage = window.location.pathname;
-    const isLoginPage = /\/auth\/.*login/.test(currentPage) || currentPage.includes('login.html');
+    const isLoginPage = /\/auth\/.*login/.test(currentPage) || 
+                        currentPage.includes('login.html') ||
+                        currentPage.endsWith('/login');
     
     if (isLoginPage) {
         // في صفحة تسجيل الدخول: نعطل التوجيه التلقائي
@@ -369,18 +399,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 
 // ========================================================================
-// 7. مثال للاستخدام (يمكنك تفعيله في حالة الاختبار)
-// ========================================================================
-
-/*
-// مثال: تسجيل الدخول السريع (للاختبار فقط)
-// window.TeraAuth.login('106', '123')
-//     .then(user => console.log('✅ تسجيل الدخول ناجح:', user))
-//     .catch(err => console.error('❌ فشل تسجيل الدخول:', err));
-*/
-
-// ========================================================================
-// 8. تنظيف المفاتيح القديمة (ترقية من إصدار سابق)
+// 7. تنظيف المفاتيح القديمة (ترقية من إصدار سابق)
 // ========================================================================
 
 // إذا كان هناك مفتاح tera_auth_token قديم، نقوم بنقل بياناته إلى المفتاح الجديد
@@ -400,3 +419,14 @@ if (typeof module !== 'undefined' && module.exports) {
         localStorage.removeItem('tera_user_data');
     }
 })();
+
+// ========================================================================
+// 8. مثال للاستخدام (يمكنك تفعيله في حالة الاختبار)
+// ========================================================================
+
+/*
+// مثال: تسجيل الدخول السريع (للاختبار فقط)
+// window.TeraAuth.login('106', '123')
+//     .then(user => console.log('✅ تسجيل الدخول ناجح:', user))
+//     .catch(err => console.error('❌ فشل تسجيل الدخول:', err));
+*/
