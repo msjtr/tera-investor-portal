@@ -1,62 +1,121 @@
 /**
- * TERA CORE SYSTEM - المحرك الأساسي للمشروع
- * يقوم بإدارة تحميل المكونات المشتركة، حماية الجلسة، والتحكم باللودر.
+ * ========================================
+ * core.js - الدوال الأساسية المشتركة
+ * ========================================
  */
-'use strict';
 
-const TERA = {
-    version: '1.0.0',
-    // المسارات تبدأ بـ / لضمان أنها دائماً من المجلد الرئيسي للمشروع
-    components: {
-        header: '/components/header.html',
-        sidebar: '/components/sidebar.html',
-        footer: '/components/footer.html',
-        loader: '/components/loader.html',
-        alerts: '/components/alerts.html'
+const Core = (() => {
+    'use strict';
+
+    // دالة مساعدة لإضافة/إزالة كلاس
+    function toggleClass(element, className) {
+        if (!element) return;
+        element.classList.toggle(className);
     }
-};
 
-/* 1. تحميل المكونات الديناميكي */
-async function loadComponent(id, path) {
-    const element = document.getElementById(id);
-    if (!element) return;
-    try {
-        const response = await fetch(path);
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-        element.innerHTML = await response.text();
-    } catch (error) {
-        console.error(`خطأ في تحميل المكون: ${path}`, error);
+    // دالة لإضافة كلاس
+    function addClass(element, className) {
+        if (!element) return;
+        element.classList.add(className);
     }
-}
 
-async function initSystem() {
-    // تحميل كافة المكونات بالتوازي
-    await Promise.all([
-        loadComponent('header-container', TERA.components.header),
-        loadComponent('sidebar-container', TERA.components.sidebar),
-        loadComponent('footer-container', TERA.components.footer),
-        loadComponent('loader-container', TERA.components.loader),
-        loadComponent('alerts-container', TERA.components.alerts)
-    ]);
-    
-    // إخفاء اللودر عند اكتمال التحميل
-    const loader = document.getElementById('tera-loader');
-    if (loader) loader.style.display = 'none';
-}
-
-/* 2. حماية الجلسة (Auth Check) */
-function checkAuth() {
-    const isLoginPage = window.location.pathname.includes('/login/');
-    const token = localStorage.getItem('tera_token');
-
-    if (!isLoginPage && !token) {
-        // إذا لم يكن هناك توكن وليس في صفحة تسجيل الدخول، حوّله لل login
-        window.location.replace('/auth/auth/login/login.html');
+    // دالة لإزالة كلاس
+    function removeClass(element, className) {
+        if (!element) return;
+        element.classList.remove(className);
     }
-}
 
-/* 3. تهيئة النظام عند بدء الصفحة */
+    // دالة لإيجاد العنصر الأم (Parent) الذي يحتوي على كلاس معين
+    function findParentByClass(element, className) {
+        while (element) {
+            if (element.classList && element.classList.contains(className)) {
+                return element;
+            }
+            element = element.parentElement;
+        }
+        return null;
+    }
+
+    // دالة لتبديل القائمة الفرعية (Submenu)
+    function handleSubmenuToggles() {
+        const submenuTriggers = document.querySelectorAll('.has-submenu > a');
+        submenuTriggers.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parentItem = this.parentElement;
+                // إغلاق القوائم الأخرى (اختياري - لجعلها تعمل مثل الأكورديون)
+                // يمكن إزالة التعليق عن السطر التالي لتفعيل الأكورديون
+                // document.querySelectorAll('.has-submenu').forEach(item => { if(item !== parentItem) removeClass(item, 'submenu-open'); });
+                toggleClass(parentItem, 'submenu-open');
+            });
+        });
+    }
+
+    // دالة لتبديل القائمة الجانبية (للشاشات الصغيرة)
+    function handleSidebarToggle() {
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function() {
+                toggleClass(sidebar, 'sidebar-open');
+            });
+        }
+        // إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 991) {
+                const sidebar = document.getElementById('sidebar');
+                const toggleBtn = document.getElementById('sidebarToggle');
+                if (sidebar && toggleBtn) {
+                    const isClickInside = sidebar.contains(e.target) || toggleBtn.contains(e.target);
+                    if (!isClickInside) {
+                        removeClass(sidebar, 'sidebar-open');
+                    }
+                }
+            }
+        });
+    }
+
+    // تهيئة القائمة النشطة بناءً على الرابط الحالي
+    function setActiveNavItem() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.sidebar-nav a');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.includes(href) && href !== '#') {
+                // إزالة النشاط من جميع العناصر
+                document.querySelectorAll('.nav-item').forEach(item => removeClass(item, 'active'));
+                const parentItem = link.closest('.nav-item');
+                if (parentItem) {
+                    addClass(parentItem, 'active');
+                    // فتح القائمة الأم إذا كانت فرعية
+                    const parentHasSub = parentItem.closest('.has-submenu');
+                    if (parentHasSub) {
+                        addClass(parentHasSub, 'submenu-open');
+                    }
+                }
+            }
+        });
+    }
+
+    // الدالة العامة للتهيئة
+    function init() {
+        handleSubmenuToggles();
+        handleSidebarToggle();
+        setActiveNavItem();
+    }
+
+    // إرجاع الدوال العامة
+    return {
+        init: init,
+        toggleClass: toggleClass,
+        addClass: addClass,
+        removeClass: removeClass,
+        findParentByClass: findParentByClass
+    };
+
+})();
+
+// بدء التشغيل عند تحميل الـ DOM
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    initSystem();
+    Core.init();
 });
