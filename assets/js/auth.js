@@ -9,6 +9,10 @@
  * 3. إدارة جلسة المستخدم (تسجيل الدخول/الخروج)
  * 4. تفعيل أزرار إظهار/إخفاء كلمة المرور
  * ==========================================================================
+ * تم توحيد أسماء المفاتيح في التخزين المحلي:
+ * - tera_token : لتخزين رمز المصادقة
+ * - tera_user  : لتخزين بيانات المستخدم
+ * ==========================================================================
  */
 'use strict';
 
@@ -18,11 +22,7 @@
 
 /**
  * استخراج المسار الجذري للمشروع بناءً على موقع الصفحة الحالية
- * يعمل مع:
- * - الصفحات في الجذر (index.html)
- * - الصفحات في /pages/
- * - الصفحات في /auth/
- * - الصفحات في /auth/login/ و /auth/register/
+ * @returns {string} المسار الجذري (مثل /tera-investor-portal-main أو فارغ)
  */
 const getBasePath = () => {
     const path = window.location.pathname;
@@ -74,6 +74,7 @@ const TeraAuth = {
      * - إذا لم يكن مسجل الدخول وفي صفحة محمية -> يوجه لتسجيل الدخول
      */
     checkSession: function() {
+        // استخدام المفتاح الموحد tera_token
         const token = localStorage.getItem('tera_token');
         const currentPage = window.location.pathname;
         
@@ -110,7 +111,7 @@ const TeraAuth = {
      * @param {boolean} isSessionExpired - هل الجلسة منتهية (عرض رسالة مختلفة)
      */
     logout: function(isSessionExpired = false) {
-        // مسح بيانات الجلسة
+        // مسح بيانات الجلسة (باستخدام المفاتيح الموحدة)
         localStorage.removeItem('tera_token');
         localStorage.removeItem('tera_user');
         sessionStorage.clear();
@@ -123,6 +124,37 @@ const TeraAuth = {
         const loginUrl = resolvePath('/auth/auth/login/login.html');
         console.log('🚪 [Auth] تسجيل الخروج والتوجيه إلى:', loginUrl);
         window.location.replace(loginUrl);
+    },
+
+    /**
+     * تسجيل الدخول (وهمي - سيتم استبداله بـ API حقيقي)
+     * @param {string} identifier - اسم المستخدم أو البريد أو الجوال
+     * @param {string} password - كلمة المرور
+     * @returns {Promise} وعد بنتيجة تسجيل الدخول
+     */
+    login: function(identifier, password) {
+        return new Promise((resolve, reject) => {
+            // محاكاة طلب API
+            setTimeout(() => {
+                // التحقق بسيط: أي بريد وكلمة مرور بطول 6 أحرف على الأقل
+                if (identifier && password && password.length >= 6) {
+                    const user = {
+                        id: 1,
+                        name: 'أحمد محمد',
+                        email: identifier.includes('@') ? identifier : 'investor@tera.sa',
+                        role: 'investor',
+                        verified: true,
+                        loginTime: new Date().toISOString()
+                    };
+                    // تخزين بيانات الجلسة بالمفاتيح الموحدة
+                    localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
+                    localStorage.setItem('tera_user', JSON.stringify(user));
+                    resolve(user);
+                } else {
+                    reject(new Error('بيانات الدخول غير صحيحة. تأكد من اسم المستخدم وكلمة المرور.'));
+                }
+            }, 800);
+        });
     },
 
     /**
@@ -162,32 +194,40 @@ const TeraAuth = {
     },
 
     /**
-     * تسجيل الدخول (وهمي - سيتم استبداله بـ API حقيقي)
-     * @param {string} email - البريد الإلكتروني
-     * @param {string} password - كلمة المرور
-     * @returns {Promise} وعد بنتيجة تسجيل الدخول
+     * الحصول على بيانات المستخدم الحالي
+     * @returns {object|null} بيانات المستخدم أو null
      */
-    login: function(email, password) {
-        return new Promise((resolve, reject) => {
-            // محاكاة طلب API
-            setTimeout(() => {
-                if (email && password && password.length >= 6) {
-                    const user = {
-                        id: 1,
-                        name: 'أحمد محمد',
-                        email: email,
-                        role: 'investor',
-                        verified: true
-                    };
-                    // تخزين بيانات الجلسة
-                    localStorage.setItem('tera_token', 'mock-jwt-token-xyz');
-                    localStorage.setItem('tera_user', JSON.stringify(user));
-                    resolve(user);
-                } else {
-                    reject(new Error('بيانات الدخول غير صحيحة'));
-                }
-            }, 500);
-        });
+    getCurrentUser: function() {
+        try {
+            const userData = localStorage.getItem('tera_user');
+            return userData ? JSON.parse(userData) : null;
+        } catch (error) {
+            console.warn('⚠️ [Auth] خطأ في قراءة بيانات المستخدم:', error);
+            return null;
+        }
+    },
+
+    /**
+     * تحديث بيانات المستخدم (بعد تعديل الملف الشخصي)
+     * @param {object} userData - بيانات المستخدم الجديدة
+     * @returns {boolean} نجاح العملية
+     */
+    updateUserData: function(userData) {
+        try {
+            localStorage.setItem('tera_user', JSON.stringify(userData));
+            return true;
+        } catch (error) {
+            console.error('❌ [Auth] فشل تحديث بيانات المستخدم:', error);
+            return false;
+        }
+    },
+
+    /**
+     * التحقق مما إذا كان المستخدم مسجلاً للدخول
+     * @returns {boolean}
+     */
+    isLoggedIn: function() {
+        return !!localStorage.getItem('tera_token');
     }
 };
 
@@ -204,6 +244,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ثانياً: تفعيل أزرار إظهار كلمة المرور
     TeraAuth.initPasswordToggles();
+    
+    // تسجيل معلومات إضافية في وحدة التحكم للمساعدة في التصحيح
+    if (TeraAuth.isLoggedIn()) {
+        const user = TeraAuth.getCurrentUser();
+        console.log('👤 [Auth] مستخدم مسجل:', user ? user.name : 'غير معروف');
+    } else {
+        console.log('👤 [Auth] مستخدم غير مسجل');
+    }
 });
 
 // ========================================================================
@@ -229,31 +277,21 @@ document.addEventListener('click', function(e) {
 // جعل TeraAuth متاحاً في النطاق العام
 window.TeraAuth = TeraAuth;
 
-// دوال مساعدة للتحقق من حالة المستخدم
-window.isUserLoggedIn = function() {
-    return !!localStorage.getItem('tera_token');
-};
-
-window.getCurrentUser = function() {
-    try {
-        const userData = localStorage.getItem('tera_user');
-        return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-        console.warn('⚠️ [Auth] خطأ في قراءة بيانات المستخدم:', error);
-        return null;
-    }
-};
-
-// دالة لتحديث بيانات المستخدم (بعد تعديل الملف الشخصي)
-window.updateUserData = function(userData) {
-    try {
-        localStorage.setItem('tera_user', JSON.stringify(userData));
-        return true;
-    } catch (error) {
-        console.error('❌ [Auth] فشل تحديث بيانات المستخدم:', error);
-        return false;
-    }
-};
+// دوال مساعدة للتحقق من حالة المستخدم (اختصارات)
+window.isUserLoggedIn = TeraAuth.isLoggedIn;
+window.getCurrentUser = TeraAuth.getCurrentUser;
 
 console.log('✅ [Auth] auth.js loaded successfully');
 console.log('📌 [Auth] استخدم TeraAuth للوصول إلى دوال المصادقة');
+console.log('📌 [Auth] المفاتيح المستخدمة: tera_token, tera_user');
+
+// ========================================================================
+// 6. مثال للاستخدام (يمكنك تفعيله في حالة الاختبار)
+// ========================================================================
+
+/*
+// مثال: تسجيل الدخول السريع (للاختبار فقط)
+// window.TeraAuth.login('test@tera.sa', '123456')
+//     .then(user => console.log('✅ تسجيل الدخول ناجح:', user))
+//     .catch(err => console.error('❌ فشل تسجيل الدخول:', err));
+*/
