@@ -1,48 +1,35 @@
-<div class="tera-card glass-panel" id="stat-card">
-    <div class="card-icon" id="card-icon-wrapper">
-        <i class="fa-solid fa-chart-line" id="card-icon"></i>
+<template id="tera-stat-card-template">
+    <div class="stat-card">
+        <div class="stat-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div class="stat-icon" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0, 194, 199, 0.1); color: var(--tera-secondary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div class="stat-trend" style="font-size: 0.85rem; font-weight: 700; color: #10B981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 8px;">
+                <i class="fa-solid fa-arrow-trend-up"></i> +5.2%
+            </div>
+        </div>
+        <div class="stat-details">
+            <h4 class="stat-title" style="color: var(--tera-text-light); font-size: 0.9rem; font-weight: 600; margin: 0 0 5px 0;">إجمالي المحفظة</h4>
+            <div class="stat-value" style="color: var(--tera-primary); font-size: 1.8rem; font-weight: 800; font-family: var(--font-heading);">
+                0 <span class="currency" style="font-size: 1rem; color: var(--tera-text-light);">ر.س</span>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <p class="card-label" id="card-label">العنوان</p>
-        <h3 class="card-value" id="card-value">0.00 ر.س</h3>
+</template>
+
+<template id="tera-glass-panel-template">
+    <div class="glass-panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px;">
+            <h3 class="panel-title" style="margin: 0; color: var(--tera-primary); font-size: 1.2rem; font-weight: 800;">
+                <i class="fa-solid fa-chart-pie" style="color: var(--tera-secondary); margin-left: 8px;"></i>
+                ملخص الأداء
+            </h3>
+            <button class="btn-icon" style="background: none; border: none; color: var(--tera-text-light); cursor: pointer;"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+        <div class="panel-body">
+            <p style="color: var(--tera-text); font-size: 0.9rem; line-height: 1.6;">
+                هذه المساحة مخصصة لعرض الرسوم البيانية أو القوائم المصغرة داخل تأثير الزجاج الضبابي (Glassmorphism).
+            </p>
+        </div>
     </div>
-</div>
-
-<style>
-    .tera-card {
-        padding: 25px;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        transition: transform 0.3s ease;
-        border-right: 4px solid var(--tera-teal);
-    }
-    .tera-card:hover { transform: translateY(-5px); }
-    
-    .card-icon {
-        width: 55px;
-        height: 55px;
-        border-radius: 15px;
-        background: rgba(2, 128, 144, 0.1);
-        color: var(--tera-teal);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 22px;
-    }
-    
-    .card-label { color: #64748b; font-size: 14px; font-weight: 500; margin-bottom: 5px; }
-    .card-value { color: var(--tera-navy); font-size: 24px; font-weight: 800; }
-</style>
-
-<script>
-    // دالة لتعبئة البطاقة برمجياً عند الاستدعاء
-    function fillCard(elementId, label, value, iconClass) {
-        const card = document.getElementById(elementId);
-        if(!card) return;
-        
-        card.querySelector('#card-label').textContent = label;
-        card.querySelector('#card-value').textContent = value;
-        card.querySelector('#card-icon').className = `fa-solid ${iconClass}`;
-    }
-</script>
+</template>
