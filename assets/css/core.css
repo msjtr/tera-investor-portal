@@ -1,89 +1,155 @@
-/* ================================================= */
-/* TERA CORE - Global Variables & Base Reset */
-/* ================================================= */
+/* ========================================
+   core.css - الأساسيات والمتغيرات
+   ======================================== */
 
-/* 1. نظام التصميم (Design System) */
+/* ----- متغيرات الألوان (Color Variables) ----- */
 :root {
-    /* الألوان */
-    --tera-primary: #0A1B3F;      /* الأزرق الغامق */
-    --tera-secondary: #00C2C7;    /* التيل الفاتح */
-    --tera-white: #ffffff;
-    --tera-bg: #F8FAFC;
-    --tera-text: #1E293B;
-    --tera-text-light: #64748B;
-    --tera-border: #E2E8F0;
+    --primary-color: #0D6EFD;
+    --primary-dark: #0B5ED7;
+    --primary-light: #E6F0FF;
+    --secondary-color: #6C757D;
+    --success-color: #198754;
+    --danger-color: #DC3545;
+    --warning-color: #FFC107;
+    --info-color: #0DCAF0;
+    --dark-color: #212529;
+    --light-color: #F8F9FA;
+    --white-color: #FFFFFF;
+    --gray-100: #F8F9FA;
+    --gray-200: #E9ECEF;
+    --gray-300: #DEE2E6;
+    --gray-400: #CED4DA;
+    --gray-500: #ADB5BD;
+    --gray-600: #6C757D;
+    --gray-700: #495057;
+    --gray-800: #343A40;
+    --gray-900: #212529;
 
-    /* الخطوط */
-    --font-heading: 'Tajawal', sans-serif;
-    --font-body: 'Tajawal', sans-serif;
-
-    /* المقاسات */
-    --sidebar-width: 280px;
+    --sidebar-width: 260px;
     --header-height: 70px;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --transition-speed: 0.3s;
+    --font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* 2. الإعدادات الأولية (Global Reset) */
+/* ----- إعادة التعيين (Reset) ----- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: var(--font-body);
-    background-color: var(--tera-bg);
-    color: var(--tera-text);
-    direction: rtl; /* دعم اللغة العربية */
-    text-align: right;
-    line-height: 1.6;
-    overflow-x: hidden; /* منع التمرير الأفقي غير المرغوب */
+html {
+    scroll-behavior: smooth;
 }
 
+body {
+    font-family: var(--font-family);
+    background-color: #F4F7FC;
+    color: var(--gray-800);
+    direction: rtl;
+    text-align: right;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ----- الأنماط الأساسية للعناصر ----- */
 a {
     text-decoration: none;
-    color: inherit;
+    color: var(--primary-color);
+    transition: color var(--transition-speed);
+}
+a:hover {
+    color: var(--primary-dark);
 }
 
 ul {
     list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-/* 3. حاوية المشروع (Layout Wrapper) */
-.tera-wrapper {
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ----- الأزرار الأساسية ----- */
+.btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: var(--border-radius);
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    font-size: 14px;
+    background-color: var(--gray-200);
+    color: var(--gray-700);
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+}
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    color: var(--white-color);
+}
+
+/* ----- البطاقات العامة (Card) ----- */
+.card {
+    background: var(--white-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--gray-200);
+}
+.card-header {
     display: flex;
-    min-height: 100vh;
-    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--gray-200);
+}
+.card-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+.card-subtitle {
+    font-size: 13px;
+    color: var(--gray-600);
+}
+.view-all {
+    font-size: 13px;
+    font-weight: 600;
 }
 
-.tera-main-content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    width: calc(100% - var(--sidebar-width));
-    transition: width 0.3s ease;
+/* ----- الشارات (Badges) ----- */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
 }
-
-/* 4. إعدادات شريط التمرير (Custom Scrollbar) */
-::-webkit-scrollbar {
-    width: 8px;
+.status-active {
+    background-color: #D1E7DD;
+    color: #0F5132;
 }
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.status-completed {
+    background-color: #CCE5FF;
+    color: #084298;
 }
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
+.status-pending {
+    background-color: #FFF3CD;
+    color: #856404;
 }
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+.status-danger {
+    background-color: #F8D7DA;
+    color: #721C24;
 }
-
-/* 5. فئات مساعدة (Utility Classes) */
-.d-flex { display: flex; }
-.justify-between { justify-content: space-between; }
-.align-center { align-items: center; }
-.hidden { display: none !important; }
-.mt-20 { margin-top: 20px; }
