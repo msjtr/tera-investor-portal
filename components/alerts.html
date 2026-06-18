@@ -1,106 +1,76 @@
 <style>
-    /* حاوية التنبيهات (يسار الشاشة لأن الموقع عربي RTL) */
+    /* الحاوية التي ستظهر فيها التنبيهات */
     .tera-alerts-wrapper {
         position: fixed;
-        top: 24px;
-        left: 24px;
+        top: 20px;
+        right: 20px; /* تغيير لـ right بما أن الموقع RTL */
         z-index: 9999;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        pointer-events: none; /* لمنع حجب النقر على ما خلف الحاوية */
+        gap: 15px;
+        pointer-events: none;
     }
 
-    /* تصميم بطاقة التنبيه (Glassmorphism + Modern) */
     .tera-alert {
-        min-width: 300px;
-        max-width: 400px;
-        background: var(--tera-white, #ffffff);
-        border-radius: var(--tera-radius, 16px);
-        padding: 16px 20px;
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        box-shadow: 0 15px 35px rgba(10, 27, 63, 0.15);
-        border: 1px solid var(--tera-border, #E2E8F0);
-        border-right: 5px solid transparent;
-        pointer-events: auto;
-        
-        /* حالة البداية للحركة (مخفي ومزاح لليسار) */
-        transform: translateX(-120%);
-        opacity: 0;
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    /* تفعيل ظهور التنبيه */
-    .tera-alert.show {
-        transform: translateX(0);
-        opacity: 1;
-    }
-
-    /* ألوان وأنماط التنبيهات المختلفة */
-    .tera-alert.success { border-right-color: #10B981; }
-    .tera-alert.success .alert-icon { color: #10B981; background: rgba(16, 185, 129, 0.1); }
-
-    .tera-alert.error { border-right-color: #EF4444; }
-    .tera-alert.error .alert-icon { color: #EF4444; background: rgba(239, 68, 68, 0.1); }
-
-    .tera-alert.warning { border-right-color: #F59E0B; }
-    .tera-alert.warning .alert-icon { color: #F59E0B; background: rgba(245, 158, 11, 0.1); }
-
-    .tera-alert.info { border-right-color: var(--tera-secondary, #00C2C7); }
-    .tera-alert.info .alert-icon { color: var(--tera-secondary, #00C2C7); background: rgba(0, 194, 199, 0.1); }
-
-    /* أيقونة التنبيه */
-    .alert-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
+        min-width: 320px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        flex-shrink: 0;
+        gap: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border-right: 5px solid transparent;
+        pointer-events: auto;
+        animation: slideIn 0.4s ease-out;
     }
 
-    /* محتوى التنبيه */
-    .alert-content {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
+    @keyframes slideIn {
+        from { transform: translateX(50px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
-    .alert-title {
-        font-weight: 800;
-        color: var(--tera-primary, #0A1B3F);
-        font-size: 0.95rem;
-        margin-bottom: 4px;
-        font-family: var(--font-heading, 'Tajawal', sans-serif);
-    }
+    .alert-icon { font-size: 1.5rem; }
+    .alert-content h4 { margin: 0; font-size: 0.95rem; color: #1e293b; }
+    .alert-content p { margin: 2px 0 0; font-size: 0.85rem; color: #64748b; }
 
-    .alert-message {
-        color: var(--tera-text-light, #64748B);
-        font-size: 0.85rem;
-        line-height: 1.5;
-        font-weight: 600;
-    }
+    /* الأنواع */
+    .alert-success { border-right-color: #10b981; }
+    .alert-success .alert-icon { color: #10b981; }
 
-    /* زر الإغلاق اليدوي */
-    .alert-close {
-        background: none;
-        border: none;
-        color: #94A3B8;
-        cursor: pointer;
-        font-size: 1.1rem;
-        padding: 0;
-        margin-top: 2px;
-        transition: 0.3s;
-    }
-
-    .alert-close:hover {
-        color: var(--tera-primary, #0A1B3F);
-        transform: scale(1.1);
-    }
+    .alert-error { border-right-color: #ef4444; }
+    .alert-error .alert-icon { color: #ef4444; }
 </style>
 
 <div class="tera-alerts-wrapper" id="teraAlertsWrapper"></div>
+
+<script>
+    /**
+     * نظام إظهار التنبيهات (استدعه من أي ملف JS باستخدام TeraAlert.show)
+     */
+    window.TeraAlert = {
+        show: function(type, title, message) {
+            const wrapper = document.getElementById('teraAlertsWrapper');
+            const alert = document.createElement('div');
+            
+            const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+            
+            alert.className = `tera-alert alert-${type}`;
+            alert.innerHTML = `
+                <div class="alert-icon"><i class="fa-solid ${icon}"></i></div>
+                <div class="alert-content">
+                    <h4>${title}</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+            
+            wrapper.appendChild(alert);
+            
+            // إخفاء التنبيه تلقائياً بعد 5 ثوانٍ
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 400);
+            }, 5000);
+        }
+    };
+</script>
