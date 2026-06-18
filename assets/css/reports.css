@@ -1,111 +1,783 @@
-/* ================================================= */
-/* TERA Investor Portal - Advanced Reports & Filters */
-/* إصدار مستقر متوافق مع نظام الهوية البصرية */
-/* ================================================= */
+/**
+ * ============================================================
+ * reports.css - أنماط صفحات التقارير
+ * ============================================================
+ * الموقع: /assets/css/reports.css
+ * 
+ * هذا الملف يحتوي على جميع الأنماط الخاصة بصفحات:
+ * - لوحة التقارير (reports-dashboard)
+ * - تقرير المحفظة (portfolio-report)
+ * - تقرير الاستثمارات (investments-report)
+ * - تقرير الأرباح (profits-report)
+ * - تقرير السحوبات (withdrawals-report)
+ * ============================================================
+ * يعتمد على: core.css (المتغيرات الأساسية)
+ * ============================================================
+ */
 
-/* شريط تصفية وفرز البيانات */
-.filter-bar-card {
-    background: var(--tera-white, #ffffff);
-    border: 1px solid var(--tera-border, #E2E8F0);
-    border-radius: var(--tera-radius, 16px);
-    padding: 24px;
-    margin-bottom: 24px;
-    display: flex;
-    flex-wrap: wrap;
+/* ============================================================
+   1. بطاقات التقارير الرئيسية
+   ============================================================ */
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
-    align-items: flex-end;
-    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
+    margin-bottom: 30px;
 }
 
-.filter-control-group {
+.report-card {
+    background: var(--white-color, #ffffff);
+    border-radius: var(--border-radius, 12px);
+    padding: 22px 24px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    box-shadow: var(--box-shadow, 0 2px 8px rgba(0,0,0,0.04));
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+    border-color: var(--primary-color, #028090);
+}
+
+.report-card .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 14px;
+}
+
+.report-card .card-icon.primary {
+    background: rgba(2, 128, 144, 0.10);
+    color: var(--primary-color, #028090);
+}
+
+.report-card .card-icon.success {
+    background: rgba(16, 185, 129, 0.10);
+    color: var(--success-color, #10b981);
+}
+
+.report-card .card-icon.warning {
+    background: rgba(245, 158, 11, 0.10);
+    color: var(--warning-color, #f59e0b);
+}
+
+.report-card .card-icon.danger {
+    background: rgba(239, 68, 68, 0.10);
+    color: var(--danger-color, #ef4444);
+}
+
+.report-card .card-icon.info {
+    background: rgba(13, 110, 253, 0.10);
+    color: var(--info-color, #0D6EFD);
+}
+
+.report-card .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gray-800, #1e293b);
+    margin-bottom: 4px;
+}
+
+.report-card .card-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--gray-900, #0A2540);
+}
+
+.report-card .card-value.positive {
+    color: var(--success-color, #10b981);
+}
+
+.report-card .card-value.negative {
+    color: var(--danger-color, #ef4444);
+}
+
+.report-card .card-change {
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.report-card .card-change.up {
+    color: var(--success-color, #10b981);
+}
+
+.report-card .card-change.down {
+    color: var(--danger-color, #ef4444);
+}
+
+.report-card .card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-color, #028090);
+    text-decoration: none;
+    margin-top: 10px;
+    transition: gap 0.2s;
+}
+
+.report-card .card-link:hover {
+    gap: 10px;
+    text-decoration: underline;
+}
+
+/* ============================================================
+   2. قائمة التقارير المتاحة
+   ============================================================ */
+.reports-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.report-item {
+    background: var(--white-color, #ffffff);
+    border-radius: var(--border-radius, 12px);
+    padding: 20px 24px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.report-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    border-color: var(--primary-color, #028090);
+}
+
+.report-item .report-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.report-item .report-icon.primary {
+    background: rgba(2, 128, 144, 0.10);
+    color: var(--primary-color, #028090);
+}
+
+.report-item .report-icon.success {
+    background: rgba(16, 185, 129, 0.10);
+    color: var(--success-color, #10b981);
+}
+
+.report-item .report-icon.warning {
+    background: rgba(245, 158, 11, 0.10);
+    color: var(--warning-color, #f59e0b);
+}
+
+.report-item .report-icon.danger {
+    background: rgba(239, 68, 68, 0.10);
+    color: var(--danger-color, #ef4444);
+}
+
+.report-item .report-info {
+    flex: 1;
+}
+
+.report-item .report-info .report-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-800, #1e293b);
+}
+
+.report-item .report-info .report-desc {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+}
+
+.report-item .report-arrow {
+    color: var(--gray-400, #94a3b8);
+    font-size: 18px;
+    transition: transform 0.2s;
+}
+
+.report-item:hover .report-arrow {
+    transform: translateX(-4px);
+    color: var(--primary-color, #028090);
+}
+
+/* ============================================================
+   3. أدوات التصفية والبحث في التقارير
+   ============================================================ */
+.report-filters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background: var(--white-color, #ffffff);
+    padding: 18px 22px;
+    border-radius: var(--border-radius, 12px);
+    border: 1px solid var(--gray-200, #e9ecef);
+    margin-bottom: 25px;
+}
+
+.report-filters .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex-grow: 1;
-    min-width: 200px;
+    gap: 4px;
 }
 
-.filter-select, 
-.filter-date-input {
-    width: 100%;
-    padding: 12px 16px;
-    background: #F8FAFC;
-    border: 1px solid var(--tera-border, #E2E8F0);
-    border-radius: var(--tera-radius, 16px);
-    font-size: 0.9rem;
+.report-filters .filter-group label {
+    font-size: 13px;
     font-weight: 600;
-    color: var(--tera-text, #1E293B);
+    color: var(--gray-700, #475569);
+}
+
+.report-filters .filter-group input,
+.report-filters .filter-group select {
+    padding: 8px 14px;
+    border: 2px solid var(--gray-200, #e9ecef);
+    border-radius: var(--border-radius, 8px);
+    font-size: 14px;
+    font-family: 'Tajawal', sans-serif;
+    background: var(--white-color, #ffffff);
+    color: var(--gray-800, #1e293b);
+    min-width: 150px;
+}
+
+.report-filters .filter-group input:focus,
+.report-filters .filter-group select:focus {
     outline: none;
-    transition: all 0.3s ease;
+    border-color: var(--primary-color, #028090);
+    box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.08);
 }
 
-.filter-select:focus, 
-.filter-date-input:focus {
-    border-color: var(--tera-secondary, #00C2C7);
-    box-shadow: 0 0 0 3px rgba(0, 194, 199, 0.1);
+.report-filters .filter-actions {
+    display: flex;
+    gap: 10px;
 }
 
-/* الجداول المالية المخصصة للتقارير */
-.reports-table-wrapper {
-    width: 100%;
+.report-filters .filter-actions .btn {
+    padding: 8px 22px;
+    border-radius: var(--border-radius, 8px);
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Tajawal', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.report-filters .filter-actions .btn-primary {
+    background: var(--primary-color, #028090);
+    color: #fff;
+}
+
+.report-filters .filter-actions .btn-primary:hover {
+    background: var(--primary-dark, #026b73);
+}
+
+.report-filters .filter-actions .btn-secondary {
+    background: var(--gray-200, #e9ecef);
+    color: var(--gray-700, #475569);
+}
+
+.report-filters .filter-actions .btn-secondary:hover {
+    background: var(--gray-300, #dee2e6);
+}
+
+/* ============================================================
+   4. حاوية الرسم البياني
+   ============================================================ */
+.chart-container {
+    background: var(--white-color, #ffffff);
+    border-radius: var(--border-radius, 12px);
+    border: 1px solid var(--gray-200, #e9ecef);
+    padding: 20px 24px;
+    margin-bottom: 25px;
+    box-shadow: var(--box-shadow, 0 2px 8px rgba(0,0,0,0.04));
+}
+
+.chart-container .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.chart-container .chart-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-800, #1e293b);
+    margin: 0;
+}
+
+.chart-container .chart-header .chart-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chart-container .chart-header .chart-actions .btn-sm {
+    padding: 4px 14px;
+    border-radius: var(--border-radius, 6px);
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+    background: var(--gray-200, #e9ecef);
+    color: var(--gray-700, #475569);
+}
+
+.chart-container .chart-header .chart-actions .btn-sm:hover {
+    background: var(--gray-300, #dee2e6);
+}
+
+.chart-container .chart-header .chart-actions .btn-sm.active {
+    background: var(--primary-color, #028090);
+    color: #fff;
+}
+
+.chart-container .chart-body {
+    position: relative;
+    height: 300px;
+}
+
+.chart-container .chart-body canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ============================================================
+   5. جدول التقارير
+   ============================================================ */
+.report-table-wrapper {
     overflow-x: auto;
-    background: var(--tera-white, #ffffff);
-    border: 1px solid var(--tera-border, #E2E8F0);
-    border-radius: var(--tera-radius, 16px);
-    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
+    background: var(--white-color, #ffffff);
+    border-radius: var(--border-radius, 12px);
+    border: 1px solid var(--gray-200, #e9ecef);
+    margin-bottom: 25px;
 }
 
-.tera-table {
+.report-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 14px;
+    min-width: 600px;
+}
+
+.report-table thead {
+    background: var(--gray-100, #f8f9fa);
+}
+
+.report-table th {
+    padding: 12px 18px;
     text-align: right;
-    font-size: 0.9rem;
-}
-
-.tera-table th {
-    background: #F1F5F9;
-    padding: 18px;
-    font-weight: 800;
-    color: var(--tera-primary, #0A1B3F);
-    border-bottom: 2px solid var(--tera-border, #E2E8F0);
+    font-weight: 700;
+    color: var(--gray-700, #475569);
+    border-bottom: 2px solid var(--gray-300, #dee2e6);
     white-space: nowrap;
 }
 
-.tera-table td {
-    padding: 18px;
-    border-bottom: 1px solid var(--tera-border, #E2E8F0);
-    color: var(--tera-text, #1E293B);
+.report-table td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--gray-200, #e9ecef);
+    color: var(--gray-800, #1e293b);
+    vertical-align: middle;
+}
+
+.report-table tbody tr:hover {
+    background: var(--gray-50, #fafafa);
+}
+
+.report-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.report-table .amount-positive {
+    color: var(--success-color, #10b981);
     font-weight: 600;
-    white-space: nowrap;
 }
 
-.tera-table tr:hover {
-    background: rgba(248, 250, 252, 0.8);
+.report-table .amount-negative {
+    color: var(--danger-color, #ef4444);
+    font-weight: 600;
 }
 
-/* أزرار تصدير البيانات */
-.export-actions-wrap {
+.report-table .table-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.report-table .table-actions .btn-sm {
+    padding: 4px 12px;
+    border-radius: var(--border-radius, 6px);
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.report-table .table-actions .btn-sm-primary {
+    background: var(--primary-color, #028090);
+    color: #fff;
+}
+
+.report-table .table-actions .btn-sm-primary:hover {
+    background: var(--primary-dark, #026b73);
+}
+
+.report-table .table-actions .btn-sm-secondary {
+    background: var(--gray-200, #e9ecef);
+    color: var(--gray-700, #475569);
+}
+
+.report-table .table-actions .btn-sm-secondary:hover {
+    background: var(--gray-300, #dee2e6);
+}
+
+/* ============================================================
+   6. أزرار تصدير التقارير
+   ============================================================ */
+.export-actions {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+    margin: 20px 0 30px;
 }
 
-.btn-export-trigger {
-    padding: 12px 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border-radius: var(--tera-radius, 16px);
+.export-actions .btn-export {
+    padding: 10px 24px;
+    border-radius: var(--border-radius, 8px);
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
     cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Tajawal', sans-serif;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid var(--tera-border, #E2E8F0);
-    background: #ffffff;
-    transition: all 0.3s ease;
 }
 
-.btn-export-trigger:hover {
-    background: #F8FAFC;
+.export-actions .btn-export.pdf {
+    background: #DC3545;
+    color: #fff;
 }
 
-.btn-export-trigger.pdf { color: #EF4444; border-color: rgba(239, 68, 68, 0.2); }
-.btn-export-trigger.excel { color: #16A34A; border-color: rgba(22, 163, 74, 0.2); }
+.export-actions .btn-export.pdf:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.25);
+}
+
+.export-actions .btn-export.excel {
+    background: #198754;
+    color: #fff;
+}
+
+.export-actions .btn-export.excel:hover {
+    background: #157347;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.25);
+}
+
+.export-actions .btn-export.csv {
+    background: #0DCAF0;
+    color: #fff;
+}
+
+.export-actions .btn-export.csv:hover {
+    background: #0bb5d9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 202, 240, 0.25);
+}
+
+.export-actions .btn-export.print {
+    background: var(--gray-600, #6c757d);
+    color: #fff;
+}
+
+.export-actions .btn-export.print:hover {
+    background: var(--gray-700, #495057);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.25);
+}
+
+/* ============================================================
+   7. ملخص التقرير (Report Summary)
+   ============================================================ */
+.report-summary {
+    background: var(--gray-50, #fafafa);
+    border-radius: var(--border-radius, 10px);
+    padding: 18px 22px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    margin-bottom: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.report-summary .summary-item {
+    text-align: center;
+}
+
+.report-summary .summary-item .summary-label {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+    font-weight: 500;
+}
+
+.report-summary .summary-item .summary-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--gray-900, #0A2540);
+}
+
+.report-summary .summary-item .summary-value.positive {
+    color: var(--success-color, #10b981);
+}
+
+.report-summary .summary-item .summary-value.negative {
+    color: var(--danger-color, #ef4444);
+}
+
+/* ============================================================
+   8. التوافق مع الشاشات الصغيرة (Responsive)
+   ============================================================ */
+@media (max-width: 992px) {
+    .reports-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reports-list {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-list {
+        grid-template-columns: 1fr;
+    }
+
+    .report-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .report-filters .filter-group input,
+    .report-filters .filter-group select {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .report-filters .filter-actions {
+        flex-wrap: wrap;
+    }
+
+    .report-filters .filter-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .chart-container .chart-body {
+        height: 220px;
+    }
+
+    .report-table {
+        min-width: 500px;
+    }
+
+    .export-actions {
+        justify-content: center;
+    }
+
+    .report-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .report-card .card-value {
+        font-size: 20px;
+    }
+
+    .chart-container {
+        padding: 14px 16px;
+    }
+
+    .chart-container .chart-body {
+        height: 180px;
+    }
+
+    .export-actions .btn-export {
+        padding: 8px 16px;
+        font-size: 13px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .report-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .report-summary .summary-item .summary-value {
+        font-size: 18px;
+    }
+}
+
+/* ============================================================
+   9. دعم الوضع المظلم (Dark Mode)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    .report-card {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .report-card .card-title {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .report-card .card-value {
+        color: var(--gray-100, #f8f9fa);
+    }
+
+    .report-item {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .report-item .report-info .report-name {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .report-item .report-info .report-desc {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .report-filters {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .report-filters .filter-group label {
+        color: var(--gray-300, #dee2e6);
+    }
+
+    .report-filters .filter-group input,
+    .report-filters .filter-group select {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+        color: var(--gray-100, #f8f9fa);
+    }
+
+    .report-filters .filter-group input:focus,
+    .report-filters .filter-group select:focus {
+        border-color: var(--primary-color, #14b8a6);
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+    }
+
+    .report-filters .filter-actions .btn-secondary {
+        background: var(--gray-700, #495057);
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .chart-container {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .chart-container .chart-header h4 {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .chart-container .chart-header .chart-actions .btn-sm {
+        background: var(--gray-700, #495057);
+        color: var(--gray-300, #dee2e6);
+    }
+
+    .chart-container .chart-header .chart-actions .btn-sm.active {
+        background: var(--primary-color, #14b8a6);
+        color: #fff;
+    }
+
+    .report-table-wrapper {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .report-table thead {
+        background: var(--gray-700, #495057);
+    }
+
+    .report-table th {
+        color: var(--gray-200, #e9ecef);
+        border-bottom-color: var(--gray-600, #6c757d);
+    }
+
+    .report-table td {
+        color: var(--gray-300, #dee2e6);
+        border-bottom-color: var(--gray-700, #495057);
+    }
+
+    .report-table tbody tr:hover {
+        background: var(--gray-700, #495057);
+    }
+
+    .report-table .table-actions .btn-sm-secondary {
+        background: var(--gray-700, #495057);
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .report-summary {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+    }
+
+    .report-summary .summary-item .summary-label {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .report-summary .summary-item .summary-value {
+        color: var(--gray-100, #f8f9fa);
+    }
+
+    .export-actions .btn-export.print {
+        background: var(--gray-600, #6c757d);
+    }
+
+    .export-actions .btn-export.print:hover {
+        background: var(--gray-700, #495057);
+    }
+}
