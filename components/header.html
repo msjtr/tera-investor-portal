@@ -1,3 +1,7 @@
+<!-- ================================================= -->
+<!-- TERA HEADER COMPONENT (المسارات المربوطة ديناميكياً) -->
+<!-- ================================================= -->
+
 <style>
     .tera-header {
         height: 70px;
@@ -12,13 +16,8 @@
         z-index: 900;
     }
 
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
+    .header-left { display: flex; align-items: center; gap: 20px; }
 
-    /* زر القائمة الجانبية (يظهر فقط على الموبايل والتابلت) */
     .menu-toggle {
         display: none;
         background: none;
@@ -30,15 +29,9 @@
         cursor: pointer;
     }
 
-    @media (max-width: 992px) {
-        .menu-toggle { display: block; }
-    }
+    @media (max-width: 992px) { .menu-toggle { display: block; } }
 
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
+    .header-right { display: flex; align-items: center; gap: 20px; }
 
     .notification-bell {
         position: relative;
@@ -57,7 +50,7 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        display: none; /* يتم إظهاره عبر JS عند وجود إشعارات */
+        display: none;
         align-items: center;
         justify-content: center;
         font-weight: 800;
@@ -109,26 +102,29 @@
             <span id="notificationCount">0</span>
         </div>
 
-        <div class="user-profile-summary" onclick="window.location.href='/pages/profile/personal-information.html'">
+        <!-- رابط البروفايل المربوط ديناميكياً -->
+        <div class="user-profile-summary" id="profileLink">
             <div class="user-avatar" id="userAvatarInitials">م</div>
-            <span class="investor-name">جاري التحميل...</span>
+            <span class="investor-name" id="userName">جاري التحميل...</span>
         </div>
     </div>
 </header>
 
 <script>
-    // تحديث بيانات المستخدم في الهيدر عند تحميله
-    (function updateHeaderData() {
+    (function() {
+        // 1. الربط الديناميكي للروابط لمنع 404
+        const profileLink = document.getElementById('profileLink');
+        const basePath = (typeof TERA !== 'undefined' && TERA.basePath) ? TERA.basePath : '';
+        
+        profileLink.addEventListener('click', () => {
+            window.location.href = basePath + '/pages/profile/personal-information.html';
+        });
+
+        // 2. تحديث بيانات المستخدم
         const userData = JSON.parse(localStorage.getItem('tera_user'));
         if (userData && userData.fullName) {
-            const nameEl = document.querySelector('.investor-name');
-            const avatarEl = document.getElementById('userAvatarInitials');
-            
-            nameEl.textContent = userData.fullName;
-            
-            // استخراج أول حرف من الاسم للصورة الرمزية
-            const initial = userData.fullName.charAt(0);
-            avatarEl.textContent = initial;
+            document.getElementById('userName').textContent = userData.fullName;
+            document.getElementById('userAvatarInitials').textContent = userData.fullName.charAt(0);
         }
     })();
 </script>
