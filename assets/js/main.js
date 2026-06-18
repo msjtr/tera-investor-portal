@@ -1,92 +1,63 @@
 /**
- * ==========================================================================
- * TERA Investor Portal - Main UI Interactions (main.js)
- * المكون التفاعلي المشترك - نسخة مستقرة تعتمد على Event Delegation
- * ==========================================================================
+ * TERA MAIN JS - Controller for Site Interactions
+ * هذا الملف مسؤول عن التفاعلات (أزرار، قوائم، نوافذ)
  */
-'use strict';
 
-// نستخدم مستمع أحداث عام على مستوى المستند لضمان تفاعل المكونات المحقونة ديناميكياً
-document.addEventListener('click', (e) => {
-
-    // 1. التحكم في القائمة الجانبية (Sidebar Toggle)
-    const menuToggleBtn = e.target.closest('.menu-toggle');
-    const mainSidebar = document.querySelector('.tera-sidebar') || document.querySelector('.main-sidebar');
+document.addEventListener('DOMContentLoaded', () => {
     
-    if (menuToggleBtn && mainSidebar) {
-        e.stopPropagation();
-        mainSidebar.classList.toggle('active');
-    }
-
-    // إغلاق القائمة الجانبية عند النقر خارجها في الشاشات الصغيرة (Mobile/Tablet)
-    if (window.innerWidth <= 992 && mainSidebar && mainSidebar.classList.contains('active')) {
-        if (!mainSidebar.contains(e.target) && !e.target.closest('.menu-toggle')) {
-            mainSidebar.classList.remove('active');
+    // 1. القائمة الجانبية: تبديل الحالة (Collapsed)
+    document.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('#sidebarToggle');
+        if (toggleBtn) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                // حفظ حالة القائمة في الـ LocalStorage إذا أردت
+                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+            }
         }
-    }
+    });
 
-    // 2. التحكم في القوائم المنسدلة (Dropdowns)
-    const dropdownToggle = e.target.closest('.dropdown-toggle');
-    if (dropdownToggle) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const parent = dropdownToggle.parentElement;
-        const menu = parent.querySelector('.dropdown-menu');
-        
-        // إغلاق أي قائمة منسدلة أخرى مفتوحة
-        document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
-            if (openMenu !== menu) openMenu.classList.remove('show');
-        });
-
-        // تبديل حالة القائمة الحالية
-        if (menu) menu.classList.toggle('show');
-    } else {
-        // إغلاق القوائم المنسدلة عند النقر في أي مكان آخر في الصفحة
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
-    }
-
-    // 3. نظام التبويبات المشترك (Tabs System)
-    const tabBtn = e.target.closest('.tab-btn');
-    if (tabBtn) {
-        const tabsContainer = tabBtn.closest('.tabs-wrapper');
-        if (tabsContainer) {
-            const targetId = tabBtn.getAttribute('data-target');
+    // 2. القوائم الفرعية (Submenus)
+    document.addEventListener('click', (e) => {
+        const submenuToggle = e.target.closest('.submenu-toggle');
+        if (submenuToggle) {
+            e.preventDefault();
+            const parent = submenuToggle.parentElement;
             
-            // إزالة الكلاس النشط من جميع الأزرار والمحتويات داخل نفس الحاوية
-            tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            tabsContainer.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            
-            // تفعيل الزر والمحتوى المستهدف
-            tabBtn.classList.add('active');
-            const targetPane = tabsContainer.querySelector(`#${targetId}`);
-            if (targetPane) targetPane.classList.add('active');
+            // إغلاق القوائم الأخرى المفتوحة (اختياري لجمالية التصميم)
+            document.querySelectorAll('.menu-item.has-submenu').forEach(item => {
+                if (item !== parent) item.classList.remove('active');
+            });
+
+            // تبديل حالة القائمة الحالية
+            parent.classList.toggle('active');
         }
+    });
+
+    // 3. النوافذ المنبثقة (Modals)
+    document.addEventListener('click', (e) => {
+        // فتح المودال
+        const modalTrigger = e.target.closest('[data-toggle="modal"]');
+        if (modalTrigger) {
+            const targetId = modalTrigger.getAttribute('data-target');
+            const modal = document.querySelector(targetId);
+            if (modal) modal.style.display = 'flex';
+        }
+
+        // إغلاق المودال
+        if (e.target.matches('[data-dismiss="modal"]') || e.target.classList.contains('modal')) {
+            const modal = e.target.closest('.modal');
+            if (modal) modal.style.display = 'none';
+        }
+    });
+
+    // 4. استعادة حالة القائمة الجانبية عند تحميل الصفحة
+    const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && isCollapsed) {
+        sidebar.classList.add('collapsed');
     }
 
-    // 4. النوافذ المنبثقة (Modals)
-    
-    // أ. فتح النافذة
-    const modalTrigger = e.target.closest('[data-toggle="modal"]');
-    if (modalTrigger) {
-        e.preventDefault();
-        const targetId = modalTrigger.getAttribute('data-target');
-        const modal = document.querySelector(targetId);
-        if (modal) modal.style.display = 'flex';
-    }
-
-    // ب. إغلاق النافذة عبر زر الإغلاق
-    const modalCloseBtn = e.target.closest('.modal-close, [data-dismiss="modal"]');
-    if (modalCloseBtn) {
-        e.preventDefault();
-        const modal = modalCloseBtn.closest('.modal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    // ج. إغلاق النافذة عند النقر خارج المحتوى (على الخلفية الداكنة)
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = 'none';
-    }
+    console.log('Main Interactions System Ready.');
 });
