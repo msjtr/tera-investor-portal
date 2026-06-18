@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- أيقونة الموقع (مسار نسبي) -->
+    <script>
+        if (!localStorage.getItem('tera_token')) {
+            window.location.replace('../../auth/auth/login/login.html');
+        }
+    </script>
+
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
 
-    <!-- الملفات المشتركة CSS (مسارات نسبية) -->
     <link rel="stylesheet" href="../../assets/css/core.css" />
     <link rel="stylesheet" href="../../assets/css/main.css" />
     <link rel="stylesheet" href="../../assets/css/dashboard.css" />
@@ -19,7 +23,6 @@
 
     <div class="app-wrapper">
 
-        <!-- ====== القائمة الجانبية (Sidebar) ====== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
                 <a href="../../index.html">
@@ -29,7 +32,6 @@
             </div>
 
             <nav class="sidebar-nav">
-                <!-- لوحة التحكم -->
                 <div class="nav-item active">
                     <a href="index.html">
                         <i class="fas fa-th-large"></i>
@@ -37,7 +39,6 @@
                     </a>
                 </div>
 
-                <!-- الاستثمارات -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-chart-line"></i>
@@ -54,7 +55,6 @@
                     </ul>
                 </div>
 
-                <!-- المحفظة -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-wallet"></i>
@@ -71,7 +71,6 @@
                     </ul>
                 </div>
 
-                <!-- التقارير -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-file-alt"></i>
@@ -87,7 +86,6 @@
                     </ul>
                 </div>
 
-                <!-- الملف الشخصي -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-user-circle"></i>
@@ -103,7 +101,6 @@
                     </ul>
                 </div>
 
-                <!-- الأمان -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-shield-alt"></i>
@@ -120,7 +117,6 @@
                     </ul>
                 </div>
 
-                <!-- الدعم -->
                 <div class="nav-item has-submenu">
                     <a href="#">
                         <i class="fas fa-headset"></i>
@@ -146,10 +142,8 @@
             </div>
         </aside>
 
-        <!-- ====== المحتوى الرئيسي ====== -->
         <main class="main-content">
 
-            <!-- ====== الهيدر ====== -->
             <header class="header">
                 <div class="header-left">
                     <button class="sidebar-toggle" id="sidebarToggle">
@@ -169,10 +163,8 @@
                 </div>
             </header>
 
-            <!-- ====== محتوى لوحة التحكم ====== -->
             <section class="dashboard-content">
 
-                <!-- بطاقات الإحصائيات -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-coins"></i></div>
@@ -204,7 +196,6 @@
                     </div>
                 </div>
 
-                <!-- الرسوم البيانية ونشاطات -->
                 <div class="dashboard-grid">
                     <div class="card chart-card">
                         <div class="card-header">
@@ -259,7 +250,6 @@
                     </div>
                 </div>
 
-                <!-- جدول الاستثمارات الأخيرة -->
                 <div class="card table-card">
                     <div class="card-header">
                         <h3>أحدث الاستثمارات</h3>
@@ -301,7 +291,6 @@
 
             </section>
 
-            <!-- ====== الفوتر ====== -->
             <footer class="footer">
                 <div class="footer-content">
                     <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
@@ -316,28 +305,20 @@
         </main>
     </div>
 
-    <!-- ====== الملفات المشتركة JS (مسارات نسبية) ====== -->
-    <!-- ترتيب التحميل مهم: core → app → main → page-specific → libraries -->
     <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/auth.js"></script> <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- كود احتياطي مدمج لتشغيل زر القائمة الجانبية في حال فشل تحميل core.js أو main.js -->
     <script>
         (function() {
             'use strict';
-
-            // وظيفة لتبديل القائمة الجانبية
             function toggleSidebar() {
                 var sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    sidebar.classList.toggle('sidebar-open');
-                }
+                if (sidebar) sidebar.classList.toggle('sidebar-open');
             }
 
-            // إضافة مستمع للزر عند تحميل الصفحة
             document.addEventListener('DOMContentLoaded', function() {
                 var toggleBtn = document.getElementById('sidebarToggle');
                 if (toggleBtn) {
@@ -347,7 +328,6 @@
                     });
                 }
 
-                // إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
                 document.addEventListener('click', function(e) {
                     if (window.innerWidth <= 991) {
                         var sidebar = document.getElementById('sidebar');
@@ -362,32 +342,22 @@
                     }
                 });
 
-                // إغلاق القائمة عند تغيير حجم النافذة
                 window.addEventListener('resize', function() {
                     if (window.innerWidth > 991) {
                         var sidebar = document.getElementById('sidebar');
-                        if (sidebar) {
-                            sidebar.classList.remove('sidebar-open');
-                        }
+                        if (sidebar) sidebar.classList.remove('sidebar-open');
                     }
                 });
 
-                // تفعيل القوائم الفرعية (للموبايل) في حالة عدم تحميل main.js
                 document.querySelectorAll('.has-submenu > a').forEach(function(link) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         var parent = this.parentElement;
-                        if (parent) {
-                            parent.classList.toggle('submenu-open');
-                        }
+                        if (parent) parent.classList.toggle('submenu-open');
                     });
                 });
-
-                console.log('✅ تم تفعيل زر القائمة الجانبية (كود احتياطي مدمج)');
             });
-
         })();
     </script>
-
 </body>
 </html>
