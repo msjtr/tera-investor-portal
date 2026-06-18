@@ -1,104 +1,27 @@
-<!-- ================================================= -->
-<!-- TERA LOADER COMPONENT (نسخة الربط الكامل) -->
-<!-- ================================================= -->
+<!-- ========================================
+     loader.html - مؤشر التحميل (Spinner)
+     ======================================== -->
+<div class="loader-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 50px 30px;">
 
-<style>
-    /* حاوية اللودر */
-    .tera-loader-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.98);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        backdrop-filter: blur(8px);
-        transition: opacity 0.5s ease;
-    }
+    <!-- 1. مؤشر تحميل دائري (CSS) -->
+    <div class="spinner" style="width: 50px; height: 50px; border: 6px solid var(--gray-200); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
 
-    /* تأثير نبض الشعار */
-    .loader-logo {
-        width: 100px;
-        height: auto;
-        margin-bottom: 25px;
-        animation: pulse 1.5s infinite ease-in-out;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-    }
+    <!-- 2. مؤشر مع نص -->
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="spinner" style="width: 30px; height: 30px; border: 4px solid var(--gray-200); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <span style="color: var(--gray-600); font-weight: 500;">جاري التحميل، يرجى الانتظار...</span>
+    </div>
 
-    /* مؤشر التحميل الدائري */
-    .loader-spinner {
-        width: 45px;
-        height: 45px;
-        border: 4px solid #F1F5F9;
-        border-top: 4px solid var(--tera-secondary, #00C2C7);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
+    <!-- 3. مؤشر تحميل باستخدام FontAwesome (اختياري) -->
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <i class="fas fa-spinner fa-pulse" style="font-size: 28px; color: var(--primary-color);"></i>
+        <span style="color: var(--gray-600); font-weight: 500;">جاري معالجة الطلب...</span>
+    </div>
 
-    .loader-text {
-        margin-top: 20px;
-        color: var(--tera-primary, #0A1B3F);
-        font-weight: 700;
-        font-family: var(--font-heading, 'Tajawal', sans-serif);
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.1); opacity: 0.8; }
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-</style>
-
-<div class="tera-loader-overlay" id="tera-loader">
-    <!-- تم ربط الشعار برمجياً لضمان المسار الصحيح -->
-    <img src="" alt="TERA Logo" class="loader-logo" id="loaderLogo">
-    
-    <div class="loader-spinner"></div>
-    
-    <div class="loader-text">جاري المعالجة...</div>
+    <!-- إضافة Keyframes للدوران -->
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </div>
-
-<script>
-    /**
-     * ربط الشعار ديناميكياً بناءً على مسار المشروع الجذري
-     * هذا يضمن عدم ظهور خطأ 404 للصورة مهما كانت الصفحة عميقة
-     */
-    (function() {
-        const logoImg = document.getElementById('loaderLogo');
-        // استخدام TERA.basePath الموحد في المشروع
-        const basePath = (typeof TERA !== 'undefined' && TERA.basePath) ? TERA.basePath : '';
-        logoImg.src = basePath + '/images/logo.svg';
-    })();
-
-    /**
-     * وظائف التحكم (تستدعى من core.js)
-     */
-    window.hideLoader = function() {
-        const loader = document.getElementById('tera-loader');
-        if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 500);
-        }
-    };
-
-    window.showLoader = function() {
-        const loader = document.getElementById('tera-loader');
-        if (loader) {
-            loader.style.opacity = '1';
-            loader.style.display = 'flex';
-        }
-    };
-</script>
