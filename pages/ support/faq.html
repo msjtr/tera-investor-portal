@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
-    <link rel="stylesheet" href="../../assets/css/support.css"> <!-- أنماط إضافية للدعم -->
+    <link rel="stylesheet" href="../../assets/css/support.css">
     <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -67,7 +67,6 @@
             text-align: center;
         }
 
-        /* تنسيق الإجابة */
         .faq-answer {
             max-height: 0;
             padding: 0 25px;
@@ -91,7 +90,6 @@
             margin-bottom: 5px;
         }
 
-        /* الحالة المفتوحة */
         .faq-item.open {
             border-color: var(--primary-color);
         }
@@ -104,12 +102,11 @@
             color: var(--primary-color);
         }
         .faq-item.open .faq-answer {
-            max-height: 800px; /* قيمة كبيرة لتظهر جميع المحتويات */
+            max-height: 800px;
             padding: 20px 25px;
             border-top-color: var(--gray-300);
         }
 
-        /* زر البحث السريع */
         .faq-search-box {
             position: relative;
             margin-bottom: 30px;
@@ -137,7 +134,6 @@
             font-size: 18px;
         }
 
-        /* تذييل الصفحة */
         .faq-footer-cta {
             background: var(--primary-light);
             border-radius: var(--border-radius);
@@ -152,6 +148,13 @@
         .faq-footer-cta p {
             color: var(--gray-600);
             margin-bottom: 15px;
+        }
+
+        /* تفعيل العنصر النشط في القائمة */
+        .sidebar-nav .nav-item .submenu li.active a {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -226,7 +229,7 @@
                 </ul>
             </div>
 
-            <div class="nav-item has-submenu submenu-open">
+            <div class="nav-item has-submenu">
                 <a href="#"><i class="fas fa-headset"></i><span>الدعم</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                 <ul class="submenu">
                     <li><a href="help-center.html">مركز المساعدة</a></li>
@@ -267,14 +270,14 @@
             <!-- شريط البحث السريع -->
             <div class="faq-search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="faqSearchInput" placeholder="ابحث في الأسئلة الشائعة..." onkeyup="filterFaqs()">
+                <input type="text" id="faqSearchInput" placeholder="ابحث في الأسئلة الشائعة...">
             </div>
 
             <!-- القسم 1: الأسئلة العامة -->
             <h3 class="faq-section-title"><i class="fas fa-info-circle" style="margin-left:10px;color:var(--primary-color);"></i>عام</h3>
             
             <div class="faq-item open">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>ما هي منصة تيرا للمستثمرين؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -284,7 +287,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف يمكنني التسجيل في المنصة؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -300,7 +303,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>هل المنصة مرخصة وموثقة رسمياً؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -313,7 +316,7 @@
             <h3 class="faq-section-title"><i class="fas fa-chart-pie" style="margin-left:10px;color:var(--primary-color);"></i>الاستثمار والأرباح</h3>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>ما هي خطوات الاستثمار في فرصة معينة؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -329,7 +332,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف يتم حساب وتوزيع الأرباح؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -339,7 +342,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>ماذا يحدث إذا تأخر العميل عن السداد؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -352,7 +355,7 @@
             <h3 class="faq-section-title"><i class="fas fa-wallet" style="margin-left:10px;color:var(--primary-color);"></i>المحفظة والسحب</h3>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف يمكنني إيداع أموال في محفظتي؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -366,7 +369,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كم تستغرق عملية طلب السحب؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -376,7 +379,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>هل توجد رسوم على عمليات السحب أو الإيداع؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -389,7 +392,7 @@
             <h3 class="faq-section-title"><i class="fas fa-shield-alt" style="margin-left:10px;color:var(--primary-color);"></i>الأمان والحساب</h3>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف يمكنني تغيير كلمة المرور الخاصة بي؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -404,7 +407,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>هل توجد مصادقة ثنائية لحماية الحساب؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -414,7 +417,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>ماذا أفعل إذا نسيت كلمة المرور؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -427,7 +430,7 @@
             <h3 class="faq-section-title"><i class="fas fa-headset" style="margin-left:10px;color:var(--primary-color);"></i>الدعم والشكاوى</h3>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف يمكنني التواصل مع فريق الدعم؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -442,7 +445,7 @@
             </div>
 
             <div class="faq-item">
-                <div class="faq-question" onclick="toggleFaq(this)">
+                <div class="faq-question">
                     <span>كيف أبلغ عن مشكلة تقنية في المنصة؟</span>
                     <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
                 </div>
@@ -455,7 +458,7 @@
             <div class="faq-footer-cta">
                 <h3>لم تجد إجابة لسؤالك؟</h3>
                 <p>فريق الدعم لدينا جاهز لمساعدتك على مدار الساعة</p>
-                <a href="tickets.html" class="btn btn-primary"><i class="fas fa-ticket-alt"></i> افتح تذكرة الآن</a>
+                <a href="tickets.html" class="btn btn-primary" id="openTicketBtn"><i class="fas fa-ticket-alt"></i> افتح تذكرة الآن</a>
             </div>
 
         </section>
@@ -477,82 +480,116 @@
 
 <!-- ====== الملفات المشتركة JS ====== -->
 <script src="../../assets/js/core.js"></script>
+<script src="../../assets/js/app.js"></script>
 <script src="../../assets/js/main.js"></script>
 <script src="../../assets/js/support.js"></script>
 
 <script>
-    /**
-     * دالة لتبديل حالة السؤال (فتح/غلق)
-     */
-    function toggleFaq(element) {
-        var parentItem = element.closest('.faq-item');
-        if (!parentItem) return;
+    (function() {
+        'use strict';
 
-        // إغلاق الفقرة الحالية إذا كانت مفتوحة، أو فتحها
-        parentItem.classList.toggle('open');
+        /**
+         * تهيئة أحداث صفحة الأسئلة الشائعة
+         */
+        function initFaqPage() {
+            // 1. تفعيل خاصية الطي/التوسيع لكل الأسئلة
+            document.querySelectorAll('.faq-question').forEach(function(question) {
+                question.addEventListener('click', function(e) {
+                    var parentItem = this.closest('.faq-item');
+                    if (!parentItem) return;
 
-        // (اختياري) إذا أردت إغلاق الفقرات الأخرى (الأكورديون)، قم بإلغاء التعليق عن الكود التالي:
-        /*
-        var allItems = document.querySelectorAll('.faq-item');
-        allItems.forEach(function(item) {
-            if (item !== parentItem && item.classList.contains('open')) {
-                item.classList.remove('open');
-            }
-        });
-        */
-    }
+                    // تبديل الحالة
+                    parentItem.classList.toggle('open');
 
-    /**
-     * دالة البحث في الأسئلة (تصفية)
-     */
-    function filterFaqs() {
-        var input = document.getElementById('faqSearchInput');
-        var filter = input.value.toLowerCase().trim();
-        var items = document.querySelectorAll('.faq-item');
-
-        if (filter === '') {
-            // إظهار الكل وإعادة تعيين التوسيع (إذا أردت إعادة فتح الأول)
-            items.forEach(function(item) {
-                item.style.display = 'block';
-                // يمكن إعادة تعيين الفتح الافتراضي للأول، لكن نتركها كما هي
+                    // (اختياري) إغلاق الفقرات الأخرى (تعليق لتفعيل الأكورديون)
+                    /*
+                    var allItems = document.querySelectorAll('.faq-item');
+                    allItems.forEach(function(item) {
+                        if (item !== parentItem && item.classList.contains('open')) {
+                            item.classList.remove('open');
+                        }
+                    });
+                    */
+                });
             });
-            return;
+
+            // 2. تفعيل البحث في الأسئلة
+            var searchInput = document.getElementById('faqSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    var filter = this.value.toLowerCase().trim();
+                    var items = document.querySelectorAll('.faq-item');
+
+                    if (filter === '') {
+                        items.forEach(function(item) {
+                            item.style.display = 'block';
+                        });
+                        return;
+                    }
+
+                    items.forEach(function(item) {
+                        var questionText = item.querySelector('.faq-question span:first-child')?.textContent?.toLowerCase() || '';
+                        var answerText = item.querySelector('.faq-answer')?.textContent?.toLowerCase() || '';
+                        var isMatch = questionText.includes(filter) || answerText.includes(filter);
+                        
+                        item.style.display = isMatch ? 'block' : 'none';
+                        
+                        // فتح العنصر المطابق تلقائياً
+                        if (isMatch && !item.classList.contains('open')) {
+                            item.classList.add('open');
+                        }
+                    });
+                });
+            }
+
+            // 3. تفعيل زر "فتح تذكرة"
+            var ticketBtn = document.getElementById('openTicketBtn');
+            if (ticketBtn) {
+                ticketBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // استخدام TeraApp لعرض إشعار
+                    if (typeof TeraApp !== 'undefined' && TeraApp.showNotification) {
+                        TeraApp.showNotification('🎫 تم فتح نموذج إنشاء تذكرة جديدة', 'success', 3000);
+                    } else {
+                        alert('🎫 سيتم توجيهك إلى صفحة التذاكر');
+                    }
+                    // التوجيه إلى صفحة التذاكر
+                    if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
+                        TeraApp.navigateTo('/support/tickets');
+                    } else {
+                        window.location.href = 'tickets.html';
+                    }
+                });
+            }
+
+            console.log('✅ تم تهيئة صفحة الأسئلة الشائعة (FAQ)');
         }
 
-        items.forEach(function(item) {
-            var questionText = item.querySelector('.faq-question span:first-child')?.textContent?.toLowerCase() || '';
-            var answerText = item.querySelector('.faq-answer')?.textContent?.toLowerCase() || '';
-            if (questionText.includes(filter) || answerText.includes(filter)) {
-                item.style.display = 'block';
-                // لفتح العنصر تلقائياً عند التطابق
-                if (!item.classList.contains('open')) {
-                    item.classList.add('open');
-                }
-            } else {
-                item.style.display = 'none';
-            }
+        // ====== تشغيل التهيئة عند تحميل DOM ======
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFaqPage);
+        } else {
+            initFaqPage();
+        }
+
+        // ====== تفعيل القائمة الجانبية ======
+        var sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('sidebar-open');
+            });
+        }
+
+        // ====== تفعيل القوائم الفرعية ======
+        document.querySelectorAll('.has-submenu > a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var parent = this.parentElement;
+                parent.classList.toggle('submenu-open');
+            });
         });
-    }
 
-    // ====== تفعيل القائمة الجانبية ======
-    document.getElementById('sidebarToggle').addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('sidebar-open');
-    });
-
-    // ====== تفعيل القوائم الفرعية (للموبايل) ======
-    document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            var parent = this.parentElement;
-            // أغلق القوائم الأخرى (اختياري)
-            // document.querySelectorAll('.has-submenu').forEach(function(item) {
-            //     if (item !== parent) item.classList.remove('submenu-open');
-            // });
-            parent.classList.toggle('submenu-open');
-        });
-    });
-
-    console.log('✅ صفحة الأسئلة الشائعة (FAQ) تم تحميلها بنجاح');
+    })();
 </script>
 
 </body>
