@@ -1,45 +1,27 @@
-<header class="tera-header">
+<!-- ========================================
+     header.html - الشريط العلوي (الهيدر)
+     ======================================== -->
+<header class="header">
     <div class="header-left">
-        <button class="menu-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
-            <i class="fa-solid fa-bars"></i>
+        <!-- زر تبديل القائمة الجانبية (للشاشات الصغيرة) -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
         </button>
-        <h2 class="page-title">بوابة المستثمر</h2>
+        <!-- عنوان الصفحة (ديناميكي، يمكن تغييره حسب الصفحة) -->
+        <h1 class="page-title">لوحة التحكم</h1>
     </div>
 
     <div class="header-right">
-        <div class="notification-bell">
-            <i class="fa-solid fa-bell"></i>
-            <span id="notificationCount" class="badge-count">0</span>
+        <!-- أيقونة الإشعارات -->
+        <div class="notifications" title="الإشعارات">
+            <i class="fas fa-bell"></i>
+            <span class="badge">3</span>
         </div>
 
-        <div class="user-profile-summary" id="profileLink" role="button">
-            <div class="user-avatar" id="userAvatarInitials"></div>
-            <span class="investor-name" id="userName"></span>
+        <!-- معلومات المستخدم -->
+        <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=0D6EFD&color=fff&size=40" alt="صورة المستخدم" />
+            <span class="user-name">أحمد محمد</span>
         </div>
     </div>
 </header>
-
-<script>
-    (function() {
-        // 1. الربط الديناميكي للروابط
-        const profileLink = document.getElementById('profileLink');
-        if (profileLink) {
-            profileLink.addEventListener('click', () => {
-                window.location.href = '/pages/profile/personal-information.html';
-            });
-        }
-
-        // 2. تحديث بيانات المستخدم
-        const userData = JSON.parse(localStorage.getItem('tera_user'));
-        if (userData && userData.fullName) {
-            const nameEl = document.getElementById('userName');
-            const avatarEl = document.getElementById('userAvatarInitials');
-            
-            nameEl.textContent = userData.fullName;
-            avatarEl.textContent = userData.fullName.charAt(0);
-        } else {
-            document.getElementById('userName').textContent = 'مستخدم';
-            document.getElementById('userAvatarInitials').textContent = 'U';
-        }
-    })();
-</script>
