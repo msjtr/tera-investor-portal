@@ -10,6 +10,7 @@
  * - معالجة الأخطاء العامة
  * ============================================================
  * تم تحديثه لإصلاح مشكلة المسارات المطلقة على Render
+ * وجعل جميع المسارات نسبية بناءً على عمق الصفحة الحالية
  * ============================================================
  */
 
@@ -17,7 +18,53 @@
     'use strict';
 
     // ============================================================
-    // 1. تكوينات التطبيق الأساسية
+    // 1. دوال مساعدة للمسارات النسبية
+    // ============================================================
+
+    /**
+     * حساب عدد المستويات (العمق) للوصول إلى الجذر من المسار الحالي
+     * @returns {number} عدد المستويات
+     */
+    function getBaseDepth() {
+        const path = window.location.pathname;
+        if (path.includes('/pages/')) return 2;
+        if (path.includes('/auth/auth/')) return 3;
+        if (path.includes('/auth/')) return 2;
+        if (path.includes('/assets/')) return 1;
+        if (path === '/' || path === '/index.html') return 0;
+        const parts = path.split('/').filter(p => p.length > 0);
+        return parts.length;
+    }
+
+    /**
+     * إنشاء مسار نسبي من الجذر إلى المسار المطلوب
+     * @param {string} targetPath - المسار المطلوب (قد يبدأ بـ / أو لا)
+     * @returns {string} المسار النسبي مع ../ بالعدد المناسب
+     */
+    function resolveRelativePath(targetPath) {
+        // إزالة / من البداية إن وجدت
+        let cleanPath = targetPath;
+        if (cleanPath.startsWith('/')) {
+            cleanPath = cleanPath.slice(1);
+        }
+        // إزالة أي تكرار لـ ../ في البداية
+        while (cleanPath.startsWith('../')) {
+            cleanPath = cleanPath.slice(3);
+        }
+        // إضافة .html إذا لزم الأمر
+        if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
+            cleanPath = cleanPath + '.html';
+        }
+        const depth = getBaseDepth();
+        let prefix = '';
+        for (let i = 0; i < depth; i++) {
+            prefix += '../';
+        }
+        return prefix + cleanPath;
+    }
+
+    // ============================================================
+    // 2. تكوينات التطبيق الأساسية (باستخدام مسارات نسبية)
     // ============================================================
 
     const APP_CONFIG = {
@@ -26,12 +73,12 @@
         apiBaseUrl: '/api/v1',
         debug: true,
         authRequired: true,
-        loginUrl: '../../../auth/auth/login/login.html', // مسار نسبي
-        defaultPage: '../../../pages/dashboard/index.html' // مسار نسبي
+        loginUrl: resolveRelativePath('/auth/auth/login/login.html'),
+        defaultPage: resolveRelativePath('/pages/dashboard/index.html')
     };
 
     // ============================================================
-    // 2. حالة التطبيق (Application State)
+    // 3. حالة التطبيق (Application State)
     // ============================================================
 
     const AppState = {
@@ -45,45 +92,6 @@
     };
 
     // ============================================================
-    // 3. حساب العمق الحالي للمسار
-    // ============================================================
-
-    /**
-     * حساب عدد المستويات للوصول إلى الجذر من المسار الحالي
-     */
-    const getBaseDepth = () => {
-        const path = window.location.pathname;
-        if (path.includes('/pages/')) return 2;
-        if (path.includes('/auth/auth/')) return 3;
-        if (path.includes('/auth/')) return 2;
-        if (path.includes('/assets/')) return 1;
-        if (path === '/' || path === '/index.html') return 0;
-        const parts = path.split('/').filter(p => p.length > 0);
-        return parts.length;
-    };
-
-    /**
-     * إنشاء مسار نسبي من الجذر
-     */
-    const resolveRelativePath = (relativePath) => {
-        // إزالة / من البداية إذا وجدت
-        let cleanPath = relativePath;
-        if (cleanPath.startsWith('/')) {
-            cleanPath = cleanPath.slice(1);
-        }
-        // إضافة .html إذا لزم الأمر
-        if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
-            cleanPath = cleanPath + '.html';
-        }
-        const depth = getBaseDepth();
-        let prefix = '';
-        for (let i = 0; i < depth; i++) {
-            prefix += '../';
-        }
-        return prefix + cleanPath;
-    };
-
-    // ============================================================
     // 4. مسارات الصفحات (باستخدام مسارات نسبية)
     // ============================================================
 
@@ -91,54 +99,54 @@
         '/': APP_CONFIG.defaultPage,
         '/index.html': APP_CONFIG.defaultPage,
         '/home': APP_CONFIG.defaultPage,
-        '/dashboard': '../../../pages/dashboard/index.html',
-        '/dashboard/index.html': '../../../pages/dashboard/index.html',
-        '/investments': '../../../pages/investments/opportunities.html',
-        '/investments/opportunities': '../../../pages/investments/opportunities.html',
-        '/investments/active': '../../../pages/investments/active-investments.html',
-        '/investments/completed': '../../../pages/investments/completed-investments.html',
-        '/investments/cancelled': '../../../pages/investments/cancelled-investments.html',
-        '/investments/extended': '../../../pages/investments/extended-investments.html',
-        '/investments/details': '../../../pages/investments/investment-details.html',
-        '/portfolio': '../../../pages/portfolio/portfolio-overview.html',
-        '/portfolio/overview': '../../../pages/portfolio/portfolio-overview.html',
-        '/portfolio/transactions': '../../../pages/portfolio/transactions.html',
-        '/portfolio/profits': '../../../pages/portfolio/profits.html',
-        '/portfolio/withdraw': '../../../pages/portfolio/withdraw-request.html',
-        '/portfolio/withdrawals': '../../../pages/portfolio/withdrawal-history.html',
-        '/portfolio/statement': '../../../pages/portfolio/account-statement.html',
-        '/reports': '../../../pages/reports/reports-dashboard.html',
-        '/reports/dashboard': '../../../pages/reports/reports-dashboard.html',
-        '/reports/portfolio': '../../../pages/reports/portfolio-report.html',
-        '/reports/investments': '../../../pages/reports/investments-report.html',
-        '/reports/profits': '../../../pages/reports/profits-report.html',
-        '/reports/withdrawals': '../../../pages/reports/withdrawals-report.html',
-        '/profile': '../../../pages/profile/personal-information.html',
-        '/profile/personal': '../../../pages/profile/personal-information.html',
-        '/profile/contact': '../../../pages/profile/contact-information.html',
-        '/profile/address': '../../../pages/profile/national-address.html',
-        '/profile/bank': '../../../pages/profile/bank-information.html',
-        '/profile/attachments': '../../../pages/profile/attachments.html',
-        '/security': '../../../pages/security/change-password.html',
-        '/security/password': '../../../pages/security/change-password.html',
-        '/security/email': '../../../pages/security/change-email.html',
-        '/security/mobile': '../../../pages/security/change-mobile.html',
-        '/security/2fa': '../../../pages/security/two-factor-authentication.html',
-        '/security/devices': '../../../pages/security/registered-devices.html',
-        '/security/login-history': '../../../pages/security/login-history.html',
-        '/support': '../../../pages/support/help-center.html',
-        '/support/help': '../../../pages/support/help-center.html',
-        '/support/faq': '../../../pages/support/faq.html',
-        '/support/tickets': '../../../pages/support/tickets.html',
-        '/support/notifications': '../../../pages/support/notifications.html',
-        '/support/privacy': '../../../pages/support/privacy-policy.html',
-        '/support/terms': '../../../pages/support/terms-and-conditions.html',
-        '/auth/login': '../../../auth/auth/login/login.html',
-        '/auth/register': '../../../auth/register/register.html',
-        '/auth/forgot-password': '../../../auth/forgot-password.html',
-        '/auth/reset-password': '../../../auth/reset-password.html',
-        '/auth/verify-otp': '../../../auth/verify-otp.html',
-        '/auth/complete-profile': '../../../auth/complete-profile.html'
+        '/dashboard': resolveRelativePath('/pages/dashboard/index.html'),
+        '/dashboard/index.html': resolveRelativePath('/pages/dashboard/index.html'),
+        '/investments': resolveRelativePath('/pages/investments/opportunities.html'),
+        '/investments/opportunities': resolveRelativePath('/pages/investments/opportunities.html'),
+        '/investments/active': resolveRelativePath('/pages/investments/active-investments.html'),
+        '/investments/completed': resolveRelativePath('/pages/investments/completed-investments.html'),
+        '/investments/cancelled': resolveRelativePath('/pages/investments/cancelled-investments.html'),
+        '/investments/extended': resolveRelativePath('/pages/investments/extended-investments.html'),
+        '/investments/details': resolveRelativePath('/pages/investments/investment-details.html'),
+        '/portfolio': resolveRelativePath('/pages/portfolio/portfolio-overview.html'),
+        '/portfolio/overview': resolveRelativePath('/pages/portfolio/portfolio-overview.html'),
+        '/portfolio/transactions': resolveRelativePath('/pages/portfolio/transactions.html'),
+        '/portfolio/profits': resolveRelativePath('/pages/portfolio/profits.html'),
+        '/portfolio/withdraw': resolveRelativePath('/pages/portfolio/withdraw-request.html'),
+        '/portfolio/withdrawals': resolveRelativePath('/pages/portfolio/withdrawal-history.html'),
+        '/portfolio/statement': resolveRelativePath('/pages/portfolio/account-statement.html'),
+        '/reports': resolveRelativePath('/pages/reports/reports-dashboard.html'),
+        '/reports/dashboard': resolveRelativePath('/pages/reports/reports-dashboard.html'),
+        '/reports/portfolio': resolveRelativePath('/pages/reports/portfolio-report.html'),
+        '/reports/investments': resolveRelativePath('/pages/reports/investments-report.html'),
+        '/reports/profits': resolveRelativePath('/pages/reports/profits-report.html'),
+        '/reports/withdrawals': resolveRelativePath('/pages/reports/withdrawals-report.html'),
+        '/profile': resolveRelativePath('/pages/profile/personal-information.html'),
+        '/profile/personal': resolveRelativePath('/pages/profile/personal-information.html'),
+        '/profile/contact': resolveRelativePath('/pages/profile/contact-information.html'),
+        '/profile/address': resolveRelativePath('/pages/profile/national-address.html'),
+        '/profile/bank': resolveRelativePath('/pages/profile/bank-information.html'),
+        '/profile/attachments': resolveRelativePath('/pages/profile/attachments.html'),
+        '/security': resolveRelativePath('/pages/security/change-password.html'),
+        '/security/password': resolveRelativePath('/pages/security/change-password.html'),
+        '/security/email': resolveRelativePath('/pages/security/change-email.html'),
+        '/security/mobile': resolveRelativePath('/pages/security/change-mobile.html'),
+        '/security/2fa': resolveRelativePath('/pages/security/two-factor-authentication.html'),
+        '/security/devices': resolveRelativePath('/pages/security/registered-devices.html'),
+        '/security/login-history': resolveRelativePath('/pages/security/login-history.html'),
+        '/support': resolveRelativePath('/pages/support/help-center.html'),
+        '/support/help': resolveRelativePath('/pages/support/help-center.html'),
+        '/support/faq': resolveRelativePath('/pages/support/faq.html'),
+        '/support/tickets': resolveRelativePath('/pages/support/tickets.html'),
+        '/support/notifications': resolveRelativePath('/pages/support/notifications.html'),
+        '/support/privacy': resolveRelativePath('/pages/support/privacy-policy.html'),
+        '/support/terms': resolveRelativePath('/pages/support/terms-and-conditions.html'),
+        '/auth/login': resolveRelativePath('/auth/auth/login/login.html'),
+        '/auth/register': resolveRelativePath('/auth/register/register.html'),
+        '/auth/forgot-password': resolveRelativePath('/auth/forgot-password.html'),
+        '/auth/reset-password': resolveRelativePath('/auth/reset-password.html'),
+        '/auth/verify-otp': resolveRelativePath('/auth/verify-otp.html'),
+        '/auth/complete-profile': resolveRelativePath('/auth/complete-profile.html')
     };
 
     // ============================================================
@@ -218,16 +226,15 @@
         if (normalizedPath.includes('tera-investor-portal-main')) {
             normalizedPath = normalizedPath.replace('/tera-investor-portal-main', '');
         }
-        // إذا كان المسار يبدأ بـ / نتعامل معه كمسار مطلق في جدول ROUTES
+        // إذا كان المسار يبدأ بـ / نبحث في ROUTES
         if (normalizedPath.startsWith('/')) {
             if (ROUTES[normalizedPath]) {
-                // إرجاع المسار النسبي المحول
-                return resolveRelativePath(ROUTES[normalizedPath]);
+                return ROUTES[normalizedPath];
             }
             // محاولة إضافة .html
             const withHtml = normalizedPath + '.html';
             if (ROUTES[withHtml]) {
-                return resolveRelativePath(ROUTES[withHtml]);
+                return ROUTES[withHtml];
             }
             // إذا كان المسار المطلق ينتهي بـ .html، نحوله مباشرة
             if (normalizedPath.endsWith('.html')) {
@@ -236,21 +243,19 @@
         } else {
             // مسار نسبي أو اسم ملف
             if (normalizedPath.endsWith('.html')) {
-                // نحتاج إلى حساب العمق لإضافة ../ بشكل صحيح
                 return resolveRelativePath(normalizedPath);
             } else {
                 // قد يكون اسم صفحة بدون مسار
-                // نبحث في ROUTES عن مفتاح يبدأ بـ /
                 for (const key in ROUTES) {
                     if (key.endsWith(normalizedPath) || key === '/' + normalizedPath) {
-                        return resolveRelativePath(ROUTES[key]);
+                        return ROUTES[key];
                     }
                 }
             }
         }
         // إذا لم يتم العثور على مسار، نعيد الصفحة الافتراضية
         console.warn('⚠️ المسار غير معروف:', normalizedPath);
-        return resolveRelativePath(APP_CONFIG.defaultPage);
+        return APP_CONFIG.defaultPage;
     }
 
     function navigateTo(path, replace) {
@@ -258,7 +263,7 @@
         // التحقق من المصادقة
         if (APP_CONFIG.authRequired && !isPublicPage(path) && !AppState.isLoggedIn) {
             console.warn('🔒 يتطلب تسجيل الدخول، يتم التوجيه إلى صفحة تسجيل الدخول');
-            window.location.href = resolveRelativePath(APP_CONFIG.loginUrl);
+            window.location.href = APP_CONFIG.loginUrl;
             return;
         }
         if (replace) {
@@ -350,7 +355,6 @@
                 // نحول المسار إلى نسبي إذا كان مطلقاً
                 let src = script.src;
                 if (src.startsWith('/')) {
-                    // نحوله إلى مسار نسبي بناءً على العمق الحالي
                     src = resolveRelativePath(src);
                 }
                 const existingScript = document.querySelector(`script[src="${src}"]`);
@@ -475,7 +479,7 @@
                         <button class="btn btn-primary" onclick="window.location.reload()">
                             <i class="fas fa-redo"></i> إعادة المحاولة
                         </button>
-                        <a href="../../../index.html" class="btn" style="background: var(--gray-200, #e9ecef);">
+                        <a href="../../index.html" class="btn" style="background: var(--gray-200, #e9ecef);">
                             <i class="fas fa-home"></i> العودة للرئيسية
                         </a>
                     </div>
@@ -485,7 +489,6 @@
     }
 
     function showNotification(message, type, duration) {
-        // ... (نفس الكود السابق مع تعديل المسار إذا لزم الأمر)
         type = type || 'info';
         duration = duration || 5000;
         let container = document.getElementById('notification-container');
@@ -695,10 +698,12 @@
         initReports: initReports,
         initProfile: initProfile,
         initSecurity: initSecurity,
-        initSupport: initSupport
+        initSupport: initSupport,
+        resolveRelativePath: resolveRelativePath,
+        getBaseDepth: getBaseDepth
     };
 
-    console.log('✅ app.js: تم تحميل تطبيق تيرا للمستثمرين بنجاح');
+    console.log('✅ app.js: تم تحميل تطبيق تيرا للمستثمرين بنجاح (باستخدام مسارات نسبية)');
     console.log('📚 استخدم TeraApp للوصول إلى دوال التطبيق');
 
 })();
