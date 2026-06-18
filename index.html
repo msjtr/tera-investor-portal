@@ -193,7 +193,6 @@
             </p>
 
             <div class="auth-actions">
-                <!-- تم تصحيح المسار إلى /auth/auth/login/login.html -->
                 <a href="./auth/auth/login/login.html" class="btn-action btn-login">
                     <i class="fa-solid fa-lock"></i> تسجيل الدخول
                 </a>
@@ -219,15 +218,15 @@
         </div>
     </main>
 
-    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح ====== -->
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح مع defer ====== -->
     <!-- 1. core.js: الدوال الأساسية والمكتبات المساعدة -->
-    <script src="./assets/js/core.js"></script>
+    <script src="./assets/js/core.js" defer></script>
     
     <!-- 2. auth.js: التحقق من الجلسة وإدارة المصادقة (تم تحديثه لاستخدام tera_token) -->
-    <script src="./assets/js/auth.js"></script>
+    <script src="./assets/js/auth.js" defer></script>
     
     <!-- 3. main.js: التهيئة العامة للتطبيق -->
-    <script src="./assets/js/main.js"></script>
+    <script src="./assets/js/main.js" defer></script>
 
     <script>
         (function() {
