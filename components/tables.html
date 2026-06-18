@@ -1,71 +1,56 @@
-<style>
-    /* حاوية الجدول (لتوفير التجاوب للأجهزة الصغيرة) */
-    .table-container {
-        width: 100%;
-        overflow-x: auto;
-        background: var(--tera-white, #ffffff);
-        border-radius: var(--tera-radius, 16px);
-        box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
-        border: 1px solid var(--tera-border, #E2E8F0);
-        margin-bottom: 24px;
-    }
+<!-- ========================================
+     tables.html - الجداول
+     ======================================== -->
+<div class="tables-wrapper" style="padding: 20px 30px;">
 
-    /* تنسيق الجدول */
-    .tera-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: right;
-        min-width: 600px; /* لضمان عدم تداخل الأعمدة في الجوال */
-    }
-
-    .tera-table thead th {
-        background: #F1F5F9;
-        padding: 18px 24px;
-        color: var(--tera-primary, #0A1B3F);
-        font-weight: 800;
-        font-size: 0.9rem;
-        border-bottom: 2px solid var(--tera-border, #E2E8F0);
-        white-space: nowrap;
-    }
-
-    .tera-table tbody td {
-        padding: 16px 24px;
-        border-bottom: 1px solid var(--tera-border, #E2E8F0);
-        color: var(--tera-text, #1E293B);
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-
-    .tera-table tbody tr:hover {
-        background: rgba(0, 194, 199, 0.03);
-        transition: 0.3s;
-    }
-
-    /* تصنيف الحالة (Badges) */
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .status-success { background: rgba(16, 185, 129, 0.1); color: #10B981; }
-    .status-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
-</style>
-
-<template id="tera-table-template">
-    <div class="table-container">
-        <table class="tera-table">
-            <thead>
-                <tr>
-                    <th>التاريخ</th>
-                    <th>العملية</th>
-                    <th>المبلغ</th>
-                    <th>الحالة</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
+    <!-- بطاقة الجدول -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>أحدث الاستثمارات</h3>
+            <a href="../investments/opportunities.html" class="view-all">عرض الكل</a>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>المشروع</th>
+                        <th>المبلغ</th>
+                        <th>تاريخ البدء</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>مشروع الطاقة الشمسية</td>
+                        <td>$10,000</td>
+                        <td>2026-06-01</td>
+                        <td><span class="badge status-active">نشط</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>صندوق العقارات</td>
+                        <td>$25,000</td>
+                        <td>2026-05-15</td>
+                        <td><span class="badge status-completed">مكتمل</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>تكنولوجيا الذكاء الاصطناعي</td>
+                        <td>$5,000</td>
+                        <td>2026-06-10</td>
+                        <td><span class="badge status-pending">قيد الانتظار</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>مشروع البنية التحتية</td>
+                        <td>$50,000</td>
+                        <td>2026-04-20</td>
+                        <td><span class="badge status-danger">ملغي</span></td>
+                    </tr>
                 </tbody>
-        </table>
+            </table>
+        </div>
     </div>
-</template>
+</div>
