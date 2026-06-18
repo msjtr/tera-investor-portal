@@ -1,144 +1,588 @@
-/* تنسيقات بوابة المستثمر لمنصة تيرا - التباعد الفاخر والتحكم في الأيقونات والشعار */
+/**
+ * ============================================================
+ * login.css - الأنماط الخاصة بصفحة تسجيل الدخول لمنصة تيرا
+ * ============================================================
+ * هذا الملف مسؤول عن:
+ * 1. تنسيق بطاقة تسجيل الدخول الرئيسية
+ * 2. أنماط حقول الإدخال والأزرار
+ * 3. أنماط رسائل الخطأ والتحقق
+ * 4. أنماط شاشة التحميل الإبداعية
+ * 5. تأثيرات الانتقال والتحريك
+ * ============================================================
+ */
+
+/* ============================================================
+   1. الحاوية الرئيسية والخلفية
+   ============================================================ */
 .auth-layout {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
-    padding: 60px 20px;
+    padding: 20px;
+    direction: rtl;
 }
 
-/* الكارد الزجاجي المتناسق والمتباعد بالكامل وحبس الشعار بالداخل */
 .auth-container {
-    background: #FFFFFF;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 24px;
-    box-shadow: 0 25px 55px rgba(15, 23, 42, 0.05);
+    padding: 50px 40px 40px;
+    max-width: 480px;
     width: 100%;
-    max-width: 540px;
-    padding: 55px; /* حشوة داخلية كبيرة لمنع التكدس */
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 25px 60px rgba(10, 37, 64, 0.08);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.text-center { text-align: center; }
-.mb-5 { margin-bottom: 3.5rem; }
-.mt-3 { margin-top: 1.2rem; }
-
-/* صندوق تنسيق الشعار المحبوس داخل الكارد ليعطي فخامة مطلقة */
-.brand-logo-box {
+/* ============================================================
+   2. رأس البطاقة - الشعار والعناوين
+   ============================================================ */
+.auth-card-header {
+    text-align: center;
     margin-bottom: 30px;
+}
+
+.brand-logo-box {
+    margin-bottom: 20px;
+}
+
+.brand-logo-box img {
+    width: 80px;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.brand-logo-box img:hover {
+    transform: scale(1.05);
+}
+
+.portal-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--gray-900, #0A2540);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color, #028090);
+    margin-bottom: 10px;
+}
+
+.welcome-text {
+    font-size: 14px;
+    color: var(--gray-600, #64748b);
+    line-height: 1.7;
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   3. حقول الإدخال والتسميات
+   ============================================================ */
+.form-field-group {
+    margin-bottom: 20px;
+}
+
+.field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--gray-800, #0A2540);
+    font-size: 14px;
+}
+
+.field-label .required {
+    color: var(--danger-color, #DC3545);
+    margin-right: 2px;
+}
+
+.field-label-flex {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
 }
 
-.enclosed-logo-img {
-    width: 145px;
-    height: auto;
-    object-fit: contain;
+.forgot-pass-link {
+    font-size: 13px;
+    color: var(--primary-color, #028090);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
-.portal-title { font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-.page-subtitle { font-size: 18px; color: #0d9488; font-weight: 700; margin-bottom: 12px; }
-.welcome-text { font-size: 14px; color: #475569; line-height: 1.6; }
+.forgot-pass-link:hover {
+    text-decoration: underline;
+    color: var(--primary-dark, #026b73);
+}
 
-/* لوحة التنبيه للأخطاء التكتيكية */
-.error-summary-box {
-    background-color: #FFF5F5;
-    border-right: 4px solid #E25950;
-    padding: 16px 20px;
+.input-wrapper {
+    position: relative;
+}
+
+.form-input-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--gray-300, #e2e8f0);
     border-radius: 12px;
-    margin-bottom: 35px;
+    font-size: 16px;
+    font-family: 'Tajawal', sans-serif;
+    transition: all 0.25s ease;
+    background: #ffffff;
+    color: var(--gray-800, #1e293b);
+    direction: ltr;
+    text-align: right;
+}
+
+.form-input-control:focus {
+    outline: none;
+    border-color: var(--primary-color, #028090);
+    box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+}
+
+.form-input-control::placeholder {
+    color: var(--gray-400, #94a3b8);
+    font-size: 14px;
+}
+
+/* حالات التحقق */
+.form-input-control.is-valid-active {
+    border-color: var(--success-color, #10b981);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+}
+
+.form-input-control.is-invalid-active {
+    border-color: var(--danger-color, #ef4444);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+/* رسائل الخطأ تحت الحقل */
+.error-feedback-msg {
+    font-size: 13px;
+    color: var(--danger-color, #ef4444);
+    margin-top: 6px;
+    min-height: 20px;
+}
+
+/* ============================================================
+   4. خيارات إضافية (تذكرني، إظهار كلمة المرور)
+   ============================================================ */
+.checkbox-options-container {
+    margin-top: 10px;
+}
+
+.remember-me-box {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.checkbox-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--gray-700, #475569);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-toggle-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color, #028090);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-toggle-label:hover {
+    color: var(--gray-900, #0A2540);
+}
+
+/* ============================================================
+   5. زر تسجيل الدخول
+   ============================================================ */
+.form-actions-block {
+    margin-top: 25px;
+}
+
+.btn-submit-login {
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #0A2540 0%, var(--primary-color, #028090) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-submit-login:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35);
+}
+
+.btn-submit-login:active:not(:disabled) {
+    transform: translateY(0px);
+}
+
+.btn-submit-login:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-submit-login .fa-spinner {
+    font-size: 18px;
+}
+
+/* ============================================================
+   6. روابط التذييل
+   ============================================================ */
+.bottom-routing-footer-links {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--gray-600, #64748b);
+    border-top: 1px solid var(--gray-200, #e2e8f0);
+    padding-top: 20px;
+}
+
+.bottom-routing-footer-links p {
+    margin-bottom: 8px;
+}
+
+.bottom-routing-footer-links p:last-child {
+    margin-bottom: 0;
+}
+
+.routing-link {
+    color: var(--primary-color, #028090);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.routing-link:hover {
+    text-decoration: underline;
+    color: var(--primary-dark, #026b73);
+}
+
+.routing-link-secondary {
+    color: var(--gray-600, #64748b);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.routing-link-secondary:hover {
+    text-decoration: underline;
+    color: var(--gray-800, #1e293b);
+}
+
+/* ============================================================
+   7. صندوق الأخطاء العالمي
+   ============================================================ */
+.error-summary-box {
+    background: #FEE2E2;
+    border: 1px solid #FCA5A5;
+    border-radius: 12px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 13.5px;
-    color: #E25950;
-    font-weight: 700;
+    color: #991B1B;
+    margin-bottom: 20px;
+    animation: shakeError 0.4s ease;
 }
 
-/* زيادة تباعد الحقول والمسافات (طلب العميل للتباعد) */
-.form-field-group { 
-    margin-bottom: 34px; /* زيادة التباعد بين الحقول براحة تامة */
-    text-align: right; 
+.error-box-icon {
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
-.field-label-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.field-label { font-size: 14.5px; font-weight: 700; color: #0f172a; }
-.required { color: #E25950; }
-
-.forgot-pass-link { font-size: 13px; color: #1e3a8a; text-decoration: none; font-weight: 700; }
-.forgot-pass-link:hover { text-decoration: underline; }
-
-.input-wrapper { position: relative; width: 100%; }
-
-.form-input-control {
-    width: 100%; padding: 15px 20px; font-size: 14.5px;
-    border: 1px solid #CBD5E1; border-radius: 12px; box-sizing: border-box;
-    background: #FFFFFF; transition: all 0.25s ease;
-}
-.form-input-control:focus {
-    border-color: #0d9488;
-    box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
-    outline: none;
+#errorBoxText {
+    font-size: 14px;
+    font-weight: 500;
 }
 
-/* الأطر الذكية الملونة للتحقق الفوري البصري */
-.form-input-control.is-invalid-active { border-color: #E25950 !important; background-color: #FFF5F5 !important; }
-.form-input-control.is-valid-active { border-color: #00D46A !important; background-color: #F6FFF9 !important; }
-
-.checkbox-toggle-label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; color: #475569; }
-.remember-me-box { margin-top: -10px; margin-bottom: 35px; }
-.error-feedback-msg { color: #E25950; font-size: 12.5px; margin-top: 8px; display: block; font-weight: 500; }
-
-/* زر الإرسال المتناسق مع تدرج تيرا الفاخر */
-.btn-submit-login {
-    width: 100%; padding: 15px; font-size: 15px; font-weight: 700;
-    background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%); color: #FFFFFF;
-    border: none; border-radius: 12px; cursor: pointer;
-    transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.25);
-}
-.btn-submit-login:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(13, 148, 136, 0.35); opacity: 0.95; }
-
-.bottom-routing-footer-links { font-size: 14px; border-top: 1px dashed #e2e8f0; padding-top: 30px; margin-top: 40px; }
-.routing-link { color: #1e3a8a; text-decoration: none; font-weight: bold; }
-.routing-link-secondary { color: #64748b; text-decoration: none; }
-.routing-link:hover, .routing-link-secondary:hover { text-decoration: underline; }
-
-/* 🌌 لوحة التحويل السينمائية والعبارات الإبداعية الشاملة للأبعاد */
+/* ============================================================
+   8. شاشة التحميل الإبداعية (Loader)
+   ============================================================ */
 .tera-loader-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 37, 64, 0.5); backdrop-filter: blur(8px);
-    z-index: 20000; display: none; justify-content: center; align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 37, 64, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeInOverlay 0.5s ease;
 }
 
 .loader-content-card {
-    background: #FFFFFF; border-radius: 24px; padding: 50px;
-    width: 90%; max-width: 480px; text-align: center;
-    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.18);
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    animation: modalScaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px 50px 45px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+    animation: scaleUp 0.5s ease;
 }
 
-@keyframes modalScaleUp { from { transform: scale(0.9) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-
-/* حلقة الدوران السينمائية اللطيفة المعززة لـ تيرا */
+/* حلقة التحميل الدائرية */
 .spinning-infinity-ring {
-    width: 65px; height: 65px;
-    border: 4px solid #F1F5F9; border-top: 4px solid #1e3a8a; border-bottom: 4px solid #0d9488;
-    border-radius: 50%; margin: 0 auto 25px auto;
-    animation: spinRing 1s linear infinite;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+    border: 6px solid var(--gray-200, #e2e8f0);
+    border-top-color: var(--primary-color, #028090);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
 
-@keyframes spinRing { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loader-primary-heading {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-900, #0A2540);
+    margin-bottom: 10px;
+}
 
-.loader-primary-heading { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
-.creative-motivational-text { font-size: 14.5px; color: #0d9488; font-weight: 700; min-height: 44px; line-height: 1.6; }
+.creative-motivational-text {
+    font-size: 15px;
+    color: var(--gray-600, #64748b);
+    margin-bottom: 25px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+    line-height: 1.6;
+}
 
-/* شريط التقدم السريع في الأسفل */
-.loading-progress-track { background: #F1F5F9; height: 5px; border-radius: 3px; width: 100%; margin-top: 25px; overflow: hidden; }
-.progress-fill-bar { background: linear-gradient(90deg, #1e3a8a, #0d9488); height: 100%; width: 0%; animation: fillBarProgress 3s linear forwards; }
+/* شريط التقدم */
+.loading-progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--gray-200, #e2e8f0);
+    border-radius: 10px;
+    overflow: hidden;
+}
 
-@keyframes fillBarProgress { from { width: 0%; } to { width: 100%; } }
+.progress-fill-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color, #028090), #0A2540);
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
-@media (max-width: 576px) { .auth-container { padding: 35px 20px; } .loader-content-card { padding: 35px 20px; } }
+/* ============================================================
+   9. التحريك (Animations & Keyframes)
+   ============================================================ */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shakeError {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ============================================================
+   10. التوافق مع الشاشات الصغيرة (Responsive)
+   ============================================================ */
+@media (max-width: 576px) {
+    .auth-container {
+        padding: 30px 20px 25px;
+        border-radius: 18px;
+    }
+
+    .portal-title {
+        font-size: 20px;
+    }
+
+    .page-subtitle {
+        font-size: 16px;
+    }
+
+    .welcome-text {
+        font-size: 13px;
+    }
+
+    .form-input-control {
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    .btn-submit-login {
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+
+    .loader-content-card {
+        padding: 30px 20px 35px;
+    }
+
+    .loader-primary-heading {
+        font-size: 18px;
+    }
+
+    .brand-logo-box img {
+        width: 65px;
+    }
+
+    .field-label-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 400px) {
+    .auth-container {
+        padding: 20px 15px 20px;
+    }
+
+    .bottom-routing-footer-links {
+        font-size: 13px;
+    }
+
+    .creative-motivational-text {
+        font-size: 14px;
+        min-height: 50px;
+    }
+}
+
+/* ============================================================
+   11. دعم الوضع المظلم (اختياري - يعتمد على متغيرات CSS)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    .auth-layout {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .auth-container {
+        background: rgba(30, 41, 59, 0.96);
+        border-color: rgba(71, 85, 105, 0.5);
+    }
+
+    .portal-title {
+        color: #f1f5f9;
+    }
+
+    .welcome-text {
+        color: #94a3b8;
+    }
+
+    .field-label {
+        color: #e2e8f0;
+    }
+
+    .form-input-control {
+        background: #1e293b;
+        border-color: #334155;
+        color: #f1f5f9;
+    }
+
+    .form-input-control:focus {
+        border-color: var(--primary-color, #14b8a6);
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+    }
+
+    .form-input-control::placeholder {
+        color: #64748b;
+    }
+
+    .checkbox-toggle-label {
+        color: #94a3b8;
+    }
+
+    .checkbox-toggle-label:hover {
+        color: #e2e8f0;
+    }
+
+    .bottom-routing-footer-links {
+        border-top-color: #334155;
+        color: #94a3b8;
+    }
+
+    .routing-link-secondary {
+        color: #94a3b8;
+    }
+
+    .routing-link-secondary:hover {
+        color: #e2e8f0;
+    }
+
+    .error-summary-box {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: #f87171;
+        color: #fca5a5;
+    }
+
+    .loader-content-card {
+        background: #1e293b;
+    }
+
+    .loader-primary-heading {
+        color: #f1f5f9;
+    }
+
+    .creative-motivational-text {
+        color: #94a3b8;
+    }
+
+    .spinning-infinity-ring {
+        border-color: #334155;
+        border-top-color: var(--primary-color, #14b8a6);
+    }
+
+    .loading-progress-track {
+        background: #334155;
+    }
+
+    .btn-submit-login {
+        background: linear-gradient(135deg, #0f172a 0%, var(--primary-color, #14b8a6) 100%);
+    }
+}
