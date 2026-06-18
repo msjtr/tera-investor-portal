@@ -1,27 +1,11 @@
-<section>
-
-    <h1>تقرير الاستثمارات</h1>
-
-    <table>
-
-        <tr>
-            <th>رقم الاستثمار</th>
-            <th>المبلغ</th>
-            <th>العائد</th>
-            <th>الحالة</th>
-        </tr>
-
-    </table>
-
-</section>
-<div class="export-actions">
-
-    <button>
-        تصدير PDF
-    </button>
-
-    <button>
-        تصدير Excel
-    </button>
-
+<div class="card">
+    <div class="card-header"><h3>عنوان التقرير</h3>
+        <div><button class="btn btn-primary"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+        <button class="btn"><i class="fas fa-file-excel"></i> تصدير Excel</button></div>
+    </div>
+    <div class="card-body">
+        <!-- رسم بياني أو جدول -->
+        <canvas id="reportChart" height="200"></canvas>
+        <table class="table">...</table>
+    </div>
 </div>
