@@ -1,76 +1,19 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>مركز المساعدة | تيرا</title>
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
-</head>
-<body class="dashboard-body">
-
-    <div id="loader-container"></div>
-    <div id="sidebar-container"></div>
-
-    <main class="tera-main-content">
-        <div id="header-container"></div>
-
-        <section class="help-center-wrapper">
-            <div class="search-hero glass-panel text-center" style="padding: 60px 20px; margin-bottom: 30px;">
-                <h1>كيف يمكننا مساعدتك اليوم؟</h1>
-                <div class="search-box" style="max-width: 600px; margin: 30px auto 0;">
-                    <input type="text" class="form-control" placeholder="ابحث عن سؤالك أو موضوع معين...">
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <a href="faq.html" class="stat-card glass-panel" style="text-decoration: none; display: flex; flex-direction: column; align-items: flex-start;">
-                    <i class="fa-solid fa-circle-question" style="color: var(--tera-teal); font-size: 30px;"></i>
-                    <h3 class="stat-value" style="font-size: 18px; margin: 15px 0;">الأسئلة الشائعة</h3>
-                    <p class="stat-label">إجابات سريعة على تساؤلاتك</p>
-                </a>
-                <div class="stat-card glass-panel" style="display: flex; flex-direction: column; align-items: flex-start;">
-                    <i class="fa-solid fa-headset" style="color: var(--tera-gold); font-size: 30px;"></i>
-                    <h3 class="stat-value" style="font-size: 18px; margin: 15px 0;">تواصل مع الدعم</h3>
-                    <p class="stat-label">فريقنا جاهز لخدمتك على مدار الساعة</p>
-                </div>
-                <div class="stat-card glass-panel" style="display: flex; flex-direction: column; align-items: flex-start;">
-                    <i class="fa-solid fa-file-contract" style="color: var(--tera-navy); font-size: 30px;"></i>
-                    <h3 class="stat-value" style="font-size: 18px; margin: 15px 0;">الأدلة التعليمية</h3>
-                    <p class="stat-label">خطوات مصورة لاستخدام المنصة</p>
-                </div>
-            </div>
-
-            <div class="glass-panel" style="padding: 30px; margin-top: 20px;">
-                <div class="section-header">
-                    <h2>تذاكر الدعم الأخيرة</h2>
-                    <a href="tickets.html" class="view-all-link">عرض جميع التذاكر</a>
-                </div>
-                <table class="tera-table">
-                    <thead>
-                        <tr>
-                            <th>رقم التذكرة</th>
-                            <th>الموضوع</th>
-                            <th>الحالة</th>
-                            <th>التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#TER-9921</td>
-                            <td>استفسار حول تحويل الأرباح</td>
-                            <td><span class="status-badge success">مغلقة</span></td>
-                            <td>12 يونيو 2026</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <div id="footer-container"></div>
-    </main>
-
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
-</body>
-</html>
+<div class="card">
+    <div class="card-header"><h3>مركز المساعدة</h3></div>
+    <div class="card-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;">
+            <a href="faq.html" style="padding:20px;background:var(--gray-100);border-radius:10px;text-align:center;">
+                <i class="fas fa-question-circle fa-2x" style="color:var(--primary-color);"></i>
+                <div style="font-weight:600;margin-top:10px;">الأسئلة الشائعة</div>
+            </a>
+            <a href="tickets.html" style="padding:20px;background:var(--gray-100);border-radius:10px;text-align:center;">
+                <i class="fas fa-ticket-alt fa-2x" style="color:var(--primary-color);"></i>
+                <div style="font-weight:600;margin-top:10px;">التذاكر</div>
+            </a>
+            <a href="notifications.html" style="padding:20px;background:var(--gray-100);border-radius:10px;text-align:center;">
+                <i class="fas fa-bell fa-2x" style="color:var(--primary-color);"></i>
+                <div style="font-weight:600;margin-top:10px;">الإشعارات</div>
+            </a>
+        </div>
+    </div>
+</div>
