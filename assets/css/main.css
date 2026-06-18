@@ -1,109 +1,122 @@
 /* ================================================= */
-/* TERA DESIGN SYSTEM - النُسخة النهائية (LAYOUT FIXED) */
-/* تم ضبط التباعد (Spacing) وتثبيت الحاويات */
+/* TERA PORTAL - MAIN STYLES */
 /* ================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-    --tera-primary: #0A1B3F;
-    --tera-secondary: #00C2C7;
-    --tera-primary-dark: #07132B;
-    --tera-bg: #F8FAFC;
-    --tera-white: #ffffff;
-    --tera-border: #E2E8F0;
-    --tera-text: #1E293B;
-    --tera-text-light: #64748B;
-    --tera-shadow: 0 4px 20px rgba(10, 27, 63, 0.08);
-    --tera-radius: 16px;
-    --font-heading: 'Tajawal', sans-serif;
-    --font-body: 'Cairo', sans-serif;
-    /* متغيرات المسافات */
-    --gap-md: 24px;
-    --gap-lg: 32px;
+    --sidebar-width: 280px;
+    --header-height: 70px;
+    --spacing-sm: 15px;
+    --spacing-md: 25px;
+    --spacing-lg: 40px;
 }
 
-/* ================================================= */
-/* LAYOUT STRUCTURE (إصلاح تداخل العناصر) */
-/* ================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
+    font-family: 'Tajawal', sans-serif;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    overflow-x: hidden;
+}
+
+/* الحاوية الرئيسية */
+.tera-wrapper {
     display: flex;
     min-height: 100vh;
-    margin: 0;
-    background: var(--tera-bg);
-    color: var(--tera-text);
-    font-family: var(--font-body);
-    direction: rtl;
-    text-align: right;
+    position: relative;
 }
 
-#sidebar-container {
-    width: 280px;
+/* 1. السايدبار */
+.tera-sidebar {
+    width: var(--sidebar-width);
+    background: #ffffff;
+    border-left: 1px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
     flex-shrink: 0;
-    background: var(--tera-white);
-    border-left: 1px solid var(--tera-border);
+    transition: transform 0.3s ease;
 }
 
+/* حاوية الشعار (المسافة الآمنة في الجوال) */
+.sidebar-logo {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-md);
+    border-bottom: 1px solid #E2E8F0;
+    gap: 12px;
+}
+
+.sidebar-logo img {
+    max-height: 35px; /* حجم الشعار في الجوال والديكستوب */
+    width: auto;
+}
+
+.logo-text {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #0A1B3F;
+}
+
+/* التمرير داخل القائمة */
+.sidebar-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm) 0;
+}
+
+/* 2. المحتوى الرئيسي */
 .tera-main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    width: calc(100% - 280px);
-    min-height: 100vh;
+    width: calc(100% - var(--sidebar-width));
 }
 
-/* التباعد داخل المحتوى */
-.page-wrapper {
-    flex-grow: 1;
-    padding: var(--gap-lg); /* تباعد ثابت للحواف */
+/* الهيدر */
+.tera-header {
+    height: var(--header-height);
+    background: #ffffff;
+    border-bottom: 1px solid #E2E8F0;
     display: flex;
-    flex-direction: column;
-    gap: var(--gap-md); /* تباعد عمودي بين الأقسام */
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-lg);
+}
+
+/* مساحة المحتوى */
+.content-area {
+    padding: var(--spacing-lg);
+    flex-grow: 1;
 }
 
 /* ================================================= */
-/* GLOBAL ELEMENTS & COMPONENTS */
+/* الاستجابة للجوال (Mobile Responsive) */
 /* ================================================= */
-h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
-    color: var(--tera-primary);
-    font-weight: 800;
-    margin-bottom: 0.5em;
-}
 
-/* البطاقات (Stat Cards) مع تباعد محسّن */
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--gap-md);
-}
-
-.stat-card { 
-    background: var(--tera-white); 
-    border-radius: var(--tera-radius); 
-    padding: 24px; 
-    box-shadow: var(--tera-shadow);
-    border-right: 4px solid var(--tera-secondary);
-}
-
-/* الجداول (Tables) */
-.table-responsive {
-    background: var(--tera-white);
-    border-radius: var(--tera-radius);
-    padding: 20px;
-    box-shadow: var(--tera-shadow);
-}
-
-.tera-table { width: 100%; border-collapse: collapse; }
-.tera-table th { padding: 20px; text-align: right; border-bottom: 2px solid var(--tera-bg); color: var(--tera-primary); }
-.tera-table td { padding: 20px; border-bottom: 1px solid var(--tera-border); }
-
-/* ================================================= */
-/* RESPONSIVE & SPACING FIX */
-/* ================================================= */
 @media (max-width: 992px) {
-    body { flex-direction: column; }
-    #sidebar-container { width: 100%; border-left: none; border-bottom: 1px solid var(--tera-border); }
-    .tera-main-content { width: 100%; }
-    .page-wrapper { padding: 15px; }
+    /* إخفاء السايدبار في الجوال أو جعله فوق المحتوى */
+    .tera-sidebar {
+        position: fixed;
+        right: -100%; /* مخفي خارج الشاشة */
+        top: 0;
+        z-index: 1000;
+        height: 100vh;
+        width: 260px;
+    }
+
+    .tera-sidebar.open { right: 0; }
+
+    .tera-main-content {
+        width: 100%; /* المحتوى يأخذ كامل العرض */
+    }
+
+    /* تقليل المسافات في الجوال */
+    .content-area {
+        padding: var(--spacing-md);
+    }
+    
+    .tera-header {
+        padding: 0 var(--spacing-md);
+    }
 }
