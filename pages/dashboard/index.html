@@ -2,98 +2,41 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا | لوحة تحكم المستثمر</title>
+    <title>لوحة التحكم | تيرا للاستثمار</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/dashboard.css">
 </head>
-<body class="dashboard-body">
+<body>
 
     <div id="loader-container"></div>
-    <div id="sidebar-container"></div>
 
-    <main class="tera-main-content">
-        <div id="header-container"></div>
+    <div class="tera-wrapper">
+        <div id="sidebar-container"></div>
 
-        <section class="stats-grid">
-            <div class="stat-card glass-panel" style="border-right-color: var(--tera-navy);">
-                <p class="stat-label">إجمالي قيمة المحفظة</p>
-                <h3 class="stat-value">245,500 <span class="currency">ر.س</span></h3>
-            </div>
-            <div class="stat-card glass-panel" style="border-right-color: var(--tera-teal);">
-                <p class="stat-label">إجمالي الأرباح الموزعة</p>
-                <h3 class="stat-value" style="color: var(--tera-teal);">18,250 <span class="currency">ر.س</span></h3>
-            </div>
-            <div class="stat-card glass-panel" style="border-right-color: var(--tera-gold);">
-                <p class="stat-label">الاستثمارات النشطة</p>
-                <h3 class="stat-value" style="color: var(--tera-gold);">4 <span class="currency">فرص</span></h3>
-            </div>
-        </section>
+        <div class="tera-main-content">
+            <div id="header-container"></div>
 
-        <section class="middle-grid">
-            <div class="chart-section glass-panel">
-                <div class="section-header">
-                    <h2>تحليل الأداء المالي</h2>
-                </div>
-                <div class="mock-chart">
-                    <div class="bar" style="height: 60%"></div>
-                    <div class="bar" style="height: 80%"></div>
-                    <div class="bar" style="height: 45%"></div>
-                    <div class="bar" style="height: 90%"></div>
-                    <div class="bar" style="height: 70%"></div>
-                </div>
-            </div>
+            <main class="content-area" style="padding: 30px;">
+                <div id="breadcrumb-container"></div>
 
-            <div class="quick-actions-section glass-panel">
-                <div class="section-header">
-                    <h2>إجراءات سريعة</h2>
-                </div>
-                <div class="actions-list">
-                    <a href="../portfolio/withdraw-request.html" class="action-card">
-                        <i class="fa-solid fa-money-bill-transfer"></i> طلب سحب
-                    </a>
-                    <a href="../investments/opportunities.html" class="action-card">
-                        <i class="fa-solid fa-plus-circle"></i> استثمار جديد
-                    </a>
-                </div>
-            </div>
-        </section>
+                <h1>مرحباً بك في لوحة تحكم تيرا</h1>
+                <div class="stats-grid" id="stats-container">
+                    </div>
+            </main>
 
-        <div id="footer-container"></div>
-    </main>
+            <div id="footer-container"></div>
+        </div>
+    </div>
 
-    <script>
-        async function loadComponents() {
-            const comps = [
-                { id: 'loader-container', path: '../../components/loader.html' },
-                { id: 'sidebar-container', path: '../../components/sidebar.html' },
-                { id: 'header-container', path: '../../components/header.html' },
-                { id: 'footer-container', path: '../../components/footer.html' }
-            ];
-            
-            for(const c of comps) {
-                const el = document.getElementById(c.id);
-                if(el) {
-                    try {
-                        const res = await fetch(c.path);
-                        if(res.ok) el.innerHTML = await res.text();
-                    } catch (err) {
-                        console.error('Error loading component:', c.path, err);
-                    }
-                }
-            }
-        }
-        window.addEventListener('DOMContentLoaded', loadComponents);
-    </script>
-    
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/dashboard.js"></script>
+    <div id="alerts-container"></div>
+
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/dashboard.js"></script>
 </body>
 </html>
