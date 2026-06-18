@@ -1,104 +1,93 @@
 /**
  * ============================================================
- * auth.js - محرك المصادقة والحماية - النسخة المستقرة النهائية
+ * auth.js - محرك المصادقة والحماية الذكي - النسخة الهيكلية المستقرة
  * ============================================================
- * - يعالج مشكلة الحلقات اللانهائية لإعادة التوجيه (Infinite Loop Fixed)
- * - يكتشف مسار الاستضافة تلقائياً سواء محلياً أو على Render
- * - يدعم التحكم الكامل بجلسات شريك مستثمر تيرا
+ * - يعتمد على فحص المجلدات الهيكلية بدلاً من المسارات المطلقة الثابتة
+ * - يحسب عمق المجلدات ديناميكياً لتفادي مشاكل الـ 404 والـ Redirect Loops
+ * - متوافق تماماً مع البيئة المحلية وبيئة سيرفرات الويب (Render)
  */
 'use strict';
 
-// ========================================================================
-// 1. المسارات النسبية الأساسية
-// ========================================================================
-const PATHS = {
-    login: '/auth/auth/login/login.html',
-    dashboard: '/pages/dashboard/index.html',
-    register: '/auth/register/register.html',
-    forgotPassword: '/auth/forgot-password.html',
-    resetPassword: '/auth/reset-password.html',
-    verifyOtp: '/auth/verify-otp.html',
-    completeProfile: '/auth/complete-profile.html'
-};
-
-// ========================================================================
-// 2. كائن المصادقة الرئيسي
-// ========================================================================
 const TeraAuth = {
     _isChecking: false,
     _lastCheckTime: 0,
     _blockCheck: false,
 
-    // جلب الـ Path الحالي للمتصفح
+    // 1. جلب المسار الحالي للمتصفح
     getCurrentPath: function() {
         return window.location.pathname;
     },
 
-    // استخراج البادئة تلقائياً إذا كان المشروع يعمل داخل مجلد فرعي على السيرفر
-    getBasePrefix: function() {
-        const path = this.getCurrentPath();
-        if (path.includes('/tera-investor-portal-main')) {
-            return '/tera-investor-portal-main';
-        }
-        return '';
-    },
-
-    // التحقق المرن والمحمي من صفحات المصادقة لمنع التكرار اللانهائي
+    // 2. فحص نوع الصفحة بناءً على المجلد الفرعي المحتوي عليها
     isAuthPage: function(path = this.getCurrentPath()) {
         return path.includes('/auth/');
     },
 
-    isLandingPage: function(path = this.getCurrentPath()) {
-        const base = this.getBasePrefix();
-        return path === base + '/' || path === base + '/index.html';
+    isProtectedPage: function(path = this.getCurrentPath()) {
+        return path.includes('/pages/');
     },
 
-    isProtectedPage: function(path = this.getCurrentPath()) {
-        return !this.isAuthPage(path) && !this.isLandingPage(path);
+    isLandingPage: function(path = this.getCurrentPath()) {
+        return !this.isAuthPage(path) && !this.isProtectedPage(path);
+    },
+
+    // 3. توليد مسار نسبي ذكي وديناميكي للانتقال بين الصفحات بدون أخطاء
+    getRelativePath: function(targetPath) {
+        const path = this.getCurrentPath();
+        let depth = 0;
+
+        if (path.includes('/pages/')) {
+            depth = 2; // مجلد فرعي داخل pages مثل dashboard
+        } else if (path.includes('/auth/auth/')) {
+            depth = 3; // مجلد فرعي مزدوج مثل auth/login
+        } else if (path.includes('/auth/')) {
+            depth = 2; // مجلد auth الرئيسي
+        }
+
+        return '../'.repeat(depth) + targetPath;
     },
 
     redirectTo: function(url) {
-        const current = this.getCurrentPath();
-        if (current === url) return;
+        if (this.getCurrentPath() === url) return;
         window.location.replace(url);
     },
 
+    // 4. فحص الجلسة والتحقق من الصلاحيات
     checkSession: function() {
         if (this._blockCheck) {
-            console.log('⛔ [Auth] checkSession محظور في هذه الصفحة');
+            console.log('⛔ [Auth] تم تعليق الفحص لحماية الصفحة الحالية');
             return;
         }
 
         const now = Date.now();
-        if (this._isChecking || now - this._lastCheckTime < 500) {
-            return;
-        }
+        if (this._isChecking || now - this._lastCheckTime < 500) return;
 
         this._isChecking = true;
         this._lastCheckTime = now;
 
         try {
-            const currentPage = this.getCurrentPath();
-            const base = this.getBasePrefix();
             const token = localStorage.getItem('tera_token');
-            
+            const currentPage = this.getCurrentPath();
+
             const isAuth = this.isAuthPage(currentPage);
+            const isProtected = this.isProtectedPage(currentPage);
             const isLanding = this.isLandingPage(currentPage);
-            const isProtected = !isAuth && !isLanding;
 
+            // حالة 1: مستخدم غير مسجل يحاول دخول صفحات لوحة التحكم المحمية
             if (!token && isProtected) {
-                console.log('🔐 [Auth] غير مسجل الدخول -> توجيه لصفحة الدخول');
-                this.redirectTo(base + PATHS.login);
+                console.log('🔐 [Auth] غير مسجل -> تحويل لصفحة الدخول');
+                this.redirectTo(this.getRelativePath('auth/auth/login/login.html'));
                 return;
             }
 
+            // حالة 2: مستخدم مسجل دخول بالفعل ويحاول فتح صفحة الهبوط أو الدخول
             if (token && (isAuth || isLanding)) {
-                console.log('🚀 [Auth] مسجل الدخول بالفعل -> توجيه للوحة التحكم');
-                this.redirectTo(base + PATHS.dashboard);
+                console.log('🚀 [Auth] مسجل دخول بالفعل -> تحويل للوحة التحكم');
+                this.redirectTo(this.getRelativePath('pages/dashboard/index.html'));
                 return;
             }
 
-            console.log('✅ [Auth] الجلسة مستقرة، الصفحة الحالية:', currentPage);
+            console.log('✅ [Auth] الجلسة آمنة ومستقرة في المسار:', currentPage);
         } finally {
             this._isChecking = false;
         }
@@ -106,7 +95,6 @@ const TeraAuth = {
 
     blockCheck: function() {
         this._blockCheck = true;
-        console.log('⛔ [Auth] تم حظر فحص الجلسة مؤقتاً لحماية الصفحة');
     },
 
     unblockCheck: function() {
@@ -121,19 +109,13 @@ const TeraAuth = {
         this._isChecking = false;
     },
 
-    logout: function(isSessionExpired = false) {
+    logout: function() {
         localStorage.removeItem('tera_token');
         localStorage.removeItem('tera_user');
         localStorage.removeItem('tera_remember');
         localStorage.removeItem('tera_identifier');
         sessionStorage.clear();
-
-        if (isSessionExpired) {
-            alert('⏳ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
-        }
-
-        const base = this.getBasePrefix();
-        this.redirectTo(base + PATHS.login);
+        this.redirectTo(this.getRelativePath('auth/auth/login/login.html'));
     },
 
     login: function(identifier, password) {
@@ -141,11 +123,6 @@ const TeraAuth = {
             setTimeout(() => {
                 if (!identifier || !password) {
                     reject(new Error('يرجى إدخال جميع البيانات المطلوبة.'));
-                    return;
-                }
-
-                if (password.length < 3) {
-                    reject(new Error('كلمة المرور يجب أن تكون 3 أحرف على الأقل.'));
                     return;
                 }
 
@@ -220,7 +197,7 @@ const TeraAuth = {
 };
 
 // ========================================================================
-// 3. التنفيذ التلقائي الآمن عند تحميل المستند
+// 5. التنفيذ التلقائي الآمن عند تحميل الصفحة
 // ========================================================================
 document.addEventListener('DOMContentLoaded', function() {
     const currentPage = window.location.pathname;
@@ -228,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (TeraAuth.isAuthPage(currentPage)) {
         TeraAuth.disableAutoRedirect();
         TeraAuth.blockCheck();
+        console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة لمنع التكرار');
     } else {
         TeraAuth.checkSession();
     }
@@ -235,37 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     TeraAuth.initPasswordToggles();
 });
 
-// ========================================================================
-// 4. معالج الأحداث العام لعمليات تسجيل الخروج
-// ========================================================================
-document.addEventListener('click', function(e) {
-    const logoutBtn = e.target.closest('.logout-btn, .btn-logout, #btn-logout');
-    if (!logoutBtn) return;
-
-    e.preventDefault();
-    if (confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-        TeraAuth.logout();
-    }
-});
-
-// تصدير النطاق العام
+// ربط النطاق العام لسهولة الاستدعاء
 window.TeraAuth = TeraAuth;
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
-
-// ========================================================================
-// 5. ترقية مفاتيح التخزين المحلية القديمة إن وُجدت
-// ========================================================================
-(function cleanupOldKeys() {
-    const oldToken = localStorage.getItem('tera_auth_token');
-    const oldUser = localStorage.getItem('tera_user_data');
-
-    if (oldToken && !localStorage.getItem('tera_token')) {
-        localStorage.setItem('tera_token', oldToken);
-        localStorage.removeItem('tera_auth_token');
-    }
-    if (oldUser && !localStorage.getItem('tera_user')) {
-        localStorage.setItem('tera_user', oldUser);
-        localStorage.removeItem('tera_user_data');
-    }
-})();
