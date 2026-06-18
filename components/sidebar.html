@@ -1,84 +1,131 @@
-<aside class="tera-sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <img src="/images/logo.svg" alt="Tera Logo" class="logo-img">
-        <span class="logo-text">تيرا للاستثمار</span>
+<!-- ========================================
+     sidebar.html - القائمة الجانبية
+     ======================================== -->
+<aside class="sidebar" id="sidebar">
+    <!-- الشعار -->
+    <div class="sidebar-brand">
+        <a href="../../index.html">
+            <img src="../../images/logo.svg" alt="Tera Logo" class="logo-img" />
+            <span class="logo-text">Tera Investor</span>
+        </a>
     </div>
 
-    <div class="sidebar-scroll">
-        <ul class="sidebar-menu">
-            <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/dashboard/index.html"><i class="fa-solid fa-gauge"></i> <span>الرئيسية</span></a></li>
+    <!-- قائمة التنقل -->
+    <nav class="sidebar-nav">
+        <!-- 1. لوحة التحكم -->
+        <div class="nav-item active">
+            <a href="../dashboard/index.html">
+                <i class="fas fa-th-large"></i>
+                <span>لوحة التحكم</span>
+            </a>
+        </div>
 
-            <li class="menu-item has-submenu">
-                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span>الاستثمارات</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-                <ul class="submenu">
-                    <li><a href="#" class="menu-link" data-path="/pages/investments/opportunities.html">الفرص المتاحة</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/investments/completed-investments.html">الاستثمارات المكتملة</a></li>
-                </ul>
-            </li>
+        <!-- 2. الاستثمارات -->
+        <div class="nav-item has-submenu submenu-open">
+            <a href="#">
+                <i class="fas fa-chart-line"></i>
+                <span>الاستثمارات</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../investments/opportunities.html">فرص الاستثمار</a></li>
+                <li><a href="../investments/active-investments.html">الاستثمارات النشطة</a></li>
+                <li><a href="../investments/completed-investments.html">المكتملة</a></li>
+                <li><a href="../investments/cancelled-investments.html">الملغاة</a></li>
+                <li><a href="../investments/extended-investments.html">الممددة</a></li>
+                <li><a href="../investments/investment-details.html">تفاصيل الاستثمار</a></li>
+            </ul>
+        </div>
 
-            <li class="menu-item has-submenu">
-                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-wallet"></i> <span>المحفظة</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-                <ul class="submenu">
-                    <li><a href="#" class="menu-link" data-path="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-                </ul>
-            </li>
+        <!-- 3. المحفظة -->
+        <div class="nav-item has-submenu">
+            <a href="#">
+                <i class="fas fa-wallet"></i>
+                <span>المحفظة</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                <li><a href="../portfolio/transactions.html">المعاملات</a></li>
+                <li><a href="../portfolio/profits.html">الأرباح</a></li>
+                <li><a href="../portfolio/withdraw-request.html">طلب سحب</a></li>
+                <li><a href="../portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                <li><a href="../portfolio/account-statement.html">كشف الحساب</a></li>
+            </ul>
+        </div>
 
-            <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/reports/reports-dashboard.html"><i class="fa-solid fa-file-invoice"></i> <span>التقارير</span></a></li>
+        <!-- 4. التقارير -->
+        <div class="nav-item has-submenu">
+            <a href="#">
+                <i class="fas fa-file-alt"></i>
+                <span>التقارير</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../reports/reports-dashboard.html">لوحة التقارير</a></li>
+                <li><a href="../reports/portfolio-report.html">تقرير المحفظة</a></li>
+                <li><a href="../reports/investments-report.html">تقرير الاستثمارات</a></li>
+                <li><a href="../reports/profits-report.html">تقرير الأرباح</a></li>
+                <li><a href="../reports/withdrawals-report.html">تقرير السحوبات</a></li>
+            </ul>
+        </div>
 
-            <li class="menu-item has-submenu">
-                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-user"></i> <span>الملف الشخصي</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-                <ul class="submenu">
-                    <li><a href="#" class="menu-link" data-path="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                </ul>
-            </li>
+        <!-- 5. الملف الشخصي -->
+        <div class="nav-item has-submenu">
+            <a href="#">
+                <i class="fas fa-user-circle"></i>
+                <span>الملف الشخصي</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../profile/personal-information.html">المعلومات الشخصية</a></li>
+                <li><a href="../profile/contact-information.html">معلومات الاتصال</a></li>
+                <li><a href="../profile/national-address.html">العنوان الوطني</a></li>
+                <li><a href="../profile/bank-information.html">المعلومات البنكية</a></li>
+                <li><a href="../profile/attachments.html">المرفقات</a></li>
+            </ul>
+        </div>
 
-            <li class="menu-item has-submenu">
-                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-shield-halved"></i> <span>الأمان</span> <i class="fa-solid fa-chevron-down arrow"></i></a>
-                <ul class="submenu">
-                    <li><a href="#" class="menu-link" data-path="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                    <li><a href="#" class="menu-link" data-path="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                </ul>
-            </li>
+        <!-- 6. الأمان -->
+        <div class="nav-item has-submenu">
+            <a href="#">
+                <i class="fas fa-shield-alt"></i>
+                <span>الأمان</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../security/change-password.html">تغيير كلمة المرور</a></li>
+                <li><a href="../security/change-email.html">تغيير البريد الإلكتروني</a></li>
+                <li><a href="../security/change-mobile.html">تغيير رقم الجوال</a></li>
+                <li><a href="../security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                <li><a href="../security/registered-devices.html">الأجهزة المسجلة</a></li>
+                <li><a href="../security/login-history.html">سجل الدخول</a></li>
+            </ul>
+        </div>
 
-            <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/support/tickets.html"><i class="fa-solid fa-headset"></i> <span>الدعم الفني</span></a></li>
-        </ul>
-    </div>
+        <!-- 7. الدعم -->
+        <div class="nav-item has-submenu">
+            <a href="#">
+                <i class="fas fa-headset"></i>
+                <span>الدعم</span>
+                <i class="fas fa-chevron-down submenu-toggle"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="../support/help-center.html">مركز المساعدة</a></li>
+                <li><a href="../support/faq.html">الأسئلة الشائعة</a></li>
+                <li><a href="../support/tickets.html">التذاكر</a></li>
+                <li><a href="../support/notifications.html">الإشعارات</a></li>
+                <li><a href="../support/privacy-policy.html">سياسة الخصوصية</a></li>
+                <li><a href="../support/terms-and-conditions.html">الشروط والأحكام</a></li>
+            </ul>
+        </div>
+    </nav>
 
+    <!-- أسفل القائمة - تسجيل الخروج -->
     <div class="sidebar-footer">
-        <a href="#" class="menu-link" onclick="Session.logout()"><i class="fa-solid fa-right-from-bracket"></i> <span>تسجيل الخروج</span></a>
+        <a href="../../auth/login/login.html" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>تسجيل الخروج</span>
+        </a>
     </div>
 </aside>
-
-<script>
-    // 1. منطق القوائم الفرعية
-    document.querySelectorAll('.submenu-toggle').forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            const parent = this.parentElement;
-            parent.classList.toggle('active');
-            // تدوير السهم
-            const arrow = this.querySelector('.arrow');
-            if (arrow) arrow.style.transform = parent.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-        });
-    });
-
-    // 2. منطق التنقل
-    document.querySelectorAll('.menu-link[data-path]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const path = this.getAttribute('data-path');
-            if (path) window.location.href = path;
-        });
-    });
-</script>
-
-<style>
-    /* تنسيق ضروري لإظهار القوائم الفرعية - أضفه إذا لم يكن موجوداً في ملفاتك */
-    .submenu { display: none; padding-right: 20px; }
-    .has-submenu.active .submenu { display: block; }
-    .arrow { transition: transform 0.3s; }
-</style>
