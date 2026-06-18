@@ -1,130 +1,45 @@
-<!-- ================================================= -->
-<!-- TERA HEADER COMPONENT (المسارات المربوطة ديناميكياً) -->
-<!-- ================================================= -->
-
-<style>
-    .tera-header {
-        height: 70px;
-        background: var(--tera-white, #ffffff);
-        border-bottom: 1px solid var(--tera-border, #E2E8F0);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 30px;
-        position: sticky;
-        top: 0;
-        z-index: 900;
-    }
-
-    .header-left { display: flex; align-items: center; gap: 20px; }
-
-    .menu-toggle {
-        display: none;
-        background: none;
-        border: 1px solid var(--tera-border);
-        color: var(--tera-primary);
-        font-size: 1.2rem;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    @media (max-width: 992px) { .menu-toggle { display: block; } }
-
-    .header-right { display: flex; align-items: center; gap: 20px; }
-
-    .notification-bell {
-        position: relative;
-        font-size: 1.2rem;
-        color: var(--tera-text-light);
-        cursor: pointer;
-    }
-
-    #notificationCount {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #EF4444;
-        color: white;
-        font-size: 0.65rem;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-    }
-
-    .user-profile-summary {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 8px;
-        transition: 0.3s;
-    }
-
-    .user-profile-summary:hover { background: #F8FAFC; }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--tera-secondary);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 0.9rem;
-    }
-
-    .investor-name {
-        font-weight: 700;
-        color: var(--tera-primary);
-        font-size: 0.9rem;
-    }
-</style>
-
 <header class="tera-header">
     <div class="header-left">
-        <button class="menu-toggle" id="sidebarToggle">
+        <button class="menu-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
             <i class="fa-solid fa-bars"></i>
         </button>
-        <h2 class="page-title" style="margin: 0; font-size: 1.2rem;">بوابة المستثمر</h2>
+        <h2 class="page-title">بوابة المستثمر</h2>
     </div>
 
     <div class="header-right">
         <div class="notification-bell">
             <i class="fa-solid fa-bell"></i>
-            <span id="notificationCount">0</span>
+            <span id="notificationCount" class="badge-count">0</span>
         </div>
 
-        <!-- رابط البروفايل المربوط ديناميكياً -->
-        <div class="user-profile-summary" id="profileLink">
-            <div class="user-avatar" id="userAvatarInitials">م</div>
-            <span class="investor-name" id="userName">جاري التحميل...</span>
+        <div class="user-profile-summary" id="profileLink" role="button">
+            <div class="user-avatar" id="userAvatarInitials"></div>
+            <span class="investor-name" id="userName"></span>
         </div>
     </div>
 </header>
 
 <script>
     (function() {
-        // 1. الربط الديناميكي للروابط لمنع 404
+        // 1. الربط الديناميكي للروابط
         const profileLink = document.getElementById('profileLink');
-        const basePath = (typeof TERA !== 'undefined' && TERA.basePath) ? TERA.basePath : '';
-        
-        profileLink.addEventListener('click', () => {
-            window.location.href = basePath + '/pages/profile/personal-information.html';
-        });
+        if (profileLink) {
+            profileLink.addEventListener('click', () => {
+                window.location.href = '/pages/profile/personal-information.html';
+            });
+        }
 
         // 2. تحديث بيانات المستخدم
         const userData = JSON.parse(localStorage.getItem('tera_user'));
         if (userData && userData.fullName) {
-            document.getElementById('userName').textContent = userData.fullName;
-            document.getElementById('userAvatarInitials').textContent = userData.fullName.charAt(0);
+            const nameEl = document.getElementById('userName');
+            const avatarEl = document.getElementById('userAvatarInitials');
+            
+            nameEl.textContent = userData.fullName;
+            avatarEl.textContent = userData.fullName.charAt(0);
+        } else {
+            document.getElementById('userName').textContent = 'مستخدم';
+            document.getElementById('userAvatarInitials').textContent = 'U';
         }
     })();
 </script>
