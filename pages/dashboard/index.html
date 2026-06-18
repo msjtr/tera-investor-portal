@@ -5,18 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- الملفات المشتركة CSS -->
     <link rel="stylesheet" href="../../assets/css/core.css" />
     <link rel="stylesheet" href="../../assets/css/main.css" />
     <link rel="stylesheet" href="../../assets/css/dashboard.css" />
     <link rel="stylesheet" href="../../assets/css/responsive.css" />
-
-    <!-- أيقونات (اختيارية) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 </head>
 <body>
 
-    <!-- ====== تخطيط الصفحة ====== -->
     <div class="app-wrapper">
 
         <!-- ====== القائمة الجانبية (Sidebar) ====== -->
@@ -178,14 +174,14 @@
                         <div class="stat-icon"><i class="fas fa-coins"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">إجمالي الاستثمارات</span>
-                            <span class="stat-value">$ 124,500</span>
+                            <span class="stat-value">ر.س 124,500</span> <!-- تم التعديل -->
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">الأرباح المحققة</span>
-                            <span class="stat-value">$ 18,200</span>
+                            <span class="stat-value">ر.س 18,200</span> <!-- تم التعديل -->
                         </div>
                     </div>
                     <div class="stat-card">
@@ -212,7 +208,6 @@
                             <span class="card-subtitle">آخر 30 يوماً</span>
                         </div>
                         <div class="card-body">
-                            <!-- هنا يمكن إضافة رسم بياني باستخدام مكتبة مثل Chart.js -->
                             <canvas id="performanceChart" height="150"></canvas>
                         </div>
                     </div>
@@ -227,7 +222,7 @@
                                     <i class="fas fa-arrow-up success"></i>
                                     <div>
                                         <span class="activity-title">إيداع</span>
-                                        <span class="activity-desc">تم إيداع مبلغ $5,000 في المحفظة</span>
+                                        <span class="activity-desc">تم إيداع مبلغ ر.س 5,000 في المحفظة</span>
                                     </div>
                                     <span class="activity-time">منذ ساعة</span>
                                 </li>
@@ -235,7 +230,7 @@
                                     <i class="fas fa-arrow-down danger"></i>
                                     <div>
                                         <span class="activity-title">سحب</span>
-                                        <span class="activity-desc">طلب سحب $1,200 قيد المراجعة</span>
+                                        <span class="activity-desc">طلب سحب ر.س 1,200 قيد المراجعة</span>
                                     </div>
                                     <span class="activity-time">منذ 3 ساعات</span>
                                 </li>
@@ -279,19 +274,19 @@
                             <tbody>
                                 <tr>
                                     <td>مشروع الطاقة الشمسية</td>
-                                    <td>$10,000</td>
+                                    <td>ر.س 10,000</td>
                                     <td>2026-06-01</td>
                                     <td><span class="badge status-active">نشط</span></td>
                                 </tr>
                                 <tr>
                                     <td>صندوق العقارات</td>
-                                    <td>$25,000</td>
+                                    <td>ر.س 25,000</td>
                                     <td>2026-05-15</td>
                                     <td><span class="badge status-completed">مكتمل</span></td>
                                 </tr>
                                 <tr>
                                     <td>تكنولوجيا الذكاء الاصطناعي</td>
-                                    <td>$5,000</td>
+                                    <td>ر.س 5,000</td>
                                     <td>2026-06-10</td>
                                     <td><span class="badge status-pending">قيد الانتظار</span></td>
                                 </tr>
@@ -323,12 +318,12 @@
     <script src="../../assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // تفعيل القائمة الجانبية (تبديل الظهور في الشاشات الصغيرة)
+        // تفعيل القائمة الجانبية
         document.getElementById('sidebarToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('sidebar-open');
         });
 
-        // تفعيل القوائم الفرعية (فتح/إغلاق)
+        // تفعيل القوائم الفرعية
         document.querySelectorAll('.has-submenu > a').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -337,14 +332,14 @@
             });
         });
 
-        // رسم بياني وهمي باستخدام Chart.js
+        // رسم بياني بالريال
         const ctx = document.getElementById('performanceChart').getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['1', '5', '10', '15', '20', '25', '30'],
                 datasets: [{
-                    label: 'قيمة المحفظة ($)',
+                    label: 'قيمة المحفظة (ر.س)',
                     data: [12000, 12500, 12300, 13000, 12800, 13500, 14000],
                     borderColor: '#0D6EFD',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
@@ -359,7 +354,14 @@
                     legend: { display: false }
                 },
                 scales: {
-                    y: { beginAtZero: false }
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return 'ر.س ' + value.toLocaleString();
+                            }
+                        }
+                    }
                 }
             }
         });
