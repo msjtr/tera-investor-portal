@@ -1,63 +1,43 @@
 /**
- * TERA MAIN JS - Controller for Site Interactions
- * هذا الملف مسؤول عن التفاعلات (أزرار، قوائم، نوافذ)
+ * ========================================
+ * main.js - تهيئة المكونات العامة
+ * ========================================
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. القائمة الجانبية: تبديل الحالة (Collapsed)
-    document.addEventListener('click', (e) => {
-        const toggleBtn = e.target.closest('#sidebarToggle');
-        if (toggleBtn) {
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('collapsed');
-                // حفظ حالة القائمة في الـ LocalStorage إذا أردت
-                localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
-            }
-        }
-    });
+// يمكن استخدام هذا الملف لإضافة أي تهيئات عامة إضافية
+// مثل إدارة الإشعارات، أو تحميل المحتوى الديناميكي، أو التعامل مع النماذج.
 
-    // 2. القوائم الفرعية (Submenus)
-    document.addEventListener('click', (e) => {
-        const submenuToggle = e.target.closest('.submenu-toggle');
-        if (submenuToggle) {
-            e.preventDefault();
-            const parent = submenuToggle.parentElement;
-            
-            // إغلاق القوائم الأخرى المفتوحة (اختياري لجمالية التصميم)
-            document.querySelectorAll('.menu-item.has-submenu').forEach(item => {
-                if (item !== parent) item.classList.remove('active');
+(function() {
+    'use strict';
+
+    // مثال: إغلاق الإشعارات عند النقر
+    function setupNotifications() {
+        const notifIcon = document.querySelector('.notifications');
+        if (notifIcon) {
+            notifIcon.addEventListener('click', function() {
+                alert('سيتم عرض الإشعارات هنا قريباً!');
             });
-
-            // تبديل حالة القائمة الحالية
-            parent.classList.toggle('active');
         }
-    });
-
-    // 3. النوافذ المنبثقة (Modals)
-    document.addEventListener('click', (e) => {
-        // فتح المودال
-        const modalTrigger = e.target.closest('[data-toggle="modal"]');
-        if (modalTrigger) {
-            const targetId = modalTrigger.getAttribute('data-target');
-            const modal = document.querySelector(targetId);
-            if (modal) modal.style.display = 'flex';
-        }
-
-        // إغلاق المودال
-        if (e.target.matches('[data-dismiss="modal"]') || e.target.classList.contains('modal')) {
-            const modal = e.target.closest('.modal');
-            if (modal) modal.style.display = 'none';
-        }
-    });
-
-    // 4. استعادة حالة القائمة الجانبية عند تحميل الصفحة
-    const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar && isCollapsed) {
-        sidebar.classList.add('collapsed');
     }
 
-    console.log('Main Interactions System Ready.');
-});
+    // مثال: تأكيد تسجيل الخروج
+    function setupLogout() {
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                const confirmLogout = confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟');
+                if (!confirmLogout) {
+                    e.preventDefault();
+                }
+            });
+        }
+    }
+
+    // تشغيل الوظائف عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        setupNotifications();
+        setupLogout();
+        console.log('تم تهيئة main.js بنجاح ✅');
+    });
+
+})();
