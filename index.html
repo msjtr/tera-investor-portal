@@ -6,40 +6,172 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | بوابة المستثمر وإدارة المحافظ الرقمية</title>
     
+    <!-- أيقونات الموقع -->
     <link rel="icon" type="image/svg+xml" href="./images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="./images/favicon.svg">
 
+    <!-- خطوط Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="./assets/css/main.css">
+    <!-- الملفات الأساسية CSS (ترتيب التحميل مهم) -->
     <link rel="stylesheet" href="./assets/css/core.css">
+    <link rel="stylesheet" href="./assets/css/main.css">
+    <link rel="stylesheet" href="./assets/css/responsive.css">
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%) !important; min-height: 100vh !important; color: #0A2540 !important; display: flex !important; flex-direction: column !important; }
-        .hero-section { flex-grow: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 60px 20px !important; }
-        .hero-card { width: 100% !important; max-width: 900px !important; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(12px) !important; border-radius: 24px !important; padding: 65px !important; text-align: center !important; box-shadow: 0 25px 60px rgba(10, 37, 64, 0.05) !important; border: 1px solid rgba(226, 232, 240, 0.8) !important; }
-        .brand-logo { margin-bottom: 35px !important; display: flex !important; justify-content: center !important; }
-        .brand-logo img { width: 160px !important; height: auto !important; object-fit: contain !important; }
-        .main-title { font-size: 36px !important; color: #0A2540 !important; margin-bottom: 20px !important; font-weight: 800 !important; }
-        .main-subtitle { font-size: 18px !important; color: #475569 !important; margin-bottom: 50px !important; line-height: 1.8 !important; max-width: 750px !important; margin-left: auto !important; margin-right: auto !important; }
+        /* أنماط الصفحة الرئيسية فقط */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Tajawal', sans-serif; 
+        }
         
-        .auth-actions { display: flex !important; justify-content: center !important; gap: 20px !important; flex-wrap: wrap !important; margin-bottom: 50px !important; }
-        .btn-action { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 10px !important; text-decoration: none !important; padding: 18px 50px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 17px !important; transition: all 0.3s ease !important; }
+        body { 
+            background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%) !important; 
+            min-height: 100vh !important; 
+            color: #0A2540 !important; 
+            display: flex !important; 
+            flex-direction: column !important; 
+        }
         
-        .btn-login { background: linear-gradient(135deg, #0A2540 0%, #028090 100%) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25) !important; }
-        .btn-login:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35) !important; }
+        .hero-section { 
+            flex-grow: 1 !important; 
+            display: flex !important; 
+            align-items: center !important; 
+            justify-content: center !important; 
+            padding: 60px 20px !important; 
+        }
         
-        .btn-register { background: #f8fafc !important; color: #0A2540 !important; border: 2px solid #e2e8f0 !important; }
-        .btn-register:hover { background: #e2e8f0 !important; transform: translateY(-3px) !important; }
+        .hero-card { 
+            width: 100% !important; 
+            max-width: 900px !important; 
+            background: rgba(255, 255, 255, 0.96) !important; 
+            backdrop-filter: blur(12px) !important; 
+            border-radius: 24px !important; 
+            padding: 65px !important; 
+            text-align: center !important; 
+            box-shadow: 0 25px 60px rgba(10, 37, 64, 0.05) !important; 
+            border: 1px solid rgba(226, 232, 240, 0.8) !important; 
+        }
         
-        .features-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important; gap: 25px !important; margin-top: 20px !important; }
-        .feature-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important; padding: 25px !important; text-align: right !important; }
-        .feature-card h3 { margin-bottom: 10px !important; color: #0A2540 !important; font-size: 18px !important; font-weight: 700 !important; }
-        .feature-card p { color: #64748b !important; line-height: 1.6 !important; font-size: 14px !important; }
+        .brand-logo { 
+            margin-bottom: 35px !important; 
+            display: flex !important; 
+            justify-content: center !important; 
+        }
+        
+        .brand-logo img { 
+            width: 160px !important; 
+            height: auto !important; 
+            object-fit: contain !important; 
+        }
+        
+        .main-title { 
+            font-size: 36px !important; 
+            color: #0A2540 !important; 
+            margin-bottom: 20px !important; 
+            font-weight: 800 !important; 
+        }
+        
+        .main-subtitle { 
+            font-size: 18px !important; 
+            color: #475569 !important; 
+            margin-bottom: 50px !important; 
+            line-height: 1.8 !important; 
+            max-width: 750px !important; 
+            margin-left: auto !important; 
+            margin-right: auto !important; 
+        }
+        
+        .auth-actions { 
+            display: flex !important; 
+            justify-content: center !important; 
+            gap: 20px !important; 
+            flex-wrap: wrap !important; 
+            margin-bottom: 50px !important; 
+        }
+        
+        .btn-action { 
+            display: inline-flex !important; 
+            align-items: center !important; 
+            justify-content: center !important; 
+            gap: 10px !important; 
+            text-decoration: none !important; 
+            padding: 18px 50px !important; 
+            border-radius: 12px !important; 
+            font-weight: 700 !important; 
+            font-size: 17px !important; 
+            transition: all 0.3s ease !important; 
+            min-width: 200px !important;
+        }
+        
+        .btn-login { 
+            background: linear-gradient(135deg, #0A2540 0%, #028090 100%) !important; 
+            color: #ffffff !important; 
+            box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25) !important; 
+        }
+        .btn-login:hover { 
+            transform: translateY(-3px) !important; 
+            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35) !important; 
+        }
+        
+        .btn-register { 
+            background: #f8fafc !important; 
+            color: #0A2540 !important; 
+            border: 2px solid #e2e8f0 !important; 
+        }
+        .btn-register:hover { 
+            background: #e2e8f0 !important; 
+            transform: translateY(-3px) !important; 
+        }
+        
+        .features-grid { 
+            display: grid !important; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; 
+            gap: 25px !important; 
+            margin-top: 20px !important; 
+        }
+        
+        .feature-card { 
+            background: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
+            border-radius: 16px !important; 
+            padding: 25px !important; 
+            text-align: right !important; 
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .feature-card h3 { 
+            margin-bottom: 10px !important; 
+            color: #0A2540 !important; 
+            font-size: 18px !important; 
+            font-weight: 700 !important; 
+        }
+        
+        .feature-card p { 
+            color: #64748b !important; 
+            line-height: 1.6 !important; 
+            font-size: 14px !important; 
+        }
+
+        /* تحسين التوافق مع الهواتف */
+        @media (max-width: 576px) {
+            .hero-card { padding: 35px 20px !important; }
+            .main-title { font-size: 26px !important; }
+            .main-subtitle { font-size: 16px !important; }
+            .btn-action { padding: 14px 30px !important; font-size: 15px !important; min-width: 160px !important; }
+            .brand-logo img { width: 120px !important; }
+        }
     </style>
 </head>
 <body>
@@ -51,11 +183,17 @@
             </div>
 
             <h1 class="main-title">منصة تيرا للاستثمار الرقمي</h1>
-            <p class="main-subtitle">بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء. تابع نمو أصولك، استكشف فرصاً استثنائية، واطلع على تقاريرك المالية بكل شفافية وأمان.</p>
+            <p class="main-subtitle">
+                بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء. تابع نمو أصولك، استكشف فرصاً استثنائية، واطلع على تقاريرك المالية بكل شفافية وأمان.
+            </p>
 
             <div class="auth-actions">
-                <a href="./auth/auth/login/login.html" class="btn-action btn-login"><i class="fa-solid fa-lock"></i> تسجيل الدخول</a>
-                <a href="./auth/register/register.html" class="btn-action btn-register"><i class="fa-solid fa-user-plus"></i> إنشاء حساب جديد</a>
+                <a href="./auth/auth/login/login.html" class="btn-action btn-login">
+                    <i class="fa-solid fa-lock"></i> تسجيل الدخول
+                </a>
+                <a href="./auth/register/register.html" class="btn-action btn-register">
+                    <i class="fa-solid fa-user-plus"></i> إنشاء حساب جديد
+                </a>
             </div>
 
             <div class="features-grid">
@@ -75,6 +213,26 @@
         </div>
     </main>
 
-    <script type="module" src="./assets/js/main.js"></script>
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح ====== -->
+    <!-- 1. core.js: الدوال الأساسية والمكتبات المساعدة -->
+    <script src="./assets/js/core.js"></script>
+    
+    <!-- 2. auth.js: التحقق من الجلسة وإدارة المصادقة -->
+    <script src="./assets/js/auth.js"></script>
+    
+    <!-- 3. main.js: التهيئة العامة للتطبيق -->
+    <script src="./assets/js/main.js"></script>
+
+    <script>
+        // عند تحميل الصفحة، نضمن أن auth.js قد قام بالتحقق من الجلسة
+        // وتوجيه المستخدم المسجل الدخول تلقائياً إلى لوحة التحكم
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ الصفحة الرئيسية لتيرا تم تحميلها بنجاح');
+            
+            // في حال قام auth.js بتوجيه المستخدم، لن يتم تنفيذ ما يلي
+            // لكن يمكننا إضافة أي تهيئة إضافية هنا إذا لزم الأمر
+        });
+    </script>
+
 </body>
 </html>
