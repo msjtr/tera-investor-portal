@@ -3,11 +3,18 @@
 /* ================================================= */
 'use strict';
 
+// دالة لاكتشاف المسار الجذري للمشروع ديناميكياً لتجنب أخطاء 404
+const getBasePath = () => {
+    const path = window.location.pathname;
+    // تبحث عن بداية مجلدات المشروع وتقص ما قبلها
+    const match = path.match(/(.*)(\/pages\/|\/auth\/|\/index\.html|$)/);
+    return match && match[1] ? match[1] : '';
+};
+
 const TERA = {
-    version: '1.0.0',
+    version: '1.0.1',
     debug: true,
-    // تحديد المسار الأساسي للمشروع لضمان عمل المكونات من أي مكان
-    baseURL: window.location.origin + '/tera-investor-portal-main'
+    basePath: getBasePath()
 };
 
 /* ================================================= */
@@ -27,13 +34,13 @@ function hideLoader() {
 /* DYNAMIC COMPONENT LOADER */
 /* ================================================= */
 async function loadComponents() {
-    // نستخدم المسارات المطلوبة من جذر المشروع لضمان الاستقرار
+    // دمج المسار الجذري مع مسار المكونات لضمان الوصول الصحيح دائماً
     const components = [
-        { selector: '#header-container', path: '/components/header.html' },
-        { selector: '#footer-container', path: '/components/footer.html' },
-        { selector: '#sidebar-container', path: '/components/sidebar.html' },
-        { selector: '#loader-container', path: '/components/loader.html' },
-        { selector: '#alerts-container', path: '/components/alerts.html' }
+        { selector: '#header-container', path: `${TERA.basePath}/components/header.html` },
+        { selector: '#footer-container', path: `${TERA.basePath}/components/footer.html` },
+        { selector: '#sidebar-container', path: `${TERA.basePath}/components/sidebar.html` },
+        { selector: '#loader-container', path: `${TERA.basePath}/components/loader.html` },
+        { selector: '#alerts-container', path: `${TERA.basePath}/components/alerts.html` }
     ];
 
     for (const comp of components) {
@@ -65,7 +72,8 @@ const Session = {
     
     logout: () => {
         localStorage.clear();
-        window.location.href = '/auth/auth/login/login.html';
+        // استخدام المسار الديناميكي لتوجيه آمن
+        window.location.href = `${TERA.basePath}/auth/auth/login/login.html`;
     },
 
     checkAuth: () => {
@@ -75,7 +83,7 @@ const Session = {
         const isProtected = protectedPaths.some(path => currentPath.includes(path));
         
         if (isProtected && !Session.isLoggedIn()) {
-            window.location.replace('/auth/auth/login/login.html');
+            window.location.replace(`${TERA.basePath}/auth/auth/login/login.html`);
         }
     }
 };
