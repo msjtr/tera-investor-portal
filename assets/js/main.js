@@ -3,13 +3,14 @@
  * main.js - الملف الرئيسي لإدارة وتنسيق جميع صفحات منصة تيرا
  * ============================================================
  * هذا الملف مسؤول عن:
- * 1. تحميل وتهيئة جميع المكونات المشتركة
+ * 1. تحميل وتهيئة جميع المكونات المشتركة (باستخدام مسارات مطلقة)
  * 2. ربط جميع أحداث الصفحات المختلفة
  * 3. تنفيذ دوال خاصة بكل صفحة حسب المسار الحالي
  * 4. إدارة السلوك العام للموقع (القوائم، الإشعارات، زر العودة، إلخ)
  * 5. إضافة كلاس page-dashboard لتحديد الصفحة الحالية
  * ============================================================
- * يعتمد على: core.js, auth.js, app.js
+ * تم التحديث لاستخدام المسارات المطلقة (بدون ../) لتجنب أخطاء 404
+ * والتوافق مع نظام التوجيه الجديد في app.js
  * ============================================================
  */
 
@@ -17,39 +18,47 @@
     'use strict';
 
     // ============================================================
-    // 1. حساب العمق الديناميكي (للمسارات النسبية)
+    // 1. دوال مساعدة للمسارات (مطلقة من الجذر)
     // ============================================================
-    function getBaseDepth() {
-        const path = window.location.pathname.toLowerCase();
+
+    /**
+     * تحويل أي مسار إلى مسار مطلق من جذر السيرفر
+     * هذه الدالة تحل محل resolveRelativePath القديمة
+     */
+    function resolveAbsolutePath(path) {
+        // إذا كان المسار فارغاً أو يبدأ بـ # أو javascript:، نرجعه كما هو
+        if (!path || path.startsWith('#') || path.startsWith('javascript:')) {
+            return path;
+        }
+
+        let cleanPath = path;
         
-        // تحديد العمق بناءً على الهيكل الدقيق للمشروع
-        if (path.includes('/auth/auth/login/')) return 3;
-        if (path.includes('/auth/register/')) return 2;
-        if (path.includes('/pages/')) return 2;
-        if (path.includes('/auth/')) return 2;
-        if (path.includes('/assets/')) return 1;
-        if (path === '/' || path === '/index.html') return 0;
-        
-        // حساب عام لعدد المستويات
-        const parts = path.split('/').filter(p => p.length > 0);
-        return parts.length;
+        // إذا كان المسار يبدأ بـ http، نأخذ المسار فقط
+        if (cleanPath.startsWith('http')) {
+            cleanPath = new URL(cleanPath).pathname;
+        }
+
+        // إذا كان المسار يحتوي على مجلد المشروع الرئيسي، نزيله
+        if (cleanPath.includes('tera-investor-portal-main')) {
+            cleanPath = cleanPath.replace('/tera-investor-portal-main', '');
+        }
+
+        // التأكد من أن المسار يبدأ بـ /
+        if (!cleanPath.startsWith('/')) {
+            cleanPath = '/' + cleanPath;
+        }
+
+        return cleanPath;
     }
 
-    function resolveRelativePath(targetPath) {
-        let cleanPath = targetPath.startsWith('/') ? targetPath.slice(1) : targetPath;
-        const depth = getBaseDepth();
-        const prefix = '../'.repeat(depth);
-        return prefix + cleanPath;
-    }
-
     // ============================================================
-    // 2. التأكد من تحميل الملفات الأساسية
+    // 2. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
     // ============================================================
     function ensureCoreLoaded() {
         if (typeof TeraCore === 'undefined') {
             console.warn('⚠️ [Main] core.js غير موجود، يتم تحميله...');
             const script = document.createElement('script');
-            script.src = resolveRelativePath('assets/js/core.js');
+            script.src = '/assets/js/core.js';
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -61,7 +70,7 @@
         if (typeof TeraApp === 'undefined') {
             console.warn('⚠️ [Main] app.js غير موجود، يتم تحميله...');
             const script = document.createElement('script');
-            script.src = resolveRelativePath('assets/js/app.js');
+            script.src = '/assets/js/app.js';
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -73,7 +82,7 @@
         if (typeof TeraAuth === 'undefined') {
             console.warn('⚠️ [Main] auth.js غير موجود، يتم تحميله...');
             const script = document.createElement('script');
-            script.src = resolveRelativePath('assets/js/auth.js');
+            script.src = '/assets/js/auth.js';
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -202,7 +211,7 @@
     }
 
     // ============================================================
-    // 7. تهيئة زر تسجيل الخروج
+    // 7. تهيئة زر تسجيل الخروج (باستخدام مسار مطلق)
     // ============================================================
     function initLogout() {
         const logoutBtn = document.querySelector('.logout-btn');
@@ -214,10 +223,10 @@
                     if (typeof TeraAuth !== 'undefined' && TeraAuth.logout) {
                         TeraAuth.logout();
                     } else {
-                        // الطريقة اليدوية
+                        // الطريقة اليدوية باستخدام مسار مطلق
                         localStorage.removeItem('tera_token');
                         localStorage.removeItem('tera_user');
-                        window.location.href = resolveRelativePath('auth/auth/login/login.html');
+                        window.location.href = '/auth/auth/login/login.html';
                     }
                 }
             });
@@ -264,13 +273,13 @@
     }
 
     // ============================================================
-    // 10. دوال تهيئة الصفحات حسب النوع (اختياري)
+    // 10. دوال تهيئة الصفحات حسب النوع (باستخدام مسارات مطلقة)
     // ============================================================
     function initDashboardPage() {
         console.log('📊 [Main] تهيئة لوحة التحكم');
         // تحميل سكريبت dashboard.js إن وجد
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/dashboard.js');
+        script.src = '/assets/js/dashboard.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -278,7 +287,7 @@
     function initInvestmentsPage() {
         console.log('💰 [Main] تهيئة صفحة الاستثمارات');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/investments.js');
+        script.src = '/assets/js/investments.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -286,7 +295,7 @@
     function initPortfolioPage() {
         console.log('💼 [Main] تهيئة صفحة المحفظة');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/portfolio.js');
+        script.src = '/assets/js/portfolio.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -294,7 +303,7 @@
     function initReportsPage() {
         console.log('📊 [Main] تهيئة صفحة التقارير');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/reports.js');
+        script.src = '/assets/js/reports.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -302,7 +311,7 @@
     function initProfilePage() {
         console.log('👤 [Main] تهيئة صفحة الملف الشخصي');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/profile.js');
+        script.src = '/assets/js/profile.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -310,7 +319,7 @@
     function initSecurityPage() {
         console.log('🔐 [Main] تهيئة صفحة الأمان');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/security.js');
+        script.src = '/assets/js/security.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -318,7 +327,7 @@
     function initSupportPage() {
         console.log('🆘 [Main] تهيئة صفحة الدعم');
         const script = document.createElement('script');
-        script.src = resolveRelativePath('assets/js/support.js');
+        script.src = '/assets/js/support.js';
         script.async = false;
         document.head.appendChild(script);
     }
@@ -350,7 +359,7 @@
     function initMain() {
         console.log('🚀 [Main] بدء تهيئة النظام...');
 
-        // 1. التأكد من تحميل الملفات الأساسية
+        // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
         ensureCoreLoaded();
         ensureAuthLoaded();
         ensureAppLoaded();
@@ -393,8 +402,8 @@
         initLogout: initLogout,
         initInternalLinks: initInternalLinks,
         getCurrentPage: getCurrentPage,
-        getBaseDepth: getBaseDepth,
-        resolveRelativePath: resolveRelativePath,
+        // دوال المسارات المحسّنة (مطلقة)
+        resolveAbsolutePath: resolveAbsolutePath,
         initDashboardPage: initDashboardPage,
         initInvestmentsPage: initInvestmentsPage,
         initPortfolioPage: initPortfolioPage,
