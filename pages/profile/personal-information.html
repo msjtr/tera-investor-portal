@@ -1,17 +1,226 @@
-<div class="card" style="max-width:800px;margin:auto;">
-    <div class="card-header"><h3>المعلومات الشخصية</h3></div>
+<div class="card profile-card" style="max-width: 800px; margin: 2rem auto;">
+    <div class="card-header">
+        <h3><i class="fas fa-user-circle" style="margin-left: 10px; color: var(--primary-color);"></i>المعلومات الشخصية</h3>
+    </div>
     <div class="card-body">
-        <form>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                <div><label>الاسم الكامل</label><input type="text" value="أحمد محمد" class="form-control"></div>
-                <div><label>رقم الهوية</label><input type="text" value="1234567890" class="form-control"></div>
-                <div><label>الجنسية</label><input type="text" value="سعودي" class="form-control"></div>
-                <div><label>تاريخ الميلاد</label><input type="date" value="1985-05-15" class="form-control"></div>
+        <form id="profileForm" novalidate>
+            <div class="form-row">
+                <!-- الاسم الكامل -->
+                <div class="form-group">
+                    <label for="fullName" class="form-label">الاسم الكامل <span class="required">*</span></label>
+                    <input type="text" id="fullName" name="fullName" class="form-control" value="أحمد محمد" required>
+                </div>
+                <!-- رقم الهوية -->
+                <div class="form-group">
+                    <label for="idNumber" class="form-label">رقم الهوية <span class="required">*</span></label>
+                    <input type="text" id="idNumber" name="idNumber" class="form-control" value="1234567890" required>
+                </div>
+                <!-- الجنسية -->
+                <div class="form-group">
+                    <label for="nationality" class="form-label">الجنسية</label>
+                    <input type="text" id="nationality" name="nationality" class="form-control" value="سعودي">
+                </div>
+                <!-- تاريخ الميلاد -->
+                <div class="form-group">
+                    <label for="birthDate" class="form-label">تاريخ الميلاد</label>
+                    <input type="date" id="birthDate" name="birthDate" class="form-control" value="1985-05-15">
+                </div>
             </div>
-            <div style="margin-top:20px;">
-                <span class="badge status-active">موثق</span> <span style="color:var(--gray-600);">تم التحقق من الهوية</span>
+
+            <!-- حالة التحقق -->
+            <div class="verification-status">
+                <span class="badge status-active"><i class="fas fa-check-circle"></i> موثق</span>
+                <span class="status-text">تم التحقق من الهوية</span>
             </div>
-            <button class="btn btn-primary" style="margin-top:20px;">حفظ التغييرات</button>
+
+            <!-- أزرار الإجراء -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+                <button type="reset" class="btn btn-secondary">
+                    <i class="fas fa-undo"></i> إلغاء
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
+<!-- ====== أنماط إضافية (إذا لم تكن موجودة في ملفات CSS العامة) ====== -->
+<style>
+    .profile-card {
+        border: none;
+        box-shadow: var(--box-shadow, 0 4px 20px rgba(0,0,0,0.05));
+        border-radius: var(--border-radius, 12px);
+        overflow: hidden;
+    }
+    .profile-card .card-header {
+        background: var(--white-color, #fff);
+        border-bottom: 1px solid var(--gray-200, #e9ecef);
+        padding: 20px 25px;
+    }
+    .profile-card .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--gray-900, #212529);
+        display: flex;
+        align-items: center;
+    }
+    .profile-card .card-body {
+        padding: 25px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .form-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--gray-700, #495057);
+    }
+    .form-label .required {
+        color: var(--danger-color, #DC3545);
+        margin-right: 2px;
+    }
+    .form-control {
+        padding: 10px 14px;
+        border: 2px solid var(--gray-200, #e9ecef);
+        border-radius: var(--border-radius, 8px);
+        font-size: 16px;
+        font-family: 'Tajawal', sans-serif;
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        width: 100%;
+        direction: ltr;
+        text-align: right;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color, #0D6EFD);
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    .form-control:disabled {
+        background: var(--gray-100, #f8f9fa);
+        cursor: not-allowed;
+    }
+    .verification-status {
+        margin-top: 25px;
+        padding: 15px 0;
+        border-top: 1px solid var(--gray-200, #e9ecef);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .verification-status .badge {
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .verification-status .status-text {
+        color: var(--gray-600, #6c757d);
+        font-size: 14px;
+    }
+    .form-actions {
+        margin-top: 25px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    .form-actions .btn {
+        padding: 10px 28px;
+        font-weight: 600;
+        border-radius: var(--border-radius, 8px);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-family: 'Tajawal', sans-serif;
+    }
+    .form-actions .btn-primary {
+        background: var(--primary-color, #0D6EFD);
+        color: #fff;
+    }
+    .form-actions .btn-primary:hover {
+        background: var(--primary-dark, #0B5ED7);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+    }
+    .form-actions .btn-secondary {
+        background: var(--gray-200, #e9ecef);
+        color: var(--gray-700, #495057);
+    }
+    .form-actions .btn-secondary:hover {
+        background: var(--gray-300, #dee2e6);
+    }
+
+    /* ====== التجاوب مع الشاشات الصغيرة ====== */
+    @media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .profile-card .card-body {
+            padding: 20px;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* ====== دعم الوضع المظلم (اختياري) ====== */
+    @media (prefers-color-scheme: dark) {
+        .profile-card .card-header {
+            background: var(--gray-900, #212529);
+            border-bottom-color: var(--gray-700, #495057);
+        }
+        .profile-card .card-header h3 {
+            color: var(--gray-100, #f8f9fa);
+        }
+        .profile-card .card-body {
+            background: var(--gray-800, #343a40);
+        }
+        .form-control {
+            background: var(--gray-700, #495057);
+            border-color: var(--gray-600, #6c757d);
+            color: var(--gray-100, #f8f9fa);
+        }
+        .form-control:focus {
+            border-color: var(--primary-color, #0D6EFD);
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+        .form-label {
+            color: var(--gray-300, #dee2e6);
+        }
+        .verification-status {
+            border-top-color: var(--gray-700, #495057);
+        }
+        .verification-status .status-text {
+            color: var(--gray-400, #ced4da);
+        }
+        .form-actions .btn-secondary {
+            background: var(--gray-700, #495057);
+            color: var(--gray-200, #e9ecef);
+        }
+        .form-actions .btn-secondary:hover {
+            background: var(--gray-600, #6c757d);
+        }
+    }
+</style>
