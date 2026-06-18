@@ -24,7 +24,7 @@
         apiBaseUrl: '/api/v1',
         debug: true, // يتم تعطيله في الإنتاج
         authRequired: true, // هل يتطلب التطبيق تسجيل الدخول؟
-        loginUrl: '/auth/login/login.html',
+        loginUrl: '/auth/auth/login/login.html', // ✅ تم التصحيح
         defaultPage: '/pages/dashboard/index.html'
     };
 
@@ -107,8 +107,8 @@
         '/support/privacy': '/pages/support/privacy-policy.html',
         '/support/terms': '/pages/support/terms-and-conditions.html',
 
-        // المصادقة
-        '/auth/login': '/auth/login/login.html',
+        // المصادقة - ✅ تم تصحيح المسارات
+        '/auth/login': '/auth/auth/login/login.html',
         '/auth/register': '/auth/register/register.html',
         '/auth/forgot-password': '/auth/forgot-password.html',
         '/auth/reset-password': '/auth/reset-password.html',
