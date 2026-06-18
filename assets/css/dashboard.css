@@ -1,98 +1,142 @@
-/* ================================================= */
-/* TERA DASHBOARD - Layout & Toggle Logic */
-/* ================================================= */
+/* ========================================
+   dashboard.css - أنماط لوحة التحكم
+   ======================================== */
 
-/* 1. الحاوية الرئيسية (Layout) */
-.tera-wrapper {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    transition: all 0.3s ease;
+.dashboard-content {
+    padding: 25px 30px;
 }
 
-/* 2. التحكم في القائمة الجانبية (Sidebar State) */
-.tera-sidebar {
-    width: var(--sidebar-width, 280px);
-    transition: width 0.3s ease;
-    background: var(--tera-white);
-    border-left: 1px solid var(--tera-border);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* حالة الطي (عند الضغط على زر الإغلاق) */
-.tera-sidebar.collapsed {
-    width: 80px;
-}
-
-/* إخفاء النصوص عند الطي */
-.tera-sidebar.collapsed .logo-text,
-.tera-sidebar.collapsed .menu-text,
-.tera-sidebar.collapsed .arrow {
-    display: none;
-}
-
-/* 3. الهيدر (Sticky Header) */
-.tera-header {
-    height: var(--header-height, 70px);
-    background: var(--tera-white);
-    border-bottom: 1px solid var(--tera-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 30px;
-    position: sticky;
-    top: 0;
-    z-index: 900;
-}
-
-/* 4. الفوتر (Sticky Footer) */
-.tera-footer {
-    padding: 20px 30px;
-    background: var(--tera-white);
-    border-top: 1px solid var(--tera-border);
-    margin-top: auto; /* يجبر الفوتر على النزول للأسفل دائماً */
-    text-align: center;
-}
-
-/* 5. المحتوى الرئيسي (Main Content) */
-.tera-main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    width: calc(100% - var(--sidebar-width, 280px));
-    transition: width 0.3s ease;
-}
-
-/* توسيع المحتوى عند طي السايدبار */
-.tera-sidebar.collapsed + .tera-main-content {
-    width: calc(100% - 80px);
-}
-
-/* 6. استجابة الجوال (Mobile) */
-@media (max-width: 992px) {
-    .tera-sidebar {
-        position: fixed;
-        right: -280px;
-        height: 100vh;
-        z-index: 1000;
-    }
-    
-    .tera-sidebar.open {
-        right: 0;
-    }
-
-    .tera-main-content {
-        width: 100% !important;
-    }
-}
-
-/* 7. إحصائيات الداشبورد (Dashboard Grid) */
+/* ----- شبكة الإحصائيات ----- */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
-    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.stat-card {
+    background: var(--white-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--gray-200);
+    transition: transform 0.2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+.stat-icon {
+    width: 55px;
+    height: 55px;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.stat-info {
+    flex: 1;
+}
+.stat-label {
+    display: block;
+    font-size: 14px;
+    color: var(--gray-600);
+    margin-bottom: 5px;
+}
+.stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+/* ----- شبكة المحتوى (رسم بياني + نشاطات) ----- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.chart-card .card-body {
+    height: 250px;
+    position: relative;
+}
+.chart-card canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ----- قائمة النشاطات ----- */
+.activity-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+.activity-list li:last-child {
+    border-bottom: none;
+}
+.activity-list li i {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    font-size: 14px;
+    margin-top: 3px;
+}
+.activity-list li i.success { background: #D1E7DD; color: #0F5132; }
+.activity-list li i.danger { background: #F8D7DA; color: #721C24; }
+.activity-list li i.info { background: #CCE5FF; color: #084298; }
+.activity-list li i.warning { background: #FFF3CD; color: #856404; }
+
+.activity-title {
+    display: block;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+.activity-desc {
+    display: block;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+.activity-time {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-right: auto;
+    white-space: nowrap;
+}
+
+/* ----- الجداول ----- */
+.table-card .card-body {
+    overflow-x: auto;
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.table th {
+    background-color: var(--gray-100);
+    color: var(--gray-700);
+    font-weight: 700;
+    padding: 12px 15px;
+    text-align: right;
+    border-bottom: 2px solid var(--gray-300);
+}
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-700);
+}
+.table tr:hover td {
+    background-color: var(--gray-100);
 }
