@@ -1,35 +1,54 @@
-<template id="tera-stat-card-template">
-    <div class="stat-card">
-        <div class="stat-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <div class="stat-icon" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0, 194, 199, 0.1); color: var(--tera-secondary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                <i class="fa-solid fa-wallet"></i>
-            </div>
-            <div class="stat-trend" style="font-size: 0.85rem; font-weight: 700; color: #10B981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 8px;">
-                <i class="fa-solid fa-arrow-trend-up"></i> +5.2%
-            </div>
-        </div>
-        <div class="stat-details">
-            <h4 class="stat-title" style="color: var(--tera-text-light); font-size: 0.9rem; font-weight: 600; margin: 0 0 5px 0;">إجمالي المحفظة</h4>
-            <div class="stat-value" style="color: var(--tera-primary); font-size: 1.8rem; font-weight: 800; font-family: var(--font-heading);">
-                0 <span class="currency" style="font-size: 1rem; color: var(--tera-text-light);">ر.س</span>
-            </div>
-        </div>
-    </div>
-</template>
+<!-- ========================================
+     cards.html - البطاقات الإحصائية
+     ======================================== -->
+<div class="cards-wrapper" style="padding: 20px 30px;">
 
-<template id="tera-glass-panel-template">
-    <div class="glass-panel">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px;">
-            <h3 class="panel-title" style="margin: 0; color: var(--tera-primary); font-size: 1.2rem; font-weight: 800;">
-                <i class="fa-solid fa-chart-pie" style="color: var(--tera-secondary); margin-left: 8px;"></i>
-                ملخص الأداء
-            </h3>
-            <button class="btn-icon" style="background: none; border: none; color: var(--tera-text-light); cursor: pointer;"><i class="fa-solid fa-ellipsis"></i></button>
+    <!-- شبكة البطاقات -->
+    <div class="stats-grid">
+
+        <!-- بطاقة 1: إجمالي الاستثمارات -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #D1E7DD; color: #0F5132;">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">إجمالي الاستثمارات</span>
+                <span class="stat-value">$124,500</span>
+            </div>
         </div>
-        <div class="panel-body">
-            <p style="color: var(--tera-text); font-size: 0.9rem; line-height: 1.6;">
-                هذه المساحة مخصصة لعرض الرسوم البيانية أو القوائم المصغرة داخل تأثير الزجاج الضبابي (Glassmorphism).
-            </p>
+
+        <!-- بطاقة 2: الأرباح المحققة -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #CCE5FF; color: #084298;">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">الأرباح المحققة</span>
+                <span class="stat-value">$18,200</span>
+            </div>
         </div>
+
+        <!-- بطاقة 3: الاستثمارات النشطة -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #FFF3CD; color: #856404;">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">الاستثمارات النشطة</span>
+                <span class="stat-value">12</span>
+            </div>
+        </div>
+
+        <!-- بطاقة 4: قيد الانتظار -->
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #F8D7DA; color: #721C24;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">قيد الانتظار</span>
+                <span class="stat-value">3</span>
+            </div>
+        </div>
+
     </div>
-</template>
+</div>
