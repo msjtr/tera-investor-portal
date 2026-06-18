@@ -218,100 +218,56 @@
         </div>
     </main>
 
-    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح مع defer ====== -->
-    <!-- 1. core.js: الدوال الأساسية والمكتبات المساعدة -->
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح مع async/defer ====== -->
+    <!-- 1. core.js: الدوال الأساسية -->
     <script src="./assets/js/core.js" defer></script>
-    
-    <!-- 2. auth.js: التحقق من الجلسة وإدارة المصادقة (تم تحديثه لاستخدام tera_token) -->
+    <!-- 2. auth.js: المصادقة (تم تعديله لمنع التوجيه من الصفحة الرئيسية) -->
     <script src="./assets/js/auth.js" defer></script>
-    
-    <!-- 3. main.js: التهيئة العامة للتطبيق -->
+    <!-- 3. main.js: التهيئة العامة -->
     <script src="./assets/js/main.js" defer></script>
 
+    <!-- سكريبت مدمج لمنع أي توجيه تلقائي من الصفحة الرئيسية -->
     <script>
         (function() {
             'use strict';
 
-            // ================================================================
-            // تنظيف التخزين المحلي من أي مفاتيح قديمة تسبب تعارضاً
-            // ================================================================
-            // إذا كان هناك مفتاح tera_auth_token قديم، نقوم بحذفه
+            console.log('🚀 [index.html] الصفحة الرئيسية - منع التوجيه التلقائي');
+
+            // تنظيف المفاتيح القديمة (اختياري)
             if (localStorage.getItem('tera_auth_token')) {
-                console.warn('🧹 [index.html] تم العثور على مفتاح قديم tera_auth_token، يتم حذفه.');
                 localStorage.removeItem('tera_auth_token');
-                localStorage.removeItem('tera_user_data'); // حذف البيانات القديمة أيضاً
+                localStorage.removeItem('tera_user_data');
             }
 
-            // ================================================================
-            // منع التوجيه التلقائي من الصفحة الرئيسية
-            // ================================================================
-
-            // حفظ المرجع الأصلي لـ TeraAuth.checkSession
-            let originalCheckSession = null;
-
-            // انتظار تحميل auth.js بالكامل
-            function waitForAuthAndFix() {
+            // إذا تم تحميل TeraAuth بالفعل، نضمن عدم تنفيذ checkSession في الصفحة الرئيسية
+            // نستخدم setTimeout للتأكد من أن auth.js قد تم تحميله
+            function blockAutoRedirect() {
                 if (typeof TeraAuth !== 'undefined' && TeraAuth && typeof TeraAuth.checkSession === 'function') {
-                    // تم تحميل auth.js
-                    console.log('🔐 [index.html] auth.js جاهز، يتم تطبيق التصحيح على الصفحة الرئيسية');
-                    
-                    // حفظ الدالة الأصلية
-                    originalCheckSession = TeraAuth.checkSession;
-                    
-                    // استبدال الدالة مؤقتاً
+                    // استبدال الدالة مؤقتاً لمنع أي توجيه
+                    const originalCheck = TeraAuth.checkSession;
                     TeraAuth.checkSession = function() {
-                        const token = localStorage.getItem('tera_token');
                         const currentPage = window.location.pathname;
-                        
-                        // تحديد إذا كنا في الصفحة الرئيسية (أو index.html)
-                        const isLandingPage = currentPage === '/' || 
-                                              currentPage.endsWith('/index.html') ||
-                                              currentPage.endsWith('/tera-investor-portal-main/');
-                        
-                        if (isLandingPage) {
-                            // في الصفحة الرئيسية: لا نقوم بأي توجيه
-                            console.log('🏠 [index.html] الصفحة الرئيسية: تم تخطي التوجيه التلقائي');
-                            // لكن إذا كان هناك توكن، نظهر رسالة في الكونسول فقط
-                            if (token) {
-                                console.log('👤 [index.html] مستخدم مسجل (غير موجه)');
-                            }
+                        // إذا كنا في الصفحة الرئيسية (الجذر أو index.html)، لا تفعل شيئاً
+                        if (currentPage === '/' || currentPage.endsWith('/index.html') || currentPage === '') {
+                            console.log('🏠 [index.html] تجاهل checkSession في الصفحة الرئيسية');
                             return;
                         }
-                        
-                        // للصفحات الأخرى: ننفذ الدالة الأصلية
-                        if (originalCheckSession) {
-                            originalCheckSession.call(this);
-                        }
+                        // للصفحات الأخرى، استخدم الدالة الأصلية
+                        return originalCheck.call(this);
                     };
-                    
-                    // تنفيذ الدالة المعدلة للتأكد من عدم وجود توجيه
-                    TeraAuth.checkSession();
-                    
-                    // نترك الدالة المعدلة تعمل، ولا نعيدها إلى الأصلية
-                    // حتى لا يتم توجيه المستخدم في أي وقت لاحق
-                    console.log('✅ [index.html] تم تطبيق التصحيح على الصفحة الرئيسية بنجاح');
+                    console.log('✅ [index.html] تم تعطيل التوجيه التلقائي في الصفحة الرئيسية');
                 } else {
-                    // لم يتم تحميل auth.js بعد، ننتظر قليلاً
-                    console.log('⏳ [index.html] في انتظار تحميل auth.js...');
-                    setTimeout(waitForAuthAndFix, 150);
+                    // إذا لم يتم تحميل auth.js بعد، أعد المحاولة
+                    setTimeout(blockAutoRedirect, 100);
                 }
             }
 
-            // بدء الانتظار بعد تحميل DOM
+            // انتظر حتى يتم تحميل DOM ثم قم بتعطيل التوجيه
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                    console.log('📄 [index.html] DOM جاهز، بدء تهيئة الصفحة الرئيسية');
-                    waitForAuthAndFix();
-                });
+                document.addEventListener('DOMContentLoaded', blockAutoRedirect);
             } else {
-                waitForAuthAndFix();
+                blockAutoRedirect();
             }
-
-            // ================================================================
-            // رسالة ترحيب في وحدة التحكم
-            // ================================================================
-            console.log('🚀 منصة تيرا للاستثمار الرقمي - الصفحة الرئيسية');
-            console.log('📌 يمكنك تسجيل الدخول أو إنشاء حساب جديد');
 
         })();
     </script>
