@@ -3,13 +3,12 @@
  * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة المستقرة)
  * ============================================================
  * تم إصلاح نظام التوجيه (Routing) ليعتمد على المسارات المطلقة
- * للتخلص نهائياً من أخطاء 404 وتراكم المسارات.
+ * مع دعم المسارات المختصرة عبر جدول ROUTES.
  * ============================================================
  * التغييرات الرئيسية:
- * 1. إزالة دالة resolveRelativePath التي كانت تسبب تراكم ../.
- * 2. استخدام المسارات المطلقة في resolvePath و navigateTo.
- * 3. إضافة تجاهل للروابط داخل القوائم الفرعية (.has-submenu).
- * 4. تحسين معالجة تحميل الصفحات عبر fetch.
+ * 1. تحسين resolvePath للبحث في ROUTES حتى لو لم يكن التطابق تاماً.
+ * 2. إزالة إضافة /tera-investor-portal-main في navigateTo لتجنب الأخطاء.
+ * 3. التأكد من أن loadPage تستخدم المسار الكامل كما هو.
  * ============================================================
  */
 
@@ -41,16 +40,17 @@
             cleanPath = cleanPath.replace(baseFolder, '');
         }
 
+        // التأكد من أن المسار يبدأ بـ /
         if (!cleanPath.startsWith('/')) {
             cleanPath = '/' + cleanPath;
         }
 
-        // البحث في قاموس المسارات
+        // 1. البحث المباشر في قاموس المسارات
         if (ROUTES[cleanPath]) {
             return ROUTES[cleanPath];
         }
 
-        // محاولة إيجاد المسار إذا كان ينتهي بـ .html
+        // 2. إذا كان المسار ينتهي بـ .html، نحاول إيجاد تطابق في ROUTES
         if (cleanPath.endsWith('.html')) {
             const fileName = cleanPath.substring(cleanPath.lastIndexOf('/'));
             for (let key in ROUTES) {
@@ -60,6 +60,15 @@
             }
         }
 
+        // 3. إذا كان المسار مختصراً (بدون .html) نحاول البحث عن مفتاح يبدأ بنفس المسار
+        //    مثلاً: /investments/opportunities → نبحث عن مفتاح يبدأ بـ /investments/opportunities
+        for (let key in ROUTES) {
+            if (key === cleanPath || key.startsWith(cleanPath + '/') || key.startsWith(cleanPath)) {
+                return ROUTES[key];
+            }
+        }
+
+        // 4. إذا لم يتم العثور على مسار، نعيد المسار الأصلي (قد يكون الرابط صحيحاً بالفعل)
         return cleanPath;
     }
 
@@ -213,16 +222,12 @@
     function navigateTo(path, replace = false) {
         let targetPath = resolvePath(path);
         
-        // التحقق من تواجد مجلد المشروع المحلي لضمان التوجيه الصحيح
-        if (window.location.pathname.includes('/tera-investor-portal-main')) {
-            targetPath = '/tera-investor-portal-main' + targetPath;
-        }
+        // لا نضيف مجلدات إضافية، نترك المسار كما هو
+        // لأن resolvePath يعيد المسار الكامل من الجذر
 
         if (APP_CONFIG.authRequired && !isPublicPage(targetPath) && !AppState.isLoggedIn) {
             console.warn('🔒 يتطلب تسجيل الدخول');
-            window.location.href = window.location.pathname.includes('/tera-investor-portal-main') 
-                ? '/tera-investor-portal-main' + APP_CONFIG.loginUrl 
-                : APP_CONFIG.loginUrl;
+            window.location.href = APP_CONFIG.loginUrl;
             return;
         }
 
