@@ -1,89 +1,1032 @@
-/* ================================================= */
-/* TERA Investor Portal - Security & Session Hardening */
-/* إصدار مستقر متوافق مع هوية تيرا */
-/* ================================================= */
+/**
+ * ============================================================
+ * security.css - أنماط صفحات الأمان والحماية
+ * ============================================================
+ * الموقع: /assets/css/security.css
+ * 
+ * هذا الملف يحتوي على جميع الأنماط الخاصة بصفحات:
+ * - تغيير كلمة المرور (change-password)
+ * - تغيير البريد الإلكتروني (change-email)
+ * - تغيير رقم الجوال (change-mobile)
+ * - المصادقة الثنائية (two-factor-authentication)
+ * - الأجهزة المسجلة (registered-devices)
+ * - سجل الدخول (login-history)
+ * ============================================================
+ * يعتمد على: core.css (المتغيرات الأساسية)
+ * ============================================================
+ */
 
-/* كروت تنشيط الأمان الثنائي */
-.security-status-hero {
+/* ============================================================
+   1. الحاوية الرئيسية لصفحات الأمان
+   ============================================================ */
+.security-wrapper {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.security-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+/* ============================================================
+   2. بطاقة الأمان (Security Card)
+   ============================================================ */
+.security-card {
+    background: var(--white-color, #ffffff);
+    border-radius: var(--border-radius, 12px);
+    border: 1px solid var(--gray-200, #e9ecef);
+    box-shadow: var(--box-shadow, 0 2px 8px rgba(0,0,0,0.04));
+    overflow: hidden;
+    transition: all 0.25s ease;
+}
+
+.security-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.security-card .card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray-200, #e9ecef);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.security-card .card-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900, #0A2540);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.security-card .card-header h3 i {
+    color: var(--primary-color, #028090);
+    font-size: 20px;
+}
+
+.security-card .card-header .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.security-card .card-header .badge-status.active {
+    background: #D1E7DD;
+    color: #0F5132;
+}
+
+.security-card .card-header .badge-status.inactive {
+    background: #F8D7DA;
+    color: #721C24;
+}
+
+.security-card .card-header .badge-status.pending {
+    background: #FFF3CD;
+    color: #856404;
+}
+
+.security-card .card-body {
     padding: 24px;
-    background: var(--tera-white, #ffffff);
-    border: 1px solid var(--tera-border, #E2E8F0);
-    border-radius: var(--tera-radius, 16px);
-    margin-bottom: 24px;
-    box-shadow: var(--tera-shadow, 0 4px 20px rgba(10, 27, 63, 0.08));
 }
 
-.security-badge-indicator {
+/* ============================================================
+   3. عناصر الأمان (Security Items)
+   ============================================================ */
+.security-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-/* مفاتيح التبديل السريعة (Custom Switch Checkboxes) */
-.switch-control {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-}
-
-.switch-control input { opacity: 0; width: 0; height: 0; }
-
-.slider-knob {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #CBD5E1;
-    transition: 0.3s ease;
-    border-radius: 34px;
-}
-
-.slider-knob:before {
-    position: absolute;
-    content: "";
-    height: 18px; width: 18px;
-    left: 4px; bottom: 4px;
-    background-color: white;
-    transition: 0.3s ease;
-    border-radius: 50%;
-}
-
-input:checked + .slider-knob { background-color: var(--tera-secondary, #00C2C7); }
-input:checked + .slider-knob:before { transform: translateX(24px); }
-
-/* جدول سجل الأجهزة المتصلة */
-.session-device-card {
-    display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid var(--tera-border, #E2E8F0);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gray-100, #f8f9fa);
+    gap: 16px;
 }
 
-.session-device-card:last-child { border-bottom: none; }
+.security-item:last-child {
+    border-bottom: none;
+}
 
-.device-info-block {
+.security-item .item-info {
+    flex: 1;
+}
+
+.security-item .item-info .item-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--gray-800, #1e293b);
+}
+
+.security-item .item-info .item-desc {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+    margin-top: 2px;
+}
+
+.security-item .item-info .item-value {
+    font-size: 14px;
+    color: var(--gray-700, #475569);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.security-item .item-action {
+    flex-shrink: 0;
+}
+
+.security-item .item-action .btn-sm {
+    padding: 6px 18px;
+    border-radius: var(--border-radius, 6px);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.security-item .item-action .btn-sm-primary {
+    background: var(--primary-color, #028090);
+    color: #fff;
+}
+
+.security-item .item-action .btn-sm-primary:hover {
+    background: var(--primary-dark, #026b73);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 128, 144, 0.2);
+}
+
+.security-item .item-action .btn-sm-secondary {
+    background: var(--gray-200, #e9ecef);
+    color: var(--gray-700, #475569);
+}
+
+.security-item .item-action .btn-sm-secondary:hover {
+    background: var(--gray-300, #dee2e6);
+}
+
+.security-item .item-action .btn-sm-danger {
+    background: var(--danger-color, #ef4444);
+    color: #fff;
+}
+
+.security-item .item-action .btn-sm-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================================
+   4. مفتاح التبديل (Toggle Switch)
+   ============================================================ */
+.switch-wrapper {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
-.device-status-active {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #10B981; /* Success Green */
-    background: rgba(16, 185, 129, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
 }
 
-/* تنسيق إضافي لعنوان قسم الأمان */
-.security-title {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--tera-primary, #0A1B3F);
-    margin-bottom: 15px;
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gray-300, #dee2e6);
+    transition: 0.3s ease;
+    border-radius: 30px;
+}
+
+.switch .slider::before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background: var(--white-color, #ffffff);
+    transition: 0.3s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .slider {
+    background: var(--primary-color, #028090);
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+}
+
+.switch input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.switch input:focus + .slider {
+    box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.2);
+}
+
+.switch-label {
+    font-size: 14px;
+    color: var(--gray-700, #475569);
+    font-weight: 500;
+}
+
+/* ============================================================
+   5. نموذج تغيير كلمة المرور
+   ============================================================ */
+.password-form {
+    max-width: 500px;
+}
+
+.password-form .form-group {
+    margin-bottom: 18px;
+}
+
+.password-form .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--gray-700, #475569);
+    margin-bottom: 6px;
+}
+
+.password-form .form-group label .required {
+    color: var(--danger-color, #DC3545);
+    margin-right: 2px;
+}
+
+.password-form .form-group .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--gray-200, #e9ecef);
+    border-radius: var(--border-radius, 8px);
+    font-size: 16px;
+    font-family: 'Tajawal', sans-serif;
+    background: var(--white-color, #ffffff);
+    color: var(--gray-800, #1e293b);
+    transition: all 0.2s ease;
+    direction: ltr;
+    text-align: right;
+}
+
+.password-form .form-group .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color, #028090);
+    box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.08);
+}
+
+.password-form .form-group .form-control.is-valid {
+    border-color: var(--success-color, #10b981);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+}
+
+.password-form .form-group .form-control.is-invalid {
+    border-color: var(--danger-color, #ef4444);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+}
+
+.password-form .form-group .form-feedback {
+    font-size: 13px;
+    margin-top: 4px;
+    min-height: 18px;
+}
+
+.password-form .form-group .form-feedback.error {
+    color: var(--danger-color, #ef4444);
+}
+
+.password-form .form-group .form-feedback.success {
+    color: var(--success-color, #10b981);
+}
+
+.password-form .form-group .password-hint {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+    margin-top: 4px;
+}
+
+.password-form .form-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.password-form .form-actions .btn {
+    padding: 10px 28px;
+    font-weight: 600;
+    border-radius: var(--border-radius, 8px);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-family: 'Tajawal', sans-serif;
+}
+
+.password-form .form-actions .btn-primary {
+    background: var(--primary-color, #028090);
+    color: #fff;
+}
+
+.password-form .form-actions .btn-primary:hover {
+    background: var(--primary-dark, #026b73);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(2, 128, 144, 0.2);
+}
+
+.password-form .form-actions .btn-secondary {
+    background: var(--gray-200, #e9ecef);
+    color: var(--gray-700, #475569);
+}
+
+.password-form .form-actions .btn-secondary:hover {
+    background: var(--gray-300, #dee2e6);
+}
+
+/* ============================================================
+   6. سجل الدخول (Login History)
+   ============================================================ */
+.login-history-table-wrapper {
+    overflow-x: auto;
+}
+
+.login-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 550px;
+}
+
+.login-history-table thead {
+    background: var(--gray-100, #f8f9fa);
+}
+
+.login-history-table th {
+    padding: 10px 16px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--gray-700, #475569);
+    border-bottom: 2px solid var(--gray-300, #dee2e6);
+    white-space: nowrap;
+}
+
+.login-history-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--gray-200, #e9ecef);
+    color: var(--gray-800, #1e293b);
+    vertical-align: middle;
+}
+
+.login-history-table tbody tr:hover {
+    background: var(--gray-50, #fafafa);
+}
+
+.login-history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.login-history-table .device-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.login-history-table .device-badge.current {
+    background: #D1E7DD;
+    color: #0F5132;
+}
+
+.login-history-table .device-badge.known {
+    background: #CCE5FF;
+    color: #084298;
+}
+
+.login-history-table .device-badge.unknown {
+    background: #FFF3CD;
+    color: #856404;
+}
+
+.login-history-table .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.login-history-table .status-badge.success {
+    background: #D1E7DD;
+    color: #0F5132;
+}
+
+.login-history-table .status-badge.failed {
+    background: #F8D7DA;
+    color: #721C24;
+}
+
+.login-history-table .ip-address {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--gray-600, #64748b);
+}
+
+.login-history-table .login-time {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+}
+
+/* ============================================================
+   7. الأجهزة المسجلة (Registered Devices)
+   ============================================================ */
+.device-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--gray-50, #fafafa);
+    border-radius: var(--border-radius, 10px);
+    padding: 16px 20px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    transition: all 0.2s ease;
+}
+
+.device-card:hover {
+    border-color: var(--primary-color, #028090);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.device-card .device-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.device-card .device-icon.desktop {
+    background: rgba(13, 110, 253, 0.10);
+    color: #0D6EFD;
+}
+
+.device-card .device-icon.mobile {
+    background: rgba(2, 128, 144, 0.10);
+    color: var(--primary-color, #028090);
+}
+
+.device-card .device-icon.tablet {
+    background: rgba(245, 158, 11, 0.10);
+    color: #f59e0b;
+}
+
+.device-card .device-info {
+    flex: 1;
+}
+
+.device-card .device-info .device-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--gray-800, #1e293b);
+}
+
+.device-card .device-info .device-details {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+}
+
+.device-card .device-info .device-details .dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gray-400, #94a3b8);
+    margin: 0 6px;
+    vertical-align: middle;
+}
+
+.device-card .device-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.device-card .device-status.current {
+    background: #D1E7DD;
+    color: #0F5132;
+}
+
+.device-card .device-status.current i {
+    font-size: 12px;
+}
+
+.device-card .device-status.trusted {
+    background: #CCE5FF;
+    color: #084298;
+}
+
+.device-card .device-actions {
+    flex-shrink: 0;
+}
+
+.device-card .device-actions .btn-sm {
+    padding: 4px 14px;
+    border-radius: var(--border-radius, 6px);
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.device-card .device-actions .btn-sm-danger {
+    background: var(--danger-color, #ef4444);
+    color: #fff;
+}
+
+.device-card .device-actions .btn-sm-danger:hover {
+    background: #dc2626;
+}
+
+/* ============================================================
+   8. رموز الاسترداد (Recovery Codes)
+   ============================================================ */
+.recovery-codes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: var(--gray-50, #fafafa);
+    border-radius: var(--border-radius, 8px);
+    padding: 16px 20px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    direction: ltr;
+    text-align: left;
+    margin: 12px 0 16px;
+    color: var(--gray-800, #1e293b);
+}
+
+.recovery-codes .code-item {
+    padding: 6px 8px;
+    background: var(--white-color, #ffffff);
+    border-radius: 4px;
+    border: 1px solid var(--gray-200, #e9ecef);
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.recovery-codes .code-item.used {
+    opacity: 0.5;
+    text-decoration: line-through;
+    background: var(--gray-100, #f8f9fa);
+}
+
+/* ============================================================
+   9. مستوى الأمان (Security Level)
+   ============================================================ */
+.security-level {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--gray-50, #fafafa);
+    border-radius: var(--border-radius, 10px);
+    border: 1px solid var(--gray-200, #e9ecef);
+}
+
+.security-level .level-meter {
+    flex: 1;
+    height: 8px;
+    background: var(--gray-200, #e9ecef);
+    border-radius: 20px;
+    overflow: hidden;
+    max-width: 300px;
+}
+
+.security-level .level-meter .level-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.6s ease;
+}
+
+.security-level .level-meter .level-fill.low {
+    width: 33%;
+    background: var(--danger-color, #ef4444);
+}
+
+.security-level .level-meter .level-fill.medium {
+    width: 66%;
+    background: var(--warning-color, #f59e0b);
+}
+
+.security-level .level-meter .level-fill.high {
+    width: 100%;
+    background: var(--success-color, #10b981);
+}
+
+.security-level .level-label {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--gray-800, #1e293b);
+    flex-shrink: 0;
+}
+
+.security-level .level-label.low {
+    color: var(--danger-color, #ef4444);
+}
+
+.security-level .level-label.medium {
+    color: var(--warning-color, #f59e0b);
+}
+
+.security-level .level-label.high {
+    color: var(--success-color, #10b981);
+}
+
+.security-level .level-text {
+    font-size: 13px;
+    color: var(--gray-500, #94a3b8);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   10. التوافق مع الشاشات الصغيرة (Responsive)
+   ============================================================ */
+@media (max-width: 768px) {
+    .security-card .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 14px 18px;
+    }
+
+    .security-card .card-body {
+        padding: 18px;
+    }
+
+    .security-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 0;
+    }
+
+    .security-item .item-action {
+        width: 100%;
+    }
+
+    .security-item .item-action .btn-sm {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .switch-wrapper {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .device-card {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .device-card .device-actions {
+        width: 100%;
+    }
+
+    .device-card .device-actions .btn-sm {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .recovery-codes {
+        grid-template-columns: 1fr 1fr;
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+
+    .security-level {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .security-level .level-meter {
+        max-width: 100%;
+        width: 100%;
+        order: 3;
+    }
+
+    .login-history-table {
+        min-width: 500px;
+    }
+
+    .password-form {
+        max-width: 100%;
+    }
+
+    .password-form .form-actions {
+        flex-direction: column;
+    }
+
+    .password-form .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .security-card .card-header h3 {
+        font-size: 16px;
+    }
+
+    .security-card .card-header h3 i {
+        font-size: 18px;
+    }
+
+    .security-item .item-info .item-title {
+        font-size: 14px;
+    }
+
+    .security-item .item-info .item-desc {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .security-card .card-body {
+        padding: 14px;
+    }
+
+    .security-card .card-header {
+        padding: 12px 14px;
+    }
+
+    .recovery-codes {
+        grid-template-columns: 1fr;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    .recovery-codes .code-item {
+        padding: 4px 8px;
+    }
+
+    .security-level .level-label {
+        font-size: 14px;
+    }
+
+    .security-level .level-text {
+        font-size: 12px;
+    }
+
+    .login-history-table {
+        min-width: 420px;
+        font-size: 13px;
+    }
+
+    .login-history-table th,
+    .login-history-table td {
+        padding: 8px 12px;
+    }
+
+    .device-card .device-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    .device-card .device-info .device-name {
+        font-size: 14px;
+    }
+
+    .device-card .device-info .device-details {
+        font-size: 12px;
+    }
+
+    .switch {
+        width: 42px;
+        height: 24px;
+    }
+
+    .switch .slider::before {
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+    }
+
+    .switch input:checked + .slider::before {
+        transform: translateX(18px);
+    }
+
+    .switch-label {
+        font-size: 13px;
+    }
+
+    .password-form .form-group .form-control {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    .password-form .form-group label {
+        font-size: 13px;
+    }
+}
+
+/* ============================================================
+   11. دعم الوضع المظلم (Dark Mode)
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    .security-card {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-700, #495057);
+    }
+
+    .security-card .card-header {
+        border-bottom-color: var(--gray-700, #495057);
+    }
+
+    .security-card .card-header h3 {
+        color: var(--gray-100, #f8f9fa);
+    }
+
+    .security-item {
+        border-bottom-color: var(--gray-700, #495057);
+    }
+
+    .security-item .item-info .item-title {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .security-item .item-info .item-desc {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .security-item .item-info .item-value {
+        color: var(--gray-300, #dee2e6);
+    }
+
+    .security-item .item-action .btn-sm-secondary {
+        background: var(--gray-700, #495057);
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .security-item .item-action .btn-sm-secondary:hover {
+        background: var(--gray-600, #6c757d);
+    }
+
+    .switch .slider {
+        background: var(--gray-600, #6c757d);
+    }
+
+    .switch input:checked + .slider {
+        background: var(--primary-color, #14b8a6);
+    }
+
+    .switch-label {
+        color: var(--gray-300, #dee2e6);
+    }
+
+    .password-form .form-group label {
+        color: var(--gray-300, #dee2e6);
+    }
+
+    .password-form .form-group .form-control {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+        color: var(--gray-100, #f8f9fa);
+    }
+
+    .password-form .form-group .form-control:focus {
+        border-color: var(--primary-color, #14b8a6);
+        box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+    }
+
+    .password-form .form-actions .btn-secondary {
+        background: var(--gray-700, #495057);
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .password-form .form-actions .btn-secondary:hover {
+        background: var(--gray-600, #6c757d);
+    }
+
+    .login-history-table thead {
+        background: var(--gray-700, #495057);
+    }
+
+    .login-history-table th {
+        color: var(--gray-200, #e9ecef);
+        border-bottom-color: var(--gray-600, #6c757d);
+    }
+
+    .login-history-table td {
+        color: var(--gray-300, #dee2e6);
+        border-bottom-color: var(--gray-700, #495057);
+    }
+
+    .login-history-table tbody tr:hover {
+        background: var(--gray-700, #495057);
+    }
+
+    .login-history-table .ip-address {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .login-history-table .login-time {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .device-card {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+    }
+
+    .device-card .device-info .device-name {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .device-card .device-info .device-details {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .recovery-codes {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .recovery-codes .code-item {
+        background: var(--gray-800, #2d3a4f);
+        border-color: var(--gray-600, #6c757d);
+    }
+
+    .recovery-codes .code-item.used {
+        opacity: 0.4;
+        background: var(--gray-600, #6c757d);
+    }
+
+    .security-level {
+        background: var(--gray-700, #495057);
+        border-color: var(--gray-600, #6c757d);
+    }
+
+    .security-level .level-label {
+        color: var(--gray-200, #e9ecef);
+    }
+
+    .security-level .level-text {
+        color: var(--gray-400, #ced4da);
+    }
+
+    .security-level .level-meter {
+        background: var(--gray-600, #6c757d);
+    }
 }
