@@ -1,55 +1,11 @@
-<section class="reports-overview">
-
-    <h1>التقارير والإحصائيات</h1>
-
-    <div class="report-cards">
-
-        <div class="card">
-            <h3>إجمالي الاستثمارات</h3>
-            <span>150,000 ريال</span>
-        </div>
-
-        <div class="card">
-            <h3>إجمالي الأرباح</h3>
-            <span>12,500 ريال</span>
-        </div>
-
-        <div class="card">
-            <h3>الأرباح المسحوبة</h3>
-            <span>8,000 ريال</span>
-        </div>
-
-        <div class="card">
-            <h3>الاستثمارات النشطة</h3>
-            <span>8</span>
-        </div>
-
+<div class="card">
+    <div class="card-header"><h3>عنوان التقرير</h3>
+        <div><button class="btn btn-primary"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+        <button class="btn"><i class="fas fa-file-excel"></i> تصدير Excel</button></div>
     </div>
-
-</section>
-
-<section class="charts">
-
-    <div class="chart-card">
-        <h3>نمو المحفظة</h3>
-        <canvas id="portfolioGrowth"></canvas>
+    <div class="card-body">
+        <!-- رسم بياني أو جدول -->
+        <canvas id="reportChart" height="200"></canvas>
+        <table class="table">...</table>
     </div>
-
-    <div class="chart-card">
-        <h3>الأرباح الشهرية</h3>
-        <canvas id="monthlyProfits"></canvas>
-    </div>
-
-</section>
-
-<div class="export-actions">
-
-    <button>
-        تصدير PDF
-    </button>
-
-    <button>
-        تصدير Excel
-    </button>
-
 </div>
