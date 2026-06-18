@@ -1,78 +1,11 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>تذاكر الدعم | تيرا</title>
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/dashboard.css">
-</head>
-<body class="dashboard-body">
-
-    <div id="loader-container"></div>
-    <div id="sidebar-container"></div>
-
-    <main class="tera-main-content">
-        <div id="header-container"></div>
-
-        <section class="tickets-wrapper">
-            <div class="glass-panel" style="padding: 30px; margin-bottom: 25px;">
-                <div class="section-header" style="margin-bottom: 20px;">
-                    <h2>فتح تذكرة دعم جديدة</h2>
-                </div>
-                <form class="form-row">
-                    <div class="form-group" style="flex: 2;">
-                        <input type="text" class="tera-input-field" placeholder="موضوع التذكرة...">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <select class="tera-input-field">
-                            <option>مشكلة تقنية</option>
-                            <option>استفسار مالي</option>
-                            <option>اقتراح</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" style="height: 48px; width: 150px;">إرسال</button>
-                </form>
-            </div>
-
-            <div class="glass-panel" style="padding: 30px;">
-                <div class="section-header">
-                    <h2>سجل التذاكر</h2>
-                </div>
-                <table class="tera-table">
-                    <thead>
-                        <tr>
-                            <th>رقم التذكرة</th>
-                            <th>الموضوع</th>
-                            <th>القسم</th>
-                            <th>الحالة</th>
-                            <th>آخر تحديث</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#TER-9921</td>
-                            <td>مشكلة في تسجيل الدخول</td>
-                            <td>تقني</td>
-                            <td><span class="status-badge success">مغلقة</span></td>
-                            <td>12 يونيو 2026</td>
-                        </tr>
-                        <tr>
-                            <td>#TER-9945</td>
-                            <td>استفسار عن توزيعات الأرباح</td>
-                            <td>مالي</td>
-                            <td><span class="status-badge" style="background: #FFFBEB; color: #F59E0B; border: 1px solid #FDE68A;">قيد المعالجة</span></td>
-                            <td>15 يونيو 2026</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <div id="footer-container"></div>
-    </main>
-
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/app.js"></script>
-</body>
-</html>
+<div class="card">
+    <div class="card-header"><h3>التذاكر</h3><button class="btn btn-primary">إنشاء تذكرة</button></div>
+    <div class="card-body">
+        <table class="table">
+            <thead><tr><th>#</th><th>الموضوع</th><th>الحالة</th><th>التاريخ</th><th></th></tr></thead>
+            <tbody>
+                <tr><td>#T-101</td><td>مشكلة في الدفع</td><td><span class="badge status-pending">مفتوحة</span></td><td>2026-06-10</td><td><button class="btn btn-sm btn-primary">عرض</button></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
