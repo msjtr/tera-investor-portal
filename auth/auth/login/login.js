@@ -8,6 +8,7 @@
  * 3. التواصل مع TeraAuth لتسجيل الدخول
  * 4. إظهار وإخفاء كلمة المرور
  * 5. إدارة شاشة التحميل والرسائل
+ * 6. منع الحلقات اللانهائية (إعادة التوجيه المتكرر)
  * ============================================================
  * يعتمد على:
  * - TeraAuth (المعرفة في assets/js/auth.js)
@@ -19,7 +20,25 @@
     'use strict';
 
     // ============================================================
-    // 1. مراجع عناصر DOM
+    // 1. التأكد من أن الصفحة في وضع المصادقة (منع التوجيه المزدوج)
+    // ============================================================
+
+    // منع تنفيذ checkSession بشكل تلقائي عند تحميل الصفحة
+    // (سيتم التعامل معه يدوياً بعد تسجيل الدخول)
+    if (window.TeraAuth && typeof window.TeraAuth.checkSession === 'function') {
+        const originalCheck = window.TeraAuth.checkSession;
+        // استبدال الدالة مؤقتاً لمنع التوجيه التلقائي
+        window.TeraAuth.checkSession = function() {
+            // في صفحة تسجيل الدخول، لا نقوم بالتوجيه
+            console.log('🔒 [login.js] تم تعطيل checkSession التلقائي في صفحة تسجيل الدخول');
+            // لكن نحتفظ بالدالة الأصلية للاستخدام لاحقاً
+        };
+        // حفظ الدالة الأصلية لاستعادتها بعد تسجيل الدخول
+        window._originalCheckSession = originalCheck;
+    }
+
+    // ============================================================
+    // 2. مراجع عناصر DOM
     // ============================================================
 
     const loginForm = document.getElementById('teraLoginForm');
@@ -34,7 +53,7 @@
     const rememberMeCheckbox = document.getElementById('remember_me');
 
     // ============================================================
-    // 2. التحقق من وجود العناصر الأساسية
+    // 3. التحقق من وجود العناصر الأساسية
     // ============================================================
 
     if (!loginForm || !identifierInput || !passwordInput || !submitBtn) {
@@ -43,7 +62,7 @@
     }
 
     // ============================================================
-    // 3. دوال مساعدة
+    // 4. دوال مساعدة
     // ============================================================
 
     /**
@@ -67,8 +86,8 @@
         if (errorBox) {
             errorBox.style.display = 'none';
         }
-        identifierInput.classList.remove('is-invalid-active');
-        passwordInput.classList.remove('is-invalid-active');
+        identifierInput.classList.remove('is-invalid-active', 'is-valid-active');
+        passwordInput.classList.remove('is-invalid-active', 'is-valid-active');
         // إزالة رسائل الخطأ الصغيرة
         const idErr = document.getElementById('identifier-error');
         const passErr = document.getElementById('password-error');
@@ -86,13 +105,19 @@
             if (progressBar) {
                 let progress = 0;
                 progressBar.style.width = '0%';
+                // إزالة أي مؤقت سابق
+                if (loaderOverlay.dataset.progressInterval) {
+                    clearInterval(parseInt(loaderOverlay.dataset.progressInterval));
+                }
                 const interval = setInterval(() => {
                     progress += Math.random() * 15 + 5;
                     if (progress > 95) progress = 95;
                     progressBar.style.width = progress + '%';
-                    if (progress >= 95) clearInterval(interval);
+                    if (progress >= 95) {
+                        clearInterval(interval);
+                        loaderOverlay.dataset.progressInterval = '';
+                    }
                 }, 400);
-                // حفظ معرف المؤقت لإيقافه لاحقاً
                 loaderOverlay.dataset.progressInterval = interval;
             }
         }
@@ -110,7 +135,7 @@
             // إيقاف مؤقت التقدم
             const interval = loaderOverlay.dataset.progressInterval;
             if (interval) {
-                clearInterval(interval);
+                clearInterval(parseInt(interval));
                 delete loaderOverlay.dataset.progressInterval;
             }
             if (progressBar) {
@@ -118,7 +143,7 @@
             }
         }
         submitBtn.disabled = false;
-        submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+        submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
     }
 
     /**
@@ -130,7 +155,7 @@
     }
 
     // ============================================================
-    // 4. تبديل إظهار كلمة المرور
+    // 5. تبديل إظهار كلمة المرور
     // ============================================================
 
     if (showPasswordCheckbox) {
@@ -140,30 +165,25 @@
     }
 
     // ============================================================
-    // 5. تنظيف المدخلات من الأحرف العربية (اختياري)
+    // 6. تنظيف المدخلات وإزالة الأخطاء أثناء الكتابة
     // ============================================================
 
     identifierInput.addEventListener('input', function() {
-        // منع الأحرف العربية في اسم المستخدم (يمكن تعديل حسب الحاجة)
-        // this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
-        // إخفاء الخطأ أثناء الكتابة
-        if (this.classList.contains('is-invalid-active')) {
-            this.classList.remove('is-invalid-active');
-            const err = document.getElementById('identifier-error');
-            if (err) err.textContent = '';
-        }
+        this.classList.remove('is-invalid-active');
+        const err = document.getElementById('identifier-error');
+        if (err) err.textContent = '';
+        if (errorBox) errorBox.style.display = 'none';
     });
 
     passwordInput.addEventListener('input', function() {
-        if (this.classList.contains('is-invalid-active')) {
-            this.classList.remove('is-invalid-active');
-            const err = document.getElementById('password-error');
-            if (err) err.textContent = '';
-        }
+        this.classList.remove('is-invalid-active');
+        const err = document.getElementById('password-error');
+        if (err) err.textContent = '';
+        if (errorBox) errorBox.style.display = 'none';
     });
 
     // ============================================================
-    // 6. معالجة تقديم النموذج
+    // 7. معالجة تقديم النموذج (المنطق الرئيسي)
     // ============================================================
 
     loginForm.addEventListener('submit', function(event) {
@@ -196,7 +216,10 @@
 
         if (!isValid) return;
 
-        // إذا كان TeraAuth متاحاً، نستخدمه
+        // ============================================================
+        // 8. محاولة تسجيل الدخول عبر TeraAuth
+        // ============================================================
+
         if (window.TeraAuth && typeof TeraAuth.login === 'function') {
             // إظهار التحميل
             showLoader();
@@ -206,33 +229,52 @@
                 .then(function(user) {
                     // نجاح تسجيل الدخول
                     console.log('✅ [login.js] تم تسجيل الدخول بنجاح', user);
-                    // إخفاء التحميل وعرض شاشة الترحيب (اختياري)
-                    // نترك شاشة التحميل ظاهرة لثانية ونصف ثم نوجه
-                    setTimeout(function() {
-                        // إخفاء التحميل (سيتم التوجيه بواسطة checkSession)
-                        // ولكن نتركها حتى يتم التوجيه
-                        // التوجيه سيتم بواسطة TeraAuth.checkSession() في auth.js
-                        // لكن قد نحتاج للتوجيه يدوياً في حال عدم وجود checkSession
-                        if (typeof TeraAuth.checkSession === 'function') {
-                            // ندع auth.js يقوم بالتوجيه
-                            TeraAuth.checkSession();
-                        } else {
-                            // توجيه يدوي
-                            window.location.href = '/pages/dashboard/index.html';
+                    
+                    // إذا كان المستخدم يريد التذكر، نخزن معلومات إضافية
+                    if (remember) {
+                        try {
+                            localStorage.setItem('tera_remember', 'true');
+                            localStorage.setItem('tera_identifier', identifier);
+                        } catch (e) {
+                            console.warn('⚠️ [login.js] لا يمكن تخزين تذكرني:', e);
                         }
-                    }, 1500);
+                    } else {
+                        localStorage.removeItem('tera_remember');
+                        localStorage.removeItem('tera_identifier');
+                    }
+
+                    // إكمال شريط التقدم
+                    if (progressBar) progressBar.style.width = '100%';
+
+                    // استعادة دالة checkSession الأصلية (إذا كانت موجودة)
+                    if (window._originalCheckSession) {
+                        window.TeraAuth.checkSession = window._originalCheckSession;
+                        console.log('🔓 [login.js] تم استعادة checkSession الأصلية');
+                    }
+
+                    // التوجيه إلى لوحة التحكم (تجنب الحلقات)
+                    setTimeout(function() {
+                        // استخدام replace لتجنب إضافة الصفحة في التاريخ
+                        window.location.replace('/pages/dashboard/index.html');
+                    }, 600);
                 })
                 .catch(function(err) {
                     // فشل تسجيل الدخول
                     console.error('❌ [login.js] فشل تسجيل الدخول:', err);
                     hideLoader();
                     showError(err.message || 'فشل تسجيل الدخول. تأكد من بياناتك وحاول مرة أخرى.');
+                    
+                    // تنظيف أي بيانات جلسة خاطئة
+                    localStorage.removeItem('tera_token');
+                    localStorage.removeItem('tera_user');
                 });
         } else {
-            // حل احتياطي إذا لم يتم تحميل TeraAuth
-            console.warn('⚠️ [login.js] TeraAuth غير متاح، استخدام محاكاة بسيطة');
+            // ============================================================
+            // 9. حل احتياطي (إذا لم يتم تحميل TeraAuth)
+            // ============================================================
+            console.warn('⚠️ [login.js] TeraAuth غير متاح، استخدام المحاكاة المحلية');
 
-            // محاكاة بيانات المستخدم (للتجربة)
+            // بيانات اختبارية (للتجربة)
             const mockUsers = [
                 { username: '106', email: 'investor106@tera.sa', mobile: '506060606', password: '123' },
                 { username: 'admin', email: 'admin@tera.sa', mobile: '500000000', password: 'admin123' }
@@ -245,23 +287,24 @@
             );
 
             if (matchedUser && matchedUser.password === password) {
-                // تخزين بيانات الجلسة
+                // تخزين بيانات الجلسة بالمفاتيح الموحدة
                 const userData = {
                     id: 1,
                     name: 'مستثمر تجريبي',
                     email: matchedUser.email,
                     role: 'investor',
-                    verified: true
+                    verified: true,
+                    loginTime: new Date().toISOString()
                 };
                 localStorage.setItem('tera_token', 'mock-token-' + Date.now());
                 localStorage.setItem('tera_user', JSON.stringify(userData));
 
                 // إظهار التحميل ثم التوجيه
                 showLoader();
+                if (progressBar) progressBar.style.width = '100%';
                 setTimeout(function() {
-                    // التوجيه إلى لوحة التحكم
-                    window.location.href = '/pages/dashboard/index.html';
-                }, 1500);
+                    window.location.replace('/pages/dashboard/index.html');
+                }, 800);
             } else {
                 showError('البيانات المدخلة غير متطابقة مع سجلات المستثمرين.');
                 identifierInput.classList.add('is-invalid-active');
@@ -271,14 +314,7 @@
     });
 
     // ============================================================
-    // 7. تسجيل الخروج التلقائي إذا كان المستخدم مسجلاً (للتجربة)
-    // ============================================================
-
-    // إذا كان المستخدم مسجلاً بالفعل، يمكن توجيهه للوحة التحكم فوراً
-    // ولكن هذا يتم التعامل معه بواسطة auth.js في DOMContentLoaded
-
-    // ============================================================
-    // 8. إضافة دالة لتوسيع العبارات الإبداعية (اختياري)
+    // 10. العبارات الإبداعية (لشاشة التحميل)
     // ============================================================
 
     const creativeQuotes = [
@@ -290,15 +326,21 @@
 
     /**
      * بدء عرض العبارات الإبداعية في شاشة التحميل
-     * (يمكن استدعاؤها من login إذا أردت)
      */
     function startCreativeQuotesCycle() {
         const quoteEl = document.getElementById('creativeQuoteText');
         if (!quoteEl) return;
+        
         let index = 0;
         quoteEl.textContent = creativeQuotes[0];
         quoteEl.style.opacity = '1';
-        setInterval(() => {
+        
+        // إزالة أي مؤقت سابق
+        if (window._quoteInterval) {
+            clearInterval(window._quoteInterval);
+        }
+        
+        window._quoteInterval = setInterval(() => {
             index = (index + 1) % creativeQuotes.length;
             quoteEl.style.opacity = '0';
             setTimeout(() => {
@@ -308,8 +350,7 @@
         }, 1200);
     }
 
-    // إذا كانت شاشة التحميل موجودة، نبدأ العبارات عند ظهورها (يمكن استدعاؤها من showLoader)
-    // نضيف استماع لظهور شاشة التحميل
+    // مراقبة ظهور شاشة التحميل لبدء العبارات
     if (loaderOverlay) {
         const observer = new MutationObserver(function() {
             if (loaderOverlay.style.display === 'flex') {
@@ -320,10 +361,27 @@
     }
 
     // ============================================================
-    // 9. رسالة في وحدة التحكم للتأكد من تحميل الملف
+    // 11. تنظيف عند مغادرة الصفحة
+    // ============================================================
+
+    window.addEventListener('beforeunload', function() {
+        // تنظيف المؤقتات
+        if (window._quoteInterval) {
+            clearInterval(window._quoteInterval);
+        }
+        const interval = loaderOverlay?.dataset?.progressInterval;
+        if (interval) {
+            clearInterval(parseInt(interval));
+        }
+    });
+
+    // ============================================================
+    // 12. رسالة في وحدة التحكم للتأكد من تحميل الملف
     // ============================================================
 
     console.log('✅ [login.js] تم تحميل سكريبت تسجيل الدخول بنجاح');
-    console.log('📌 [login.js] استخدم النموذج لتسجيل الدخول إلى منصة تيرا');
+    console.log('📌 [login.js] البيانات التجريبية:');
+    console.log('   - اسم المستخدم: 106');
+    console.log('   - كلمة المرور: 123');
 
 })();
