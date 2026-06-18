@@ -1,24 +1,71 @@
-<nav class="tera-breadcrumb" aria-label="Breadcrumb">
-    <ol class="breadcrumb-list">
-        <li class="breadcrumb-item">
-            <a href="../dashboard/index.html"><i class="fa-solid fa-house"></i></a>
-        </li>
-        <li class="breadcrumb-separator"><i class="fa-solid fa-chevron-left"></i></li>
-        <li class="breadcrumb-item active" id="breadcrumb-current">نظرة عامة</li>
-    </ol>
-</nav>
-
 <style>
-    .tera-breadcrumb { margin-bottom: 20px; }
-    .breadcrumb-list { list-style: none; display: flex; align-items: center; gap: 10px; }
-    .breadcrumb-item a { color: #64748b; text-decoration: none; font-size: 14px; transition: 0.3s; }
-    .breadcrumb-item a:hover { color: var(--tera-teal); }
-    .breadcrumb-separator { color: #cbd5e1; font-size: 12px; }
-    .breadcrumb-item.active { color: var(--tera-navy); font-weight: 700; font-size: 14px; }
+    .tera-breadcrumb {
+        width: 100%;
+        padding: 10px 0;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        background: transparent;
+    }
+
+    .breadcrumb-list {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: var(--font-body, 'Cairo', sans-serif);
+    }
+
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .breadcrumb-link {
+        color: var(--tera-text-light, #64748B);
+        text-decoration: none;
+        transition: var(--transition, all 0.3s ease);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .breadcrumb-link:hover {
+        color: var(--tera-secondary, #00C2C7);
+    }
+
+    .breadcrumb-separator {
+        color: #CBD5E1; /* لون رمادي فاتح جداً للفاصل */
+        font-size: 0.7rem;
+    }
+
+    .breadcrumb-item.active {
+        color: var(--tera-primary, #0A1B3F);
+        font-weight: 800;
+        pointer-events: none; /* منع النقر على الصفحة الحالية */
+    }
+
+    .breadcrumb-icon {
+        font-size: 0.9rem;
+    }
 </style>
 
-<script>
-    // تحديث النص في الـ breadcrumb تلقائياً بناءً على عنوان الصفحة
-    const pageTitle = document.title.split('|')[0].trim();
-    document.getElementById('breadcrumb-current').textContent = pageTitle;
-</script>
+<nav class="tera-breadcrumb" aria-label="breadcrumb">
+    <ol class="breadcrumb-list" id="dynamicBreadcrumb">
+        <li class="breadcrumb-item">
+            <a href="/pages/dashboard/index.html" class="breadcrumb-link" id="homeBreadcrumbLink">
+                <i class="fa-solid fa-house breadcrumb-icon"></i> الرئيسية
+            </a>
+        </li>
+        <i class="fa-solid fa-chevron-left breadcrumb-separator"></i>
+        <li class="breadcrumb-item active" aria-current="page" id="currentBreadcrumbPage">
+            لوحة التحكم
+        </li>
+    </ol>
+</nav>
