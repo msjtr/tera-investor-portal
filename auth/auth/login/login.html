@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا بوابة المستثمر | تسجيل الدخول الذكي</title>
     
-    <!-- أيقونات الموقع -->
+    <!-- أيقونات الموقع (استخدام SVG لتجنب 404) -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
     
@@ -15,17 +15,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- ملفات CSS الأساسية -->
+    <!-- ملفات CSS الأساسية (مسارات مطلقة) -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
-    <link rel="stylesheet" href="login.css">
     
     <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- أنماط مدمجة لصفحة تسجيل الدخول (لحل مشكلة login.css 404) -->
     <style>
-        /* أنماط إضافية لضمان التوافق مع الهيكل الجديد */
+        /* ============================================================
+           أنماط صفحة تسجيل الدخول (مدمجة لتجنب 404)
+           ============================================================ */
         .auth-layout {
             display: flex;
             justify-content: center;
@@ -33,48 +35,69 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
             padding: 20px;
+            direction: rtl;
         }
+
         .auth-container {
-            background: rgba(255,255,255,0.96);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 24px;
-            padding: 50px 40px;
+            padding: 50px 40px 40px;
             max-width: 480px;
             width: 100%;
-            box-shadow: 0 25px 60px rgba(10,37,64,0.08);
-            border: 1px solid rgba(226,232,240,0.8);
+            box-shadow: 0 25px 60px rgba(10, 37, 64, 0.08);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
+
         .auth-card-header {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .brand-logo-box {
             margin-bottom: 20px;
         }
+
         .brand-logo-box img {
             width: 80px;
             height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
         }
+
+        .brand-logo-box img:hover {
+            transform: scale(1.05);
+        }
+
         .portal-title {
             font-size: 24px;
             font-weight: 800;
             color: #0A2540;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
+
         .page-subtitle {
             font-size: 18px;
             font-weight: 700;
             color: #028090;
             margin-bottom: 10px;
         }
+
         .welcome-text {
             font-size: 14px;
             color: #64748b;
-            line-height: 1.6;
+            line-height: 1.7;
+            max-width: 360px;
+            margin: 0 auto;
         }
+
         .form-field-group {
             margin-bottom: 20px;
         }
+
         .field-label {
             display: block;
             font-weight: 600;
@@ -82,25 +105,35 @@
             color: #0A2540;
             font-size: 14px;
         }
-        .required {
+
+        .field-label .required {
             color: #DC3545;
+            margin-right: 2px;
         }
+
         .field-label-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .forgot-pass-link {
             font-size: 13px;
             color: #028090;
             text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
         }
+
         .forgot-pass-link:hover {
             text-decoration: underline;
+            color: #026b73;
         }
+
         .input-wrapper {
             position: relative;
         }
+
         .form-input-control {
             width: 100%;
             padding: 12px 16px;
@@ -108,17 +141,50 @@
             border-radius: 12px;
             font-size: 16px;
             font-family: 'Tajawal', sans-serif;
-            transition: border-color 0.2s;
-            background: #fff;
+            transition: all 0.25s ease;
+            background: #ffffff;
+            color: #1e293b;
+            direction: ltr;
+            text-align: right;
         }
+
         .form-input-control:focus {
             outline: none;
             border-color: #028090;
-            box-shadow: 0 0 0 4px rgba(2,128,144,0.1);
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
         }
+
+        .form-input-control::placeholder {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .form-input-control.is-valid-active {
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+        }
+
+        .form-input-control.is-invalid-active {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+        }
+
+        .error-feedback-msg {
+            font-size: 13px;
+            color: #ef4444;
+            margin-top: 6px;
+            min-height: 20px;
+        }
+
         .checkbox-options-container {
             margin-top: 10px;
         }
+
+        .remember-me-box {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
         .checkbox-toggle-label {
             display: flex;
             align-items: center;
@@ -126,16 +192,102 @@
             font-size: 14px;
             color: #475569;
             cursor: pointer;
+            user-select: none;
         }
+
         .checkbox-toggle-label input[type="checkbox"] {
             width: 18px;
             height: 18px;
             accent-color: #028090;
             cursor: pointer;
+            flex-shrink: 0;
         }
-        .remember-me-box {
-            margin-top: 10px;
+
+        .checkbox-toggle-label:hover {
+            color: #0A2540;
         }
+
+        .form-actions-block {
+            margin-top: 25px;
+        }
+
+        .btn-submit-login {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35);
+        }
+
+        .btn-submit-login:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+
+        .btn-submit-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-submit-login .fa-spinner {
+            font-size: 18px;
+        }
+
+        .bottom-routing-footer-links {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+
+        .bottom-routing-footer-links p {
+            margin-bottom: 8px;
+        }
+
+        .bottom-routing-footer-links p:last-child {
+            margin-bottom: 0;
+        }
+
+        .routing-link {
+            color: #028090;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .routing-link:hover {
+            text-decoration: underline;
+            color: #026b73;
+        }
+
+        .routing-link-secondary {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .routing-link-secondary:hover {
+            text-decoration: underline;
+            color: #1e293b;
+        }
+
         .error-summary-box {
             background: #FEE2E2;
             border: 1px solid #FCA5A5;
@@ -146,82 +298,46 @@
             gap: 12px;
             color: #991B1B;
             margin-bottom: 20px;
-        }
-        .error-box-icon {
-            font-size: 20px;
-        }
-        .form-actions-block {
-            margin-top: 25px;
-        }
-        .btn-submit-login {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-submit-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(2,128,144,0.35);
-        }
-        .btn-submit-login:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .bottom-routing-footer-links {
-            margin-top: 25px;
-            text-align: center;
-            font-size: 14px;
-            color: #64748b;
-        }
-        .bottom-routing-footer-links p {
-            margin-bottom: 8px;
-        }
-        .routing-link {
-            color: #028090;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .routing-link:hover {
-            text-decoration: underline;
-        }
-        .routing-link-secondary {
-            color: #475569;
-            text-decoration: none;
-        }
-        .routing-link-secondary:hover {
-            text-decoration: underline;
+            animation: shakeError 0.4s ease;
         }
 
-        /* مؤشر التحميل */
+        .error-box-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        #errorBoxText {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .tera-loader-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10,37,64,0.85);
+            background: rgba(10, 37, 64, 0.88);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 9999;
+            animation: fadeInOverlay 0.5s ease;
         }
+
         .loader-content-card {
-            background: #fff;
+            background: #ffffff;
             border-radius: 24px;
-            padding: 40px 50px;
+            padding: 40px 50px 45px;
             max-width: 420px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+            animation: scaleUp 0.5s ease;
         }
+
         .spinning-infinity-ring {
             width: 60px;
             height: 60px;
@@ -231,20 +347,26 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+
         .loader-primary-heading {
             font-size: 20px;
             font-weight: 700;
             color: #0A2540;
             margin-bottom: 10px;
         }
+
         .creative-motivational-text {
-            font-size: 14px;
+            font-size: 15px;
             color: #64748b;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+            line-height: 1.6;
         }
+
         .loading-progress-track {
             width: 100%;
             height: 6px;
@@ -252,12 +374,78 @@
             border-radius: 10px;
             overflow: hidden;
         }
+
         .progress-fill-bar {
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, #028090, #0A2540);
             border-radius: 10px;
-            transition: width 0.5s ease;
+            transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 576px) {
+            .auth-container {
+                padding: 30px 20px 25px;
+                border-radius: 18px;
+            }
+            .portal-title { font-size: 20px; }
+            .page-subtitle { font-size: 16px; }
+            .welcome-text { font-size: 13px; }
+            .form-input-control { padding: 10px 14px; font-size: 15px; }
+            .btn-submit-login { padding: 12px 16px; font-size: 16px; }
+            .loader-content-card { padding: 30px 20px 35px; }
+            .loader-primary-heading { font-size: 18px; }
+            .brand-logo-box img { width: 65px; }
+            .field-label-flex { flex-direction: column; align-items: flex-start; gap: 4px; }
+        }
+
+        @media (max-width: 400px) {
+            .auth-container { padding: 20px 15px 20px; }
+            .bottom-routing-footer-links { font-size: 13px; }
+            .creative-motivational-text { font-size: 14px; min-height: 50px; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .auth-layout { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+            .auth-container { background: rgba(30, 41, 59, 0.96); border-color: rgba(71, 85, 105, 0.5); }
+            .portal-title { color: #f1f5f9; }
+            .welcome-text { color: #94a3b8; }
+            .field-label { color: #e2e8f0; }
+            .form-input-control { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+            .form-input-control:focus { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15); }
+            .form-input-control::placeholder { color: #64748b; }
+            .checkbox-toggle-label { color: #94a3b8; }
+            .checkbox-toggle-label:hover { color: #e2e8f0; }
+            .bottom-routing-footer-links { border-top-color: #334155; color: #94a3b8; }
+            .routing-link-secondary { color: #94a3b8; }
+            .routing-link-secondary:hover { color: #e2e8f0; }
+            .error-summary-box { background: rgba(239, 68, 68, 0.15); border-color: #f87171; color: #fca5a5; }
+            .loader-content-card { background: #1e293b; }
+            .loader-primary-heading { color: #f1f5f9; }
+            .creative-motivational-text { color: #94a3b8; }
+            .spinning-infinity-ring { border-color: #334155; border-top-color: #14b8a6; }
+            .loading-progress-track { background: #334155; }
+            .btn-submit-login { background: linear-gradient(135deg, #0f172a 0%, #14b8a6 100%); }
         }
     </style>
 </head>
@@ -286,7 +474,7 @@
                     <div class="input-wrapper">
                         <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم، البريد، أو الجوال" autocomplete="username" required>
                     </div>
-                    <div class="error-feedback-msg" id="identifier-error" style="color:#DC3545;font-size:13px;margin-top:5px;"></div>
+                    <div class="error-feedback-msg" id="identifier-error"></div>
                 </div>
 
                 <!-- حقل كلمة المرور -->
@@ -298,12 +486,12 @@
                     <div class="input-wrapper">
                         <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور الخاصة بك" autocomplete="current-password" required>
                     </div>
-                    <div class="checkbox-options-container mt-3">
+                    <div class="checkbox-options-container">
                         <label class="checkbox-toggle-label">
                             <input type="checkbox" id="show_login_password"> إظهار كلمة المرور
                         </label>
                     </div>
-                    <div class="error-feedback-msg" id="password-error" style="color:#DC3545;font-size:13px;margin-top:5px;"></div>
+                    <div class="error-feedback-msg" id="password-error"></div>
                 </div>
 
                 <!-- تذكرني -->
@@ -340,7 +528,7 @@
         </div>
     </div>
 
-    <!-- ====== الملفات المشتركة ====== -->
+    <!-- ====== الملفات المشتركة (مسارات مطلقة) ====== -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/main.js"></script>
@@ -348,25 +536,18 @@
     <!-- سكريبت تسجيل الدخول الخاص -->
     <script src="login.js"></script>
 
+    <!-- سكريبت إضافي للتكامل مع TeraAuth -->
     <script>
         (function() {
             'use strict';
 
-            // ============================================================
-            // 1. إظهار/إخفاء كلمة المرور
-            // ============================================================
+            // إظهار/إخفاء كلمة المرور
             document.getElementById('show_login_password').addEventListener('change', function() {
-                const passwordInput = document.getElementById('login_password');
-                if (this.checked) {
-                    passwordInput.type = 'text';
-                } else {
-                    passwordInput.type = 'password';
-                }
+                const passInput = document.getElementById('login_password');
+                passInput.type = this.checked ? 'text' : 'password';
             });
 
-            // ============================================================
-            // 2. معالجة تقديم النموذج (login)
-            // ============================================================
+            // معالجة تقديم النموذج
             const loginForm = document.getElementById('teraLoginForm');
             const submitBtn = document.getElementById('loginSubmitBtn');
             const errorBox = document.getElementById('loginErrorBox');
@@ -377,14 +558,13 @@
             loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
 
-                // reset errors
+                // إعادة تعيين الأخطاء
                 errorBox.style.display = 'none';
                 document.getElementById('identifier-error').textContent = '';
                 document.getElementById('password-error').textContent = '';
 
                 const identifier = document.getElementById('login_identifier').value.trim();
                 const password = document.getElementById('login_password').value.trim();
-                const remember = document.getElementById('remember_me').checked;
 
                 // التحقق من المدخلات
                 let isValid = true;
@@ -398,7 +578,7 @@
                 }
                 if (!isValid) return;
 
-                // تعطيل الزر أثناء المعالجة
+                // تعطيل الزر وإظهار التحميل
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
 
@@ -414,7 +594,7 @@
                     progressBar.style.width = progress + '%';
                 }, 300);
 
-                // محاكاة طلب تسجيل الدخول (استخدام TeraAuth.login)
+                // استدعاء TeraAuth.login
                 if (window.TeraAuth && typeof TeraAuth.login === 'function') {
                     TeraAuth.login(identifier, password)
                         .then(function(user) {
@@ -422,14 +602,13 @@
                             progressBar.style.width = '100%';
                             
                             setTimeout(() => {
-                                // إخفاء التحميل
                                 loaderScreen.style.display = 'none';
                                 submitBtn.disabled = false;
                                 submitBtn.innerHTML = 'تسجيل الدخول الآمن';
 
-                                // توجيه المستخدم للوحة التحكم
+                                // توجيه عبر TeraAuth
                                 if (typeof TeraAuth.checkSession === 'function') {
-                                    TeraAuth.checkSession(); // سيقوم بالتوجيه
+                                    TeraAuth.checkSession();
                                 } else {
                                     window.location.href = '/pages/dashboard/index.html';
                                 }
@@ -441,12 +620,11 @@
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = 'تسجيل الدخول الآمن';
                             
-                            // عرض الخطأ
                             errorBox.style.display = 'flex';
                             errorText.textContent = err.message || 'فشل تسجيل الدخول. تأكد من بياناتك وحاول مرة أخرى.';
                         });
                 } else {
-                    // إذا لم يكن TeraAuth متاحاً (حل احتياطي)
+                    // حل احتياطي إذا لم يتم تحميل TeraAuth
                     console.warn('⚠️ TeraAuth غير متاح، استخدام محاكاة بسيطة');
                     setTimeout(() => {
                         clearInterval(progressInterval);
@@ -456,7 +634,6 @@
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = 'تسجيل الدخول الآمن';
                             
-                            // تخزين محاكي
                             localStorage.setItem('tera_token', 'mock-token');
                             localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: identifier }));
                             window.location.href = '/pages/dashboard/index.html';
@@ -465,14 +642,8 @@
                 }
             });
 
-            // ============================================================
-            // 3. منع التوجيه التلقائي إذا كان المستخدم مسجلاً بالفعل
-            //    (سيتم التعامل معه بواسطة auth.js)
-            // ============================================================
             console.log('🔐 صفحة تسجيل الدخول جاهزة');
-
         })();
     </script>
-
 </body>
 </html>
