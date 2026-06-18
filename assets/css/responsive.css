@@ -1,98 +1,1479 @@
-/* ========================================
-   responsive.css - التجاوب مع جميع الأجهزة
-   ======================================== */
+/**
+ * ============================================================
+ * responsive.css - أنماط التجاوب مع جميع أحجام الشاشات
+ * ============================================================
+ * الموقع: /assets/css/responsive.css
+ * 
+ * هذا الملف يحتوي على جميع قواعد التجاوب (Media Queries)
+ * لتكييف واجهة المستخدم مع جميع أحجام الشاشات:
+ * - الهواتف (صغيرة جداً - أقل من 576px)
+ * - الهواتف الكبيرة (576px - 768px)
+ * - الأجهزة اللوحية (768px - 992px)
+ * - شاشات الحواسيب الصغيرة (992px - 1200px)
+ * - شاشات الحواسيب الكبيرة (أكبر من 1200px)
+ * ============================================================
+ * يعتمد على: core.css (المتغيرات الأساسية)
+ * ============================================================
+ */
 
-/* ----- شاشات كبيرة (أقل من 1200px) ----- */
-@media (max-width: 1199px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
+/* ============================================================
+   1. متغيرات التجاوب (مشتقة من core.css)
+   ============================================================ */
+:root {
+    --breakpoint-xs: 576px;
+    --breakpoint-sm: 768px;
+    --breakpoint-md: 992px;
+    --breakpoint-lg: 1200px;
+    --breakpoint-xl: 1400px;
 }
 
-/* ----- شاشات متوسطة (أقل من 992px) ----- */
-@media (max-width: 991px) {
+/* ============================================================
+   2. القائمة الجانبية (Sidebar)
+   ============================================================ */
+
+/* الأجهزة اللوحية والشاشات المتوسطة (أقل من 992px) */
+@media (max-width: 991.98px) {
     .sidebar {
-        transform: translateX(100%);
+        position: fixed;
+        top: 0;
+        right: -280px;
         width: 280px;
+        height: 100vh;
+        z-index: 1050;
+        transition: right 0.3s ease;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
     }
-    .sidebar-open {
-        transform: translateX(0);
+
+    .sidebar.sidebar-open {
+        right: 0;
     }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1040;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+    /* زر تبديل القائمة */
     .sidebar-toggle {
-        display: block !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        color: var(--gray-700, #475569);
+        cursor: pointer;
+        border-radius: var(--border-radius, 8px);
+        transition: background 0.2s;
     }
+
+    .sidebar-toggle:hover {
+        background: var(--gray-100, #f8f9fa);
+    }
+
     .main-content {
-        margin-right: 0;
+        margin-right: 0 !important;
     }
-    .header {
-        padding: 0 20px;
-    }
-    .dashboard-content {
-        padding: 20px;
-    }
+
+    /* إخفاء اسم المستخدم في الهيدر */
     .user-profile .user-name {
         display: none;
     }
 }
 
-/* ----- شاشات صغيرة (أقل من 768px) ----- */
-@media (max-width: 767px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-    .stat-card {
-        padding: 15px;
-    }
-    .stat-value {
-        font-size: 20px;
-    }
-    .stat-icon {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
-    }
-    .footer-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    .footer-links {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    .page-title {
-        font-size: 18px;
-    }
-}
+/* ============================================================
+   3. الهيدر (Header)
+   ============================================================ */
 
-/* ----- شاشات صغيرة جداً (أقل من 576px) ----- */
-@media (max-width: 575px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
+/* الهواتف والأجهزة الصغيرة (أقل من 768px) */
+@media (max-width: 767.98px) {
     .header {
         padding: 0 15px;
         height: 60px;
     }
-    .sidebar {
-        width: 260px;
+
+    .header .page-title {
+        font-size: 18px;
+        font-weight: 700;
     }
+
+    .header .notifications .badge {
+        font-size: 9px;
+        padding: 1px 6px;
+    }
+
+    .user-profile img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .user-profile .user-name {
+        display: none;
+    }
+}
+
+/* ============================================================
+   4. المحتوى الرئيسي (Main Content)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .main-content {
+        margin-right: 0;
+        padding-top: 0;
+    }
+
     .dashboard-content {
         padding: 15px;
     }
-    .card {
+
+    .app-wrapper {
+        flex-direction: column;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .dashboard-content {
+        padding: 12px;
+    }
+
+    .breadcrumb-wrapper {
+        padding: 10px 15px 0 15px !important;
+    }
+
+    .breadcrumb-wrapper .breadcrumb {
+        font-size: 12px;
+        flex-wrap: wrap;
+    }
+}
+
+/* ============================================================
+   5. البطاقات والإحصائيات (Cards & Stats)
+   ============================================================ */
+
+/* أجهزة لوحية (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 20px;
+    }
+
+    .stat-card .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 14px 16px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 18px;
+    }
+
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 13px;
+    }
+}
+
+/* ============================================================
+   6. شبكة لوحة التحكم (Dashboard Grid)
+   ============================================================ */
+
+/* شاشات متوسطة وأصغر (أقل من 1200px) */
+@media (max-width: 1199.98px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .dashboard-grid .card {
         padding: 15px;
     }
-    .card-header {
+
+    .dashboard-grid .card .card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
+
+    .dashboard-grid .card .card-header h3 {
+        font-size: 16px;
+    }
+}
+
+/* ============================================================
+   7. الجداول (Tables)
+   ============================================================ */
+
+/* أجهزة لوحية وأصغر (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .table-card .card-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        font-size: 13px;
+        min-width: 600px;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 12px;
+        white-space: nowrap;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .table {
+        font-size: 12px;
+        min-width: 500px;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px 10px;
+    }
+
+    .table .badge {
+        font-size: 10px;
+        padding: 2px 10px;
+    }
+
+    .table .btn-sm {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+}
+
+/* ============================================================
+   8. قائمة الأنشطة (Activity List)
+   ============================================================ */
+
+/* الهواتف (أقل من 768px) */
+@media (max-width: 767.98px) {
     .activity-list li {
         flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 0;
     }
-    .activity-time {
-        margin-right: 50px;
+
+    .activity-list li i {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .activity-list li .activity-title {
+        font-size: 14px;
+    }
+
+    .activity-list li .activity-desc {
+        font-size: 12px;
+    }
+
+    .activity-list li .activity-time {
+        margin-right: 38px;
+        font-size: 11px;
         width: 100%;
+    }
+}
+
+/* ============================================================
+   9. الفوتر (Footer)
+   ============================================================ */
+
+/* الهواتف والأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .footer {
+        padding: 15px;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .footer-content span {
+        font-size: 13px;
+    }
+
+    .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .footer-links a {
+        font-size: 13px;
+    }
+}
+
+/* ============================================================
+   10. الرسوم البيانية (Charts)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .chart-card .card-body {
+        height: 200px !important;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .chart-card .card-body {
+        height: 160px !important;
+    }
+}
+
+/* ============================================================
+   11. صفحات المصادقة (Auth Pages)
+   ============================================================ */
+
+/* أجهزة لوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .auth-container {
+        padding: 30px 20px !important;
+        max-width: 400px !important;
+    }
+
+    .auth-container .portal-title {
+        font-size: 20px;
+    }
+
+    .auth-container .page-subtitle {
+        font-size: 16px;
+    }
+
+    .auth-container .welcome-text {
+        font-size: 13px;
+    }
+
+    .auth-container .form-input-control {
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    .auth-container .btn-submit-login {
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+
+    .auth-container .brand-logo-box img {
+        width: 65px;
+    }
+
+    .auth-container .field-label-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .auth-container .bottom-routing-footer-links {
+        font-size: 13px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .auth-layout {
+        padding: 10px;
+    }
+
+    .auth-container {
+        padding: 20px 15px !important;
+        border-radius: 16px !important;
+        max-width: 100% !important;
+    }
+
+    .auth-container .portal-title {
+        font-size: 18px;
+    }
+
+    .auth-container .page-subtitle {
+        font-size: 14px;
+    }
+
+    .auth-container .welcome-text {
+        font-size: 12px;
+    }
+
+    .auth-container .form-input-control {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .auth-container .btn-submit-login {
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    .auth-container .brand-logo-box img {
+        width: 55px;
+    }
+
+    .auth-container .auth-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .auth-container .auth-divider {
+        font-size: 12px;
+        margin: 16px 0;
+    }
+
+    .auth-container .bottom-routing-footer-links {
+        font-size: 12px;
+        padding-top: 14px;
+        margin-top: 16px;
+    }
+
+    .auth-error-box {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    /* شاشة التحميل */
+    .loader-content-card {
+        padding: 25px 18px !important;
+    }
+
+    .loader-content-card .loader-primary-heading {
+        font-size: 16px;
+    }
+
+    .loader-content-card .creative-motivational-text {
+        font-size: 13px;
+        min-height: 40px;
+    }
+
+    .loader-content-card .spinning-infinity-ring {
+        width: 45px;
+        height: 45px;
+        border-width: 5px;
+    }
+}
+
+/* ============================================================
+   12. صفحات المحفظة (Portfolio Pages)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .balance-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+    }
+
+    .balance-card {
+        padding: 16px 18px;
+    }
+
+    .balance-card .card-value {
+        font-size: 20px;
+    }
+
+    .balance-card .card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .portfolio-distribution {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .profit-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+    }
+
+    .profit-stat-card {
+        padding: 14px 16px;
+    }
+
+    .profit-stat-card .stat-value {
+        font-size: 18px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .balance-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+
+    .profit-stats {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+    }
+
+    .withdraw-form {
+        max-width: 100% !important;
+    }
+
+    .withdraw-form .withdraw-summary .summary-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        padding: 6px 0;
+    }
+
+    .withdraw-form .btn-submit-withdraw {
+        font-size: 15px;
+        padding: 12px;
+    }
+
+    .statement-filters {
+        padding: 14px 16px;
+    }
+
+    .statement-filters .filter-group input,
+    .statement-filters .filter-group select {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .statement-filters .filter-actions .btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}
+
+/* ============================================================
+   13. صفحات الاستثمارات (Investments Pages)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .opportunities-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 18px;
+    }
+}
+
+/* الهواتف (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .opportunities-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .opportunity-card {
+        padding: 16px 18px;
+    }
+
+    .opportunity-card .card-header .opp-title {
+        font-size: 16px;
+    }
+
+    .opportunity-card .opp-details-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px 16px;
+    }
+
+    .opportunity-card .opp-details-grid .detail-item .value {
+        font-size: 14px;
+    }
+
+    .opportunity-card .card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .opportunity-card .card-footer .opp-actions {
+        justify-content: center;
+    }
+
+    .filter-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px;
+    }
+
+    .filter-actions {
+        grid-column: span 2 !important;
+        flex-wrap: wrap;
+    }
+
+    .filter-actions .btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px 14px;
+    }
+
+    /* تفاصيل الاستثمار */
+    .investment-detail-section .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .investment-detail-section .detail-header h2 {
+        font-size: 20px;
+    }
+
+    .indicators-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px;
+    }
+
+    .indicator-item {
+        padding: 12px 14px;
+    }
+
+    .indicator-item .indicator-value {
+        font-size: 18px;
+    }
+
+    .participation-box .participation-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px;
+    }
+
+    .participation-box .participation-grid .part-item .part-value {
+        font-size: 16px;
+    }
+
+    .payment-methods {
+        flex-direction: column;
+    }
+
+    .payment-method {
+        min-width: unset;
+    }
+
+    .btn-confirm-investment {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 30px;
+        font-size: 16px;
+    }
+
+    .guarantees-list {
+        gap: 8px;
+    }
+
+    .guarantee-tag {
+        font-size: 13px;
+        padding: 4px 12px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .filter-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .filter-actions {
+        grid-column: span 1 !important;
+    }
+
+    .opportunity-card .opp-details-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .opportunity-card .card-footer .opp-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .indicators-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .participation-box .participation-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .schedule-table {
+        min-width: 400px;
+    }
+}
+
+/* ============================================================
+   14. صفحات التقارير (Reports Pages)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .reports-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px;
+    }
+
+    .reports-list {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px;
+    }
+}
+
+/* الهواتف (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .reports-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+
+    .reports-list {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+
+    .report-card {
+        padding: 16px 18px;
+    }
+
+    .report-card .card-value {
+        font-size: 20px;
+    }
+
+    .report-item {
+        padding: 14px 16px;
+    }
+
+    .report-item .report-info .report-name {
+        font-size: 14px;
+    }
+
+    .report-filters {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 16px;
+    }
+
+    .report-filters .filter-group input,
+    .report-filters .filter-group select {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .report-filters .filter-actions {
+        flex-wrap: wrap;
+    }
+
+    .report-filters .filter-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .chart-container .chart-body {
+        height: 200px !important;
+    }
+
+    .report-summary {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .report-summary .summary-item .summary-value {
+        font-size: 18px;
+    }
+
+    .export-actions {
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .export-actions .btn-export {
+        padding: 8px 16px;
+        font-size: 13px;
+        flex: 1;
+        justify-content: center;
+        min-width: 80px;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .report-summary {
+        grid-template-columns: 1fr !important;
+    }
+
+    .report-card .card-value {
+        font-size: 18px;
+    }
+
+    .chart-container .chart-body {
+        height: 160px !important;
+    }
+
+    .chart-container .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .report-table {
+        min-width: 450px;
+    }
+}
+
+/* ============================================================
+   15. صفحات الملف الشخصي (Profile Pages)
+   ============================================================ */
+
+/* أجهزة لوحية (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .profile-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+    }
+
+    .profile-sidebar .profile-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .profile-sidebar .profile-nav li {
+        border-bottom: none;
+        border-left: 1px solid var(--gray-100, #f8f9fa);
+    }
+
+    .profile-sidebar .profile-nav li:last-child {
+        border-left: none;
+    }
+
+    .profile-sidebar .profile-nav li a {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .profile-header .profile-avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    .profile-header .profile-info .profile-name {
+        font-size: 18px;
+    }
+
+    .profile-form .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0;
+    }
+
+    .profile-form .form-group {
+        margin-bottom: 14px;
+    }
+
+    .profile-card .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 18px;
+    }
+
+    .profile-card .card-header .card-actions {
+        width: 100%;
+    }
+
+    .profile-card .card-header .card-actions .btn-sm {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .profile-card .card-body {
+        padding: 18px;
+    }
+
+    .verification-status {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .attachments-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 14px;
+    }
+
+    .bank-account-card .bank-details .detail-item {
+        display: block;
+        margin-left: 0;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .profile-sidebar .profile-nav {
+        flex-direction: column;
+    }
+
+    .profile-sidebar .profile-nav li {
+        border-left: none;
+        border-bottom: 1px solid var(--gray-100, #f8f9fa);
+    }
+
+    .profile-sidebar .profile-nav li:last-child {
+        border-bottom: none;
+    }
+
+    .profile-sidebar .profile-nav li a {
+        padding: 12px 16px;
+        font-size: 14px;
+        justify-content: center;
+    }
+
+    .attachments-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    .profile-form .form-actions {
+        flex-direction: column;
+    }
+
+    .profile-form .form-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .upload-zone {
+        padding: 25px 16px;
+    }
+
+    .upload-zone .upload-icon {
+        font-size: 36px;
+    }
+
+    .upload-zone .upload-text {
+        font-size: 14px;
+    }
+
+    .upload-zone .upload-hint {
+        font-size: 12px;
+    }
+
+    .profile-card .card-body {
+        padding: 14px;
+    }
+
+    .profile-card .card-header {
+        padding: 12px 14px;
+    }
+
+    .profile-card .card-header h3 {
+        font-size: 16px;
+    }
+
+    .bank-account-card {
+        padding: 14px 16px;
+    }
+}
+
+/* ============================================================
+   16. صفحات الأمان (Security Pages)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .security-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .security-card .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .switch-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .security-card .card-body .security-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px 0;
+    }
+}
+
+/* ============================================================
+   17. صفحات الدعم (Support Pages)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .faq-section-title {
+        font-size: 18px !important;
+        margin: 20px 0 12px !important;
+    }
+
+    .faq-question {
+        padding: 14px 18px !important;
+        font-size: 15px !important;
+    }
+
+    .faq-answer {
+        padding: 0 18px !important;
+        font-size: 14px !important;
+    }
+
+    .faq-item.open .faq-answer {
+        padding: 14px 18px !important;
+    }
+
+    .faq-search-box input {
+        padding: 12px 16px 12px 40px !important;
+        font-size: 14px !important;
+    }
+
+    .faq-footer-cta {
+        padding: 20px !important;
+    }
+
+    .faq-footer-cta h3 {
+        font-size: 18px !important;
+    }
+
+    .help-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 14px;
+    }
+
+    .help-card {
+        padding: 16px !important;
+    }
+
+    .help-card .help-icon {
+        font-size: 28px !important;
+    }
+
+    .help-card .help-title {
+        font-size: 15px !important;
+    }
+
+    .ticket-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ticket-filters select,
+    .ticket-filters input {
+        width: 100% !important;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .help-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .faq-question {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+    }
+
+    .faq-answer {
+        padding: 0 14px !important;
+        font-size: 13px !important;
+    }
+
+    .faq-item.open .faq-answer {
+        padding: 12px 14px !important;
+    }
+
+    .faq-section-title {
+        font-size: 16px !important;
+        padding-right: 10px !important;
+        border-right-width: 3px !important;
+    }
+
+    .faq-search-box input {
+        padding: 10px 14px 10px 36px !important;
+        font-size: 13px !important;
+    }
+
+    .faq-search-box i {
+        font-size: 15px !important;
+        left: 14px !important;
+    }
+
+    .faq-footer-cta {
+        padding: 16px !important;
+    }
+
+    .faq-footer-cta h3 {
+        font-size: 16px !important;
+    }
+
+    .faq-footer-cta .btn {
+        font-size: 14px !important;
+        padding: 10px 20px !important;
+    }
+
+    .ticket-card .ticket-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .ticket-card .ticket-actions {
+        flex-wrap: wrap;
+    }
+}
+
+/* ============================================================
+   18. المكونات العامة (General Components)
+   ============================================================ */
+
+/* الأجهزة اللوحية (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .card {
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding-bottom: 12px !important;
+    }
+
+    .card-header h3 {
+        font-size: 16px !important;
+    }
+
+    .card-header .view-all {
+        font-size: 13px !important;
+    }
+
+    .card-subtitle {
+        font-size: 12px !important;
+    }
+
+    .modal-content {
+        padding: 20px !important;
+        margin: 10px !important;
+    }
+
+    .modal-content h3 {
+        font-size: 18px !important;
+    }
+
+    .modal-content .btn {
+        font-size: 14px !important;
+        padding: 10px 20px !important;
+    }
+}
+
+/* الهواتف (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .card {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    .card-header {
+        padding-bottom: 8px !important;
+    }
+
+    .card-header h3 {
+        font-size: 15px !important;
+    }
+
+    .btn {
+        font-size: 14px !important;
+        padding: 8px 16px !important;
+    }
+
+    .btn-sm {
+        font-size: 12px !important;
+        padding: 4px 10px !important;
+    }
+
+    .badge {
+        font-size: 11px !important;
+        padding: 3px 10px !important;
+    }
+
+    .form-control {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+
+    .form-label {
+        font-size: 13px !important;
+    }
+
+    .progress {
+        height: 6px !important;
+    }
+
+    .progress .progress-bar {
+        height: 6px !important;
+    }
+
+    .breadcrumb {
+        font-size: 12px !important;
+    }
+}
+
+/* ============================================================
+   19. الطباعة (Print)
+   ============================================================ */
+@media print {
+    .sidebar,
+    .header,
+    .footer,
+    .sidebar-toggle,
+    .notifications,
+    .user-profile,
+    .breadcrumb-wrapper,
+    .filter-section,
+    .export-actions,
+    .form-actions,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        break-inside: avoid;
+    }
+
+    .table {
+        font-size: 12px !important;
+    }
+
+    .chart-container .chart-body {
+        height: 200px !important;
+    }
+
+    .stat-card,
+    .balance-card,
+    .report-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .stats-grid,
+    .balance-grid,
+    .reports-grid {
+        gap: 10px !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .dashboard-content {
+        padding: 0 !important;
+    }
+
+    .auth-layout,
+    .auth-container {
+        background: #fff !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
+/* ============================================================
+   20. التوجيه (Orientation)
+   ============================================================ */
+
+/* شاشات ذات اتجاه أفقي على الأجهزة المحمولة */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        width: 240px;
+        right: -240px;
+    }
+
+    .sidebar.sidebar-open {
+        right: 0;
+    }
+
+    .auth-container {
+        max-width: 400px !important;
+        padding: 30px 25px !important;
+    }
+
+    .auth-container .brand-logo-box img {
+        width: 55px;
+    }
+
+    .auth-container .portal-title {
+        font-size: 18px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 12px;
+    }
+
+    .stat-card .stat-value {
+        font-size: 16px;
+    }
+
+    .stat-card .stat-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+
+/* شاشات ذات اتجاه عمودي على الأجهزة المحمولة */
+@media (max-width: 576px) and (orientation: portrait) {
+    .auth-container {
+        padding: 20px 15px !important;
+    }
+
+    .stat-card .stat-value {
+        font-size: 16px;
+    }
+
+    .opportunity-card .opp-details-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+/* ============================================================
+   21. شاشات عالية الدقة (Retina)
+   ============================================================ */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .brand-logo-box img,
+    .brand-logo img,
+    .auth-logo img {
+        image-rendering: auto;
+    }
+
+    .user-profile img {
+        image-rendering: auto;
+    }
+}
+
+/* ============================================================
+   22. دعم الوضع المظلم (Dark Mode) - تحسينات إضافية للتجاوب
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+    /* تحسينات التباين في الوضع المظلم */
+    @media (max-width: 991.98px) {
+        .sidebar {
+            background: var(--gray-900, #0f172a) !important;
+            border-left-color: var(--gray-700, #495057) !important;
+        }
+
+        .sidebar .sidebar-brand .logo-text {
+            color: var(--gray-100, #f8f9fa) !important;
+        }
+
+        .sidebar .sidebar-nav .nav-item > a {
+            color: var(--gray-300, #dee2e6) !important;
+        }
+
+        .sidebar .sidebar-nav .nav-item > a:hover {
+            background: var(--gray-800, #1e293b) !important;
+            color: var(--gray-100, #f8f9fa) !important;
+        }
+
+        .sidebar .sidebar-nav .nav-item.active > a {
+            background: rgba(20, 184, 166, 0.10) !important;
+            color: var(--primary-color, #14b8a6) !important;
+        }
+
+        .sidebar .sidebar-footer {
+            border-top-color: var(--gray-700, #495057) !important;
+        }
+
+        .sidebar-overlay {
+            background: rgba(0, 0, 0, 0.6) !important;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--gray-700, #495057) !important;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .header {
+            background: var(--gray-900, #0f172a) !important;
+            border-bottom-color: var(--gray-700, #495057) !important;
+        }
+
+        .header .page-title {
+            color: var(--gray-100, #f8f9fa) !important;
+        }
     }
 }
