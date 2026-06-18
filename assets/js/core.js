@@ -6,8 +6,11 @@
  * جميع صفحات المنصة، مثل:
  * - التحكم في القائمة الجانبية (Sidebar)
  * - التحكم في القوائم الفرعية (Submenu)
- * - دوال مساعدة عامة
+ * - دوال مساعدة عامة (إضافة/إزالة كلاسات)
  * - معالجة أحداث شائعة
+ * ============================================================
+ * تم تحديثه ليتوافق مع هيكل المشروع الحالي
+ * ويستخدم المفاتيح الموحدة (tera_token, tera_user)
  * ============================================================
  */
 
@@ -71,13 +74,15 @@
      * @param {string} inputId - معرف حقل الإدخال الذي يحتوي على نص البحث
      * @param {string} itemsSelector - محدد CSS لعناصر التصفية
      * @param {string} textSelector - محدد CSS للنص المراد البحث فيه داخل كل عنصر
+     * @param {string} openClass - الكلاس الذي يضاف للعنصر المطابق لفتحه (اختياري)
      */
-    function filterItems(inputId, itemsSelector, textSelector) {
+    function filterItems(inputId, itemsSelector, textSelector, openClass) {
         const input = document.getElementById(inputId);
         if (!input) return;
 
         const filter = input.value.toLowerCase().trim();
         const items = document.querySelectorAll(itemsSelector);
+        const openClassToUse = openClass || 'open';
 
         if (filter === '') {
             items.forEach(function(item) {
@@ -89,20 +94,17 @@
         items.forEach(function(item) {
             const textElement = item.querySelector(textSelector);
             const text = textElement ? textElement.textContent.toLowerCase() : '';
-            if (text.includes(filter)) {
-                item.style.display = '';
-                // إذا كان العنصر قابلاً للطي، افتحه تلقائياً عند التطابق
-                if (item.classList && !item.classList.contains('open')) {
-                    item.classList.add('open');
-                }
-            } else {
-                item.style.display = 'none';
+            const isMatch = text.includes(filter);
+            item.style.display = isMatch ? '' : 'none';
+            // فتح العنصر المطابق تلقائياً
+            if (isMatch && item.classList && !item.classList.contains(openClassToUse)) {
+                item.classList.add(openClassToUse);
             }
         });
     }
 
     // ============================================================
-    // 4. دوال مساعدة عامة
+    // 4. دوال مساعدة عامة (DOM Manipulation Helpers)
     // ============================================================
 
     /**
@@ -154,15 +156,88 @@
         return null;
     }
 
+    /**
+     * الحصول على قيمة آمنة من localStorage مع معالجة الأخطاء
+     * @param {string} key - المفتاح
+     * @param {*} defaultValue - القيمة الافتراضية في حال عدم وجود المفتاح
+     * @returns {*} - القيمة المخزنة أو القيمة الافتراضية
+     */
+    function getLocalStorageItem(key, defaultValue) {
+        try {
+            const value = localStorage.getItem(key);
+            return value !== null ? value : defaultValue;
+        } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في قراءة localStorage:', e);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * تعيين قيمة في localStorage مع معالجة الأخطاء
+     * @param {string} key - المفتاح
+     * @param {*} value - القيمة المراد تخزينها
+     * @returns {boolean} - نجاح العملية
+     */
+    function setLocalStorageItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في كتابة localStorage:', e);
+            return false;
+        }
+    }
+
+    /**
+     * إزالة عنصر من localStorage مع معالجة الأخطاء
+     * @param {string} key - المفتاح
+     * @returns {boolean} - نجاح العملية
+     */
+    function removeLocalStorageItem(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في حذف localStorage:', e);
+            return false;
+        }
+    }
+
     // ============================================================
-    // 5. تهيئة الأحداث عند تحميل الصفحة
+    // 5. دوال متعلقة بالمصادقة (مختصرة للاستخدام العام)
+    // ============================================================
+
+    /**
+     * التحقق مما إذا كان المستخدم مسجلاً للدخول
+     * @returns {boolean}
+     */
+    function isUserLoggedIn() {
+        return !!localStorage.getItem('tera_token');
+    }
+
+    /**
+     * الحصول على بيانات المستخدم الحالي (إذا كان مسجلاً)
+     * @returns {object|null}
+     */
+    function getCurrentUser() {
+        try {
+            const userData = localStorage.getItem('tera_user');
+            return userData ? JSON.parse(userData) : null;
+        } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في قراءة بيانات المستخدم:', e);
+            return null;
+        }
+    }
+
+    // ============================================================
+    // 6. تهيئة الأحداث عند تحميل الصفحة
     // ============================================================
 
     /**
      * تهيئة جميع الأحداث والتفاعلات في الصفحة
      */
-    function init() {
-        // 5.1 تفعيل زر تبديل القائمة الجانبية
+    function initCore() {
+        // 6.1 تفعيل زر تبديل القائمة الجانبية
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
@@ -171,7 +246,7 @@
             });
         }
 
-        // 5.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
+        // 6.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
         document.querySelectorAll('.has-submenu > a').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -179,7 +254,7 @@
             });
         });
 
-        // 5.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
+        // 6.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 991) {
                 const sidebar = document.getElementById('sidebar');
@@ -194,53 +269,70 @@
             }
         });
 
-        // 5.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
+        // 6.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991) {
                 closeSidebar();
             }
         });
 
-        // 5.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
+        // 6.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
         document.querySelectorAll('.view-all').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 // يمكن إضافة تحليلات أو سلوك إضافي هنا
-                console.log('تم النقر على عرض الكل: ' + this.getAttribute('href'));
+                console.log('📊 [core.js] تم النقر على عرض الكل: ' + this.getAttribute('href'));
             });
         });
 
-        console.log('✅ core.js: تم تهيئة جميع المكونات الأساسية بنجاح');
+        console.log('✅ [core.js] تم تهيئة جميع المكونات الأساسية بنجاح');
     }
 
     // ============================================================
-    // 6. تشغيل التهيئة عند تحميل DOM
+    // 7. تشغيل التهيئة عند تحميل DOM
     // ============================================================
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', initCore);
     } else {
         // إذا كان DOM قد تم تحميله بالفعل، نفذ التهيئة مباشرة
-        init();
+        initCore();
     }
 
     // ============================================================
-    // 7. تعريف دوال عامة يمكن استخدامها في صفحات أخرى (اختياري)
+    // 8. تعريف دوال عامة يمكن استخدامها في صفحات أخرى (اختياري)
     // ============================================================
 
     // نُعرّف دوالنا في النطاق العام لتكون متاحة في وحدات التحكم
     // أو في السكريبتات الأخرى (مع الحرص على عدم التعارض)
     window.TeraCore = {
+        // دوال القائمة
         toggleSidebar: toggleSidebar,
         closeSidebar: closeSidebar,
         toggleSubmenu: toggleSubmenu,
         closeAllSubmenus: closeAllSubmenus,
+
+        // دوال التصفية
         filterItems: filterItems,
+
+        // دوال DOM
         addClass: addClass,
         removeClass: removeClass,
         toggleClass: toggleClass,
-        findParentByClass: findParentByClass
+        findParentByClass: findParentByClass,
+
+        // دوال التخزين المحلي
+        getLocalStorageItem: getLocalStorageItem,
+        setLocalStorageItem: setLocalStorageItem,
+        removeLocalStorageItem: removeLocalStorageItem,
+
+        // دوال المصادقة (مساعدة)
+        isUserLoggedIn: isUserLoggedIn,
+        getCurrentUser: getCurrentUser,
+
+        // تهيئة
+        initCore: initCore
     };
 
-    console.log('✅ core.js: تم تحميل المكتبة الأساسية (TeraCore) بنجاح');
+    console.log('✅ [core.js] تم تحميل المكتبة الأساسية (TeraCore) بنجاح');
 
 })();
