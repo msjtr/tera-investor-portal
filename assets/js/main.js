@@ -19,6 +19,10 @@
  * - security.js: الأمان
  * - support.js: الدعم
  * ============================================================
+ * تم التحديث لتوحيد استخدام المفاتيح:
+ * - tera_token (بدلاً من tera_auth_token)
+ * - tera_user (بدلاً من tera_user_data)
+ * ============================================================
  */
 
 (function() {
@@ -205,7 +209,7 @@
     }
 
     /**
-     * تهيئة زر تسجيل الخروج
+     * تهيئة زر تسجيل الخروج (تم التحديث لاستخدام المفاتيح الموحدة)
      */
     function initLogout() {
         const logoutBtn = document.querySelector('.logout-btn');
@@ -217,10 +221,14 @@
                     if (typeof TeraApp !== 'undefined' && TeraApp.logout) {
                         TeraApp.logout();
                     } else {
-                        // الطريقة اليدوية
+                        // ✅ الطريقة اليدوية باستخدام المفاتيح الموحدة
+                        localStorage.removeItem('tera_token');
+                        localStorage.removeItem('tera_user');
+                        // إزالة أي مفاتيح قديمة للتأكد
                         localStorage.removeItem('tera_auth_token');
                         localStorage.removeItem('tera_user_data');
-                        window.location.href = '../../auth/login/login.html';
+                        // التوجيه إلى صفحة تسجيل الدخول
+                        window.location.href = '../../auth/auth/login/login.html';
                     }
                 }
             });
