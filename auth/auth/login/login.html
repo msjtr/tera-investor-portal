@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
 
-    <!-- أيقونة الموقع (مسار مطلق) -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
+    <!-- أيقونة الموقع (مسار نسبي) -->
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    <link rel="shortcut icon" type="image/x-icon" href="../../../images/favicon.svg">
 
     <!-- خطوط Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,10 +18,10 @@
     <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- الملفات الأساسية CSS (مسارات مطلقة لتجنب 404) -->
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/auth.css">
+    <!-- الملفات الأساسية CSS (مسارات نسبية) -->
+    <link rel="stylesheet" href="../../../assets/css/core.css">
+    <link rel="stylesheet" href="../../../assets/css/main.css">
+    <link rel="stylesheet" href="../../../assets/css/auth.css">
 
     <!-- أنماط مدمجة لصفحة تسجيل الدخول (تجنب 404 لـ login.css) -->
     <style>
@@ -182,7 +182,7 @@
         <div class="auth-container" id="loginCardBlock">
             <div class="auth-card-header text-center">
                 <div class="brand-logo-box">
-                    <img src="/images/logo.svg" alt="تيرا">
+                    <img src="../../../images/logo.svg" alt="تيرا">
                 </div>
                 <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
                 <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
@@ -211,7 +211,7 @@
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
+                        <a href="../../../auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
                         <input type="password" id="login_password" class="form-input-control" 
@@ -242,8 +242,8 @@
             </form>
 
             <div class="bottom-routing-footer-links text-center">
-                <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="/index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
+                <p>ليس لديك حساب؟ <a href="../../../auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
+                <p><a href="../../../index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
 
@@ -260,11 +260,11 @@
         </div>
     </div>
 
-    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح (مسارات مطلقة) ====== -->
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/login.js"></script>
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح (مسارات نسبية) ====== -->
+    <script src="../../../assets/js/core.js"></script>
+    <script src="../../../assets/js/auth.js"></script>
+    <script src="../../../assets/js/main.js"></script>
+    <script src="../../../assets/js/login.js"></script>
 
     <!-- ====== سكريبت إضافي للتأكد من تهيئة الصفحة ومنع الحلقات ====== -->
     <script>
@@ -289,7 +289,7 @@
             // 3. إذا كان المستخدم مسجلاً بالفعل، نوجهه للوحة التحكم (تجاوز الحلقات)
             if (localStorage.getItem('tera_token')) {
                 console.log('👤 [login.html] مستخدم مسجل بالفعل، يتم التوجيه للوحة التحكم');
-                window.location.replace('/pages/dashboard/index.html');
+                window.location.replace('../../../pages/dashboard/index.html');
                 return;
             }
 
