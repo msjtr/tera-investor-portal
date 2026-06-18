@@ -3,30 +3,27 @@
 /* ================================================= */
 'use strict';
 
-// دالة لاكتشاف المسار الجذري للمشروع ديناميكياً لتجنب أخطاء 404
-const getBasePath = () => {
-    const path = window.location.pathname;
-    // تبحث عن بداية مجلدات المشروع وتقص ما قبلها
-    const match = path.match(/(.*)(\/pages\/|\/auth\/|\/index\.html|$)/);
-    return match && match[1] ? match[1] : '';
-};
-
+/**
+ * TERA Configuration
+ * basePath: نستخدم '/' كمسار جذري ثابت لضمان عمل المكونات 
+ * من أي صفحة (سواء في الجذر أو داخل المجلدات الفرعية).
+ */
 const TERA = {
     version: '1.0.1',
     debug: true,
-    basePath: getBasePath()
+    basePath: '' // تم تركها فارغة ليتم التعامل مع المسارات كجذرية
 };
 
 /* ================================================= */
 /* UI FEEDBACK */
 /* ================================================= */
 function showLoader() {
-    let loader = document.getElementById('tera-loader');
+    const loader = document.getElementById('tera-loader');
     if (loader) loader.style.display = 'flex';
 }
 
 function hideLoader() {
-    let loader = document.getElementById('tera-loader');
+    const loader = document.getElementById('tera-loader');
     if (loader) loader.style.display = 'none';
 }
 
@@ -34,20 +31,19 @@ function hideLoader() {
 /* DYNAMIC COMPONENT LOADER */
 /* ================================================= */
 async function loadComponents() {
-    // دمج المسار الجذري مع مسار المكونات لضمان الوصول الصحيح دائماً
+    // تم تعديل المسارات لتبدأ بـ / لضمان أنها تشير دائماً للجذر (Root)
     const components = [
-        { selector: '#header-container', path: `${TERA.basePath}/components/header.html` },
-        { selector: '#footer-container', path: `${TERA.basePath}/components/footer.html` },
-        { selector: '#sidebar-container', path: `${TERA.basePath}/components/sidebar.html` },
-        { selector: '#loader-container', path: `${TERA.basePath}/components/loader.html` },
-        { selector: '#alerts-container', path: `${TERA.basePath}/components/alerts.html` }
+        { selector: '#header-container', path: '/components/header.html' },
+        { selector: '#footer-container', path: '/components/footer.html' },
+        { selector: '#sidebar-container', path: '/components/sidebar.html' },
+        { selector: '#loader-container', path: '/components/loader.html' },
+        { selector: '#alerts-container', path: '/components/alerts.html' }
     ];
 
     for (const comp of components) {
         const element = document.querySelector(comp.selector);
         if (element) {
             try {
-                // محاولة جلب المكون
                 const res = await fetch(comp.path);
                 if (res.ok) {
                     element.innerHTML = await res.text();
@@ -61,7 +57,7 @@ async function loadComponents() {
     }
     
     // إخفاء اللودر بعد اكتمال التحميل
-    setTimeout(hideLoader, 300);
+    setTimeout(hideLoader, 500);
 }
 
 /* ================================================= */
@@ -72,18 +68,18 @@ const Session = {
     
     logout: () => {
         localStorage.clear();
-        // استخدام المسار الديناميكي لتوجيه آمن
-        window.location.href = `${TERA.basePath}/auth/auth/login/login.html`;
+        window.location.href = '/auth/auth/login/login.html';
     },
 
     checkAuth: () => {
-        const protectedPaths = ['/dashboard', '/portfolio', '/investments', '/profile', '/security', '/reports'];
         const currentPath = window.location.pathname;
+        const isAuthPage = currentPath.includes('/auth/');
         
-        const isProtected = protectedPaths.some(path => currentPath.includes(path));
+        // إذا كان المسار يتطلب حماية وليس صفحة مصادقة
+        const isProtected = !isAuthPage && !currentPath.endsWith('index.html') && currentPath !== '/';
         
         if (isProtected && !Session.isLoggedIn()) {
-            window.location.replace(`${TERA.basePath}/auth/auth/login/login.html`);
+            window.location.replace('/auth/auth/login/login.html');
         }
     }
 };
@@ -92,7 +88,7 @@ const Session = {
 /* INITIALIZATION */
 /* ================================================= */
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. فحص الجلسة أولاً
+    // 1. فحص الجلسة
     Session.checkAuth();
 
     // 2. إظهار اللودر
@@ -101,5 +97,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. تحميل المكونات
     await loadComponents();
     
-    console.log('TERA Core System Initialized Successfully.');
+    console.log('TERA Core System Initialized.');
 });
