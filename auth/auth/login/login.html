@@ -119,7 +119,7 @@
 
             console.log('🚀 [login.html] تم تحميل صفحة تسجيل الدخول');
 
-            // 1. تنظيف المفاتيح القديمة
+            // 1. تنظيف المفاتيح القديمة (غير المستخدمة)
             if (localStorage.getItem('tera_auth_token') || localStorage.getItem('tera_user_data')) {
                 console.warn('🧹 [login.html] تنظيف المفاتيح القديمة...');
                 localStorage.removeItem('tera_auth_token');
@@ -132,7 +132,6 @@
                 console.log('🔒 [login.html] تم تعطيل التوجيه التلقائي مؤقتاً');
             } else {
                 console.warn('⚠️ [login.html] TeraAuth غير متاح بعد، يتم إعادة المحاولة...');
-                // محاولة إعادة المحاولة بعد 100ms
                 setTimeout(function() {
                     if (typeof TeraAuth !== 'undefined' && TeraAuth) {
                         TeraAuth.disableAutoRedirect();
@@ -141,11 +140,13 @@
                 }, 100);
             }
 
-            // 3. إذا كان المستخدم مسجلاً بالفعل، نوجهه للوحة التحكم
-            if (localStorage.getItem('tera_token')) {
-                console.log('👤 [login.html] مستخدم مسجل بالفعل، يتم التوجيه للوحة التحكم');
-                window.location.replace('../../../pages/dashboard/index.html');
-                return;
+            // 3. إزالة أي token موجود في صفحة الدخول لتجنب الحلقات اللانهائية
+            // (لأن auth.js سيتولى التوجيه للمستخدم المسجل)
+            const existingToken = localStorage.getItem('tera_token');
+            if (existingToken) {
+                console.warn('🧹 [login.html] تم العثور على token في صفحة الدخول، يتم حذفه لتجنب التوجيه الخاطئ');
+                localStorage.removeItem('tera_token');
+                localStorage.removeItem('tera_user');
             }
 
             // 4. معالجة أزرار تسجيل الخروج (في حال وجودها)
@@ -153,7 +154,7 @@
                 const logoutBtn = e.target.closest('.logout-btn, .btn-logout, #btn-logout');
                 if (logoutBtn) {
                     e.preventDefault();
-                    console.log('🔒 [login.html] محاولة تسجيل خروج من صفحة الدخول - يتم التنظيف وإعادة التحميل');
+                    console.log('🔒 [login.html] محاولة تسجيل خروج - يتم التنظيف وإعادة التحميل');
                     localStorage.removeItem('tera_token');
                     localStorage.removeItem('tera_user');
                     window.location.reload();
