@@ -1,67 +1,77 @@
 /**
  * ==========================================================================
  * TERA Investor Portal - Shared Auth Utilities (auth.js)
- * محرك المصادقة والحماية - نسخة مصححة ومحكمة
+ * محرك المصادقة والحماية - نسخة متوافقة مع المسارات النسبية
  * ==========================================================================
  * الموقع: /assets/js/auth.js
  * 
  * هذا الملف مسؤول عن:
  * 1. التحقق من حالة تسجيل الدخول مع منع الحلقات اللانهائية
- * 2. توجيه المستخدم تلقائياً (الصفحات المحمية/العامة)
+ * 2. توجيه المستخدم تلقائياً (الصفحات المحمية/العامة) باستخدام مسارات نسبية
  * 3. إدارة جلسة المستخدم (تسجيل الدخول/الخروج)
  * 4. تفعيل أزرار إظهار/إخفاء كلمة المرور
  * 5. توفير دوال مساعدة للتحقق من الجلسة
  * ==========================================================================
- * تم توحيد أسماء المفاتيح في التخزين المحلي:
- * - tera_token : لتخزين رمز المصادقة
- * - tera_user  : لتخزين بيانات المستخدم
+ * تم التحديث لاستخدام المسارات النسبية بدلاً من المطلقة
+ * لتجنب مشاكل 404 على خوادم مثل Render
  * ==========================================================================
  */
 'use strict';
 
 // ========================================================================
-// 1. دوال مساعدة للمسارات (متوافقة مع جميع مستويات الصفحات)
+// 1. دوال مساعدة للمسارات النسبية
 // ========================================================================
 
 /**
- * استخراج المسار الجذري للمشروع بناءً على موقع الصفحة الحالية
- * @returns {string} المسار الجذري (مثل /tera-investor-portal-main أو فارغ)
+ * حساب عدد المستويات (العمق) للوصول إلى الجذر من المسار الحالي
+ * @returns {number} عدد المستويات (0 للجذر، 1 لـ /assets/، 2 لـ /pages/، 3 لـ /auth/auth/)
  */
-const getBasePath = () => {
+const getBaseDepth = () => {
     const path = window.location.pathname;
     
-    // محاولة إيجاد المجلد الرئيسي
-    const match = path.match(/(.*?)(\/pages\/|\/auth\/|\/assets\/|\/index\.html|$)/);
-    let base = match && match[1] ? match[1] : '';
+    // تحديد العمق بناءً على المسار
+    if (path.includes('/pages/')) return 2;           // /pages/dashboard/...
+    if (path.includes('/auth/auth/')) return 3;       // /auth/auth/login/...
+    if (path.includes('/auth/')) return 2;            // /auth/login/...
+    if (path.includes('/assets/')) return 1;          // /assets/js/...
+    if (path.includes('/components/')) return 1;
+    if (path.includes('/layouts/')) return 1;
+    if (path === '/' || path === '/index.html') return 0;
     
-    // إزالة الشرطة المائلة الزائدة إن وجدت
-    if (base.endsWith('/')) base = base.slice(0, -1);
-    
-    return base;
+    // افتراضياً: حساب عدد الشرطات المائلة
+    const parts = path.split('/').filter(p => p.length > 0);
+    return parts.length;
 };
 
 /**
- * إنشاء مسار مطلق للمشروع مع ضمان وجود امتداد .html
- * @param {string} relativePath - مسار نسبي (يبدأ بـ / أو لا)
- * @returns {string} المسار الكامل مع .html
+ * إنشاء مسار نسبي من الجذر إلى المسار المطلوب
+ * @param {string} relativePath - المسار المطلوب (بدون / في البداية)
+ * @returns {string} المسار النسبي مع ../ بالعدد المناسب
  */
 const resolvePath = (relativePath) => {
-    // إضافة .html إذا كان المسار لا يحتوي على امتداد
-    // ولا يحتوي على علامة استفهام (parameters)
-    if (!relativePath.endsWith('.html') && !relativePath.includes('.') && !relativePath.includes('?')) {
-        relativePath = relativePath + '.html';
+    // التأكد من عدم وجود / في البداية
+    let cleanPath = relativePath;
+    if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.slice(1);
     }
     
-    const base = getBasePath();
-    const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
+    // إزالة أي تكرار لـ ../ في البداية
+    while (cleanPath.startsWith('../')) {
+        cleanPath = cleanPath.slice(3);
+    }
     
-    // بناء المسار النهائي
-    let finalPath = base ? `/${base}/${cleanPath}` : `/${cleanPath}`;
+    // إضافة .html إذا لزم الأمر
+    if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
+        cleanPath = cleanPath + '.html';
+    }
     
-    // تصحيح المسار المزدوج (مثلاً //auth//login)
-    finalPath = finalPath.replace(/\/+/g, '/');
+    const depth = getBaseDepth();
+    let prefix = '';
+    for (let i = 0; i < depth; i++) {
+        prefix += '../';
+    }
     
-    return finalPath;
+    return prefix + cleanPath;
 };
 
 // ========================================================================
@@ -69,16 +79,12 @@ const resolvePath = (relativePath) => {
 // ========================================================================
 
 const TeraAuth = {
-    basePath: getBasePath(),
-    _isChecking: false,        // منع التوجيه المتكرر
-    _lastCheckTime: 0,         // منع التوجيه المتكرر
-    _isLoginPage: false,       // تحديد إذا كنا في صفحة تسجيل الدخول
+    _isChecking: false,
+    _lastCheckTime: 0,
+    _isLoginPage: false,
 
     /**
-     * التحقق من الجلسة وتوجيه المستخدم تلقائياً
-     * - إذا كان المستخدم مسجل الدخول (يوجد توكن) وفي صفحة عامة -> يوجه للوحة التحكم
-     * - إذا لم يكن مسجل الدخول وفي صفحة محمية -> يوجه لتسجيل الدخول
-     * - إذا كان في صفحة تسجيل الدخول -> لا يقوم بأي توجيه (منع الحلقات)
+     * التحقق من الجلسة وتوجيه المستخدم تلقائياً (باستخدام مسارات نسبية)
      */
     checkSession: function() {
         // منع التنفيذ المتكرر (للحماية من الحلقات اللانهائية)
@@ -95,7 +101,8 @@ const TeraAuth = {
             const currentPage = window.location.pathname;
             this._isLoginPage = /\/auth\/.*login/.test(currentPage) || 
                                 currentPage.includes('login.html') ||
-                                currentPage.endsWith('/login');
+                                currentPage.endsWith('/login') ||
+                                currentPage.includes('/auth/auth/login');
 
             // إذا كنا في صفحة تسجيل الدخول، لا نقوم بأي توجيه (منع الحلقات)
             if (this._isLoginPage) {
@@ -109,13 +116,13 @@ const TeraAuth = {
             // تحديد نوع الصفحة الحالية
             const isAuthPage = /\/auth\//.test(currentPage);
             const isLandingPage = currentPage === '/' || 
-                                  currentPage.endsWith('index.html') && !currentPage.includes('/pages/');
+                                  (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
             const isPublicPage = isAuthPage || isLandingPage;
             const isProtectedPage = !isPublicPage;
             
-            // الحالة 1: مستخدم غير مسجل الدخول يحاول الوصول لصفحة محمية -> طرد لتسجيل الدخول
+            // الحالة 1: مستخدم غير مسجل الدخول في صفحة محمية -> توجيه لتسجيل الدخول
             if (!token && isProtectedPage) {
-                const loginUrl = resolvePath('/auth/auth/login/login.html');
+                const loginUrl = resolvePath('auth/auth/login/login.html');
                 console.log('🔐 [Auth] توجيه غير مسجل الدخول إلى:', loginUrl);
                 window.location.replace(loginUrl);
                 return;
@@ -123,14 +130,12 @@ const TeraAuth = {
             
             // الحالة 2: مستخدم مسجل الدخول في صفحة عامة -> توجيه للوحة التحكم
             if (token && isPublicPage) {
-                const dashboardUrl = resolvePath('/pages/dashboard/index.html');
+                const dashboardUrl = resolvePath('pages/dashboard/index.html');
                 console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
                 window.location.replace(dashboardUrl);
                 return;
             }
             
-            // الحالة 3: مستخدم مسجل الدخول في صفحة محمية -> نسمح بالاستمرار
-            // الحالة 4: مستخدم غير مسجل الدخول في صفحة عامة -> نسمح بالاستمرار
             console.log('✅ [Auth] لا حاجة لتوجيه، الصفحة الحالية:', currentPage);
             
         } finally {
@@ -170,8 +175,8 @@ const TeraAuth = {
             alert('⏳ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً لحماية أصولك.');
         }
         
-        // التوجيه لصفحة تسجيل الدخول
-        const loginUrl = resolvePath('/auth/auth/login/login.html');
+        // التوجيه لصفحة تسجيل الدخول (باستخدام مسار نسبي)
+        const loginUrl = resolvePath('auth/auth/login/login.html');
         console.log('🚪 [Auth] تسجيل الخروج والتوجيه إلى:', loginUrl);
         window.location.replace(loginUrl);
     },
@@ -184,7 +189,6 @@ const TeraAuth = {
      */
     login: function(identifier, password) {
         return new Promise((resolve, reject) => {
-            // محاكاة طلب API مع تأخير
             setTimeout(() => {
                 // التحقق من المدخلات
                 if (!identifier || !password) {
@@ -225,6 +229,9 @@ const TeraAuth = {
                     localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
                     localStorage.setItem('tera_user', JSON.stringify(user));
                     
+                    // إعادة تفعيل التوجيه التلقائي بعد نجاح تسجيل الدخول
+                    this.enableAutoRedirect();
+                    
                     console.log('✅ [Auth] تم تسجيل الدخول بنجاح:', user);
                     resolve(user);
                 } else {
@@ -237,35 +244,28 @@ const TeraAuth = {
 
     /**
      * تفعيل أزرار إظهار/إخفاء كلمة المرور
-     * باستخدام Event Delegation للتعامل مع الأزرار المضافة ديناميكياً
      */
     initPasswordToggles: function() {
         document.addEventListener('click', function(e) {
-            // استهداف الأزرار التي تحمل الكلاسات: password-toggle, toggle-password, show-password-btn
             const toggleBtn = e.target.closest('.password-toggle, .toggle-password, .show-password-btn');
             if (!toggleBtn) return;
             
-            // البحث عن حقل الإدخال داخل نفس الحاوية
             const wrapper = toggleBtn.closest('.password-wrapper, .input-group, .form-group');
             if (!wrapper) return;
             
             const input = wrapper.querySelector('input[type="password"], input[type="text"]');
             if (!input) return;
             
-            // تبديل النوع
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
             
-            // تغيير الأيقونة
             const icon = toggleBtn.querySelector('i');
             if (icon) {
                 icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
             }
             
-            // تغيير النص إن وجد (مثل زر "إظهار"/"إخفاء")
             if (toggleBtn.textContent.trim()) {
                 toggleBtn.textContent = isPassword ? 'إخفاء' : 'إظهار';
-                // إعادة إضافة الأيقونة بعد تغيير النص
                 if (icon) toggleBtn.prepend(icon);
             }
         });
@@ -314,7 +314,7 @@ const TeraAuth = {
      */
     redirectToDashboardIfLoggedIn: function() {
         if (this.isLoggedIn()) {
-            const dashboardUrl = resolvePath('/pages/dashboard/index.html');
+            const dashboardUrl = resolvePath('pages/dashboard/index.html');
             console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
             window.location.replace(dashboardUrl);
             return true;
@@ -329,13 +329,14 @@ const TeraAuth = {
 
 // تهيئة عند تحميل DOM
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔐 [Auth] TeraAuth initialized. Base path:', TeraAuth.basePath);
+    console.log('🔐 [Auth] TeraAuth initialized (relative paths)');
     
     // التحقق مما إذا كنا في صفحة تسجيل الدخول
     const currentPage = window.location.pathname;
     const isLoginPage = /\/auth\/.*login/.test(currentPage) || 
                         currentPage.includes('login.html') ||
-                        currentPage.endsWith('/login');
+                        currentPage.endsWith('/login') ||
+                        currentPage.includes('/auth/auth/login');
     
     if (isLoginPage) {
         // في صفحة تسجيل الدخول: نعطل التوجيه التلقائي
@@ -363,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========================================================================
 
 document.addEventListener('click', function(e) {
-    // استهداف أي زر يحتوي على الكلاسات: logout-btn, btn-logout, #btn-logout
     const logoutBtn = e.target.closest('.logout-btn, .btn-logout, #btn-logout');
     if (!logoutBtn) return;
     
@@ -375,17 +375,14 @@ document.addEventListener('click', function(e) {
 });
 
 // ========================================================================
-// 5. تصدير الكائنات والدوال العامة (للوصول إليها من أي مكان)
+// 5. تصدير الكائنات والدوال العامة
 // ========================================================================
 
-// جعل TeraAuth متاحاً في النطاق العام
 window.TeraAuth = TeraAuth;
-
-// دوال مساعدة للتحقق من حالة المستخدم (اختصارات)
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
 
-console.log('✅ [Auth] auth.js loaded successfully');
+console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
 console.log('📌 [Auth] استخدم TeraAuth للوصول إلى دوال المصادقة');
 console.log('📌 [Auth] المفاتيح المستخدمة: tera_token, tera_user');
 
@@ -393,7 +390,6 @@ console.log('📌 [Auth] المفاتيح المستخدمة: tera_token, tera_u
 // 6. استيراد الدوال للاستخدام في وحدات أخرى (ES6 Modules)
 // ========================================================================
 
-// إذا كان النظام يدعم ES6 Modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TeraAuth;
 }
@@ -402,7 +398,6 @@ if (typeof module !== 'undefined' && module.exports) {
 // 7. تنظيف المفاتيح القديمة (ترقية من إصدار سابق)
 // ========================================================================
 
-// إذا كان هناك مفتاح tera_auth_token قديم، نقوم بنقل بياناته إلى المفتاح الجديد
 (function cleanupOldKeys() {
     const oldToken = localStorage.getItem('tera_auth_token');
     const oldUser = localStorage.getItem('tera_user_data');
@@ -421,7 +416,7 @@ if (typeof module !== 'undefined' && module.exports) {
 })();
 
 // ========================================================================
-// 8. مثال للاستخدام (يمكنك تفعيله في حالة الاختبار)
+// 8. مثال للاستخدام (للاختبار)
 // ========================================================================
 
 /*
