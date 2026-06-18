@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- أيقونة الموقع (حل مشكلة 404) -->
+    <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
 
     <!-- الملفات المشتركة CSS -->
@@ -24,7 +24,7 @@
             <div class="sidebar-brand">
                 <a href="../../index.html">
                     <img src="../../images/logo.svg" alt="Tera Logo" class="logo-img" />
-                    <span class="logo-text">Tera Investor</span>
+                    <span class="logo-text">تيرا للمستثمرين</span>
                 </a>
             </div>
 
@@ -79,7 +79,7 @@
                         <i class="fas fa-chevron-down submenu-toggle"></i>
                     </a>
                     <ul class="submenu">
-                        <li><a href="../reports/reports-dashboard.html">لوحة تقارير</a></li>
+                        <li><a href="../reports/reports-dashboard.html">لوحة التقارير</a></li>
                         <li><a href="../reports/portfolio-report.html">تقرير المحفظة</a></li>
                         <li><a href="../reports/investments-report.html">تقرير الاستثمارات</a></li>
                         <li><a href="../reports/profits-report.html">تقرير الأرباح</a></li>
@@ -212,7 +212,6 @@
                             <span class="card-subtitle">آخر 30 يوماً</span>
                         </div>
                         <div class="card-body">
-                            <!-- عنصر الرسم البياني -->
                             <canvas id="performanceChart" height="150"></canvas>
                         </div>
                     </div>
@@ -305,7 +304,7 @@
             <!-- ====== الفوتر ====== -->
             <footer class="footer">
                 <div class="footer-content">
-                    <span>© 2026 Tera Investor Portal. جميع الحقوق محفوظة.</span>
+                    <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
                     <div class="footer-links">
                         <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
                         <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
@@ -318,13 +317,82 @@
     </div>
 
     <!-- ====== الملفات المشتركة JS ====== -->
+    <!-- ترتيب التحميل مهم: core → app → main → page-specific → libraries -->
     <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- تم إزالة الكود المكرر للرسم البياني من هنا -->
-    <!-- يتم الاعتماد على dashboard.js بالكامل -->
+    <!-- يمكن إضافة أي تهيئة إضافية هنا إذا لزم الأمر -->
+    <script>
+        (function() {
+            // التأكد من تهيئة الرسم البياني بعد تحميل المكتبة
+            // سيتم التعامل معها في dashboard.js، لكننا نضع حماية إضافية
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof initPerformanceChart === 'function') {
+                    // إذا كانت الدالة موجودة في dashboard.js
+                    initPerformanceChart();
+                } else {
+                    // تهيئة الرسم البياني بشكل مباشر كحل احتياطي
+                    const canvas = document.getElementById('performanceChart');
+                    if (canvas && typeof Chart !== 'undefined') {
+                        // نستخدم TeraCore لتأخير التهيئة حتى يتم تحميل كل شيء
+                        setTimeout(function() {
+                            const ctx = canvas.getContext('2d');
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: ['1', '5', '10', '15', '20', '25', '30'],
+                                    datasets: [{
+                                        label: 'قيمة المحفظة (ر.س)',
+                                        data: [12000, 12500, 12300, 13000, 12800, 13500, 14000],
+                                        borderColor: '#0D6EFD',
+                                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                        borderWidth: 3,
+                                        tension: 0.4,
+                                        fill: true,
+                                        pointBackgroundColor: '#0D6EFD',
+                                        pointBorderColor: '#fff',
+                                        pointBorderWidth: 2,
+                                        pointRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: true,
+                                            labels: { font: { family: 'Tajawal' } }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return 'ر.س ' + context.parsed.y.toLocaleString();
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: false,
+                                            ticks: {
+                                                callback: function(value) {
+                                                    return 'ر.س ' + value.toLocaleString();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            console.log('✅ تم تهيئة الرسم البياني (حل احتياطي)');
+                        }, 300);
+                    }
+                }
+            });
+        })();
+    </script>
 
 </body>
 </html>
