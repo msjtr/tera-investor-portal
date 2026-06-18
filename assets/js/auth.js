@@ -1,13 +1,15 @@
 /**
  * ============================================================
  * auth.js - محرك المصادقة والحماية - نسخة متوافقة مع المسارات النسبية
- * مع حظر كامل لـ checkSession في جميع صفحات المصادقة (auth/*)
+ * ============================================================
+ * - يمنع التوجيه في جميع صفحات المصادقة (auth/*)
+ * - يسمح بالتوجيه في الصفحة الرئيسية (index.html) عند وجود جلسة نشطة
  * ============================================================
  */
 'use strict';
 
 // ========================================================================
-// 1. دوال مساعدة للمسارات النسبية (بدون تغيير)
+// 1. دوال مساعدة للمسارات النسبية
 // ========================================================================
 const getBaseDepth = () => {
     const path = window.location.pathname;
@@ -35,19 +37,14 @@ const resolvePath = (relativePath) => {
 };
 
 // ========================================================================
-// 2. كائن المصادقة الرئيسي (مع _blockCheck)
+// 2. كائن المصادقة الرئيسي
 // ========================================================================
 const TeraAuth = {
     _isChecking: false,
     _lastCheckTime: 0,
-    _blockCheck: false,  // منع تنفيذ checkSession نهائياً
+    _blockCheck: false,  // حظر checkSession (لصفحات المصادقة فقط)
 
-    /**
-     * التحقق من الجلسة مع منع الحلقات اللانهائية
-     * - يتخطى التوجيه في جميع صفحات المصادقة (/auth/)
-     */
     checkSession: function() {
-        // إذا تم حظر التنفيذ، نخرج فوراً
         if (this._blockCheck) {
             console.log('⛔ [Auth] checkSession محظور في هذه الصفحة');
             return;
@@ -63,15 +60,10 @@ const TeraAuth = {
 
         try {
             const currentPage = window.location.pathname;
-            
-            // التحقق من أننا في صفحة مصادقة (auth/*)
-            const isAuthPage = /\/auth\//.test(currentPage);
-            if (isAuthPage) {
-                console.log('🔒 [Auth] صفحة مصادقة: تخطي التوجيه');
-                return;
-            }
-
             const token = localStorage.getItem('tera_token');
+
+            // تحديد نوع الصفحة
+            const isAuthPage = /\/auth\//.test(currentPage);
             const isLandingPage = currentPage === '/' || 
                                   (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
             const isPublicPage = isAuthPage || isLandingPage;
@@ -85,7 +77,7 @@ const TeraAuth = {
                 return;
             }
 
-            // مستخدم مسجل في صفحة عامة -> توجيه للوحة التحكم
+            // مستخدم مسجل في صفحة عامة (بما فيها الرئيسية) -> توجيه للوحة التحكم
             if (token && isPublicPage) {
                 const dashboardUrl = resolvePath('pages/dashboard/index.html');
                 console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
@@ -100,7 +92,6 @@ const TeraAuth = {
         }
     },
 
-    // دوال حظر/إلغاء حظر checkSession
     blockCheck: function() {
         this._blockCheck = true;
         console.log('⛔ [Auth] تم حظر checkSession نهائياً');
@@ -163,7 +154,7 @@ const TeraAuth = {
                     localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
                     localStorage.setItem('tera_user', JSON.stringify(user));
                     this.enableAutoRedirect();
-                    this.unblockCheck(); // إلغاء الحظر بعد تسجيل الدخول
+                    this.unblockCheck();
                     console.log('✅ [Auth] تم تسجيل الدخول بنجاح:', user);
                     resolve(user);
                 } else {
@@ -204,22 +195,24 @@ const TeraAuth = {
 };
 
 // ========================================================================
-// 3. التنفيذ عند تحميل الصفحة مع حظر كامل لجميع صفحات المصادقة
+// 3. التنفيذ عند تحميل الصفحة
 // ========================================================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔐 [Auth] TeraAuth initialized.');
 
     const currentPage = window.location.pathname;
-    const isAuthPage = /\/auth\//.test(currentPage);
+    const isAuthPage = /\/auth\//.test(currentPage); // صفحات المصادقة فقط
     const isLandingPage = currentPage === '/' || 
                           (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
 
-    // في جميع صفحات المصادقة (auth/*) والصفحة الرئيسية نمنع تنفيذ checkSession
-    if (isAuthPage || isLandingPage) {
-        console.log('🔒 [Auth] صفحة عامة (مصادقة أو رئيسية): تعطيل التوجيه وحظر checkSession');
+    // ONLY block checkSession in auth pages (login, register, etc.)
+    if (isAuthPage) {
+        console.log('🔒 [Auth] صفحة مصادقة: تعطيل التوجيه وحظر checkSession');
         TeraAuth.disableAutoRedirect();
         TeraAuth.blockCheck();
     } else {
+        // في الصفحة الرئيسية أو أي صفحة أخرى، نترك checkSession يعمل
+        // (سيتولى التوجيه إذا كان المستخدم مسجلاً)
         TeraAuth.checkSession();
     }
 
@@ -251,7 +244,7 @@ window.TeraAuth = TeraAuth;
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
 
-console.log('✅ [Auth] auth.js loaded successfully with blockCheck for all auth pages');
+console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
 
 // ========================================================================
 // 6. تنظيف المفاتيح القديمة
