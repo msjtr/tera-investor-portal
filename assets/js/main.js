@@ -8,7 +8,8 @@
  * 3. تنفيذ دوال خاصة بكل صفحة حسب المسار الحالي
  * 4. إدارة السلوك العام للموقع (مثل القوائم، الإشعارات، وغيرها)
  * ============================================================
- * تم التحديث لاستخدام المسارات المطلقة لحل مشكلة 404
+ * تم التحديث لاستخدام المسارات النسبية بدلاً من المطلقة
+ * لحل مشكلة 404 على خوادم مثل Render
  * ============================================================
  */
 
@@ -16,7 +17,53 @@
     'use strict';
 
     // ============================================================
-    // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
+    // 1. دوال مساعدة للمسارات النسبية
+    // ============================================================
+
+    /**
+     * حساب عدد المستويات (العمق) للوصول إلى الجذر من المسار الحالي
+     * @returns {number} عدد المستويات (0 للجذر، 1 لـ /assets/، 2 لـ /pages/، 3 لـ /auth/auth/)
+     */
+    function getBaseDepth() {
+        const path = window.location.pathname;
+        
+        if (path.includes('/pages/')) return 2;
+        if (path.includes('/auth/auth/')) return 3;
+        if (path.includes('/auth/')) return 2;
+        if (path.includes('/assets/')) return 1;
+        if (path.includes('/components/')) return 1;
+        if (path.includes('/layouts/')) return 1;
+        if (path === '/' || path === '/index.html') return 0;
+        
+        const parts = path.split('/').filter(p => p.length > 0);
+        return parts.length;
+    }
+
+    /**
+     * إنشاء مسار نسبي من الجذر إلى المسار المطلوب
+     * @param {string} targetPath - المسار المطلوب (يمكن أن يبدأ بـ / أو لا)
+     * @returns {string} المسار النسبي مع ../ بالعدد المناسب
+     */
+    function resolveRelativePath(targetPath) {
+        // إزالة / من البداية إذا وجدت
+        let cleanPath = targetPath;
+        if (cleanPath.startsWith('/')) {
+            cleanPath = cleanPath.slice(1);
+        }
+        // إزالة أي تكرار لـ ../ في البداية
+        while (cleanPath.startsWith('../')) {
+            cleanPath = cleanPath.slice(3);
+        }
+        const depth = getBaseDepth();
+        let prefix = '';
+        for (let i = 0; i < depth; i++) {
+            prefix += '../';
+        }
+        return prefix + cleanPath;
+    }
+
+    // ============================================================
+    // 2. التأكد من تحميل الملفات الأساسية (باستخدام مسارات نسبية)
     // ============================================================
 
     /**
@@ -26,7 +73,7 @@
         if (typeof TeraCore === 'undefined') {
             console.warn('⚠️ core.js لم يتم تحميله، يتم تحميله الآن...');
             const script = document.createElement('script');
-            script.src = '/assets/js/core.js';
+            script.src = resolveRelativePath('/assets/js/core.js');
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -41,7 +88,7 @@
         if (typeof TeraApp === 'undefined') {
             console.warn('⚠️ app.js لم يتم تحميله، يتم تحميله الآن...');
             const script = document.createElement('script');
-            script.src = '/assets/js/app.js';
+            script.src = resolveRelativePath('/assets/js/app.js');
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -66,12 +113,12 @@
 
         const scriptPath = pageScripts[pageName];
         if (scriptPath) {
-            // التحقق مما إذا كان الملف قد تم تحميله بالفعل
-            const existingScript = document.querySelector(`script[src="${scriptPath}"]`);
+            const relativePath = resolveRelativePath(scriptPath);
+            const existingScript = document.querySelector(`script[src="${relativePath}"]`);
             if (!existingScript) {
                 console.log(`📦 تحميل ${pageName}.js...`);
                 const script = document.createElement('script');
-                script.src = scriptPath;
+                script.src = relativePath;
                 script.async = false;
                 document.head.appendChild(script);
             }
@@ -79,7 +126,7 @@
     }
 
     // ============================================================
-    // 2. التعرف على الصفحة الحالية وتفعيل دوالها
+    // 3. التعرف على الصفحة الحالية وتفعيل دوالها
     // ============================================================
 
     /**
@@ -89,7 +136,6 @@
     function getCurrentPage() {
         const path = window.location.pathname;
 
-        // استخراج اسم الملف أو المجلد
         const pageMap = {
             'dashboard': ['dashboard', 'index.html'],
             'investments': ['investments', 'opportunities', 'active', 'completed', 'cancelled', 'extended', 'details'],
@@ -108,12 +154,10 @@
             }
         }
 
-        // إذا كانت الصفحة هي الرئيسية أو لم يتم التعرف عليها
         if (path === '/' || path === '' || path === '/index.html') {
             return 'dashboard';
         }
 
-        // صفحة المصادقة (لا تحتاج إلى تهيئة خاصة)
         if (path.includes('auth') || path.includes('login') || path.includes('register')) {
             return 'auth';
         }
@@ -122,14 +166,13 @@
     }
 
     // ============================================================
-    // 3. تهيئة المكونات المشتركة
+    // 4. تهيئة المكونات المشتركة
     // ============================================================
 
     /**
      * تهيئة القائمة الجانبية (Sidebar)
      */
     function initSidebar() {
-        // زر تبديل القائمة للشاشات الصغيرة
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
@@ -141,7 +184,6 @@
             });
         }
 
-        // تفعيل القوائم الفرعية
         document.querySelectorAll('.has-submenu > a').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -152,7 +194,6 @@
             });
         });
 
-        // إغلاق القائمة عند النقر خارجها في الشاشات الصغيرة
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 991) {
                 const sidebar = document.getElementById('sidebar');
@@ -167,7 +208,6 @@
             }
         });
 
-        // إغلاق القائمة عند تغيير حجم النافذة إلى حجم كبير
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991) {
                 const sidebar = document.getElementById('sidebar');
@@ -185,7 +225,6 @@
         const notifIcon = document.querySelector('.notifications');
         if (notifIcon) {
             notifIcon.addEventListener('click', function() {
-                // عرض قائمة الإشعارات (يمكن توسيعها لاحقاً)
                 if (typeof TeraApp !== 'undefined' && TeraApp.showNotification) {
                     TeraApp.showNotification('📬 لديك 3 إشعارات جديدة', 'info', 4000);
                 } else {
@@ -196,7 +235,7 @@
     }
 
     /**
-     * تهيئة زر تسجيل الخروج (تم التحديث لاستخدام المسار المطلق)
+     * تهيئة زر تسجيل الخروج (باستخدام مسارات نسبية)
      */
     function initLogout() {
         const logoutBtn = document.querySelector('.logout-btn');
@@ -208,12 +247,11 @@
                     if (typeof TeraApp !== 'undefined' && TeraApp.logout) {
                         TeraApp.logout();
                     } else {
-                        // الطريقة اليدوية باستخدام المسار المطلق
                         localStorage.removeItem('tera_token');
                         localStorage.removeItem('tera_user');
                         localStorage.removeItem('tera_auth_token');
                         localStorage.removeItem('tera_user_data');
-                        window.location.href = '/auth/auth/login/login.html';
+                        window.location.href = resolveRelativePath('/auth/auth/login/login.html');
                     }
                 }
             });
@@ -225,7 +263,6 @@
      */
     function initInternalLinks() {
         document.querySelectorAll('a[href]').forEach(function(link) {
-            // تجاهل الروابط التي تمتلك target="_blank" أو تبدأ بـ http
             if (link.target === '_blank') return;
             if (link.getAttribute('href').startsWith('http://') || 
                 link.getAttribute('href').startsWith('https://')) return;
@@ -234,21 +271,12 @@
             if (link.getAttribute('href').endsWith('.css')) return;
             if (link.getAttribute('href').endsWith('.js')) return;
             
-            // إذا كانت الصفحة داخل نفس الموقع، استخدم TeraApp للتنقل
             link.addEventListener('click', function(e) {
                 if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
                     e.preventDefault();
                     const href = this.getAttribute('href');
-                    // تحويل المسار النسبي إلى مطلق إذا كان يبدأ بـ ..
-                    let absoluteHref = href;
-                    if (href.startsWith('..')) {
-                        // محاولة بسيطة لتحويل المسار النسبي إلى مطلق
-                        // في التطبيق الحقيقي، يفضل استخدام مسارات مطلقة في HTML
-                        absoluteHref = '/' + href.replace(/\.\.\//g, '');
-                    }
-                    TeraApp.navigateTo(absoluteHref);
+                    TeraApp.navigateTo(href);
                 }
-                // وإلا، سيتم التعامل مع الرابط بشكل طبيعي
             });
         });
     }
@@ -265,25 +293,18 @@
     }
 
     // ============================================================
-    // 4. دوال تهيئة الصفحات حسب النوع
+    // 5. دوال تهيئة الصفحات حسب النوع
     // ============================================================
 
-    /**
-     * تهيئة صفحة لوحة التحكم
-     */
     function initDashboardPage() {
         console.log('📊 تهيئة لوحة التحكم');
         loadPageScript('dashboard');
     }
 
-    /**
-     * تهيئة صفحة الاستثمارات
-     */
     function initInvestmentsPage() {
         console.log('💰 تهيئة صفحة الاستثمارات');
         loadPageScript('investments');
 
-        // تفعيل أزرار "مشاركة الآن" في بطاقات الفرص
         document.querySelectorAll('.opportunity-card .btn-primary').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -299,7 +320,6 @@
             });
         });
 
-        // تفعيل زر "إضافة للمفضلة"
         document.querySelectorAll('.opportunity-card .btn-outline-primary').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -318,7 +338,6 @@
             });
         });
 
-        // تفعيل الفلاتر
         document.querySelectorAll('.filter-group select, .filter-group input').forEach(function(element) {
             element.addEventListener('change', function() {
                 console.log('🔍 تغيير الفلتر:', this.value);
@@ -326,14 +345,10 @@
         });
     }
 
-    /**
-     * تهيئة صفحة المحفظة
-     */
     function initPortfolioPage() {
         console.log('💼 تهيئة صفحة المحفظة');
         loadPageScript('portfolio');
 
-        // تفعيل طلب السحب
         const withdrawBtn = document.querySelector('.withdraw-submit-btn');
         if (withdrawBtn) {
             withdrawBtn.addEventListener('click', function(e) {
@@ -355,7 +370,6 @@
             });
         }
 
-        // تفعيل طرق الدفع
         document.querySelectorAll('.payment-method').forEach(function(method) {
             method.addEventListener('click', function() {
                 document.querySelectorAll('.payment-method').forEach(function(m) {
@@ -366,14 +380,10 @@
         });
     }
 
-    /**
-     * تهيئة صفحة التقارير
-     */
     function initReportsPage() {
         console.log('📊 تهيئة صفحة التقارير');
         loadPageScript('reports');
 
-        // تفعيل أزرار تحميل التقارير
         document.querySelectorAll('.btn-primary .fa-file-pdf, .btn .fa-file-excel').forEach(function(icon) {
             const btn = icon.closest('button') || icon.closest('a');
             if (btn) {
@@ -390,14 +400,10 @@
         });
     }
 
-    /**
-     * تهيئة صفحة الملف الشخصي
-     */
     function initProfilePage() {
         console.log('👤 تهيئة صفحة الملف الشخصي');
         loadPageScript('profile');
 
-        // تفعيل زر حفظ التغييرات
         document.querySelectorAll('.card .btn-primary').forEach(function(btn) {
             if (btn.textContent.includes('حفظ') || btn.textContent.includes('تحديث')) {
                 btn.addEventListener('click', function(e) {
@@ -412,14 +418,10 @@
         });
     }
 
-    /**
-     * تهيئة صفحة الأمان
-     */
     function initSecurityPage() {
         console.log('🔐 تهيئة صفحة الأمان');
         loadPageScript('security');
 
-        // تفعيل مفاتيح التبديل (Switches)
         document.querySelectorAll('.switch input[type="checkbox"]').forEach(function(checkbox) {
             checkbox.addEventListener('change', function() {
                 const status = this.checked ? 'مفعل' : 'معطل';
@@ -431,7 +433,6 @@
             });
         });
 
-        // تفعيل زر توليد رموز الاسترداد
         document.querySelectorAll('.btn-secondary, .btn-outline-secondary').forEach(function(btn) {
             if (btn.textContent.includes('توليد')) {
                 btn.addEventListener('click', function() {
@@ -445,14 +446,10 @@
         });
     }
 
-    /**
-     * تهيئة صفحة الدعم
-     */
     function initSupportPage() {
         console.log('🆘 تهيئة صفحة الدعم');
         loadPageScript('support');
 
-        // تفعيل الأسئلة الشائعة (FAQ)
         document.querySelectorAll('.faq-question').forEach(function(question) {
             question.addEventListener('click', function() {
                 const item = this.closest('.faq-item');
@@ -462,7 +459,6 @@
             });
         });
 
-        // تفعيل بحث الأسئلة الشائعة
         const searchInput = document.getElementById('faqSearchInput');
         if (searchInput) {
             searchInput.addEventListener('keyup', function() {
@@ -485,7 +481,6 @@
             });
         }
 
-        // تفعيل إنشاء تذكرة
         const ticketBtn = document.querySelector('.btn-primary .fa-ticket-alt')?.closest('button') || 
                          document.querySelector('.btn-primary:has(.fa-ticket-alt)');
         if (ticketBtn) {
@@ -499,18 +494,10 @@
         }
     }
 
-    /**
-     * تهيئة صفحات المصادقة
-     */
     function initAuthPage() {
         console.log('🔑 تهيئة صفحة المصادقة');
-        // لا نحتاج إلى تحميل أي سكريبت إضافي هنا
-        // يتم التعامل معها بواسطة auth.js
     }
 
-    /**
-     * توجيه التهيئة حسب نوع الصفحة
-     */
     function initPageByType(pageType) {
         switch (pageType) {
             case 'dashboard':
@@ -544,12 +531,9 @@
     }
 
     // ============================================================
-    // 5. تحميل جميع الملفات المشتركة (باستخدام مسارات مطلقة)
+    // 6. تحميل جميع الملفات المشتركة (باستخدام مسارات نسبية)
     // ============================================================
 
-    /**
-     * تحميل جميع ملفات CSS المشتركة (في حال عدم تحميلها بالفعل)
-     */
     function ensureStylesLoaded() {
         const styles = [
             '/assets/css/core.css',
@@ -559,19 +543,17 @@
         ];
 
         styles.forEach(function(stylePath) {
-            if (!document.querySelector(`link[href="${stylePath}"]`)) {
+            const relativePath = resolveRelativePath(stylePath);
+            if (!document.querySelector(`link[href="${relativePath}"]`)) {
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = stylePath;
+                link.href = relativePath;
                 document.head.appendChild(link);
                 console.log(`📦 تحميل ${stylePath}...`);
             }
         });
     }
 
-    /**
-     * تحميل مكتبة Font Awesome (إذا لم تكن محملة)
-     */
     function ensureFontAwesome() {
         if (!document.querySelector('link[href*="font-awesome"]')) {
             const link = document.createElement('link');
@@ -582,9 +564,6 @@
         }
     }
 
-    /**
-     * تحميل مكتبة Chart.js (إذا لزم الأمر)
-     */
     function ensureChartJs() {
         if (document.getElementById('performanceChart') && typeof Chart === 'undefined') {
             const script = document.createElement('script');
@@ -596,37 +575,26 @@
     }
 
     // ============================================================
-    // 6. التهيئة الرئيسية
+    // 7. التهيئة الرئيسية
     // ============================================================
 
-    /**
-     * التهيئة الرئيسية لملف main.js
-     */
     function initMain() {
         console.log('🚀 بدء تهيئة main.js...');
 
-        // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
         ensureCoreLoaded();
         ensureAppLoaded();
-
-        // 2. التأكد من تحميل أنماط CSS (باستخدام مسارات مطلقة)
         ensureStylesLoaded();
         ensureFontAwesome();
         ensureChartJs();
 
-        // 3. تهيئة المكونات المشتركة
         initCommonComponents();
 
-        // 4. تحديد نوع الصفحة الحالية
         const pageType = getCurrentPage();
         console.log(`📄 نوع الصفحة: ${pageType}`);
 
-        // 5. تهيئة الصفحة حسب نوعها
         initPageByType(pageType);
 
-        // 6. إعادة تهيئة أي عناصر ديناميكية بعد تحميل المحتوى
         document.addEventListener('DOMContentLoaded', function() {
-            // تنفيذ أي تهيئة إضافية بعد تحميل DOM بالكامل
             console.log('✅ DOM جاهز، يتم تنفيذ التهيئة النهائية');
         });
 
@@ -635,31 +603,26 @@
     }
 
     // ============================================================
-    // 7. بدء التهيئة
+    // 8. بدء التهيئة
     // ============================================================
 
-    // بدء التهيئة عند تحميل DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMain);
     } else {
-        // إذا كان DOM قد تم تحميله بالفعل
         initMain();
     }
 
     // ============================================================
-    // 8. تصدير الدوال العامة
+    // 9. تصدير الدوال العامة
     // ============================================================
 
     window.TeraMain = {
-        // تهيئة المكونات
         initMain: initMain,
         initCommonComponents: initCommonComponents,
         initSidebar: initSidebar,
         initNotifications: initNotifications,
         initLogout: initLogout,
         initInternalLinks: initInternalLinks,
-
-        // تهيئة الصفحات
         initDashboardPage: initDashboardPage,
         initInvestmentsPage: initInvestmentsPage,
         initPortfolioPage: initPortfolioPage,
@@ -668,15 +631,15 @@
         initSecurityPage: initSecurityPage,
         initSupportPage: initSupportPage,
         initAuthPage: initAuthPage,
-
-        // دوال مساعدة
         getCurrentPage: getCurrentPage,
         loadPageScript: loadPageScript,
         ensureCoreLoaded: ensureCoreLoaded,
         ensureAppLoaded: ensureAppLoaded,
         ensureStylesLoaded: ensureStylesLoaded,
         ensureFontAwesome: ensureFontAwesome,
-        ensureChartJs: ensureChartJs
+        ensureChartJs: ensureChartJs,
+        getBaseDepth: getBaseDepth,
+        resolveRelativePath: resolveRelativePath
     };
 
     console.log('✅ main.js: تم تحميل المكتبة الرئيسية (TeraMain) بنجاح');
