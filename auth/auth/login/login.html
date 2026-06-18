@@ -6,17 +6,260 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا بوابة المستثمر | تسجيل الدخول الذكي</title>
     
+    <!-- أيقونات الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
     
+    <!-- الخطوط -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght=300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
+    <!-- ملفات CSS الأساسية -->
+    <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
     <link rel="stylesheet" href="login.css">
     
+    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* أنماط إضافية لضمان التوافق مع الهيكل الجديد */
+        .auth-layout {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
+            padding: 20px;
+        }
+        .auth-container {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 50px 40px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(10,37,64,0.08);
+            border: 1px solid rgba(226,232,240,0.8);
+        }
+        .auth-card-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .brand-logo-box {
+            margin-bottom: 20px;
+        }
+        .brand-logo-box img {
+            width: 80px;
+            height: auto;
+        }
+        .portal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0A2540;
+            margin-bottom: 5px;
+        }
+        .page-subtitle {
+            font-size: 18px;
+            font-weight: 700;
+            color: #028090;
+            margin-bottom: 10px;
+        }
+        .welcome-text {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        .form-field-group {
+            margin-bottom: 20px;
+        }
+        .field-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0A2540;
+            font-size: 14px;
+        }
+        .required {
+            color: #DC3545;
+        }
+        .field-label-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .forgot-pass-link {
+            font-size: 13px;
+            color: #028090;
+            text-decoration: none;
+        }
+        .forgot-pass-link:hover {
+            text-decoration: underline;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .form-input-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Tajawal', sans-serif;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+        .form-input-control:focus {
+            outline: none;
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.1);
+        }
+        .checkbox-options-container {
+            margin-top: 10px;
+        }
+        .checkbox-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+        }
+        .checkbox-toggle-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #028090;
+            cursor: pointer;
+        }
+        .remember-me-box {
+            margin-top: 10px;
+        }
+        .error-summary-box {
+            background: #FEE2E2;
+            border: 1px solid #FCA5A5;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #991B1B;
+            margin-bottom: 20px;
+        }
+        .error-box-icon {
+            font-size: 20px;
+        }
+        .form-actions-block {
+            margin-top: 25px;
+        }
+        .btn-submit-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(2,128,144,0.35);
+        }
+        .btn-submit-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .bottom-routing-footer-links {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .bottom-routing-footer-links p {
+            margin-bottom: 8px;
+        }
+        .routing-link {
+            color: #028090;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .routing-link:hover {
+            text-decoration: underline;
+        }
+        .routing-link-secondary {
+            color: #475569;
+            text-decoration: none;
+        }
+        .routing-link-secondary:hover {
+            text-decoration: underline;
+        }
+
+        /* مؤشر التحميل */
+        .tera-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10,37,64,0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loader-content-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 50px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .spinning-infinity-ring {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 6px solid #e2e8f0;
+            border-top-color: #028090;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loader-primary-heading {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0A2540;
+            margin-bottom: 10px;
+        }
+        .creative-motivational-text {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        .loading-progress-track {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #028090, #0A2540);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+    </style>
 </head>
 <body>
     <div class="auth-layout">
@@ -30,43 +273,47 @@
                 <p class="welcome-text">مرحباً بك مجدداً في عالم الاستثمار الذكي. يرجى إدخال بياناتك للوصول إلى محفظتك المالية.</p>
             </div>
 
+            <!-- صندوق الأخطاء -->
             <div class="error-summary-box" id="loginErrorBox" style="display: none;">
                 <span class="error-box-icon">❌</span>
                 <span id="errorBoxText">البيانات المدخلة غير متطابقة مع سجلات المستثمرين.</span>
             </div>
 
-            <form id="teraLoginForm" onsubmit="event.preventDefault(); executeInvestorLoginAuth();">
-                
+            <form id="teraLoginForm">
+                <!-- حقل اسم المستخدم / البريد / الجوال -->
                 <div class="form-field-group">
                     <label class="field-label">بيانات الدخول (اسم المستخدم، البريد، أو رقم الجوال) <span class="required">*</span></label>
                     <div class="input-wrapper">
-                        <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم (106)، البريد، أو الجوال" autocomplete="off" required>
+                        <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم، البريد، أو الجوال" autocomplete="username" required>
                     </div>
-                    <div class="error-feedback-msg" id="identifier-error"></div>
+                    <div class="error-feedback-msg" id="identifier-error" style="color:#DC3545;font-size:13px;margin-top:5px;"></div>
                 </div>
 
+                <!-- حقل كلمة المرور -->
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور الخاصة بك (123)" required>
+                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور الخاصة بك" autocomplete="current-password" required>
                     </div>
                     <div class="checkbox-options-container mt-3">
                         <label class="checkbox-toggle-label">
                             <input type="checkbox" id="show_login_password"> إظهار كلمة المرور
                         </label>
                     </div>
-                    <div class="error-feedback-msg" id="password-error"></div>
+                    <div class="error-feedback-msg" id="password-error" style="color:#DC3545;font-size:13px;margin-top:5px;"></div>
                 </div>
 
+                <!-- تذكرني -->
                 <div class="form-field-group remember-me-box">
                     <label class="checkbox-toggle-label">
                         <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز الآمن
                     </label>
                 </div>
 
+                <!-- زر الإرسال -->
                 <div class="form-actions-block">
                     <button type="submit" class="btn-submit-login" id="loginSubmitBtn">تسجيل الدخول الآمن</button>
                 </div>
@@ -78,6 +325,7 @@
             </div>
         </div>
 
+        <!-- شاشة التحميل -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring">
@@ -86,13 +334,145 @@
                 <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
                 <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة مفاتيح حسابك الاستثماري الفاخر...</p>
                 <div class="loading-progress-track">
-                    <div class="progress-fill-bar"></div>
+                    <div class="progress-fill-bar" id="progressFillBar"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module" src="/assets/js/main.js"></script>
+    <!-- ====== الملفات المشتركة ====== -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/main.js"></script>
+    
+    <!-- سكريبت تسجيل الدخول الخاص -->
     <script src="login.js"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            // 1. إظهار/إخفاء كلمة المرور
+            // ============================================================
+            document.getElementById('show_login_password').addEventListener('change', function() {
+                const passwordInput = document.getElementById('login_password');
+                if (this.checked) {
+                    passwordInput.type = 'text';
+                } else {
+                    passwordInput.type = 'password';
+                }
+            });
+
+            // ============================================================
+            // 2. معالجة تقديم النموذج (login)
+            // ============================================================
+            const loginForm = document.getElementById('teraLoginForm');
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            const errorBox = document.getElementById('loginErrorBox');
+            const errorText = document.getElementById('errorBoxText');
+            const loaderScreen = document.getElementById('creativeLoaderScreen');
+            const progressBar = document.getElementById('progressFillBar');
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // reset errors
+                errorBox.style.display = 'none';
+                document.getElementById('identifier-error').textContent = '';
+                document.getElementById('password-error').textContent = '';
+
+                const identifier = document.getElementById('login_identifier').value.trim();
+                const password = document.getElementById('login_password').value.trim();
+                const remember = document.getElementById('remember_me').checked;
+
+                // التحقق من المدخلات
+                let isValid = true;
+                if (!identifier) {
+                    document.getElementById('identifier-error').textContent = 'يرجى إدخال اسم المستخدم أو البريد أو الجوال.';
+                    isValid = false;
+                }
+                if (!password) {
+                    document.getElementById('password-error').textContent = 'يرجى إدخال كلمة المرور.';
+                    isValid = false;
+                }
+                if (!isValid) return;
+
+                // تعطيل الزر أثناء المعالجة
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+
+                // إظهار شاشة التحميل
+                loaderScreen.style.display = 'flex';
+                progressBar.style.width = '0%';
+
+                // محاكاة تقدم
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 20;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                }, 300);
+
+                // محاكاة طلب تسجيل الدخول (استخدام TeraAuth.login)
+                if (window.TeraAuth && typeof TeraAuth.login === 'function') {
+                    TeraAuth.login(identifier, password)
+                        .then(function(user) {
+                            clearInterval(progressInterval);
+                            progressBar.style.width = '100%';
+                            
+                            setTimeout(() => {
+                                // إخفاء التحميل
+                                loaderScreen.style.display = 'none';
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+
+                                // توجيه المستخدم للوحة التحكم
+                                if (typeof TeraAuth.checkSession === 'function') {
+                                    TeraAuth.checkSession(); // سيقوم بالتوجيه
+                                } else {
+                                    window.location.href = '/pages/dashboard/index.html';
+                                }
+                            }, 600);
+                        })
+                        .catch(function(err) {
+                            clearInterval(progressInterval);
+                            loaderScreen.style.display = 'none';
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+                            
+                            // عرض الخطأ
+                            errorBox.style.display = 'flex';
+                            errorText.textContent = err.message || 'فشل تسجيل الدخول. تأكد من بياناتك وحاول مرة أخرى.';
+                        });
+                } else {
+                    // إذا لم يكن TeraAuth متاحاً (حل احتياطي)
+                    console.warn('⚠️ TeraAuth غير متاح، استخدام محاكاة بسيطة');
+                    setTimeout(() => {
+                        clearInterval(progressInterval);
+                        progressBar.style.width = '100%';
+                        setTimeout(() => {
+                            loaderScreen.style.display = 'none';
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+                            
+                            // تخزين محاكي
+                            localStorage.setItem('tera_token', 'mock-token');
+                            localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: identifier }));
+                            window.location.href = '/pages/dashboard/index.html';
+                        }, 500);
+                    }, 1500);
+                }
+            });
+
+            // ============================================================
+            // 3. منع التوجيه التلقائي إذا كان المستخدم مسجلاً بالفعل
+            //    (سيتم التعامل معه بواسطة auth.js)
+            // ============================================================
+            console.log('🔐 صفحة تسجيل الدخول جاهزة');
+
+        })();
+    </script>
+
 </body>
 </html>
