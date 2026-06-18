@@ -1,15 +1,15 @@
 /**
  * ============================================================
- * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين
+ * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (نسخة متوافقة مع المسارات النسبية)
  * ============================================================
  * هذا الملف هو المدخل الرئيسي للتطبيق، ويتحكم في:
- * - توجيه الصفحات (Routing)
+ * - توجيه الصفحات (Routing) باستخدام مسارات نسبية
  * - التحقق من الجلسة والمستخدم
  * - تحميل المكونات المشتركة
  * - إدارة حالة التطبيق
  * - معالجة الأخطاء العامة
  * ============================================================
- * تم تحديثه لإصلاح خطأ "doc is not defined"
+ * تم تحديثه لإصلاح مشكلة المسارات المطلقة على Render
  * ============================================================
  */
 
@@ -26,8 +26,8 @@
         apiBaseUrl: '/api/v1',
         debug: true,
         authRequired: true,
-        loginUrl: '/auth/auth/login/login.html',
-        defaultPage: '/pages/dashboard/index.html'
+        loginUrl: '../../../auth/auth/login/login.html', // مسار نسبي
+        defaultPage: '../../../pages/dashboard/index.html' // مسار نسبي
     };
 
     // ============================================================
@@ -41,69 +41,108 @@
         isLoading: false,
         notifications: [],
         portfolioData: null,
-        _loadingCount: 0 // منع التحميل المتكرر
+        _loadingCount: 0
     };
 
     // ============================================================
-    // 3. مسارات الصفحات (Routing Configuration)
+    // 3. حساب العمق الحالي للمسار
+    // ============================================================
+
+    /**
+     * حساب عدد المستويات للوصول إلى الجذر من المسار الحالي
+     */
+    const getBaseDepth = () => {
+        const path = window.location.pathname;
+        if (path.includes('/pages/')) return 2;
+        if (path.includes('/auth/auth/')) return 3;
+        if (path.includes('/auth/')) return 2;
+        if (path.includes('/assets/')) return 1;
+        if (path === '/' || path === '/index.html') return 0;
+        const parts = path.split('/').filter(p => p.length > 0);
+        return parts.length;
+    };
+
+    /**
+     * إنشاء مسار نسبي من الجذر
+     */
+    const resolveRelativePath = (relativePath) => {
+        // إزالة / من البداية إذا وجدت
+        let cleanPath = relativePath;
+        if (cleanPath.startsWith('/')) {
+            cleanPath = cleanPath.slice(1);
+        }
+        // إضافة .html إذا لزم الأمر
+        if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
+            cleanPath = cleanPath + '.html';
+        }
+        const depth = getBaseDepth();
+        let prefix = '';
+        for (let i = 0; i < depth; i++) {
+            prefix += '../';
+        }
+        return prefix + cleanPath;
+    };
+
+    // ============================================================
+    // 4. مسارات الصفحات (باستخدام مسارات نسبية)
     // ============================================================
 
     const ROUTES = {
         '/': APP_CONFIG.defaultPage,
         '/index.html': APP_CONFIG.defaultPage,
         '/home': APP_CONFIG.defaultPage,
-        '/dashboard': '/pages/dashboard/index.html',
-        '/dashboard/index.html': '/pages/dashboard/index.html',
-        '/investments': '/pages/investments/opportunities.html',
-        '/investments/opportunities': '/pages/investments/opportunities.html',
-        '/investments/active': '/pages/investments/active-investments.html',
-        '/investments/completed': '/pages/investments/completed-investments.html',
-        '/investments/cancelled': '/pages/investments/cancelled-investments.html',
-        '/investments/extended': '/pages/investments/extended-investments.html',
-        '/investments/details': '/pages/investments/investment-details.html',
-        '/portfolio': '/pages/portfolio/portfolio-overview.html',
-        '/portfolio/overview': '/pages/portfolio/portfolio-overview.html',
-        '/portfolio/transactions': '/pages/portfolio/transactions.html',
-        '/portfolio/profits': '/pages/portfolio/profits.html',
-        '/portfolio/withdraw': '/pages/portfolio/withdraw-request.html',
-        '/portfolio/withdrawals': '/pages/portfolio/withdrawal-history.html',
-        '/portfolio/statement': '/pages/portfolio/account-statement.html',
-        '/reports': '/pages/reports/reports-dashboard.html',
-        '/reports/dashboard': '/pages/reports/reports-dashboard.html',
-        '/reports/portfolio': '/pages/reports/portfolio-report.html',
-        '/reports/investments': '/pages/reports/investments-report.html',
-        '/reports/profits': '/pages/reports/profits-report.html',
-        '/reports/withdrawals': '/pages/reports/withdrawals-report.html',
-        '/profile': '/pages/profile/personal-information.html',
-        '/profile/personal': '/pages/profile/personal-information.html',
-        '/profile/contact': '/pages/profile/contact-information.html',
-        '/profile/address': '/pages/profile/national-address.html',
-        '/profile/bank': '/pages/profile/bank-information.html',
-        '/profile/attachments': '/pages/profile/attachments.html',
-        '/security': '/pages/security/change-password.html',
-        '/security/password': '/pages/security/change-password.html',
-        '/security/email': '/pages/security/change-email.html',
-        '/security/mobile': '/pages/security/change-mobile.html',
-        '/security/2fa': '/pages/security/two-factor-authentication.html',
-        '/security/devices': '/pages/security/registered-devices.html',
-        '/security/login-history': '/pages/security/login-history.html',
-        '/support': '/pages/support/help-center.html',
-        '/support/help': '/pages/support/help-center.html',
-        '/support/faq': '/pages/support/faq.html',
-        '/support/tickets': '/pages/support/tickets.html',
-        '/support/notifications': '/pages/support/notifications.html',
-        '/support/privacy': '/pages/support/privacy-policy.html',
-        '/support/terms': '/pages/support/terms-and-conditions.html',
-        '/auth/login': '/auth/auth/login/login.html',
-        '/auth/register': '/auth/register/register.html',
-        '/auth/forgot-password': '/auth/forgot-password.html',
-        '/auth/reset-password': '/auth/reset-password.html',
-        '/auth/verify-otp': '/auth/verify-otp.html',
-        '/auth/complete-profile': '/auth/complete-profile.html'
+        '/dashboard': '../../../pages/dashboard/index.html',
+        '/dashboard/index.html': '../../../pages/dashboard/index.html',
+        '/investments': '../../../pages/investments/opportunities.html',
+        '/investments/opportunities': '../../../pages/investments/opportunities.html',
+        '/investments/active': '../../../pages/investments/active-investments.html',
+        '/investments/completed': '../../../pages/investments/completed-investments.html',
+        '/investments/cancelled': '../../../pages/investments/cancelled-investments.html',
+        '/investments/extended': '../../../pages/investments/extended-investments.html',
+        '/investments/details': '../../../pages/investments/investment-details.html',
+        '/portfolio': '../../../pages/portfolio/portfolio-overview.html',
+        '/portfolio/overview': '../../../pages/portfolio/portfolio-overview.html',
+        '/portfolio/transactions': '../../../pages/portfolio/transactions.html',
+        '/portfolio/profits': '../../../pages/portfolio/profits.html',
+        '/portfolio/withdraw': '../../../pages/portfolio/withdraw-request.html',
+        '/portfolio/withdrawals': '../../../pages/portfolio/withdrawal-history.html',
+        '/portfolio/statement': '../../../pages/portfolio/account-statement.html',
+        '/reports': '../../../pages/reports/reports-dashboard.html',
+        '/reports/dashboard': '../../../pages/reports/reports-dashboard.html',
+        '/reports/portfolio': '../../../pages/reports/portfolio-report.html',
+        '/reports/investments': '../../../pages/reports/investments-report.html',
+        '/reports/profits': '../../../pages/reports/profits-report.html',
+        '/reports/withdrawals': '../../../pages/reports/withdrawals-report.html',
+        '/profile': '../../../pages/profile/personal-information.html',
+        '/profile/personal': '../../../pages/profile/personal-information.html',
+        '/profile/contact': '../../../pages/profile/contact-information.html',
+        '/profile/address': '../../../pages/profile/national-address.html',
+        '/profile/bank': '../../../pages/profile/bank-information.html',
+        '/profile/attachments': '../../../pages/profile/attachments.html',
+        '/security': '../../../pages/security/change-password.html',
+        '/security/password': '../../../pages/security/change-password.html',
+        '/security/email': '../../../pages/security/change-email.html',
+        '/security/mobile': '../../../pages/security/change-mobile.html',
+        '/security/2fa': '../../../pages/security/two-factor-authentication.html',
+        '/security/devices': '../../../pages/security/registered-devices.html',
+        '/security/login-history': '../../../pages/security/login-history.html',
+        '/support': '../../../pages/support/help-center.html',
+        '/support/help': '../../../pages/support/help-center.html',
+        '/support/faq': '../../../pages/support/faq.html',
+        '/support/tickets': '../../../pages/support/tickets.html',
+        '/support/notifications': '../../../pages/support/notifications.html',
+        '/support/privacy': '../../../pages/support/privacy-policy.html',
+        '/support/terms': '../../../pages/support/terms-and-conditions.html',
+        '/auth/login': '../../../auth/auth/login/login.html',
+        '/auth/register': '../../../auth/register/register.html',
+        '/auth/forgot-password': '../../../auth/forgot-password.html',
+        '/auth/reset-password': '../../../auth/reset-password.html',
+        '/auth/verify-otp': '../../../auth/verify-otp.html',
+        '/auth/complete-profile': '../../../auth/complete-profile.html'
     };
 
     // ============================================================
-    // 4. دوال التحكم في الصفحات (Page Controllers)
+    // 5. دوال التحكم في الصفحات
     // ============================================================
 
     const PUBLIC_PAGES = [
@@ -124,7 +163,6 @@
     function checkAuthStatus() {
         const token = localStorage.getItem('tera_token');
         const userData = localStorage.getItem('tera_user');
-
         if (token && userData) {
             try {
                 AppState.currentUser = JSON.parse(userData);
@@ -170,34 +208,57 @@
     }
 
     // ============================================================
-    // 5. نظام التوجيه (Router)
+    // 6. نظام التوجيه (Router) - متوافق مع المسارات النسبية
     // ============================================================
 
     function resolveRoute(path) {
         const cleanPath = path.split('?')[0].split('#')[0];
         let normalizedPath = cleanPath;
+        // إزالة أي مجلد رئيسي إن وجد
         if (normalizedPath.includes('tera-investor-portal-main')) {
             normalizedPath = normalizedPath.replace('/tera-investor-portal-main', '');
         }
-        if (normalizedPath.endsWith('.html')) {
-            return normalizedPath;
+        // إذا كان المسار يبدأ بـ / نتعامل معه كمسار مطلق في جدول ROUTES
+        if (normalizedPath.startsWith('/')) {
+            if (ROUTES[normalizedPath]) {
+                // إرجاع المسار النسبي المحول
+                return resolveRelativePath(ROUTES[normalizedPath]);
+            }
+            // محاولة إضافة .html
+            const withHtml = normalizedPath + '.html';
+            if (ROUTES[withHtml]) {
+                return resolveRelativePath(ROUTES[withHtml]);
+            }
+            // إذا كان المسار المطلق ينتهي بـ .html، نحوله مباشرة
+            if (normalizedPath.endsWith('.html')) {
+                return resolveRelativePath(normalizedPath);
+            }
+        } else {
+            // مسار نسبي أو اسم ملف
+            if (normalizedPath.endsWith('.html')) {
+                // نحتاج إلى حساب العمق لإضافة ../ بشكل صحيح
+                return resolveRelativePath(normalizedPath);
+            } else {
+                // قد يكون اسم صفحة بدون مسار
+                // نبحث في ROUTES عن مفتاح يبدأ بـ /
+                for (const key in ROUTES) {
+                    if (key.endsWith(normalizedPath) || key === '/' + normalizedPath) {
+                        return resolveRelativePath(ROUTES[key]);
+                    }
+                }
+            }
         }
-        if (ROUTES[normalizedPath]) {
-            return ROUTES[normalizedPath];
-        }
-        const withHtml = normalizedPath + '.html';
-        if (ROUTES[withHtml]) {
-            return ROUTES[withHtml];
-        }
+        // إذا لم يتم العثور على مسار، نعيد الصفحة الافتراضية
         console.warn('⚠️ المسار غير معروف:', normalizedPath);
-        return APP_CONFIG.defaultPage;
+        return resolveRelativePath(APP_CONFIG.defaultPage);
     }
 
     function navigateTo(path, replace) {
         const targetPath = resolveRoute(path);
+        // التحقق من المصادقة
         if (APP_CONFIG.authRequired && !isPublicPage(path) && !AppState.isLoggedIn) {
             console.warn('🔒 يتطلب تسجيل الدخول، يتم التوجيه إلى صفحة تسجيل الدخول');
-            window.location.href = APP_CONFIG.loginUrl;
+            window.location.href = resolveRelativePath(APP_CONFIG.loginUrl);
             return;
         }
         if (replace) {
@@ -209,15 +270,11 @@
     }
 
     // ============================================================
-    // 6. تحميل الصفحات (مع إصلاح خطأ doc is not defined)
+    // 7. تحميل الصفحات (مع دعم المسارات النسبية)
     // ============================================================
 
-    /**
-     * تحميل صفحة معينة في الإطار الرئيسي
-     * @param {string} url - مسار الصفحة
-     */
     function loadPage(url) {
-        // منع التحميل المتكرر لنفس الصفحة
+        // منع التحميل المتكرر
         if (AppState.currentPage === url && AppState._loadingCount > 0) {
             console.log('⏳ الصفحة قيد التحميل بالفعل، يتم تجاهل الطلب:', url);
             return;
@@ -238,41 +295,31 @@
                 return response.text();
             })
             .then(function(html) {
-                // استخدام DOMParser لتحليل HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // التأكد من وجود doc قبل الاستخدام
                 if (!doc) {
                     throw new Error('فشل في تحليل محتوى الصفحة');
                 }
 
-                // تحديث المحتوى الرئيسي
                 const mainContent = document.querySelector('.main-content');
                 if (mainContent) {
                     const newContent = doc.querySelector('.main-content');
                     if (newContent) {
-                        // نسخ المحتوى الجديد
                         mainContent.innerHTML = newContent.innerHTML;
                     } else {
-                        // إذا لم يكن هناك .main-content، استخدم body
                         const bodyContent = doc.body;
                         if (bodyContent) {
                             mainContent.innerHTML = bodyContent.innerHTML;
                         } else {
-                            // في حالة عدم وجود body، استخدم html كامل
                             mainContent.innerHTML = doc.documentElement.innerHTML;
                         }
                     }
-
-                    // إعادة تهيئة السكريبتات بعد تحديث المحتوى
                     reinitializeScripts(doc);
                 } else {
-                    // إذا لم يكن هناك .main-content، استبدل الصفحة بالكامل
                     document.documentElement.innerHTML = html;
                 }
 
-                // تحديث عنوان الصفحة
                 const title = doc.querySelector('title');
                 if (title) {
                     document.title = title.textContent;
@@ -291,30 +338,29 @@
             });
     }
 
-    /**
-     * إعادة تهيئة السكريبتات في الصفحة الجديدة
-     * @param {Document} doc - مستند الصفحة الجديدة
-     */
     function reinitializeScripts(doc) {
         if (!doc) {
             console.warn('⚠️ لا يوجد مستند لإعادة تهيئة السكريبتات');
             return;
         }
 
-        // العثور على جميع السكريبتات في الصفحة الجديدة
         const scripts = doc.querySelectorAll('script');
         scripts.forEach(function(script) {
             if (script.src) {
-                // تحميل السكريبت الخارجي (تجنب التكرار)
-                const existingScript = document.querySelector(`script[src="${script.src}"]`);
+                // نحول المسار إلى نسبي إذا كان مطلقاً
+                let src = script.src;
+                if (src.startsWith('/')) {
+                    // نحوله إلى مسار نسبي بناءً على العمق الحالي
+                    src = resolveRelativePath(src);
+                }
+                const existingScript = document.querySelector(`script[src="${src}"]`);
                 if (!existingScript) {
                     const newScript = document.createElement('script');
-                    newScript.src = script.src;
+                    newScript.src = src;
                     newScript.async = false;
                     document.body.appendChild(newScript);
                 }
             } else if (script.textContent) {
-                // تنفيذ السكريبت المضمن (تجنب التكرار)
                 try {
                     eval(script.textContent);
                 } catch (e) {
@@ -323,7 +369,6 @@
             }
         });
 
-        // إعادة تهيئة TeraCore إذا كانت موجودة
         if (window.TeraCore && typeof window.TeraCore.initCore === 'function') {
             try {
                 window.TeraCore.initCore();
@@ -332,15 +377,9 @@
             }
         }
 
-        // إعادة تهيئة دوال الصفحات الفرعية
         const pageFunctions = [
-            'initDashboard',
-            'initInvestments',
-            'initPortfolio',
-            'initReports',
-            'initProfile',
-            'initSecurity',
-            'initSupport'
+            'initDashboard', 'initInvestments', 'initPortfolio',
+            'initReports', 'initProfile', 'initSecurity', 'initSupport'
         ];
         pageFunctions.forEach(function(fnName) {
             if (typeof window[fnName] === 'function') {
@@ -354,7 +393,7 @@
     }
 
     // ============================================================
-    // 7. دوال واجهة المستخدم (UI Helpers)
+    // 8. دوال واجهة المستخدم
     // ============================================================
 
     function showLoader() {
@@ -436,7 +475,7 @@
                         <button class="btn btn-primary" onclick="window.location.reload()">
                             <i class="fas fa-redo"></i> إعادة المحاولة
                         </button>
-                        <a href="/" class="btn" style="background: var(--gray-200, #e9ecef);">
+                        <a href="../../../index.html" class="btn" style="background: var(--gray-200, #e9ecef);">
                             <i class="fas fa-home"></i> العودة للرئيسية
                         </a>
                     </div>
@@ -446,9 +485,9 @@
     }
 
     function showNotification(message, type, duration) {
+        // ... (نفس الكود السابق مع تعديل المسار إذا لزم الأمر)
         type = type || 'info';
         duration = duration || 5000;
-
         let container = document.getElementById('notification-container');
         if (!container) {
             container = document.createElement('div');
@@ -467,7 +506,6 @@
             `;
             document.body.appendChild(container);
         }
-
         const notification = document.createElement('div');
         notification.style.cssText = `
             background: white;
@@ -482,18 +520,15 @@
             font-weight: 500;
             color: var(--gray-800, #212529);
         `;
-
         const colors = {
             success: { border: '#198754', icon: 'fa-check-circle', color: '#0F5132' },
             error: { border: '#DC3545', icon: 'fa-times-circle', color: '#721C24' },
             warning: { border: '#FFC107', icon: 'fa-exclamation-circle', color: '#856404' },
             info: { border: '#0D6EFD', icon: 'fa-info-circle', color: '#084298' }
         };
-
         const color = colors[type] || colors.info;
         notification.style.borderRightColor = color.border;
         notification.style.color = color.color;
-
         notification.innerHTML = `
             <i class="fas ${color.icon}" style="font-size: 20px;"></i>
             <span style="flex: 1;">${message}</span>
@@ -506,9 +541,7 @@
                 padding: 0 5px;
             ">&times;</button>
         `;
-
         container.appendChild(notification);
-
         setTimeout(function() {
             if (notification.parentElement) {
                 notification.style.opacity = '0';
@@ -524,7 +557,7 @@
     }
 
     // ============================================================
-    // 8. معالجة أحداث المتصفح
+    // 9. معالجة أحداث المتصفح
     // ============================================================
 
     function handlePopState() {
@@ -536,24 +569,21 @@
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
             if (!link) return;
-
             const href = link.getAttribute('href');
             if (!href) return;
-
             if (link.target === '_blank') return;
             if (href.startsWith('http://') || href.startsWith('https://')) return;
             if (href.startsWith('#')) return;
             if (href.startsWith('javascript:')) return;
             if (href.endsWith('.css') || href.endsWith('.js') || href.endsWith('.json')) return;
             if (href.includes('?') && !href.includes('.html')) return;
-
             e.preventDefault();
             navigateTo(href);
         });
     }
 
     // ============================================================
-    // 9. دوال API
+    // 10. دوال API
     // ============================================================
 
     function apiRequest(endpoint, options) {
@@ -588,7 +618,7 @@
     }
 
     // ============================================================
-    // 10. دوال تهيئة الصفحات الفرعية
+    // 11. دوال تهيئة الصفحات الفرعية
     // ============================================================
 
     function initDashboard() { console.log('📊 تهيئة لوحة التحكم'); }
@@ -600,7 +630,7 @@
     function initSupport() { console.log('🆘 تهيئة صفحة الدعم'); }
 
     // ============================================================
-    // 11. تهيئة التطبيق
+    // 12. تهيئة التطبيق
     // ============================================================
 
     function initApp() {
@@ -632,7 +662,7 @@
     }
 
     // ============================================================
-    // 12. بدء التطبيق
+    // 13. بدء التطبيق
     // ============================================================
 
     if (document.readyState === 'loading') {
@@ -642,7 +672,7 @@
     }
 
     // ============================================================
-    // 13. تصدير الدوال العامة
+    // 14. تصدير الدوال العامة
     // ============================================================
 
     window.TeraApp = {
