@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا | تسجيل الدخول الذكي إلى المحفظة</title>
+    <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
 
-    <!-- أيقونات الموقع -->
+    <!-- أيقونة الموقع (مسار مطلق) -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
 
@@ -18,13 +18,16 @@
     <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- الملفات الأساسية CSS -->
+    <!-- الملفات الأساسية CSS (مسارات مطلقة) -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
 
+    <!-- أنماط مدمجة لصفحة تسجيل الدخول (تجنب 404 لـ login.css) -->
     <style>
-        /* أنماط خاصة بصفحة تسجيل الدخول (لتجنب 404 للـ login.css) */
+        /* ============================================================
+           أنماط صفحة تسجيل الدخول (مدمجة لضمان عدم وجود 404)
+           ============================================================ */
         .auth-layout {
             display: flex;
             justify-content: center;
@@ -179,11 +182,11 @@
         <div class="auth-container" id="loginCardBlock">
             <div class="auth-card-header text-center">
                 <div class="brand-logo-box">
-                    <img src="/images/logo.svg" alt="TERA">
+                    <img src="/images/logo.svg" alt="تيرا">
                 </div>
                 <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
                 <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
-                <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية.</p>
+                <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
             </div>
 
             <!-- صندوق الأخطاء -->
@@ -192,22 +195,28 @@
                 <span id="errorBoxText">البيانات المدخلة غير متطابقة مع سجلات المستثمرين.</span>
             </div>
 
-            <form id="teraLoginForm">
+            <form id="teraLoginForm" novalidate>
+                <!-- حقل اسم المستخدم / البريد / الجوال -->
                 <div class="form-field-group">
-                    <label class="field-label">اسم المستخدم / البريد / الجوال <span class="required">*</span></label>
+                    <label class="field-label">اسم المستخدم / البريد الإلكتروني / الجوال <span class="required">*</span></label>
                     <div class="input-wrapper">
-                        <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم، البريد، أو الجوال" autocomplete="username" required>
+                        <input type="text" id="login_identifier" class="form-input-control" 
+                               placeholder="أدخل اسم المستخدم، البريد، أو الجوال" 
+                               autocomplete="username" required>
                     </div>
                     <div class="error-feedback-msg" id="identifier-error"></div>
                 </div>
 
+                <!-- حقل كلمة المرور -->
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
+                        <input type="password" id="login_password" class="form-input-control" 
+                               placeholder="أدخل كلمة المرور" 
+                               autocomplete="current-password" required>
                     </div>
                     <div class="checkbox-options-container">
                         <label class="checkbox-toggle-label">
@@ -217,12 +226,14 @@
                     <div class="error-feedback-msg" id="password-error"></div>
                 </div>
 
+                <!-- تذكرني -->
                 <div class="form-field-group remember-me-box">
                     <label class="checkbox-toggle-label">
                         <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
                     </label>
                 </div>
 
+                <!-- زر الإرسال -->
                 <div class="form-actions-block">
                     <button type="submit" class="btn-submit-login" id="loginSubmitBtn">
                         <i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن
@@ -249,172 +260,37 @@
         </div>
     </div>
 
-    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح ====== -->
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح (مسارات مطلقة) ====== -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/login.js"></script>
 
+    <!-- ====== سكريبت إضافي للتأكد من تهيئة الصفحة ====== -->
     <script>
         (function() {
             'use strict';
 
-            console.log('🚀 [login.html] بدء تحميل صفحة تسجيل الدخول');
+            console.log('🚀 [login.html] تم تحميل صفحة تسجيل الدخول');
 
-            // ================================================================
-            // 1. تنظيف المفاتيح القديمة (لحل مشكلة التعارض)
-            // ================================================================
+            // حذف أي مفاتيح قديمة قد تسبب تعارضاً
             if (localStorage.getItem('tera_auth_token') || localStorage.getItem('tera_user_data')) {
-                console.warn('🧹 [login.html] تم العثور على مفاتيح قديمة (tera_auth_token, tera_user_data). يتم تنظيفها.');
+                console.warn('🧹 [login.html] تنظيف المفاتيح القديمة...');
                 localStorage.removeItem('tera_auth_token');
                 localStorage.removeItem('tera_user_data');
             }
 
-            // ================================================================
-            // 2. مراجع العناصر الأساسية
-            // ================================================================
-            const form = document.getElementById('teraLoginForm');
-            const identifier = document.getElementById('login_identifier');
-            const password = document.getElementById('login_password');
-            const submitBtn = document.getElementById('loginSubmitBtn');
-            const errorBox = document.getElementById('loginErrorBox');
-            const errorText = document.getElementById('errorBoxText');
-            const loader = document.getElementById('creativeLoaderScreen');
-            const progressBar = document.getElementById('progressFillBar');
-            const showPassCheck = document.getElementById('show_login_password');
-
-            // ================================================================
-            // 3. إظهار/إخفاء كلمة المرور
-            // ================================================================
-            if (showPassCheck) {
-                showPassCheck.addEventListener('change', function() {
-                    password.type = this.checked ? 'text' : 'password';
-                });
+            // تعطيل checkSession التلقائي في auth.js لصفحة تسجيل الدخول
+            if (window.TeraAuth && typeof TeraAuth.disableAutoRedirect === 'function') {
+                TeraAuth.disableAutoRedirect();
+                console.log('🔒 [login.html] تم تعطيل التوجيه التلقائي مؤقتاً');
             }
 
-            // ================================================================
-            // 4. معالجة تقديم النموذج (منع الحلقة اللانهائية)
-            // ================================================================
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // إعادة تعيين الأخطاء
-                errorBox.style.display = 'none';
-                document.getElementById('identifier-error').textContent = '';
-                document.getElementById('password-error').textContent = '';
-
-                const idVal = identifier.value.trim();
-                const passVal = password.value.trim();
-
-                // التحقق من الحقول الفارغة
-                let isValid = true;
-                if (!idVal) {
-                    document.getElementById('identifier-error').textContent = 'هذا الحقل مطلوب.';
-                    identifier.classList.add('is-invalid-active');
-                    isValid = false;
-                } else {
-                    identifier.classList.remove('is-invalid-active');
-                }
-
-                if (!passVal) {
-                    document.getElementById('password-error').textContent = 'هذا الحقل مطلوب.';
-                    password.classList.add('is-invalid-active');
-                    isValid = false;
-                } else {
-                    password.classList.remove('is-invalid-active');
-                }
-
-                if (!isValid) return;
-
-                // تعطيل الزر وإظهار التحميل
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
-                loader.style.display = 'flex';
-
-                // محاكاة تقدم
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 20 + 5;
-                    if (progress > 95) progress = 95;
-                    if (progressBar) progressBar.style.width = progress + '%';
-                }, 300);
-
-                // استدعاء TeraAuth.login (الموجود في auth.js)
-                if (window.TeraAuth && typeof TeraAuth.login === 'function') {
-                    console.log('🔐 [login.html] محاولة تسجيل الدخول عبر TeraAuth...');
-                    TeraAuth.login(idVal, passVal)
-                        .then(function(user) {
-                            console.log('✅ [login.html] تم تسجيل الدخول بنجاح:', user);
-                            clearInterval(interval);
-                            if (progressBar) progressBar.style.width = '100%';
-
-                            // التوجيه المباشر إلى لوحة التحكم (تجاوز checkSession لتجنب الحلقات)
-                            setTimeout(function() {
-                                window.location.href = '/pages/dashboard/index.html';
-                            }, 800);
-                        })
-                        .catch(function(err) {
-                            console.error('❌ [login.html] فشل تسجيل الدخول:', err);
-                            clearInterval(interval);
-                            loader.style.display = 'none';
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
-
-                            errorBox.style.display = 'flex';
-                            errorText.textContent = err.message || 'فشل تسجيل الدخول. تحقق من بياناتك.';
-                            identifier.classList.add('is-invalid-active');
-                            password.classList.add('is-invalid-active');
-                        });
-                } else {
-                    // حل احتياطي إذا لم يتم تحميل TeraAuth (نادراً)
-                    console.warn('⚠️ [login.html] TeraAuth غير متاح، استخدام المحاكاة المحلية.');
-                    const mockUsers = [
-                        { username: '106', email: 'investor106@tera.sa', mobile: '506060606', password: '123' }
-                    ];
-                    const matched = mockUsers.find(u =>
-                        u.username === idVal || u.email.toLowerCase() === idVal.toLowerCase() || u.mobile === idVal
-                    );
-
-                    setTimeout(() => {
-                        clearInterval(interval);
-                        if (matched && matched.password === passVal) {
-                            if (progressBar) progressBar.style.width = '100%';
-                            localStorage.setItem('tera_token', 'mock-token-' + Date.now());
-                            localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: matched.email }));
-                            setTimeout(() => {
-                                window.location.href = '/pages/dashboard/index.html';
-                            }, 800);
-                        } else {
-                            loader.style.display = 'none';
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
-                            errorBox.style.display = 'flex';
-                            errorText.textContent = 'البيانات المدخلة غير متطابقة.';
-                            identifier.classList.add('is-invalid-active');
-                            password.classList.add('is-invalid-active');
-                        }
-                    }, 1500);
-                }
+            // بعد تحميل الصفحة بالكامل، نعيد تفعيل checkSession (سيتم بعد تسجيل الدخول)
+            window.addEventListener('load', function() {
+                // نترك checkSession معطلاً حتى يتم تسجيل الدخول بنجاح
+                console.log('✅ [login.html] الصفحة جاهزة، انتظار إدخال البيانات');
             });
-
-            // ================================================================
-            // 5. إزالة علامات الخطأ أثناء الكتابة
-            // ================================================================
-            identifier.addEventListener('input', function() {
-                this.classList.remove('is-invalid-active');
-                document.getElementById('identifier-error').textContent = '';
-                errorBox.style.display = 'none';
-            });
-            password.addEventListener('input', function() {
-                this.classList.remove('is-invalid-active');
-                document.getElementById('password-error').textContent = '';
-                errorBox.style.display = 'none';
-            });
-
-            console.log('✅ [login.html] تم تهيئة صفحة تسجيل الدخول بنجاح');
-            console.log('📌 [login.html] استخدم البيانات التالية للاختبار:');
-            console.log('   - اسم المستخدم: 106');
-            console.log('   - كلمة المرور: 123');
 
         })();
     </script>
