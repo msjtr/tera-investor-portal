@@ -1,82 +1,35 @@
 <aside class="tera-sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <i class="fa-solid fa-cube" style="color: var(--tera-secondary, #00C2C7); font-size: 1.5rem;"></i>
-        <span class="logo-text" style="font-weight: 800; font-size: 1.2rem; color: var(--tera-primary, #0A1B3F);">تيرا للاستثمار</span>
+        <img src="/images/logo.svg" alt="Tera Logo" class="logo-img">
+        <span class="logo-text">تيرا للاستثمار</span>
     </div>
 
-    <ul class="sidebar-menu">
-        <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/dashboard/index.html"><i class="fa-solid fa-gauge"></i> <span class="menu-text">الرئيسية</span></a></li>
+    <div class="sidebar-scroll">
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a href="/pages/dashboard/index.html" class="menu-link"><i class="fa-solid fa-gauge"></i> <span>الرئيسية</span></a></li>
+            
+            <li class="menu-item has-submenu">
+                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span>الاستثمارات</span></a>
+                <ul class="submenu">
+                    <li><a href="/pages/investments/opportunities.html" class="menu-link">الفرص المتاحة</a></li>
+                    <li><a href="/pages/investments/active-investments.html" class="menu-link">الاستثمارات النشطة</a></li>
+                </ul>
+            </li>
+            
+            <li class="menu-item has-submenu">
+                <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-wallet"></i> <span>المحفظة</span></a>
+                <ul class="submenu">
+                    <li><a href="/pages/portfolio/portfolio-overview.html" class="menu-link">نظرة عامة</a></li>
+                    <li><a href="/pages/portfolio/withdraw-request.html" class="menu-link">طلب سحب</a></li>
+                </ul>
+            </li>
+            
+            <li class="menu-item"><a href="/pages/security/change-password.html" class="menu-link"><i class="fa-solid fa-shield"></i> <span>الأمان</span></a></li>
+            <li class="menu-item"><a href="/pages/support/tickets.html" class="menu-link"><i class="fa-solid fa-headset"></i> <span>الدعم الفني</span></a></li>
+        </ul>
+    </div>
 
-        <li class="menu-item has-submenu">
-            <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-chart-line"></i> <span class="menu-text">الاستثمارات</span> <i class="fa-solid fa-chevron-down submenu-icon"></i></a>
-            <ul class="submenu">
-                <li><a href="#" class="menu-link" data-path="/pages/investments/opportunities.html"><i class="fa-solid fa-circle-dot"></i> الفرص المتاحة</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/investments/active-investments.html"><i class="fa-solid fa-circle-dot"></i> الاستثمارات النشطة</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/investments/completed-investments.html"><i class="fa-solid fa-circle-dot"></i> الاستثمارات المكتملة</a></li>
-            </ul>
-        </li>
-
-        <li class="menu-item has-submenu">
-            <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-wallet"></i> <span class="menu-text">المحفظة</span> <i class="fa-solid fa-chevron-down submenu-icon"></i></a>
-            <ul class="submenu">
-                <li><a href="#" class="menu-link" data-path="/pages/portfolio/portfolio-overview.html"><i class="fa-solid fa-circle-dot"></i> نظرة عامة</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/portfolio/account-statement.html"><i class="fa-solid fa-circle-dot"></i> كشف الحساب</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/portfolio/withdraw-request.html"><i class="fa-solid fa-circle-dot"></i> طلب سحب</a></li>
-            </ul>
-        </li>
-
-        <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/reports/reports-dashboard.html"><i class="fa-solid fa-file-invoice"></i> <span class="menu-text">التقارير</span></a></li>
-
-        <li class="menu-item has-submenu">
-            <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-user"></i> <span class="menu-text">الملف الشخصي</span> <i class="fa-solid fa-chevron-down submenu-icon"></i></a>
-            <ul class="submenu">
-                <li><a href="#" class="menu-link" data-path="/pages/profile/personal-information.html"><i class="fa-solid fa-circle-dot"></i> المعلومات الشخصية</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/profile/bank-information.html"><i class="fa-solid fa-circle-dot"></i> المعلومات البنكية</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/profile/attachments.html"><i class="fa-solid fa-circle-dot"></i> المرفقات (KYC)</a></li>
-            </ul>
-        </li>
-
-        <li class="menu-item has-submenu">
-            <a href="#" class="menu-link submenu-toggle"><i class="fa-solid fa-shield-halved"></i> <span class="menu-text">الأمان</span> <i class="fa-solid fa-chevron-down submenu-icon"></i></a>
-            <ul class="submenu">
-                <li><a href="#" class="menu-link" data-path="/pages/security/change-password.html"><i class="fa-solid fa-circle-dot"></i> تغيير كلمة المرور</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/security/two-factor-authentication.html"><i class="fa-solid fa-circle-dot"></i> المصادقة الثنائية</a></li>
-                <li><a href="#" class="menu-link" data-path="/pages/security/registered-devices.html"><i class="fa-solid fa-circle-dot"></i> الأجهزة المسجلة</a></li>
-            </ul>
-        </li>
-
-        <li class="menu-item"><a href="#" class="menu-link" data-path="/pages/support/tickets.html"><i class="fa-solid fa-headset"></i> <span class="menu-text">الدعم الفني</span></a></li>
-    </ul>
-
-    <div style="padding: 20px; border-top: 1px solid var(--tera-border, #E2E8F0);">
-        <a href="#" class="menu-link btn-logout"><i class="fa-solid fa-right-from-bracket"></i> <span class="menu-text">تسجيل الخروج</span></a>
+    <div class="sidebar-footer">
+        <a href="#" class="menu-link btn-logout"><i class="fa-solid fa-right-from-bracket"></i> <span>تسجيل الخروج</span></a>
     </div>
 </aside>
-
-<script>
-    // 1. ربط الروابط بـ TERA.basePath
-    document.querySelectorAll('.tera-sidebar .menu-link[data-path]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetPath = this.getAttribute('data-path');
-            if (typeof TERA !== 'undefined' && TERA.basePath) {
-                window.location.href = TERA.basePath + targetPath;
-            } else {
-                window.location.href = targetPath;
-            }
-        });
-    });
-
-    // 2. تفعيل القوائم المنسدلة (Submenu Logic)
-    document.querySelectorAll('.submenu-toggle').forEach(toggle => {
-        toggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            const parent = this.parentElement;
-            parent.classList.toggle('active');
-            
-            // تدوير أيقونة السهم
-            const icon = this.querySelector('.submenu-icon');
-            if(icon) icon.style.transform = parent.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-        });
-    });
-</script>
