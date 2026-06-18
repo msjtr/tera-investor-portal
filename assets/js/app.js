@@ -1,12 +1,24 @@
 /**
  * ============================================================
  * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين
- * (مصحح لتوحيد مفتاح التخزين)
+ * ============================================================
+ * هذا الملف هو المدخل الرئيسي للتطبيق، ويتحكم في:
+ * - توجيه الصفحات (Routing)
+ * - التحقق من الجلسة والمستخدم
+ * - تحميل المكونات المشتركة
+ * - إدارة حالة التطبيق
+ * - معالجة الأخطاء العامة
+ * ============================================================
+ * تم تحديثه لإصلاح خطأ "doc is not defined"
  * ============================================================
  */
 
 (function() {
     'use strict';
+
+    // ============================================================
+    // 1. تكوينات التطبيق الأساسية
+    // ============================================================
 
     const APP_CONFIG = {
         name: 'تيرا للمستثمرين',
@@ -18,14 +30,23 @@
         defaultPage: '/pages/dashboard/index.html'
     };
 
+    // ============================================================
+    // 2. حالة التطبيق (Application State)
+    // ============================================================
+
     const AppState = {
         currentUser: null,
         currentPage: '',
         isLoggedIn: false,
         isLoading: false,
         notifications: [],
-        portfolioData: null
+        portfolioData: null,
+        _loadingCount: 0 // منع التحميل المتكرر
     };
+
+    // ============================================================
+    // 3. مسارات الصفحات (Routing Configuration)
+    // ============================================================
 
     const ROUTES = {
         '/': APP_CONFIG.defaultPage,
@@ -81,6 +102,10 @@
         '/auth/complete-profile': '/auth/complete-profile.html'
     };
 
+    // ============================================================
+    // 4. دوال التحكم في الصفحات (Page Controllers)
+    // ============================================================
+
     const PUBLIC_PAGES = [
         '/auth/login',
         '/auth/register',
@@ -96,7 +121,6 @@
         });
     }
 
-    // ✅ تم تعديل checkAuthStatus لاستخدام tera_token
     function checkAuthStatus() {
         const token = localStorage.getItem('tera_token');
         const userData = localStorage.getItem('tera_user');
@@ -114,7 +138,6 @@
         return false;
     }
 
-    // ✅ تم تعديل login لاستخدام tera_token
     function login(credentials) {
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
@@ -138,7 +161,6 @@
         });
     }
 
-    // ✅ تم تعديل logout لاستخدام tera_token
     function logout() {
         localStorage.removeItem('tera_token');
         localStorage.removeItem('tera_user');
@@ -147,39 +169,10 @@
         navigateTo('/auth/login');
     }
 
-    // ... (باقي دوال التطبيق كما هي، مع التأكد من استخدام tera_token في apiRequest)
-    function apiRequest(endpoint, options) {
-        options = options || {};
-        const url = APP_CONFIG.apiBaseUrl + endpoint;
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        };
-        const token = localStorage.getItem('tera_token');
-        if (token) {
-            headers['Authorization'] = 'Bearer ' + token;
-        }
-        const config = {
-            method: options.method || 'GET',
-            headers: headers,
-            body: options.body ? JSON.stringify(options.body) : undefined
-        };
-        return fetch(url, config)
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(data) {
-                        throw new Error(data.message || 'خطأ في الطلب');
-                    });
-                }
-                return response.json();
-            })
-            .catch(function(error) {
-                console.error('❌ خطأ في API:', error);
-                throw error;
-            });
-    }
+    // ============================================================
+    // 5. نظام التوجيه (Router)
+    // ============================================================
 
-    // دوال التوجيه والتحميل (متبقية كما هي)
     function resolveRoute(path) {
         const cleanPath = path.split('?')[0].split('#')[0];
         let normalizedPath = cleanPath;
@@ -215,10 +208,28 @@
         loadPage(targetPath);
     }
 
+    // ============================================================
+    // 6. تحميل الصفحات (مع إصلاح خطأ doc is not defined)
+    // ============================================================
+
+    /**
+     * تحميل صفحة معينة في الإطار الرئيسي
+     * @param {string} url - مسار الصفحة
+     */
     function loadPage(url) {
-        showLoader();
+        // منع التحميل المتكرر لنفس الصفحة
+        if (AppState.currentPage === url && AppState._loadingCount > 0) {
+            console.log('⏳ الصفحة قيد التحميل بالفعل، يتم تجاهل الطلب:', url);
+            return;
+        }
+
+        AppState._loadingCount++;
         AppState.currentPage = url;
         AppState.isLoading = true;
+        showLoader();
+
+        console.log('📄 جاري تحميل الصفحة:', url);
+
         fetch(url)
             .then(function(response) {
                 if (!response.ok) {
@@ -227,50 +238,83 @@
                 return response.text();
             })
             .then(function(html) {
+                // استخدام DOMParser لتحليل HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // التأكد من وجود doc قبل الاستخدام
+                if (!doc) {
+                    throw new Error('فشل في تحليل محتوى الصفحة');
+                }
+
+                // تحديث المحتوى الرئيسي
                 const mainContent = document.querySelector('.main-content');
                 if (mainContent) {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
                     const newContent = doc.querySelector('.main-content');
                     if (newContent) {
+                        // نسخ المحتوى الجديد
                         mainContent.innerHTML = newContent.innerHTML;
                     } else {
+                        // إذا لم يكن هناك .main-content، استخدم body
                         const bodyContent = doc.body;
                         if (bodyContent) {
                             mainContent.innerHTML = bodyContent.innerHTML;
+                        } else {
+                            // في حالة عدم وجود body، استخدم html كامل
+                            mainContent.innerHTML = doc.documentElement.innerHTML;
                         }
                     }
+
+                    // إعادة تهيئة السكريبتات بعد تحديث المحتوى
                     reinitializeScripts(doc);
                 } else {
-                    document.open();
-                    document.write(html);
-                    document.close();
+                    // إذا لم يكن هناك .main-content، استبدل الصفحة بالكامل
+                    document.documentElement.innerHTML = html;
                 }
-                hideLoader();
-                AppState.isLoading = false;
+
+                // تحديث عنوان الصفحة
                 const title = doc.querySelector('title');
                 if (title) {
                     document.title = title.textContent;
                 }
-                console.log('✅ تم تحميل الصفحة:', url);
+
+                console.log('✅ تم تحميل الصفحة بنجاح:', url);
             })
             .catch(function(error) {
                 console.error('❌ خطأ في تحميل الصفحة:', error);
-                hideLoader();
-                AppState.isLoading = false;
                 showErrorPage(error);
+            })
+            .finally(function() {
+                AppState._loadingCount--;
+                AppState.isLoading = false;
+                hideLoader();
             });
     }
 
+    /**
+     * إعادة تهيئة السكريبتات في الصفحة الجديدة
+     * @param {Document} doc - مستند الصفحة الجديدة
+     */
     function reinitializeScripts(doc) {
+        if (!doc) {
+            console.warn('⚠️ لا يوجد مستند لإعادة تهيئة السكريبتات');
+            return;
+        }
+
+        // العثور على جميع السكريبتات في الصفحة الجديدة
         const scripts = doc.querySelectorAll('script');
         scripts.forEach(function(script) {
             if (script.src) {
-                const newScript = document.createElement('script');
-                newScript.src = script.src;
-                newScript.async = false;
-                document.body.appendChild(newScript);
+                // تحميل السكريبت الخارجي (تجنب التكرار)
+                const existingScript = document.querySelector(`script[src="${script.src}"]`);
+                if (!existingScript) {
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src;
+                    newScript.async = false;
+                    document.body.appendChild(newScript);
+                }
             } else if (script.textContent) {
+                // تنفيذ السكريبت المضمن (تجنب التكرار)
                 try {
                     eval(script.textContent);
                 } catch (e) {
@@ -278,19 +322,41 @@
                 }
             }
         });
-        if (window.TeraCore && typeof window.TeraCore.init === 'function') {
-            window.TeraCore.init();
+
+        // إعادة تهيئة TeraCore إذا كانت موجودة
+        if (window.TeraCore && typeof window.TeraCore.initCore === 'function') {
+            try {
+                window.TeraCore.initCore();
+            } catch (e) {
+                console.warn('⚠️ خطأ في تهيئة TeraCore:', e);
+            }
         }
-        if (typeof initDashboard === 'function') initDashboard();
-        if (typeof initInvestments === 'function') initInvestments();
-        if (typeof initPortfolio === 'function') initPortfolio();
-        if (typeof initReports === 'function') initReports();
-        if (typeof initProfile === 'function') initProfile();
-        if (typeof initSecurity === 'function') initSecurity();
-        if (typeof initSupport === 'function') initSupport();
+
+        // إعادة تهيئة دوال الصفحات الفرعية
+        const pageFunctions = [
+            'initDashboard',
+            'initInvestments',
+            'initPortfolio',
+            'initReports',
+            'initProfile',
+            'initSecurity',
+            'initSupport'
+        ];
+        pageFunctions.forEach(function(fnName) {
+            if (typeof window[fnName] === 'function') {
+                try {
+                    window[fnName]();
+                } catch (e) {
+                    console.warn(`⚠️ خطأ في تنفيذ ${fnName}:`, e);
+                }
+            }
+        });
     }
 
-    // دوال UI Helpers
+    // ============================================================
+    // 7. دوال واجهة المستخدم (UI Helpers)
+    // ============================================================
+
     function showLoader() {
         let loader = document.getElementById('app-loader');
         if (!loader) {
@@ -380,52 +446,151 @@
     }
 
     function showNotification(message, type, duration) {
-        // ... (نفس الكود السابق، لم يتغير)
+        type = type || 'info';
+        duration = duration || 5000;
+
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            container.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                left: 30px;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column-reverse;
+                gap: 10px;
+                max-width: 400px;
+                width: 100%;
+                direction: rtl;
+            `;
+            document.body.appendChild(container);
+        }
+
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            background: white;
+            padding: 15px 20px;
+            border-radius: var(--border-radius, 10px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border-right: 5px solid var(--primary-color, #0D6EFD);
+            animation: slideUp 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            color: var(--gray-800, #212529);
+        `;
+
+        const colors = {
+            success: { border: '#198754', icon: 'fa-check-circle', color: '#0F5132' },
+            error: { border: '#DC3545', icon: 'fa-times-circle', color: '#721C24' },
+            warning: { border: '#FFC107', icon: 'fa-exclamation-circle', color: '#856404' },
+            info: { border: '#0D6EFD', icon: 'fa-info-circle', color: '#084298' }
+        };
+
+        const color = colors[type] || colors.info;
+        notification.style.borderRightColor = color.border;
+        notification.style.color = color.color;
+
+        notification.innerHTML = `
+            <i class="fas ${color.icon}" style="font-size: 20px;"></i>
+            <span style="flex: 1;">${message}</span>
+            <button onclick="this.parentElement.remove()" style="
+                background: none;
+                border: none;
+                font-size: 20px;
+                cursor: pointer;
+                color: var(--gray-500, #adb5bd);
+                padding: 0 5px;
+            ">&times;</button>
+        `;
+
+        container.appendChild(notification);
+
+        setTimeout(function() {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(20px)';
+                notification.style.transition = 'all 0.3s ease';
+                setTimeout(function() {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, duration);
     }
 
-    // تهيئة التطبيق
-    function initApp() {
-        console.log('🚀 بدء تشغيل تطبيق تيرا للمستثمرين v' + APP_CONFIG.version);
-        checkAuthStatus();
-        console.log('🔐 حالة تسجيل الدخول:', AppState.isLoggedIn ? 'مُسجل' : 'غير مُسجل');
-        handleInternalLinks();
-        window.addEventListener('popstate', function() {
-            const path = window.location.pathname;
-            navigateTo(path, true);
-        });
-        const currentPath = window.location.pathname;
-        const targetPage = resolveRoute(currentPath);
-        if (targetPage !== currentPath && !currentPath.includes('.html')) {
-            navigateTo(currentPath);
-        } else {
-            loadPage(targetPage);
-        }
-        console.log('✅ تم تهيئة التطبيق بنجاح');
-        if (AppState.isLoggedIn && AppState.currentUser) {
-            setTimeout(function() {
-                showNotification('مرحباً ' + AppState.currentUser.name + '! 👋', 'success', 3000);
-            }, 1000);
-        }
+    // ============================================================
+    // 8. معالجة أحداث المتصفح
+    // ============================================================
+
+    function handlePopState() {
+        const path = window.location.pathname;
+        navigateTo(path, true);
     }
 
     function handleInternalLinks() {
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
             if (!link) return;
+
             const href = link.getAttribute('href');
             if (!href) return;
+
             if (link.target === '_blank') return;
             if (href.startsWith('http://') || href.startsWith('https://')) return;
             if (href.startsWith('#')) return;
             if (href.startsWith('javascript:')) return;
             if (href.endsWith('.css') || href.endsWith('.js') || href.endsWith('.json')) return;
             if (href.includes('?') && !href.includes('.html')) return;
+
             e.preventDefault();
             navigateTo(href);
         });
     }
 
-    // دوال تهيئة الصفحات الفرعية (متبقية)
+    // ============================================================
+    // 9. دوال API
+    // ============================================================
+
+    function apiRequest(endpoint, options) {
+        options = options || {};
+        const url = APP_CONFIG.apiBaseUrl + endpoint;
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+        const token = localStorage.getItem('tera_token');
+        if (token) {
+            headers['Authorization'] = 'Bearer ' + token;
+        }
+        const config = {
+            method: options.method || 'GET',
+            headers: headers,
+            body: options.body ? JSON.stringify(options.body) : undefined
+        };
+        return fetch(url, config)
+            .then(function(response) {
+                if (!response.ok) {
+                    return response.json().then(function(data) {
+                        throw new Error(data.message || 'خطأ في الطلب');
+                    });
+                }
+                return response.json();
+            })
+            .catch(function(error) {
+                console.error('❌ خطأ في API:', error);
+                throw error;
+            });
+    }
+
+    // ============================================================
+    // 10. دوال تهيئة الصفحات الفرعية
+    // ============================================================
+
     function initDashboard() { console.log('📊 تهيئة لوحة التحكم'); }
     function initInvestments() { console.log('💰 تهيئة صفحة الاستثمارات'); }
     function initPortfolio() { console.log('💼 تهيئة صفحة المحفظة'); }
@@ -434,11 +599,51 @@
     function initSecurity() { console.log('🔐 تهيئة صفحة الأمان'); }
     function initSupport() { console.log('🆘 تهيئة صفحة الدعم'); }
 
+    // ============================================================
+    // 11. تهيئة التطبيق
+    // ============================================================
+
+    function initApp() {
+        console.log('🚀 بدء تشغيل تطبيق تيرا للمستثمرين v' + APP_CONFIG.version);
+
+        checkAuthStatus();
+        console.log('🔐 حالة تسجيل الدخول:', AppState.isLoggedIn ? 'مُسجل' : 'غير مُسجل');
+
+        handleInternalLinks();
+        window.addEventListener('popstate', handlePopState);
+
+        const currentPath = window.location.pathname;
+        const targetPage = resolveRoute(currentPath);
+
+        if (targetPage !== currentPath && !currentPath.includes('.html')) {
+            navigateTo(currentPath);
+        } else {
+            loadPage(targetPage);
+        }
+
+        console.log('✅ تم تهيئة التطبيق بنجاح');
+        console.log('📌 يمكنك التنقل بين الصفحات باستخدام الروابط الداخلية');
+
+        if (AppState.isLoggedIn && AppState.currentUser) {
+            setTimeout(function() {
+                showNotification('مرحباً ' + AppState.currentUser.name + '! 👋', 'success', 3000);
+            }, 1000);
+        }
+    }
+
+    // ============================================================
+    // 12. بدء التطبيق
+    // ============================================================
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initApp);
     } else {
         initApp();
     }
+
+    // ============================================================
+    // 13. تصدير الدوال العامة
+    // ============================================================
 
     window.TeraApp = {
         navigateTo: navigateTo,
@@ -464,4 +669,6 @@
     };
 
     console.log('✅ app.js: تم تحميل تطبيق تيرا للمستثمرين بنجاح');
+    console.log('📚 استخدم TeraApp للوصول إلى دوال التطبيق');
+
 })();
