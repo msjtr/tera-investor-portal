@@ -1,70 +1,98 @@
-/* ================================================= */
-/* TERA RESPONSIVE SYSTEM - UPDATED & STABLE */
-/* ================================================= */
+/* ========================================
+   responsive.css - التجاوب مع جميع الأجهزة
+   ======================================== */
 
-/* 1. LARGE SCREENS */
-@media (max-width: 1400px) {
-    .container { max-width: 1140px; }
-}
-
-/* 2. DESKTOP (أجهزة سطح المكتب) */
-@media (max-width: 1200px) {
-    .grid-4 { grid-template-columns: repeat(3, 1fr); }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-/* 3. TABLET (الأجهزة اللوحية) */
-@media (max-width: 992px) {
-    .page-wrapper { padding: 20px; }
-    .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
-    
-    /* إصلاح السايدبار للتابلت - إخفاء النص وإظهار الأيقونات فقط */
-    #sidebar-container { width: 80px; }
-    .tera-main-content { width: calc(100% - 80px); }
-    
-    .register-steps { flex-direction: column; gap: 15px; }
-    .step { width: 100%; display: flex; align-items: center; gap: 10px; }
-}
-
-/* 4. MOBILE (الجوالات) */
-@media (max-width: 768px) {
-    .container { padding: 0 15px; }
-    
-    /* تفعيل التصميم الرأسي الكامل */
-    body { flex-direction: column; }
-    #sidebar-container { width: 100%; height: auto; }
-    .tera-main-content { width: 100%; }
-    
-    /* الشبكات تصبح عموداً واحداً */
-    .grid-2, .grid-3, .grid-4, .form-grid, .stats-grid, .profile-form-body { 
-        grid-template-columns: 1fr !important; 
-        gap: 15px !important; 
+/* ----- شاشات كبيرة (أقل من 1200px) ----- */
+@media (max-width: 1199px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
     }
-
-    .card, .auth-card { padding: 20px; border-radius: 16px; }
-    
-    /* الأزرار تأخذ العرض الكامل */
-    .btn { width: 100%; padding: 14px 20px; }
-    
-    .form-actions { flex-direction: column-reverse; gap: 12px; }
-
-    /* الجداول */
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .tera-table { min-width: 600px; }
-    
-    /* الخطوط */
-    .page-title { font-size: 20px !important; }
 }
 
-/* 5. SMALL MOBILE & EXTRA SMALL */
-@media (max-width: 480px) {
-    .page-wrapper { padding: 15px; }
-    .auth-title { font-size: 1.5rem; }
-    .form-control { padding: 12px; font-size: 14px; }
-    .btn { font-size: 15px; }
+/* ----- شاشات متوسطة (أقل من 992px) ----- */
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(100%);
+        width: 280px;
+    }
+    .sidebar-open {
+        transform: translateX(0);
+    }
+    .sidebar-toggle {
+        display: block !important;
+    }
+    .main-content {
+        margin-right: 0;
+    }
+    .header {
+        padding: 0 20px;
+    }
+    .dashboard-content {
+        padding: 20px;
+    }
+    .user-profile .user-name {
+        display: none;
+    }
 }
 
-@media (max-width: 360px) {
-    .logo-wrapper img { max-width: 130px; }
-    .page-title { font-size: 16px !important; }
+/* ----- شاشات صغيرة (أقل من 768px) ----- */
+@media (max-width: 767px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    .stat-card {
+        padding: 15px;
+    }
+    .stat-value {
+        font-size: 20px;
+    }
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .page-title {
+        font-size: 18px;
+    }
+}
+
+/* ----- شاشات صغيرة جداً (أقل من 576px) ----- */
+@media (max-width: 575px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .header {
+        padding: 0 15px;
+        height: 60px;
+    }
+    .sidebar {
+        width: 260px;
+    }
+    .dashboard-content {
+        padding: 15px;
+    }
+    .card {
+        padding: 15px;
+    }
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .activity-list li {
+        flex-wrap: wrap;
+    }
+    .activity-time {
+        margin-right: 50px;
+        width: 100%;
+    }
 }
