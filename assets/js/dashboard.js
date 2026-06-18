@@ -1,76 +1,96 @@
 /**
- * بوابة المستثمر - منصة تيرا
- * محرك لوحة التحكم الرئيسية (Dashboard) - نسخة محسنة
- * * ملاحظة: تم إزالة دوال التحقق من الجلسة وتسجيل الخروج من هنا،
- * لأن ملف (core.js) و (app.js) يقومان بهذه المهمة مركزياً وبشكل آمن لجميع الصفحات.
+ * ========================================
+ * dashboard.js - منطق لوحة التحكم
+ * ========================================
  */
-'use strict';
 
-const Dashboard = {
-    init() {
-        console.log('Dashboard Module Initialized');
-        this.setupDynamicGreeting();
-        this.animateStats();
-    },
+(function() {
+    'use strict';
 
-    setupDynamicGreeting() {
-        const hour = new Date().getHours();
-        // يفترض وجود عنصر بهذا الكلاس في index.html الخاص بلوحة التحكم
-        const subtitleEl = document.querySelector('.greeting-subtitle'); 
-        
-        if (subtitleEl) {
-            let greeting = "أهلاً بك،";
-            if (hour >= 5 && hour < 12) {
-                greeting = "صباح الخير،";
-            } else if (hour >= 12 && hour < 18) {
-                greeting = "مساء الخير،";
-            } else {
-                greeting = "طابت ليلتك،";
-            }
-            
-            // جلب اسم المستخدم من التخزين المحلي إن وجد لجعله أكثر تخصيصاً
-            const userData = JSON.parse(localStorage.getItem('tera_user')) || {};
-            const nameStr = userData.fullName ? ` ${userData.fullName}` : ' مستثمرنا العزيز';
-            
-            subtitleEl.textContent = `${greeting}${nameStr}.. إليك ملخص أداء محفظتك الاستثمارية اليوم.`;
+    // دالة لتهيئة الرسم البياني (Chart.js)
+    function initPerformanceChart() {
+        const canvas = document.getElementById('performanceChart');
+        if (!canvas) return;
+
+        // التأكد من تحميل Chart.js
+        if (typeof Chart === 'undefined') {
+            console.warn('مكتبة Chart.js غير محملة، يرجى إضافتها.');
+            return;
         }
-    },
 
-    // تأثير حركي لعداد الأرقام في البطاقات الإحصائية (إضافة بصرية لزيادة الفخامة)
-    animateStats() {
-        const statValues = document.querySelectorAll('.stat-value');
-        
-        statValues.forEach(stat => {
-            // استخراج الرقم فقط وتجاهل النصوص والعملات
-            const text = stat.innerText;
-            const numberMatch = text.replace(/,/g, '').match(/\d+/);
-            
-            if (numberMatch) {
-                const target = parseInt(numberMatch[0], 10);
-                const suffix = text.replace(/[\d,]/g, '').trim(); // الاحتفاظ بالعملة (مثل ر.س)
-                
-                let current = 0;
-                const increment = target / 30; // سرعة العداد
-                
-                const updateCounter = () => {
-                    current += increment;
-                    if (current < target) {
-                        stat.innerHTML = `${Math.ceil(current).toLocaleString()} <span class="currency">${suffix}</span>`;
-                        requestAnimationFrame(updateCounter);
-                    } else {
-                        stat.innerHTML = `${target.toLocaleString()} <span class="currency">${suffix}</span>`;
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1', '5', '10', '15', '20', '25', '30'],
+                datasets: [{
+                    label: 'قيمة المحفظة ($)',
+                    data: [12000, 12500, 12300, 13000, 12800, 13500, 14000],
+                    borderColor: '#0D6EFD',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#0D6EFD',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: {
+                                family: 'Tajawal'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$ ' + context.parsed.y.toLocaleString();
+                            }
+                        }
                     }
-                };
-                
-                updateCounter();
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return '$ ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
             }
         });
     }
-};
 
-// تشغيل النظام بعد تأخير بسيط لضمان اكتمال حقن مكونات core.js
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => {
-        Dashboard.init();
-    }, 400); 
-});
+    // دالة لتحميل بيانات إضافية (وهمية) يمكن استبدالها بـ API لاحقاً
+    function loadDashboardStats() {
+        // يمكن وضع كود لجلب البيانات من الخادم هنا
+        console.log('تم تحميل إحصائيات لوحة التحكم (بيانات وهمية)');
+    }
+
+    // تهيئة لوحة التحكم
+    function initDashboard() {
+        loadDashboardStats();
+        // استخدام setTimeout للتأكد من ظهور الـ canvas بشكل صحيح
+        setTimeout(initPerformanceChart, 200);
+    }
+
+    // تشغيل عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        // التأكد من أننا في صفحة لوحة التحكم (يمكن التحقق من وجود عنصر معين)
+        if (document.querySelector('.dashboard-content')) {
+            initDashboard();
+            console.log('تم تهيئة dashboard.js بنجاح 📊');
+        }
+    });
+
+})();
