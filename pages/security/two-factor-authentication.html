@@ -1,19 +1,23 @@
-<section class="security-section">
-
-    <h1>التحقق الثنائي</h1>
-
-    <div class="security-card">
-
-        <p>حالة التحقق الثنائي</p>
-
-        <span class="status active">
-            مفعل
-        </span>
-
-        <button>
-            تعطيل التحقق الثنائي
-        </button>
-
+<div class="card">
+    <div class="card-header"><h3>المصادقة الثنائية</h3></div>
+    <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;">
+            <span><strong>تفعيل المصادقة الثنائية</strong><br><span style="color:var(--gray-600);">حماية إضافية لحسابك</span></span>
+            <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+        </div>
+        <div style="margin-top:20px;">
+            <span class="stat-label">تطبيق المصادقة</span>
+            <div style="display:flex;gap:10px;margin-top:5px;">
+                <button class="btn btn-outline-primary"><i class="fab fa-google"></i> Google Authenticator</button>
+                <button class="btn btn-outline-primary"><i class="fab fa-microsoft"></i> Microsoft Authenticator</button>
+            </div>
+        </div>
+        <div style="margin-top:20px;">
+            <span class="stat-label">رموز الاسترداد</span>
+            <div style="background:var(--gray-100);padding:10px;border-radius:8px;font-family:monospace;direction:ltr;text-align:left;">
+                12345-67890-ABCDE-FGHIJ
+            </div>
+            <button class="btn btn-secondary" style="margin-top:5px;">توليد رموز جديدة</button>
+        </div>
     </div>
-
-</section>
+</div>
