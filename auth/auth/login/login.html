@@ -6,28 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
 
-    <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="../../../images/favicon.svg">
 
-    <!-- خطوط Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- الملفات الأساسية CSS -->
     <link rel="stylesheet" href="../../../assets/css/core.css">
     <link rel="stylesheet" href="../../../assets/css/main.css">
     <link rel="stylesheet" href="../../../assets/css/auth.css">
-
-    <style>
-        /* جميع الأنماط السابقة (نفس الكود) ... */
-        .auth-layout { /* ... */ }
-        /* ... */
-    </style>
+    <link rel="stylesheet" href="login.css">
 </head>
 <body>
     <div class="auth-layout">
@@ -60,7 +51,7 @@
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <a href="../../../auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
+                        <a href="../../forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
                         <input type="password" id="login_password" class="form-input-control" 
@@ -69,7 +60,7 @@
                     </div>
                     <div class="checkbox-options-container">
                         <label class="checkbox-toggle-label">
-                            <input type="checkbox" id="show_login_password"> إظهار كلمة المرور
+                            <input type="checkbox" id="show_login_password" class="show-password-btn"> إظهار كلمة المرور
                         </label>
                     </div>
                     <div class="error-feedback-msg" id="password-error"></div>
@@ -89,12 +80,12 @@
             </form>
 
             <div class="bottom-routing-footer-links text-center">
-                <p>ليس لديك حساب؟ <a href="../../../auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
+                <p>ليس لديك حساب؟ <a href="../../register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
                 <p><a href="../../../index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
 
-        <div class="tera-loader-overlay" id="creativeLoaderScreen">
+        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
                 <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
@@ -106,64 +97,39 @@
         </div>
     </div>
 
-    <!-- ====== تحميل ملفات JavaScript (مع defer لتحسين الأداء) ====== -->
-    <script src="../../../assets/js/core.js" defer></script>
-    <script src="../../../assets/js/auth.js" defer></script>
-    <script src="../../../assets/js/main.js" defer></script>
-    <script src="../../../assets/js/login.js" defer></script>
+    <script src="../../../assets/js/core.js"></script>
+    <script src="../../../assets/js/auth.js"></script>
+    <script src="login.js"></script>
 
-    <!-- ====== سكريبت التهيئة (ينفذ بعد تحميل جميع الملفات) ====== -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             'use strict';
+            console.log('🚀 [login.html] تم تحميل واجهة الدخول');
 
-            console.log('🚀 [login.html] تم تحميل صفحة تسجيل الدخول');
-
-            // 1. تنظيف المفاتيح القديمة (غير المستخدمة)
-            if (localStorage.getItem('tera_auth_token') || localStorage.getItem('tera_user_data')) {
-                console.warn('🧹 [login.html] تنظيف المفاتيح القديمة...');
-                localStorage.removeItem('tera_auth_token');
-                localStorage.removeItem('tera_user_data');
+            // 1. التحقق من وجود توكن: إذا كان المستخدم مسجل دخول، قم بتوجيهه فوراً للوحة التحكم
+            const token = localStorage.getItem('tera_token');
+            if (token && window.TeraAuth) {
+                console.log('✅ [login.html] مستخدم مسجل الدخول، جاري التوجيه للوحة التحكم...');
+                TeraAuth.redirectTo(TeraAuth.getBasePrefix() + '/pages/dashboard/index.html');
+                return; // إيقاف تنفيذ باقي الكود
             }
 
-            // 2. تعطيل التوجيه التلقائي (إذا كان TeraAuth متاحاً)
-            if (typeof TeraAuth !== 'undefined' && TeraAuth && typeof TeraAuth.disableAutoRedirect === 'function') {
+            // 2. إذا لم يكن مسجلاً، قم بإيقاف الفحص التلقائي لكي لا تحدث حلقة لانهائية
+            if (window.TeraAuth) {
                 TeraAuth.disableAutoRedirect();
-                console.log('🔒 [login.html] تم تعطيل التوجيه التلقائي مؤقتاً');
-            } else {
-                console.warn('⚠️ [login.html] TeraAuth غير متاح بعد، يتم إعادة المحاولة...');
-                setTimeout(function() {
-                    if (typeof TeraAuth !== 'undefined' && TeraAuth) {
-                        TeraAuth.disableAutoRedirect();
-                        console.log('🔒 [login.html] تم تعطيل التوجيه التلقائي (بعد إعادة المحاولة)');
-                    }
-                }, 100);
+                TeraAuth.blockCheck();
+                console.log('🔒 [login.html] تم تأمين صفحة الدخول لمنع حلقات التوجيه');
             }
 
-            // 3. إزالة أي token موجود في صفحة الدخول لتجنب الحلقات اللانهائية
-            // (لأن auth.js سيتولى التوجيه للمستخدم المسجل)
-            const existingToken = localStorage.getItem('tera_token');
-            if (existingToken) {
-                console.warn('🧹 [login.html] تم العثور على token في صفحة الدخول، يتم حذفه لتجنب التوجيه الخاطئ');
-                localStorage.removeItem('tera_token');
-                localStorage.removeItem('tera_user');
+            // 3. عرض كلمة المرور (التفعيل السريع)
+            const showPasswordCheckbox = document.getElementById('show_login_password');
+            const passwordInput = document.getElementById('login_password');
+            if (showPasswordCheckbox && passwordInput) {
+                showPasswordCheckbox.addEventListener('change', function() {
+                    passwordInput.type = this.checked ? 'text' : 'password';
+                });
             }
-
-            // 4. معالجة أزرار تسجيل الخروج (في حال وجودها)
-            document.addEventListener('click', function(e) {
-                const logoutBtn = e.target.closest('.logout-btn, .btn-logout, #btn-logout');
-                if (logoutBtn) {
-                    e.preventDefault();
-                    console.log('🔒 [login.html] محاولة تسجيل خروج - يتم التنظيف وإعادة التحميل');
-                    localStorage.removeItem('tera_token');
-                    localStorage.removeItem('tera_user');
-                    window.location.reload();
-                }
-            });
-
-            console.log('✅ [login.html] الصفحة جاهزة، انتظار إدخال البيانات');
         });
     </script>
-
 </body>
 </html>
