@@ -1,71 +1,22 @@
-<style>
-    .tera-breadcrumb {
-        width: 100%;
-        padding: 10px 0;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        background: transparent;
-    }
-
-    .breadcrumb-list {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        font-size: 0.85rem;
-        font-weight: 600;
-        font-family: var(--font-body, 'Cairo', sans-serif);
-    }
-
-    .breadcrumb-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .breadcrumb-link {
-        color: var(--tera-text-light, #64748B);
-        text-decoration: none;
-        transition: var(--transition, all 0.3s ease);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .breadcrumb-link:hover {
-        color: var(--tera-secondary, #00C2C7);
-    }
-
-    .breadcrumb-separator {
-        color: #CBD5E1; /* لون رمادي فاتح جداً للفاصل */
-        font-size: 0.7rem;
-    }
-
-    .breadcrumb-item.active {
-        color: var(--tera-primary, #0A1B3F);
-        font-weight: 800;
-        pointer-events: none; /* منع النقر على الصفحة الحالية */
-    }
-
-    .breadcrumb-icon {
-        font-size: 0.9rem;
-    }
-</style>
-
-<nav class="tera-breadcrumb" aria-label="breadcrumb">
-    <ol class="breadcrumb-list" id="dynamicBreadcrumb">
+<!-- ========================================
+     breadcrumb.html - مسار التنقل
+     ======================================== -->
+<nav aria-label="مسار التنقل" class="breadcrumb-wrapper" style="padding: 15px 30px 0 30px;">
+    <ol class="breadcrumb" style="display: flex; gap: 10px; list-style: none; font-size: 14px; color: var(--gray-600);">
         <li class="breadcrumb-item">
-            <a href="/pages/dashboard/index.html" class="breadcrumb-link" id="homeBreadcrumbLink">
-                <i class="fa-solid fa-house breadcrumb-icon"></i> الرئيسية
+            <a href="../dashboard/index.html" style="color: var(--primary-color);">
+                <i class="fas fa-home"></i> الرئيسية
             </a>
         </li>
-        <i class="fa-solid fa-chevron-left breadcrumb-separator"></i>
-        <li class="breadcrumb-item active" aria-current="page" id="currentBreadcrumbPage">
-            لوحة التحكم
+        <li class="breadcrumb-item" style="color: var(--gray-400);">/</li>
+        <li class="breadcrumb-item">
+            <a href="#" style="color: var(--gray-700);">لوحة التحكم</a>
+        </li>
+        <li class="breadcrumb-item" style="color: var(--gray-400);">/</li>
+        <li class="breadcrumb-item active" style="color: var(--gray-900); font-weight: 600;" aria-current="page">
+            الإحصائيات
         </li>
     </ol>
 </nav>
+
+<!-- يمكن إضافة CSS إضافي لتحسين المظهر، لكنه يعتمد على الفئات العامة -->
