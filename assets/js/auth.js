@@ -1,39 +1,24 @@
 /**
  * ============================================================
- * auth.js - محرك المصادقة والحماية - نسخة متوافقة مع المسارات النسبية
+ * auth.js - محرك المصادقة والحماية - نسخة مصححة
  * ============================================================
- * - يمنع التوجيه في جميع صفحات المصادقة (auth/*)
- * - يسمح بالتوجيه في الصفحة الرئيسية (index.html) عند وجود جلسة نشطة
- * ============================================================
+ * - يمنع التوجيه في صفحات المصادقة
+ * - يمنع حلقة إعادة التوجيه إلى صفحة الدخول
+ * - يستخدم مسارات absolute لتفادي تضاعف المسار
  */
 'use strict';
 
 // ========================================================================
-// 1. دوال مساعدة للمسارات النسبية
+// 1. المسارات الثابتة
 // ========================================================================
-const getBaseDepth = () => {
-    const path = window.location.pathname;
-    if (path.includes('/pages/')) return 2;
-    if (path.includes('/auth/auth/')) return 3;
-    if (path.includes('/auth/')) return 2;
-    if (path.includes('/assets/')) return 1;
-    if (path.includes('/components/')) return 1;
-    if (path.includes('/layouts/')) return 1;
-    if (path === '/' || path === '/index.html') return 0;
-    const parts = path.split('/').filter(p => p.length > 0);
-    return parts.length;
-};
-
-const resolvePath = (relativePath) => {
-    let cleanPath = relativePath;
-    if (cleanPath.startsWith('/')) cleanPath = cleanPath.slice(1);
-    if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
-        cleanPath = cleanPath + '.html';
-    }
-    const depth = getBaseDepth();
-    let prefix = '';
-    for (let i = 0; i < depth; i++) prefix += '../';
-    return prefix + cleanPath;
+const PATHS = {
+    login: '/auth/auth/login/login.html',
+    dashboard: '/pages/dashboard/index.html',
+    register: '/auth/register/register.html',
+    forgotPassword: '/auth/forgot-password.html',
+    resetPassword: '/auth/reset-password.html',
+    verifyOtp: '/auth/verify-otp.html',
+    completeProfile: '/auth/complete-profile.html'
 };
 
 // ========================================================================
@@ -42,7 +27,37 @@ const resolvePath = (relativePath) => {
 const TeraAuth = {
     _isChecking: false,
     _lastCheckTime: 0,
-    _blockCheck: false,  // حظر checkSession (لصفحات المصادقة فقط)
+    _blockCheck: false,
+
+    getCurrentPath: function() {
+        return window.location.pathname;
+    },
+
+    isAuthPage: function(path = this.getCurrentPath()) {
+        return (
+            path === PATHS.login ||
+            path === PATHS.register ||
+            path === PATHS.forgotPassword ||
+            path === PATHS.resetPassword ||
+            path === PATHS.verifyOtp ||
+            path === PATHS.completeProfile ||
+            path.startsWith('/auth/')
+        );
+    },
+
+    isLandingPage: function(path = this.getCurrentPath()) {
+        return path === '/' || path === '/index.html';
+    },
+
+    isProtectedPage: function(path = this.getCurrentPath()) {
+        return !this.isAuthPage(path) && !this.isLandingPage(path);
+    },
+
+    redirectTo: function(url) {
+        const current = this.getCurrentPath();
+        if (current === url) return;
+        window.location.replace(url);
+    },
 
     checkSession: function() {
         if (this._blockCheck) {
@@ -51,42 +66,35 @@ const TeraAuth = {
         }
 
         const now = Date.now();
-        if (this._isChecking || (now - this._lastCheckTime < 500)) {
+        if (this._isChecking || now - this._lastCheckTime < 500) {
             console.log('⏳ [Auth] منع تنفيذ checkSession المتكرر');
             return;
         }
+
         this._isChecking = true;
         this._lastCheckTime = now;
 
         try {
-            const currentPage = window.location.pathname;
+            const currentPage = this.getCurrentPath();
             const token = localStorage.getItem('tera_token');
-
-            // تحديد نوع الصفحة
-            const isAuthPage = /\/auth\//.test(currentPage);
-            const isLandingPage = currentPage === '/' || 
-                                  (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
+            const isAuthPage = this.isAuthPage(currentPage);
+            const isLandingPage = this.isLandingPage(currentPage);
             const isPublicPage = isAuthPage || isLandingPage;
             const isProtectedPage = !isPublicPage;
 
-            // مستخدم غير مسجل في صفحة محمية -> توجيه لتسجيل الدخول
             if (!token && isProtectedPage) {
-                const loginUrl = resolvePath('auth/auth/login/login.html');
-                console.log('🔐 [Auth] توجيه غير مسجل الدخول إلى:', loginUrl);
-                window.location.replace(loginUrl);
+                console.log('🔐 [Auth] غير مسجل الدخول -> صفحة الدخول');
+                this.redirectTo(PATHS.login);
                 return;
             }
 
-            // مستخدم مسجل في صفحة عامة (بما فيها الرئيسية) -> توجيه للوحة التحكم
             if (token && isPublicPage) {
-                const dashboardUrl = resolvePath('pages/dashboard/index.html');
-                console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
-                window.location.replace(dashboardUrl);
+                console.log('🚀 [Auth] مسجل الدخول -> لوحة التحكم');
+                this.redirectTo(PATHS.dashboard);
                 return;
             }
 
             console.log('✅ [Auth] لا حاجة لتوجيه، الصفحة الحالية:', currentPage);
-
         } finally {
             this._isChecking = false;
         }
@@ -96,6 +104,7 @@ const TeraAuth = {
         this._blockCheck = true;
         console.log('⛔ [Auth] تم حظر checkSession نهائياً');
     },
+
     unblockCheck: function() {
         this._blockCheck = false;
         console.log('🔓 [Auth] تم إلغاء حظر checkSession');
@@ -105,6 +114,7 @@ const TeraAuth = {
         this._isChecking = true;
         console.log('🔒 [Auth] تم تعطيل التوجيه التلقائي مؤقتاً');
     },
+
     enableAutoRedirect: function() {
         this._isChecking = false;
         console.log('🔓 [Auth] تم إعادة تفعيل التوجيه التلقائي');
@@ -116,10 +126,13 @@ const TeraAuth = {
         localStorage.removeItem('tera_remember');
         localStorage.removeItem('tera_identifier');
         sessionStorage.clear();
-        if (isSessionExpired) alert('⏳ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
-        const loginUrl = resolvePath('auth/auth/login/login.html');
-        console.log('🚪 [Auth] تسجيل الخروج إلى:', loginUrl);
-        window.location.replace(loginUrl);
+
+        if (isSessionExpired) {
+            alert('⏳ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
+        }
+
+        console.log('🚪 [Auth] تسجيل الخروج إلى:', PATHS.login);
+        this.redirectTo(PATHS.login);
     },
 
     login: function(identifier, password) {
@@ -129,19 +142,24 @@ const TeraAuth = {
                     reject(new Error('يرجى إدخال جميع البيانات المطلوبة.'));
                     return;
                 }
+
                 if (password.length < 3) {
                     reject(new Error('كلمة المرور يجب أن تكون 3 أحرف على الأقل.'));
                     return;
                 }
+
                 const mockUsers = [
                     { username: '106', email: 'investor106@tera.sa', mobile: '506060606', password: '123' },
                     { username: 'admin', email: 'admin@tera.sa', mobile: '500000000', password: 'admin123' }
                 ];
+
+                const normalizedIdentifier = String(identifier).trim().toLowerCase();
                 const matchedUser = mockUsers.find(u =>
-                    u.username === identifier ||
-                    u.email.toLowerCase() === identifier.toLowerCase() ||
-                    u.mobile === identifier
+                    u.username.toLowerCase() === normalizedIdentifier ||
+                    u.email.toLowerCase() === normalizedIdentifier ||
+                    u.mobile === String(identifier).trim()
                 );
+
                 if (matchedUser && matchedUser.password === password) {
                     const user = {
                         id: 1,
@@ -151,10 +169,12 @@ const TeraAuth = {
                         verified: true,
                         loginTime: new Date().toISOString()
                     };
+
                     localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
                     localStorage.setItem('tera_user', JSON.stringify(user));
                     this.enableAutoRedirect();
                     this.unblockCheck();
+
                     console.log('✅ [Auth] تم تسجيل الدخول بنجاح:', user);
                     resolve(user);
                 } else {
@@ -168,14 +188,20 @@ const TeraAuth = {
         document.addEventListener('click', function(e) {
             const toggleBtn = e.target.closest('.password-toggle, .toggle-password, .show-password-btn');
             if (!toggleBtn) return;
+
             const wrapper = toggleBtn.closest('.password-wrapper, .input-group, .form-group');
             if (!wrapper) return;
+
             const input = wrapper.querySelector('input[type="password"], input[type="text"]');
             if (!input) return;
+
             const isPassword = input.type === 'password';
             input.type = isPassword ? 'text' : 'password';
+
             const icon = toggleBtn.querySelector('i');
-            if (icon) icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            if (icon) {
+                icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            }
         });
     },
 
@@ -201,18 +227,13 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🔐 [Auth] TeraAuth initialized.');
 
     const currentPage = window.location.pathname;
-    const isAuthPage = /\/auth\//.test(currentPage); // صفحات المصادقة فقط
-    const isLandingPage = currentPage === '/' || 
-                          (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
+    const isAuthPage = TeraAuth.isAuthPage(currentPage);
 
-    // ONLY block checkSession in auth pages (login, register, etc.)
     if (isAuthPage) {
         console.log('🔒 [Auth] صفحة مصادقة: تعطيل التوجيه وحظر checkSession');
         TeraAuth.disableAutoRedirect();
         TeraAuth.blockCheck();
     } else {
-        // في الصفحة الرئيسية أو أي صفحة أخرى، نترك checkSession يعمل
-        // (سيتولى التوجيه إذا كان المستخدم مسجلاً)
         TeraAuth.checkSession();
     }
 
@@ -232,9 +253,12 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('click', function(e) {
     const logoutBtn = e.target.closest('.logout-btn, .btn-logout, #btn-logout');
     if (!logoutBtn) return;
+
     e.preventDefault();
     const confirmLogout = confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟');
-    if (confirmLogout) TeraAuth.logout();
+    if (confirmLogout) {
+        TeraAuth.logout();
+    }
 });
 
 // ========================================================================
@@ -244,7 +268,7 @@ window.TeraAuth = TeraAuth;
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
 
-console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
+console.log('✅ [Auth] auth.js loaded successfully');
 
 // ========================================================================
 // 6. تنظيف المفاتيح القديمة
@@ -252,11 +276,13 @@ console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
 (function cleanupOldKeys() {
     const oldToken = localStorage.getItem('tera_auth_token');
     const oldUser = localStorage.getItem('tera_user_data');
+
     if (oldToken && !localStorage.getItem('tera_token')) {
         console.log('🔄 [Auth] ترقية المفتاح القديم tera_auth_token إلى tera_token');
         localStorage.setItem('tera_token', oldToken);
         localStorage.removeItem('tera_auth_token');
     }
+
     if (oldUser && !localStorage.getItem('tera_user')) {
         console.log('🔄 [Auth] ترقية المفتاح القديم tera_user_data إلى tera_user');
         localStorage.setItem('tera_user', oldUser);
