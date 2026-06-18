@@ -5,7 +5,7 @@
  * - التحكم في القائمة الجانبية والقوائم الفرعية
  * - دوال مساعدة عامة (DOM Manipulation)
  * - التعامل الآمن مع التخزين المحلي (LocalStorage)
- * - توليد المسارات النسبية (Relative Paths Generator)
+ * - توليد المسارات النسبية المتطابقة مع الهيكل
  * ============================================================
  */
 
@@ -17,15 +17,14 @@
     // ============================================================
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
-        // في هيكلنا الجديد القائمة الجانبية توجد داخل حاوية في الموبايل
         const sidebarContainer = sidebar ? sidebar : document.querySelector('.tera-sidebar');
         if (sidebarContainer) {
-            sidebarContainer.classList.toggle('active'); // تم تغيير الكلاس ليتوافق مع css الخاص بنا
+            sidebarContainer.classList.toggle('active');
         }
     }
 
     function closeSidebar() {
-        const sidebarContainer = document.querySelector('.tera-sidebar');
+        const sidebarContainer = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
         if (sidebarContainer && sidebarContainer.classList.contains('active')) {
             sidebarContainer.classList.remove('active');
         }
@@ -132,22 +131,18 @@
     }
 
     // ============================================================
-    // 6. دوال مساعدة لحساب المسارات النسبية (مُحسنة للسيرفرات)
+    // 6. دوال مساعدة لحساب المسارات النسبية بدقة (مُحدثة)
     // ============================================================
     function getBaseDepth() {
-        const path = window.location.pathname;
+        const path = window.location.pathname.toLowerCase();
         
-        // حساب العمق بناءً على عدد السلاش (/) في المسار
-        // مثلاً: /pages/dashboard/index.html -> يحتاج الرجوع خطوتين ../../
-        const pathParts = path.replace(/^\/|\/$/g, '').split('/');
+        // حساب العمق بناءً على المجلدات المعروفة في الهيكل لضمان عدم حدوث أخطاء
+        if (path.includes('/auth/auth/login/')) return 3;
+        if (path.includes('/auth/register/')) return 2;
+        if (path.includes('/pages/')) return 2;
+        if (path.includes('/auth/')) return 1;
         
-        // استثناء مجلد المشروع الرئيسي إذا كان يعمل كمسار فرعي على السيرفر
-        let depth = pathParts.length - 1; 
-        if (pathParts[0] === 'tera-investor-portal-main') {
-            depth -= 1; 
-        }
-        
-        return Math.max(0, depth);
+        return 0; // إذا كنا في الجذر
     }
 
     function getRelativePath(targetPath) {
@@ -161,7 +156,7 @@
     // 7. تهيئة الأحداث
     // ============================================================
     function initCore() {
-        // تفعيل زر القائمة الجانبية (Mobile Toggle)
+        // تفعيل زر القائمة الجانبية الموحد
         document.addEventListener('click', function(e) {
             const toggleBtn = e.target.closest('#sidebarToggle, .menu-toggle');
             if (toggleBtn) {
@@ -182,7 +177,7 @@
         // إغلاق القائمة عند النقر خارجها في الموبايل
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 991) {
-                const sidebar = document.querySelector('.tera-sidebar');
+                const sidebar = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
                 const toggleBtn = document.getElementById('sidebarToggle');
                 
                 if (sidebar && sidebar.classList.contains('active')) {
