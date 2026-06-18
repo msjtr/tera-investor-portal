@@ -1,60 +1,116 @@
-<footer class="tera-footer">
-    <div class="footer-content">
-        <div class="footer-info">
-            <p>&copy; 2026 جميع الحقوق محفوظة لشركة تيرا للاستثمار</p>
-        </div>
-        <div class="footer-links">
-            <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
-            <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
-            <a href="../support/help-center.html">مركز المساعدة</a>
-        </div>
-    </div>
-</footer>
-
 <style>
     .tera-footer {
         width: 100%;
-        margin-top: auto; /* هذا هو مفتاح دفع الفوتر للأسفل دائماً */
-        padding: 30px 40px;
-        border-top: 1px solid var(--tera-border);
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-    }
-
-    .footer-content {
+        background: var(--tera-white, #ffffff);
+        border-top: 1px solid var(--tera-border, #E2E8F0);
+        padding: 20px 30px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        max-width: 1200px;
-        margin: 0 auto;
+        flex-wrap: wrap;
+        gap: 15px;
+        color: var(--tera-text-light, #64748B);
+        font-size: 0.85rem;
+        font-family: var(--font-body, 'Cairo', sans-serif);
+        margin-top: auto; /* لضمان بقاء الفوتر في أسفل الصفحة دائماً */
     }
 
-    .footer-info p { 
-        color: var(--tera-text-light); 
-        font-size: 14px; 
-        font-family: var(--font-body);
+    .footer-copyright {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
-    .footer-links { display: flex; gap: 25px; }
-
-    .footer-links a { 
-        color: var(--tera-text-light); 
-        text-decoration: none; 
-        font-size: 14px; 
-        font-family: var(--font-heading);
-        transition: 0.3s ease;
+    .footer-copyright span {
+        color: var(--tera-primary, #0A1B3F);
+        font-weight: 800;
     }
 
-    .footer-links a:hover { 
-        color: var(--tera-secondary); /* لون السهم في شعار تيرا */
+    .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
+    .footer-link {
+        color: var(--tera-text-light, #64748B);
+        text-decoration: none;
+        font-weight: 700;
+        transition: var(--transition, all 0.3s ease);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .footer-link:hover {
+        color: var(--tera-secondary, #00C2C7);
+    }
+
+    /* التجاوب مع شاشات الجوال */
     @media (max-width: 768px) {
-        .tera-footer { padding: 20px; }
-        .footer-content { 
-            flex-direction: column; 
-            gap: 15px; 
-            text-align: center; 
+        .tera-footer {
+            flex-direction: column;
+            text-align: center;
+            justify-content: center;
+            padding: 20px 15px;
+        }
+        
+        .footer-links {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
         }
     }
 </style>
+
+<footer class="tera-footer">
+    <div class="footer-copyright">
+        &copy; <span id="currentYear">2026</span> <span>منصة تيرا للاستثمار.</span> جميع الحقوق محفوظة.
+    </div>
+
+    <ul class="footer-links">
+        <li>
+            <a href="#" class="footer-link dynamic-link" data-path="/pages/support/faq.html">
+                <i class="fa-solid fa-circle-question"></i> مركز الدعم
+            </a>
+        </li>
+        <li>
+            <a href="#" class="footer-link dynamic-link" data-path="/pages/legal/privacy.html">
+                <i class="fa-solid fa-shield-halved"></i> سياسة الخصوصية
+            </a>
+        </li>
+        <li>
+            <a href="#" class="footer-link dynamic-link" data-path="/pages/legal/terms.html">
+                <i class="fa-solid fa-file-contract"></i> الشروط والأحكام
+            </a>
+        </li>
+    </ul>
+</footer>
+
+<script>
+    // 1. تحديث السنة تلقائياً
+    const yearSpan = document.getElementById('currentYear');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
+
+    // 2. تفعيل الروابط بشكل ديناميكي لتجنب أخطاء المسارات (404)
+    document.querySelectorAll('.tera-footer .dynamic-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetPath = this.getAttribute('data-path');
+            
+            // التحقق من وجود المتغير TERA الذي أنشأناه في core.js
+            if (typeof TERA !== 'undefined' && TERA.basePath !== undefined) {
+                window.location.href = TERA.basePath + targetPath;
+            } else {
+                // خطة بديلة في حال لم يتم تحميل core.js
+                window.location.href = targetPath;
+            }
+        });
+    });
+</script>
