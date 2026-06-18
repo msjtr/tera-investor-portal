@@ -1,0 +1,82 @@
+# ============================================================
+# _redirects - ملف إعادة التوجيه لمنصة تيرا على Render
+# ============================================================
+# هذا الملف يضمن توجيه جميع الطلبات إلى المسارات الصحيحة
+# بناءً على هيكل المشروع في tera-investor-portal-main
+# ============================================================
+
+# ============================================================
+# 1. الموارد الثابتة (Assets)
+# ============================================================
+# جميع ملفات CSS و JS والصور تخدم مباشرة من مجلد assets
+/assets/* /assets/:splat 200
+
+# ============================================================
+# 2. الصفحات (Pages)
+# ============================================================
+# جميع صفحات التطبيق تخدم من مجلد pages
+/pages/* /pages/:splat 200
+
+# ============================================================
+# 3. الصور (Images)
+# ============================================================
+/images/* /images/:splat 200
+
+# ============================================================
+# 4. صفحات المصادقة (Auth)
+# ============================================================
+# توجيه جميع طلبات المصادقة إلى الملفات الصحيحة
+/auth/* /auth/:splat 200
+
+# ============================================================
+# 5. تصحيح المسارات الخاطئة (لحل مشكلة 404)
+# ============================================================
+# إعادة توجيه أي طلب يبدأ بـ /auth/assets إلى /assets
+/auth/assets/* /assets/:splat 301
+/auth/pages/* /pages/:splat 301
+/auth/images/* /images/:splat 301
+
+# إعادة توجيه أي طلب يبدأ بـ /tera-investor-portal-main
+/tera-investor-portal-main/* /:splat 301
+
+# ============================================================
+# 6. اختصارات المسارات (Routing Shortcuts)
+# ============================================================
+# توجيه المسارات المختصرة إلى صفحاتها الفعلية
+/ /index.html 200
+/dashboard /pages/dashboard/index.html 301
+/investments /pages/investments/opportunities.html 301
+/portfolio /pages/portfolio/portfolio-overview.html 301
+/reports /pages/reports/reports-dashboard.html 301
+/profile /pages/profile/personal-information.html 301
+/security /pages/security/change-password.html 301
+/support /pages/support/help-center.html 301
+
+# ============================================================
+# 7. اختصارات المصادقة
+# ============================================================
+/login /auth/auth/login/login.html 301
+/register /auth/register/register.html 301
+/forgot-password /auth/forgot-password.html 301
+/reset-password /auth/reset-password.html 301
+/verify-otp /auth/verify-otp.html 301
+/complete-profile /auth/complete-profile.html 301
+
+# ============================================================
+# 8. معالجة الروابط بدون .html
+# ============================================================
+# توجيه الروابط التي تنتهي بدون امتداد إلى الملفات المناسبة
+# (يتم التعامل معها بواسطة التطبيق، لكن نضيف توجيهات احتياطية)
+/auth/login /auth/auth/login/login.html 301
+/auth/register /auth/register/register.html 301
+/auth/forgot-password /auth/forgot-password.html 301
+/auth/reset-password /auth/reset-password.html 301
+/auth/verify-otp /auth/verify-otp.html 301
+/auth/complete-profile /auth/complete-profile.html 301
+
+# ============================================================
+# 9. الصفحة الرئيسية الافتراضية (Fallback)
+# ============================================================
+# إذا لم يتم العثور على أي مسار، توجيه إلى الصفحة الرئيسية
+# هذا يحل مشكلة 404 للـ SPA (تطبيق الصفحة الواحدة)
+/* /index.html 404
