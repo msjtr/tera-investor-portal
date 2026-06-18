@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="./assets/css/responsive.css">
 
     <style>
-        /* أنماط الصفحة الرئيسية (كما هي) */
+        /* أنماط الصفحة الرئيسية */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
         body { background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%) !important; min-height: 100vh !important; color: #0A2540 !important; display: flex !important; flex-direction: column !important; }
         .hero-section { flex-grow: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 60px 20px !important; }
@@ -81,19 +81,33 @@
                     <p>لوحة تحكم ذكية تتيح لك مراقبة الأصول والأرباح لحظة بلحظة.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>تقارير شفافة</h3>
+                    <h3>تقارير شفافية</h3>
                     <p>كشوفات حساب تفصيلية وتقارير أداء دورية معتمدة بكل سهولة.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- تحميل ملفات JavaScript بالترتيب -->
-    <script src="./assets/js/core.js" defer></script>
-    <script src="./assets/js/auth.js" defer></script>
-    <script src="./assets/js/main.js" defer></script>
+    <script src="./assets/js/core.js"></script>
+    <script src="./assets/js/auth.js"></script>
+    <script src="./assets/js/main.js"></script>
 
-    <!-- تم حذف السكريبت المدمج الذي يعطل التوجيه، لأن auth.js يتولى المهمة -->
+    <script>
+        (function() {
+            'use strict';
+            if (window.TeraAuth) {
+                const token = localStorage.getItem('tera_token');
+                if (token) {
+                    console.log('🚀 [index.html] مستخدم مسجل بالفعل، جاري الانتقال للوحة التحكم...');
+                    window.location.replace('./pages/dashboard/index.html');
+                } else {
+                    console.log('🔓 [index.html] صفحة عامة، تم إلغاء فحص الحماية لتأمين استقرار الواجهة');
+                    TeraAuth.blockCheck();
+                    TeraAuth.disableAutoRedirect();
+                }
+            }
+        })();
+    </script>
 
 </body>
 </html>
