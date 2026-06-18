@@ -8,20 +8,7 @@
  * 3. تنفيذ دوال خاصة بكل صفحة حسب المسار الحالي
  * 4. إدارة السلوك العام للموقع (مثل القوائم، الإشعارات، وغيرها)
  * ============================================================
- * ربط الملفات:
- * - core.js: الدوال الأساسية
- * - app.js: التطبيق الرئيسي والتوجيه
- * - dashboard.js: لوحة التحكم
- * - investments.js: الاستثمارات
- * - portfolio.js: المحفظة
- * - reports.js: التقارير
- * - profile.js: الملف الشخصي
- * - security.js: الأمان
- * - support.js: الدعم
- * ============================================================
- * تم التحديث لتوحيد استخدام المفاتيح:
- * - tera_token (بدلاً من tera_auth_token)
- * - tera_user (بدلاً من tera_user_data)
+ * تم التحديث لاستخدام المسارات المطلقة لحل مشكلة 404
  * ============================================================
  */
 
@@ -29,7 +16,7 @@
     'use strict';
 
     // ============================================================
-    // 1. التأكد من تحميل الملفات الأساسية
+    // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
     // ============================================================
 
     /**
@@ -39,7 +26,7 @@
         if (typeof TeraCore === 'undefined') {
             console.warn('⚠️ core.js لم يتم تحميله، يتم تحميله الآن...');
             const script = document.createElement('script');
-            script.src = '../../assets/js/core.js';
+            script.src = '/assets/js/core.js';
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -54,7 +41,7 @@
         if (typeof TeraApp === 'undefined') {
             console.warn('⚠️ app.js لم يتم تحميله، يتم تحميله الآن...');
             const script = document.createElement('script');
-            script.src = '../../assets/js/app.js';
+            script.src = '/assets/js/app.js';
             script.async = false;
             document.head.appendChild(script);
             return false;
@@ -68,13 +55,13 @@
      */
     function loadPageScript(pageName) {
         const pageScripts = {
-            'dashboard': '../../assets/js/dashboard.js',
-            'investments': '../../assets/js/investments.js',
-            'portfolio': '../../assets/js/portfolio.js',
-            'reports': '../../assets/js/reports.js',
-            'profile': '../../assets/js/profile.js',
-            'security': '../../assets/js/security.js',
-            'support': '../../assets/js/support.js'
+            'dashboard': '/assets/js/dashboard.js',
+            'investments': '/assets/js/investments.js',
+            'portfolio': '/assets/js/portfolio.js',
+            'reports': '/assets/js/reports.js',
+            'profile': '/assets/js/profile.js',
+            'security': '/assets/js/security.js',
+            'support': '/assets/js/support.js'
         };
 
         const scriptPath = pageScripts[pageName];
@@ -209,7 +196,7 @@
     }
 
     /**
-     * تهيئة زر تسجيل الخروج (تم التحديث لاستخدام المفاتيح الموحدة)
+     * تهيئة زر تسجيل الخروج (تم التحديث لاستخدام المسار المطلق)
      */
     function initLogout() {
         const logoutBtn = document.querySelector('.logout-btn');
@@ -221,14 +208,12 @@
                     if (typeof TeraApp !== 'undefined' && TeraApp.logout) {
                         TeraApp.logout();
                     } else {
-                        // ✅ الطريقة اليدوية باستخدام المفاتيح الموحدة
+                        // الطريقة اليدوية باستخدام المسار المطلق
                         localStorage.removeItem('tera_token');
                         localStorage.removeItem('tera_user');
-                        // إزالة أي مفاتيح قديمة للتأكد
                         localStorage.removeItem('tera_auth_token');
                         localStorage.removeItem('tera_user_data');
-                        // التوجيه إلى صفحة تسجيل الدخول
-                        window.location.href = '../../auth/auth/login/login.html';
+                        window.location.href = '/auth/auth/login/login.html';
                     }
                 }
             });
@@ -254,7 +239,14 @@
                 if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
                     e.preventDefault();
                     const href = this.getAttribute('href');
-                    TeraApp.navigateTo(href);
+                    // تحويل المسار النسبي إلى مطلق إذا كان يبدأ بـ ..
+                    let absoluteHref = href;
+                    if (href.startsWith('..')) {
+                        // محاولة بسيطة لتحويل المسار النسبي إلى مطلق
+                        // في التطبيق الحقيقي، يفضل استخدام مسارات مطلقة في HTML
+                        absoluteHref = '/' + href.replace(/\.\.\//g, '');
+                    }
+                    TeraApp.navigateTo(absoluteHref);
                 }
                 // وإلا، سيتم التعامل مع الرابط بشكل طبيعي
             });
@@ -281,44 +273,7 @@
      */
     function initDashboardPage() {
         console.log('📊 تهيئة لوحة التحكم');
-        
-        // تحميل سكريبت لوحة التحكم
         loadPageScript('dashboard');
-        
-        // تهيئة الرسم البياني إذا كان موجوداً
-        const chartCanvas = document.getElementById('performanceChart');
-        if (chartCanvas && typeof Chart !== 'undefined') {
-            // سيتم تهيئته في dashboard.js
-        }
-
-        // تفعيل البطاقات الإحصائية (إضافة تأثيرات)
-        document.querySelectorAll('.stat-card').forEach(function(card) {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-5px)';
-                this.style.transition = 'transform 0.3s ease';
-            });
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-
-        // تفعيل أزرار المشاركة في الفرص
-        document.querySelectorAll('.btn-primary.btn-sm').forEach(function(btn) {
-            if (btn.textContent.includes('مشاركة')) {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const row = this.closest('tr');
-                    if (row) {
-                        const opportunity = row.querySelector('td:first-child')?.textContent || 'الفرصة';
-                        if (typeof TeraApp !== 'undefined' && TeraApp.showNotification) {
-                            TeraApp.showNotification(`✅ تم المشاركة في ${opportunity} بنجاح`, 'success', 3000);
-                        } else {
-                            alert(`✅ تم المشاركة في ${opportunity}`);
-                        }
-                    }
-                });
-            }
-        });
     }
 
     /**
@@ -367,7 +322,6 @@
         document.querySelectorAll('.filter-group select, .filter-group input').forEach(function(element) {
             element.addEventListener('change', function() {
                 console.log('🔍 تغيير الفلتر:', this.value);
-                // يمكن تنفيذ عملية التصفية هنا
             });
         });
     }
@@ -590,7 +544,7 @@
     }
 
     // ============================================================
-    // 5. تحميل جميع الملفات المشتركة
+    // 5. تحميل جميع الملفات المشتركة (باستخدام مسارات مطلقة)
     // ============================================================
 
     /**
@@ -598,10 +552,10 @@
      */
     function ensureStylesLoaded() {
         const styles = [
-            '../../assets/css/core.css',
-            '../../assets/css/main.css',
-            '../../assets/css/dashboard.css',
-            '../../assets/css/responsive.css'
+            '/assets/css/core.css',
+            '/assets/css/main.css',
+            '/assets/css/dashboard.css',
+            '/assets/css/responsive.css'
         ];
 
         styles.forEach(function(stylePath) {
@@ -651,11 +605,11 @@
     function initMain() {
         console.log('🚀 بدء تهيئة main.js...');
 
-        // 1. التأكد من تحميل الملفات الأساسية
+        // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
         ensureCoreLoaded();
         ensureAppLoaded();
 
-        // 2. التأكد من تحميل أنماط CSS
+        // 2. التأكد من تحميل أنماط CSS (باستخدام مسارات مطلقة)
         ensureStylesLoaded();
         ensureFontAwesome();
         ensureChartJs();
