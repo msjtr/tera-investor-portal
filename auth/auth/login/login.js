@@ -69,11 +69,18 @@ const TeraAuth = {
     _isChecking: false,
     _lastCheckTime: 0,
     _isLoginPage: false,
+    _blockCheck: false,  // خاصية جديدة لمنع تنفيذ checkSession نهائياً في صفحات المصادقة
 
     /**
      * التحقق من الجلسة مع منع الحلقات اللانهائية
      */
     checkSession: function() {
+        // إذا تم حظر التنفيذ، نخرج فوراً
+        if (this._blockCheck) {
+            console.log('⛔ [Auth] checkSession محظور في هذه الصفحة');
+            return;
+        }
+
         // منع التنفيذ المتكرر
         const now = Date.now();
         if (this._isChecking || (now - this._lastCheckTime < 500)) {
@@ -86,7 +93,7 @@ const TeraAuth = {
         try {
             const currentPage = window.location.pathname;
             
-            // التحقق من صفحة تسجيل الدخول
+            // التحقق من صفحة تسجيل الدخول (مع دعم المسار المكرر auth/auth)
             this._isLoginPage = /\/auth\/.*login/.test(currentPage) || 
                                 currentPage.includes('login.html') ||
                                 currentPage.endsWith('/login') ||
@@ -144,6 +151,22 @@ const TeraAuth = {
     enableAutoRedirect: function() {
         this._isChecking = false;
         console.log('🔓 [Auth] تم إعادة تفعيل التوجيه التلقائي');
+    },
+
+    /**
+     * حظر تنفيذ checkSession نهائياً (لصفحات تسجيل الدخول والرئيسية)
+     */
+    blockCheck: function() {
+        this._blockCheck = true;
+        console.log('⛔ [Auth] تم حظر checkSession نهائياً في هذه الصفحة');
+    },
+
+    /**
+     * إلغاء حظر checkSession
+     */
+    unblockCheck: function() {
+        this._blockCheck = false;
+        console.log('🔓 [Auth] تم إلغاء حظر checkSession');
     },
 
     /**
@@ -205,8 +228,9 @@ const TeraAuth = {
                     localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
                     localStorage.setItem('tera_user', JSON.stringify(user));
                     
-                    // إعادة تفعيل التوجيه التلقائي بعد نجاح تسجيل الدخول
+                    // إعادة تفعيل التوجيه التلقائي وإلغاء الحظر بعد نجاح تسجيل الدخول
                     this.enableAutoRedirect();
+                    this.unblockCheck();
                     
                     console.log('✅ [Auth] تم تسجيل الدخول بنجاح:', user);
                     resolve(user);
@@ -272,11 +296,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPage = window.location.pathname;
     const isLoginPage = /\/auth\/.*login/.test(currentPage) || 
                         currentPage.includes('login.html') ||
-                        currentPage.endsWith('/login');
+                        currentPage.endsWith('/login') ||
+                        currentPage.includes('/auth/auth/login');
     
-    if (isLoginPage) {
-        console.log('🔒 [Auth] صفحة تسجيل الدخول: تعطيل التوجيه التلقائي');
+    const isLandingPage = currentPage === '/' || 
+                          (currentPage.endsWith('index.html') && !currentPage.includes('/pages/'));
+    
+    // في جميع الصفحات العامة (تسجيل دخول، رئيسية) نمنع تنفيذ checkSession نهائياً
+    if (isLoginPage || isLandingPage) {
+        console.log('🔒 [Auth] صفحة عامة: تعطيل التوجيه وحظر checkSession');
         TeraAuth.disableAutoRedirect();
+        TeraAuth.blockCheck();  // الحظر الشامل
     } else {
         TeraAuth.checkSession();
     }
@@ -314,7 +344,7 @@ window.TeraAuth = TeraAuth;
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
 
-console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
+console.log('✅ [Auth] auth.js loaded successfully (relative paths) with blockCheck');
 console.log('📌 [Auth] المفاتيح المستخدمة: tera_token, tera_user');
 
 // ========================================================================
