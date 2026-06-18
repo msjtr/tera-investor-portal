@@ -1,101 +1,62 @@
-/* ================================================= */
-/* TERA CORE - النسخة المستقرة والمحمية (Final Fix) */
-/* ================================================= */
+/**
+ * TERA CORE SYSTEM - المحرك الأساسي للمشروع
+ * يقوم بإدارة تحميل المكونات المشتركة، حماية الجلسة، والتحكم باللودر.
+ */
 'use strict';
 
-/**
- * TERA Configuration
- * basePath: نستخدم '/' كمسار جذري ثابت لضمان عمل المكونات 
- * من أي صفحة (سواء في الجذر أو داخل المجلدات الفرعية).
- */
 const TERA = {
-    version: '1.0.1',
-    debug: true,
-    basePath: '' // تم تركها فارغة ليتم التعامل مع المسارات كجذرية
+    version: '1.0.0',
+    // المسارات تبدأ بـ / لضمان أنها دائماً من المجلد الرئيسي للمشروع
+    components: {
+        header: '/components/header.html',
+        sidebar: '/components/sidebar.html',
+        footer: '/components/footer.html',
+        loader: '/components/loader.html',
+        alerts: '/components/alerts.html'
+    }
 };
 
-/* ================================================= */
-/* UI FEEDBACK */
-/* ================================================= */
-function showLoader() {
-    const loader = document.getElementById('tera-loader');
-    if (loader) loader.style.display = 'flex';
+/* 1. تحميل المكونات الديناميكي */
+async function loadComponent(id, path) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    try {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        element.innerHTML = await response.text();
+    } catch (error) {
+        console.error(`خطأ في تحميل المكون: ${path}`, error);
+    }
 }
 
-function hideLoader() {
+async function initSystem() {
+    // تحميل كافة المكونات بالتوازي
+    await Promise.all([
+        loadComponent('header-container', TERA.components.header),
+        loadComponent('sidebar-container', TERA.components.sidebar),
+        loadComponent('footer-container', TERA.components.footer),
+        loadComponent('loader-container', TERA.components.loader),
+        loadComponent('alerts-container', TERA.components.alerts)
+    ]);
+    
+    // إخفاء اللودر عند اكتمال التحميل
     const loader = document.getElementById('tera-loader');
     if (loader) loader.style.display = 'none';
 }
 
-/* ================================================= */
-/* DYNAMIC COMPONENT LOADER */
-/* ================================================= */
-async function loadComponents() {
-    // تم تعديل المسارات لتبدأ بـ / لضمان أنها تشير دائماً للجذر (Root)
-    const components = [
-        { selector: '#header-container', path: '/components/header.html' },
-        { selector: '#footer-container', path: '/components/footer.html' },
-        { selector: '#sidebar-container', path: '/components/sidebar.html' },
-        { selector: '#loader-container', path: '/components/loader.html' },
-        { selector: '#alerts-container', path: '/components/alerts.html' }
-    ];
+/* 2. حماية الجلسة (Auth Check) */
+function checkAuth() {
+    const isLoginPage = window.location.pathname.includes('/login/');
+    const token = localStorage.getItem('tera_token');
 
-    for (const comp of components) {
-        const element = document.querySelector(comp.selector);
-        if (element) {
-            try {
-                const res = await fetch(comp.path);
-                if (res.ok) {
-                    element.innerHTML = await res.text();
-                } else {
-                    console.warn(`فشل تحميل المكون: ${comp.path} - حالة: ${res.status}`);
-                }
-            } catch (err) {
-                console.error(`خطأ في الاتصال بالمكون: ${comp.path}`, err);
-            }
-        }
+    if (!isLoginPage && !token) {
+        // إذا لم يكن هناك توكن وليس في صفحة تسجيل الدخول، حوّله لل login
+        window.location.replace('/auth/auth/login/login.html');
     }
-    
-    // إخفاء اللودر بعد اكتمال التحميل
-    setTimeout(hideLoader, 500);
 }
 
-/* ================================================= */
-/* SESSION & AUTH */
-/* ================================================= */
-const Session = {
-    isLoggedIn: () => !!localStorage.getItem('tera_token'),
-    
-    logout: () => {
-        localStorage.clear();
-        window.location.href = '/auth/auth/login/login.html';
-    },
-
-    checkAuth: () => {
-        const currentPath = window.location.pathname;
-        const isAuthPage = currentPath.includes('/auth/');
-        
-        // إذا كان المسار يتطلب حماية وليس صفحة مصادقة
-        const isProtected = !isAuthPage && !currentPath.endsWith('index.html') && currentPath !== '/';
-        
-        if (isProtected && !Session.isLoggedIn()) {
-            window.location.replace('/auth/auth/login/login.html');
-        }
-    }
-};
-
-/* ================================================= */
-/* INITIALIZATION */
-/* ================================================= */
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. فحص الجلسة
-    Session.checkAuth();
-
-    // 2. إظهار اللودر
-    showLoader();
-
-    // 3. تحميل المكونات
-    await loadComponents();
-    
-    console.log('TERA Core System Initialized.');
+/* 3. تهيئة النظام عند بدء الصفحة */
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    initSystem();
 });
