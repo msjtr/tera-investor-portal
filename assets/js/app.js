@@ -329,7 +329,7 @@
     }
 
     // ============================================================
-    // 9. معالجة أحداث المتصفح والروابط
+    // 9. معالجة أحداث المتصفح والروابط (مع تجاهل القوائم الفرعية)
     // ============================================================
 
     function handlePopState() {
@@ -342,6 +342,11 @@
             if (!link) return;
             const href = link.getAttribute('href');
             
+            // ✅ تجاهل الروابط التي تفتح القوائم الفرعية (has-submenu)
+            if (link.closest('.has-submenu')) {
+                return; // نترك القائمة تعمل دون تدخل من نظام التوجيه
+            }
+
             // تجاهل الروابط الخارجية أو الهاشتاجات أو ملفات الجافاسكريبت والـ CSS
             if (!href || link.target === '_blank' || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:') || href.endsWith('.css') || href.endsWith('.js')) return;
             
