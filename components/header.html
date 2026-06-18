@@ -1,5 +1,5 @@
 <!-- ========================================
-     header.html - الشريط العلوي (الهيدر)
+     header.html - الشريط العلوي (الهيدر) مع زر العودة
      ======================================== -->
 <header class="header">
     <div class="header-left">
@@ -7,8 +7,15 @@
         <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-bars"></i>
         </button>
+
+        <!-- زر العودة إلى لوحة التحكم (يظهر في الصفحات الفرعية فقط) -->
+        <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboard">
+            <i class="fas fa-arrow-right"></i>
+            <span>العودة للوحة التحكم</span>
+        </a>
+
         <!-- عنوان الصفحة (ديناميكي، يمكن تغييره حسب الصفحة) -->
-        <h1 class="page-title">لوحة التحكم</h1>
+        <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
     </div>
 
     <div class="header-right">
