@@ -1,44 +1,64 @@
 /**
  * ============================================================
- * auth.js - محرك المصادقة والحماية - نسخة مصححة ومحكمة
+ * auth.js - محرك المصادقة والحماية - نسخة متوافقة مع المسارات النسبية
  * ============================================================
  * الموقع: /assets/js/auth.js
  * 
- * تم التحديث لمنع الحلقات اللانهائية في التوجيه
- * ومعالجة صفحة تسجيل الدخول بشكل خاص
+ * تم التحديث لاستخدام المسارات النسبية بدلاً من المطلقة
+ * لضمان العمل على خوادم لا تدعم المسارات المطلقة (مثل Render)
  * ============================================================
  */
 'use strict';
 
 // ========================================================================
-// 1. دوال مساعدة للمسارات
+// 1. دوال مساعدة للمسارات النسبية
 // ========================================================================
 
 /**
- * استخراج المسار الجذري للمشروع
+ * حساب عدد المستويات للوصول إلى الجذر من المسار الحالي
+ * @returns {number} عدد المستويات (مثل: 0 للجذر، 1 لـ /assets/، 2 لـ /pages/، 3 لـ /auth/auth/)
  */
-const getBasePath = () => {
+const getBaseDepth = () => {
     const path = window.location.pathname;
-    const match = path.match(/(.*?)(\/pages\/|\/auth\/|\/assets\/|\/index\.html|$)/);
-    let base = match && match[1] ? match[1] : '';
-    if (base.endsWith('/')) base = base.slice(0, -1);
-    return base;
+    
+    // تحديد العمق بناءً على المسار
+    if (path.includes('/pages/')) return 2;           // /pages/dashboard/...
+    if (path.includes('/auth/auth/')) return 3;       // /auth/auth/login/...
+    if (path.includes('/auth/')) return 2;            // /auth/login/...
+    if (path.includes('/assets/')) return 1;          // /assets/js/...
+    if (path.includes('/components/')) return 1;
+    if (path.includes('/layouts/')) return 1;
+    if (path === '/' || path === '/index.html') return 0;
+    
+    // افتراضياً: حساب عدد الشرطات المائلة
+    const parts = path.split('/').filter(p => p.length > 0);
+    return parts.length;
 };
 
 /**
- * إنشاء مسار مطلق مع ضمان وجود .html
+ * إنشاء مسار نسبي من الجذر إلى المسار المطلوب
+ * @param {string} relativePath - المسار المطلوب (بدون斜杠 البداية)
+ * @returns {string} المسار النسبي مع ../ بالعدد المناسب
  */
 const resolvePath = (relativePath) => {
-    // إضافة .html إذا كان المسار لا يحتوي على امتداد
-    if (!relativePath.endsWith('.html') && !relativePath.includes('.') && !relativePath.includes('?')) {
-        relativePath = relativePath + '.html';
+    // التأكد من عدم وجود / في البداية
+    let cleanPath = relativePath;
+    if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.slice(1);
     }
     
-    const base = getBasePath();
-    const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
-    let finalPath = base ? `/${base}/${cleanPath}` : `/${cleanPath}`;
-    finalPath = finalPath.replace(/\/+/g, '/');
-    return finalPath;
+    // إضافة .html إذا لزم الأمر
+    if (!cleanPath.endsWith('.html') && !cleanPath.includes('.') && !cleanPath.includes('?')) {
+        cleanPath = cleanPath + '.html';
+    }
+    
+    const depth = getBaseDepth();
+    let prefix = '';
+    for (let i = 0; i < depth; i++) {
+        prefix += '../';
+    }
+    
+    return prefix + cleanPath;
 };
 
 // ========================================================================
@@ -46,7 +66,6 @@ const resolvePath = (relativePath) => {
 // ========================================================================
 
 const TeraAuth = {
-    basePath: getBasePath(),
     _isChecking: false,
     _lastCheckTime: 0,
     _isLoginPage: false,
@@ -67,13 +86,13 @@ const TeraAuth = {
         try {
             const currentPage = window.location.pathname;
             
-            // ✅ التحقق من صفحة تسجيل الدخول (باستخدام أنماط متعددة)
+            // التحقق من صفحة تسجيل الدخول
             this._isLoginPage = /\/auth\/.*login/.test(currentPage) || 
                                 currentPage.includes('login.html') ||
                                 currentPage.endsWith('/login') ||
                                 currentPage.includes('/auth/auth/login');
 
-            // ✅ إذا كنا في صفحة تسجيل الدخول، لا نقوم بأي توجيه (منع الحلقات)
+            // إذا كنا في صفحة تسجيل الدخول، لا نقوم بأي توجيه (منع الحلقات)
             if (this._isLoginPage) {
                 console.log('🔒 [Auth] صفحة تسجيل الدخول: تخطي التوجيه');
                 return;
@@ -88,17 +107,17 @@ const TeraAuth = {
             const isPublicPage = isAuthPage || isLandingPage;
             const isProtectedPage = !isPublicPage;
             
-            // ✅ مستخدم غير مسجل في صفحة محمية -> توجيه لتسجيل الدخول
+            // مستخدم غير مسجل في صفحة محمية -> توجيه لتسجيل الدخول
             if (!token && isProtectedPage) {
-                const loginUrl = resolvePath('/auth/auth/login/login.html');
+                const loginUrl = resolvePath('auth/auth/login/login.html');
                 console.log('🔐 [Auth] توجيه غير مسجل الدخول إلى:', loginUrl);
                 window.location.replace(loginUrl);
                 return;
             }
             
-            // ✅ مستخدم مسجل في صفحة عامة -> توجيه للوحة التحكم
+            // مستخدم مسجل في صفحة عامة -> توجيه للوحة التحكم
             if (token && isPublicPage) {
-                const dashboardUrl = resolvePath('/pages/dashboard/index.html');
+                const dashboardUrl = resolvePath('pages/dashboard/index.html');
                 console.log('🚀 [Auth] توجيه مستخدم مسجل إلى:', dashboardUrl);
                 window.location.replace(dashboardUrl);
                 return;
@@ -141,7 +160,7 @@ const TeraAuth = {
             alert('⏳ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً.');
         }
         
-        const loginUrl = resolvePath('/auth/auth/login/login.html');
+        const loginUrl = resolvePath('auth/auth/login/login.html');
         console.log('🚪 [Auth] تسجيل الخروج إلى:', loginUrl);
         window.location.replace(loginUrl);
     },
@@ -186,7 +205,7 @@ const TeraAuth = {
                     localStorage.setItem('tera_token', 'jwt-token-' + Date.now());
                     localStorage.setItem('tera_user', JSON.stringify(user));
                     
-                    // ✅ إعادة تفعيل التوجيه التلقائي بعد نجاح تسجيل الدخول
+                    // إعادة تفعيل التوجيه التلقائي بعد نجاح تسجيل الدخول
                     this.enableAutoRedirect();
                     
                     console.log('✅ [Auth] تم تسجيل الدخول بنجاح:', user);
@@ -248,7 +267,7 @@ const TeraAuth = {
 // ========================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔐 [Auth] TeraAuth initialized. Base path:', TeraAuth.basePath);
+    console.log('🔐 [Auth] TeraAuth initialized.');
     
     const currentPage = window.location.pathname;
     const isLoginPage = /\/auth\/.*login/.test(currentPage) || 
@@ -295,7 +314,7 @@ window.TeraAuth = TeraAuth;
 window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
 window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
 
-console.log('✅ [Auth] auth.js loaded successfully');
+console.log('✅ [Auth] auth.js loaded successfully (relative paths)');
 console.log('📌 [Auth] المفاتيح المستخدمة: tera_token, tera_user');
 
 // ========================================================================
