@@ -3,20 +3,21 @@
  * login.js - صفحة تسجيل الدخول
  * ============================================================
  * - يتوافق مع auth.js الجديد
- * - يتوافق مع login.html (IDs: teraLoginForm, login_identifier, login_password, loginSubmitBtn)
- * - يستخدم مسارات absolute (PATHS.login, PATHS.dashboard)
+ * - يستخدم مسارات نسبية لتفادي أخطاء الاستضافة (404)
  * - يمنع اللوب عند الانتقال من صفحة الدخول
  */
 'use strict';
 
 // ========================================================================
-// 1. المسارات الثابتة (متسقة مع auth.js)
+// 1. المسارات النسبية (حسب موقع login.js في هيكل المشروع)
 // ========================================================================
+// بما أن هذا السكربت يتم استدعاؤه من داخل /auth/auth/login/login.html
+// فالمسارات تبدأ بصعود مستويين أو ثلاثة حسب الوجهة
 const PATHS = {
-    login: '/auth/auth/login/login.html',
-    dashboard: '/pages/dashboard/index.html',
-    register: '/auth/register/register.html',
-    forgotPassword: '/auth/forgot-password.html'
+    dashboard: '../../../pages/dashboard/index.html',
+    register: '../../register/register.html',
+    forgotPassword: '../../forgot-password.html',
+    home: '../../../index.html'
 };
 
 // ========================================================================
@@ -55,14 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // 2.4. إظهار/إخفاء كلمة المرور عبر checkbox
-    if (showPasswordCheckbox) {
-        showPasswordCheckbox.addEventListener('change', function() {
-            passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
-        });
-    }
-
-    // 2.5. أزرار التنقل (إنشاء حساب جديد + العودة للشاشة الرئيسية)
+    // 2.4. أزرار التنقل (إنشاء حساب جديد + العودة للشاشة الرئيسية)
     document.addEventListener('click', function(e) {
         const routingLink = e.target.closest('.routing-link, .routing-link-secondary');
         if (!routingLink) return;
@@ -73,11 +67,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (href.includes('register')) {
             window.location.replace(PATHS.register);
         } else if (href.includes('index.html')) {
-            window.location.replace('/index.html');
+            window.location.replace(PATHS.home);
         }
     });
 
-    // 2.6. معالجة نموذج تسجيل الدخول
+    // 2.5. معالجة نموذج تسجيل الدخول
     loginForm.addEventListener('submit', async function(event) {
         event.preventDefault();
 
@@ -94,34 +88,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // التحقق من الإدخال
         if (!identifier) {
-            if (identifierError) {
-                identifierError.textContent = 'يرجى إدخال الاسم/البريد الإلكتروني/رقم الجوال.';
-            }
+            if (identifierError) identifierError.textContent = 'يرجى إدخال الاسم/البريد الإلكتروني/رقم الجوال.';
             identifierInput.focus();
             return;
         }
 
         if (!password) {
-            if (passwordError) {
-                passwordError.textContent = 'يرجى إدخال كلمة المرور.';
-            }
+            if (passwordError) passwordError.textContent = 'يرجى إدخال كلمة المرور.';
             passwordInput.focus();
             return;
         }
 
         if (password.length < 3) {
-            if (passwordError) {
-                passwordError.textContent = 'كلمة المرور يجب أن تكون 3 أحرف على الأقل.';
-            }
+            if (passwordError) passwordError.textContent = 'كلمة المرور يجب أن تكون 3 أحرف على الأقل.';
             passwordInput.focus();
             return;
         }
 
         // إظهار الـ loader
         if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'flex';
-        if (loginButton) {
-            loginButton.disabled = true;
-        }
+        if (loginButton) loginButton.disabled = true;
 
         // تشغيل شريط التقدم
         let progress = 0;
@@ -132,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 40);
 
         try {
+            // نداء دالة تسجيل الدخول من auth.js
             const user = await TeraAuth.login(identifier, password);
 
             console.log('✅ [Login] تسجيل دخول ناجح، توجيه إلى لوحة التحكم');
@@ -147,8 +134,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
             if (progressFillBar) progressFillBar.style.width = '0%';
 
-            // الانتقال إلى لوحة التحكم
+            // الانتقال المباشر والآمن إلى لوحة التحكم
             window.location.replace(PATHS.dashboard);
+            
         } catch (error) {
             console.error('❌ [Login] خطأ في تسجيل الدخول:', error);
 
@@ -156,19 +144,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
             if (progressFillBar) progressFillBar.style.width = '0%';
 
-            // عرض الرسالة
+            // عرض رسالة الخطأ
             const errorMsg = error.message || 'حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مجددًا.';
-
             if (errorBoxText) errorBoxText.textContent = errorMsg;
             if (loginErrorBox) loginErrorBox.style.display = 'flex';
 
-            if (loginButton) {
-                loginButton.disabled = false;
-            }
+            if (loginButton) loginButton.disabled = false;
         }
     });
 
-    // 2.7. السماح بالضغط على Enter لتسجيل الدخول
+    // 2.6. السماح بالضغط على Enter لتسجيل الدخول
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             const activeElement = document.activeElement;
@@ -177,10 +162,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 (activeElement.id === 'login_identifier' || activeElement.id === 'login_password')
             ) {
                 event.preventDefault();
-                loginForm.dispatchEvent(new Event('submit'));
+                // بدلاً من dispatchEvent نستخدم requestSubmit لضمان التوافق مع المتصفحات الحديثة
+                if(typeof loginForm.requestSubmit === 'function') {
+                    loginForm.requestSubmit();
+                } else {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
             }
         }
     });
 
-    console.log('✅ [Login] formul جاهز، انتظار إدخال البيانات');
+    console.log('✅ [Login] السكربت جاهز، انتظار إدخال البيانات');
 });
