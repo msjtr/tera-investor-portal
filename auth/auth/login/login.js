@@ -2,175 +2,158 @@
  * ============================================================
  * login.js - صفحة تسجيل الدخول
  * ============================================================
- * - يتوافق مع auth.js الجديد
+ * - تم حل مشكلة تداخل المتغيرات (PATHS Collision Fixed)
  * - يستخدم مسارات نسبية لتفادي أخطاء الاستضافة (404)
- * - يمنع اللوب عند الانتقال من صفحة الدخول
  */
-'use strict';
 
-// ========================================================================
-// 1. المسارات النسبية (حسب موقع login.js في هيكل المشروع)
-// ========================================================================
-// بما أن هذا السكربت يتم استدعاؤه من داخل /auth/auth/login/login.html
-// فالمسارات تبدأ بصعود مستويين أو ثلاثة حسب الوجهة
-const PATHS = {
-    dashboard: '../../../pages/dashboard/index.html',
-    register: '../../register/register.html',
-    forgotPassword: '../../forgot-password.html',
-    home: '../../../index.html'
-};
+(function() {
+    'use strict';
 
-// ========================================================================
-// 2. تهيئة الصفحة
-// ========================================================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔐 [Login] DOM loaded, initializing login form...');
+    // ========================================================================
+    // 1. المسارات النسبية (استخدمنا اسم جديد لمنع التداخل مع auth.js)
+    // ========================================================================
+    const LOGIN_ROUTES = {
+        dashboard: '../../../pages/dashboard/index.html',
+        register: '../../register/register.html',
+        forgotPassword: '../../forgot-password.html',
+        home: '../../../index.html'
+    };
 
-    // 2.1. تهيئة زر التبديل بين إخفاء وإظهار كلمة المرور
-    if (typeof TeraAuth !== 'undefined' && TeraAuth) {
-        TeraAuth.initPasswordToggles();
-    }
+    // ========================================================================
+    // 2. تهيئة الصفحة
+    // ========================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🔐 [Login] DOM loaded, initializing login form...');
 
-    // 2.2. ربط نموذج تسجيل الدخول
-    const loginForm = document.getElementById('teraLoginForm');
-    const identifierInput = document.getElementById('login_identifier');
-    const passwordInput = document.getElementById('login_password');
-    const loginButton = document.getElementById('loginSubmitBtn');
-    const showPasswordCheckbox = document.getElementById('show_login_password');
-    const rememberMeCheckbox = document.getElementById('remember_me');
-
-    // 2.3. عناصر واجهة المستخدم الإضافية
-    const loginErrorBox = document.getElementById('loginErrorBox');
-    const errorBoxText = document.getElementById('errorBoxText');
-    const creativeLoaderScreen = document.getElementById('creativeLoaderScreen');
-    const creativeQuoteText = document.getElementById('creativeQuoteText');
-    const progressFillBar = document.getElementById('progressFillBar');
-
-    if (!loginForm) {
-        console.warn('⚠️ [Login] عنصر #teraLoginForm غير موجود في الصفحة');
-        return;
-    }
-
-    if (!identifierInput || !passwordInput) {
-        console.warn('⚠️ [Login] عناصر الإدخال غير موجودة: #login_identifier أو #login_password');
-        return;
-    }
-
-    // 2.4. أزرار التنقل (إنشاء حساب جديد + العودة للشاشة الرئيسية)
-    document.addEventListener('click', function(e) {
-        const routingLink = e.target.closest('.routing-link, .routing-link-secondary');
-        if (!routingLink) return;
-
-        e.preventDefault();
-        const href = routingLink.getAttribute('href');
-
-        if (href.includes('register')) {
-            window.location.replace(PATHS.register);
-        } else if (href.includes('index.html')) {
-            window.location.replace(PATHS.home);
+        // 2.1. تهيئة زر التبديل بين إخفاء وإظهار كلمة المرور
+        if (typeof TeraAuth !== 'undefined' && TeraAuth) {
+            TeraAuth.initPasswordToggles();
         }
-    });
 
-    // 2.5. معالجة نموذج تسجيل الدخول
-    loginForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
+        // 2.2. ربط نموذج تسجيل الدخول
+        const loginForm = document.getElementById('teraLoginForm');
+        const identifierInput = document.getElementById('login_identifier');
+        const passwordInput = document.getElementById('login_password');
+        const loginButton = document.getElementById('loginSubmitBtn');
+        const showPasswordCheckbox = document.getElementById('show_login_password');
+        const rememberMeCheckbox = document.getElementById('remember_me');
 
-        const identifier = identifierInput.value.trim();
-        const password = passwordInput.value.trim();
+        // 2.3. عناصر واجهة المستخدم الإضافية
+        const loginErrorBox = document.getElementById('loginErrorBox');
+        const errorBoxText = document.getElementById('errorBoxText');
+        const creativeLoaderScreen = document.getElementById('creativeLoaderScreen');
+        const progressFillBar = document.getElementById('progressFillBar');
 
-        // تنظيف الأخطاء السابقة
-        const identifierError = document.getElementById('identifier-error');
-        const passwordError = document.getElementById('password-error');
-
-        if (identifierError) identifierError.textContent = '';
-        if (passwordError) passwordError.textContent = '';
-        if (loginErrorBox) loginErrorBox.style.display = 'none';
-
-        // التحقق من الإدخال
-        if (!identifier) {
-            if (identifierError) identifierError.textContent = 'يرجى إدخال الاسم/البريد الإلكتروني/رقم الجوال.';
-            identifierInput.focus();
+        if (!loginForm) {
+            console.warn('⚠️ [Login] عنصر #teraLoginForm غير موجود في الصفحة');
             return;
         }
 
-        if (!password) {
-            if (passwordError) passwordError.textContent = 'يرجى إدخال كلمة المرور.';
-            passwordInput.focus();
-            return;
-        }
+        // 2.4. أزرار التنقل (إنشاء حساب جديد + العودة للشاشة الرئيسية)
+        document.addEventListener('click', function(e) {
+            const routingLink = e.target.closest('.routing-link, .routing-link-secondary');
+            if (!routingLink) return;
 
-        if (password.length < 3) {
-            if (passwordError) passwordError.textContent = 'كلمة المرور يجب أن تكون 3 أحرف على الأقل.';
-            passwordInput.focus();
-            return;
-        }
+            e.preventDefault();
+            const href = routingLink.getAttribute('href');
 
-        // إظهار الـ loader
-        if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'flex';
-        if (loginButton) loginButton.disabled = true;
+            if (href.includes('register')) {
+                window.location.replace(LOGIN_ROUTES.register);
+            } else if (href.includes('index.html')) {
+                window.location.replace(LOGIN_ROUTES.home);
+            }
+        });
 
-        // تشغيل شريط التقدم
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 5;
-            if (progressFillBar) progressFillBar.style.width = progress + '%';
-            if (progress >= 100) clearInterval(progressInterval);
-        }, 40);
+        // 2.5. معالجة نموذج تسجيل الدخول
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-        try {
-            // نداء دالة تسجيل الدخول من auth.js
-            const user = await TeraAuth.login(identifier, password);
+            const identifier = identifierInput.value.trim();
+            const password = passwordInput.value.trim();
 
-            console.log('✅ [Login] تسجيل دخول ناجح، توجيه إلى لوحة التحكم');
+            // تنظيف الأخطاء السابقة
+            const identifierError = document.getElementById('identifier-error');
+            const passwordError = document.getElementById('password-error');
 
-            // حفظ "تذكرني" إذا تم تفعيله
-            if (rememberMeCheckbox && rememberMeCheckbox.checked) {
-                localStorage.setItem('tera_remember', 'true');
-            } else {
-                localStorage.removeItem('tera_remember');
+            if (identifierError) identifierError.textContent = '';
+            if (passwordError) passwordError.textContent = '';
+            if (loginErrorBox) loginErrorBox.style.display = 'none';
+
+            // التحقق من الإدخال
+            if (!identifier) {
+                if (identifierError) identifierError.textContent = 'يرجى إدخال الاسم/البريد الإلكتروني/رقم الجوال.';
+                identifierInput.focus();
+                return;
             }
 
-            // إخفاء الـ loader
-            if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
-            if (progressFillBar) progressFillBar.style.width = '0%';
+            if (!password) {
+                if (passwordError) passwordError.textContent = 'يرجى إدخال كلمة المرور.';
+                passwordInput.focus();
+                return;
+            }
 
-            // الانتقال المباشر والآمن إلى لوحة التحكم
-            window.location.replace(PATHS.dashboard);
-            
-        } catch (error) {
-            console.error('❌ [Login] خطأ في تسجيل الدخول:', error);
+            // إظهار الـ loader
+            if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'flex';
+            if (loginButton) loginButton.disabled = true;
 
-            // إخفاء الـ loader
-            if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
-            if (progressFillBar) progressFillBar.style.width = '0%';
+            // تشغيل شريط التقدم
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progressFillBar) progressFillBar.style.width = progress + '%';
+                if (progress >= 100) clearInterval(progressInterval);
+            }, 40);
 
-            // عرض رسالة الخطأ
-            const errorMsg = error.message || 'حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مجددًا.';
-            if (errorBoxText) errorBoxText.textContent = errorMsg;
-            if (loginErrorBox) loginErrorBox.style.display = 'flex';
+            try {
+                // نداء دالة تسجيل الدخول من auth.js
+                const user = await TeraAuth.login(identifier, password);
 
-            if (loginButton) loginButton.disabled = false;
-        }
-    });
+                console.log('✅ [Login] تسجيل دخول ناجح، توجيه إلى لوحة التحكم');
 
-    // 2.6. السماح بالضغط على Enter لتسجيل الدخول
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            const activeElement = document.activeElement;
-            if (
-                activeElement &&
-                (activeElement.id === 'login_identifier' || activeElement.id === 'login_password')
-            ) {
-                event.preventDefault();
-                // بدلاً من dispatchEvent نستخدم requestSubmit لضمان التوافق مع المتصفحات الحديثة
-                if(typeof loginForm.requestSubmit === 'function') {
-                    loginForm.requestSubmit();
+                if (rememberMeCheckbox && rememberMeCheckbox.checked) {
+                    localStorage.setItem('tera_remember', 'true');
                 } else {
-                    loginForm.dispatchEvent(new Event('submit'));
+                    localStorage.removeItem('tera_remember');
+                }
+
+                if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
+                
+                // التوجيه للوحة التحكم بالاعتماد على المتغير الجديد
+                window.location.replace(LOGIN_ROUTES.dashboard);
+                
+            } catch (error) {
+                console.error('❌ [Login] خطأ في تسجيل الدخول:', error);
+
+                if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
+                if (progressFillBar) progressFillBar.style.width = '0%';
+
+                const errorMsg = error.message || 'حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مجددًا.';
+                if (errorBoxText) errorBoxText.textContent = errorMsg;
+                if (loginErrorBox) loginErrorBox.style.display = 'flex';
+
+                if (loginButton) loginButton.disabled = false;
+            }
+        });
+
+        // 2.6. السماح بالضغط على Enter لتسجيل الدخول
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (
+                    activeElement &&
+                    (activeElement.id === 'login_identifier' || activeElement.id === 'login_password')
+                ) {
+                    event.preventDefault();
+                    if(typeof loginForm.requestSubmit === 'function') {
+                        loginForm.requestSubmit();
+                    } else {
+                        loginForm.dispatchEvent(new Event('submit'));
+                    }
                 }
             }
-        }
+        });
+
+        console.log('✅ [Login] السكربت جاهز بدون أي تداخل برمجي');
     });
 
-    console.log('✅ [Login] السكربت جاهز، انتظار إدخال البيانات');
-});
+})(); // نهاية التغليف لحماية المتغيرات
