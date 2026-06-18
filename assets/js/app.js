@@ -39,12 +39,32 @@ const App = {
     },
 
     initializeSidebar() {
-        // استخدام event delegation لضمان عمل الزر حتى بعد حقن الـ HTML
+        // استخدام event delegation لضمان عمل الأزرار حتى بعد حقن الـ HTML
         document.addEventListener('click', (e) => {
+            
+            // 1. منطق تصغير/تكبير القائمة الجانبية
             const toggleBtn = e.target.closest('.menu-toggle, #sidebarToggle');
-            const sidebar = document.querySelector('.tera-sidebar, #sidebar');
-            if (toggleBtn && sidebar) {
-                sidebar.classList.toggle('collapsed');
+            if (toggleBtn) {
+                const sidebar = document.querySelector('.tera-sidebar, #sidebar');
+                if (sidebar) sidebar.classList.toggle('collapsed');
+            }
+
+            // 2. منطق القوائم المنسدلة (Submenus)
+            const submenuToggle = e.target.closest('.submenu-toggle');
+            if (submenuToggle) {
+                e.preventDefault(); // منع الرابط من تحديث الصفحة
+                const parentLi = submenuToggle.parentElement;
+                const isActive = parentLi.classList.contains('active');
+
+                // إغلاق جميع القوائم الأخرى أولاً (اختياري، لتجربة مستخدم أنظف)
+                document.querySelectorAll('.has-submenu').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // فتح القائمة الحالية إذا لم تكن مفتوحة
+                if (!isActive) {
+                    parentLi.classList.add('active');
+                }
             }
         });
     },
@@ -97,16 +117,19 @@ const Router = {
 /* SESSION TIMEOUT (حماية الجلسة) */
 /* ================================================= */
 let sessionTimer;
+
 function startSessionTimer() {
     clearTimeout(sessionTimer);
     sessionTimer = setTimeout(() => {
-        alert('⚠️ انتهت الجلسة بسبب الخمول.');
+        alert('⚠️ انتهت الجلسة بسبب الخمول. يرجى تسجيل الدخول مجدداً.');
         App.logout();
     }, 3600000); // ساعة واحدة
 }
 
-document.addEventListener('click', startSessionTimer);
-document.addEventListener('keypress', startSessionTimer);
+// تحديث المؤقت عند أي نشاط للمستخدم لضمان عدم خروجه أثناء الاستخدام
+['click', 'keypress', 'scroll', 'mousemove'].forEach(evt => 
+    document.addEventListener(evt, startSessionTimer, { passive: true })
+);
 
 /* ================================================= */
 /* INITIALIZATION */
@@ -115,12 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
     App.init();
     startSessionTimer();
     
-    // ربط زر تسجيل الخروج عالمياً
-    const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
+    // ربط زر تسجيل الخروج عالمياً (يعمل عبر تفويض الأحداث لضمان استجابته المكونات المحقونة)
+    document.addEventListener('click', (e) => {
+        const logoutBtn = e.target.closest('#btn-logout, .btn-logout');
+        if (logoutBtn) {
             e.preventDefault();
             App.logout();
-        });
-    }
+        }
+    });
 });
