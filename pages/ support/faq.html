@@ -1,1 +1,558 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأسئلة الشائعة | تيرا للمستثمرين</title>
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    
+    <!-- الملفات المشتركة CSS -->
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/support.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* أنماط خاصة بالأسئلة الشائعة */
+        .faq-section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 30px 0 15px 0;
+            padding-right: 15px;
+            border-right: 5px solid var(--primary-color);
+        }
+        .faq-section-title:first-of-type {
+            margin-top: 0;
+        }
 
+        .faq-item {
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            margin-bottom: 12px;
+            background: var(--white-color);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        .faq-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(13, 110, 253, 0.08);
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--gray-800);
+            background: var(--white-color);
+            transition: background 0.2s;
+            user-select: none;
+            gap: 15px;
+        }
+        .faq-question:hover {
+            background: var(--gray-100);
+        }
+        .faq-question .faq-icon {
+            flex-shrink: 0;
+            color: var(--gray-500);
+            transition: transform 0.3s ease;
+            font-size: 14px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            padding: 0 25px;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            color: var(--gray-600);
+            line-height: 1.8;
+            font-size: 15px;
+            background: var(--gray-100);
+            border-top: 1px solid transparent;
+        }
+        .faq-answer p {
+            margin: 15px 0;
+        }
+        .faq-answer ul {
+            list-style: disc;
+            padding-right: 20px;
+            margin: 10px 0;
+        }
+        .faq-answer ul li {
+            margin-bottom: 5px;
+        }
+
+        .faq-item.open {
+            border-color: var(--primary-color);
+        }
+        .faq-item.open .faq-question {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        .faq-item.open .faq-question .faq-icon {
+            transform: rotate(180deg);
+            color: var(--primary-color);
+        }
+        .faq-item.open .faq-answer {
+            max-height: 800px;
+            padding: 20px 25px;
+            border-top-color: var(--gray-300);
+        }
+
+        .faq-search-box {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .faq-search-box input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background: var(--white-color);
+            transition: border-color 0.2s;
+        }
+        .faq-search-box input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+        .faq-search-box i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 18px;
+        }
+
+        .faq-footer-cta {
+            background: var(--primary-light);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        .faq-footer-cta h3 {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        .faq-footer-cta p {
+            color: var(--gray-600);
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <!-- ====== القائمة الجانبية (Sidebar) ====== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <a href="../../index.html">
+                <img src="../../images/logo.svg" alt="Tera Logo" class="logo-img">
+                <span class="logo-text">تيرا للمستثمرين</span>
+            </a>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item"><a href="../dashboard/index.html"><i class="fas fa-th-large"></i><span>لوحة التحكم</span></a></div>
+            
+            <div class="nav-item has-submenu">
+                <a href="#"><i class="fas fa-chart-line"></i><span>الاستثمارات</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="../investments/opportunities.html">الفرص</a></li>
+                    <li><a href="../investments/active-investments.html">النشطة</a></li>
+                    <li><a href="../investments/completed-investments.html">المكتملة</a></li>
+                    <li><a href="../investments/cancelled-investments.html">الملغاة</a></li>
+                    <li><a href="../investments/extended-investments.html">الممددة</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-item has-submenu">
+                <a href="#"><i class="fas fa-wallet"></i><span>المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="../portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                    <li><a href="../portfolio/transactions.html">المعاملات</a></li>
+                    <li><a href="../portfolio/profits.html">الأرباح</a></li>
+                    <li><a href="../portfolio/withdraw-request.html">طلب سحب</a></li>
+                    <li><a href="../portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                    <li><a href="../portfolio/account-statement.html">كشف الحساب</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-item has-submenu">
+                <a href="#"><i class="fas fa-file-alt"></i><span>التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="../reports/reports-dashboard.html">مركز التقارير</a></li>
+                    <li><a href="../reports/portfolio-report.html">تقرير المحفظة</a></li>
+                    <li><a href="../reports/investments-report.html">تقرير الاستثمارات</a></li>
+                    <li><a href="../reports/profits-report.html">تقرير الأرباح</a></li>
+                    <li><a href="../reports/withdrawals-report.html">تقرير السحوبات</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-item has-submenu">
+                <a href="#"><i class="fas fa-user-circle"></i><span>الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="../profile/personal-information.html">المعلومات الشخصية</a></li>
+                    <li><a href="../profile/contact-information.html">معلومات الاتصال</a></li>
+                    <li><a href="../profile/national-address.html">العنوان الوطني</a></li>
+                    <li><a href="../profile/bank-information.html">المعلومات البنكية</a></li>
+                    <li><a href="../profile/attachments.html">المرفقات</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-item has-submenu">
+                <a href="#"><i class="fas fa-shield-alt"></i><span>الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="../security/change-password.html">تغيير كلمة المرور</a></li>
+                    <li><a href="../security/change-email.html">تغيير البريد</a></li>
+                    <li><a href="../security/change-mobile.html">تغيير الجوال</a></li>
+                    <li><a href="../security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                    <li><a href="../security/registered-devices.html">الأجهزة المسجلة</a></li>
+                    <li><a href="../security/login-history.html">سجل الدخول</a></li>
+                </ul>
+            </div>
+
+            <div class="nav-item has-submenu submenu-open">
+                <a href="#"><i class="fas fa-headset"></i><span>الدعم</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                <ul class="submenu">
+                    <li><a href="help-center.html">مركز المساعدة</a></li>
+                    <li class="active"><a href="faq.html">الأسئلة الشائعة</a></li>
+                    <li><a href="tickets.html">التذاكر</a></li>
+                    <li><a href="notifications.html">الإشعارات</a></li>
+                    <li><a href="privacy-policy.html">سياسة الخصوصية</a></li>
+                    <li><a href="terms-and-conditions.html">الشروط والأحكام</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="../../auth/login/login.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a>
+        </div>
+    </aside>
+
+    <!-- ====== المحتوى الرئيسي ====== -->
+    <main class="main-content">
+
+        <!-- ====== الهيدر ====== -->
+        <header class="header">
+            <div class="header-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <h1 class="page-title">الأسئلة الشائعة</h1>
+            </div>
+            <div class="header-right">
+                <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=0D6EFD&color=fff&size=40" alt="User">
+                    <span class="user-name">أحمد محمد</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ====== محتوى صفحة الأسئلة الشائعة ====== -->
+        <section class="dashboard-content">
+
+            <!-- شريط البحث -->
+            <div class="faq-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="faqSearchInput" placeholder="ابحث في الأسئلة الشائعة...">
+            </div>
+
+            <!-- القسم 1: عام -->
+            <h3 class="faq-section-title"><i class="fas fa-info-circle" style="margin-left:10px;color:var(--primary-color);"></i>عام</h3>
+            
+            <div class="faq-item open">
+                <div class="faq-question">
+                    <span>ما هي منصة تيرا للمستثمرين؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>منصة تيرا هي منصة استثمارية رقمية تهدف إلى ربط المستثمرين بفرص تمويلية متنوعة (عقارية، صناعية، تقنية) بطريقة شفافة وآمنة. توفر المنصة أدوات متقدمة لتحليل الفرص، متابعة المحفظة، وإدارة الأرباح بشكل لحظي.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف يمكنني التسجيل في المنصة؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك التسجيل بسهولة عبر اتباع الخطوات التالية:</p>
+                    <ul>
+                        <li>الانتقال إلى صفحة <a href="../../auth/register/register.html">إنشاء حساب</a>.</li>
+                        <li>إدخال البيانات المطلوبة (الاسم، البريد الإلكتروني، رقم الجوال، كلمة المرور).</li>
+                        <li>تفعيل الحساب عبر رمز التحقق المرسل إلى بريدك الإلكتروني.</li>
+                        <li>إكمال بيانات الملف الشخصي للتأهل للاستثمار.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>هل المنصة مرخصة وموثقة رسمياً؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>نعم، تعمل منصة تيرا بموجب تراخيص رسمية من الهيئات المختصة في المملكة العربية السعودية، وتلتزم بأعلى معايير الأمان والشفافية لحماية أموال وبيانات المستثمرين.</p>
+                </div>
+            </div>
+
+            <!-- القسم 2: الاستثمار والأرباح -->
+            <h3 class="faq-section-title"><i class="fas fa-chart-pie" style="margin-left:10px;color:var(--primary-color);"></i>الاستثمار والأرباح</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>ما هي خطوات الاستثمار في فرصة معينة؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>خطوات الاستثمار بسيطة ومباشرة:</p>
+                    <ul>
+                        <li><strong>استعراض الفرص:</strong> تصفح الفرص المتاحة من خلال صفحة <a href="../investments/opportunities.html">الفرص</a>.</li>
+                        <li><strong>دراسة التفاصيل:</strong> اطلع على كامل التفاصيل، الضمانات، وجدول السداد.</li>
+                        <li><strong>تحديد المبلغ:</strong> أدخل عدد الأسهم أو المبلغ الذي ترغب في استثماره.</li>
+                        <li><strong>تأكيد الدفع:</strong> اختر طريقة الدفع المناسبة وأكمل العملية.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف يتم حساب وتوزيع الأرباح؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يتم حساب الأرباح بناءً على نسبة العائد المعلنة للفرصة، وتوزع وفق جدول سداد دوري (شهري، ربع سنوي، أو سنوي). يتم إيداع الأرباح المستحقة تلقائياً في رصيدك في المنصة، ويمكنك متابعة تفاصيلها من خلال صفحة <a href="../portfolio/profits.html">الأرباح</a>.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>ماذا يحدث إذا تأخر العميل عن السداد؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>في حال تأخر العميل عن السداد، تتخذ المنصة إجراءات تصحيحية فورية تشمل التواصل مع العميل، وتطبيق غرامات تأخير وفقاً للشروط المتفق عليها، واللجوء إلى الضمانات (الشيكات، السندات) لضمان حقوق المستثمرين.</p>
+                </div>
+            </div>
+
+            <!-- القسم 3: المحفظة والسحب -->
+            <h3 class="faq-section-title"><i class="fas fa-wallet" style="margin-left:10px;color:var(--primary-color);"></i>المحفظة والسحب</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف يمكنني إيداع أموال في محفظتي؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك الإيداع عبر طريقتين رئيسيتين:</p>
+                    <ul>
+                        <li><strong>التحويل البنكي:</strong> تحويل مباشر من حسابك البنكي إلى حساب المنصة وإرفاق صورة الإيداع.</li>
+                        <li><strong>بوابة الدفع الإلكتروني:</strong> باستخدام بطاقات مدى، فيزا، أو ماستركارد عبر بوابة آمنة.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كم تستغرق عملية طلب السحب؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>تتم معالجة طلبات السحب خلال مدة تتراوح بين 1 إلى 3 أيام عمل، حسب البنك المستفيد. يمكنك متابعة حالة طلب السحب من خلال صفحة <a href="../portfolio/withdrawal-history.html">سجل السحوبات</a>.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>هل توجد رسوم على عمليات السحب أو الإيداع؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>المنصة لا تفرض رسوماً على عمليات الإيداع. أما بالنسبة للسحوبات، فهناك رسم بسيط (يبدأ من 5 ريال سعودي) يغطي تكاليف التحويل البنكي، ويتم توضيحه في صفحة طلب السحب قبل التأكيد.</p>
+                </div>
+            </div>
+
+            <!-- القسم 4: الأمان -->
+            <h3 class="faq-section-title"><i class="fas fa-shield-alt" style="margin-left:10px;color:var(--primary-color);"></i>الأمان والحساب</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف يمكنني تغيير كلمة المرور الخاصة بي؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك تغيير كلمة المرور بسهولة من خلال:</p>
+                    <ul>
+                        <li>الذهاب إلى صفحة <a href="../security/change-password.html">تغيير كلمة المرور</a>.</li>
+                        <li>إدخال كلمة المرور الحالية ثم الجديدة.</li>
+                        <li>تأكيد التغيير، وسيتم تحديث كلمة المرور فوراً.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>هل توجد مصادقة ثنائية لحماية الحساب؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>نعم، تدعم المنصة المصادقة الثنائية (2FA) عبر تطبيقات مثل Google Authenticator أو Microsoft Authenticator. ننصح بشدة بتفعيلها من خلال صفحة <a href="../security/two-factor-authentication.html">المصادقة الثنائية</a> لتعزيز أمان حسابك.</p>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>ماذا أفعل إذا نسيت كلمة المرور؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك استخدام خاصية "نسيت كلمة المرور" في صفحة <a href="../../auth/login/login.html">تسجيل الدخول</a>، حيث ستتلقى رابطاً لإعادة تعيين كلمة المرور عبر بريدك الإلكتروني المسجل.</p>
+                </div>
+            </div>
+
+            <!-- القسم 5: الدعم -->
+            <h3 class="faq-section-title"><i class="fas fa-headset" style="margin-left:10px;color:var(--primary-color);"></i>الدعم والشكاوى</h3>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف يمكنني التواصل مع فريق الدعم؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك التواصل معنا عبر عدة طرق:</p>
+                    <ul>
+                        <li>فتح تذكرة دعم من خلال صفحة <a href="tickets.html">التذاكر</a>.</li>
+                        <li>البريد الإلكتروني: support@tera.com</li>
+                        <li>رقم الهاتف الموحد: 9200-12345 (متاح من الأحد إلى الخميس، 9 صباحاً - 6 مساءً).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>كيف أبلغ عن مشكلة تقنية في المنصة؟</span>
+                    <span class="faq-icon"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="faq-answer">
+                    <p>نوصي بفتح تذكرة دعم مع وصف تفصيلي للمشكلة وإرفاق لقطة شاشة إن أمكن. سيقوم فريق الدعم بالتواصل معك لحل المشكلة في أقرب وقت.</p>
+                </div>
+            </div>
+
+            <!-- قسم دعوة للتواصل -->
+            <div class="faq-footer-cta">
+                <h3>لم تجد إجابة لسؤالك؟</h3>
+                <p>فريق الدعم لدينا جاهز لمساعدتك على مدار الساعة</p>
+                <a href="tickets.html" class="btn btn-primary" id="openTicketBtn"><i class="fas fa-ticket-alt"></i> افتح تذكرة الآن</a>
+            </div>
+
+        </section>
+
+        <!-- ====== الفوتر ====== -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
+                <div class="footer-links">
+                    <a href="privacy-policy.html">سياسة الخصوصية</a>
+                    <a href="terms-and-conditions.html">الشروط والأحكام</a>
+                    <a href="help-center.html">مركز الدعم</a>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+</div>
+
+<!-- ====== الملفات المشتركة JS ====== -->
+<script src="../../assets/js/core.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/main.js"></script>
+<script src="../../assets/js/support.js"></script>
+
+<script>
+    (function() {
+        'use strict';
+
+        // تهيئة صفحة الأسئلة الشائعة
+        function initFaq() {
+            // 1. تفعيل الطي والتوسيع
+            document.querySelectorAll('.faq-question').forEach(function(question) {
+                question.addEventListener('click', function() {
+                    var item = this.closest('.faq-item');
+                    if (item) {
+                        item.classList.toggle('open');
+                    }
+                });
+            });
+
+            // 2. تفعيل البحث
+            var searchInput = document.getElementById('faqSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var filter = this.value.toLowerCase().trim();
+                    var items = document.querySelectorAll('.faq-item');
+
+                    items.forEach(function(item) {
+                        var questionText = item.querySelector('.faq-question span:first-child')?.textContent?.toLowerCase() || '';
+                        var answerText = item.querySelector('.faq-answer')?.textContent?.toLowerCase() || '';
+                        var match = questionText.includes(filter) || answerText.includes(filter);
+                        item.style.display = match ? 'block' : 'none';
+                        if (match && filter !== '') {
+                            item.classList.add('open');
+                        }
+                    });
+                });
+            }
+
+            // 3. زر فتح التذكرة
+            var ticketBtn = document.getElementById('openTicketBtn');
+            if (ticketBtn) {
+                ticketBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // يمكن إظهار إشعار أو توجيه
+                    if (typeof TeraApp !== 'undefined' && TeraApp.showNotification) {
+                        TeraApp.showNotification('🎫 جاري التوجيه إلى صفحة التذاكر', 'info', 2000);
+                    }
+                    window.location.href = 'tickets.html';
+                });
+            }
+
+            console.log('✅ تم تهيئة الأسئلة الشائعة');
+        }
+
+        // تشغيل عند تحميل DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFaq);
+        } else {
+            initFaq();
+        }
+
+        // تفعيل القائمة الجانبية
+        var toggleBtn = document.getElementById('sidebarToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('sidebar-open');
+            });
+        }
+
+        // تفعيل القوائم الفرعية
+        document.querySelectorAll('.has-submenu > a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.parentElement.classList.toggle('submenu-open');
+            });
+        });
+
+    })();
+</script>
+
+</body>
+</html>
