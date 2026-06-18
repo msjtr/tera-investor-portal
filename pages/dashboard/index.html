@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم | تيرا للاستثمار</title>
-    
+
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/dashboard.css">
@@ -15,16 +17,20 @@
 
     <div id="loader-container"></div>
 
-    <div class="tera-wrapper">
+    <div id="alerts-container"></div>
+
+    <div class="tera-wrapper" style="display: flex;">
         <div id="sidebar-container"></div>
 
-        <div class="tera-main-content">
+        <div class="tera-main-content" style="flex-grow: 1; display: flex; flex-direction: column; min-height: 100vh;">
             <div id="header-container"></div>
 
-            <main class="content-area" style="padding: 30px;">
+            <main class="content-area" style="padding: 30px; flex-grow: 1;">
                 <div id="breadcrumb-container"></div>
 
-                <h1>مرحباً بك في لوحة تحكم تيرا</h1>
+                <h1>لوحة التحكم</h1>
+                <p>مرحباً بك في منصة تيرا للاستثمار.</p>
+                
                 <div class="stats-grid" id="stats-container">
                     </div>
             </main>
@@ -33,10 +39,19 @@
         </div>
     </div>
 
-    <div id="alerts-container"></div>
-
     <script src="/assets/js/core.js"></script>
+    
     <script src="/assets/js/main.js"></script>
+    
     <script src="/assets/js/dashboard.js"></script>
+
+    <script>
+        // التأكد من تحميل المكونات عند بدء الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof loadComponents === 'function') {
+                loadComponents();
+            }
+        });
+    </script>
 </body>
 </html>
