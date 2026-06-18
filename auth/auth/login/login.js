@@ -1,16 +1,11 @@
 /**
  * بوابة المستثمر - منصة تيرا
  * محرك فحص الدخول الثلاثي الذكي وجدولة التحويل السينمائي بالعبارات الإبداعية
+ * 
+ * تم التحديث لاستخدام TeraAuth الموحد
  */
 
-// حساب المستثمر المطلق المطلوب والافتراضي
-const targetAccount = {
-    username: "106",
-    email: "investor106@tera.sa",
-    mobile: "506060606",
-    password: "123"
-};
-
+// قائمة العبارات الإبداعية (يمكن توسيعها)
 const creativeQuotes = [
     "جاري تهيئة بيئتك المالية الفاخرة... أهلاً بك في تيرا 🌌",
     "نصنع مستقبلك الاستثماري المالي الواعد بثقة وأمان وثبات 📈",
@@ -21,8 +16,12 @@ const creativeQuotes = [
 document.addEventListener("DOMContentLoaded", function() {
     bindInputFilters();
     bindPasswordToggle();
+    // إضافة مستمع لزر إظهار كلمة المرور إذا لم يتم التعامل معه بالفعل
 });
 
+/**
+ * ربط الفلاتر على حقول الإدخال (منع الأحرف العربية)
+ */
 function bindInputFilters() {
     const identInput = document.getElementById("login_identifier");
     const passInput = document.getElementById("login_password");
@@ -41,6 +40,9 @@ function bindInputFilters() {
     }
 }
 
+/**
+ * ربط تبديل إظهار كلمة المرور
+ */
 function bindPasswordToggle() {
     const checkToggle = document.getElementById("show_login_password");
     const passInput = document.getElementById("login_password");
@@ -51,6 +53,9 @@ function bindPasswordToggle() {
     }
 }
 
+/**
+ * إعادة تعيين علامات الخطأ
+ */
 function resetFieldMarkers(inputEl, errId) {
     inputEl.classList.remove("is-invalid-active");
     const errText = document.getElementById(errId);
@@ -59,66 +64,168 @@ function resetFieldMarkers(inputEl, errId) {
     if (globalErr) globalErr.style.display = "none";
 }
 
+/**
+ * دالة تسجيل الدخول الرئيسية (التي تستدعى من النموذج)
+ * تم تعديلها لاستخدام TeraAuth.login الموحد
+ */
 function executeInvestorLoginAuth() {
     const identInput = document.getElementById("login_identifier");
     const passInput = document.getElementById("login_password");
     const globalErr = document.getElementById("loginErrorBox");
+    const errorText = document.getElementById("errorBoxText");
+    const submitBtn = document.getElementById("loginSubmitBtn");
 
+    // 1. التحقق من الحقول الفارغة
     const userVal = identInput.value.trim();
-    const passVal = passInput.value;
+    const passVal = passInput.value.trim();
 
     if (userVal === "" || passVal === "") {
         identInput.classList.add("is-invalid-active");
         passInput.classList.add("is-invalid-active");
-        if (globalErr) globalErr.style.display = "flex";
-        document.getElementById("errorBoxText").textContent = "يرجى تعبئة جميع الحقول المطلوبة.";
+        if (globalErr) {
+            globalErr.style.display = "flex";
+            errorText.textContent = "يرجى تعبئة جميع الحقول المطلوبة.";
+        }
         return;
     }
 
-    const matchIdentifier = (userVal === targetAccount.username || userVal.toLowerCase() === targetAccount.email || userVal === targetAccount.mobile);
-    const matchPassword = (passVal === targetAccount.password);
+    // 2. محاولة استخدام TeraAuth إن وجد
+    if (window.TeraAuth && typeof TeraAuth.login === 'function') {
+        // تعطيل الزر أثناء المعالجة
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+        }
 
-    if (matchIdentifier && matchPassword) {
-        identInput.classList.add("is-valid-active");
-        passInput.classList.add("is-valid-active");
+        // إخفاء الأخطاء السابقة
         if (globalErr) globalErr.style.display = "none";
+        identInput.classList.remove("is-invalid-active");
+        passInput.classList.remove("is-invalid-active");
 
-        document.getElementById("loginCardBlock").style.opacity = "0";
-        setTimeout(() => {
-            document.getElementById("loginCardBlock").style.display = "none";
-            const loaderOverlay = document.getElementById("creativeLoaderScreen");
-            if(loaderOverlay) loaderOverlay.style.display = "flex";
-            startCreativeQuotesCycle();
-        }, 200);
+        // استدعاء TeraAuth.login
+        TeraAuth.login(userVal, passVal)
+            .then(function(user) {
+                // نجاح تسجيل الدخول
+                // يمكن تخزين بيانات إضافية
+                console.log('✅ [login.js] تم تسجيل الدخول بنجاح عبر TeraAuth', user);
+                
+                // إظهار شاشة التحميل الإبداعية
+                showLoadingScreen();
 
-        localStorage.setItem('tera_token', 'secure_investor_session_106');
+                // بدء عرض العبارات الإبداعية
+                startCreativeQuotesCycle();
 
-        // 🎯 التوجيه النهائي المحكم:
-        // نستخدم المسار المطلق بالكامل وبدون إمكانية العودة (replace) لضمان عدم تكرار المشاكل
-        setTimeout(() => {
-            window.location.replace("/pages/dashboard/index.html");
-        }, 3000);
-
+                // التوجيه عبر TeraAuth (الذي سيتحقق من الجلسة ويوجه)
+                // استخدام setTimeout لتجربة المستخدم
+                setTimeout(() => {
+                    if (typeof TeraAuth.checkSession === 'function') {
+                        TeraAuth.checkSession(); // سيقوم بالتوجيه تلقائياً
+                    } else {
+                        // احتياطي: توجيه مباشر للوحة التحكم
+                        window.location.replace('/pages/dashboard/index.html');
+                    }
+                }, 2500);
+            })
+            .catch(function(err) {
+                // فشل تسجيل الدخول
+                console.error('❌ [login.js] فشل تسجيل الدخول:', err);
+                if (globalErr) {
+                    globalErr.style.display = "flex";
+                    errorText.textContent = err.message || 'فشل تسجيل الدخول. تأكد من بياناتك وحاول مرة أخرى.';
+                }
+                identInput.classList.add("is-invalid-active");
+                passInput.classList.add("is-invalid-active");
+                
+                // إعادة تمكين الزر
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+                }
+            });
     } else {
-        identInput.classList.add("is-invalid-active");
-        passInput.classList.add("is-invalid-active");
-        if (globalErr) globalErr.style.display = "flex";
-        document.getElementById("errorBoxText").textContent = "البيانات المدخلة غير متطابقة مع سجلات المستثمرين.";
+        // 3. حل احتياطي (إذا لم يتم تحميل TeraAuth)
+        console.warn('⚠️ [login.js] TeraAuth غير متاح، استخدام المحاكاة المحلية');
+        // محاكاة بسيطة (نفس المنطق القديم)
+        const mockUser = { username: "106", email: "investor106@tera.sa", mobile: "506060606", password: "123" };
+        const matchIdentifier = (userVal === mockUser.username || userVal.toLowerCase() === mockUser.email || userVal === mockUser.mobile);
+        const matchPassword = (passVal === mockUser.password);
+
+        if (matchIdentifier && matchPassword) {
+            if (globalErr) globalErr.style.display = "none";
+            identInput.classList.add("is-valid-active");
+            passInput.classList.add("is-valid-active");
+            
+            // تخزين توكن وهمي
+            localStorage.setItem('tera_token', 'mock_token_123');
+            localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: userVal }));
+            
+            showLoadingScreen();
+            startCreativeQuotesCycle();
+            
+            setTimeout(() => {
+                window.location.replace('/pages/dashboard/index.html');
+            }, 2500);
+        } else {
+            if (globalErr) {
+                globalErr.style.display = "flex";
+                errorText.textContent = "البيانات المدخلة غير متطابقة مع سجلات المستثمرين.";
+            }
+            identInput.classList.add("is-invalid-active");
+            passInput.classList.add("is-invalid-active");
+        }
     }
 }
 
+/**
+ * إظهار شاشة التحميل مع تأثيرات
+ */
+function showLoadingScreen() {
+    const card = document.getElementById("loginCardBlock");
+    const loader = document.getElementById("creativeLoaderScreen");
+    if (card) {
+        card.style.opacity = "0";
+        card.style.transition = "opacity 0.3s ease";
+        setTimeout(() => {
+            card.style.display = "none";
+        }, 300);
+    }
+    if (loader) {
+        loader.style.display = "flex";
+        // بدء تقدم وهمي
+        const progressBar = document.getElementById("progressFillBar");
+        if (progressBar) {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress > 95) progress = 95;
+                progressBar.style.width = progress + '%';
+                if (progress >= 95) clearInterval(interval);
+            }, 400);
+        }
+    }
+}
+
+/**
+ * تدوير العبارات الإبداعية
+ */
 function startCreativeQuotesCycle() {
     const quoteEl = document.getElementById("creativeQuoteText");
-    let quoteIndex = 0;
+    if (!quoteEl) return;
     
+    let quoteIndex = 0;
+    // عرض أول عبارة فوراً
+    quoteEl.textContent = creativeQuotes[0];
+    quoteEl.style.opacity = "1";
+
     setInterval(() => {
         quoteIndex = (quoteIndex + 1) % creativeQuotes.length;
-        if(quoteEl) {
-            quoteEl.style.opacity = "0";
-            setTimeout(() => {
-                quoteEl.textContent = creativeQuotes[quoteIndex];
-                quoteEl.style.opacity = "1";
-            }, 150);
-        }
-    }, 900);
+        quoteEl.style.opacity = "0";
+        setTimeout(() => {
+            quoteEl.textContent = creativeQuotes[quoteIndex];
+            quoteEl.style.opacity = "1";
+        }, 200);
+    }, 1200);
 }
+
+// تصدير الدالة للنطاق العام (إذا لزم الأمر)
+window.executeInvestorLoginAuth = executeInvestorLoginAuth;
