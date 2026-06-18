@@ -11,6 +11,7 @@
  * ============================================================
  * تم تحديثه ليتوافق مع هيكل المشروع الحالي
  * ويستخدم المفاتيح الموحدة (tera_token, tera_user)
+ * ولا يعتمد على أي مسارات مطلقة (جميع الدوال تعمل على DOM فقط)
  * ============================================================
  */
 
@@ -230,14 +231,56 @@
     }
 
     // ============================================================
-    // 6. تهيئة الأحداث عند تحميل الصفحة
+    // 6. دوال مساعدة لحساب العمق (للتعامل مع المسارات النسبية)
+    // ============================================================
+
+    /**
+     * حساب عدد المستويات (العمق) للوصول إلى الجذر من المسار الحالي
+     * يمكن استخدامها في ملفات أخرى لتوليد مسارات نسبية
+     * @returns {number} عدد المستويات (0 للجذر، 1 لـ /assets/، 2 لـ /pages/، 3 لـ /auth/auth/)
+     */
+    function getBaseDepth() {
+        const path = window.location.pathname;
+        
+        if (path.includes('/pages/')) return 2;
+        if (path.includes('/auth/auth/')) return 3;
+        if (path.includes('/auth/')) return 2;
+        if (path.includes('/assets/')) return 1;
+        if (path.includes('/components/')) return 1;
+        if (path.includes('/layouts/')) return 1;
+        if (path === '/' || path === '/index.html') return 0;
+        
+        const parts = path.split('/').filter(p => p.length > 0);
+        return parts.length;
+    }
+
+    /**
+     * إنشاء مسار نسبي من الجذر إلى المسار المطلوب
+     * @param {string} targetPath - المسار المطلوب (بدون / في البداية)
+     * @returns {string} المسار النسبي مع ../ بالعدد المناسب
+     */
+    function getRelativePath(targetPath) {
+        let cleanPath = targetPath;
+        if (cleanPath.startsWith('/')) {
+            cleanPath = cleanPath.slice(1);
+        }
+        const depth = getBaseDepth();
+        let prefix = '';
+        for (let i = 0; i < depth; i++) {
+            prefix += '../';
+        }
+        return prefix + cleanPath;
+    }
+
+    // ============================================================
+    // 7. تهيئة الأحداث عند تحميل الصفحة
     // ============================================================
 
     /**
      * تهيئة جميع الأحداث والتفاعلات في الصفحة
      */
     function initCore() {
-        // 6.1 تفعيل زر تبديل القائمة الجانبية
+        // 7.1 تفعيل زر تبديل القائمة الجانبية
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
@@ -246,7 +289,7 @@
             });
         }
 
-        // 6.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
+        // 7.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
         document.querySelectorAll('.has-submenu > a').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -254,7 +297,7 @@
             });
         });
 
-        // 6.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
+        // 7.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 991) {
                 const sidebar = document.getElementById('sidebar');
@@ -269,14 +312,14 @@
             }
         });
 
-        // 6.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
+        // 7.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991) {
                 closeSidebar();
             }
         });
 
-        // 6.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
+        // 7.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
         document.querySelectorAll('.view-all').forEach(function(link) {
             link.addEventListener('click', function(e) {
                 // يمكن إضافة تحليلات أو سلوك إضافي هنا
@@ -288,7 +331,7 @@
     }
 
     // ============================================================
-    // 7. تشغيل التهيئة عند تحميل DOM
+    // 8. تشغيل التهيئة عند تحميل DOM
     // ============================================================
 
     if (document.readyState === 'loading') {
@@ -299,11 +342,9 @@
     }
 
     // ============================================================
-    // 8. تعريف دوال عامة يمكن استخدامها في صفحات أخرى (اختياري)
+    // 9. تعريف دوال عامة يمكن استخدامها في صفحات أخرى
     // ============================================================
 
-    // نُعرّف دوالنا في النطاق العام لتكون متاحة في وحدات التحكم
-    // أو في السكريبتات الأخرى (مع الحرص على عدم التعارض)
     window.TeraCore = {
         // دوال القائمة
         toggleSidebar: toggleSidebar,
@@ -328,6 +369,10 @@
         // دوال المصادقة (مساعدة)
         isUserLoggedIn: isUserLoggedIn,
         getCurrentUser: getCurrentUser,
+
+        // دوال المسارات النسبية
+        getBaseDepth: getBaseDepth,
+        getRelativePath: getRelativePath,
 
         // تهيئة
         initCore: initCore
