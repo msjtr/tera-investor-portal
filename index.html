@@ -172,6 +172,11 @@
             .btn-action { padding: 14px 30px !important; font-size: 15px !important; min-width: 160px !important; }
             .brand-logo img { width: 120px !important; }
         }
+
+        /* تحسينات إضافية */
+        .auth-actions .btn-action i {
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -224,14 +229,77 @@
     <script src="./assets/js/main.js"></script>
 
     <script>
-        // عند تحميل الصفحة، نضمن أن auth.js قد قام بالتحقق من الجلسة
-        // وتوجيه المستخدم المسجل الدخول تلقائياً إلى لوحة التحكم
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ الصفحة الرئيسية لتيرا تم تحميلها بنجاح');
-            
-            // في حال قام auth.js بتوجيه المستخدم، لن يتم تنفيذ ما يلي
-            // لكن يمكننا إضافة أي تهيئة إضافية هنا إذا لزم الأمر
-        });
+        (function() {
+            'use strict';
+
+            // ================================================================
+            // منع التوجيه التلقائي من الصفحة الرئيسية
+            // ================================================================
+
+            // حفظ المرجع الأصلي لـ TeraAuth.checkSession
+            let originalCheckSession = null;
+
+            // انتظار تحميل auth.js بالكامل
+            function waitForAuthAndFix() {
+                if (typeof TeraAuth !== 'undefined' && TeraAuth && typeof TeraAuth.checkSession === 'function') {
+                    // تم تحميل auth.js
+                    console.log('🔐 auth.js جاهز، يتم تطبيق التصحيح على الصفحة الرئيسية');
+                    
+                    // حفظ الدالة الأصلية
+                    originalCheckSession = TeraAuth.checkSession;
+                    
+                    // استبدال الدالة مؤقتاً
+                    TeraAuth.checkSession = function() {
+                        const token = localStorage.getItem('tera_token');
+                        const currentPage = window.location.pathname;
+                        
+                        // تحديد إذا كنا في الصفحة الرئيسية (أو index.html)
+                        const isLandingPage = currentPage === '/' || 
+                                              currentPage.endsWith('/index.html') ||
+                                              currentPage.endsWith('/tera-investor-portal-main/');
+                        
+                        if (isLandingPage) {
+                            // في الصفحة الرئيسية: لا نقوم بأي توجيه
+                            console.log('🏠 الصفحة الرئيسية: تم تخطي التوجيه التلقائي');
+                            return;
+                        }
+                        
+                        // للصفحات الأخرى: ننفذ الدالة الأصلية
+                        if (originalCheckSession) {
+                            originalCheckSession.call(this);
+                        }
+                    };
+                    
+                    // تنفيذ الدالة المعدلة للتأكد من عدم وجود توجيه
+                    TeraAuth.checkSession();
+                    
+                    // نترك الدالة المعدلة تعمل، ولا نعيدها إلى الأصلية
+                    // حتى لا يتم توجيه المستخدم في أي وقت لاحق
+                    console.log('✅ تم تطبيق التصحيح على الصفحة الرئيسية بنجاح');
+                } else {
+                    // لم يتم تحميل auth.js بعد، ننتظر قليلاً
+                    console.log('⏳ في انتظار تحميل auth.js...');
+                    setTimeout(waitForAuthAndFix, 100);
+                }
+            }
+
+            // بدء الانتظار بعد تحميل DOM
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('📄 DOM جاهز، بدء تهيئة الصفحة الرئيسية');
+                    waitForAuthAndFix();
+                });
+            } else {
+                waitForAuthAndFix();
+            }
+
+            // ================================================================
+            // رسالة ترحيب في وحدة التحكم
+            // ================================================================
+            console.log('🚀 منصة تيرا للاستثمار الرقمي - الصفحة الرئيسية');
+            console.log('📌 يمكنك تسجيل الدخول أو إنشاء حساب جديد');
+
+        })();
     </script>
 
 </body>
