@@ -1,122 +1,240 @@
-/* ================================================= */
-/* TERA PORTAL - MAIN STYLES */
-/* ================================================= */
+/* ========================================
+   main.css - التخطيط العام للصفحة
+   ======================================== */
 
-:root {
-    --sidebar-width: 280px;
-    --header-height: 70px;
-    --spacing-sm: 15px;
-    --spacing-md: 25px;
-    --spacing-lg: 40px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-    font-family: 'Tajawal', sans-serif;
-    background-color: #F8FAFC;
-    color: #1E293B;
-    overflow-x: hidden;
-}
-
-/* الحاوية الرئيسية */
-.tera-wrapper {
+/* ----- حاوية التطبيق ----- */
+.app-wrapper {
     display: flex;
     min-height: 100vh;
-    position: relative;
 }
 
-/* 1. السايدبار */
-.tera-sidebar {
+/* ===== القائمة الجانبية (Sidebar) ===== */
+.sidebar {
     width: var(--sidebar-width);
-    background: #ffffff;
-    border-left: 1px solid #E2E8F0;
+    background-color: var(--white-color);
+    border-left: 1px solid var(--gray-200);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-speed) ease;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.03);
 }
 
-/* حاوية الشعار (المسافة الآمنة في الجوال) */
-.sidebar-logo {
-    height: var(--header-height);
+/* العلامة التجارية (الشعار) */
+.sidebar-brand {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--gray-200);
+}
+.sidebar-brand a {
     display: flex;
     align-items: center;
-    padding: 0 var(--spacing-md);
-    border-bottom: 1px solid #E2E8F0;
     gap: 12px;
 }
-
-.sidebar-logo img {
-    max-height: 35px; /* حجم الشعار في الجوال والديكستوب */
-    width: auto;
+.sidebar-brand .logo-img {
+    width: 40px;
+    height: 40px;
 }
-
-.logo-text {
+.sidebar-brand .logo-text {
+    font-size: 20px;
     font-weight: 800;
-    font-size: 1.1rem;
-    color: #0A1B3F;
+    color: var(--primary-color);
 }
 
-/* التمرير داخل القائمة */
-.sidebar-scroll {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: var(--spacing-sm) 0;
+/* قائمة التنقل */
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 15px;
+}
+.nav-item {
+    margin-bottom: 5px;
+    border-radius: var(--border-radius);
+}
+.nav-item > a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: var(--gray-700);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: all var(--transition-speed);
+    gap: 12px;
+}
+.nav-item > a i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+.nav-item > a .submenu-toggle {
+    margin-right: auto;
+    font-size: 12px;
+    transition: transform var(--transition-speed);
+}
+.nav-item.active > a,
+.nav-item > a:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+.nav-item.active > a {
+    font-weight: 700;
 }
 
-/* 2. المحتوى الرئيسي */
-.tera-main-content {
-    flex-grow: 1;
+/* القوائم الفرعية (Submenu) */
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    padding-right: 20px;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+    margin-top: 2px;
+}
+.submenu li a {
+    display: block;
+    padding: 10px 20px;
+    color: var(--gray-600);
+    font-size: 14px;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed);
+}
+.submenu li a:hover {
+    background-color: var(--white-color);
+    color: var(--primary-color);
+}
+/* تفعيل القائمة الفرعية */
+.nav-item.submenu-open > a .submenu-toggle {
+    transform: rotate(180deg);
+}
+.nav-item.submenu-open .submenu {
+    max-height: 500px;
+    padding: 10px 0;
+}
+
+/* أسفل القائمة (تسجيل الخروج) */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid var(--gray-200);
+}
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--danger-color);
+    font-weight: 600;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    transition: background var(--transition-speed);
+}
+.logout-btn:hover {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+/* ===== المحتوى الرئيسي ===== */
+.main-content {
+    flex: 1;
+    margin-right: var(--sidebar-width);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    width: calc(100% - var(--sidebar-width));
 }
 
-/* الهيدر */
-.tera-header {
+/* ===== الهيدر ===== */
+.header {
     height: var(--header-height);
-    background: #ffffff;
-    border-bottom: 1px solid #E2E8F0;
+    background-color: var(--white-color);
+    border-bottom: 1px solid var(--gray-200);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 var(--spacing-lg);
+    padding: 0 30px;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--gray-700);
+    cursor: pointer;
+    padding: 5px;
+}
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+.notifications {
+    position: relative;
+    font-size: 22px;
+    color: var(--gray-600);
+    cursor: pointer;
+}
+.notifications .badge {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 50%;
+}
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-profile img {
+    border-radius: 50%;
+    border: 2px solid var(--gray-200);
+}
+.user-profile .user-name {
+    font-weight: 600;
+    font-size: 14px;
 }
 
-/* مساحة المحتوى */
-.content-area {
-    padding: var(--spacing-lg);
-    flex-grow: 1;
+/* ===== الفوتر ===== */
+.footer {
+    margin-top: auto;
+    padding: 20px 30px;
+    background-color: var(--white-color);
+    border-top: 1px solid var(--gray-200);
 }
-
-/* ================================================= */
-/* الاستجابة للجوال (Mobile Responsive) */
-/* ================================================= */
-
-@media (max-width: 992px) {
-    /* إخفاء السايدبار في الجوال أو جعله فوق المحتوى */
-    .tera-sidebar {
-        position: fixed;
-        right: -100%; /* مخفي خارج الشاشة */
-        top: 0;
-        z-index: 1000;
-        height: 100vh;
-        width: 260px;
-    }
-
-    .tera-sidebar.open { right: 0; }
-
-    .tera-main-content {
-        width: 100%; /* المحتوى يأخذ كامل العرض */
-    }
-
-    /* تقليل المسافات في الجوال */
-    .content-area {
-        padding: var(--spacing-md);
-    }
-    
-    .tera-header {
-        padding: 0 var(--spacing-md);
-    }
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--gray-600);
+}
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+.footer-links a {
+    color: var(--gray-600);
+}
+.footer-links a:hover {
+    color: var(--primary-color);
 }
