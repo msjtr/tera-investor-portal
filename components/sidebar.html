@@ -1,5 +1,5 @@
 <!-- ========================================
-     sidebar.html - القائمة الجانبية
+     sidebar.html - القائمة الجانبية الموحدة
      ======================================== -->
 <aside class="sidebar" id="sidebar">
     <!-- الشعار -->
@@ -21,7 +21,7 @@
         </div>
 
         <!-- 2. الاستثمارات -->
-        <div class="nav-item has-submenu submenu-open">
+        <div class="nav-item has-submenu">
             <a href="#">
                 <i class="fas fa-chart-line"></i>
                 <span>الاستثمارات</span>
@@ -123,7 +123,8 @@
 
     <!-- أسفل القائمة - تسجيل الخروج -->
     <div class="sidebar-footer">
-        <a href="../../auth/login/login.html" class="logout-btn">
+        <!-- تم تعديل مسار رابط تسجيل الخروج ليتوافق مع هيكل المجلدات -->
+        <a href="../../auth/auth/login/login.html" class="logout-btn">
             <i class="fas fa-sign-out-alt"></i>
             <span>تسجيل الخروج</span>
         </a>
