@@ -193,6 +193,7 @@
             </p>
 
             <div class="auth-actions">
+                <!-- تم تصحيح المسار إلى /auth/auth/login/login.html -->
                 <a href="./auth/auth/login/login.html" class="btn-action btn-login">
                     <i class="fa-solid fa-lock"></i> تسجيل الدخول
                 </a>
@@ -222,7 +223,7 @@
     <!-- 1. core.js: الدوال الأساسية والمكتبات المساعدة -->
     <script src="./assets/js/core.js"></script>
     
-    <!-- 2. auth.js: التحقق من الجلسة وإدارة المصادقة -->
+    <!-- 2. auth.js: التحقق من الجلسة وإدارة المصادقة (تم تحديثه لاستخدام tera_token) -->
     <script src="./assets/js/auth.js"></script>
     
     <!-- 3. main.js: التهيئة العامة للتطبيق -->
@@ -231,6 +232,16 @@
     <script>
         (function() {
             'use strict';
+
+            // ================================================================
+            // تنظيف التخزين المحلي من أي مفاتيح قديمة تسبب تعارضاً
+            // ================================================================
+            // إذا كان هناك مفتاح tera_auth_token قديم، نقوم بحذفه
+            if (localStorage.getItem('tera_auth_token')) {
+                console.warn('🧹 [index.html] تم العثور على مفتاح قديم tera_auth_token، يتم حذفه.');
+                localStorage.removeItem('tera_auth_token');
+                localStorage.removeItem('tera_user_data'); // حذف البيانات القديمة أيضاً
+            }
 
             // ================================================================
             // منع التوجيه التلقائي من الصفحة الرئيسية
@@ -243,7 +254,7 @@
             function waitForAuthAndFix() {
                 if (typeof TeraAuth !== 'undefined' && TeraAuth && typeof TeraAuth.checkSession === 'function') {
                     // تم تحميل auth.js
-                    console.log('🔐 auth.js جاهز، يتم تطبيق التصحيح على الصفحة الرئيسية');
+                    console.log('🔐 [index.html] auth.js جاهز، يتم تطبيق التصحيح على الصفحة الرئيسية');
                     
                     // حفظ الدالة الأصلية
                     originalCheckSession = TeraAuth.checkSession;
@@ -260,7 +271,11 @@
                         
                         if (isLandingPage) {
                             // في الصفحة الرئيسية: لا نقوم بأي توجيه
-                            console.log('🏠 الصفحة الرئيسية: تم تخطي التوجيه التلقائي');
+                            console.log('🏠 [index.html] الصفحة الرئيسية: تم تخطي التوجيه التلقائي');
+                            // لكن إذا كان هناك توكن، نظهر رسالة في الكونسول فقط
+                            if (token) {
+                                console.log('👤 [index.html] مستخدم مسجل (غير موجه)');
+                            }
                             return;
                         }
                         
@@ -275,18 +290,18 @@
                     
                     // نترك الدالة المعدلة تعمل، ولا نعيدها إلى الأصلية
                     // حتى لا يتم توجيه المستخدم في أي وقت لاحق
-                    console.log('✅ تم تطبيق التصحيح على الصفحة الرئيسية بنجاح');
+                    console.log('✅ [index.html] تم تطبيق التصحيح على الصفحة الرئيسية بنجاح');
                 } else {
                     // لم يتم تحميل auth.js بعد، ننتظر قليلاً
-                    console.log('⏳ في انتظار تحميل auth.js...');
-                    setTimeout(waitForAuthAndFix, 100);
+                    console.log('⏳ [index.html] في انتظار تحميل auth.js...');
+                    setTimeout(waitForAuthAndFix, 150);
                 }
             }
 
             // بدء الانتظار بعد تحميل DOM
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('📄 DOM جاهز، بدء تهيئة الصفحة الرئيسية');
+                    console.log('📄 [index.html] DOM جاهز، بدء تهيئة الصفحة الرئيسية');
                     waitForAuthAndFix();
                 });
             } else {
