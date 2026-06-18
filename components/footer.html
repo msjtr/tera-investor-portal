@@ -1,44 +1,13 @@
-<footer class="tera-footer">
-    <div class="footer-container">
-        <div class="footer-copyright">
-            &copy; <span id="currentYear"></span> <span>منصة تيرا للاستثمار.</span> جميع الحقوق محفوظة.
+<!-- ========================================
+     footer.html - الشريط السفلي (الفوتر)
+     ======================================== -->
+<footer class="footer">
+    <div class="footer-content">
+        <span>© 2026 Tera Investor Portal. جميع الحقوق محفوظة.</span>
+        <div class="footer-links">
+            <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
+            <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
+            <a href="../support/help-center.html">مركز الدعم</a>
         </div>
-
-        <nav class="footer-nav">
-            <a href="/pages/support/faq.html" class="footer-link">الأسئلة الشائعة</a>
-            <a href="/pages/support/privacy-policy.html" class="footer-link">سياسة الخصوصية</a>
-            <a href="/pages/support/terms-and-conditions.html" class="footer-link">الشروط والأحكام</a>
-            <a href="/pages/support/tickets.html" class="footer-link">الدعم الفني</a>
-        </nav>
     </div>
 </footer>
-
-<style>
-    .tera-footer {
-        padding: 20px 0;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        margin-top: 40px;
-        font-size: 0.85rem;
-    }
-    .footer-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-    .footer-nav { display: flex; gap: 20px; }
-    .footer-link { color: #64748b; text-decoration: none; transition: 0.3s; }
-    .footer-link:hover { color: var(--tera-secondary, #00C2C7); }
-    
-    @media (max-width: 768px) {
-        .footer-container { flex-direction: column; gap: 15px; }
-    }
-</style>
-
-<script>
-    // تحديث السنة تلقائياً
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-</script>
