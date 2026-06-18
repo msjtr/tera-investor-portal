@@ -4,30 +4,27 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا بوابة المستثمر | تسجيل الدخول الذكي</title>
-    
-    <!-- أيقونات الموقع (استخدام SVG لتجنب 404) -->
+    <title>تيرا | تسجيل الدخول الذكي إلى المحفظة</title>
+
+    <!-- أيقونات الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
-    
-    <!-- الخطوط -->
+
+    <!-- خطوط Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-    
-    <!-- ملفات CSS الأساسية (مسارات مطلقة) -->
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/auth.css">
-    
+
     <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- أنماط مدمجة لصفحة تسجيل الدخول (لحل مشكلة login.css 404) -->
+    <!-- الملفات الأساسية CSS -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
+
     <style>
-        /* ============================================================
-           أنماط صفحة تسجيل الدخول (مدمجة لتجنب 404)
-           ============================================================ */
+        /* أنماط خاصة بصفحة تسجيل الدخول (لتجنب 404 للـ login.css) */
         .auth-layout {
             display: flex;
             justify-content: center;
@@ -51,363 +48,93 @@
             transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
-        .auth-card-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .auth-card-header { text-align: center; margin-bottom: 30px; }
+        .brand-logo-box { margin-bottom: 20px; }
+        .brand-logo-box img { width: 80px; height: auto; object-fit: contain; transition: transform 0.3s ease; }
+        .brand-logo-box img:hover { transform: scale(1.05); }
+        .portal-title { font-size: 24px; font-weight: 800; color: #0A2540; margin-bottom: 4px; letter-spacing: -0.5px; }
+        .page-subtitle { font-size: 18px; font-weight: 700; color: #028090; margin-bottom: 10px; }
+        .welcome-text { font-size: 14px; color: #64748b; line-height: 1.7; max-width: 360px; margin: 0 auto; }
 
-        .brand-logo-box {
-            margin-bottom: 20px;
-        }
-
-        .brand-logo-box img {
-            width: 80px;
-            height: auto;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .brand-logo-box img:hover {
-            transform: scale(1.05);
-        }
-
-        .portal-title {
-            font-size: 24px;
-            font-weight: 800;
-            color: #0A2540;
-            margin-bottom: 4px;
-            letter-spacing: -0.5px;
-        }
-
-        .page-subtitle {
-            font-size: 18px;
-            font-weight: 700;
-            color: #028090;
-            margin-bottom: 10px;
-        }
-
-        .welcome-text {
-            font-size: 14px;
-            color: #64748b;
-            line-height: 1.7;
-            max-width: 360px;
-            margin: 0 auto;
-        }
-
-        .form-field-group {
-            margin-bottom: 20px;
-        }
-
-        .field-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #0A2540;
-            font-size: 14px;
-        }
-
-        .field-label .required {
-            color: #DC3545;
-            margin-right: 2px;
-        }
-
-        .field-label-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .forgot-pass-link {
-            font-size: 13px;
-            color: #028090;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .forgot-pass-link:hover {
-            text-decoration: underline;
-            color: #026b73;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
+        .form-field-group { margin-bottom: 20px; }
+        .field-label { display: block; font-weight: 600; margin-bottom: 8px; color: #0A2540; font-size: 14px; }
+        .field-label .required { color: #DC3545; margin-right: 2px; }
+        .field-label-flex { display: flex; justify-content: space-between; align-items: center; }
+        .forgot-pass-link { font-size: 13px; color: #028090; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .forgot-pass-link:hover { text-decoration: underline; color: #026b73; }
+        .input-wrapper { position: relative; }
         .form-input-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Tajawal', sans-serif;
-            transition: all 0.25s ease;
-            background: #ffffff;
-            color: #1e293b;
-            direction: ltr;
-            text-align: right;
+            width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px;
+            font-family: 'Tajawal', sans-serif; transition: all 0.25s ease; background: #ffffff; color: #1e293b;
+            direction: ltr; text-align: right;
         }
+        .form-input-control:focus { outline: none; border-color: #028090; box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10); }
+        .form-input-control::placeholder { color: #94a3b8; font-size: 14px; }
+        .form-input-control.is-valid-active { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12); }
+        .form-input-control.is-invalid-active { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12); }
+        .error-feedback-msg { font-size: 13px; color: #ef4444; margin-top: 6px; min-height: 20px; }
 
-        .form-input-control:focus {
-            outline: none;
-            border-color: #028090;
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
-        }
+        .checkbox-options-container { margin-top: 10px; }
+        .remember-me-box { margin-top: 5px; margin-bottom: 5px; }
+        .checkbox-toggle-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #475569; cursor: pointer; user-select: none; }
+        .checkbox-toggle-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #028090; cursor: pointer; flex-shrink: 0; }
+        .checkbox-toggle-label:hover { color: #0A2540; }
 
-        .form-input-control::placeholder {
-            color: #94a3b8;
-            font-size: 14px;
-        }
-
-        .form-input-control.is-valid-active {
-            border-color: #10b981;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
-        }
-
-        .form-input-control.is-invalid-active {
-            border-color: #ef4444;
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
-        }
-
-        .error-feedback-msg {
-            font-size: 13px;
-            color: #ef4444;
-            margin-top: 6px;
-            min-height: 20px;
-        }
-
-        .checkbox-options-container {
-            margin-top: 10px;
-        }
-
-        .remember-me-box {
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-
-        .checkbox-toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #475569;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .checkbox-toggle-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #028090;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .checkbox-toggle-label:hover {
-            color: #0A2540;
-        }
-
-        .form-actions-block {
-            margin-top: 25px;
-        }
-
+        .form-actions-block { margin-top: 25px; }
         .btn-submit-login {
-            width: 100%;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            font-family: 'Tajawal', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
+            color: #ffffff; border: none; border-radius: 12px; font-size: 18px; font-weight: 700;
+            font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
+        .btn-submit-login:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35); }
+        .btn-submit-login:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-        .btn-submit-login:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35);
-        }
-
-        .btn-submit-login:active:not(:disabled) {
-            transform: translateY(0px);
-        }
-
-        .btn-submit-login:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-submit-login .fa-spinner {
-            font-size: 18px;
-        }
-
-        .bottom-routing-footer-links {
-            margin-top: 25px;
-            text-align: center;
-            font-size: 14px;
-            color: #64748b;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 20px;
-        }
-
-        .bottom-routing-footer-links p {
-            margin-bottom: 8px;
-        }
-
-        .bottom-routing-footer-links p:last-child {
-            margin-bottom: 0;
-        }
-
-        .routing-link {
-            color: #028090;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .routing-link:hover {
-            text-decoration: underline;
-            color: #026b73;
-        }
-
-        .routing-link-secondary {
-            color: #64748b;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .routing-link-secondary:hover {
-            text-decoration: underline;
-            color: #1e293b;
-        }
+        .bottom-routing-footer-links { margin-top: 25px; text-align: center; font-size: 14px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .bottom-routing-footer-links p { margin-bottom: 8px; }
+        .bottom-routing-footer-links p:last-child { margin-bottom: 0; }
+        .routing-link { color: #028090; font-weight: 600; text-decoration: none; transition: color 0.2s; }
+        .routing-link:hover { text-decoration: underline; color: #026b73; }
+        .routing-link-secondary { color: #64748b; text-decoration: none; transition: color 0.2s; }
+        .routing-link-secondary:hover { text-decoration: underline; color: #1e293b; }
 
         .error-summary-box {
-            background: #FEE2E2;
-            border: 1px solid #FCA5A5;
-            border-radius: 12px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #991B1B;
-            margin-bottom: 20px;
+            background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: 12px; padding: 12px 16px;
+            display: flex; align-items: center; gap: 12px; color: #991B1B; margin-bottom: 20px;
             animation: shakeError 0.4s ease;
         }
-
-        .error-box-icon {
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        #errorBoxText {
-            font-size: 14px;
-            font-weight: 500;
-        }
+        .error-box-icon { font-size: 20px; flex-shrink: 0; }
+        #errorBoxText { font-size: 14px; font-weight: 500; }
 
         .tera-loader-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 37, 64, 0.88);
-            backdrop-filter: blur(8px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 37, 64, 0.88); backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
+            display: none; justify-content: center; align-items: center; z-index: 9999;
             animation: fadeInOverlay 0.5s ease;
         }
-
         .loader-content-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 40px 50px 45px;
-            max-width: 420px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+            background: #ffffff; border-radius: 24px; padding: 40px 50px 45px;
+            max-width: 420px; width: 90%; text-align: center; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
             animation: scaleUp 0.5s ease;
         }
-
         .spinning-infinity-ring {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 20px;
-            border: 6px solid #e2e8f0;
-            border-top-color: #028090;
-            border-radius: 50%;
+            width: 60px; height: 60px; margin: 0 auto 20px;
+            border: 6px solid #e2e8f0; border-top-color: #028090; border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+        .loader-primary-heading { font-size: 20px; font-weight: 700; color: #0A2540; margin-bottom: 10px; }
+        .creative-motivational-text { font-size: 15px; color: #64748b; margin-bottom: 25px; min-height: 60px; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s ease; line-height: 1.6; }
+        .loading-progress-track { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #028090, #0A2540); border-radius: 10px; transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
 
-        .loader-primary-heading {
-            font-size: 20px;
-            font-weight: 700;
-            color: #0A2540;
-            margin-bottom: 10px;
-        }
-
-        .creative-motivational-text {
-            font-size: 15px;
-            color: #64748b;
-            margin-bottom: 25px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.3s ease;
-            line-height: 1.6;
-        }
-
-        .loading-progress-track {
-            width: 100%;
-            height: 6px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #028090, #0A2540);
-            border-radius: 10px;
-            transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes shakeError {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-6px); }
-            75% { transform: translateX(6px); }
-        }
-
-        @keyframes fadeInOverlay {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes scaleUp {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shakeError { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
         @media (max-width: 576px) {
-            .auth-container {
-                padding: 30px 20px 25px;
-                border-radius: 18px;
-            }
+            .auth-container { padding: 30px 20px 25px; border-radius: 18px; }
             .portal-title { font-size: 20px; }
             .page-subtitle { font-size: 16px; }
             .welcome-text { font-size: 13px; }
@@ -418,13 +145,11 @@
             .brand-logo-box img { width: 65px; }
             .field-label-flex { flex-direction: column; align-items: flex-start; gap: 4px; }
         }
-
         @media (max-width: 400px) {
             .auth-container { padding: 20px 15px 20px; }
             .bottom-routing-footer-links { font-size: 13px; }
             .creative-motivational-text { font-size: 14px; min-height: 50px; }
         }
-
         @media (prefers-color-scheme: dark) {
             .auth-layout { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
             .auth-container { background: rgba(30, 41, 59, 0.96); border-color: rgba(71, 85, 105, 0.5); }
@@ -454,11 +179,11 @@
         <div class="auth-container" id="loginCardBlock">
             <div class="auth-card-header text-center">
                 <div class="brand-logo-box">
-                    <img src="/images/logo.svg" alt="TERA" class="enclosed-logo-img">
+                    <img src="/images/logo.svg" alt="TERA">
                 </div>
                 <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
                 <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
-                <p class="welcome-text">مرحباً بك مجدداً في عالم الاستثمار الذكي. يرجى إدخال بياناتك للوصول إلى محفظتك المالية.</p>
+                <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية.</p>
             </div>
 
             <!-- صندوق الأخطاء -->
@@ -468,23 +193,21 @@
             </div>
 
             <form id="teraLoginForm">
-                <!-- حقل اسم المستخدم / البريد / الجوال -->
                 <div class="form-field-group">
-                    <label class="field-label">بيانات الدخول (اسم المستخدم، البريد، أو رقم الجوال) <span class="required">*</span></label>
+                    <label class="field-label">اسم المستخدم / البريد / الجوال <span class="required">*</span></label>
                     <div class="input-wrapper">
                         <input type="text" id="login_identifier" class="form-input-control" placeholder="أدخل اسم المستخدم، البريد، أو الجوال" autocomplete="username" required>
                     </div>
                     <div class="error-feedback-msg" id="identifier-error"></div>
                 </div>
 
-                <!-- حقل كلمة المرور -->
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور الخاصة بك" autocomplete="current-password" required>
+                        <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
                     </div>
                     <div class="checkbox-options-container">
                         <label class="checkbox-toggle-label">
@@ -494,33 +217,31 @@
                     <div class="error-feedback-msg" id="password-error"></div>
                 </div>
 
-                <!-- تذكرني -->
                 <div class="form-field-group remember-me-box">
                     <label class="checkbox-toggle-label">
-                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز الآمن
+                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
                     </label>
                 </div>
 
-                <!-- زر الإرسال -->
                 <div class="form-actions-block">
-                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">تسجيل الدخول الآمن</button>
+                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">
+                        <i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن
+                    </button>
                 </div>
             </form>
 
             <div class="bottom-routing-footer-links text-center">
-                <p>ليس لديك حساب مستثمر؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="/index.html" class="routing-link-secondary">العودة للشاشة الرئيسية</a></p>
+                <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
+                <p><a href="/index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
 
         <!-- شاشة التحميل -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen">
             <div class="loader-content-card">
-                <div class="spinning-infinity-ring">
-                    <div class="ring-core"></div>
-                </div>
+                <div class="spinning-infinity-ring"></div>
                 <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
-                <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة مفاتيح حسابك الاستثماري الفاخر...</p>
+                <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة بياناتك الاستثمارية...</p>
                 <div class="loading-progress-track">
                     <div class="progress-fill-bar" id="progressFillBar"></div>
                 </div>
@@ -528,34 +249,53 @@
         </div>
     </div>
 
-    <!-- ====== الملفات المشتركة (مسارات مطلقة) ====== -->
+    <!-- ====== تحميل ملفات JavaScript بالترتيب الصحيح ====== -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/main.js"></script>
-    
-    <!-- سكريبت تسجيل الدخول الخاص -->
-    <script src="login.js"></script>
+    <script src="/assets/js/login.js"></script>
 
-    <!-- سكريبت إضافي للتكامل مع TeraAuth -->
     <script>
         (function() {
             'use strict';
 
-            // إظهار/إخفاء كلمة المرور
-            document.getElementById('show_login_password').addEventListener('change', function() {
-                const passInput = document.getElementById('login_password');
-                passInput.type = this.checked ? 'text' : 'password';
-            });
+            console.log('🚀 [login.html] بدء تحميل صفحة تسجيل الدخول');
 
-            // معالجة تقديم النموذج
-            const loginForm = document.getElementById('teraLoginForm');
+            // ================================================================
+            // 1. تنظيف المفاتيح القديمة (لحل مشكلة التعارض)
+            // ================================================================
+            if (localStorage.getItem('tera_auth_token') || localStorage.getItem('tera_user_data')) {
+                console.warn('🧹 [login.html] تم العثور على مفاتيح قديمة (tera_auth_token, tera_user_data). يتم تنظيفها.');
+                localStorage.removeItem('tera_auth_token');
+                localStorage.removeItem('tera_user_data');
+            }
+
+            // ================================================================
+            // 2. مراجع العناصر الأساسية
+            // ================================================================
+            const form = document.getElementById('teraLoginForm');
+            const identifier = document.getElementById('login_identifier');
+            const password = document.getElementById('login_password');
             const submitBtn = document.getElementById('loginSubmitBtn');
             const errorBox = document.getElementById('loginErrorBox');
             const errorText = document.getElementById('errorBoxText');
-            const loaderScreen = document.getElementById('creativeLoaderScreen');
+            const loader = document.getElementById('creativeLoaderScreen');
             const progressBar = document.getElementById('progressFillBar');
+            const showPassCheck = document.getElementById('show_login_password');
 
-            loginForm.addEventListener('submit', function(e) {
+            // ================================================================
+            // 3. إظهار/إخفاء كلمة المرور
+            // ================================================================
+            if (showPassCheck) {
+                showPassCheck.addEventListener('change', function() {
+                    password.type = this.checked ? 'text' : 'password';
+                });
+            }
+
+            // ================================================================
+            // 4. معالجة تقديم النموذج (منع الحلقة اللانهائية)
+            // ================================================================
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
 
                 // إعادة تعيين الأخطاء
@@ -563,86 +303,119 @@
                 document.getElementById('identifier-error').textContent = '';
                 document.getElementById('password-error').textContent = '';
 
-                const identifier = document.getElementById('login_identifier').value.trim();
-                const password = document.getElementById('login_password').value.trim();
+                const idVal = identifier.value.trim();
+                const passVal = password.value.trim();
 
-                // التحقق من المدخلات
+                // التحقق من الحقول الفارغة
                 let isValid = true;
-                if (!identifier) {
-                    document.getElementById('identifier-error').textContent = 'يرجى إدخال اسم المستخدم أو البريد أو الجوال.';
+                if (!idVal) {
+                    document.getElementById('identifier-error').textContent = 'هذا الحقل مطلوب.';
+                    identifier.classList.add('is-invalid-active');
                     isValid = false;
+                } else {
+                    identifier.classList.remove('is-invalid-active');
                 }
-                if (!password) {
-                    document.getElementById('password-error').textContent = 'يرجى إدخال كلمة المرور.';
+
+                if (!passVal) {
+                    document.getElementById('password-error').textContent = 'هذا الحقل مطلوب.';
+                    password.classList.add('is-invalid-active');
                     isValid = false;
+                } else {
+                    password.classList.remove('is-invalid-active');
                 }
+
                 if (!isValid) return;
 
                 // تعطيل الزر وإظهار التحميل
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
-
-                // إظهار شاشة التحميل
-                loaderScreen.style.display = 'flex';
-                progressBar.style.width = '0%';
+                loader.style.display = 'flex';
 
                 // محاكاة تقدم
                 let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += Math.random() * 20;
-                    if (progress > 90) progress = 90;
-                    progressBar.style.width = progress + '%';
+                const interval = setInterval(() => {
+                    progress += Math.random() * 20 + 5;
+                    if (progress > 95) progress = 95;
+                    if (progressBar) progressBar.style.width = progress + '%';
                 }, 300);
 
-                // استدعاء TeraAuth.login
+                // استدعاء TeraAuth.login (الموجود في auth.js)
                 if (window.TeraAuth && typeof TeraAuth.login === 'function') {
-                    TeraAuth.login(identifier, password)
+                    console.log('🔐 [login.html] محاولة تسجيل الدخول عبر TeraAuth...');
+                    TeraAuth.login(idVal, passVal)
                         .then(function(user) {
-                            clearInterval(progressInterval);
-                            progressBar.style.width = '100%';
-                            
-                            setTimeout(() => {
-                                loaderScreen.style.display = 'none';
-                                submitBtn.disabled = false;
-                                submitBtn.innerHTML = 'تسجيل الدخول الآمن';
+                            console.log('✅ [login.html] تم تسجيل الدخول بنجاح:', user);
+                            clearInterval(interval);
+                            if (progressBar) progressBar.style.width = '100%';
 
-                                // توجيه عبر TeraAuth
-                                if (typeof TeraAuth.checkSession === 'function') {
-                                    TeraAuth.checkSession();
-                                } else {
-                                    window.location.href = '/pages/dashboard/index.html';
-                                }
-                            }, 600);
+                            // التوجيه المباشر إلى لوحة التحكم (تجاوز checkSession لتجنب الحلقات)
+                            setTimeout(function() {
+                                window.location.href = '/pages/dashboard/index.html';
+                            }, 800);
                         })
                         .catch(function(err) {
-                            clearInterval(progressInterval);
-                            loaderScreen.style.display = 'none';
+                            console.error('❌ [login.html] فشل تسجيل الدخول:', err);
+                            clearInterval(interval);
+                            loader.style.display = 'none';
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'تسجيل الدخول الآمن';
-                            
+                            submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
+
                             errorBox.style.display = 'flex';
-                            errorText.textContent = err.message || 'فشل تسجيل الدخول. تأكد من بياناتك وحاول مرة أخرى.';
+                            errorText.textContent = err.message || 'فشل تسجيل الدخول. تحقق من بياناتك.';
+                            identifier.classList.add('is-invalid-active');
+                            password.classList.add('is-invalid-active');
                         });
                 } else {
-                    // حل احتياطي إذا لم يتم تحميل TeraAuth
-                    console.warn('⚠️ TeraAuth غير متاح، استخدام محاكاة بسيطة');
+                    // حل احتياطي إذا لم يتم تحميل TeraAuth (نادراً)
+                    console.warn('⚠️ [login.html] TeraAuth غير متاح، استخدام المحاكاة المحلية.');
+                    const mockUsers = [
+                        { username: '106', email: 'investor106@tera.sa', mobile: '506060606', password: '123' }
+                    ];
+                    const matched = mockUsers.find(u =>
+                        u.username === idVal || u.email.toLowerCase() === idVal.toLowerCase() || u.mobile === idVal
+                    );
+
                     setTimeout(() => {
-                        clearInterval(progressInterval);
-                        progressBar.style.width = '100%';
-                        setTimeout(() => {
-                            loaderScreen.style.display = 'none';
+                        clearInterval(interval);
+                        if (matched && matched.password === passVal) {
+                            if (progressBar) progressBar.style.width = '100%';
+                            localStorage.setItem('tera_token', 'mock-token-' + Date.now());
+                            localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: matched.email }));
+                            setTimeout(() => {
+                                window.location.href = '/pages/dashboard/index.html';
+                            }, 800);
+                        } else {
+                            loader.style.display = 'none';
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'تسجيل الدخول الآمن';
-                            
-                            localStorage.setItem('tera_token', 'mock-token');
-                            localStorage.setItem('tera_user', JSON.stringify({ name: 'مستثمر تجريبي', email: identifier }));
-                            window.location.href = '/pages/dashboard/index.html';
-                        }, 500);
+                            submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
+                            errorBox.style.display = 'flex';
+                            errorText.textContent = 'البيانات المدخلة غير متطابقة.';
+                            identifier.classList.add('is-invalid-active');
+                            password.classList.add('is-invalid-active');
+                        }
                     }, 1500);
                 }
             });
 
-            console.log('🔐 صفحة تسجيل الدخول جاهزة');
+            // ================================================================
+            // 5. إزالة علامات الخطأ أثناء الكتابة
+            // ================================================================
+            identifier.addEventListener('input', function() {
+                this.classList.remove('is-invalid-active');
+                document.getElementById('identifier-error').textContent = '';
+                errorBox.style.display = 'none';
+            });
+            password.addEventListener('input', function() {
+                this.classList.remove('is-invalid-active');
+                document.getElementById('password-error').textContent = '';
+                errorBox.style.display = 'none';
+            });
+
+            console.log('✅ [login.html] تم تهيئة صفحة تسجيل الدخول بنجاح');
+            console.log('📌 [login.html] استخدم البيانات التالية للاختبار:');
+            console.log('   - اسم المستخدم: 106');
+            console.log('   - كلمة المرور: 123');
+
         })();
     </script>
 </body>
