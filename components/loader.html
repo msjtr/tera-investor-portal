@@ -1,54 +1,59 @@
+<!-- ================================================= -->
+<!-- TERA LOADER COMPONENT (نسخة الربط الكامل) -->
+<!-- ================================================= -->
+
 <style>
-    /* حاوية اللودر (تغطي كامل الشاشة) */
+    /* حاوية اللودر */
     .tera-loader-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.95); /* خلفية بيضاء شبه شفافة */
+        background: rgba(255, 255, 255, 0.98);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(8px);
+        transition: opacity 0.5s ease;
     }
 
-    /* تأثير الدوران للـ Logo */
+    /* تأثير نبض الشعار */
     .loader-logo {
-        width: 80px;
-        height: 80px;
-        margin-bottom: 20px;
+        width: 100px;
+        height: auto;
+        margin-bottom: 25px;
         animation: pulse 1.5s infinite ease-in-out;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }
 
     /* مؤشر التحميل الدائري */
     .loader-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
+        width: 45px;
+        height: 45px;
+        border: 4px solid #F1F5F9;
         border-top: 4px solid var(--tera-secondary, #00C2C7);
         border-radius: 50%;
         animation: spin 1s linear infinite;
     }
 
-    /* نصوص التحميل */
     .loader-text {
-        margin-top: 15px;
+        margin-top: 20px;
         color: var(--tera-primary, #0A1B3F);
         font-weight: 700;
         font-family: var(--font-heading, 'Tajawal', sans-serif);
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
     }
 
-    /* تحريك اللوجو */
     @keyframes pulse {
         0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.1); opacity: 0.7; }
+        50% { transform: scale(1.1); opacity: 0.8; }
     }
 
-    /* تحريك الدوران */
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
@@ -56,9 +61,44 @@
 </style>
 
 <div class="tera-loader-overlay" id="tera-loader">
-    <img src="../../assets/images/logo-icon.png" alt="TERA Logo" class="loader-logo">
+    <!-- تم ربط الشعار برمجياً لضمان المسار الصحيح -->
+    <img src="" alt="TERA Logo" class="loader-logo" id="loaderLogo">
     
     <div class="loader-spinner"></div>
     
-    <div class="loader-text">جاري التحميل...</div>
+    <div class="loader-text">جاري المعالجة...</div>
 </div>
+
+<script>
+    /**
+     * ربط الشعار ديناميكياً بناءً على مسار المشروع الجذري
+     * هذا يضمن عدم ظهور خطأ 404 للصورة مهما كانت الصفحة عميقة
+     */
+    (function() {
+        const logoImg = document.getElementById('loaderLogo');
+        // استخدام TERA.basePath الموحد في المشروع
+        const basePath = (typeof TERA !== 'undefined' && TERA.basePath) ? TERA.basePath : '';
+        logoImg.src = basePath + '/images/logo.svg';
+    })();
+
+    /**
+     * وظائف التحكم (تستدعى من core.js)
+     */
+    window.hideLoader = function() {
+        const loader = document.getElementById('tera-loader');
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500);
+        }
+    };
+
+    window.showLoader = function() {
+        const loader = document.getElementById('tera-loader');
+        if (loader) {
+            loader.style.opacity = '1';
+            loader.style.display = 'flex';
+        }
+    };
+</script>
