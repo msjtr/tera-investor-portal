@@ -3,14 +3,6 @@
  * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة المستقرة)
  * ============================================================
  * تم إصلاح نظام التوجيه (Routing) ليعتمد على المسارات المطلقة
- * مع دعم المسارات المختصرة عبر جدول ROUTES.
- * ============================================================
- * التغييرات الرئيسية:
- * 1. تحسين resolvePath للبحث في ROUTES حتى لو لم يكن التطابق تاماً.
- * 2. إزالة إضافة /tera-investor-portal-main في navigateTo لتجنب الأخطاء.
- * 3. التأكد من أن loadPage تستخدم المسار الكامل كما هو.
- * 4. إصلاح handlePopState لاستخدام المسار الصحيح وتحديث واجهة المستخدم.
- * 5. استدعاء TeraMain.refreshUI() بعد تحميل الصفحة لتحديث المكونات.
  * ============================================================
  */
 
@@ -63,14 +55,13 @@
         }
 
         // 3. إذا كان المسار مختصراً (بدون .html) نحاول البحث عن مفتاح يبدأ بنفس المسار
-        //    مثلاً: /investments/opportunities → نبحث عن مفتاح يبدأ بـ /investments/opportunities
         for (let key in ROUTES) {
             if (key === cleanPath || key.startsWith(cleanPath + '/') || key.startsWith(cleanPath)) {
                 return ROUTES[key];
             }
         }
 
-        // 4. إذا لم يتم العثور على مسار، نعيد المسار الأصلي (قد يكون الرابط صحيحاً بالفعل)
+        // 4. إذا لم يتم العثور على مسار، نعيد المسار الأصلي
         return cleanPath;
     }
 
@@ -218,18 +209,22 @@
     }
 
     // ============================================================
-    // 6. نظام التوجيه (Router) - المسارات المطلقة فقط
+    // 6. نظام التوجيه (Router)
     // ============================================================
 
     function navigateTo(path, replace = false) {
         let targetPath = resolvePath(path);
         
-        // لا نضيف مجلدات إضافية، نترك المسار كما هو
-        // لأن resolvePath يعيد المسار الكامل من الجذر
+        // التحقق من تواجد مجلد المشروع المحلي لضمان التوجيه الصحيح
+        if (window.location.pathname.includes('/tera-investor-portal-main')) {
+            targetPath = '/tera-investor-portal-main' + targetPath;
+        }
 
         if (APP_CONFIG.authRequired && !isPublicPage(targetPath) && !AppState.isLoggedIn) {
             console.warn('🔒 يتطلب تسجيل الدخول');
-            window.location.href = APP_CONFIG.loginUrl;
+            window.location.href = window.location.pathname.includes('/tera-investor-portal-main') 
+                ? '/tera-investor-portal-main' + APP_CONFIG.loginUrl 
+                : APP_CONFIG.loginUrl;
             return;
         }
 
@@ -280,11 +275,6 @@
 
                 const title = doc.querySelector('title');
                 if (title) document.title = title.textContent;
-
-                // ✅ تحديث واجهة المستخدم بعد تحميل الصفحة
-                if (typeof window.TeraMain !== 'undefined' && typeof window.TeraMain.refreshUI === 'function') {
-                    window.TeraMain.refreshUI();
-                }
             })
             .catch(error => {
                 console.error('❌ خطأ في تحميل الصفحة:', error);
@@ -351,11 +341,7 @@
     // ============================================================
 
     function handlePopState() {
-        // ✅ استخدام المسار الفعلي من window.location
-        const path = window.location.pathname;
-        // التأكد من أن المسار مطلق ويبدأ بـ /
-        const finalPath = path.startsWith('/') ? path : '/' + path;
-        navigateTo(finalPath, true);
+        navigateTo(window.location.pathname, true);
     }
 
     function handleInternalLinks() {
