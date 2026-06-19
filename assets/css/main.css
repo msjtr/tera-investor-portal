@@ -177,6 +177,48 @@
     font-weight: 700;
     color: var(--gray-900);
 }
+
+/* ----- زر العودة إلى لوحة التحكم (Back to Dashboard) ----- */
+.back-to-dashboard {
+    display: none; /* مخفي افتراضياً، يظهر في الصفحات الفرعية فقط */
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--border-radius, 8px);
+    background: var(--gray-100, #f8f9fa);
+    color: var(--gray-700, #475569);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    border: 1px solid var(--gray-200, #e9ecef);
+}
+
+.back-to-dashboard:hover {
+    background: var(--primary-color, #028090);
+    color: #fff;
+    border-color: var(--primary-color, #028090);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(2, 128, 144, 0.20);
+}
+
+.back-to-dashboard i {
+    font-size: 14px;
+}
+
+/* إظهار الزر في جميع الصفحات ما عدا لوحة التحكم */
+body:not(.page-dashboard) .back-to-dashboard {
+    display: inline-flex;
+}
+
+/* إخفاء الزر في صفحة لوحة التحكم */
+.page-dashboard .back-to-dashboard {
+    display: none !important;
+}
+
+/* ----- نهاية زر العودة ----- */
+
 .header-right {
     display: flex;
     align-items: center;
@@ -237,4 +279,103 @@
 }
 .footer-links a:hover {
     color: var(--primary-color);
+}
+
+/* ============================================================
+   تحسين التوافق مع الشاشات الصغيرة (Responsive)
+   ============================================================ */
+
+/* شاشات متوسطة (أقل من 992px) */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(100%);
+        width: 280px;
+    }
+    .sidebar-open {
+        transform: translateX(0);
+    }
+    .sidebar-toggle {
+        display: block !important;
+    }
+    .main-content {
+        margin-right: 0;
+    }
+    .header {
+        padding: 0 20px;
+    }
+    .user-profile .user-name {
+        display: none;
+    }
+}
+
+/* شاشات صغيرة (أقل من 768px) */
+@media (max-width: 767.98px) {
+    .header {
+        padding: 0 15px;
+        height: 60px;
+    }
+    .header .page-title {
+        font-size: 18px;
+    }
+    .header .notifications .badge {
+        font-size: 9px;
+        padding: 1px 6px;
+    }
+    .user-profile img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    .footer {
+        padding: 15px;
+    }
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+    .footer-links a {
+        font-size: 13px;
+    }
+}
+
+/* شاشات صغيرة جداً (أقل من 576px) */
+@media (max-width: 575.98px) {
+    .header {
+        padding: 0 12px;
+    }
+    .header .page-title {
+        font-size: 16px;
+    }
+    .sidebar {
+        width: 260px;
+    }
+    .back-to-dashboard span {
+        display: none;
+    }
+    .back-to-dashboard {
+        padding: 6px 10px;
+        margin-left: 6px;
+    }
+    .footer-content span {
+        font-size: 13px;
+    }
+}
+
+/* شاشات ذات اتجاه أفقي على الأجهزة المحمولة */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        width: 240px;
+    }
+    .header {
+        height: 55px;
+        padding: 0 15px;
+    }
+    .header .page-title {
+        font-size: 17px;
+    }
 }
