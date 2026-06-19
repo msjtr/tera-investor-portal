@@ -35,7 +35,12 @@
         
         // إذا كان المسار يبدأ بـ http، نأخذ المسار فقط
         if (cleanPath.startsWith('http')) {
-            cleanPath = new URL(cleanPath).pathname;
+            try {
+                cleanPath = new URL(cleanPath).pathname;
+            } catch (e) {
+                // إذا فشل التحليل، نترك المسار كما هو
+                return cleanPath;
+            }
         }
 
         // إذا كان المسار يحتوي على مجلد المشروع الرئيسي، نزيله
@@ -164,7 +169,7 @@
     }
 
     // ============================================================
-    // 5. تهيئة زر العودة إلى لوحة التحكم
+    // 5. تهيئة زر العودة إلى لوحة التحكم وتحديث عنوان الصفحة
     // ============================================================
     function initBackToDashboard() {
         // تحديد ما إذا كانت الصفحة الحالية هي لوحة التحكم
@@ -354,34 +359,81 @@
     }
 
     // ============================================================
-    // 11. التهيئة الرئيسية
+    // 11. التهيئة الرئيسية (محسّنة)
     // ============================================================
     function initMain() {
         console.log('🚀 [Main] بدء تهيئة النظام...');
 
         // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
-        ensureCoreLoaded();
-        ensureAuthLoaded();
-        ensureAppLoaded();
+        const coreLoaded = ensureCoreLoaded();
+        const authLoaded = ensureAuthLoaded();
+        const appLoaded = ensureAppLoaded();
 
-        // 2. تهيئة المكونات المشتركة (تعتمد على وجود TeraCore و TeraApp)
-        // نستخدم setTimeout للتأكد من تحميل TeraCore و TeraApp
-        setTimeout(function() {
+        // 2. إذا كانت جميع الملفات محملة مسبقاً، نبدأ التهيئة فوراً
+        if (coreLoaded && authLoaded && appLoaded) {
+            performInitialization();
+        } else {
+            // إذا كان هناك ملف لم يتم تحميله، ننتظر تحميله عبر setTimeout
+            // نستخدم setInterval للتحقق من التحميل بدلاً من setTimeout الثابت
+            let attempts = 0;
+            const maxAttempts = 20; // 20 * 100ms = 2 ثانية كحد أقصى
+            const checkInterval = setInterval(function() {
+                attempts++;
+                if (typeof TeraCore !== 'undefined' && 
+                    typeof TeraAuth !== 'undefined' && 
+                    typeof TeraApp !== 'undefined') {
+                    clearInterval(checkInterval);
+                    performInitialization();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkInterval);
+                    console.warn('⚠️ [Main] لم يتم تحميل جميع المكتبات خلال المهلة، محاولة التهيئة مع المتاح');
+                    performInitialization();
+                }
+            }, 100);
+        }
+
+        function performInitialization() {
+            // تهيئة المكونات المشتركة
             initCommonComponents();
 
-            // 3. تحديد نوع الصفحة الحالية
+            // تحديد نوع الصفحة الحالية
             const pageType = getCurrentPage();
             console.log('📄 [Main] نوع الصفحة:', pageType);
 
-            // 4. تهيئة الصفحة حسب نوعها
+            // تهيئة الصفحة حسب نوعها
             initPageByType(pageType);
 
             console.log('✅ [Main] تم الانتهاء من التهيئة الرئيسية');
-        }, 150);
+        }
     }
 
     // ============================================================
-    // 12. بدء التهيئة
+    // 12. الاستماع لتغيير الصفحة (في حالة SPA)
+    // ============================================================
+    function handlePageChange() {
+        // تحديث زر العودة وعنوان الصفحة عند تغيير الصفحة
+        initBackToDashboard();
+    }
+
+    // الاستماع لتغيير التاريخ (popstate) في المتصفح
+    window.addEventListener('popstate', handlePageChange);
+
+    // ربط دالة التحديث بـ TeraApp ليتم استدعاؤها بعد تحميل الصفحة
+    if (typeof window.TeraApp !== 'undefined') {
+        // نخزن المرجع الأصلي لـ loadPage إن وجد
+        const originalLoadPage = window.TeraApp.loadPage;
+        if (originalLoadPage) {
+            window.TeraApp.loadPage = function(url) {
+                // استدعاء الدالة الأصلية
+                originalLoadPage(url);
+                // بعد تحميل الصفحة، نقوم بتحديث المكونات
+                setTimeout(handlePageChange, 100);
+            };
+        }
+    }
+
+    // ============================================================
+    // 13. بدء التهيئة
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMain);
@@ -391,7 +443,7 @@
     }
 
     // ============================================================
-    // 13. تصدير الدوال العامة (للاستخدام في صفحات أخرى)
+    // 14. تصدير الدوال العامة (للاستخدام في صفحات أخرى)
     // ============================================================
     window.TeraMain = {
         initMain: initMain,
@@ -411,7 +463,9 @@
         initProfilePage: initProfilePage,
         initSecurityPage: initSecurityPage,
         initSupportPage: initSupportPage,
-        initAuthPage: initAuthPage
+        initAuthPage: initAuthPage,
+        // دالة لتحديث المكونات يدوياً (للاستخدام من صفحات أخرى)
+        refreshUI: handlePageChange
     };
 
     console.log('✅ [Main] تم تحميل المكتبة الرئيسية (TeraMain) بنجاح');
