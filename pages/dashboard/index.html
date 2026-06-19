@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- ============================================================
-         منع التخزين المؤقت بشكل قاطع
-         ============================================================ -->
+    <!-- منع التخزين المؤقت -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -27,11 +25,9 @@
 
     <style>
         /* إخفاء زر العودة في صفحة لوحة التحكم */
-        .page-dashboard .back-to-dashboard {
-            display: none !important;
-        }
+        .page-dashboard .back-to-dashboard { display: none !important; }
 
-        /* ===== إصلاح زر القائمة الجانبية: إظهاره في جميع الشاشات ===== */
+        /* ===== إصلاح زر القائمة الجانبية ===== */
         .sidebar-toggle {
             display: flex !important;
             align-items: center;
@@ -46,57 +42,29 @@
             border-radius: var(--border-radius, 8px);
             transition: background 0.2s;
         }
-        .sidebar-toggle:hover {
-            background: var(--gray-100, #f8f9fa);
-        }
+        .sidebar-toggle:hover { background: var(--gray-100, #f8f9fa); }
 
-        /* التأكد من ظهور الزر في جميع الأحوال */
         @media (max-width: 991.98px) {
-            .sidebar-toggle {
-                display: flex !important;
-            }
-        }
-
-        /* تحسين مظهر القائمة الجانبية عند التصغير */
-        .sidebar-container {
-            width: var(--sidebar-width, 250px);
-        }
-        .sidebar-container.collapsed {
-            width: 70px;
-        }
-        @media (max-width: 991.98px) {
+            .sidebar-toggle { display: flex !important; }
             .sidebar-container {
                 transform: translateX(100%);
                 width: 280px !important;
                 transition: transform 0.3s ease;
                 box-shadow: 4px 0 30px rgba(0, 0, 0, 0.08);
             }
-            .sidebar-container.sidebar-open {
-                transform: translateX(0);
-            }
-            .sidebar-container.collapsed {
-                width: 280px !important;
-            }
+            .sidebar-container.sidebar-open { transform: translateX(0); }
+            .sidebar-container.collapsed { width: 280px !important; }
             .sidebar-container.collapsed .nav-label,
             .sidebar-container.collapsed .submenu-toggle,
-            .sidebar-container.collapsed .submenu {
-                display: block;
-            }
-            .sidebar-container.collapsed .nav-item > a {
-                justify-content: flex-start;
-                padding: 10px 18px;
-            }
-            .sidebar-container.collapsed .nav-item > a i {
-                margin-left: 14px;
-            }
-            .sidebar-container.collapsed .logout-btn .nav-label {
-                display: inline;
-            }
-            .sidebar-container.collapsed .logout-btn {
-                justify-content: flex-start;
-                padding: 10px 12px;
-            }
+            .sidebar-container.collapsed .submenu { display: block; }
+            .sidebar-container.collapsed .nav-item > a { justify-content: flex-start; padding: 10px 18px; }
+            .sidebar-container.collapsed .nav-item > a i { margin-left: 14px; }
+            .sidebar-container.collapsed .logout-btn .nav-label { display: inline; }
+            .sidebar-container.collapsed .logout-btn { justify-content: flex-start; padding: 10px 12px; }
         }
+        
+        .sidebar-container { width: var(--sidebar-width, 250px); }
+        .sidebar-container.collapsed { width: 70px; }
     </style>
 </head>
 <body>
@@ -106,14 +74,12 @@
     <!-- ===== القائمة الجانبية ===== -->
     <aside class="sidebar-container" id="sidebar">
         <div class="sidebar-brand">
-            <a href="/index.html">
-                <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
-            </a>
+            <a href="/index.html"><img src="/images/logo.svg" alt="Tera Logo" class="logo-img" /></a>
         </div>
         <nav class="sidebar-menu">
             <ul class="nav-list">
                 <li class="nav-item active">
-                    <a href="/pages/dashboard"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
+                    <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
                 </li>
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمارات</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
@@ -192,23 +158,22 @@
         <!-- ===== الهيدر ===== -->
         <header class="header">
             <div class="header-left">
-                <!-- زر القائمة الجانبية -->
                 <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
+                <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
                 <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
             </div>
             <div class="header-right">
                 <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
                 <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=0D6EFD&color=fff&size=40" alt="User Avatar" />
+                    <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=028090&color=fff&size=40" alt="User Avatar" />
                     <span class="user-name">أحمد محمد</span>
                 </div>
             </div>
         </header>
 
-        <!-- ===== محتوى لوحة التحكم ===== -->
+        <!-- ===== محتوى الصفحة الديناميكي (يتغير بواسطة app.js) ===== -->
         <section class="dashboard-content" id="dashboardContent">
-            <!-- البطاقات الإحصائية -->
+            
             <div class="stats-grid">
                 <div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><span class="stat-label">إجمالي الاستثمارات</span><span class="stat-value">ر.س 124,500</span></div></div>
                 <div class="stat-card"><div class="stat-icon"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><span class="stat-label">الأرباح المحققة</span><span class="stat-value">ر.س 18,200</span></div></div>
@@ -216,7 +181,6 @@
                 <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><span class="stat-label">قيد الانتظار</span><span class="stat-value">3</span></div></div>
             </div>
 
-            <!-- الرسم البياني والنشاطات -->
             <div class="dashboard-grid">
                 <div class="card chart-card">
                     <div class="card-header">
@@ -237,13 +201,11 @@
                             <li><i class="fas fa-arrow-up success"></i><div><span class="activity-title">إيداع</span><span class="activity-desc">تم إيداع مبلغ ر.س 5,000 في المحفظة</span></div><span class="activity-time">منذ ساعة</span></li>
                             <li><i class="fas fa-arrow-down danger"></i><div><span class="activity-title">سحب</span><span class="activity-desc">طلب سحب ر.س 1,200 قيد المراجعة</span></div><span class="activity-time">منذ 3 ساعات</span></li>
                             <li><i class="fas fa-plus-circle info"></i><div><span class="activity-title">استثمار جديد</span><span class="activity-desc">تم تفعيل استثمار في مشروع الطاقة الشمسية</span></div><span class="activity-time">الأمس</span></li>
-                            <li><i class="fas fa-exclamation-triangle warning"></i><div><span class="activity-title">تنبيه</span><span class="activity-desc">انتهاء صلاحية المصادقة الثنائية قريباً</span></div><span class="activity-time">الأمس</span></li>
                         </ul>
                     </div>
                 </div>
             </div>
 
-            <!-- جدول الاستثمارات -->
             <div class="card table-card">
                 <div class="card-header">
                     <h3>أحدث الاستثمارات</h3>
@@ -260,6 +222,7 @@
                     </table>
                 </div>
             </div>
+
         </section>
 
         <!-- ===== الفوتر ===== -->
@@ -277,247 +240,14 @@
     </main>
 </div>
 
-<!-- ===== الملفات المشتركة ===== -->
+<!-- ===== المكتبات والملفات المشتركة (يجب أن تبقى في الأسفل) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/assets/js/core.js"></script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/app.js"></script>
 <script src="/assets/js/main.js"></script>
 <script src="/assets/js/dashboard.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- ===== سكريبت إضافي لتفعيل القائمة الجانبية والرسم البياني (SPA) ===== -->
-<script>
-    (function() {
-        'use strict';
-
-        // ============================================================
-        // 1. دالة تبديل القائمة الجانبية (مع دعم الانهيار)
-        // ============================================================
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            if (!sidebar) return;
-
-            if (window.innerWidth > 991) {
-                sidebar.classList.toggle('collapsed');
-                try {
-                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                } catch (e) { /* ignore */ }
-            } else {
-                sidebar.classList.toggle('sidebar-open');
-            }
-        }
-
-        // استعادة حالة الانهيار من localStorage
-        function restoreSidebarState() {
-            var sidebar = document.getElementById('sidebar');
-            if (!sidebar) return;
-            if (window.innerWidth > 991) {
-                try {
-                    var saved = localStorage.getItem('sidebarCollapsed');
-                    if (saved === 'true') {
-                        sidebar.classList.add('collapsed');
-                    } else if (saved === 'false') {
-                        sidebar.classList.remove('collapsed');
-                    }
-                } catch (e) { /* ignore */ }
-            }
-        }
-
-        // ============================================================
-        // 2. دالة تهيئة الرسم البياني (مع تدمير المخطط السابق)
-        // ============================================================
-        function initChart() {
-            var canvas = document.getElementById('performanceChart');
-            if (!canvas) {
-                console.log('ℹ️ [Chart] عنصر performanceChart غير موجود');
-                return;
-            }
-
-            // تدمير المخطط السابق إن وجد
-            if (window.myDashboardChart) {
-                window.myDashboardChart.destroy();
-                window.myDashboardChart = null;
-            }
-
-            if (typeof Chart === 'undefined') {
-                console.warn('⚠️ [Chart] Chart.js غير محملة');
-                return;
-            }
-
-            try {
-                window.myDashboardChart = new Chart(canvas, {
-                    type: 'line',
-                    data: {
-                        labels: ['1', '5', '10', '15', '20', '25', '30'],
-                        datasets: [{
-                            label: 'قيمة المحفظة (ر.س)',
-                            data: [12000, 12500, 12300, 13000, 12800, 13500, 14000],
-                            borderColor: '#0D6EFD',
-                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                            borderWidth: 3,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#0D6EFD',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                labels: { font: { family: 'Tajawal' } }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'ر.س ' + context.parsed.y.toLocaleString();
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: false,
-                                ticks: {
-                                    callback: function(value) {
-                                        return 'ر.س ' + value.toLocaleString();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                console.log('✅ [Chart] تم رسم المخطط البياني بنجاح');
-            } catch (error) {
-                console.error('❌ [Chart] خطأ في رسم المخطط:', error);
-            }
-        }
-
-        // ============================================================
-        // 3. التهيئة عند تحميل الصفحة (باستخدام Event Delegation)
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // === زر تبديل القائمة الجانبية ===
-            var toggleBtn = document.getElementById('sidebarToggle');
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    toggleSidebar();
-                });
-            }
-
-            // === زر تسجيل الخروج ===
-            var logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                        if (typeof TeraAuth !== 'undefined' && TeraAuth.logout) {
-                            TeraAuth.logout();
-                        } else {
-                            localStorage.removeItem('tera_token');
-                            localStorage.removeItem('tera_user');
-                            window.location.href = '/auth/auth/login/login.html';
-                        }
-                    }
-                });
-            }
-
-            // === إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة) ===
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 991) {
-                    var sidebar = document.getElementById('sidebar');
-                    var toggleBtn = document.getElementById('sidebarToggle');
-                    if (sidebar && toggleBtn) {
-                        var isInside = sidebar.contains(e.target);
-                        var isToggle = toggleBtn.contains(e.target);
-                        if (!isInside && !isToggle) {
-                            sidebar.classList.remove('sidebar-open');
-                        }
-                    }
-                }
-            });
-
-            // === إغلاق القائمة عند تغيير حجم النافذة ===
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 991) {
-                    var sidebar = document.getElementById('sidebar');
-                    if (sidebar) {
-                        sidebar.classList.remove('sidebar-open');
-                        try {
-                            var saved = localStorage.getItem('sidebarCollapsed');
-                            if (saved === 'true') {
-                                sidebar.classList.add('collapsed');
-                            } else {
-                                sidebar.classList.remove('collapsed');
-                            }
-                        } catch (e) { /* ignore */ }
-                    }
-                }
-            });
-
-            // === القوائم الفرعية (باستخدام Event Delegation) ===
-            document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    var parent = this.parentElement;
-                    if (!parent) return;
-
-                    var sidebar = document.getElementById('sidebar');
-                    if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
-                        if (typeof showToast === 'function') {
-                            showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
-                        } else {
-                            alert('افتح القائمة أولاً لعرض الخيارات');
-                        }
-                        return;
-                    }
-                    parent.classList.toggle('submenu-open');
-                });
-            });
-
-            // === إضافة كلاس page-dashboard لإخفاء زر العودة ===
-            document.body.classList.add('page-dashboard');
-
-            // === استعادة حالة القائمة الجانبية ===
-            restoreSidebarState();
-
-            // === تهيئة الرسم البياني (مع تأخير بسيط) ===
-            setTimeout(function() {
-                initChart();
-            }, 150);
-
-            console.log('✅ [Dashboard] تم التحميل بنجاح مع دعم SPA');
-        });
-
-        // ============================================================
-        // 4. تصدير الدوال للاستخدام في app.js (SPA)
-        // ============================================================
-        window.initDashboardChart = initChart;
-        window.toggleSidebar = toggleSidebar;
-        window.restoreSidebarState = restoreSidebarState;
-
-        // إذا تم تحميل الصفحة عبر SPA (fetch)، نعيد تهيئة الرسم البياني
-        if (typeof TeraApp !== 'undefined' && TeraApp.loadPage) {
-            var originalLoadPage = TeraApp.loadPage;
-            TeraApp.loadPage = function(url) {
-                originalLoadPage(url);
-                // بعد تحميل الصفحة، نتحقق إذا كانت لوحة التحكم
-                setTimeout(function() {
-                    if (url.includes('dashboard') || document.getElementById('performanceChart')) {
-                        initChart();
-                    }
-                }, 200);
-            };
-        }
-
-    })();
-</script>
+<!-- لا يوجد أي أكواد <script> مضمنة هنا! كلها في الملفات أعلاه -->
 
 </body>
 </html>
