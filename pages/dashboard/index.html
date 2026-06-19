@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     
     <style>
-        /* تنسيقات هيكلية لضمان ظهور المؤشرات والرسم البياني بشكل صحيح */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 24px; }
         .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 15px; }
         .stat-icon { width: 50px; height: 50px; border-radius: 12px; background: rgba(2, 128, 144, 0.1); color: #028090; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
@@ -140,8 +139,8 @@
                 <div class="header-right">
                     <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
                     <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=مستثمر&background=028090&color=fff&size=35" alt="User Avatar" width="35" height="35" />
-                        <span class="user-name">مستثمر تيرا</span>
+                        <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=028090&color=fff&size=35" alt="User Avatar" width="35" height="35" />
+                        <span class="user-name">أحمد محمد</span>
                     </div>
                 </div>
             </header>
@@ -151,77 +150,47 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-wallet"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-label">إجمالي المحفظة</span>
-                            <span class="stat-value">124,500.00 ر.س</span>
-                        </div>
+                        <div class="stat-info"><span class="stat-label">إجمالي المحفظة</span><span class="stat-value">124,500.00 ر.س</span></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #dcfce7; color: #10b981;"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-label">الأرباح المحققة</span>
-                            <span class="stat-value" style="color: #10b981;">18,200.00 ر.س</span>
-                        </div>
+                        <div class="stat-icon" style="background: #dcfce7; color: #10b981;"><i class="fas fa-arrow-trend-up"></i></div>
+                        <div class="stat-info"><span class="stat-label">إجمالي الأرباح</span><span class="stat-value" style="color: #10b981;">+ 18,200.00 ر.س</span></div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: #e0f2fe; color: #0ea5e9;"><i class="fas fa-hand-holding-usd"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-label">الاستثمارات النشطة</span>
-                            <span class="stat-value">12 شراكة</span>
-                        </div>
+                        <div class="stat-icon" style="background: #e0f2fe; color: #0ea5e9;"><i class="fas fa-chart-pie"></i></div>
+                        <div class="stat-info"><span class="stat-label">الشراكات النشطة</span><span class="stat-value">5 شراكات</span></div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;"><i class="fas fa-clock"></i></div>
-                        <div class="stat-info">
-                            <span class="stat-label">قيد الانتظار</span>
-                            <span class="stat-value">3 طلبات</span>
-                        </div>
+                        <div class="stat-info"><span class="stat-label">طلبات قيد المراجعة</span><span class="stat-value">2 طلبات</span></div>
                     </div>
                 </div>
 
                 <div class="dashboard-grid">
                     <div class="card">
-                        <div class="card-header">
-                            <h3>أداء المحفظة الاستثمارية</h3>
-                        </div>
-                        <div style="height: 300px; position: relative;">
-                            <canvas id="performanceChart"></canvas>
-                        </div>
+                        <div class="card-header"><h3>أداء المحفظة الاستثمارية</h3></div>
+                        <div style="height: 300px; position: relative;"><canvas id="mainChart"></canvas></div>
                     </div>
 
                     <div class="card">
                         <div class="card-header">
                             <h3>آخر النشاطات</h3>
+                            <a href="/pages/portfolio/transactions.html" style="font-size: 13px; color: #028090; text-decoration: none;">عرض الكل</a>
                         </div>
                         <ul class="activity-list">
                             <li class="activity-item">
-                                <div class="activity-icon icon-success"><i class="fas fa-arrow-up"></i></div>
-                                <div class="activity-details">
-                                    <h4>إيداع أرباح دورية</h4>
-                                    <p>تم إيداع مبلغ الاستحقاق بنجاح</p>
-                                </div>
-                                <span class="activity-time">منذ ساعة</span>
+                                <div class="activity-icon icon-success"><i class="fas fa-arrow-down"></i></div>
+                                <div class="activity-details"><h4>إيداع أرباح</h4><p>تم إيداع أرباح الشراكة الممتدة</p></div>
+                                <span class="activity-time">اليوم</span>
                             </li>
                             <li class="activity-item">
-                                <div class="activity-icon icon-primary"><i class="fas fa-plus-circle"></i></div>
-                                <div class="activity-details">
-                                    <h4>تفعيل شراكة ممتدة</h4>
-                                    <p>تم اعتماد عقد الشراكة رقم TR-2026</p>
-                                </div>
-                                <span class="activity-time">الأمس</span>
-                            </li>
-                            <li class="activity-item">
-                                <div class="activity-icon icon-warning"><i class="fas fa-hourglass-half"></i></div>
-                                <div class="activity-details">
-                                    <h4>طلب سحب قيد المراجعة</h4>
-                                    <p>طلب سحب الرصيد قيد التدقيق المحاسبي</p>
-                                </div>
-                                <span class="activity-time">منذ يومين</span>
+                                <div class="activity-icon icon-primary"><i class="fas fa-plus"></i></div>
+                                <div class="activity-details"><h4>استثمار جديد</h4><p>فرصة استثمارية: مشروع حائل</p></div>
+                                <span class="activity-time">أمس</span>
                             </li>
                         </ul>
                     </div>
                 </div>
-
             </section>
 
             <footer class="footer">
@@ -236,17 +205,17 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
-        // نظام مراقبة وتفويض الأحداث العام على مستوى الـ Document
+        // الكلمة السحرية "true" هنا تعني (Event Capture)
+        // هذه الطريقة تجبر المتصفح على تنفيذ هذا الكود أولاً قبل أن توقفه الملفات الأخرى المعطوبة
         document.addEventListener('click', function(e) {
             
-            // 1. معالجة نقرة زر فتح/إغلاق القائمة الجانبية (Sidebar Toggle)
-            const toggleBtn = e.target.closest('#sidebarToggle');
+            // 1. فحص النقر على زر فتح/إغلاق القائمة الجانبية
+            let toggleBtn = e.target.closest('.sidebar-toggle');
             if (toggleBtn) {
                 e.preventDefault();
-                const sidebar = document.getElementById('sidebar');
+                e.stopPropagation(); // منع الأخطاء من الملفات الأخرى
+                let sidebar = document.querySelector('.sidebar-container');
                 if (sidebar) {
                     if (window.innerWidth > 991) {
                         sidebar.classList.toggle('collapsed');
@@ -257,57 +226,46 @@
                 return;
             }
 
-            // 2. معالجة نقرة فتح/إغلاق القوائم الفرعية (Submenus)
-            const submenuLink = e.target.closest('.has-submenu > a');
+            // 2. فحص النقر على القوائم الفرعية (الاستثمارات، المحفظة...)
+            let submenuLink = e.target.closest('.has-submenu > a');
             if (submenuLink) {
                 e.preventDefault();
-                const parentLi = submenuLink.parentElement;
+                e.stopPropagation(); // منع الأخطاء من الملفات الأخرى
+                let parentLi = submenuLink.parentElement;
                 
-                // إغلاق باقي القوائم الفرعية المفتوحة للحفاظ على المظهر
-                document.querySelectorAll('.has-submenu').forEach(li => {
-                    if (li !== parentLi) li.classList.remove('submenu-open');
+                // إغلاق أي قائمة مفتوحة أخرى
+                document.querySelectorAll('.has-submenu').forEach(function(li) {
+                    if (li !== parentLi) {
+                        li.classList.remove('submenu-open');
+                    }
                 });
                 
+                // فتح أو إغلاق القائمة الحالية
                 parentLi.classList.toggle('submenu-open');
-                return;
             }
+        }, true); // <- "true" هي السر هنا لتجاوز أي تعارض
+    </script>
 
-            // إغلاق القائمة تلقائياً عند النقر خارجها في شاشات الجوال
-            if (window.innerWidth <= 991) {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar && sidebar.classList.contains('sidebar-open') && !sidebar.contains(e.target) && !e.target.closest('#sidebarToggle')) {
-                    sidebar.classList.remove('sidebar-open');
-                }
-            }
-        });
-
-        // بناء وتشغيل الرسم البياني (Chart.js) فور تحميل الصفحة
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('performanceChart');
+            const ctx = document.getElementById('mainChart');
             if (ctx) {
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
                         datasets: [{
-                            label: 'قيمة الاستثمارات (ر.س)',
-                            data: [90000, 102000, 108000, 115000, 121000, 124500],
+                            label: 'قيمة المحفظة (ر.س)',
+                            data: [100000, 105000, 112000, 115000, 120000, 124500],
                             borderColor: '#028090',
-                            backgroundColor: 'rgba(2, 128, 144, 0.05)',
-                            borderWidth: 2.5,
+                            backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                            borderWidth: 2,
                             fill: true,
                             tension: 0.4
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Tajawal', size: 11 } } },
-                            x: { grid: { display: false }, ticks: { font: { family: 'Tajawal', size: 11 } } }
-                        }
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
                 });
             }
         });
