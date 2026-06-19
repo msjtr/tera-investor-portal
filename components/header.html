@@ -1,37 +1,26 @@
-<!-- ============================================================
-     header.html - الشريط العلوي (الهيدر) مع زر العودة للـ SPA
-     ملاحظة: الأحداث (مثل زر القائمة وزر العودة والإشعارات) 
-     تتم إدارتها مركزياً من خلال Event Delegation في main.js
-     ============================================================ -->
 <header class="header">
     <div class="header-left">
-        <!-- زر فتح/إغلاق القائمة الجانبية -->
         <button class="sidebar-toggle" id="sidebarToggle" title="القائمة الجانبية">
             <i class="fas fa-bars"></i>
         </button>
         
-        <!-- زر العودة للوحة التحكم (مخفي برمجياً في صفحة لوحة التحكم الرئيسية) -->
-        <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboardLink" title="العودة للرئيسية">
+        <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboardLink" title="العودة للوحة التحكم">
             <i class="fas fa-arrow-right"></i>
             <span>العودة للوحة التحكم</span>
         </a>
         
-        <!-- عنوان الصفحة المتغير -->
         <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
     </div>
 
     <div class="header-right">
-        <!-- الإشعارات -->
         <div class="notifications" title="الإشعارات">
             <i class="fas fa-bell"></i>
             <span class="badge">3</span>
         </div>
         
-        <!-- ملف المستخدم -->
         <div class="user-profile">
-            <!-- ملاحظة: يتم تحديث الاسم والصورة ديناميكياً بناءً على بيانات المستخدم المسجلة -->
-            <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=028090&color=fff&size=40&font-family=Tajawal" alt="صورة المستخدم" id="headerUserAvatar" />
-            <span class="user-name" id="headerUserName">أحمد محمد</span>
+            <img src="https://ui-avatars.com/api/?name=محمد&background=028090&color=fff&size=40" alt="صورة المستخدم" id="headerUserAvatar" />
+            <span class="user-name" id="headerUserName">محمد</span>
         </div>
     </div>
 </header>
