@@ -1,14 +1,11 @@
 /**
  * ============================================================
- * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة النهائية)
+ * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة النهائية المصلحة)
  * ============================================================
- * الموقع: /assets/js/app.js
- * 
- * تم تطبيق جميع التحديثات العاجلة:
- * 1. إزالة دالة resolveRelativePath بالكامل.
- * 2. استخدام المسارات المطلقة فقط في ROUTES و resolvePath.
- * 3. إضافة نمط التنظيف (Cleanup Pattern) لمنع تسرب الذاكرة.
- * 4. تحسين التوجيه ومنع التخزين المؤقت.
+ * تم إضافة:
+ * 1. تفويض الأحداث (Event Delegation) للقائمة الجانبية والقوائم الفرعية.
+ * 2. تفعيل الرسم البياني (Chart.js) داخل دالة initDashboard.
+ * 3. دمج تدمير الرسم البياني مع نظام التنظيف (Cleanup) لمنع تسرب الذاكرة.
  * ============================================================
  */
 
@@ -21,7 +18,7 @@
 
     const APP_CONFIG = {
         name: 'تيرا للمستثمرين',
-        version: '1.0.3',
+        version: '1.0.4',
         apiBaseUrl: '/api/v1',
         debug: true,
         authRequired: true,
@@ -143,7 +140,7 @@
     }
 
     // ============================================================
-    // 5. دالة تحويل المسارات (بدون resolveRelativePath)
+    // 5. دالة تحويل المسارات
     // ============================================================
 
     function resolvePath(path) {
@@ -268,7 +265,6 @@
             return;
         }
 
-        // إضافة timestamp لتجاوز الكاش
         const urlWithTimestamp = targetPath + (targetPath.includes('?') ? '&' : '?') + 't=' + Date.now();
 
         if (replace) {
@@ -281,13 +277,11 @@
     }
 
     // ============================================================
-    // 8. تحميل الصفحات مع تنظيف الذاكرة (Fetch + Cleanup)
+    // 8. تحميل الصفحات وتنظيف الذاكرة
     // ============================================================
 
     function cleanup() {
         console.log('🧹 [App] بدء تنظيف الذاكرة...');
-
-        // تنفيذ جميع دوال التنظيف المسجلة
         AppState._cleanupFunctions.forEach(function(cleanupFn) {
             try {
                 cleanupFn();
@@ -296,20 +290,14 @@
             }
         });
         AppState._cleanupFunctions = [];
-
-        // إزالة جميع مستمعات الأحداث المرتبطة بـ document (يمكن تحسينها)
-        // لكننا نعتمد على تسجيل دوال التنظيف بدلاً من الإزالة العامة.
-
         console.log('✅ [App] تم تنظيف الذاكرة');
     }
 
     function loadPage(url) {
         if (AppState.currentPage === url && AppState._loadingCount > 0) {
-            console.log('⏳ [App] الصفحة قيد التحميل بالفعل:', url);
             return;
         }
 
-        // تنظيف الذاكرة قبل تحميل الصفحة الجديدة
         cleanup();
 
         AppState._loadingCount++;
@@ -317,51 +305,36 @@
         AppState.isLoading = true;
         showLoader();
 
-        console.log('📄 [App] جاري تحميل الصفحة:', url);
-
         fetch(url + '?t=' + Date.now())
             .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-                }
+                if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                 return response.text();
             })
             .then(function(html) {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-
-                if (!doc) {
-                    throw new Error('فشل في تحليل محتوى الصفحة');
-                }
-
                 const mainContent = document.querySelector('.main-content');
+                
                 if (mainContent) {
                     const newContent = doc.querySelector('.main-content');
                     if (newContent) {
                         mainContent.innerHTML = newContent.innerHTML;
+                    } else if (doc.body) {
+                        mainContent.innerHTML = doc.body.innerHTML;
                     } else {
-                        const bodyContent = doc.body;
-                        if (bodyContent) {
-                            mainContent.innerHTML = bodyContent.innerHTML;
-                        } else {
-                            mainContent.innerHTML = doc.documentElement.innerHTML;
-                        }
+                        mainContent.innerHTML = doc.documentElement.innerHTML;
                     }
-
                     reinitializeScripts(doc);
                 } else {
                     document.documentElement.innerHTML = html;
                 }
 
                 const title = doc.querySelector('title');
-                if (title) {
-                    document.title = title.textContent;
-                }
+                if (title) document.title = title.textContent;
 
                 console.log('✅ [App] تم تحميل الصفحة بنجاح:', url);
             })
             .catch(function(error) {
-                console.error('❌ [App] خطأ في تحميل الصفحة:', error);
                 showErrorPage(error);
             })
             .finally(function() {
@@ -372,61 +345,39 @@
     }
 
     // ============================================================
-    // 9. إعادة تهيئة السكريبتات مع تسجيل دوال التنظيف
+    // 9. إعادة تهيئة السكريبتات 
     // ============================================================
 
     function reinitializeScripts(doc) {
-        if (!doc) {
-            console.warn('⚠️ [App] لا يوجد مستند لإعادة تهيئة السكريبتات');
-            return;
-        }
+        if (!doc) return;
 
-        // العثور على جميع السكريبتات في الصفحة الجديدة
         const scripts = doc.querySelectorAll('script');
         scripts.forEach(function(script) {
             if (script.src) {
-                const existingScript = document.querySelector('script[src="' + script.src + '"]');
-                if (!existingScript) {
+                if (!document.querySelector('script[src="' + script.src + '"]')) {
                     const newScript = document.createElement('script');
                     newScript.src = script.src;
                     newScript.async = false;
                     document.body.appendChild(newScript);
                 }
             } else if (script.textContent) {
-                try {
-                    eval(script.textContent);
-                } catch (e) {
-                    console.warn('⚠️ [App] خطأ في تنفيذ سكريبت مضمن:', e);
-                }
+                try { eval(script.textContent); } catch (e) { }
             }
         });
 
-        // إعادة تهيئة TeraCore إذا كانت موجودة
         if (window.TeraCore && typeof window.TeraCore.initCore === 'function') {
-            try {
-                window.TeraCore.initCore();
-            } catch (e) {
-                console.warn('⚠️ [App] خطأ في تهيئة TeraCore:', e);
-            }
+            try { window.TeraCore.initCore(); } catch (e) { }
         }
 
-        // إعادة تهيئة دوال الصفحات الفرعية مع تسجيل دوال التنظيف
+        // تشغيل دوال الصفحات الفرعية
         const pageFunctions = [
-            'initDashboard',
-            'initInvestments',
-            'initPortfolio',
-            'initReports',
-            'initProfile',
-            'initSecurity',
-            'initSupport'
+            'initDashboard', 'initInvestments', 'initPortfolio',
+            'initReports', 'initProfile', 'initSecurity', 'initSupport'
         ];
+        
         pageFunctions.forEach(function(fnName) {
             if (typeof window[fnName] === 'function') {
-                try {
-                    window[fnName]();
-                } catch (e) {
-                    console.warn('⚠️ [App] خطأ في تنفيذ ' + fnName + ':', e);
-                }
+                try { window[fnName](); } catch (e) { }
             }
         });
     }
@@ -441,38 +392,15 @@
             loader = document.createElement('div');
             loader.id = 'app-loader';
             loader.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.85);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-                backdrop-filter: blur(4px);
-                transition: opacity 0.3s ease;
-                font-family: 'Tajawal', sans-serif;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(255, 255, 255, 0.85); display: flex; flex-direction: column;
+                align-items: center; justify-content: center; z-index: 9999;
+                backdrop-filter: blur(4px); transition: opacity 0.3s ease; font-family: 'Tajawal', sans-serif;
             `;
             loader.innerHTML = `
-                <div style="
-                    width: 50px;
-                    height: 50px;
-                    border: 6px solid var(--gray-200, #e9ecef);
-                    border-top-color: var(--primary-color, #0D6EFD);
-                    border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
-                "></div>
-                <p style="margin-top: 20px; color: var(--gray-600, #6c757d); font-weight: 500;">
-                    جاري التحميل...
-                </p>
-                <style>
-                    @keyframes spin {
-                        to { transform: rotate(360deg); }
-                    }
-                </style>
+                <div style="width: 50px; height: 50px; border: 6px solid #e9ecef; border-top-color: #0D6EFD; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+                <p style="margin-top: 20px; color: #6c757d; font-weight: 500;">جاري التحميل...</p>
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
             `;
             document.body.appendChild(loader);
         }
@@ -481,43 +409,18 @@
 
     function hideLoader() {
         const loader = document.getElementById('app-loader');
-        if (loader) {
-            loader.style.display = 'none';
-        }
+        if (loader) loader.style.display = 'none';
     }
 
     function showErrorPage(error) {
         const mainContent = document.querySelector('.main-content');
         if (mainContent) {
             mainContent.innerHTML = `
-                <div style="
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 80px 20px;
-                    min-height: 60vh;
-                    text-align: center;
-                ">
-                    <div style="
-                        font-size: 72px;
-                        color: var(--danger-color, #DC3545);
-                        margin-bottom: 20px;
-                    ">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; text-align: center;">
+                    <div style="font-size: 72px; color: #DC3545; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></div>
                     <h1 style="font-weight: 700; margin-bottom: 10px;">عذراً! حدث خطأ</h1>
-                    <p style="color: var(--gray-600, #6c757d); max-width: 500px; margin: 0 auto 25px;">
-                        ${error.message || 'حدث خطأ غير متوقع أثناء تحميل الصفحة'}
-                    </p>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-                        <button class="btn btn-primary" onclick="window.location.reload()">
-                            <i class="fas fa-redo"></i> إعادة المحاولة
-                        </button>
-                        <a href="/pages/dashboard" class="btn" style="background: var(--gray-200, #e9ecef); text-decoration: none; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-top: 10px;">
-                            <i class="fas fa-home"></i> العودة للرئيسية
-                        </a>
-                    </div>
+                    <p style="color: #6c757d; max-width: 500px; margin: 0 auto 25px;">${error.message || 'حدث خطأ غير متوقع'}</p>
+                    <button class="btn btn-primary" onclick="window.location.reload()"><i class="fas fa-redo"></i> إعادة المحاولة</button>
                 </div>
             `;
         }
@@ -526,187 +429,145 @@
     function showNotification(message, type, duration) {
         type = type || 'info';
         duration = duration || 5000;
-
         const existing = document.querySelector('.custom-toast');
         if (existing) existing.remove();
 
         const toast = document.createElement('div');
         toast.className = 'custom-toast';
-        toast.innerHTML = `
-            <div class="toast-content ${type}">
-                <span>${message}</span>
-                <button class="toast-close">&times;</button>
-            </div>
-        `;
+        toast.innerHTML = `<div class="toast-content ${type}"><span>${message}</span><button class="toast-close">&times;</button></div>`;
         document.body.appendChild(toast);
 
         if (!document.getElementById('toastStyles')) {
             const style = document.createElement('style');
             style.id = 'toastStyles';
             style.textContent = `
-                .custom-toast {
-                    position: fixed;
-                    bottom: 30px;
-                    left: 30px;
-                    z-index: 99999;
-                    direction: rtl;
-                    animation: slideUp 0.4s ease;
-                }
-                .toast-content {
-                    background: #fff;
-                    padding: 14px 24px;
-                    border-radius: 10px;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    border-right: 4px solid #028090;
-                    color: #1e293b;
-                    font-weight: 500;
-                    min-width: 200px;
-                }
-                .toast-content.info { border-right-color: #0D6EFD; }
-                .toast-content.success { border-right-color: #10b981; }
-                .toast-content.error { border-right-color: #ef4444; }
-                .toast-content .toast-close {
-                    background: none;
-                    border: none;
-                    font-size: 22px;
-                    cursor: pointer;
-                    color: #94a3b8;
-                    padding: 0 4px;
-                }
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @media (prefers-color-scheme: dark) {
-                    .toast-content {
-                        background: #1e293b;
-                        color: #f8f9fa;
-                    }
-                }
+                .custom-toast { position: fixed; bottom: 30px; left: 30px; z-index: 99999; direction: rtl; animation: slideUp 0.4s ease; }
+                .toast-content { background: #fff; padding: 14px 24px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 16px; border-right: 4px solid #028090; font-weight: 500; }
+                .toast-content.info { border-right-color: #0D6EFD; } .toast-content.success { border-right-color: #10b981; } .toast-content.error { border-right-color: #ef4444; }
+                .toast-content .toast-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8; }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `;
             document.head.appendChild(style);
         }
 
-        toast.querySelector('.toast-close').addEventListener('click', function() {
-            toast.remove();
-        });
-
-        setTimeout(function() {
-            if (toast.parentElement) {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(function() {
-                    if (toast.parentElement) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
-        }, duration);
+        toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+        setTimeout(() => { if (toast.parentElement) { toast.style.opacity = '0'; setTimeout(() => { if(toast.parentElement) toast.remove(); }, 300); } }, duration);
     }
 
     // ============================================================
-    // 11. دوال API
+    // 11. دوال تهيئة الصفحات الفرعية وتفعيل (القوائم/الرسومات)
     // ============================================================
+    
+    // --> تفعيل الإحداث الشاملة للقائمة الجانبية (Event Delegation)
+    function initGlobalSidebarEvents() {
+        if (window._sidebarEventsInitialized) return;
+        window._sidebarEventsInitialized = true;
 
-    function apiRequest(endpoint, options) {
-        options = options || {};
-        const url = APP_CONFIG.apiBaseUrl + endpoint;
+        document.body.addEventListener('click', function(e) {
+            // 1. زر فتح/إغلاق القائمة
+            const toggleBtn = e.target.closest('#sidebarToggle');
+            if (toggleBtn) {
+                e.stopPropagation();
+                const sidebar = document.getElementById('sidebar');
+                if(sidebar) {
+                    if (window.innerWidth > 991) {
+                        sidebar.classList.toggle('collapsed');
+                    } else {
+                        sidebar.classList.toggle('sidebar-open');
+                    }
+                }
+            }
 
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        };
+            // 2. القوائم الفرعية
+            const submenuLink = e.target.closest('.has-submenu > a');
+            if (submenuLink) {
+                e.preventDefault();
+                const parentLi = submenuLink.parentElement;
+                const sidebarEl = document.getElementById('sidebar');
+                
+                if (window.innerWidth > 991 && sidebarEl && sidebarEl.classList.contains('collapsed')) {
+                    showNotification('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات', 'info');
+                    return;
+                }
+                
+                document.querySelectorAll('.has-submenu').forEach(li => {
+                    if (li !== parentLi) li.classList.remove('submenu-open');
+                });
+                parentLi.classList.toggle('submenu-open');
+            }
+        });
+    }
 
-        const token = localStorage.getItem('tera_token');
-        if (token) {
-            headers['Authorization'] = 'Bearer ' + token;
+    // --> تفعيل لوحة التحكم (Chart.js)
+    function initDashboard() {
+        console.log('📊 [App] تهيئة لوحة التحكم والرسم البياني');
+        
+        const ctx = document.getElementById('performanceChart');
+        if (!ctx) return;
+
+        if (window.myDashboardChart) {
+            window.myDashboardChart.destroy();
         }
 
-        const config = {
-            method: options.method || 'GET',
-            headers: headers,
-            body: options.body ? JSON.stringify(options.body) : undefined
-        };
+        if (typeof Chart === 'undefined') {
+            console.warn('⚠️ [App] مكتبة Chart.js غير محملة');
+            return;
+        }
 
-        return fetch(url, config)
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(function(data) {
-                        throw new Error(data.message || 'خطأ في الطلب');
-                    });
-                }
-                return response.json();
-            })
-            .catch(function(error) {
-                console.error('❌ [App] خطأ في API:', error);
-                throw error;
-            });
+        window.myDashboardChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                datasets: [{
+                    label: 'نمو المحفظة (ر.س)',
+                    data: [100000, 105000, 112000, 110000, 118000, 124500],
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+
+        // تسجيل دالة تنظيف (لتدمير الرسم البياني عند الخروج من لوحة التحكم)
+        TeraApp.registerCleanup(function() {
+            if (window.myDashboardChart) {
+                window.myDashboardChart.destroy();
+                window.myDashboardChart = null;
+                console.log('🧹 [App] تم تدمير الرسم البياني لتحرير الذاكرة');
+            }
+        });
     }
+
+    function initInvestments() { console.log('💰 [App] تهيئة الاستثمارات'); }
+    function initPortfolio() { console.log('💼 [App] تهيئة المحفظة'); }
+    function initReports() { console.log('📊 [App] تهيئة التقارير'); }
+    function initProfile() { console.log('👤 [App] تهيئة الملف الشخصي'); }
+    function initSecurity() { console.log('🔐 [App] تهيئة الأمان'); }
+    function initSupport() { console.log('🆘 [App] تهيئة الدعم'); }
 
     // ============================================================
-    // 12. دوال تهيئة الصفحات الفرعية (لتسجيل دوال التنظيف)
-    // ============================================================
-
-    function initDashboard() {
-        console.log('📊 [App] تهيئة لوحة التحكم');
-        // يمكن إضافة منطق خاص بلوحة التحكم
-    }
-
-    function initInvestments() {
-        console.log('💰 [App] تهيئة صفحة الاستثمارات');
-    }
-
-    function initPortfolio() {
-        console.log('💼 [App] تهيئة صفحة المحفظة');
-    }
-
-    function initReports() {
-        console.log('📊 [App] تهيئة صفحة التقارير');
-    }
-
-    function initProfile() {
-        console.log('👤 [App] تهيئة صفحة الملف الشخصي');
-    }
-
-    function initSecurity() {
-        console.log('🔐 [App] تهيئة صفحة الأمان');
-    }
-
-    function initSupport() {
-        console.log('🆘 [App] تهيئة صفحة الدعم');
-    }
-
-    // ============================================================
-    // 13. معالجة أحداث المتصفح
+    // 12. معالجة أحداث المتصفح
     // ============================================================
 
     function handlePopState() {
-        const path = window.location.pathname;
-        navigateTo(path, true);
+        navigateTo(window.location.pathname, true);
     }
 
     function handleInternalLinks() {
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a');
             if (!link) return;
-
             const href = link.getAttribute('href');
-            if (!href) return;
-
-            if (link.target === '_blank') return;
-            if (href.startsWith('http://') || href.startsWith('https://')) {
-                return;
-            }
-            if (href.startsWith('#')) return;
-            if (href.startsWith('javascript:')) return;
+            if (!href || link.target === '_blank' || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:')) return;
             if (href.endsWith('.css') || href.endsWith('.js') || href.endsWith('.json')) return;
-            if (href.includes('?') && !href.includes('.html')) return;
-            if (link.closest('.has-submenu')) {
-                return;
-            }
+            if (link.closest('.has-submenu')) return;
 
             e.preventDefault();
             navigateTo(href);
@@ -714,15 +575,15 @@
     }
 
     // ============================================================
-    // 14. تهيئة التطبيق
+    // 13. تهيئة التطبيق (Initialization)
     // ============================================================
 
     function initApp() {
-        console.log('🚀 [App] بدء تشغيل تطبيق تيرا للمستثمرين v' + APP_CONFIG.version);
-
+        console.log('🚀 [App] بدء تشغيل تطبيق تيرا للمستثمرين');
         checkAuthStatus();
-        console.log('🔐 [App] حالة تسجيل الدخول:', AppState.isLoggedIn ? 'مُسجل' : 'غير مُسجل');
-
+        
+        initGlobalSidebarEvents(); // تفعيل أحداث القائمة الجانبية هنا مرة واحدة
+        
         handleInternalLinks();
         window.addEventListener('popstate', handlePopState);
 
@@ -735,19 +596,10 @@
             loadPage(targetPage);
         }
 
-        console.log('✅ [App] تم تهيئة التطبيق بنجاح');
-        console.log('📌 [App] يمكنك التنقل بين الصفحات باستخدام الروابط الداخلية');
-
         if (AppState.isLoggedIn && AppState.currentUser) {
-            setTimeout(function() {
-                showNotification('مرحباً ' + AppState.currentUser.name + '! 👋', 'success', 3000);
-            }, 1000);
+            setTimeout(() => showNotification('مرحباً ' + AppState.currentUser.name + '! 👋', 'success', 3000), 1000);
         }
     }
-
-    // ============================================================
-    // 15. بدء التطبيق
-    // ============================================================
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initApp);
@@ -756,37 +608,18 @@
     }
 
     // ============================================================
-    // 16. تصدير الدوال العامة
+    // 14. تصدير الدوال العامة
     // ============================================================
 
     window.TeraApp = {
-        navigateTo: navigateTo,
-        loadPage: loadPage,
-        resolvePath: resolvePath,
-        login: login,
-        logout: logout,
-        checkAuthStatus: checkAuthStatus,
-        isLoggedIn: function() { return AppState.isLoggedIn; },
-        getCurrentUser: function() { return AppState.currentUser; },
-        showNotification: showNotification,
-        showLoader: showLoader,
-        hideLoader: hideLoader,
-        apiRequest: apiRequest,
-        getState: function() { return AppState; },
-        cleanup: cleanup,
-        registerCleanup: function(fn) {
-            AppState._cleanupFunctions.push(fn);
-        },
-        initDashboard: initDashboard,
-        initInvestments: initInvestments,
-        initPortfolio: initPortfolio,
-        initReports: initReports,
-        initProfile: initProfile,
-        initSecurity: initSecurity,
-        initSupport: initSupport
+        navigateTo, loadPage, resolvePath, login, logout, checkAuthStatus,
+        isLoggedIn: () => AppState.isLoggedIn,
+        getCurrentUser: () => AppState.currentUser,
+        showNotification, showLoader, hideLoader,
+        getState: () => AppState,
+        cleanup, registerCleanup: (fn) => AppState._cleanupFunctions.push(fn),
+        initDashboard, initInvestments, initPortfolio, initReports,
+        initProfile, initSecurity, initSupport
     };
-
-    console.log('✅ [App] app.js: تم تحميل تطبيق تيرا للمستثمرين بنجاح');
-    console.log('📚 [App] استخدم TeraApp للوصول إلى دوال التطبيق');
 
 })();
