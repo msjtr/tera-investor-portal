@@ -6,7 +6,6 @@
     <title>لوحة التحكم | Tera Investor Portal</title>
 
     <script>
-        // استخدام مسار مطلق لتوجيه المستخدم غير المسجل
         if (!localStorage.getItem('tera_token')) {
             window.location.replace('/auth/auth/login/login.html');
         }
@@ -21,9 +20,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* أنماط إضافية لضمان عدم ظهور زر العودة في صفحة dashboard */
         .page-dashboard .back-to-dashboard {
             display: none !important;
+        }
+
+        /* ✅ تأكيد إظهار زر القائمة الجانبية على الجوال */
+        @media (max-width: 991.98px) {
+            .sidebar-toggle {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                border: none;
+                background: transparent;
+                font-size: 22px;
+                color: var(--gray-700, #475569);
+                cursor: pointer;
+                border-radius: var(--border-radius, 8px);
+                transition: background 0.2s;
+            }
+            .sidebar-toggle:hover {
+                background: var(--gray-100, #f8f9fa);
+            }
         }
     </style>
 </head>
@@ -154,10 +173,9 @@
 
             <header class="header">
                 <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebarToggle">
+                    <button class="sidebar-toggle" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- ✅ زر العودة إلى لوحة التحكم - تم تعديل الرابط إلى /pages/dashboard (بدون index.html) -->
                     <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboard">
                         <i class="fas fa-arrow-right"></i>
                         <span>العودة للوحة التحكم</span>
@@ -333,20 +351,30 @@
             // تبديل القائمة الجانبية (للشاشات الصغيرة)
             function toggleSidebar() {
                 var sidebar = document.getElementById('sidebar');
-                if (sidebar) sidebar.classList.toggle('sidebar-open');
+                if (sidebar) {
+                    sidebar.classList.toggle('sidebar-open');
+                }
             }
 
             document.addEventListener('DOMContentLoaded', function() {
-                // زر تبديل القائمة
+                // ✅ زر تبديل القائمة
                 var toggleBtn = document.getElementById('sidebarToggle');
                 if (toggleBtn) {
-                    toggleBtn.addEventListener('click', function(e) {
+                    // إزالة أي مستمعات سابقة لتجنب التكرار
+                    var newToggleBtn = toggleBtn.cloneNode(true);
+                    toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+                    
+                    newToggleBtn.addEventListener('click', function(e) {
                         e.stopPropagation();
+                        e.preventDefault();
                         toggleSidebar();
+                        console.log('🔄 [Sidebar] تم تبديل القائمة');
                     });
+                } else {
+                    console.warn('⚠️ [Sidebar] زر التبديل غير موجود في الصفحة');
                 }
 
-                // إغلاق القائمة عند النقر خارجها (شاشات صغيرة)
+                // ✅ إغلاق القائمة عند النقر خارجها (شاشات صغيرة)
                 document.addEventListener('click', function(e) {
                     if (window.innerWidth <= 991) {
                         var sidebar = document.getElementById('sidebar');
@@ -361,19 +389,21 @@
                     }
                 });
 
-                // إغلاق القائمة عند تغيير حجم النافذة
+                // ✅ إغلاق القائمة عند تغيير حجم النافذة إلى حجم كبير
                 window.addEventListener('resize', function() {
                     if (window.innerWidth > 991) {
                         var sidebar = document.getElementById('sidebar');
-                        if (sidebar) sidebar.classList.remove('sidebar-open');
+                        if (sidebar) {
+                            sidebar.classList.remove('sidebar-open');
+                        }
                     }
                 });
 
-                // تفعيل القوائم الفرعية مع منع تعارض app.js
+                // ✅ تفعيل القوائم الفرعية مع منع تعارض app.js
                 document.querySelectorAll('.has-submenu > a').forEach(function(link) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
-                        e.stopImmediatePropagation(); // منع تداخل app.js
+                        e.stopImmediatePropagation();
                         var parent = this.parentElement;
                         if (parent) {
                             parent.classList.toggle('submenu-open');
@@ -386,6 +416,7 @@
 
                 console.log('✅ تم تفعيل القوائم الجانبية (مع منع التعارض) وإخفاء زر العودة في لوحة التحكم');
             });
+
         })();
     </script>
 
