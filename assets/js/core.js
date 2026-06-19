@@ -1,14 +1,12 @@
 /**
  * ============================================================
- * core.js - الملف الأساسي للدوال المشتركة في منصة تيرا
+ * core.js - الملف الأساسي للدوال المشتركة في منصة تيرا (نسخة الـ SPA)
  * ============================================================
  * الموقع: /assets/js/core.js
- * 
- * يحتوي على الدوال الأساسية المستخدمة في جميع الصفحات:
- * - التحكم في القائمة الجانبية (Sidebar)
- * - التحكم في القوائم الفرعية (Submenu)
- * - دوال مساعدة عامة (إضافة/إزالة كلاسات)
- * - معالجة أحداث شائعة
+ * * التحديثات:
+ * 1. تحويل جميع الأحداث إلى Event Delegation لتعمل مع الصفحات الديناميكية.
+ * 2. إضافة قفل (Flag) يمنع تكرار تكدس الأحداث في الذاكرة.
+ * 3. حفظ حالة القائمة (مفتوحة/مغلقة) في localStorage.
  * ============================================================
  */
 
@@ -22,7 +20,14 @@
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
-            sidebar.classList.toggle('sidebar-open');
+            if (window.innerWidth > 991) {
+                // سطح المكتب: طي / توسعة
+                sidebar.classList.toggle('collapsed');
+                setLocalStorageItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            } else {
+                // الموبايل: فتح / إغلاق
+                sidebar.classList.toggle('sidebar-open');
+            }
         }
     }
 
@@ -33,84 +38,21 @@
         }
     }
 
-    // ============================================================
-    // 2. دوال التحكم في القوائم الفرعية (Submenu)
-    // ============================================================
-
-    function toggleSubmenu(element) {
-        const parent = element.closest('.has-submenu');
-        if (parent) {
-            parent.classList.toggle('submenu-open');
-        }
-    }
-
-    function closeAllSubmenus() {
-        document.querySelectorAll('.has-submenu.submenu-open').forEach(function(item) {
-            item.classList.remove('submenu-open');
-        });
-    }
-
-    // ============================================================
-    // 3. دوال البحث والتصفية
-    // ============================================================
-
-    function filterItems(inputId, itemsSelector, textSelector, openClass) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-
-        const filter = input.value.toLowerCase().trim();
-        const items = document.querySelectorAll(itemsSelector);
-        const openClassToUse = openClass || 'open';
-
-        if (filter === '') {
-            items.forEach(function(item) {
-                item.style.display = '';
-            });
-            return;
-        }
-
-        items.forEach(function(item) {
-            const textElement = item.querySelector(textSelector);
-            const text = textElement ? textElement.textContent.toLowerCase() : '';
-            const isMatch = text.includes(filter);
-            item.style.display = isMatch ? '' : 'none';
-            if (isMatch && item.classList && !item.classList.contains(openClassToUse)) {
-                item.classList.add(openClassToUse);
+    function restoreSidebarState() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && window.innerWidth > 991) {
+            const isCollapsed = getLocalStorageItem('sidebarCollapsed', 'false') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+            } else {
+                sidebar.classList.remove('collapsed');
             }
-        });
+        }
     }
 
     // ============================================================
-    // 4. دوال مساعدة عامة (DOM Manipulation Helpers)
+    // 2. دوال مساعدة عامة (DOM Manipulation & Storage)
     // ============================================================
-
-    function addClass(element, className) {
-        if (element) {
-            element.classList.add(className);
-        }
-    }
-
-    function removeClass(element, className) {
-        if (element) {
-            element.classList.remove(className);
-        }
-    }
-
-    function toggleClass(element, className) {
-        if (element) {
-            element.classList.toggle(className);
-        }
-    }
-
-    function findParentByClass(element, className) {
-        while (element) {
-            if (element.classList && element.classList.contains(className)) {
-                return element;
-            }
-            element = element.parentElement;
-        }
-        return null;
-    }
 
     function getLocalStorageItem(key, defaultValue) {
         try {
@@ -132,90 +74,85 @@
         }
     }
 
-    function removeLocalStorageItem(key) {
-        try {
-            localStorage.removeItem(key);
-            return true;
-        } catch (e) {
-            console.warn('⚠️ [core.js] خطأ في حذف localStorage:', e);
-            return false;
-        }
-    }
-
     // ============================================================
-    // 5. دوال متعلقة بالمصادقة (مختصرة للاستخدام العام)
-    // ============================================================
-
-    function isUserLoggedIn() {
-        return !!localStorage.getItem('tera_token');
-    }
-
-    function getCurrentUser() {
-        try {
-            const userData = localStorage.getItem('tera_user');
-            return userData ? JSON.parse(userData) : null;
-        } catch (e) {
-            console.warn('⚠️ [core.js] خطأ في قراءة بيانات المستخدم:', e);
-            return null;
-        }
-    }
-
-    // ============================================================
-    // 6. تهيئة الأحداث عند تحميل الصفحة
+    // 3. تهيئة الأحداث الشاملة (Event Delegation)
     // ============================================================
 
     function initCore() {
-        // 6.1 تفعيل زر تبديل القائمة الجانبية
-        const toggleBtn = document.getElementById('sidebarToggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function(e) {
+        // حماية هامة جداً للـ SPA: منع تكرار تهيئة الأحداث عند التنقل بين الصفحات
+        if (window._coreEventsInitialized) {
+            console.log('⚡ [core.js] الأحداث مهيأة مسبقاً، لا حاجة للتكرار.');
+            return;
+        }
+        window._coreEventsInitialized = true;
+
+        // تفويض حدث النقر على مستوى الـ Body ليعمل مع أي عناصر يتم جلبها بـ fetch
+        document.body.addEventListener('click', function(e) {
+            
+            // 1. زر تبديل القائمة الجانبية
+            const toggleBtn = e.target.closest('#sidebarToggle');
+            if (toggleBtn) {
                 e.stopPropagation();
                 toggleSidebar();
-            });
-        }
+            }
 
-        // 6.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
-        document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-            link.addEventListener('click', function(e) {
+            // 2. النقر على القوائم الفرعية
+            const submenuLink = e.target.closest('.has-submenu > a');
+            if (submenuLink) {
                 e.preventDefault();
-                toggleSubmenu(this);
-            });
-        });
+                const parentLi = submenuLink.parentElement;
+                const sidebarEl = document.getElementById('sidebar');
 
-        // 6.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
-        document.addEventListener('click', function(e) {
+                // منع فتح القائمة الفرعية إذا كانت القائمة الرئيسية مطوية (سطح مكتب)
+                if (window.innerWidth > 991 && sidebarEl && sidebarEl.classList.contains('collapsed')) {
+                    if (window.TeraApp && typeof window.TeraApp.showNotification === 'function') {
+                        window.TeraApp.showNotification('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات', 'info');
+                    } else {
+                        alert('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات');
+                    }
+                    return;
+                }
+
+                // إغلاق القوائم الفرعية المفتوحة الأخرى
+                document.querySelectorAll('.has-submenu').forEach(function(li) {
+                    if (li !== parentLi) {
+                        li.classList.remove('submenu-open');
+                    }
+                });
+
+                // التبديل للقائمة الحالية
+                parentLi.classList.toggle('submenu-open');
+            }
+
+            // 3. إغلاق القائمة في الموبايل عند النقر خارجها
             if (window.innerWidth <= 991) {
                 const sidebar = document.getElementById('sidebar');
-                const toggleBtn = document.getElementById('sidebarToggle');
-                if (sidebar && toggleBtn) {
-                    const isClickInsideSidebar = sidebar.contains(e.target);
-                    const isClickOnToggle = toggleBtn.contains(e.target);
-                    if (!isClickInsideSidebar && !isClickOnToggle) {
+                if (sidebar && sidebar.classList.contains('sidebar-open')) {
+                    const isInsideSidebar = e.target.closest('#sidebar');
+                    const isToggleBtn = e.target.closest('#sidebarToggle');
+                    if (!isInsideSidebar && !isToggleBtn) {
                         closeSidebar();
                     }
                 }
             }
         });
 
-        // 6.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
+        // 4. معالجة تغيير حجم الشاشة
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991) {
-                closeSidebar();
+                closeSidebar(); // نزيل كلاس الموبايل إذا كبرنا الشاشة
+                restoreSidebarState(); // نستعيد حالة الانهيار
             }
         });
 
-        // 6.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
-        document.querySelectorAll('.view-all').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                console.log('📊 [core.js] تم النقر على عرض الكل: ' + this.getAttribute('href'));
-            });
-        });
+        // استعادة الحالة عند التحميل الأول
+        restoreSidebarState();
 
-        console.log('✅ [core.js] تم تهيئة جميع المكونات الأساسية بنجاح');
+        console.log('✅ [core.js] تم تهيئة الأحداث الشاملة بنظام (Event Delegation) بنجاح');
     }
 
     // ============================================================
-    // 7. تشغيل التهيئة عند تحميل DOM
+    // 4. تشغيل التهيئة عند تحميل DOM
     // ============================================================
 
     if (document.readyState === 'loading') {
@@ -225,27 +162,15 @@
     }
 
     // ============================================================
-    // 8. تعريف دوال عامة
+    // 5. تعريف دوال عامة للاستخدام الخارجي
     // ============================================================
 
     window.TeraCore = {
         toggleSidebar: toggleSidebar,
         closeSidebar: closeSidebar,
-        toggleSubmenu: toggleSubmenu,
-        closeAllSubmenus: closeAllSubmenus,
-        filterItems: filterItems,
-        addClass: addClass,
-        removeClass: removeClass,
-        toggleClass: toggleClass,
-        findParentByClass: findParentByClass,
         getLocalStorageItem: getLocalStorageItem,
         setLocalStorageItem: setLocalStorageItem,
-        removeLocalStorageItem: removeLocalStorageItem,
-        isUserLoggedIn: isUserLoggedIn,
-        getCurrentUser: getCurrentUser,
         initCore: initCore
     };
-
-    console.log('✅ [core.js] تم تحميل المكتبة الأساسية (TeraCore) بنجاح');
 
 })();
