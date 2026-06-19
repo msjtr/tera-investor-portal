@@ -19,6 +19,13 @@
     <link rel="stylesheet" href="/assets/css/dashboard.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <style>
+        /* أنماط إضافية لضمان عدم ظهور زر العودة في صفحة dashboard */
+        .page-dashboard .back-to-dashboard {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -150,7 +157,12 @@
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <h1 class="page-title">لوحة التحكم</h1>
+                    <!-- زر العودة إلى لوحة التحكم (يختفي تلقائياً في هذه الصفحة عبر الكلاس page-dashboard) -->
+                    <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboard">
+                        <i class="fas fa-arrow-right"></i>
+                        <span>العودة للوحة التحكم</span>
+                    </a>
+                    <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
                 </div>
                 <div class="header-right">
                     <div class="notifications">
@@ -369,7 +381,10 @@
                     });
                 });
 
-                console.log('✅ تم تفعيل القوائم الجانبية (مع منع التعارض)');
+                // ✅ إضافة كلاس page-dashboard إلى body (لإخفاء زر العودة في هذه الصفحة)
+                document.body.classList.add('page-dashboard');
+
+                console.log('✅ تم تفعيل القوائم الجانبية (مع منع التعارض) وإخفاء زر العودة في لوحة التحكم');
             });
         })();
     </script>
