@@ -176,8 +176,8 @@
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- زر العودة إلى لوحة التحكم (يختفي في هذه الصفحة عبر كلاس page-dashboard) -->
-                    <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboard">
+                    <!-- زر العودة إلى لوحة التحكم (مع منع التخزين المؤقت) -->
+                    <a href="#" class="back-to-dashboard" id="backToDashboard">
                         <i class="fas fa-arrow-right"></i>
                         <span>العودة للوحة التحكم</span>
                     </a>
@@ -340,7 +340,6 @@
     </div>
 
     <!-- ====== جميع الملفات المشتركة (مسارات مطلقة) ====== -->
-    <!-- ملاحظة: تأكد من أن app.js و main.js لا يحتويان على دالة resolveRelativePath -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/app.js"></script>
@@ -360,10 +359,8 @@
                 var toggleBtn = document.getElementById('sidebarToggle');
                 if (!sidebar) return;
 
-                // في الشاشات الكبيرة نبدل وضع الانهيار، وفي الصغيرة نفتح/نغلق القائمة
                 if (window.innerWidth > 991) {
                     sidebar.classList.toggle('collapsed');
-                    // حفظ الحالة في localStorage
                     try {
                         localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
                     } catch (e) { /* ignore */ }
@@ -372,11 +369,9 @@
                 }
             }
 
-            // استعادة حالة الانهيار من localStorage
             function restoreSidebarState() {
                 var sidebar = document.getElementById('sidebar');
                 if (!sidebar) return;
-
                 if (window.innerWidth > 991) {
                     try {
                         var saved = localStorage.getItem('sidebarCollapsed');
@@ -390,7 +385,43 @@
             }
 
             // ============================================================
-            // 2. زر تسجيل الخروج مع Toast
+            // 2. زر العودة إلى لوحة التحكم (مع منع التخزين المؤقت)
+            // ============================================================
+            function setupBackButton() {
+                var backBtn = document.getElementById('backToDashboard');
+                if (!backBtn) return;
+
+                // إزالة أي مستمع سابق
+                var newBackBtn = backBtn.cloneNode(true);
+                backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+
+                newBackBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // === حل المشكلة الأساسي ===
+                    // 1. محاولة استخدام TeraApp.navigateTo إن وجد (التوجيه الذكي)
+                    if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
+                        // إضافة timestamp لتجاوز الكاش
+                        TeraApp.navigateTo('/pages/dashboard?t=' + Date.now());
+                        return;
+                    }
+
+                    // 2. حل بديل: استخدام replace مع timestamp
+                    try {
+                        // استخدام sessionStorage لتحديد أننا نأتي من زر العودة
+                        sessionStorage.setItem('fromBackButton', 'true');
+                        var url = '/pages/dashboard?t=' + Date.now();
+                        // استخدام replace لتجنب إضافة الصفحة في سجل التصفح
+                        window.location.replace(url);
+                    } catch (err) {
+                        // 3. حل أخير: reload مع معلمة
+                        window.location.href = '/pages/dashboard?t=' + Date.now();
+                    }
+                });
+            }
+
+            // ============================================================
+            // 3. زر تسجيل الخروج مع Toast
             // ============================================================
             function showToast(message, type) {
                 type = type || 'info';
@@ -407,7 +438,6 @@
                 `;
                 document.body.appendChild(toast);
 
-                // أنماط الـ Toast (تُضاف مرة واحدة فقط)
                 if (!document.getElementById('toastStyles')) {
                     var style = document.createElement('style');
                     style.id = 'toastStyles';
@@ -458,12 +488,10 @@
                     document.head.appendChild(style);
                 }
 
-                // زر الإغلاق
                 toast.querySelector('.toast-close').addEventListener('click', function() {
                     toast.remove();
                 });
 
-                // إزالة تلقائية بعد 4 ثوانٍ
                 setTimeout(function() {
                     if (toast.parentElement) {
                         toast.style.opacity = '0';
@@ -490,10 +518,10 @@
             }
 
             // ============================================================
-            // 3. تهيئة الصفحة عند تحميل DOM
+            // 4. تهيئة الصفحة
             // ============================================================
             document.addEventListener('DOMContentLoaded', function() {
-                // زر تبديل القائمة الجانبية
+                // زر تبديل القائمة
                 var toggleBtn = document.getElementById('sidebarToggle');
                 if (toggleBtn) {
                     toggleBtn.addEventListener('click', function(e) {
@@ -532,7 +560,6 @@
                         var sidebar = document.getElementById('sidebar');
                         if (sidebar) {
                             sidebar.classList.remove('sidebar-open');
-                            // تطبيق حالة الانهيار المحفوظة
                             try {
                                 var saved = localStorage.getItem('sidebarCollapsed');
                                 if (saved === 'true') {
@@ -545,14 +572,13 @@
                     }
                 });
 
-                // القوائم الفرعية (فتح/إغلاق)
+                // القوائم الفرعية
                 document.querySelectorAll('.has-submenu > a').forEach(function(link) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopImmediatePropagation();
                         var parent = this.parentElement;
                         if (parent) {
-                            // في حالة الانهيار على سطح المكتب، لا نفتح القوائم الفرعية
                             var sidebar = document.getElementById('sidebar');
                             if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
                                 showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
@@ -566,10 +592,25 @@
                 // إضافة كلاس لإخفاء زر العودة في هذه الصفحة
                 document.body.classList.add('page-dashboard');
 
-                // استعادة حالة القائمة الجانبية
+                // استعادة حالة القائمة
                 restoreSidebarState();
 
-                console.log('✅ [Dashboard] تم تهيئة الصفحة بنجاح مع القائمة الجانبية المطورة');
+                // === إصلاح زر العودة (الحل الأساسي) ===
+                setupBackButton();
+
+                // === إذا كان هناك علامة في sessionStorage تشير إلى العودة، نعالجها ===
+                if (sessionStorage.getItem('fromBackButton') === 'true') {
+                    sessionStorage.removeItem('fromBackButton');
+                    // نضمن تحميل الصفحة بشكل جديد
+                    if (window.performance && window.performance.navigation) {
+                        if (window.performance.navigation.type === 2) {
+                            // الصفحة تم تحميلها من الكاش، نعيد تحميلها
+                            window.location.reload(true);
+                        }
+                    }
+                }
+
+                console.log('✅ [Dashboard] تم تهيئة الصفحة بنجاح مع إصلاح زر العودة');
             });
 
         })();
