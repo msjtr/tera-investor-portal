@@ -2,10 +2,13 @@
  * ============================================================
  * core.js - الملف الأساسي للدوال المشتركة في منصة تيرا
  * ============================================================
- * - التحكم في القائمة الجانبية والقوائم الفرعية
- * - دوال مساعدة عامة (DOM Manipulation)
- * - التعامل الآمن مع التخزين المحلي (LocalStorage)
- * - توليد المسارات النسبية المتطابقة مع الهيكل
+ * الموقع: /assets/js/core.js
+ * 
+ * يحتوي على الدوال الأساسية المستخدمة في جميع الصفحات:
+ * - التحكم في القائمة الجانبية (Sidebar)
+ * - التحكم في القوائم الفرعية (Submenu)
+ * - دوال مساعدة عامة (إضافة/إزالة كلاسات)
+ * - معالجة أحداث شائعة
  * ============================================================
  */
 
@@ -15,24 +18,25 @@
     // ============================================================
     // 1. دوال التحكم في القائمة الجانبية (Sidebar)
     // ============================================================
+
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
-        const sidebarContainer = sidebar ? sidebar : document.querySelector('.tera-sidebar');
-        if (sidebarContainer) {
-            sidebarContainer.classList.toggle('active');
+        if (sidebar) {
+            sidebar.classList.toggle('sidebar-open');
         }
     }
 
     function closeSidebar() {
-        const sidebarContainer = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
-        if (sidebarContainer && sidebarContainer.classList.contains('active')) {
-            sidebarContainer.classList.remove('active');
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('sidebar-open')) {
+            sidebar.classList.remove('sidebar-open');
         }
     }
 
     // ============================================================
     // 2. دوال التحكم في القوائم الفرعية (Submenu)
     // ============================================================
+
     function toggleSubmenu(element) {
         const parent = element.closest('.has-submenu');
         if (parent) {
@@ -49,6 +53,7 @@
     // ============================================================
     // 3. دوال البحث والتصفية
     // ============================================================
+
     function filterItems(inputId, itemsSelector, textSelector, openClass) {
         const input = document.getElementById(inputId);
         if (!input) return;
@@ -57,31 +62,51 @@
         const items = document.querySelectorAll(itemsSelector);
         const openClassToUse = openClass || 'open';
 
+        if (filter === '') {
+            items.forEach(function(item) {
+                item.style.display = '';
+            });
+            return;
+        }
+
         items.forEach(function(item) {
             const textElement = item.querySelector(textSelector);
             const text = textElement ? textElement.textContent.toLowerCase() : '';
             const isMatch = text.includes(filter);
-            
             item.style.display = isMatch ? '' : 'none';
-            
-            if (isMatch && filter !== '' && item.classList) {
+            if (isMatch && item.classList && !item.classList.contains(openClassToUse)) {
                 item.classList.add(openClassToUse);
-            } else if (filter === '') {
-                item.classList.remove(openClassToUse);
             }
         });
     }
 
     // ============================================================
-    // 4. دوال مساعدة عامة (DOM Helpers)
+    // 4. دوال مساعدة عامة (DOM Manipulation Helpers)
     // ============================================================
-    function addClass(element, className) { if (element) element.classList.add(className); }
-    function removeClass(element, className) { if (element) element.classList.remove(className); }
-    function toggleClass(element, className) { if (element) element.classList.toggle(className); }
-    
+
+    function addClass(element, className) {
+        if (element) {
+            element.classList.add(className);
+        }
+    }
+
+    function removeClass(element, className) {
+        if (element) {
+            element.classList.remove(className);
+        }
+    }
+
+    function toggleClass(element, className) {
+        if (element) {
+            element.classList.toggle(className);
+        }
+    }
+
     function findParentByClass(element, className) {
         while (element) {
-            if (element.classList && element.classList.contains(className)) return element;
+            if (element.classList && element.classList.contains(className)) {
+                return element;
+            }
             element = element.parentElement;
         }
         return null;
@@ -92,6 +117,7 @@
             const value = localStorage.getItem(key);
             return value !== null ? value : defaultValue;
         } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في قراءة localStorage:', e);
             return defaultValue;
         }
     }
@@ -101,6 +127,7 @@
             localStorage.setItem(key, value);
             return true;
         } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في كتابة localStorage:', e);
             return false;
         }
     }
@@ -110,13 +137,15 @@
             localStorage.removeItem(key);
             return true;
         } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في حذف localStorage:', e);
             return false;
         }
     }
 
     // ============================================================
-    // 5. دوال متعلقة بالمصادقة (مختصرة)
+    // 5. دوال متعلقة بالمصادقة (مختصرة للاستخدام العام)
     // ============================================================
+
     function isUserLoggedIn() {
         return !!localStorage.getItem('tera_token');
     }
@@ -126,96 +155,97 @@
             const userData = localStorage.getItem('tera_user');
             return userData ? JSON.parse(userData) : null;
         } catch (e) {
+            console.warn('⚠️ [core.js] خطأ في قراءة بيانات المستخدم:', e);
             return null;
         }
     }
 
     // ============================================================
-    // 6. دوال مساعدة لحساب المسارات النسبية بدقة (مُحدثة)
+    // 6. تهيئة الأحداث عند تحميل الصفحة
     // ============================================================
-    function getBaseDepth() {
-        const path = window.location.pathname.toLowerCase();
-        
-        // حساب العمق بناءً على المجلدات المعروفة في الهيكل لضمان عدم حدوث أخطاء
-        if (path.includes('/auth/auth/login/')) return 3;
-        if (path.includes('/auth/register/')) return 2;
-        if (path.includes('/pages/')) return 2;
-        if (path.includes('/auth/')) return 1;
-        
-        return 0; // إذا كنا في الجذر
-    }
 
-    function getRelativePath(targetPath) {
-        let cleanPath = targetPath.startsWith('/') ? targetPath.slice(1) : targetPath;
-        const depth = getBaseDepth();
-        const prefix = '../'.repeat(depth);
-        return prefix + cleanPath;
-    }
-
-    // ============================================================
-    // 7. تهيئة الأحداث
-    // ============================================================
     function initCore() {
-        // تفعيل زر القائمة الجانبية الموحد
-        document.addEventListener('click', function(e) {
-            const toggleBtn = e.target.closest('#sidebarToggle, .menu-toggle');
-            if (toggleBtn) {
+        // 6.1 تفعيل زر تبديل القائمة الجانبية
+        const toggleBtn = document.getElementById('sidebarToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 toggleSidebar();
-            }
-        });
+            });
+        }
 
-        // تفعيل القوائم الفرعية
-        document.addEventListener('click', function(e) {
-            const submenuLink = e.target.closest('.has-submenu > a');
-            if (submenuLink) {
+        // 6.2 تفعيل القوائم الفرعية (النقر على الروابط التي تحوي قوائم فرعية)
+        document.querySelectorAll('.has-submenu > a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
                 e.preventDefault();
-                toggleSubmenu(submenuLink);
-            }
+                toggleSubmenu(this);
+            });
         });
 
-        // إغلاق القائمة عند النقر خارجها في الموبايل
+        // 6.3 إغلاق القائمة الجانبية عند النقر خارجها (للشاشات الصغيرة)
         document.addEventListener('click', function(e) {
             if (window.innerWidth <= 991) {
-                const sidebar = document.querySelector('.tera-sidebar') || document.getElementById('sidebar');
+                const sidebar = document.getElementById('sidebar');
                 const toggleBtn = document.getElementById('sidebarToggle');
-                
-                if (sidebar && sidebar.classList.contains('active')) {
-                    const isClickInside = sidebar.contains(e.target);
-                    const isClickOnToggle = toggleBtn && toggleBtn.contains(e.target);
-                    
-                    if (!isClickInside && !isClickOnToggle) {
+                if (sidebar && toggleBtn) {
+                    const isClickInsideSidebar = sidebar.contains(e.target);
+                    const isClickOnToggle = toggleBtn.contains(e.target);
+                    if (!isClickInsideSidebar && !isClickOnToggle) {
                         closeSidebar();
                     }
                 }
             }
         });
 
-        // إغلاق القائمة تلقائياً عند تكبير الشاشة
+        // 6.4 إغلاق القائمة الجانبية عند تغيير حجم النافذة إلى حجم كبير (لتفادي التداخل)
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991) {
                 closeSidebar();
             }
         });
 
-        console.log('✅ [core.js] تم تهيئة المكونات بنجاح');
+        // 6.5 تفعيل روابط "عرض الكل" (View All) في البطاقات - مجرد مثال
+        document.querySelectorAll('.view-all').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                console.log('📊 [core.js] تم النقر على عرض الكل: ' + this.getAttribute('href'));
+            });
+        });
+
+        console.log('✅ [core.js] تم تهيئة جميع المكونات الأساسية بنجاح');
     }
 
     // ============================================================
-    // 8. التشغيل والتصدير
+    // 7. تشغيل التهيئة عند تحميل DOM
     // ============================================================
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initCore);
     } else {
         initCore();
     }
 
+    // ============================================================
+    // 8. تعريف دوال عامة
+    // ============================================================
+
     window.TeraCore = {
-        toggleSidebar, closeSidebar, toggleSubmenu, closeAllSubmenus, filterItems,
-        addClass, removeClass, toggleClass, findParentByClass,
-        getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem,
-        isUserLoggedIn, getCurrentUser,
-        getBaseDepth, getRelativePath, initCore
+        toggleSidebar: toggleSidebar,
+        closeSidebar: closeSidebar,
+        toggleSubmenu: toggleSubmenu,
+        closeAllSubmenus: closeAllSubmenus,
+        filterItems: filterItems,
+        addClass: addClass,
+        removeClass: removeClass,
+        toggleClass: toggleClass,
+        findParentByClass: findParentByClass,
+        getLocalStorageItem: getLocalStorageItem,
+        setLocalStorageItem: setLocalStorageItem,
+        removeLocalStorageItem: removeLocalStorageItem,
+        isUserLoggedIn: isUserLoggedIn,
+        getCurrentUser: getCurrentUser,
+        initCore: initCore
     };
+
+    console.log('✅ [core.js] تم تحميل المكتبة الأساسية (TeraCore) بنجاح');
 
 })();
