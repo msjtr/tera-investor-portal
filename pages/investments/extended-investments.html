@@ -12,6 +12,11 @@
         }
     </script>
 
+    <!-- إضافة وسوم لمنع التخزين المؤقت لهذه الصفحة (احتياطي) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
 
     <link rel="stylesheet" href="/assets/css/core.css" />
@@ -806,7 +811,7 @@
             <header class="header">
                 <div class="header-left">
                     <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                    <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
+                    <a href="/pages/dashboard?t=0" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
                     <h1 class="page-title" id="pageTitle">الشراكة الممتدة</h1>
                 </div>
                 <div class="header-right">
@@ -1424,24 +1429,22 @@
             });
 
             // ============================================================
-            // 8. القائمة الجانبية (Sidebar) وإصلاح زر العودة
+            // 8. القائمة الجانبية (Sidebar) وإصلاح زر العودة نهائياً
             // ============================================================
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
                 if (sidebar) sidebar.classList.toggle('sidebar-open');
             }
 
-            // إصلاح زر العودة للوحة التحكم لاستخدام TeraApp.navigateTo إن وجد
+            // دالة إصلاح زر العودة - استخدام window.location.href مع منع الكاش
             function setupBackButton() {
                 const backBtn = document.getElementById('backToDashboardLink');
                 if (backBtn) {
                     backBtn.addEventListener('click', function(e) {
                         e.preventDefault();
-                        if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                            TeraApp.navigateTo('/pages/dashboard');
-                        } else {
-                            window.location.href = '/pages/dashboard';
-                        }
+                        // إضافة timestamp لتجاوز الكاش وضمان تحميل النسخة الأحدث
+                        const url = '/pages/dashboard?t=' + Date.now();
+                        window.location.href = url;
                     });
                 }
             }
@@ -1491,7 +1494,7 @@
                 // تهيئة البيانات وعرضها
                 applyFilters();
 
-                console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح');
+                console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح مع إصلاح زر العودة');
             });
 
         })();
