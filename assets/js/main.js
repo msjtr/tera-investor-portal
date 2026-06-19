@@ -4,16 +4,11 @@
  * ============================================================
  * الموقع: /assets/js/main.js
  * 
- * هذا الملف مسؤول عن:
- * 1. تحميل وتهيئة جميع المكونات المشتركة (باستخدام مسارات مطلقة)
- * 2. ربط جميع أحداث الصفحات المختلفة
- * 3. تنفيذ دوال خاصة بكل صفحة حسب المسار الحالي
- * 4. إدارة السلوك العام للموقع (القوائم، الإشعارات، زر العودة، إلخ)
- * 5. إضافة كلاس page-dashboard لتحديد الصفحة الحالية
- * 6. إدارة القائمة الجانبية المطورة (collapse, toggle, active states)
- * ============================================================
- * تم التحديث لاستخدام المسارات المطلقة (بدون ../) لتجنب أخطاء 404
- * والتوافق مع نظام التوجيه الجديد في app.js
+ * تم تطبيق جميع التحديثات العاجلة:
+ * 1. إدارة القائمة الجانبية مع حفظ الحالة.
+ * 2. زر العودة مع منع التخزين المؤقت.
+ * 3. دالة Toast الموحدة.
+ * 4. منع تكرار المستمعات وتنظيف الذاكرة.
  * ============================================================
  */
 
@@ -76,203 +71,14 @@
     }
 
     // ============================================================
-    // 3. تهيئة القائمة الجانبية المطورة (Sidebar)
-    // ============================================================
-    function initSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-
-        // 3.1 زر تبديل القائمة (لجميع الشاشات)
-        if (toggleBtn && sidebar) {
-            // إزالة أي مستمع سابق لتجنب التكرار
-            const newToggleBtn = toggleBtn.cloneNode(true);
-            toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
-
-            newToggleBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (window.innerWidth > 991) {
-                    sidebar.classList.toggle('collapsed');
-                    try {
-                        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                    } catch (e) { /* ignore */ }
-                } else {
-                    sidebar.classList.toggle('sidebar-open');
-                }
-            });
-        }
-
-        // استعادة حالة الانهيار من localStorage
-        if (sidebar && window.innerWidth > 991) {
-            try {
-                const saved = localStorage.getItem('sidebarCollapsed');
-                if (saved === 'true') {
-                    sidebar.classList.add('collapsed');
-                } else if (saved === 'false') {
-                    sidebar.classList.remove('collapsed');
-                }
-            } catch (e) { /* ignore */ }
-        }
-
-        // 3.2 القوائم الفرعية (فتح/إغلاق) - باستخدام event delegation
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('.has-submenu > a');
-            if (!link) return;
-
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            const parent = link.parentElement;
-            if (!parent) return;
-
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
-                showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
-                return;
-            }
-
-            parent.classList.toggle('submenu-open');
-        });
-
-        // 3.3 إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 991) {
-                const sidebar = document.getElementById('sidebar');
-                const toggleBtn = document.getElementById('sidebarToggle');
-                if (sidebar && toggleBtn) {
-                    const isClickInsideSidebar = sidebar.contains(e.target);
-                    const isClickOnToggle = toggleBtn.contains(e.target);
-                    if (!isClickInsideSidebar && !isClickOnToggle) {
-                        sidebar.classList.remove('sidebar-open');
-                    }
-                }
-            }
-        });
-
-        // 3.4 إغلاق القائمة عند تغيير حجم النافذة إلى حجم كبير
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 991) {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    sidebar.classList.remove('sidebar-open');
-                    try {
-                        const saved = localStorage.getItem('sidebarCollapsed');
-                        if (saved === 'true') {
-                            sidebar.classList.add('collapsed');
-                        } else {
-                            sidebar.classList.remove('collapsed');
-                        }
-                    } catch (e) { /* ignore */ }
-                }
-            }
-        });
-
-        // 3.5 تمييز الرابط النشط تلقائياً
-        setActiveNavItem();
-
-        // 3.6 تحديث عند تغيير المسار (popstate)
-        window.addEventListener('popstate', function() {
-            setActiveNavItem();
-        });
-
-        console.log('✅ [Main] تم تهيئة القائمة الجانبية المطورة');
-    }
-
-    // ============================================================
-    // 4. تمييز الرابط النشط في القائمة
-    // ============================================================
-    function setActiveNavItem() {
-        const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.nav-list a[href]');
-
-        // إزالة النشاط عن الجميع
-        document.querySelectorAll('.nav-item.active').forEach(function(el) {
-            el.classList.remove('active');
-        });
-        document.querySelectorAll('.submenu li.active').forEach(function(el) {
-            el.classList.remove('active');
-        });
-
-        navLinks.forEach(function(link) {
-            const href = link.getAttribute('href');
-            if (!href || href === '#') return;
-
-            // نبحث عن تطابق تام للمسار
-            const isMatch = href === currentPath ||
-                           (href !== '/' && currentPath.startsWith(href) && href.length > 1);
-
-            if (isMatch) {
-                const parentItem = link.closest('.nav-item');
-                if (parentItem) {
-                    parentItem.classList.add('active');
-                    const parentSub = parentItem.closest('.has-submenu');
-                    if (parentSub) {
-                        parentSub.classList.add('submenu-open');
-                    }
-                }
-                if (link.closest('.submenu')) {
-                    var li = link.closest('li');
-                    if (li) li.classList.add('active');
-                }
-            }
-        });
-    }
-
-    // ============================================================
-    // 5. تهيئة زر العودة إلى لوحة التحكم وتحديث عنوان الصفحة
-    // ============================================================
-    function initBackToDashboard() {
-        const currentPath = window.location.pathname;
-        const isDashboard = currentPath.includes('/dashboard/') ||
-                            currentPath.endsWith('dashboard/index.html') ||
-                            currentPath === '/pages/dashboard/index.html' ||
-                            currentPath === '/dashboard';
-
-        // إضافة/إزالة كلاس page-dashboard من الـ body
-        if (isDashboard) {
-            document.body.classList.add('page-dashboard');
-        } else {
-            document.body.classList.remove('page-dashboard');
-        }
-
-        // تحديث عنوان الصفحة من الـ <title>
-        const pageTitleEl = document.getElementById('pageTitle');
-        if (pageTitleEl) {
-            const titleTag = document.querySelector('title');
-            if (titleTag) {
-                const parts = titleTag.textContent.split('|');
-                pageTitleEl.textContent = parts[0].trim();
-            }
-        }
-
-        // إصلاح زر العودة: منع التخزين المؤقت واستخدام TeraApp.navigateTo
-        const backBtn = document.getElementById('backToDashboardLink') || document.getElementById('backToDashboard');
-        if (backBtn) {
-            const newBackBtn = backBtn.cloneNode(true);
-            backBtn.parentNode.replaceChild(newBackBtn, backBtn);
-            newBackBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = '/pages/dashboard?t=' + Date.now();
-                if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                    TeraApp.navigateTo(url);
-                } else {
-                    window.location.href = url;
-                }
-            });
-        }
-
-        console.log('✅ [Main] تم تهيئة زر العودة (page-dashboard:', isDashboard, ')');
-    }
-
-    // ============================================================
-    // 6. دالة Toast (تنبيه لحظي) - محسنة لتجنب التكرار
+    // 3. دالة Toast (تنبيه لحظي) - موحدة
     // ============================================================
     function showToast(message, type) {
         type = type || 'info';
-        // إزالة أي Toast سابق
-        var existing = document.querySelector('.custom-toast');
+        const existing = document.querySelector('.custom-toast');
         if (existing) existing.remove();
 
-        var toast = document.createElement('div');
+        const toast = document.createElement('div');
         toast.className = 'custom-toast';
         toast.innerHTML = `
             <div class="toast-content ${type}">
@@ -282,9 +88,8 @@
         `;
         document.body.appendChild(toast);
 
-        // أنماط الـ Toast (تُضاف مرة واحدة فقط)
         if (!document.getElementById('toastStyles')) {
-            var style = document.createElement('style');
+            const style = document.createElement('style');
             style.id = 'toastStyles';
             style.textContent = `
                 .custom-toast {
@@ -333,12 +138,10 @@
             document.head.appendChild(style);
         }
 
-        // زر الإغلاق
         toast.querySelector('.toast-close').addEventListener('click', function() {
             toast.remove();
         });
 
-        // إزالة تلقائية بعد 4 ثوانٍ
         setTimeout(function() {
             if (toast.parentElement) {
                 toast.style.opacity = '0';
@@ -353,12 +156,194 @@
     }
 
     // ============================================================
+    // 4. تهيئة القائمة الجانبية المطورة (Sidebar)
+    // ============================================================
+    function initSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+
+        // 4.1 زر تبديل القائمة (لجميع الشاشات)
+        if (toggleBtn && sidebar) {
+            // إزالة أي مستمع سابق لتجنب التكرار
+            const newToggleBtn = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+
+            newToggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (window.innerWidth > 991) {
+                    sidebar.classList.toggle('collapsed');
+                    try {
+                        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                    } catch (e) { /* ignore */ }
+                } else {
+                    sidebar.classList.toggle('sidebar-open');
+                }
+            });
+        }
+
+        // استعادة حالة الانهيار من localStorage
+        if (sidebar && window.innerWidth > 991) {
+            try {
+                const saved = localStorage.getItem('sidebarCollapsed');
+                if (saved === 'true') {
+                    sidebar.classList.add('collapsed');
+                } else if (saved === 'false') {
+                    sidebar.classList.remove('collapsed');
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // 4.2 القوائم الفرعية (فتح/إغلاق) - باستخدام event delegation
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('.has-submenu > a');
+            if (!link) return;
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const parent = link.parentElement;
+            if (!parent) return;
+
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
+                showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
+                return;
+            }
+
+            parent.classList.toggle('submenu-open');
+        });
+
+        // 4.3 إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 991) {
+                const sidebar = document.getElementById('sidebar');
+                const toggleBtn = document.getElementById('sidebarToggle');
+                if (sidebar && toggleBtn) {
+                    const isClickInsideSidebar = sidebar.contains(e.target);
+                    const isClickOnToggle = toggleBtn.contains(e.target);
+                    if (!isClickInsideSidebar && !isClickOnToggle) {
+                        sidebar.classList.remove('sidebar-open');
+                    }
+                }
+            }
+        });
+
+        // 4.4 إغلاق القائمة عند تغيير حجم النافذة إلى حجم كبير
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 991) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('sidebar-open');
+                    try {
+                        const saved = localStorage.getItem('sidebarCollapsed');
+                        if (saved === 'true') {
+                            sidebar.classList.add('collapsed');
+                        } else {
+                            sidebar.classList.remove('collapsed');
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+            }
+        });
+
+        // 4.5 تمييز الرابط النشط تلقائياً
+        setActiveNavItem();
+
+        // 4.6 تحديث عند تغيير المسار (popstate)
+        window.addEventListener('popstate', function() {
+            setActiveNavItem();
+        });
+
+        console.log('✅ [Main] تم تهيئة القائمة الجانبية المطورة');
+    }
+
+    // ============================================================
+    // 5. تمييز الرابط النشط في القائمة
+    // ============================================================
+    function setActiveNavItem() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-list a[href]');
+
+        document.querySelectorAll('.nav-item.active').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        document.querySelectorAll('.submenu li.active').forEach(function(el) {
+            el.classList.remove('active');
+        });
+
+        navLinks.forEach(function(link) {
+            const href = link.getAttribute('href');
+            if (!href || href === '#') return;
+
+            const isMatch = href === currentPath ||
+                           (href !== '/' && currentPath.startsWith(href) && href.length > 1);
+
+            if (isMatch) {
+                const parentItem = link.closest('.nav-item');
+                if (parentItem) {
+                    parentItem.classList.add('active');
+                    const parentSub = parentItem.closest('.has-submenu');
+                    if (parentSub) {
+                        parentSub.classList.add('submenu-open');
+                    }
+                }
+                if (link.closest('.submenu')) {
+                    var li = link.closest('li');
+                    if (li) li.classList.add('active');
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // 6. تهيئة زر العودة إلى لوحة التحكم وتحديث عنوان الصفحة
+    // ============================================================
+    function initBackToDashboard() {
+        const currentPath = window.location.pathname;
+        const isDashboard = currentPath.includes('/dashboard/') ||
+                            currentPath.endsWith('dashboard/index.html') ||
+                            currentPath === '/pages/dashboard/index.html' ||
+                            currentPath === '/dashboard';
+
+        if (isDashboard) {
+            document.body.classList.add('page-dashboard');
+        } else {
+            document.body.classList.remove('page-dashboard');
+        }
+
+        const pageTitleEl = document.getElementById('pageTitle');
+        if (pageTitleEl) {
+            const titleTag = document.querySelector('title');
+            if (titleTag) {
+                const parts = titleTag.textContent.split('|');
+                pageTitleEl.textContent = parts[0].trim();
+            }
+        }
+
+        const backBtn = document.getElementById('backToDashboardLink') || document.getElementById('backToDashboard');
+        if (backBtn) {
+            const newBackBtn = backBtn.cloneNode(true);
+            backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+            newBackBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = '/pages/dashboard?t=' + Date.now();
+                if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
+                    TeraApp.navigateTo(url);
+                } else {
+                    window.location.href = url;
+                }
+            });
+        }
+
+        console.log('✅ [Main] تم تهيئة زر العودة (page-dashboard:', isDashboard, ')');
+    }
+
+    // ============================================================
     // 7. تهيئة الإشعارات (مثال)
     // ============================================================
     function initNotifications() {
         var notifIcon = document.querySelector('.notifications');
         if (notifIcon) {
-            // إزالة أي مستمع سابق
             var newNotifIcon = notifIcon.cloneNode(true);
             notifIcon.parentNode.replaceChild(newNotifIcon, notifIcon);
             newNotifIcon.addEventListener('click', function() {
@@ -377,7 +362,6 @@
     function initLogout() {
         var logoutBtn = document.querySelector('.logout-btn');
         if (logoutBtn) {
-            // إزالة أي مستمع سابق
             var newLogoutBtn = logoutBtn.cloneNode(true);
             logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
             newLogoutBtn.addEventListener('click', function(e) {
@@ -402,15 +386,12 @@
     // 9. تهيئة الروابط الداخلية (مع منع التعارض مع app.js)
     // ============================================================
     function initInternalLinks() {
-        // نستخدم event delegation لتجنب إضافة مستمعات منفصلة لكل رابط
         document.addEventListener('click', function(e) {
             var link = e.target.closest('a[href]');
             if (!link) return;
 
-            // تجاهل الروابط التي تفتح القوائم الفرعية
             if (link.closest('.has-submenu')) return;
 
-            // تجاهل الروابط التي تمتلك target="_blank" أو تبدأ بـ http أو # أو javascript:
             if (link.target === '_blank') return;
             var href = link.getAttribute('href');
             if (!href) return;
@@ -419,12 +400,10 @@
             if (href.startsWith('javascript:')) return;
             if (href.endsWith('.css') || href.endsWith('.js')) return;
 
-            // استخدام TeraApp للتنقل إن وجد
             if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
                 e.preventDefault();
                 TeraApp.navigateTo(href);
             }
-            // وإلا سيتم التعامل بشكل طبيعي
         });
     }
 
@@ -438,7 +417,6 @@
         initLogout();
         initInternalLinks();
 
-        // إضافة دالة لتحديث النشاط عند أي تغيير
         window.addEventListener('popstate', function() {
             setActiveNavItem();
         });
@@ -521,7 +499,6 @@
 
     function initAuthPage() {
         console.log('🔑 [Main] تهيئة صفحة المصادقة');
-        // لا حاجة لتحميل سكريبت إضافي، يتم التعامل معها بواسطة auth.js
     }
 
     function initPageByType(pageType) {
@@ -562,12 +539,10 @@
     function initMain() {
         console.log('🚀 [Main] بدء تهيئة النظام...');
 
-        // تحميل الملفات الأساسية
         var coreLoaded = ensureCoreLoaded();
         var authLoaded = ensureAuthLoaded();
         var appLoaded = ensureAppLoaded();
 
-        // التحقق من التحميل بشكل متكرر
         var attempts = 0;
         var maxAttempts = 20;
 
@@ -586,14 +561,12 @@
             return false;
         }
 
-        // إذا كانت جميع الملفات محملة مسبقاً، نبدأ التهيئة فوراً
         if (coreLoaded && authLoaded && appLoaded &&
             typeof TeraCore !== 'undefined' &&
             typeof TeraAuth !== 'undefined' &&
             typeof TeraApp !== 'undefined') {
             performInitialization();
         } else {
-            // نستخدم setInterval للتحقق من التحميل
             var checkInterval = setInterval(function() {
                 if (checkAndInit()) {
                     clearInterval(checkInterval);
@@ -623,7 +596,6 @@
 
     window.addEventListener('popstate', handlePageChange);
 
-    // ربط دالة التحديث بـ TeraApp ليتم استدعاؤها بعد تحميل الصفحة
     if (typeof window.TeraApp !== 'undefined') {
         var originalLoadPage = window.TeraApp.loadPage;
         if (originalLoadPage) {
