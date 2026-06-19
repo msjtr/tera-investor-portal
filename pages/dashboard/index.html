@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0" />
 
     <script>
-        // التحقق من الجلسة
+        // التحقق من الجلسة باستخدام المسار المطلق
         if (!localStorage.getItem('tera_token')) {
             window.location.replace('/auth/auth/login/login.html');
         }
@@ -19,6 +19,7 @@
 
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
 
+    <!-- الملفات المشتركة CSS (مسارات مطلقة) -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/dashboard.css" />
@@ -338,7 +339,8 @@
         </main>
     </div>
 
-    <!-- ====== جميع الملفات المشتركة ====== -->
+    <!-- ====== جميع الملفات المشتركة (مسارات مطلقة) ====== -->
+    <!-- ملاحظة: تأكد من أن app.js و main.js لا يحتويان على دالة resolveRelativePath -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/app.js"></script>
