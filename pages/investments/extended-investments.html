@@ -1,1093 +1,394 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>الشراكة الممتدة | Tera Investor Portal</title>
+/**
+ * ============================================================
+ * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة المستقرة)
+ * ============================================================
+ * تم إصلاح نظام التوجيه (Routing) ليعتمد على المسارات المطلقة
+ * ============================================================
+ */
 
-    <!-- التحقق من الجلسة -->
-    <script>
-        if (!localStorage.getItem('tera_token')) {
-            window.location.replace('/auth/auth/login/login.html');
-        }
-    </script>
+(function() {
+    'use strict';
 
-    <!-- منع التخزين المؤقت -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    // ============================================================
+    // 1. نظام المسارات الذكي (بدون ../ المزعجة)
+    // ============================================================
 
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-
-    <link rel="stylesheet" href="/assets/css/core.css" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link rel="stylesheet" href="/assets/css/investments.css" />
-    <link rel="stylesheet" href="/assets/css/responsive.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-    <!-- ===== أنماط إضافية للقائمة الجانبية (للتأكد من عملها) ===== -->
-    <style>
-        /* تأكيد أن القائمة الجانبية الجديدة تظهر بشكل صحيح */
-        .sidebar-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            right: 0;
-            background: #ffffff;
-            border-left: 1px solid #e9ecef;
-            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.02);
-            z-index: 1050;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 70px;
-            padding: 0 16px;
-            border-bottom: 1px solid #e9ecef;
-            flex-shrink: 0;
-        }
-        .sidebar-brand .logo-img {
-            width: 42px;
-            height: 42px;
-        }
-        .sidebar-menu {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 0;
-        }
-        .nav-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .nav-item {
-            margin-bottom: 2px;
-        }
-        .nav-item > a {
-            display: flex;
-            align-items: center;
-            padding: 10px 18px;
-            color: #475569;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            gap: 14px;
-            border-radius: 8px;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        .nav-item > a i {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-            flex-shrink: 0;
-            color: #94a3b8;
-        }
-        .nav-item > a .nav-label {
-            flex: 1;
-        }
-        .nav-item > a .submenu-toggle {
-            font-size: 12px;
-            margin-right: auto;
-            transition: transform 0.2s;
-        }
-        .nav-item.active > a {
-            background: rgba(2, 128, 144, 0.06);
-            color: #028090;
-        }
-        .nav-item.active > a i {
-            color: #028090;
-        }
-        .nav-item > a:hover {
-            background: #f8f9fa;
-            color: #0A2540;
-        }
-        .nav-item > a:hover i {
-            color: #028090;
-        }
-        .submenu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.25s ease, padding 0.25s ease;
-            padding-right: 0;
-        }
-        .nav-item.submenu-open .submenu {
-            max-height: 500px;
-            padding: 4px 0 8px 0;
-        }
-        .submenu li a {
-            display: flex;
-            align-items: center;
-            padding: 8px 30px 8px 18px;
-            font-size: 14px;
-            color: #64748b;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.15s;
-            white-space: nowrap;
-        }
-        .submenu li a:hover {
-            background: #f8f9fa;
-            color: #0A2540;
-        }
-        .submenu li.active a {
-            color: #028090;
-            font-weight: 600;
-            background: rgba(2, 128, 144, 0.04);
-        }
-        .sidebar-footer {
-            border-top: 1px solid #e9ecef;
-            padding: 12px 18px;
-            flex-shrink: 0;
-        }
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            width: 100%;
-            padding: 10px 12px;
-            border: none;
-            background: transparent;
-            color: #DC3545;
-            font-weight: 600;
-            font-size: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.15s;
-            font-family: 'Tajawal', sans-serif;
-        }
-        .logout-btn i {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-        .logout-btn:hover {
-            background: rgba(220, 53, 69, 0.06);
+    /**
+     * يحول أي مسار إلى مسار مطلق من جذر السيرفر
+     */
+    function resolvePath(path) {
+        if (!path || path.startsWith('#') || path.startsWith('javascript:')) {
+            return path;
         }
 
-        /* وضع الانهيار */
-        .sidebar-container.collapsed {
-            width: 70px;
-        }
-        .sidebar-container.collapsed .sidebar-brand .logo-img {
-            width: 36px;
-            height: 36px;
-        }
-        .sidebar-container.collapsed .nav-label,
-        .sidebar-container.collapsed .submenu-toggle,
-        .sidebar-container.collapsed .submenu {
-            display: none;
-        }
-        .sidebar-container.collapsed .nav-item > a {
-            justify-content: center;
-            padding: 10px 0;
-        }
-        .sidebar-container.collapsed .logout-btn .nav-label {
-            display: none;
-        }
-        .sidebar-container.collapsed .logout-btn {
-            justify-content: center;
-            padding: 10px 0;
+        let cleanPath = path;
+        
+        // إذا كان الرابط كاملاً (يحتوي على http)، نأخذ المسار فقط
+        if (cleanPath.startsWith('http')) {
+            cleanPath = new URL(cleanPath).pathname;
         }
 
-        /* للشاشات الصغيرة */
-        @media (max-width: 991.98px) {
-            .sidebar-container {
-                transform: translateX(100%);
-                width: 280px !important;
-                transition: transform 0.3s ease;
-                box-shadow: 4px 0 30px rgba(0, 0, 0, 0.08);
-            }
-            .sidebar-container.sidebar-open {
-                transform: translateX(0);
-            }
-            .sidebar-container.collapsed {
-                width: 280px !important;
-            }
-            .sidebar-container.collapsed .nav-label,
-            .sidebar-container.collapsed .submenu-toggle,
-            .sidebar-container.collapsed .submenu {
-                display: block;
-            }
-            .sidebar-container.collapsed .nav-item > a {
-                justify-content: flex-start;
-                padding: 10px 18px;
-            }
-            .sidebar-container.collapsed .nav-item > a i {
-                margin-left: 14px;
-            }
-            .sidebar-container.collapsed .logout-btn .nav-label {
-                display: inline;
-            }
-            .sidebar-container.collapsed .logout-btn {
-                justify-content: flex-start;
-                padding: 10px 12px;
-            }
+        // دعم السيرفر المحلي (Live Server) إذا كان المشروع داخل مجلد
+        const baseFolder = '/tera-investor-portal-main';
+        if (cleanPath.includes(baseFolder)) {
+            cleanPath = cleanPath.replace(baseFolder, '');
         }
 
-        /* دعم الوضع المظلم */
-        @media (prefers-color-scheme: dark) {
-            .sidebar-container {
-                background: #0f172a;
-                border-left-color: #495057;
-            }
-            .sidebar-brand {
-                border-bottom-color: #495057;
-            }
-            .nav-item > a {
-                color: #dee2e6;
-            }
-            .nav-item > a i {
-                color: #94a3b8;
-            }
-            .nav-item.active > a {
-                background: rgba(20, 184, 166, 0.08);
-                color: #14b8a6;
-            }
-            .nav-item.active > a i {
-                color: #14b8a6;
-            }
-            .nav-item > a:hover {
-                background: #1e293b;
-                color: #f8f9fa;
-            }
-            .submenu li a {
-                color: #ced4da;
-            }
-            .submenu li a:hover {
-                background: #1e293b;
-                color: #f8f9fa;
-            }
-            .submenu li.active a {
-                color: #14b8a6;
-                background: rgba(20, 184, 166, 0.06);
-            }
-            .sidebar-footer {
-                border-top-color: #495057;
-            }
-            .logout-btn {
-                color: #f87171;
-            }
-            .logout-btn:hover {
-                background: rgba(248, 113, 113, 0.08);
-            }
+        // التأكد من أن المسار يبدأ بـ /
+        if (!cleanPath.startsWith('/')) {
+            cleanPath = '/' + cleanPath;
         }
 
-        /* أنماط إضافية للصفحة (من بقية الكود) */
-        .extended-header { /* ... موجودة بالفعل في investments.css */ }
-        /* ... باقي الأنماط موجودة في investments.css، لا داعي لتكرارها */
-    </style>
-</head>
-<body>
+        // 1. البحث المباشر في قاموس المسارات
+        if (ROUTES[cleanPath]) {
+            return ROUTES[cleanPath];
+        }
 
-    <div class="app-wrapper">
-
-        <!-- ====== القائمة الجانبية المطورة ====== -->
-        <aside class="sidebar-container" id="sidebar">
-            <!-- 1. منطقة الشعار (بدون نصوص) -->
-            <div class="sidebar-brand">
-                <a href="/index.html">
-                    <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
-                </a>
-            </div>
-
-            <!-- 2. منطقة التنقل -->
-            <nav class="sidebar-menu">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/pages/dashboard">
-                            <i class="fas fa-th-large"></i>
-                            <span class="nav-label">لوحة التحكم</span>
-                        </a>
-                    </li>
-                    <li class="nav-item has-submenu submenu-open">
-                        <a href="#">
-                            <i class="fas fa-chart-line"></i>
-                            <span class="nav-label">الاستثمارات</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
-                            <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                            <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
-                            <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
-                            <li class="active"><a href="/pages/investments/extended-investments.html">الشراكة الممتدة</a></li>
-                            <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-wallet"></i>
-                            <span class="nav-label">المحفظة</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                            <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
-                            <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
-                            <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-                            <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
-                            <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-file-alt"></i>
-                            <span class="nav-label">التقارير</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                            <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
-                            <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
-                            <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
-                            <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-user-circle"></i>
-                            <span class="nav-label">الملف الشخصي</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                            <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
-                            <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
-                            <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                            <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-shield-alt"></i>
-                            <span class="nav-label">الأمان</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                            <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
-                            <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
-                            <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                            <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
-                            <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-headset"></i>
-                            <span class="nav-label">الدعم</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
-                        <ul class="submenu">
-                            <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
-                            <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
-                            <li><a href="/pages/support/tickets.html">التذاكر</a></li>
-                            <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
-                            <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
-                            <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- 3. منطقة الإجراءات (تسجيل الخروج) -->
-            <div class="sidebar-footer">
-                <button class="logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-label">تسجيل الخروج</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- ====== المحتوى الرئيسي ====== -->
-        <main class="main-content">
-
-            <!-- ====== الهيدر ====== -->
-            <header class="header">
-                <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <!-- زر العودة للوحة التحكم (مع timestamp لتجاوز الكاش) -->
-                    <a href="/pages/dashboard?t=0" class="back-to-dashboard" id="backToDashboardLink">
-                        <i class="fas fa-arrow-right"></i>
-                        <span>العودة للوحة التحكم</span>
-                    </a>
-                    <h1 class="page-title" id="pageTitle">الشراكة الممتدة</h1>
-                </div>
-                <div class="header-right">
-                    <div class="notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge">3</span>
-                    </div>
-                    <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=0D6EFD&color=fff&size=40" alt="User Avatar" />
-                        <span class="user-name">أحمد محمد</span>
-                    </div>
-                </div>
-            </header>
-
-            <!-- ====== المحتوى ====== -->
-            <section class="dashboard-content" id="extendedContent">
-
-                <!-- رأس الصفحة -->
-                <div class="extended-header">
-                    <div class="title-section">
-                        <h2>عقود الشراكة الممتدة</h2>
-                        <span class="subtitle">جميع عقود الشراكة الممتدة الخاصة بك في مكان واحد</span>
-                    </div>
-                    <div class="status-badge">
-                        <i class="fas fa-chart-line"></i>
-                        إجمالي العقود: <span id="totalCount">0</span>
-                    </div>
-                </div>
-
-                <!-- شريط الأدوات (بحث + فلاتر) -->
-                <div class="toolbar-section">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchInput" placeholder="ابحث برقم الشراكة..." />
-                    </div>
-                    <div class="filters">
-                        <select id="statusFilter">
-                            <option value="all">جميع الحالات</option>
-                            <option value="نشط">نشط</option>
-                            <option value="مكتمل">مكتمل</option>
-                            <option value="قيد الانتظار">قيد الانتظار</option>
-                            <option value="ملغي">ملغي</option>
-                            <option value="ممدد">ممدد</option>
-                        </select>
-                        <select id="sortFilter">
-                            <option value="date-desc">الأحدث أولاً</option>
-                            <option value="date-asc">الأقدم أولاً</option>
-                            <option value="value-desc">الأعلى قيمة</option>
-                            <option value="value-asc">الأقل قيمة</option>
-                        </select>
-                    </div>
-                    <div class="pagination-info">
-                        عرض <span id="rangeStart">0</span> - <span id="rangeEnd">0</span> من <span id="totalItems">0</span>
-                    </div>
-                </div>
-
-                <!-- حاوية الجدول أو حالة الفراغ -->
-                <div id="tableContainer">
-                    <!-- سيتم ملؤها بواسطة JavaScript -->
-                </div>
-
-                <!-- الترقيم -->
-                <div class="pagination-wrapper" id="paginationWrapper" style="display:none;">
-                    <div class="pagination-info">
-                        الصفحة <span id="currentPageDisplay">1</span> من <span id="totalPagesDisplay">1</span>
-                    </div>
-                    <div class="pagination-buttons" id="paginationButtons">
-                        <!-- سيتم ملؤها بواسطة JavaScript -->
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- ====== الفوتر ====== -->
-            <footer class="footer">
-                <div class="footer-content">
-                    <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
-                    <div class="footer-links">
-                        <a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a>
-                        <a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a>
-                        <a href="/pages/support/help-center.html">الدعم</a>
-                    </div>
-                </div>
-            </footer>
-
-        </main>
-    </div>
-
-    <!-- ====== نافذة التفاصيل (Modal) ====== -->
-    <div class="detail-overlay" id="detailOverlay">
-        <div class="detail-modal" id="detailModal">
-            <button class="close-btn" id="closeDetailBtn">&times;</button>
-            <!-- رأس التفاصيل -->
-            <div class="detail-header-section">
-                <div>
-                    <div class="detail-id" id="detailId">#TR-2026-06-27-001 <small>قيد التنفيذ</small></div>
-                </div>
-                <div>
-                    <span class="status-badge-sm active" id="detailStatusBadge">نشط</span>
-                </div>
-            </div>
-            <!-- معلومات أساسية -->
-            <div class="detail-info-grid" id="detailInfoGrid"></div>
-            <!-- جدول توزيع الأرباح -->
-            <div class="schedule-section">
-                <div class="section-header">
-                    <h4><i class="fas fa-table"></i> جدول توزيع أرباح الشراكة الممتدة</h4>
-                    <span style="font-size:13px; color:var(--gray-500, #94a3b8);">
-                        إجمالي الأرباح: <strong style="color:var(--primary-color, #028090);" id="totalProfitDisplay">ر.س 0</strong>
-                    </span>
-                </div>
-                <div class="schedule-table-wrapper">
-                    <table class="schedule-table" id="scheduleTable">
-                        <thead>
-                            <tr><th>م</th><th>تاريخ الاستحقاق</th><th>قيمة أرباح الشراكة</th><th>الاستحقاق الشهري</th><th>المتبقي</th></tr>
-                        </thead>
-                        <tbody id="scheduleBody"></tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- أزرار الإجراءات -->
-            <div class="export-actions">
-                <button class="btn-export back" id="backBtn"><i class="fas fa-arrow-right"></i> العودة</button>
-                <button class="btn-export print" id="printBtn"><i class="fas fa-print"></i> طباعة</button>
-                <button class="btn-export pdf" id="pdfBtn"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
-                <button class="btn-export excel" id="excelBtn"><i class="fas fa-file-excel"></i> تصدير Excel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ====== الملفات المشتركة ====== -->
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/main.js"></script>
-
-    <script>
-        (function() {
-            'use strict';
-
-            // ============================================================
-            // 1. بيانات نموذجية (Mock Data) - نفس الكود السابق
-            // ============================================================
-            const mockData = [];
-            const statuses = ['نشط', 'مكتمل', 'قيد الانتظار', 'ملغي', 'ممدد'];
-            const statusClassMap = {
-                'نشط': 'active',
-                'مكتمل': 'completed',
-                'قيد الانتظار': 'pending',
-                'ملغي': 'cancelled',
-                'ممدد': 'extended'
-            };
-            const startDate = new Date(2026, 5, 1);
-            for (let i = 1; i <= 25; i++) {
-                const month = String(startDate.getMonth() + 1).padStart(2, '0');
-                const day = String(startDate.getDate() + i).padStart(2, '0');
-                const year = startDate.getFullYear();
-                const startDateStr = `${year}-${month}-${day}`;
-                const endDate = new Date(startDate);
-                endDate.setMonth(endDate.getMonth() + 12);
-                const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-                const endDay = String(endDate.getDate() + i).padStart(2, '0');
-                const endYear = endDate.getFullYear();
-                const endDateStr = `${endYear}-${endMonth}-${endDay}`;
-                const status = statuses[i % statuses.length];
-                const partnershipValue = 5000 + (i * 200);
-                const totalProfit = partnershipValue * 0.05;
-                const monthlyProfit = totalProfit / 12;
-                mockData.push({
-                    id: `TR-${year}-${month}-${day}-${String(i).padStart(3, '0')}`,
-                    startDate: startDateStr,
-                    endDate: endDateStr,
-                    partnerShare: '5%',
-                    value: partnershipValue,
-                    totalProfit: totalProfit,
-                    monthlyProfit: monthlyProfit,
-                    status: status,
-                    statusClass: statusClassMap[status] || 'pending',
-                    duration: 12,
-                    profitMechanism: 'شهري',
-                    firstPaymentDate: `2026-08-15`
-                });
-            }
-
-            // ============================================================
-            // 2. دوال مساعدة (تنسيق الأرقام)
-            // ============================================================
-            function formatCurrency(value) {
-                if (isNaN(value)) return 'ر.س 0.00';
-                return 'ر.س ' + value.toLocaleString('ar-EG', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-            function formatNumber(value) {
-                if (isNaN(value)) return '0.00';
-                return value.toLocaleString('ar-EG', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            }
-            function formatDate(dateStr) {
-                if (!dateStr) return '-';
-                const parts = dateStr.split('-');
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-
-            // ============================================================
-            // 3. توليد جدول التوزيع
-            // ============================================================
-            function generateSchedule(partnership) {
-                const duration = partnership.duration || 12;
-                const totalProfit = partnership.totalProfit;
-                const monthlyProfit = partnership.monthlyProfit;
-                const firstPaymentDate = partnership.firstPaymentDate || '2026-08-15';
-                let schedule = [];
-                let remaining = totalProfit;
-                let currentDate = new Date(firstPaymentDate);
-                for (let i = 1; i <= duration; i++) {
-                    let payment = monthlyProfit;
-                    if (i === duration) {
-                        payment = remaining;
-                    }
-                    payment = Math.round(payment * 100) / 100;
-                    remaining = Math.round((remaining - payment) * 100) / 100;
-                    if (remaining < 0.005) remaining = 0;
-                    const dateStr =
-                        `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
-                    schedule.push({
-                        month: i,
-                        dueDate: dateStr,
-                        totalProfit: totalProfit,
-                        monthlyPayment: payment,
-                        remaining: remaining
-                    });
-                    currentDate.setMonth(currentDate.getMonth() + 1);
+        // 2. إذا كان المسار ينتهي بـ .html، نحاول إيجاد تطابق في ROUTES
+        if (cleanPath.endsWith('.html')) {
+            const fileName = cleanPath.substring(cleanPath.lastIndexOf('/'));
+            for (let key in ROUTES) {
+                if (ROUTES[key].endsWith(fileName)) {
+                    return ROUTES[key];
                 }
-                return schedule;
             }
+        }
 
-            // ============================================================
-            // 4. عرض الجدول الرئيسي مع الترقيم والبحث والفلاتر
-            // ============================================================
-            let filteredData = [...mockData];
-            let currentPage = 1;
-            const itemsPerPage = 10;
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            const sortFilter = document.getElementById('sortFilter');
-
-            function applyFilters() {
-                const query = searchInput.value.trim().toLowerCase();
-                const status = statusFilter.value;
-                let data = mockData.filter(item => {
-                    const matchId = item.id.toLowerCase().includes(query);
-                    const matchStatus = status === 'all' || item.status === status;
-                    return matchId && matchStatus;
-                });
-                const sortValue = sortFilter.value;
-                switch (sortValue) {
-                    case 'date-desc':
-                        data.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-                        break;
-                    case 'date-asc':
-                        data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-                        break;
-                    case 'value-desc':
-                        data.sort((a, b) => b.value - a.value);
-                        break;
-                    case 'value-asc':
-                        data.sort((a, b) => a.value - b.value);
-                        break;
-                    default:
-                        break;
-                }
-                filteredData = data;
-                currentPage = 1;
-                renderTable(filteredData, currentPage);
+        // 3. إذا كان المسار مختصراً (بدون .html) نحاول البحث عن مفتاح يبدأ بنفس المسار
+        for (let key in ROUTES) {
+            if (key === cleanPath || key.startsWith(cleanPath + '/') || key.startsWith(cleanPath)) {
+                return ROUTES[key];
             }
+        }
 
-            searchInput.addEventListener('input', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-            sortFilter.addEventListener('change', applyFilters);
+        // 4. إذا لم يتم العثور على مسار، نعيد المسار الأصلي
+        return cleanPath;
+    }
 
-            function renderTable(data, page) {
-                const container = document.getElementById('tableContainer');
-                const total = data.length;
-                if (total === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon"><i class="fas fa-handshake"></i></div>
-                            <div class="empty-title">لا توجد شراكات ممتدة</div>
-                            <div class="empty-desc">لا توجد عقود شراكة ممتدة مطابقة للبحث الحالي</div>
-                        </div>
-                    `;
-                    document.getElementById('paginationWrapper').style.display = 'none';
-                    document.getElementById('rangeStart').textContent = '0';
-                    document.getElementById('rangeEnd').textContent = '0';
-                    document.getElementById('totalItems').textContent = '0';
-                    document.getElementById('totalCount').textContent = '0';
-                    return;
-                }
-                const startIndex = (page - 1) * itemsPerPage;
-                const endIndex = Math.min(startIndex + itemsPerPage, total);
-                const pageData = data.slice(startIndex, endIndex);
-                let tableHtml = `
-                    <div class="extended-table-wrapper">
-                        <table class="extended-table">
-                            <thead>
-                                <tr>
-                                    <th>رقم الشراكة</th>
-                                    <th>تاريخ الشراكة</th>
-                                    <th>انتهاء الشراكة</th>
-                                    <th>نسبة الشريك</th>
-                                    <th>قيمة الشراكة</th>
-                                    <th>متوقع إجمالي الأرباح</th>
-                                    <th>حالة الشراكة</th>
-                                    <th>التفاصيل</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                pageData.forEach(item => {
-                    tableHtml += `
-                        <tr>
-                            <td><strong>${item.id}</strong></td>
-                            <td>${formatDate(item.startDate)}</td>
-                            <td>${formatDate(item.endDate)}</td>
-                            <td>${item.partnerShare}</td>
-                            <td>${formatCurrency(item.value)}</td>
-                            <td>${formatCurrency(item.totalProfit)}</td>
-                            <td><span class="status-badge-sm ${item.statusClass}">${item.status}</span></td>
-                            <td>
-                                <button class="btn-view" data-id="${item.id}">
-                                    <i class="fas fa-eye"></i> عرض
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                tableHtml += `</tbody></table></div>`;
-                container.innerHTML = tableHtml;
+    // ============================================================
+    // 2. تكوينات التطبيق الأساسية
+    // ============================================================
 
-                document.getElementById('rangeStart').textContent = total > 0 ? startIndex + 1 : 0;
-                document.getElementById('rangeEnd').textContent = endIndex;
-                document.getElementById('totalItems').textContent = total;
-                document.getElementById('totalCount').textContent = total;
+    const APP_CONFIG = {
+        name: 'تيرا للمستثمرين',
+        version: '1.0.1',
+        apiBaseUrl: '/api/v1',
+        debug: true,
+        authRequired: true,
+        loginUrl: '/auth/auth/login/login.html',
+        defaultPage: '/pages/dashboard/index.html'
+    };
 
-                const pagWrapper = document.getElementById('paginationWrapper');
-                if (total > itemsPerPage) {
-                    pagWrapper.style.display = 'flex';
-                    renderPagination(total, page);
+    // ============================================================
+    // 3. حالة التطبيق (Application State)
+    // ============================================================
+
+    const AppState = {
+        currentUser: null,
+        currentPage: '',
+        isLoggedIn: false,
+        isLoading: false,
+        notifications: [],
+        portfolioData: null,
+        _loadingCount: 0
+    };
+
+    // ============================================================
+    // 4. مسارات الصفحات (مطلقة)
+    // ============================================================
+
+    const ROUTES = {
+        '/': '/pages/dashboard/index.html',
+        '/index.html': '/pages/dashboard/index.html',
+        '/dashboard': '/pages/dashboard/index.html',
+        '/dashboard/index.html': '/pages/dashboard/index.html',
+        '/investments': '/pages/investments/opportunities.html',
+        '/investments/opportunities': '/pages/investments/opportunities.html',
+        '/investments/active-investments': '/pages/investments/active-investments.html',
+        '/investments/active': '/pages/investments/active-investments.html',
+        '/investments/completed-investments': '/pages/investments/completed-investments.html',
+        '/investments/cancelled-investments': '/pages/investments/cancelled-investments.html',
+        '/investments/extended-investments': '/pages/investments/extended-investments.html',
+        '/investments/investment-details': '/pages/investments/investment-details.html',
+        '/portfolio': '/pages/portfolio/portfolio-overview.html',
+        '/portfolio/portfolio-overview': '/pages/portfolio/portfolio-overview.html',
+        '/portfolio/transactions': '/pages/portfolio/transactions.html',
+        '/portfolio/profits': '/pages/portfolio/profits.html',
+        '/portfolio/withdraw-request': '/pages/portfolio/withdraw-request.html',
+        '/portfolio/withdrawal-history': '/pages/portfolio/withdrawal-history.html',
+        '/portfolio/account-statement': '/pages/portfolio/account-statement.html',
+        '/reports': '/pages/reports/reports-dashboard.html',
+        '/reports/reports-dashboard': '/pages/reports/reports-dashboard.html',
+        '/reports/portfolio-report': '/pages/reports/portfolio-report.html',
+        '/reports/investments-report': '/pages/reports/investments-report.html',
+        '/reports/profits-report': '/pages/reports/profits-report.html',
+        '/reports/withdrawals-report': '/pages/reports/withdrawals-report.html',
+        '/profile': '/pages/profile/personal-information.html',
+        '/profile/personal-information': '/pages/profile/personal-information.html',
+        '/profile/contact-information': '/pages/profile/contact-information.html',
+        '/profile/national-address': '/pages/profile/national-address.html',
+        '/profile/bank-information': '/pages/profile/bank-information.html',
+        '/profile/attachments': '/pages/profile/attachments.html',
+        '/security': '/pages/security/change-password.html',
+        '/security/change-password': '/pages/security/change-password.html',
+        '/security/change-email': '/pages/security/change-email.html',
+        '/security/change-mobile': '/pages/security/change-mobile.html',
+        '/security/two-factor-authentication': '/pages/security/two-factor-authentication.html',
+        '/security/registered-devices': '/pages/security/registered-devices.html',
+        '/security/login-history': '/pages/security/login-history.html',
+        '/support': '/pages/support/help-center.html',
+        '/support/help-center': '/pages/support/help-center.html',
+        '/support/faq': '/pages/support/faq.html',
+        '/support/tickets': '/pages/support/tickets.html',
+        '/support/notifications': '/pages/support/notifications.html',
+        '/support/privacy-policy': '/pages/support/privacy-policy.html',
+        '/support/terms-and-conditions': '/pages/support/terms-and-conditions.html',
+        '/auth/login': '/auth/auth/login/login.html',
+        '/auth/register': '/auth/register/register.html',
+        '/auth/forgot-password': '/auth/forgot-password.html',
+        '/auth/reset-password': '/auth/reset-password.html',
+        '/auth/verify-otp': '/auth/verify-otp.html',
+        '/auth/complete-profile': '/auth/complete-profile.html'
+    };
+
+    // ============================================================
+    // 5. دوال التحكم في الصفحات
+    // ============================================================
+
+    const PUBLIC_PAGES = [
+        '/auth/login',
+        '/auth/register',
+        '/auth/forgot-password',
+        '/auth/reset-password',
+        '/auth/verify-otp',
+        '/auth/complete-profile'
+    ];
+
+    function isPublicPage(path) {
+        return PUBLIC_PAGES.some(publicPath => path.startsWith(publicPath));
+    }
+
+    function checkAuthStatus() {
+        const token = localStorage.getItem('tera_token');
+        const userData = localStorage.getItem('tera_user');
+        if (token && userData) {
+            try {
+                AppState.currentUser = JSON.parse(userData);
+                AppState.isLoggedIn = true;
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    function login(credentials) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if (credentials.email && credentials.password) {
+                    const userData = { id: 1, name: 'أحمد محمد', email: credentials.email, role: 'investor' };
+                    localStorage.setItem('tera_token', 'mock_token_12345');
+                    localStorage.setItem('tera_user', JSON.stringify(userData));
+                    AppState.currentUser = userData;
+                    AppState.isLoggedIn = true;
+                    resolve(userData);
                 } else {
-                    pagWrapper.style.display = 'none';
+                    reject(new Error('بيانات الدخول غير صحيحة'));
                 }
+            }, 500);
+        });
+    }
 
-                document.querySelectorAll('.btn-view').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.dataset.id;
-                        const item = mockData.find(d => d.id === id);
-                        if (item) openDetail(item);
-                    });
-                });
-                document.getElementById('currentPageDisplay').textContent = page;
-                document.getElementById('totalPagesDisplay').textContent = Math.ceil(total / itemsPerPage);
-            }
+    function logout() {
+        localStorage.removeItem('tera_token');
+        localStorage.removeItem('tera_user');
+        AppState.currentUser = null;
+        AppState.isLoggedIn = false;
+        window.location.href = APP_CONFIG.loginUrl;
+    }
 
-            function renderPagination(total, currentPage) {
-                const totalPages = Math.ceil(total / itemsPerPage);
-                const container = document.getElementById('paginationButtons');
-                let html = '';
-                html += `<button class="prev" ${currentPage <= 1 ? 'disabled' : ''}>&laquo;</button>`;
-                let startPage = Math.max(1, currentPage - 2);
-                let endPage = Math.min(totalPages, currentPage + 2);
-                if (startPage > 1) {
-                    html += `<button data-page="1">1</button>`;
-                    if (startPage > 2) html += `<span>…</span>`;
-                }
-                for (let i = startPage; i <= endPage; i++) {
-                    html += `<button data-page="${i}" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-                }
-                if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) html += `<span>…</span>`;
-                    html += `<button data-page="${totalPages}">${totalPages}</button>`;
-                }
-                html += `<button class="next" ${currentPage >= totalPages ? 'disabled' : ''}>&raquo;</button>`;
-                container.innerHTML = html;
-                container.querySelectorAll('button[data-page]').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const page = parseInt(this.dataset.page);
-                        if (page !== currentPage) {
-                            currentPage = page;
-                            renderTable(filteredData, currentPage);
-                        }
-                    });
-                });
-                const prevBtn = container.querySelector('.prev');
-                const nextBtn = container.querySelector('.next');
-                if (prevBtn && !prevBtn.disabled) {
-                    prevBtn.addEventListener('click', function() {
-                        if (currentPage > 1) {
-                            currentPage--;
-                            renderTable(filteredData, currentPage);
-                        }
-                    });
-                }
-                if (nextBtn && !nextBtn.disabled) {
-                    nextBtn.addEventListener('click', function() {
-                        if (currentPage < totalPages) {
-                            currentPage++;
-                            renderTable(filteredData, currentPage);
-                        }
-                    });
-                }
-            }
+    // ============================================================
+    // 6. نظام التوجيه (Router)
+    // ============================================================
 
-            // ============================================================
-            // 5. نافذة التفاصيل (Modal)
-            // ============================================================
-            function openDetail(item) {
-                const overlay = document.getElementById('detailOverlay');
-                document.getElementById('detailId').innerHTML = `${item.id} <small>${item.status}</small>`;
-                document.getElementById('detailStatusBadge').textContent = item.status;
-                document.getElementById('detailStatusBadge').className = `status-badge-sm ${item.statusClass}`;
-                const grid = document.getElementById('detailInfoGrid');
-                grid.innerHTML = `
-                    <div class="item"><div class="label">قيمة الشراكة</div><div class="value primary">${formatCurrency(item.value)}</div></div>
-                    <div class="item"><div class="label">نسبة الشراكة الشهرية</div><div class="value">${(item.monthlyProfit / item.value * 100).toFixed(2)}%</div></div>
-                    <div class="item"><div class="label">نسبة الشراكة السنوية</div><div class="value">5%</div></div>
-                    <div class="item"><div class="label">مدة الشراكة</div><div class="value">${item.duration} شهر</div></div>
-                    <div class="item"><div class="label">تاريخ الشراكة</div><div class="value">${formatDate(item.startDate)}</div></div>
-                    <div class="item"><div class="label">انتهاء الشراكة</div><div class="value">${formatDate(item.endDate)}</div></div>
-                    <div class="item"><div class="label">متوقع أرباح الشراكة الشهري</div><div class="value primary">${formatCurrency(item.monthlyProfit)}</div></div>
-                    <div class="item"><div class="label">متوقع إجمالي أرباح الشراكة نهاية المدة</div><div class="value primary">${formatCurrency(item.totalProfit)}</div></div>
-                    <div class="item"><div class="label">آلية صرف الأرباح</div><div class="value">${item.profitMechanism}</div></div>
-                    <div class="item"><div class="label">موعد صرف أرباح الشراكة</div><div class="value">${formatDate(item.firstPaymentDate)}</div></div>
-                `;
-                document.getElementById('totalProfitDisplay').textContent = formatCurrency(item.totalProfit);
-                const schedule = generateSchedule(item);
-                const tbody = document.getElementById('scheduleBody');
-                let rows = '';
-                schedule.forEach(row => {
-                    rows += `
-                        <tr>
-                            <td>${row.month}</td>
-                            <td>${formatDate(row.dueDate)}</td>
-                            <td class="amount-positive">${formatCurrency(row.totalProfit)}</td>
-                            <td class="amount-positive">${formatCurrency(row.monthlyPayment)}</td>
-                            <td class="${row.remaining <= 0.01 ? 'amount-zero' : 'amount-remaining'}">${formatCurrency(row.remaining)}</td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = rows;
-                overlay.classList.add('open');
-                document.body.style.overflow = 'hidden';
-            }
+    function navigateTo(path, replace = false) {
+        let targetPath = resolvePath(path);
+        
+        // التحقق من تواجد مجلد المشروع المحلي لضمان التوجيه الصحيح
+        if (window.location.pathname.includes('/tera-investor-portal-main')) {
+            targetPath = '/tera-investor-portal-main' + targetPath;
+        }
 
-            function closeDetail() {
-                document.getElementById('detailOverlay').classList.remove('open');
-                document.body.style.overflow = '';
-            }
-            document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
-            document.getElementById('backBtn').addEventListener('click', closeDetail);
-            document.getElementById('detailOverlay').addEventListener('click', function(e) {
-                if (e.target === this) closeDetail();
-            });
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') closeDetail();
-            });
+        if (APP_CONFIG.authRequired && !isPublicPage(targetPath) && !AppState.isLoggedIn) {
+            console.warn('🔒 يتطلب تسجيل الدخول');
+            window.location.href = window.location.pathname.includes('/tera-investor-portal-main') 
+                ? '/tera-investor-portal-main' + APP_CONFIG.loginUrl 
+                : APP_CONFIG.loginUrl;
+            return;
+        }
 
-            // ============================================================
-            // 6. أزرار التصدير
-            // ============================================================
-            document.getElementById('printBtn').addEventListener('click', function() {
-                const modalContent = document.getElementById('detailModal');
-                const originalTitle = document.title;
-                document.title = 'تفاصيل الشراكة الممتدة';
-                const printWindow = window.open('', '_blank', 'width=800,height=600');
-                printWindow.document.write(`
-                    <html dir="rtl">
-                    <head><title>تفاصيل الشراكة الممتدة</title>
-                    <link rel="stylesheet" href="/assets/css/core.css" />
-                    <link rel="stylesheet" href="/assets/css/main.css" />
-                    <style>
-                        body { padding: 40px; background: #fff; color: #000; }
-                        .schedule-table { width: 100%; border-collapse: collapse; }
-                        .schedule-table th, .schedule-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-                        .schedule-table th { background: #f5f5f5; }
-                        .no-print { display: none; }
-                        .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-                        .detail-info-grid .item .label { font-weight: 600; color: #666; }
-                        .detail-info-grid .item .value { font-weight: 700; }
-                    </style>
-                    </head>
-                    <body>
-                        ${modalContent.innerHTML.replace(/<button[^>]*>.*?<\/button>/gs, '')}
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 500);
-                document.title = originalTitle;
-            });
-            document.getElementById('pdfBtn').addEventListener('click', function() {
-                alert('📄 سيتم تصدير التقرير بصيغة PDF قريباً');
-            });
-            document.getElementById('excelBtn').addEventListener('click', function() {
-                alert('📊 سيتم تصدير التقرير بصيغة Excel قريباً');
-            });
+        if (replace) {
+            window.history.replaceState({ path: targetPath }, '', targetPath);
+        } else {
+            window.history.pushState({ path: targetPath }, '', targetPath);
+        }
+        
+        loadPage(targetPath);
+    }
 
-            // ============================================================
-            // 7. القائمة الجانبية وزر العودة (تم تضمينها في main.js، لكن نؤكدها)
-            // ============================================================
-            function toggleSidebar() {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    if (window.innerWidth > 991) {
-                        sidebar.classList.toggle('collapsed');
-                        try {
-                            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                        } catch (e) { /* ignore */ }
+    // ============================================================
+    // 7. تحميل الصفحات (Fetch) - باستخدام المسار المطلق النظيف
+    // ============================================================
+
+    function loadPage(url) {
+        if (AppState.currentPage === url && AppState._loadingCount > 0) return;
+
+        AppState._loadingCount++;
+        AppState.currentPage = url;
+        AppState.isLoading = true;
+        showLoader();
+
+        console.log('📄 جاري تحميل الصفحة:', url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const mainContent = document.querySelector('.main-content');
+                
+                if (mainContent) {
+                    const newContent = doc.querySelector('.main-content');
+                    if (newContent) {
+                        mainContent.innerHTML = newContent.innerHTML;
                     } else {
-                        sidebar.classList.toggle('sidebar-open');
+                        mainContent.innerHTML = doc.body ? doc.body.innerHTML : html;
                     }
-                }
-            }
-
-            function setupBackButton() {
-                const backBtn = document.getElementById('backToDashboardLink');
-                if (backBtn) {
-                    backBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const url = '/pages/dashboard?t=' + Date.now();
-                        if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                            TeraApp.navigateTo(url);
-                        } else {
-                            window.location.href = url;
-                        }
-                    });
-                }
-            }
-
-            // استعادة حالة القائمة عند التحميل
-            function restoreSidebarState() {
-                const sidebar = document.getElementById('sidebar');
-                if (!sidebar) return;
-                if (window.innerWidth > 991) {
-                    try {
-                        const saved = localStorage.getItem('sidebarCollapsed');
-                        if (saved === 'true') {
-                            sidebar.classList.add('collapsed');
-                        } else {
-                            sidebar.classList.remove('collapsed');
-                        }
-                    } catch (e) { /* ignore */ }
-                }
-            }
-
-            // ============================================================
-            // 8. التهيئة النهائية عند تحميل DOM
-            // ============================================================
-            document.addEventListener('DOMContentLoaded', function() {
-                // زر تبديل القائمة
-                const toggleBtn = document.getElementById('sidebarToggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        toggleSidebar();
-                    });
+                    reinitializeScripts(doc);
+                } else {
+                    document.documentElement.innerHTML = html;
                 }
 
-                // إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
-                document.addEventListener('click', function(e) {
-                    if (window.innerWidth <= 991) {
-                        const sidebar = document.getElementById('sidebar');
-                        const toggleBtn = document.getElementById('sidebarToggle');
-                        if (sidebar && toggleBtn) {
-                            const isClickInsideSidebar = sidebar.contains(e.target);
-                            const isClickOnToggle = toggleBtn.contains(e.target);
-                            if (!isClickInsideSidebar && !isClickOnToggle) {
-                                sidebar.classList.remove('sidebar-open');
-                            }
-                        }
-                    }
-                });
-
-                // إغلاق القائمة عند تغيير حجم النافذة
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth > 991) {
-                        const sidebar = document.getElementById('sidebar');
-                        if (sidebar) {
-                            sidebar.classList.remove('sidebar-open');
-                            try {
-                                const saved = localStorage.getItem('sidebarCollapsed');
-                                if (saved === 'true') {
-                                    sidebar.classList.add('collapsed');
-                                } else {
-                                    sidebar.classList.remove('collapsed');
-                                }
-                            } catch (e) { /* ignore */ }
-                        }
-                    }
-                });
-
-                // تفعيل القوائم الفرعية
-                document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopImmediatePropagation();
-                        const parent = this.parentElement;
-                        if (parent) {
-                            if (window.innerWidth > 991 && document.getElementById('sidebar').classList.contains('collapsed')) {
-                                // في حالة الانهيار، نوجه المستخدم لتوسيع القائمة
-                                if (typeof showToast === 'function') {
-                                    showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
-                                } else {
-                                    alert('افتح القائمة أولاً لعرض الخيارات');
-                                }
-                                return;
-                            }
-                            parent.classList.toggle('submenu-open');
-                        }
-                    });
-                });
-
-                // زر تسجيل الخروج
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const confirmLogout = confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟');
-                        if (!confirmLogout) return;
-                        if (typeof showToast === 'function') {
-                            showToast('جاري تسجيل الخروج...', 'info');
-                        }
-                        setTimeout(function() {
-                            if (typeof TeraAuth !== 'undefined' && TeraAuth.logout) {
-                                TeraAuth.logout();
-                            } else {
-                                localStorage.removeItem('tera_token');
-                                localStorage.removeItem('tera_user');
-                                window.location.href = '/auth/auth/login/login.html';
-                            }
-                        }, 600);
-                    });
-                }
-
-                // استعادة حالة القائمة
-                restoreSidebarState();
-
-                // إصلاح زر العودة
-                setupBackButton();
-
-                // تهيئة البيانات وعرضها
-                applyFilters();
-
-                console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح مع القائمة الجانبية المطورة');
+                const title = doc.querySelector('title');
+                if (title) document.title = title.textContent;
+            })
+            .catch(error => {
+                console.error('❌ خطأ في تحميل الصفحة:', error);
+                showErrorPage(error);
+            })
+            .finally(() => {
+                AppState._loadingCount--;
+                AppState.isLoading = false;
+                hideLoader();
             });
+    }
 
-        })();
-    </script>
+    function reinitializeScripts(doc) {
+        if (window.TeraCore && typeof window.TeraCore.initCore === 'function') {
+            window.TeraCore.initCore();
+        }
+        const pageFunctions = ['initDashboard', 'initInvestments', 'initPortfolio', 'initReports', 'initProfile', 'initSecurity', 'initSupport'];
+        pageFunctions.forEach(fnName => {
+            if (typeof window[fnName] === 'function') window[fnName]();
+        });
+    }
 
-</body>
-</html>
+    // ============================================================
+    // 8. واجهة المستخدم (Loader & Notifications)
+    // ============================================================
+
+    function showLoader() {
+        let loader = document.getElementById('app-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'app-loader';
+            loader.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);`;
+            loader.innerHTML = `<div style="width: 50px; height: 50px; border: 6px solid #e9ecef; border-top-color: #0D6EFD; border-radius: 50%; animation: spin 0.8s linear infinite;"></div><p style="margin-top: 20px; font-weight: 500;">جاري التحميل...</p><style>@keyframes spin { to { transform: rotate(360deg); } }</style>`;
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
+    }
+
+    function hideLoader() {
+        const loader = document.getElementById('app-loader');
+        if (loader) loader.style.display = 'none';
+    }
+
+    function showErrorPage(error) {
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; text-align: center;">
+                    <div style="font-size: 72px; color: #DC3545; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h1>عذراً! حدث خطأ</h1>
+                    <p style="color: #6c757d;">${error.message}</p>
+                    <button class="btn btn-primary" onclick="window.location.reload()"><i class="fas fa-redo"></i> إعادة المحاولة</button>
+                </div>
+            `;
+        }
+    }
+
+    function showNotification(message, type = 'info', duration = 3000) {
+        alert(message);
+    }
+
+    // ============================================================
+    // 9. معالجة أحداث المتصفح والروابط (مع تجاهل القوائم الفرعية)
+    // ============================================================
+
+    function handlePopState() {
+        navigateTo(window.location.pathname, true);
+    }
+
+    function handleInternalLinks() {
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const href = link.getAttribute('href');
+            
+            // تجاهل الروابط التي تفتح القوائم الفرعية (has-submenu)
+            if (link.closest('.has-submenu')) {
+                return;
+            }
+
+            // تجاهل الروابط الخارجية أو الهاشتاجات أو ملفات الجافاسكريبت والـ CSS
+            if (!href || link.target === '_blank' || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript:') || href.endsWith('.css') || href.endsWith('.js')) return;
+            
+            e.preventDefault();
+            navigateTo(href);
+        });
+    }
+
+    // ============================================================
+    // 10. تهيئة التطبيق
+    // ============================================================
+
+    function initApp() {
+        checkAuthStatus();
+        handleInternalLinks();
+        window.addEventListener('popstate', handlePopState);
+        console.log('✅ تم تهيئة التطبيق بنجاح');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
+
+    // ============================================================
+    // 11. تصدير الدوال
+    // ============================================================
+
+    window.TeraApp = {
+        navigateTo, loadPage, resolvePath, login, logout, checkAuthStatus,
+        isLoggedIn: () => AppState.isLoggedIn,
+        getCurrentUser: () => AppState.currentUser,
+        showLoader, hideLoader, showNotification
+    };
+
+})();
