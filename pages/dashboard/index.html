@@ -1,3 +1,6 @@
+إليك كود صفحة لوحة التحكم (`/pages/dashboard/index.html`) كاملاً، متضمناً القائمة الجانبية (Sidebar) بجميع فروعها التي طلبتها، ومنظماً وفق هيكلية مشروعك:
+
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -5,144 +8,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- منع التخزين المؤقت -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
-    <script>
-        if (!localStorage.getItem('tera_token')) {
-            window.location.replace('/auth/auth/login/login.html');
-        }
-    </script>
-
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-    <link rel="stylesheet" href="/assets/css/core.css" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link rel="stylesheet" href="/assets/css/dashboard.css" />
-    <link rel="stylesheet" href="/assets/css/responsive.css" />
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
+    <link rel="stylesheet" href="../../assets/css/core.css" />
+    <link rel="stylesheet" href="../../assets/css/main.css" />
+    <link rel="stylesheet" href="../../assets/css/dashboard.css" />
+    <link rel="stylesheet" href="../../assets/css/responsive.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-    <style>
-        /* إخفاء زر العودة في صفحة لوحة التحكم */
-        .page-dashboard .back-to-dashboard { display: none !important; }
-
-        /* ===== إصلاح زر القائمة الجانبية ===== */
-        .sidebar-toggle {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: transparent;
-            font-size: 22px;
-            color: var(--gray-700, #475569);
-            cursor: pointer;
-            border-radius: var(--border-radius, 8px);
-            transition: background 0.2s;
-        }
-        .sidebar-toggle:hover { background: var(--gray-100, #f8f9fa); }
-
-        @media (max-width: 991.98px) {
-            .sidebar-toggle { display: flex !important; }
-            .sidebar-container {
-                transform: translateX(100%);
-                width: 280px !important;
-                transition: transform 0.3s ease;
-                box-shadow: 4px 0 30px rgba(0, 0, 0, 0.08);
-            }
-            .sidebar-container.sidebar-open { transform: translateX(0); }
-            .sidebar-container.collapsed { width: 280px !important; }
-            .sidebar-container.collapsed .nav-label,
-            .sidebar-container.collapsed .submenu-toggle,
-            .sidebar-container.collapsed .submenu { display: block; }
-            .sidebar-container.collapsed .nav-item > a { justify-content: flex-start; padding: 10px 18px; }
-            .sidebar-container.collapsed .nav-item > a i { margin-left: 14px; }
-            .sidebar-container.collapsed .logout-btn .nav-label { display: inline; }
-            .sidebar-container.collapsed .logout-btn { justify-content: flex-start; padding: 10px 12px; }
-        }
-        
-        .sidebar-container { width: var(--sidebar-width, 250px); }
-        .sidebar-container.collapsed { width: 70px; }
-    </style>
 </head>
-<body>
+<body class="page-dashboard">
 
 <div class="app-wrapper">
 
-    <!-- ===== القائمة الجانبية ===== -->
     <aside class="sidebar-container" id="sidebar">
         <div class="sidebar-brand">
-            <a href="/index.html"><img src="/images/logo.svg" alt="Tera Logo" class="logo-img" /></a>
+            <a href="../../index.html"><img src="../../images/logo.svg" alt="Tera Logo" class="logo-img" /></a>
         </div>
         <nav class="sidebar-menu">
             <ul class="nav-list">
                 <li class="nav-item active">
-                    <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
+                    <a href="../dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
                 </li>
+                
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمارات</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
-                        <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                        <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
-                        <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
-                        <li><a href="/pages/investments/extended-investments.html">الشراكة الممتدة</a></li>
-                        <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
+                        <li><a href="../investments/opportunities.html">فرص الاستثمار</a></li>
+                        <li><a href="../investments/active-investments.html">الاستثمارات النشطة</a></li>
+                        <li><a href="../investments/completed-investments.html">المكتملة</a></li>
+                        <li><a href="../investments/cancelled-investments.html">الملغاة</a></li>
+                        <li><a href="../investments/extended-investments.html">الشراكة الممتدة</a></li>
+                        <li><a href="../investments/investment-details.html">تفاصيل الاستثمار</a></li>
                     </ul>
                 </li>
+
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                        <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
-                        <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
-                        <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-                        <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
-                        <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
+                        <li><a href="../portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                        <li><a href="../portfolio/transactions.html">المعاملات</a></li>
+                        <li><a href="../portfolio/profits.html">الأرباح</a></li>
+                        <li><a href="../portfolio/withdraw-request.html">طلب سحب</a></li>
+                        <li><a href="../portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                        <li><a href="../portfolio/account-statement.html">كشف الحساب</a></li>
                     </ul>
                 </li>
+
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                        <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
-                        <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
-                        <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
-                        <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
+                        <li><a href="../reports/reports-dashboard.html">لوحة التقارير</a></li>
+                        <li><a href="../reports/portfolio-report.html">تقرير المحفظة</a></li>
+                        <li><a href="../reports/investments-report.html">تقرير الاستثمارات</a></li>
+                        <li><a href="../reports/profits-report.html">تقرير الأرباح</a></li>
+                        <li><a href="../reports/withdrawals-report.html">تقرير السحوبات</a></li>
                     </ul>
                 </li>
+
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                        <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
-                        <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
-                        <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                        <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
+                        <li><a href="../profile/personal-information.html">المعلومات الشخصية</a></li>
+                        <li><a href="../profile/contact-information.html">معلومات الاتصال</a></li>
+                        <li><a href="../profile/national-address.html">العنوان الوطني</a></li>
+                        <li><a href="../profile/bank-information.html">المعلومات البنكية</a></li>
+                        <li><a href="../profile/attachments.html">المرفقات</a></li>
                     </ul>
                 </li>
+
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                        <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
-                        <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
-                        <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                        <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
-                        <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
+                        <li><a href="../security/change-password.html">تغيير كلمة المرور</a></li>
+                        <li><a href="../security/change-email.html">تغيير البريد الإلكتروني</a></li>
+                        <li><a href="../security/change-mobile.html">تغيير رقم الجوال</a></li>
+                        <li><a href="../security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                        <li><a href="../security/registered-devices.html">الأجهزة المسجلة</a></li>
+                        <li><a href="../security/login-history.html">سجل الدخول</a></li>
                     </ul>
                 </li>
+
                 <li class="nav-item has-submenu">
                     <a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                     <ul class="submenu">
-                        <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
-                        <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
-                        <li><a href="/pages/support/tickets.html">التذاكر</a></li>
-                        <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
-                        <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
-                        <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
+                        <li><a href="../support/help-center.html">مركز المساعدة</a></li>
+                        <li><a href="../support/faq.html">الأسئلة الشائعة</a></li>
+                        <li><a href="../support/tickets.html">التذاكر</a></li>
+                        <li><a href="../support/notifications.html">الإشعارات</a></li>
+                        <li><a href="../support/privacy-policy.html">سياسة الخصوصية</a></li>
+                        <li><a href="../support/terms-and-conditions.html">الشروط والأحكام</a></li>
                     </ul>
                 </li>
             </ul>
@@ -152,102 +105,38 @@
         </div>
     </aside>
 
-    <!-- ===== المحتوى الرئيسي ===== -->
     <main class="main-content">
-
-        <!-- ===== الهيدر ===== -->
         <header class="header">
             <div class="header-left">
                 <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <a href="/pages/dashboard/index.html" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
-                <h1 class="page-title" id="pageTitle">لوحة التحكم</h1>
+                <h1 class="page-title">لوحة التحكم</h1>
             </div>
             <div class="header-right">
                 <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
                 <div class="user-profile">
-                    <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=028090&color=fff&size=40" alt="User Avatar" />
                     <span class="user-name">أحمد محمد</span>
                 </div>
             </div>
         </header>
 
-        <!-- ===== محتوى الصفحة الديناميكي (يتغير بواسطة app.js) ===== -->
         <section class="dashboard-content" id="dashboardContent">
-            
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><span class="stat-label">إجمالي الاستثمارات</span><span class="stat-value">ر.س 124,500</span></div></div>
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><span class="stat-label">الأرباح المحققة</span><span class="stat-value">ر.س 18,200</span></div></div>
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div><div class="stat-info"><span class="stat-label">الاستثمارات النشطة</span><span class="stat-value">12</span></div></div>
-                <div class="stat-card"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-info"><span class="stat-label">قيد الانتظار</span><span class="stat-value">3</span></div></div>
-            </div>
+            </section>
 
-            <div class="dashboard-grid">
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <h3>أداء المحفظة</h3>
-                        <span class="card-subtitle">آخر 30 يوماً</span>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="performanceChart" height="150"></canvas>
-                    </div>
-                </div>
-                <div class="card recent-activity">
-                    <div class="card-header">
-                        <h3>آخر النشاطات</h3>
-                        <a href="/pages/portfolio/transactions.html" class="view-all">عرض الكل</a>
-                    </div>
-                    <div class="card-body">
-                        <ul class="activity-list">
-                            <li><i class="fas fa-arrow-up success"></i><div><span class="activity-title">إيداع</span><span class="activity-desc">تم إيداع مبلغ ر.س 5,000 في المحفظة</span></div><span class="activity-time">منذ ساعة</span></li>
-                            <li><i class="fas fa-arrow-down danger"></i><div><span class="activity-title">سحب</span><span class="activity-desc">طلب سحب ر.س 1,200 قيد المراجعة</span></div><span class="activity-time">منذ 3 ساعات</span></li>
-                            <li><i class="fas fa-plus-circle info"></i><div><span class="activity-title">استثمار جديد</span><span class="activity-desc">تم تفعيل استثمار في مشروع الطاقة الشمسية</span></div><span class="activity-time">الأمس</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card table-card">
-                <div class="card-header">
-                    <h3>أحدث الاستثمارات</h3>
-                    <a href="/pages/investments/opportunities.html" class="view-all">عرض الكل</a>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead><tr><th>المشروع</th><th>المبلغ</th><th>تاريخ البدء</th><th>الحالة</th></tr></thead>
-                        <tbody>
-                            <tr><td>مشروع الطاقة الشمسية</td><td>ر.س 10,000</td><td>2026-06-01</td><td><span class="badge status-active">نشط</span></td></tr>
-                            <tr><td>صندوق العقارات</td><td>ر.س 25,000</td><td>2026-05-15</td><td><span class="badge status-completed">مكتمل</span></td></tr>
-                            <tr><td>تكنولوجيا الذكاء الاصطناعي</td><td>ر.س 5,000</td><td>2026-06-10</td><td><span class="badge status-pending">قيد الانتظار</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- ===== الفوتر ===== -->
         <footer class="footer">
             <div class="footer-content">
                 <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
-                <div class="footer-links">
-                    <a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a>
-                    <a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a>
-                    <a href="/pages/support/help-center.html">الدعم</a>
-                </div>
             </div>
         </footer>
-
     </main>
 </div>
 
-<!-- ===== المكتبات والملفات المشتركة (يجب أن تبقى في الأسفل) ===== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/assets/js/core.js"></script>
-<script src="/assets/js/auth.js"></script>
-<script src="/assets/js/app.js"></script>
-<script src="/assets/js/main.js"></script>
-<script src="/assets/js/dashboard.js"></script>
-<!-- لا يوجد أي أكواد <script> مضمنة هنا! كلها في الملفات أعلاه -->
+<script src="../../assets/js/core.js"></script>
+<script src="../../assets/js/app.js"></script>
+<script src="../../assets/js/main.js"></script>
+<script src="../../assets/js/dashboard.js"></script>
 
 </body>
 </html>
+
+```
