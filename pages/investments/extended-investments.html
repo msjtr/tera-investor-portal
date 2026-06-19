@@ -9,13 +9,21 @@
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/investments.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* تنسيقات إضافية لترتيب عرض التفاصيل */
+        .details-card { display: none; margin-top: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; }
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; }
+        .details-item span { display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 5px; }
+        .details-item strong { display: block; font-size: 1.1rem; color: #0f172a; }
+    </style>
 </head>
 <body>
 
 <div class="app-wrapper">
     <main class="main-content">
         
-        <nav class="filters-nav">
+        <nav class="filters-nav" style="margin-bottom: 20px; display: flex; gap: 10px;">
             <button class="filter-tab active" data-status="all">الكل</button>
             <button class="filter-tab" data-status="pending">بانتظار الاعتماد</button>
             <button class="filter-tab" data-status="expired">منتهية</button>
@@ -24,11 +32,11 @@
 
         <section class="card table-card">
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="table tera-table" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #f1f5f9; text-align: right;">
                             <tr>
-                                <th>رقم الشراكة</th>
+                                <th style="padding: 12px;">رقم الشراكة</th>
                                 <th>تاريخ الشراكة</th>
                                 <th>انتهاء الشراكة</th>
                                 <th>نسبة الشريك</th>
@@ -36,6 +44,7 @@
                                 <th>متوقع إجمالي الأرباح</th>
                                 <th>المدة</th>
                                 <th>الحالة</th>
+                                <th>التفاصيل</th>
                             </tr>
                         </thead>
                         <tbody id="investmentsTableBody">
@@ -45,14 +54,104 @@
             </div>
         </section>
 
-        <footer class="footer-actions">
-            <a href="/pages/dashboard/index.html" class="btn btn-outline">العودة للوحة التحكم</a>
+        <section id="detailedView" class="details-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #028090;">جدول توزيع أرباح الشراكة الممتدة</h3>
+                <button onclick="closeDetails()" class="btn btn-outline" style="padding: 5px 15px; border-radius: 6px; cursor: pointer;">إغلاق <i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="details-grid" id="contractSummary">
+                </div>
+
+            <div class="table-responsive">
+                <table class="table tera-table" style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f8fafc; text-align: right;">
+                        <tr>
+                            <th style="padding: 12px;">م</th>
+                            <th>تاريخ الاستحقاق</th>
+                            <th>قيمة أرباح الشراكة</th>
+                            <th>الاستحقاق الشهري</th>
+                            <th>المتبقي</th>
+                        </tr>
+                    </thead>
+                    <tbody id="distributionTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="footer-actions" style="margin-top: 30px; display: flex; gap: 10px;">
+            <a href="/pages/dashboard/index.html" class="btn btn-outline" style="text-decoration: none; padding: 10px 20px; border: 1px solid #ccc; border-radius: 6px; color: #333;">العودة للصفحة السابقة</a>
+            <button onclick="window.print()" class="btn btn-outline" style="padding: 10px 20px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;"><i class="fas fa-print"></i> طباعة</button>
+            <button id="exportPdf" class="btn btn-primary" style="padding: 10px 20px; border: none; border-radius: 6px; background: #028090; color: white; cursor: pointer;"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+            <button id="exportExcel" class="btn btn-success" style="padding: 10px 20px; border: none; border-radius: 6px; background: #10B981; color: white; cursor: pointer;"><i class="fas fa-file-excel"></i> تصدير إكسل</button>
         </footer>
     </main>
 </div>
 
-<script src="/assets/js/core.js"></script>
-<script src="/assets/js/investments.js"></script>
+<script>
+    // 1. البيانات التجريبية المستخرجة من الـ PRD
+    const mockData = [
+        {
+            id: "TR-2026-06-27-001",
+            startDate: "2026/06/27",
+            endDate: "2027/06/17",
+            percentage: "5%",
+            capital: 10000,
+            expectedProfit: 5000,
+            durationMonths: 12,
+            status: "قائم / نشط"
+        }
+    ];
 
-</body>
-</html>
+    // 2. دالة التنسيق المحاسبي (فواصل الآلاف وتقريب لخانتين)
+    function formatMoney(amount) {
+        return parseFloat(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // 3. بناء الجدول الرئيسي
+    function renderMainTable() {
+        const tbody = document.getElementById('investmentsTableBody');
+        tbody.innerHTML = '';
+
+        mockData.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 15px; border-bottom: 1px solid #eee; color: #028090; font-weight: bold;">${item.id}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${item.startDate}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${item.endDate}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${item.percentage}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${formatMoney(item.capital)}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${formatMoney(item.expectedProfit)}</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">${item.durationMonths} شهر</td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;"><span style="background: #dcfce7; color: #10b981; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">${item.status}</span></td>
+                <td style="padding: 15px; border-bottom: 1px solid #eee;">
+                    <button onclick="viewDetails(${index})" style="padding: 6px 12px; border: none; background: #f1f5f9; color: #0f172a; border-radius: 4px; cursor: pointer; font-weight: bold;">عرض</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 4. عرض التفاصيل والمعادلة المحاسبية وجدول التوزيع
+    window.viewDetails = function(index) {
+        const contract = mockData[index];
+        const detailedView = document.getElementById('detailedView');
+        const summaryGrid = document.getElementById('contractSummary');
+        const distBody = document.getElementById('distributionTableBody');
+        
+        // عرض ملخص العقد
+        summaryGrid.innerHTML = `
+            <div class="details-item"><span>رقم الشراكة</span><strong>${contract.id}</strong></div>
+            <div class="details-item"><span>قيمة الشراكة الأساسية</span><strong>${formatMoney(contract.capital)} ر.س</strong></div>
+            <div class="details-item"><span>إجمالي الأرباح المتوقع</span><strong style="color: #10b981;">${formatMoney(contract.expectedProfit)} ر.س</strong></div>
+            <div class="details-item"><span>المدة</span><strong>${contract.durationMonths} شهر</strong></div>
+        `;
+
+        // حساب الأرباح الدورية (التقريب لخانتين)
+        let totalProfit = contract.expectedProfit;
+        let duration = contract.durationMonths;
+        let rawMonthly = totalProfit / duration;
+        let monthlyProfit = parseFloat(rawMonthly.toFixed(2));
+        
+        let remaining = totalProfit;
