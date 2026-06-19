@@ -61,7 +61,7 @@
             font-size: 14px;
         }
 
-        /* --- شريط البحث والأدوات --- */
+        /* --- شريط الأدوات (بحث + فلاتر) --- */
         .toolbar-section {
             display: flex;
             justify-content: space-between;
@@ -73,7 +73,7 @@
         .toolbar-section .search-box {
             position: relative;
             flex: 1;
-            max-width: 340px;
+            max-width: 280px;
         }
         .toolbar-section .search-box input {
             width: 100%;
@@ -98,9 +98,31 @@
             color: var(--gray-400, #94a3b8);
             font-size: 16px;
         }
+        .toolbar-section .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .toolbar-section .filters select {
+            padding: 10px 14px;
+            border: 2px solid var(--gray-200, #e9ecef);
+            border-radius: var(--border-radius, 8px);
+            font-size: 14px;
+            font-family: 'Tajawal', sans-serif;
+            background: var(--white-color, #ffffff);
+            color: var(--gray-800, #1e293b);
+            min-width: 130px;
+            cursor: pointer;
+        }
+        .toolbar-section .filters select:focus {
+            outline: none;
+            border-color: var(--primary-color, #028090);
+        }
         .toolbar-section .pagination-info {
             font-size: 14px;
             color: var(--gray-600, #64748b);
+            white-space: nowrap;
         }
 
         /* --- جدول الشراكة الممتدة --- */
@@ -494,6 +516,13 @@
             .toolbar-section .search-box {
                 max-width: 100%;
             }
+            .toolbar-section .filters {
+                justify-content: space-between;
+            }
+            .toolbar-section .filters select {
+                flex: 1;
+                min-width: 0;
+            }
             .detail-modal {
                 padding: 24px 18px;
             }
@@ -522,6 +551,12 @@
         @media (max-width: 576px) {
             .extended-header .title-section h2 {
                 font-size: 20px;
+            }
+            .toolbar-section .filters {
+                flex-direction: column;
+            }
+            .toolbar-section .filters select {
+                width: 100%;
             }
             .detail-modal .detail-info-grid {
                 grid-template-columns: 1fr;
@@ -566,6 +601,14 @@
             }
             .toolbar-section .search-box i {
                 color: var(--gray-500, #94a3b8);
+            }
+            .toolbar-section .filters select {
+                background: var(--gray-800, #2d3a4f);
+                border-color: var(--gray-700, #495057);
+                color: var(--gray-100, #f8f9fa);
+            }
+            .toolbar-section .filters select:focus {
+                border-color: var(--primary-color, #14b8a6);
             }
             .extended-table-wrapper {
                 background: var(--gray-800, #2d3a4f);
@@ -763,7 +806,7 @@
             <header class="header">
                 <div class="header-left">
                     <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                    <a href="/pages/dashboard" class="back-to-dashboard"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
+                    <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboardLink"><i class="fas fa-arrow-right"></i><span>العودة للوحة التحكم</span></a>
                     <h1 class="page-title" id="pageTitle">الشراكة الممتدة</h1>
                 </div>
                 <div class="header-right">
@@ -790,11 +833,27 @@
                     </div>
                 </div>
 
-                <!-- شريط البحث والأدوات -->
+                <!-- شريط الأدوات (بحث + فلاتر) -->
                 <div class="toolbar-section">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="ابحث برقم الشراكة..." />
+                    </div>
+                    <div class="filters">
+                        <select id="statusFilter">
+                            <option value="all">جميع الحالات</option>
+                            <option value="نشط">نشط</option>
+                            <option value="مكتمل">مكتمل</option>
+                            <option value="قيد الانتظار">قيد الانتظار</option>
+                            <option value="ملغي">ملغي</option>
+                            <option value="ممدد">ممدد</option>
+                        </select>
+                        <select id="sortFilter">
+                            <option value="date-desc">الأحدث أولاً</option>
+                            <option value="date-asc">الأقدم أولاً</option>
+                            <option value="value-desc">الأعلى قيمة</option>
+                            <option value="value-asc">الأقل قيمة</option>
+                        </select>
                     </div>
                     <div class="pagination-info">
                         عرض <span id="rangeStart">0</span> - <span id="rangeEnd">0</span> من <span id="totalItems">0</span>
@@ -904,7 +963,6 @@
             // ============================================================
             const mockData = [];
 
-            // توليد 25 عقد شراكة ممتدة
             const statuses = ['نشط', 'مكتمل', 'قيد الانتظار', 'ملغي', 'ممدد'];
             const statusClassMap = {
                 'نشط': 'active',
@@ -914,7 +972,7 @@
                 'ممدد': 'extended'
             };
 
-            const startDate = new Date(2026, 5, 1); // 1 يونيو 2026
+            const startDate = new Date(2026, 5, 1);
 
             for (let i = 1; i <= 25; i++) {
                 const month = String(startDate.getMonth() + 1).padStart(2, '0');
@@ -931,8 +989,7 @@
 
                 const status = statuses[i % statuses.length];
                 const partnershipValue = 5000 + (i * 200);
-                const profitPercentage = 0.05; // 5% سنوياً
-                const totalProfit = partnershipValue * profitPercentage;
+                const totalProfit = partnershipValue * 0.05;
                 const monthlyProfit = totalProfit / 12;
 
                 mockData.push({
@@ -977,7 +1034,7 @@
             }
 
             // ============================================================
-            // 3. توليد جدول التوزيع (حسب مدة الشراكة)
+            // 3. توليد جدول التوزيع
             // ============================================================
             function generateSchedule(partnership) {
                 const duration = partnership.duration || 12;
@@ -991,11 +1048,9 @@
 
                 for (let i = 1; i <= duration; i++) {
                     let payment = monthlyProfit;
-                    // في الشهر الأخير، نضبط المبلغ ليكون الرصيد المتبقي بالضبط
                     if (i === duration) {
                         payment = remaining;
                     }
-                    // تقريب لخانتين عشريتين
                     payment = Math.round(payment * 100) / 100;
                     remaining = Math.round((remaining - payment) * 100) / 100;
                     if (remaining < 0.005) remaining = 0;
@@ -1011,7 +1066,6 @@
                         remaining: remaining
                     });
 
-                    // إضافة شهر واحد
                     currentDate.setMonth(currentDate.getMonth() + 1);
                 }
 
@@ -1019,12 +1073,56 @@
             }
 
             // ============================================================
-            // 4. عرض الجدول الرئيسي مع الترقيم والبحث
+            // 4. عرض الجدول الرئيسي مع الترقيم والبحث والفلاتر
             // ============================================================
-            let currentData = [...mockData];
             let filteredData = [...mockData];
             let currentPage = 1;
             const itemsPerPage = 10;
+
+            // عناصر الفلاتر
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const sortFilter = document.getElementById('sortFilter');
+
+            function applyFilters() {
+                const query = searchInput.value.trim().toLowerCase();
+                const status = statusFilter.value;
+
+                // تصفية البيانات
+                let data = mockData.filter(item => {
+                    const matchId = item.id.toLowerCase().includes(query);
+                    const matchStatus = status === 'all' || item.status === status;
+                    return matchId && matchStatus;
+                });
+
+                // ترتيب البيانات
+                const sortValue = sortFilter.value;
+                switch (sortValue) {
+                    case 'date-desc':
+                        data.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+                        break;
+                    case 'date-asc':
+                        data.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+                        break;
+                    case 'value-desc':
+                        data.sort((a, b) => b.value - a.value);
+                        break;
+                    case 'value-asc':
+                        data.sort((a, b) => a.value - b.value);
+                        break;
+                    default:
+                        break;
+                }
+
+                filteredData = data;
+                currentPage = 1;
+                renderTable(filteredData, currentPage);
+            }
+
+            // ربط الفلاتر بالأحداث
+            searchInput.addEventListener('input', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+            sortFilter.addEventListener('change', applyFilters);
 
             function renderTable(data, page) {
                 const container = document.getElementById('tableContainer');
@@ -1035,7 +1133,7 @@
                         <div class="empty-state">
                             <div class="empty-icon"><i class="fas fa-handshake"></i></div>
                             <div class="empty-title">لا توجد شراكات ممتدة</div>
-                            <div class="empty-desc">لا توجد عقود شراكة ممتدة نشطة في حسابك حالياً</div>
+                            <div class="empty-desc">لا توجد عقود شراكة ممتدة مطابقة للبحث الحالي</div>
                         </div>
                     `;
                     document.getElementById('paginationWrapper').style.display = 'none';
@@ -1134,16 +1232,14 @@
                 const container = document.getElementById('paginationButtons');
                 let html = '';
 
-                // زر السابق
                 html += `<button class="prev" ${currentPage <= 1 ? 'disabled' : ''}>&laquo;</button>`;
 
-                // أرقام الصفحات
                 let startPage = Math.max(1, currentPage - 2);
                 let endPage = Math.min(totalPages, currentPage + 2);
 
                 if (startPage > 1) {
                     html += `<button data-page="1">1</button>`;
-                    if (startPage > 2) html += `<span style="padding:0 6px; color:var(--gray-500);">…</span>`;
+                    if (startPage > 2) html += `<span>…</span>`;
                 }
 
                 for (let i = startPage; i <= endPage; i++) {
@@ -1151,16 +1247,14 @@
                 }
 
                 if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) html += `<span style="padding:0 6px; color:var(--gray-500);">…</span>`;
+                    if (endPage < totalPages - 1) html += `<span>…</span>`;
                     html += `<button data-page="${totalPages}">${totalPages}</button>`;
                 }
 
-                // زر التالي
                 html += `<button class="next" ${currentPage >= totalPages ? 'disabled' : ''}>&raquo;</button>`;
 
                 container.innerHTML = html;
 
-                // أحداث الأزرار
                 container.querySelectorAll('button[data-page]').forEach(btn => {
                     btn.addEventListener('click', function() {
                         const page = parseInt(this.dataset.page);
@@ -1192,32 +1286,15 @@
             }
 
             // ============================================================
-            // 6. البحث (Search)
-            // ============================================================
-            document.getElementById('searchInput').addEventListener('input', function() {
-                const query = this.value.trim().toLowerCase();
-                if (query === '') {
-                    filteredData = [...currentData];
-                } else {
-                    filteredData = currentData.filter(item => item.id.toLowerCase().includes(query));
-                }
-                currentPage = 1;
-                renderTable(filteredData, currentPage);
-            });
-
-            // ============================================================
-            // 7. نافذة التفاصيل (Modal)
+            // 6. نافذة التفاصيل (Modal)
             // ============================================================
             function openDetail(item) {
                 const overlay = document.getElementById('detailOverlay');
-                const modal = document.getElementById('detailModal');
 
-                // تحديث المعرف والحالة
                 document.getElementById('detailId').innerHTML = `${item.id} <small>${item.status}</small>`;
                 document.getElementById('detailStatusBadge').textContent = item.status;
                 document.getElementById('detailStatusBadge').className = `status-badge-sm ${item.statusClass}`;
 
-                // تحديث معلومات الشراكة
                 const grid = document.getElementById('detailInfoGrid');
                 grid.innerHTML = `
                     <div class="item">
@@ -1262,15 +1339,12 @@
                     </div>
                 `;
 
-                // إجمالي الأرباح
                 document.getElementById('totalProfitDisplay').textContent = formatCurrency(item.totalProfit);
 
-                // توليد جدول التوزيع
                 const schedule = generateSchedule(item);
                 const tbody = document.getElementById('scheduleBody');
                 let rows = '';
                 schedule.forEach(row => {
-                    const remainingDisplay = row.remaining <= 0.01 ? '0.00' : formatNumber(row.remaining);
                     rows += `
                         <tr>
                             <td>${row.month}</td>
@@ -1285,14 +1359,10 @@
                 });
                 tbody.innerHTML = rows;
 
-                // عرض النافذة
                 overlay.classList.add('open');
                 document.body.style.overflow = 'hidden';
             }
 
-            // ============================================================
-            // 8. إغلاق نافذة التفاصيل
-            // ============================================================
             function closeDetail() {
                 document.getElementById('detailOverlay').classList.remove('open');
                 document.body.style.overflow = '';
@@ -1300,20 +1370,17 @@
 
             document.getElementById('closeDetailBtn').addEventListener('click', closeDetail);
             document.getElementById('backBtn').addEventListener('click', closeDetail);
-
             document.getElementById('detailOverlay').addEventListener('click', function(e) {
                 if (e.target === this) closeDetail();
             });
-
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeDetail();
             });
 
             // ============================================================
-            // 9. أزرار التصدير
+            // 7. أزرار التصدير
             // ============================================================
             document.getElementById('printBtn').addEventListener('click', function() {
-                // نطبع محتوى النافذة فقط
                 const modalContent = document.getElementById('detailModal');
                 const originalTitle = document.title;
                 document.title = 'تفاصيل الشراكة الممتدة';
@@ -1357,11 +1424,26 @@
             });
 
             // ============================================================
-            // 10. القائمة الجانبية (Sidebar)
+            // 8. القائمة الجانبية (Sidebar) وإصلاح زر العودة
             // ============================================================
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
                 if (sidebar) sidebar.classList.toggle('sidebar-open');
+            }
+
+            // إصلاح زر العودة للوحة التحكم لاستخدام TeraApp.navigateTo إن وجد
+            function setupBackButton() {
+                const backBtn = document.getElementById('backToDashboardLink');
+                if (backBtn) {
+                    backBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
+                            TeraApp.navigateTo('/pages/dashboard');
+                        } else {
+                            window.location.href = '/pages/dashboard';
+                        }
+                    });
+                }
             }
 
             document.addEventListener('DOMContentLoaded', function() {
@@ -1403,9 +1485,11 @@
                     });
                 });
 
+                // تطبيق إصلاح زر العودة
+                setupBackButton();
+
                 // تهيئة البيانات وعرضها
-                filteredData = [...mockData];
-                renderTable(filteredData, 1);
+                applyFilters();
 
                 console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح');
             });
