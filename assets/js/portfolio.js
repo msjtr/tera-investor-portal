@@ -1,102 +1,142 @@
-/* ================================================= */
-/* TERA PORTFOLIO MODULE */
-/* ================================================= */
-'use strict';
+/**
+ * ============================================================
+ * portfolio.js - ملف إدارة عمليات المحفظة (النسخة المتوافقة مع SPA)
+ * ============================================================
+ * الموقع: /assets/js/portfolio.js
+ * * التحديثات:
+ * 1. تحويل الأحداث إلى Event Delegation لتعمل مع الصفحات الديناميكية.
+ * 2. التخلص من رسائل alert المزعجة واستخدام نظام Toast.
+ * 3. دمج التهيئة مع نظام `app.js` عبر دالة `initPortfolio`.
+ * 4. استخدام `registerCleanup` لمنع تكرار الأحداث.
+ * ============================================================
+ */
 
-const PortfolioManager = {
-    init() {
-        console.log('Portfolio Module Initialized');
-        this.cacheDOM();
-        this.bindEvents();
-        this.loadPortfolio();
-    },
+(function() {
+    'use strict';
 
-    cacheDOM() {
-        // جلب عناصر صفحة المحفظة إن وجدت
-        this.withdrawForm = document.getElementById('withdrawForm');
-        this.balanceDisplay = document.querySelector('.balance-amount-display');
-    },
+    const PortfolioManager = {
+        initialized: false,
 
-    bindEvents() {
-        // ربط حدث الإرسال بنموذج السحب (إن وجد)
-        if (this.withdrawForm) {
-            this.withdrawForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleWithdrawRequest();
-            });
-        }
-    },
+        init() {
+            console.log('💼 [Portfolio] بدء تهيئة وحدة المحفظة');
+            this.loadPortfolio();
+            this.bindEvents();
+        },
 
-    loadPortfolio() {
-        // محاكاة جلب بيانات المحفظة من السيرفر
-        console.log('جاري تحميل وتحديث بيانات المحفظة...');
-        
-        // إضافة تأثير بصري لظهور الرصيد بنعومة (Fade-in effect)
-        if (this.balanceDisplay) {
-            this.balanceDisplay.style.opacity = '0';
-            setTimeout(() => {
-                this.balanceDisplay.style.transition = 'opacity 0.6s ease';
-                this.balanceDisplay.style.opacity = '1';
-            }, 300);
-        }
-    },
+        bindEvents() {
+            // استخدام تفويض الأحداث (Event Delegation) لنموذج السحب
+            // لمنع تكرار الأحداث في نظام الـ SPA
+            if (this.initialized) return;
+            this.initialized = true;
 
-    handleWithdrawRequest() {
-        // جلب حقل المبلغ للتحقق منه (بافتراض وجود حقل يحمل هذا الـ ID)
-        const amountInput = document.getElementById('withdrawAmount');
-        
-        if (amountInput && (amountInput.value === '' || parseFloat(amountInput.value) <= 0)) {
-            alert('يرجى إدخال مبلغ صحيح للسحب.');
-            return;
-        }
+            const submitHandler = (e) => {
+                const withdrawForm = e.target.closest('#withdrawForm');
+                if (withdrawForm) {
+                    e.preventDefault();
+                    this.handleWithdrawRequest(withdrawForm);
+                }
+            };
 
-        // تفعيل حالة التحميل للزر لمنع الإرسال المزدوج
-        const submitBtn = this.withdrawForm ? this.withdrawForm.querySelector('button[type="submit"]') : null;
-        let originalText = '';
-        
-        if (submitBtn) {
-            originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-left: 8px;"></i> جاري المعالجة...';
-            submitBtn.style.opacity = '0.7';
-        }
+            document.body.addEventListener('submit', submitHandler);
 
-        // محاكاة الاتصال بالخادم (API Call)
-        setTimeout(() => {
-            alert('تم إرسال طلب السحب بنجاح. ستتم المعالجة وإيداع المبلغ في حسابك البنكي خلال أيام العمل الرسمية.');
-            
-            // إعادة ضبط النموذج
-            if (this.withdrawForm) {
-                this.withdrawForm.reset();
+            // تسجيل دالة تنظيف (Cleanup) لإزالة الحدث إذا غادر المستخدم صفحة المحفظة
+            if (typeof TeraApp !== 'undefined' && typeof TeraApp.registerCleanup === 'function') {
+                TeraApp.registerCleanup(() => {
+                    document.body.removeEventListener('submit', submitHandler);
+                    this.initialized = false;
+                    console.log('🧹 [Portfolio] تم تنظيف أحداث المحفظة');
+                });
             }
+        },
+
+        loadPortfolio() {
+            console.log('💼 [Portfolio] جاري تحديث الأرصدة والبيانات...');
             
-            // إعادة الزر لحالته الطبيعية
+            const balanceDisplay = document.querySelector('.balance-amount-display');
+            
+            // تأثير بصري للرصيد
+            if (balanceDisplay) {
+                balanceDisplay.style.opacity = '0';
+                setTimeout(() => {
+                    balanceDisplay.style.transition = 'opacity 0.6s ease';
+                    balanceDisplay.style.opacity = '1';
+                }, 100);
+            }
+        },
+
+        handleWithdrawRequest(form) {
+            const amountInput = form.querySelector('#withdrawAmount');
+            
+            // جلب دالة التنبيه الموحدة (Toast)
+            const showNotification = (typeof TeraMain !== 'undefined' && TeraMain.showToast) 
+                                      ? TeraMain.showToast 
+                                      : (msg) => alert(msg);
+
+            // التحقق من صحة المبلغ
+            if (!amountInput || amountInput.value.trim() === '' || parseFloat(amountInput.value) <= 0) {
+                showNotification('❌ يرجى إدخال مبلغ صحيح للسحب أكبر من صفر.', 'error');
+                return;
+            }
+
+            // تفعيل حالة التحميل للزر
+            const submitBtn = form.querySelector('button[type="submit"]');
+            let originalText = '';
+            
             if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-                submitBtn.style.opacity = '1';
+                originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-left: 8px;"></i> جاري المعالجة...';
+                submitBtn.style.opacity = '0.7';
             }
-        }, 1500);
+
+            // محاكاة الاتصال بالسيرفر (API Call)
+            setTimeout(() => {
+                showNotification('✅ تم إرسال طلب السحب بنجاح. ستتم المعالجة قريباً.', 'success');
+                
+                // إعادة ضبط النموذج
+                form.reset();
+                
+                // إعادة الزر لحالته
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.style.opacity = '1';
+                }
+            }, 1500);
+        }
+    };
+
+    // ============================================================
+    // تصدير دالة التهيئة للـ Router (app.js)
+    // ============================================================
+    
+    // هذه الدالة سيقوم app.js باستدعائها تلقائياً عند الدخول لصفحات المحفظة
+    window.initPortfolio = function() {
+        PortfolioManager.init();
+    };
+
+    // لتوافقية الأكواد القديمة (إن وجدت في الـ HTML)
+    window.requestWithdraw = function(e) {
+        if (e) e.preventDefault();
+        const form = document.getElementById('withdrawForm');
+        if(form) PortfolioManager.handleWithdrawRequest(form);
+    };
+
+    window.loadPortfolio = function() {
+        PortfolioManager.loadPortfolio();
+    };
+
+    // تشغيل مبدئي في حال تم فتح الصفحة بشكل مباشر (خارج الـ SPA)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.location.pathname.includes('portfolio')) {
+                PortfolioManager.init();
+            }
+        });
+    } else {
+        if (window.location.pathname.includes('portfolio')) {
+            PortfolioManager.init();
+        }
     }
-};
 
-/* ================================================= */
-/* إتاحة الدوال عالمياً (Global Scope) */
-/* لضمان استمرار عمل الأزرار المربوطة بـ onclick في HTML */
-/* ================================================= */
-
-window.requestWithdraw = function(e) {
-    if (e) e.preventDefault();
-    PortfolioManager.handleWithdrawRequest();
-};
-
-window.loadPortfolio = function() {
-    PortfolioManager.loadPortfolio();
-};
-
-/* ================================================= */
-/* التهيئة عند تحميل الصفحة */
-/* ================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-    PortfolioManager.init();
-});
+})();
