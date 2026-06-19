@@ -677,7 +677,8 @@
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <a href="/pages/dashboard?t=0" class="back-to-dashboard" id="backToDashboardLink">
+                    <!-- زر العودة إلى لوحة التحكم (مع منع التخزين المؤقت) -->
+                    <a href="#" class="back-to-dashboard" id="backToDashboardLink">
                         <i class="fas fa-arrow-right"></i>
                         <span>العودة للوحة التحكم</span>
                     </a>
@@ -1187,7 +1188,7 @@
             });
 
             // ============================================================
-            // 6. القائمة الجانبية وزر العودة
+            // 6. القائمة الجانبية وزر العودة (محسن)
             // ============================================================
             function toggleSidebar() {
                 const sidebar = document.getElementById('sidebar');
@@ -1218,7 +1219,7 @@
             }
 
             // ============================================================
-            // 7. التهيئة
+            // 7. التهيئة وإصلاح زر العودة
             // ============================================================
             document.addEventListener('DOMContentLoaded', function() {
                 // زر تبديل القائمة
@@ -1311,21 +1312,43 @@
                 // تهيئة البيانات
                 applyFilters();
 
-                // زر العودة للوحة التحكم
+                // ============================================================
+                // إصلاح زر العودة للوحة التحكم (تجاوز TeraApp.navigateTo)
+                // ============================================================
                 const backBtn = document.getElementById('backToDashboardLink');
                 if (backBtn) {
-                    backBtn.addEventListener('click', function(e) {
+                    // إزالة أي مستمع سابق
+                    const newBackBtn = backBtn.cloneNode(true);
+                    backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+
+                    newBackBtn.addEventListener('click', function(e) {
                         e.preventDefault();
+
+                        // استخدام window.location.replace مباشرة مع timestamp لتجاوز الكاش
                         const url = '/pages/dashboard?t=' + Date.now();
-                        if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                            TeraApp.navigateTo(url);
-                        } else {
-                            window.location.href = url;
-                        }
+                        // وضع علامة في sessionStorage للدلالة على أننا قادمون من زر العودة
+                        try {
+                            sessionStorage.setItem('fromBackButton', 'true');
+                        } catch (err) { /* ignore */ }
+                        // استخدام replace لتجنب إضافة الصفحة في سجل التصفح
+                        window.location.replace(url);
                     });
                 }
 
-                console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح');
+                // التحقق من وجود علامة sessionStorage لإعادة تحميل الصفحة إذا لزم الأمر
+                try {
+                    if (sessionStorage.getItem('fromBackButton') === 'true') {
+                        sessionStorage.removeItem('fromBackButton');
+                        // إذا كانت الصفحة قد تم تحميلها من الكاش (navigation type 2)
+                        if (window.performance && window.performance.navigation) {
+                            if (window.performance.navigation.type === 2) {
+                                window.location.reload(true);
+                            }
+                        }
+                    }
+                } catch (err) { /* ignore */ }
+
+                console.log('✅ [extended-investments] تم تحميل الصفحة بنجاح مع إصلاح زر العودة');
             });
 
         })();
