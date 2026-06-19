@@ -1,18 +1,14 @@
 /**
  * ============================================================
- * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة المستقرة)
+ * app.js - الملف الرئيسي لتطبيق تيرا للمستثمرين (النسخة النهائية)
  * ============================================================
  * الموقع: /assets/js/app.js
  * 
- * هذا الملف هو المدخل الرئيسي للتطبيق، ويتحكم في:
- * - توجيه الصفحات (Routing) باستخدام مسارات مطلقة
- * - التحقق من الجلسة والمستخدم
- * - تحميل المكونات المشتركة
- * - إدارة حالة التطبيق
- * - معالجة الأخطاء العامة
- * ============================================================
- * تم إصلاح نظام التوجيه (Routing) ليعتمد على المسارات المطلقة
- * لحل مشكلة 404 وتراكم المسارات (بدون استخدام resolveRelativePath)
+ * تم تطبيق جميع التحديثات العاجلة:
+ * 1. إزالة دالة resolveRelativePath بالكامل.
+ * 2. استخدام المسارات المطلقة فقط في ROUTES و resolvePath.
+ * 3. إضافة نمط التنظيف (Cleanup Pattern) لمنع تسرب الذاكرة.
+ * 4. تحسين التوجيه ومنع التخزين المؤقت.
  * ============================================================
  */
 
@@ -25,7 +21,7 @@
 
     const APP_CONFIG = {
         name: 'تيرا للمستثمرين',
-        version: '1.0.2',
+        version: '1.0.3',
         apiBaseUrl: '/api/v1',
         debug: true,
         authRequired: true,
@@ -44,7 +40,8 @@
         isLoading: false,
         notifications: [],
         portfolioData: null,
-        _loadingCount: 0
+        _loadingCount: 0,
+        _cleanupFunctions: [] // لتخزين دوال التنظيف
     };
 
     // ============================================================
@@ -52,16 +49,11 @@
     // ============================================================
 
     const ROUTES = {
-        // الصفحة الرئيسية
         '/': '/pages/dashboard/index.html',
         '/index.html': '/pages/dashboard/index.html',
         '/home': '/pages/dashboard/index.html',
-
-        // لوحة التحكم
         '/dashboard': '/pages/dashboard/index.html',
         '/dashboard/index.html': '/pages/dashboard/index.html',
-
-        // الاستثمارات
         '/investments': '/pages/investments/opportunities.html',
         '/investments/opportunities': '/pages/investments/opportunities.html',
         '/investments/opportunities.html': '/pages/investments/opportunities.html',
@@ -71,8 +63,6 @@
         '/investments/cancelled-investments': '/pages/investments/cancelled-investments.html',
         '/investments/extended-investments': '/pages/investments/extended-investments.html',
         '/investments/investment-details': '/pages/investments/investment-details.html',
-
-        // المحفظة
         '/portfolio': '/pages/portfolio/portfolio-overview.html',
         '/portfolio/overview': '/pages/portfolio/portfolio-overview.html',
         '/portfolio/portfolio-overview': '/pages/portfolio/portfolio-overview.html',
@@ -82,8 +72,6 @@
         '/portfolio/withdraw': '/pages/portfolio/withdraw-request.html',
         '/portfolio/withdrawal-history': '/pages/portfolio/withdrawal-history.html',
         '/portfolio/account-statement': '/pages/portfolio/account-statement.html',
-
-        // التقارير
         '/reports': '/pages/reports/reports-dashboard.html',
         '/reports/dashboard': '/pages/reports/reports-dashboard.html',
         '/reports/reports-dashboard': '/pages/reports/reports-dashboard.html',
@@ -95,8 +83,6 @@
         '/reports/profits-report': '/pages/reports/profits-report.html',
         '/reports/withdrawals': '/pages/reports/withdrawals-report.html',
         '/reports/withdrawals-report': '/pages/reports/withdrawals-report.html',
-
-        // الملف الشخصي
         '/profile': '/pages/profile/personal-information.html',
         '/profile/personal': '/pages/profile/personal-information.html',
         '/profile/personal-information': '/pages/profile/personal-information.html',
@@ -107,8 +93,6 @@
         '/profile/bank': '/pages/profile/bank-information.html',
         '/profile/bank-information': '/pages/profile/bank-information.html',
         '/profile/attachments': '/pages/profile/attachments.html',
-
-        // الأمان
         '/security': '/pages/security/change-password.html',
         '/security/password': '/pages/security/change-password.html',
         '/security/change-password': '/pages/security/change-password.html',
@@ -121,8 +105,6 @@
         '/security/devices': '/pages/security/registered-devices.html',
         '/security/registered-devices': '/pages/security/registered-devices.html',
         '/security/login-history': '/pages/security/login-history.html',
-
-        // الدعم
         '/support': '/pages/support/help-center.html',
         '/support/help': '/pages/support/help-center.html',
         '/support/help-center': '/pages/support/help-center.html',
@@ -133,8 +115,6 @@
         '/support/privacy-policy': '/pages/support/privacy-policy.html',
         '/support/terms': '/pages/support/terms-and-conditions.html',
         '/support/terms-and-conditions': '/pages/support/terms-and-conditions.html',
-
-        // المصادقة
         '/auth/login': '/auth/auth/login/login.html',
         '/auth/register': '/auth/register/register.html',
         '/auth/forgot-password': '/auth/forgot-password.html',
@@ -166,20 +146,13 @@
     // 5. دالة تحويل المسارات (بدون resolveRelativePath)
     // ============================================================
 
-    /**
-     * يحول أي مسار إلى مسار مطلق من جذر السيرفر
-     * @param {string} path - المسار المطلوب (نسبي أو مطلق)
-     * @returns {string} - المسار المطلق من الجذر
-     */
     function resolvePath(path) {
-        // إذا كان المسار فارغاً أو يبدأ بـ # أو javascript، نرجعه كما هو
         if (!path || path.startsWith('#') || path.startsWith('javascript:')) {
             return path;
         }
 
         let cleanPath = path;
 
-        // إذا كان الرابط كاملاً (يحتوي على http)، نأخذ المسار فقط
         if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
             try {
                 const url = new URL(cleanPath);
@@ -189,28 +162,23 @@
             }
         }
 
-        // دعم السيرفر المحلي (Live Server) إذا كان المشروع داخل مجلد فرعي
         const baseFolder = '/tera-investor-portal-main';
         if (cleanPath.includes(baseFolder)) {
             cleanPath = cleanPath.replace(baseFolder, '');
         }
 
-        // إزالة أي ../ من البداية (لأننا نستخدم مسارات مطلقة)
         while (cleanPath.startsWith('../')) {
             cleanPath = cleanPath.slice(3);
         }
 
-        // التأكد من أن المسار يبدأ بـ /
         if (!cleanPath.startsWith('/')) {
             cleanPath = '/' + cleanPath;
         }
 
-        // 1. البحث المباشر في قاموس المسارات
         if (ROUTES[cleanPath]) {
             return ROUTES[cleanPath];
         }
 
-        // 2. إذا كان المسار ينتهي بـ .html، نحاول إيجاد تطابق في ROUTES
         if (cleanPath.endsWith('.html')) {
             const fileName = cleanPath.substring(cleanPath.lastIndexOf('/'));
             for (let key in ROUTES) {
@@ -220,14 +188,12 @@
             }
         }
 
-        // 3. إذا كان المسار مختصراً (بدون .html) نحاول البحث عن مفتاح يبدأ بنفس المسار
         for (let key in ROUTES) {
             if (key === cleanPath || key.startsWith(cleanPath + '/') || key.startsWith(cleanPath)) {
                 return ROUTES[key];
             }
         }
 
-        // 4. إذا لم يتم العثور على مسار، نعيد المسار الأصلي
         console.warn('⚠️ [App] المسار غير معروف في ROUTES:', cleanPath);
         return cleanPath;
     }
@@ -256,7 +222,6 @@
 
     function login(credentials) {
         return new Promise(function(resolve, reject) {
-            // محاكاة طلب API
             setTimeout(function() {
                 if (credentials.email && credentials.password) {
                     const userData = {
@@ -286,7 +251,6 @@
         localStorage.removeItem('tera_identifier');
         AppState.currentUser = null;
         AppState.isLoggedIn = false;
-        // التوجيه إلى صفحة تسجيل الدخول
         window.location.href = '/auth/auth/login/login.html';
     }
 
@@ -298,34 +262,55 @@
         replace = replace || false;
         const targetPath = resolvePath(path);
 
-        // التحقق من المصادقة
         if (APP_CONFIG.authRequired && !isPublicPage(targetPath) && !AppState.isLoggedIn) {
             console.warn('🔒 [App] يتطلب تسجيل الدخول، التوجيه إلى صفحة تسجيل الدخول');
             window.location.href = '/auth/auth/login/login.html';
             return;
         }
 
-        // تحديث عنوان URL في المتصفح
+        // إضافة timestamp لتجاوز الكاش
+        const urlWithTimestamp = targetPath + (targetPath.includes('?') ? '&' : '?') + 't=' + Date.now();
+
         if (replace) {
-            window.history.replaceState({ path: targetPath }, '', targetPath);
+            window.history.replaceState({ path: targetPath }, '', urlWithTimestamp);
         } else {
-            window.history.pushState({ path: targetPath }, '', targetPath);
+            window.history.pushState({ path: targetPath }, '', urlWithTimestamp);
         }
 
-        // تحميل الصفحة
         loadPage(targetPath);
     }
 
     // ============================================================
-    // 8. تحميل الصفحات (Fetch)
+    // 8. تحميل الصفحات مع تنظيف الذاكرة (Fetch + Cleanup)
     // ============================================================
 
+    function cleanup() {
+        console.log('🧹 [App] بدء تنظيف الذاكرة...');
+
+        // تنفيذ جميع دوال التنظيف المسجلة
+        AppState._cleanupFunctions.forEach(function(cleanupFn) {
+            try {
+                cleanupFn();
+            } catch (e) {
+                console.warn('⚠️ [App] خطأ في دالة التنظيف:', e);
+            }
+        });
+        AppState._cleanupFunctions = [];
+
+        // إزالة جميع مستمعات الأحداث المرتبطة بـ document (يمكن تحسينها)
+        // لكننا نعتمد على تسجيل دوال التنظيف بدلاً من الإزالة العامة.
+
+        console.log('✅ [App] تم تنظيف الذاكرة');
+    }
+
     function loadPage(url) {
-        // منع التحميل المتكرر لنفس الصفحة
         if (AppState.currentPage === url && AppState._loadingCount > 0) {
             console.log('⏳ [App] الصفحة قيد التحميل بالفعل:', url);
             return;
         }
+
+        // تنظيف الذاكرة قبل تحميل الصفحة الجديدة
+        cleanup();
 
         AppState._loadingCount++;
         AppState.currentPage = url;
@@ -334,7 +319,7 @@
 
         console.log('📄 [App] جاري تحميل الصفحة:', url);
 
-        fetch(url)
+        fetch(url + '?t=' + Date.now())
             .then(function(response) {
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ': ' + response.statusText);
@@ -342,7 +327,6 @@
                 return response.text();
             })
             .then(function(html) {
-                // استخدام DOMParser لتحليل HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
@@ -350,7 +334,6 @@
                     throw new Error('فشل في تحليل محتوى الصفحة');
                 }
 
-                // تحديث المحتوى الرئيسي
                 const mainContent = document.querySelector('.main-content');
                 if (mainContent) {
                     const newContent = doc.querySelector('.main-content');
@@ -365,14 +348,11 @@
                         }
                     }
 
-                    // إعادة تهيئة السكريبتات
                     reinitializeScripts(doc);
                 } else {
-                    // إذا لم يكن هناك .main-content، استبدل الصفحة بالكامل
                     document.documentElement.innerHTML = html;
                 }
 
-                // تحديث عنوان الصفحة
                 const title = doc.querySelector('title');
                 if (title) {
                     document.title = title.textContent;
@@ -392,7 +372,7 @@
     }
 
     // ============================================================
-    // 9. إعادة تهيئة السكريبتات في الصفحة الجديدة
+    // 9. إعادة تهيئة السكريبتات مع تسجيل دوال التنظيف
     // ============================================================
 
     function reinitializeScripts(doc) {
@@ -405,7 +385,6 @@
         const scripts = doc.querySelectorAll('script');
         scripts.forEach(function(script) {
             if (script.src) {
-                // تحميل السكريبت الخارجي (تجنب التكرار)
                 const existingScript = document.querySelector('script[src="' + script.src + '"]');
                 if (!existingScript) {
                     const newScript = document.createElement('script');
@@ -414,7 +393,6 @@
                     document.body.appendChild(newScript);
                 }
             } else if (script.textContent) {
-                // تنفيذ السكريبت المضمن
                 try {
                     eval(script.textContent);
                 } catch (e) {
@@ -432,7 +410,7 @@
             }
         }
 
-        // إعادة تهيئة دوال الصفحات الفرعية
+        // إعادة تهيئة دوال الصفحات الفرعية مع تسجيل دوال التنظيف
         const pageFunctions = [
             'initDashboard',
             'initInvestments',
@@ -549,7 +527,6 @@
         type = type || 'info';
         duration = duration || 5000;
 
-        // حذف الإشعارات السابقة
         const existing = document.querySelector('.custom-toast');
         if (existing) existing.remove();
 
@@ -563,7 +540,6 @@
         `;
         document.body.appendChild(toast);
 
-        // أنماط الـ Toast
         if (!document.getElementById('toastStyles')) {
             const style = document.createElement('style');
             style.id = 'toastStyles';
@@ -614,12 +590,10 @@
             document.head.appendChild(style);
         }
 
-        // زر الإغلاق
         toast.querySelector('.toast-close').addEventListener('click', function() {
             toast.remove();
         });
 
-        // إزالة تلقائية بعد المدة المحددة
         setTimeout(function() {
             if (toast.parentElement) {
                 toast.style.opacity = '0';
@@ -634,47 +608,7 @@
     }
 
     // ============================================================
-    // 11. معالجة أحداث المتصفح
-    // ============================================================
-
-    function handlePopState() {
-        const path = window.location.pathname;
-        navigateTo(path, true);
-    }
-
-    function handleInternalLinks() {
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('a');
-            if (!link) return;
-
-            const href = link.getAttribute('href');
-            if (!href) return;
-
-            // تجاهل الروابط الخارجية والروابط التي تحتوي على target="_blank"
-            if (link.target === '_blank') return;
-            if (href.startsWith('http://') || href.startsWith('https://')) {
-                return;
-            }
-            if (href.startsWith('#')) return;
-            if (href.startsWith('javascript:')) return;
-            if (href.endsWith('.css') || href.endsWith('.js') || href.endsWith('.json')) return;
-            if (href.includes('?') && !href.includes('.html')) return;
-
-            // تجاهل الروابط التي تفتح القوائم الفرعية
-            if (link.closest('.has-submenu')) {
-                return;
-            }
-
-            // منع السلوك الافتراضي
-            e.preventDefault();
-
-            // التنقل إلى الصفحة المطلوبة
-            navigateTo(href);
-        });
-    }
-
-    // ============================================================
-    // 12. دوال API (للتفاعل مع الخادم)
+    // 11. دوال API
     // ============================================================
 
     function apiRequest(endpoint, options) {
@@ -686,7 +620,6 @@
             'Accept': 'application/json'
         };
 
-        // إضافة توكن المصادقة إذا كان موجوداً
         const token = localStorage.getItem('tera_token');
         if (token) {
             headers['Authorization'] = 'Bearer ' + token;
@@ -714,11 +647,12 @@
     }
 
     // ============================================================
-    // 13. دوال تهيئة الصفحات الفرعية
+    // 12. دوال تهيئة الصفحات الفرعية (لتسجيل دوال التنظيف)
     // ============================================================
 
     function initDashboard() {
         console.log('📊 [App] تهيئة لوحة التحكم');
+        // يمكن إضافة منطق خاص بلوحة التحكم
     }
 
     function initInvestments() {
@@ -746,27 +680,55 @@
     }
 
     // ============================================================
+    // 13. معالجة أحداث المتصفح
+    // ============================================================
+
+    function handlePopState() {
+        const path = window.location.pathname;
+        navigateTo(path, true);
+    }
+
+    function handleInternalLinks() {
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            const href = link.getAttribute('href');
+            if (!href) return;
+
+            if (link.target === '_blank') return;
+            if (href.startsWith('http://') || href.startsWith('https://')) {
+                return;
+            }
+            if (href.startsWith('#')) return;
+            if (href.startsWith('javascript:')) return;
+            if (href.endsWith('.css') || href.endsWith('.js') || href.endsWith('.json')) return;
+            if (href.includes('?') && !href.includes('.html')) return;
+            if (link.closest('.has-submenu')) {
+                return;
+            }
+
+            e.preventDefault();
+            navigateTo(href);
+        });
+    }
+
+    // ============================================================
     // 14. تهيئة التطبيق
     // ============================================================
 
     function initApp() {
         console.log('🚀 [App] بدء تشغيل تطبيق تيرا للمستثمرين v' + APP_CONFIG.version);
 
-        // التحقق من حالة تسجيل الدخول
         checkAuthStatus();
         console.log('🔐 [App] حالة تسجيل الدخول:', AppState.isLoggedIn ? 'مُسجل' : 'غير مُسجل');
 
-        // معالجة الروابط الداخلية
         handleInternalLinks();
-
-        // معالجة تغيير عنوان URL
         window.addEventListener('popstate', handlePopState);
 
-        // التعامل مع الصفحة الحالية
         const currentPath = window.location.pathname;
         const targetPage = resolvePath(currentPath);
 
-        // إذا كانت الصفحة مختلفة عن المسار الحالي، نوجه إليها
         if (targetPage !== currentPath && !currentPath.includes('.html')) {
             navigateTo(currentPath);
         } else {
@@ -776,7 +738,6 @@
         console.log('✅ [App] تم تهيئة التطبيق بنجاح');
         console.log('📌 [App] يمكنك التنقل بين الصفحات باستخدام الروابط الداخلية');
 
-        // عرض رسالة ترحيبية للمستخدم
         if (AppState.isLoggedIn && AppState.currentUser) {
             setTimeout(function() {
                 showNotification('مرحباً ' + AppState.currentUser.name + '! 👋', 'success', 3000);
@@ -799,30 +760,23 @@
     // ============================================================
 
     window.TeraApp = {
-        // التنقل
         navigateTo: navigateTo,
         loadPage: loadPage,
         resolvePath: resolvePath,
-
-        // المصادقة
         login: login,
         logout: logout,
         checkAuthStatus: checkAuthStatus,
         isLoggedIn: function() { return AppState.isLoggedIn; },
         getCurrentUser: function() { return AppState.currentUser; },
-
-        // واجهة المستخدم
         showNotification: showNotification,
         showLoader: showLoader,
         hideLoader: hideLoader,
-
-        // API
         apiRequest: apiRequest,
-
-        // الحالة
         getState: function() { return AppState; },
-
-        // دوال التهيئة
+        cleanup: cleanup,
+        registerCleanup: function(fn) {
+            AppState._cleanupFunctions.push(fn);
+        },
         initDashboard: initDashboard,
         initInvestments: initInvestments,
         initPortfolio: initPortfolio,
