@@ -9,6 +9,8 @@
  * 1. تحسين resolvePath للبحث في ROUTES حتى لو لم يكن التطابق تاماً.
  * 2. إزالة إضافة /tera-investor-portal-main في navigateTo لتجنب الأخطاء.
  * 3. التأكد من أن loadPage تستخدم المسار الكامل كما هو.
+ * 4. إصلاح handlePopState لاستخدام المسار الصحيح وتحديث واجهة المستخدم.
+ * 5. استدعاء TeraMain.refreshUI() بعد تحميل الصفحة لتحديث المكونات.
  * ============================================================
  */
 
@@ -278,6 +280,11 @@
 
                 const title = doc.querySelector('title');
                 if (title) document.title = title.textContent;
+
+                // ✅ تحديث واجهة المستخدم بعد تحميل الصفحة
+                if (typeof window.TeraMain !== 'undefined' && typeof window.TeraMain.refreshUI === 'function') {
+                    window.TeraMain.refreshUI();
+                }
             })
             .catch(error => {
                 console.error('❌ خطأ في تحميل الصفحة:', error);
@@ -344,7 +351,11 @@
     // ============================================================
 
     function handlePopState() {
-        navigateTo(window.location.pathname, true);
+        // ✅ استخدام المسار الفعلي من window.location
+        const path = window.location.pathname;
+        // التأكد من أن المسار مطلق ويبدأ بـ /
+        const finalPath = path.startsWith('/') ? path : '/' + path;
+        navigateTo(finalPath, true);
     }
 
     function handleInternalLinks() {
