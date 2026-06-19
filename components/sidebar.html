@@ -1,17 +1,10 @@
-<!-- ============================================================
-     sidebar.html - القائمة الجانبية (النسخة المنظفة لـ SPA)
-     ملاحظة: هذا الملف يحتوي على HTML و CSS فقط. 
-     وظائف الـ JavaScript تمت إزالتها لتتم إدارتها مركزياً عبر core.js
-     ============================================================ -->
 <aside class="sidebar-container" id="sidebar">
-    <!-- 1. منطقة الشعار (بدون نصوص) -->
     <div class="sidebar-brand">
         <a href="/index.html">
             <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
         </a>
     </div>
 
-    <!-- 2. منطقة التنقل -->
     <nav class="sidebar-menu" id="sidebarMenu">
         <ul class="nav-list">
             <li class="nav-item active">
@@ -20,6 +13,7 @@
                     <span class="nav-label">لوحة التحكم</span>
                 </a>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="investments">
                     <i class="fas fa-chart-line"></i>
@@ -35,6 +29,7 @@
                     <li><a href="/pages/investments/investment-details.html" data-page="investment-details">تفاصيل الاستثمار</a></li>
                 </ul>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="portfolio">
                     <i class="fas fa-wallet"></i>
@@ -50,6 +45,7 @@
                     <li><a href="/pages/portfolio/account-statement.html" data-page="account-statement">كشف الحساب</a></li>
                 </ul>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="reports">
                     <i class="fas fa-file-alt"></i>
@@ -64,6 +60,7 @@
                     <li><a href="/pages/reports/withdrawals-report.html" data-page="withdrawals-report">تقرير السحوبات</a></li>
                 </ul>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="profile">
                     <i class="fas fa-user-circle"></i>
@@ -78,6 +75,7 @@
                     <li><a href="/pages/profile/attachments.html" data-page="attachments">المرفقات</a></li>
                 </ul>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="security">
                     <i class="fas fa-shield-alt"></i>
@@ -93,6 +91,7 @@
                     <li><a href="/pages/security/login-history.html" data-page="login-history">سجل الدخول</a></li>
                 </ul>
             </li>
+            
             <li class="nav-item has-submenu">
                 <a href="#" data-page="support">
                     <i class="fas fa-headset"></i>
@@ -111,7 +110,6 @@
         </ul>
     </nav>
 
-    <!-- 3. منطقة الإجراءات (تسجيل الخروج) -->
     <div class="sidebar-footer">
         <button class="logout-btn" id="logoutBtn">
             <i class="fas fa-sign-out-alt"></i>
@@ -120,9 +118,6 @@
     </div>
 </aside>
 
-<!-- ============================================================
-     الأنماط المصاحبة (تضاف إلى main.css أو core.css)
-     ============================================================ -->
 <style>
     /* ============================================================
        القائمة الجانبية - الهيكل الأساسي
@@ -311,7 +306,7 @@
         border-radius: var(--border-radius, 8px);
         cursor: pointer;
         transition: background 0.15s;
-        font-family: 'Tajawal', sans-serif;
+        font-family: inherit;
     }
     .logout-btn i {
         font-size: 18px;
