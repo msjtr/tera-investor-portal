@@ -1,14 +1,12 @@
 /**
  * ============================================================
- * main.js - الملف الرئيسي لإدارة وتنسيق جميع صفحات منصة تيرا
+ * main.js - الملف الرئيسي لإدارة واجهة المستخدم (النسخة المنظفة للـ SPA)
  * ============================================================
  * الموقع: /assets/js/main.js
- * 
- * تم تطبيق جميع التحديثات العاجلة:
- * 1. إدارة القائمة الجانبية مع حفظ الحالة.
- * 2. زر العودة مع منع التخزين المؤقت.
- * 3. دالة Toast الموحدة.
- * 4. منع تكرار المستمعات وتنظيف الذاكرة.
+ * * تم التحديث:
+ * 1. إزالة كود القائمة الجانبية (Sidebar) لمنع التعارض مع core.js.
+ * 2. إزالة كود التوجيه (Routing) لمنع التعارض مع app.js.
+ * 3. الإبقاء على دالة Toast وتحديث الرابط النشط وزر العودة فقط.
  * ============================================================
  */
 
@@ -16,46 +14,7 @@
     'use strict';
 
     // ============================================================
-    // 1. التأكد من تحميل الملفات الأساسية (باستخدام مسارات مطلقة)
-    // ============================================================
-    function ensureCoreLoaded() {
-        if (typeof TeraCore === 'undefined') {
-            console.warn('⚠️ [Main] core.js غير موجود، يتم تحميله...');
-            const script = document.createElement('script');
-            script.src = '/assets/js/core.js';
-            script.async = false;
-            document.head.appendChild(script);
-            return false;
-        }
-        return true;
-    }
-
-    function ensureAppLoaded() {
-        if (typeof TeraApp === 'undefined') {
-            console.warn('⚠️ [Main] app.js غير موجود، يتم تحميله...');
-            const script = document.createElement('script');
-            script.src = '/assets/js/app.js';
-            script.async = false;
-            document.head.appendChild(script);
-            return false;
-        }
-        return true;
-    }
-
-    function ensureAuthLoaded() {
-        if (typeof TeraAuth === 'undefined') {
-            console.warn('⚠️ [Main] auth.js غير موجود، يتم تحميله...');
-            const script = document.createElement('script');
-            script.src = '/assets/js/auth.js';
-            script.async = false;
-            document.head.appendChild(script);
-            return false;
-        }
-        return true;
-    }
-
-    // ============================================================
-    // 2. تحديد نوع الصفحة الحالية
+    // 1. تحديد نوع الصفحة الحالية
     // ============================================================
     function getCurrentPage() {
         const path = window.location.pathname.toLowerCase();
@@ -71,9 +30,15 @@
     }
 
     // ============================================================
-    // 3. دالة Toast (تنبيه لحظي) - موحدة
+    // 2. دالة Toast (تنبيه لحظي) - موحدة
     // ============================================================
     function showToast(message, type) {
+        // الاعتماد على دالة التطبيق الرئيسية إذا كانت موجودة لتوحيد الشكل
+        if (typeof TeraApp !== 'undefined' && typeof TeraApp.showNotification === 'function') {
+            TeraApp.showNotification(message, type);
+            return;
+        }
+
         type = type || 'info';
         const existing = document.querySelector('.custom-toast');
         if (existing) existing.remove();
@@ -92,191 +57,40 @@
             const style = document.createElement('style');
             style.id = 'toastStyles';
             style.textContent = `
-                .custom-toast {
-                    position: fixed;
-                    bottom: 30px;
-                    left: 30px;
-                    z-index: 99999;
-                    direction: rtl;
-                    animation: slideUp 0.4s ease;
-                }
-                .toast-content {
-                    background: var(--white-color, #fff);
-                    padding: 14px 24px;
-                    border-radius: var(--border-radius, 10px);
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-                    border-right: 4px solid var(--primary-color, #028090);
-                    color: var(--gray-800, #1e293b);
-                    font-weight: 500;
-                    min-width: 200px;
-                }
-                .toast-content.info { border-right-color: #0D6EFD; }
-                .toast-content.success { border-right-color: #10b981; }
-                .toast-content.error { border-right-color: #ef4444; }
-                .toast-content .toast-close {
-                    background: none;
-                    border: none;
-                    font-size: 22px;
-                    cursor: pointer;
-                    color: var(--gray-500, #94a3b8);
-                    padding: 0 4px;
-                }
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @media (prefers-color-scheme: dark) {
-                    .toast-content {
-                        background: var(--gray-800, #2d3a4f);
-                        color: var(--gray-100, #f8f9fa);
-                    }
-                }
+                .custom-toast { position: fixed; bottom: 30px; left: 30px; z-index: 99999; direction: rtl; animation: slideUp 0.4s ease; }
+                .toast-content { background: var(--white-color, #fff); padding: 14px 24px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 16px; border-right: 4px solid #028090; color: #1e293b; font-weight: 500; min-width: 200px; }
+                .toast-content.info { border-right-color: #0D6EFD; } .toast-content.success { border-right-color: #10b981; } .toast-content.error { border-right-color: #ef4444; }
+                .toast-content .toast-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8; padding: 0 4px; }
+                @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `;
             document.head.appendChild(style);
         }
 
-        toast.querySelector('.toast-close').addEventListener('click', function() {
-            toast.remove();
-        });
-
-        setTimeout(function() {
-            if (toast.parentElement) {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(function() {
-                    if (toast.parentElement) {
-                        toast.remove();
-                    }
-                }, 300);
-            }
+        toast.querySelector('.toast-close').addEventListener('click', function() { toast.remove(); });
+        setTimeout(function() { 
+            if (toast.parentElement) { 
+                toast.style.opacity = '0'; 
+                toast.style.transition = 'opacity 0.3s'; 
+                setTimeout(function() { if (toast.parentElement) toast.remove(); }, 300); 
+            } 
         }, 4000);
     }
 
     // ============================================================
-    // 4. تهيئة القائمة الجانبية المطورة (Sidebar)
-    // ============================================================
-    function initSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-
-        // 4.1 زر تبديل القائمة (لجميع الشاشات)
-        if (toggleBtn && sidebar) {
-            // إزالة أي مستمع سابق لتجنب التكرار
-            const newToggleBtn = toggleBtn.cloneNode(true);
-            toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
-
-            newToggleBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (window.innerWidth > 991) {
-                    sidebar.classList.toggle('collapsed');
-                    try {
-                        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-                    } catch (e) { /* ignore */ }
-                } else {
-                    sidebar.classList.toggle('sidebar-open');
-                }
-            });
-        }
-
-        // استعادة حالة الانهيار من localStorage
-        if (sidebar && window.innerWidth > 991) {
-            try {
-                const saved = localStorage.getItem('sidebarCollapsed');
-                if (saved === 'true') {
-                    sidebar.classList.add('collapsed');
-                } else if (saved === 'false') {
-                    sidebar.classList.remove('collapsed');
-                }
-            } catch (e) { /* ignore */ }
-        }
-
-        // 4.2 القوائم الفرعية (فتح/إغلاق) - باستخدام event delegation
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('.has-submenu > a');
-            if (!link) return;
-
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            const parent = link.parentElement;
-            if (!parent) return;
-
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
-                showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
-                return;
-            }
-
-            parent.classList.toggle('submenu-open');
-        });
-
-        // 4.3 إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 991) {
-                const sidebar = document.getElementById('sidebar');
-                const toggleBtn = document.getElementById('sidebarToggle');
-                if (sidebar && toggleBtn) {
-                    const isClickInsideSidebar = sidebar.contains(e.target);
-                    const isClickOnToggle = toggleBtn.contains(e.target);
-                    if (!isClickInsideSidebar && !isClickOnToggle) {
-                        sidebar.classList.remove('sidebar-open');
-                    }
-                }
-            }
-        });
-
-        // 4.4 إغلاق القائمة عند تغيير حجم النافذة إلى حجم كبير
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 991) {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    sidebar.classList.remove('sidebar-open');
-                    try {
-                        const saved = localStorage.getItem('sidebarCollapsed');
-                        if (saved === 'true') {
-                            sidebar.classList.add('collapsed');
-                        } else {
-                            sidebar.classList.remove('collapsed');
-                        }
-                    } catch (e) { /* ignore */ }
-                }
-            }
-        });
-
-        // 4.5 تمييز الرابط النشط تلقائياً
-        setActiveNavItem();
-
-        // 4.6 تحديث عند تغيير المسار (popstate)
-        window.addEventListener('popstate', function() {
-            setActiveNavItem();
-        });
-
-        console.log('✅ [Main] تم تهيئة القائمة الجانبية المطورة');
-    }
-
-    // ============================================================
-    // 5. تمييز الرابط النشط في القائمة
+    // 3. تمييز الرابط النشط في القائمة
     // ============================================================
     function setActiveNavItem() {
         const currentPath = window.location.pathname;
         const navLinks = document.querySelectorAll('.nav-list a[href]');
 
-        document.querySelectorAll('.nav-item.active').forEach(function(el) {
-            el.classList.remove('active');
-        });
-        document.querySelectorAll('.submenu li.active').forEach(function(el) {
-            el.classList.remove('active');
-        });
+        document.querySelectorAll('.nav-item.active').forEach(function(el) { el.classList.remove('active'); });
+        document.querySelectorAll('.submenu li.active').forEach(function(el) { el.classList.remove('active'); });
 
         navLinks.forEach(function(link) {
             const href = link.getAttribute('href');
             if (!href || href === '#') return;
 
-            const isMatch = href === currentPath ||
-                           (href !== '/' && currentPath.startsWith(href) && href.length > 1);
+            const isMatch = href === currentPath || (href !== '/' && currentPath.startsWith(href) && href.length > 1);
 
             if (isMatch) {
                 const parentItem = link.closest('.nav-item');
@@ -288,7 +102,7 @@
                     }
                 }
                 if (link.closest('.submenu')) {
-                    var li = link.closest('li');
+                    const li = link.closest('li');
                     if (li) li.classList.add('active');
                 }
             }
@@ -296,14 +110,30 @@
     }
 
     // ============================================================
-    // 6. تهيئة زر العودة إلى لوحة التحكم وتحديث عنوان الصفحة
+    // 4. تهيئة زر العودة إلى لوحة التحكم
     // ============================================================
     function initBackToDashboard() {
+        // منع التكرار في الأحداث باستخدام Event Delegation
+        if(window._backBtnInitialized) return;
+        window._backBtnInitialized = true;
+
+        document.body.addEventListener('click', function(e) {
+            const backBtn = e.target.closest('#backToDashboardLink') || e.target.closest('#backToDashboard');
+            if (backBtn) {
+                e.preventDefault();
+                const url = '/pages/dashboard/index.html';
+                if (typeof TeraApp !== 'undefined' && typeof TeraApp.navigateTo === 'function') {
+                    TeraApp.navigateTo(url);
+                } else {
+                    window.location.href = url;
+                }
+            }
+        });
+    }
+
+    function updateDashboardStyling() {
         const currentPath = window.location.pathname;
-        const isDashboard = currentPath.includes('/dashboard/') ||
-                            currentPath.endsWith('dashboard/index.html') ||
-                            currentPath === '/pages/dashboard/index.html' ||
-                            currentPath === '/dashboard';
+        const isDashboard = currentPath.includes('/dashboard/') || currentPath.endsWith('dashboard/index.html') || currentPath === '/pages/dashboard/index.html' || currentPath === '/dashboard' || currentPath === '/';
 
         if (isDashboard) {
             document.body.classList.add('page-dashboard');
@@ -319,295 +149,85 @@
                 pageTitleEl.textContent = parts[0].trim();
             }
         }
+    }
 
-        const backBtn = document.getElementById('backToDashboardLink') || document.getElementById('backToDashboard');
-        if (backBtn) {
-            const newBackBtn = backBtn.cloneNode(true);
-            backBtn.parentNode.replaceChild(newBackBtn, backBtn);
-            newBackBtn.addEventListener('click', function(e) {
+    // ============================================================
+    // 5. تهيئة الإشعارات وتسجيل الخروج (Event Delegation)
+    // ============================================================
+    function initUiEvents() {
+        if(window._uiEventsInitialized) return;
+        window._uiEventsInitialized = true;
+
+        document.body.addEventListener('click', function(e) {
+            // زر الإشعارات
+            const notifIcon = e.target.closest('.notifications');
+            if (notifIcon) {
+                showToast('📬 لديك إشعارات جديدة', 'info');
+            }
+
+            // زر تسجيل الخروج
+            const logoutBtn = e.target.closest('.logout-btn');
+            if (logoutBtn) {
                 e.preventDefault();
-                const url = '/pages/dashboard?t=' + Date.now();
-                if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                    TeraApp.navigateTo(url);
-                } else {
-                    window.location.href = url;
+                if (confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
+                    showToast('جاري تسجيل الخروج...', 'info');
+                    setTimeout(function() {
+                        if (typeof TeraAuth !== 'undefined' && typeof TeraAuth.logout === 'function') {
+                            TeraAuth.logout();
+                        } else if (typeof TeraApp !== 'undefined' && typeof TeraApp.logout === 'function') {
+                            TeraApp.logout();
+                        } else {
+                            localStorage.removeItem('tera_token');
+                            localStorage.removeItem('tera_user');
+                            window.location.href = '/auth/auth/login/login.html';
+                        }
+                    }, 600);
                 }
-            });
-        }
-
-        console.log('✅ [Main] تم تهيئة زر العودة (page-dashboard:', isDashboard, ')');
-    }
-
-    // ============================================================
-    // 7. تهيئة الإشعارات (مثال)
-    // ============================================================
-    function initNotifications() {
-        var notifIcon = document.querySelector('.notifications');
-        if (notifIcon) {
-            var newNotifIcon = notifIcon.cloneNode(true);
-            notifIcon.parentNode.replaceChild(newNotifIcon, notifIcon);
-            newNotifIcon.addEventListener('click', function() {
-                if (typeof TeraApp !== 'undefined' && TeraApp.showNotification) {
-                    TeraApp.showNotification('📬 لديك 3 إشعارات جديدة', 'info', 4000);
-                } else {
-                    showToast('📬 لديك 3 إشعارات جديدة', 'info');
-                }
-            });
-        }
-    }
-
-    // ============================================================
-    // 8. تهيئة زر تسجيل الخروج (مع Toast)
-    // ============================================================
-    function initLogout() {
-        var logoutBtn = document.querySelector('.logout-btn');
-        if (logoutBtn) {
-            var newLogoutBtn = logoutBtn.cloneNode(true);
-            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
-            newLogoutBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                showToast('جاري تسجيل الخروج...', 'info');
-                setTimeout(function() {
-                    if (typeof TeraAuth !== 'undefined' && TeraAuth.logout) {
-                        TeraAuth.logout();
-                    } else if (typeof TeraApp !== 'undefined' && TeraApp.logout) {
-                        TeraApp.logout();
-                    } else {
-                        localStorage.removeItem('tera_token');
-                        localStorage.removeItem('tera_user');
-                        window.location.href = '/auth/auth/login/login.html';
-                    }
-                }, 600);
-            });
-        }
-    }
-
-    // ============================================================
-    // 9. تهيئة الروابط الداخلية (مع منع التعارض مع app.js)
-    // ============================================================
-    function initInternalLinks() {
-        document.addEventListener('click', function(e) {
-            var link = e.target.closest('a[href]');
-            if (!link) return;
-
-            if (link.closest('.has-submenu')) return;
-
-            if (link.target === '_blank') return;
-            var href = link.getAttribute('href');
-            if (!href) return;
-            if (href.startsWith('http://') || href.startsWith('https://')) return;
-            if (href.startsWith('#')) return;
-            if (href.startsWith('javascript:')) return;
-            if (href.endsWith('.css') || href.endsWith('.js')) return;
-
-            if (typeof TeraApp !== 'undefined' && TeraApp.navigateTo) {
-                e.preventDefault();
-                TeraApp.navigateTo(href);
             }
         });
     }
 
     // ============================================================
-    // 10. تهيئة المكونات المشتركة
-    // ============================================================
-    function initCommonComponents() {
-        initSidebar();
-        initBackToDashboard();
-        initNotifications();
-        initLogout();
-        initInternalLinks();
-
-        window.addEventListener('popstate', function() {
-            setActiveNavItem();
-        });
-
-        console.log('✅ [Main] تم تهيئة جميع المكونات المشتركة');
-    }
-
-    // ============================================================
-    // 11. دوال تهيئة الصفحات حسب النوع (باستخدام مسارات مطلقة)
-    // ============================================================
-    function initDashboardPage() {
-        console.log('📊 [Main] تهيئة لوحة التحكم');
-        if (!document.querySelector('script[src="/assets/js/dashboard.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/dashboard.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initInvestmentsPage() {
-        console.log('💰 [Main] تهيئة صفحة الاستثمارات');
-        if (!document.querySelector('script[src="/assets/js/investments.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/investments.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initPortfolioPage() {
-        console.log('💼 [Main] تهيئة صفحة المحفظة');
-        if (!document.querySelector('script[src="/assets/js/portfolio.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/portfolio.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initReportsPage() {
-        console.log('📊 [Main] تهيئة صفحة التقارير');
-        if (!document.querySelector('script[src="/assets/js/reports.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/reports.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initProfilePage() {
-        console.log('👤 [Main] تهيئة صفحة الملف الشخصي');
-        if (!document.querySelector('script[src="/assets/js/profile.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/profile.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initSecurityPage() {
-        console.log('🔐 [Main] تهيئة صفحة الأمان');
-        if (!document.querySelector('script[src="/assets/js/security.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/security.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initSupportPage() {
-        console.log('🆘 [Main] تهيئة صفحة الدعم');
-        if (!document.querySelector('script[src="/assets/js/support.js"]')) {
-            var script = document.createElement('script');
-            script.src = '/assets/js/support.js';
-            script.async = false;
-            document.head.appendChild(script);
-        }
-    }
-
-    function initAuthPage() {
-        console.log('🔑 [Main] تهيئة صفحة المصادقة');
-    }
-
-    function initPageByType(pageType) {
-        switch (pageType) {
-            case 'dashboard':
-                initDashboardPage();
-                break;
-            case 'investments':
-                initInvestmentsPage();
-                break;
-            case 'portfolio':
-                initPortfolioPage();
-                break;
-            case 'reports':
-                initReportsPage();
-                break;
-            case 'profile':
-                initProfilePage();
-                break;
-            case 'security':
-                initSecurityPage();
-                break;
-            case 'support':
-                initSupportPage();
-                break;
-            case 'auth':
-                initAuthPage();
-                break;
-            default:
-                console.log('📄 [Main] صفحة غير معروفة، يتم التهيئة العامة فقط');
-                break;
-        }
-    }
-
-    // ============================================================
-    // 12. التهيئة الرئيسية (محسّنة)
+    // 6. التهيئة الرئيسية
     // ============================================================
     function initMain() {
-        console.log('🚀 [Main] بدء تهيئة النظام...');
+        console.log('🚀 [Main] بدء تهيئة واجهة المستخدم (UI)...');
+        
+        initBackToDashboard();
+        initUiEvents();
+        updateDashboardStyling();
+        setActiveNavItem();
 
-        var coreLoaded = ensureCoreLoaded();
-        var authLoaded = ensureAuthLoaded();
-        var appLoaded = ensureAppLoaded();
-
-        var attempts = 0;
-        var maxAttempts = 20;
-
-        function checkAndInit() {
-            attempts++;
-            if (typeof TeraCore !== 'undefined' &&
-                typeof TeraAuth !== 'undefined' &&
-                typeof TeraApp !== 'undefined') {
-                performInitialization();
-                return true;
-            } else if (attempts >= maxAttempts) {
-                console.warn('⚠️ [Main] لم يتم تحميل جميع المكتبات خلال المهلة، محاولة التهيئة مع المتاح');
-                performInitialization();
-                return true;
-            }
-            return false;
-        }
-
-        if (coreLoaded && authLoaded && appLoaded &&
-            typeof TeraCore !== 'undefined' &&
-            typeof TeraAuth !== 'undefined' &&
-            typeof TeraApp !== 'undefined') {
-            performInitialization();
-        } else {
-            var checkInterval = setInterval(function() {
-                if (checkAndInit()) {
-                    clearInterval(checkInterval);
-                }
-            }, 100);
-        }
-
-        function performInitialization() {
-            initCommonComponents();
-
-            var pageType = getCurrentPage();
-            console.log('📄 [Main] نوع الصفحة:', pageType);
-
-            initPageByType(pageType);
-
-            console.log('✅ [Main] تم الانتهاء من التهيئة الرئيسية');
-        }
+        console.log('✅ [Main] تم الانتهاء من تهيئة واجهة المستخدم');
     }
 
     // ============================================================
-    // 13. الاستماع لتغيير الصفحة (في حالة SPA)
+    // 7. الاستماع لتغيير الصفحة (مهم للـ SPA)
     // ============================================================
     function handlePageChange() {
-        initBackToDashboard();
+        updateDashboardStyling();
         setActiveNavItem();
     }
 
+    // ربط تغيير الصفحة بأحداث المتصفح
     window.addEventListener('popstate', handlePageChange);
 
-    if (typeof window.TeraApp !== 'undefined') {
-        var originalLoadPage = window.TeraApp.loadPage;
-        if (originalLoadPage) {
+    // ربط تحديث الواجهة مع دالة loadPage في app.js
+    // نستخدم setInterval بسيط للتأكد من تحميل TeraApp
+    const checkAppInterval = setInterval(function() {
+        if (typeof window.TeraApp !== 'undefined' && typeof window.TeraApp.loadPage === 'function') {
+            clearInterval(checkAppInterval);
+            const originalLoadPage = window.TeraApp.loadPage;
             window.TeraApp.loadPage = function(url) {
                 originalLoadPage(url);
-                setTimeout(handlePageChange, 100);
+                // تأخير بسيط لضمان تحديث الـ DOM
+                setTimeout(handlePageChange, 150);
             };
         }
-    }
+    }, 100);
 
     // ============================================================
-    // 14. بدء التهيئة
+    // 8. بدء التهيئة
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMain);
@@ -616,30 +236,16 @@
     }
 
     // ============================================================
-    // 15. تصدير الدوال العامة
+    // 9. تصدير الدوال العامة
     // ============================================================
     window.TeraMain = {
         initMain: initMain,
-        initCommonComponents: initCommonComponents,
-        initSidebar: initSidebar,
-        initBackToDashboard: initBackToDashboard,
-        initNotifications: initNotifications,
-        initLogout: initLogout,
-        initInternalLinks: initInternalLinks,
         getCurrentPage: getCurrentPage,
-        initDashboardPage: initDashboardPage,
-        initInvestmentsPage: initInvestmentsPage,
-        initPortfolioPage: initPortfolioPage,
-        initReportsPage: initReportsPage,
-        initProfilePage: initProfilePage,
-        initSecurityPage: initSecurityPage,
-        initSupportPage: initSupportPage,
-        initAuthPage: initAuthPage,
         refreshUI: handlePageChange,
         showToast: showToast,
         setActiveNavItem: setActiveNavItem
     };
 
-    console.log('✅ [Main] تم تحميل المكتبة الرئيسية (TeraMain) بنجاح');
+    console.log('✅ [Main] تم تحميل المكتبة المساعدة للواجهة بنجاح');
 
 })();
