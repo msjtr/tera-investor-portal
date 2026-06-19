@@ -1,131 +1,132 @@
-<!-- ========================================
-     sidebar.html - القائمة الجانبية الموحدة (باستخدام مسارات مطلقة)
-     ======================================== -->
-<aside class="sidebar" id="sidebar">
-    <!-- الشعار -->
+<!-- ============================================================
+     sidebar.html - القائمة الجانبية المتطورة (وفق مواصفات UX)
+     ============================================================ -->
+<aside class="sidebar-container" id="sidebar">
+    <!-- 1. منطقة الشعار (بدون نصوص) -->
     <div class="sidebar-brand">
         <a href="/index.html">
             <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
-            <span class="logo-text">تيرا للمستثمرين</span>
         </a>
     </div>
 
-    <!-- قائمة التنقل -->
-    <nav class="sidebar-nav">
-        <!-- 1. لوحة التحكم -->
-        <div class="nav-item active">
-            <a href="/pages/dashboard">
-                <i class="fas fa-th-large"></i>
-                <span>لوحة التحكم</span>
-            </a>
-        </div>
+    <!-- 2. منطقة التنقل -->
+    <nav class="sidebar-menu">
+        <ul class="nav-list">
+            <!-- لوحة التحكم -->
+            <li class="nav-item active">
+                <a href="/pages/dashboard">
+                    <i class="fas fa-th-large"></i>
+                    <span class="nav-label">لوحة التحكم</span>
+                </a>
+            </li>
 
-        <!-- 2. الاستثمارات -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-chart-line"></i>
-                <span>الاستثمارات</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
-                <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
-                <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
-                <li><a href="/pages/investments/extended-investments.html">الممددة</a></li>
-                <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
-            </ul>
-        </div>
+            <!-- الاستثمارات -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-label">الاستثمارات</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
+                    <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
+                    <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
+                    <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
+                    <li><a href="/pages/investments/extended-investments.html">الشراكة الممتدة</a></li>
+                    <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
+                </ul>
+            </li>
 
-        <!-- 3. المحفظة -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-wallet"></i>
-                <span>المحفظة</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
-                <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
-                <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-                <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
-                <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
-            </ul>
-        </div>
+            <!-- المحفظة -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-wallet"></i>
+                    <span class="nav-label">المحفظة</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                    <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
+                    <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
+                    <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
+                    <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                    <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
+                </ul>
+            </li>
 
-        <!-- 4. التقارير -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-file-alt"></i>
-                <span>التقارير</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
-                <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
-                <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
-                <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
-            </ul>
-        </div>
+            <!-- التقارير -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="nav-label">التقارير</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
+                    <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
+                    <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
+                    <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
+                    <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
+                </ul>
+            </li>
 
-        <!-- 5. الملف الشخصي -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-user-circle"></i>
-                <span>الملف الشخصي</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
-                <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
-                <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
-            </ul>
-        </div>
+            <!-- الملف الشخصي -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="nav-label">الملف الشخصي</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
+                    <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
+                    <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
+                    <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                    <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
+                </ul>
+            </li>
 
-        <!-- 6. الأمان -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-shield-alt"></i>
-                <span>الأمان</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
-                <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
-                <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
-                <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
-            </ul>
-        </div>
+            <!-- الأمان -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="nav-label">الأمان</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
+                    <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
+                    <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
+                    <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                    <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
+                    <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
+                </ul>
+            </li>
 
-        <!-- 7. الدعم -->
-        <div class="nav-item has-submenu">
-            <a href="#">
-                <i class="fas fa-headset"></i>
-                <span>الدعم</span>
-                <i class="fas fa-chevron-down submenu-toggle"></i>
-            </a>
-            <ul class="submenu">
-                <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
-                <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
-                <li><a href="/pages/support/tickets.html">التذاكر</a></li>
-                <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
-                <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
-                <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
-            </ul>
-        </div>
+            <!-- الدعم -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-headset"></i>
+                    <span class="nav-label">الدعم</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
+                    <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
+                    <li><a href="/pages/support/tickets.html">التذاكر</a></li>
+                    <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
+                    <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
+                    <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
+                </ul>
+            </li>
+        </ul>
     </nav>
 
-    <!-- أسفل القائمة - تسجيل الخروج -->
+    <!-- 3. منطقة الإجراءات (تسجيل الخروج) -->
     <div class="sidebar-footer">
-        <a href="/auth/auth/login/login.html" class="logout-btn">
+        <button class="logout-btn" id="logoutBtn">
             <i class="fas fa-sign-out-alt"></i>
-            <span>تسجيل الخروج</span>
-        </a>
+            <span class="nav-label">تسجيل الخروج</span>
+        </button>
     </div>
 </aside>
