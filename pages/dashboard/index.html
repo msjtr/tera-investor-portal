@@ -35,133 +35,147 @@
 
     <div class="app-wrapper">
 
-        <aside class="sidebar" id="sidebar">
+        <!-- ====== القائمة الجانبية المطورة (متوافقة مع المواصفات الجديدة) ====== -->
+        <aside class="sidebar-container" id="sidebar">
+            <!-- 1. منطقة الشعار (بدون نصوص) -->
             <div class="sidebar-brand">
                 <a href="/index.html">
                     <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
-                    <span class="logo-text">تيرا للمستثمرين</span>
                 </a>
             </div>
 
-            <nav class="sidebar-nav">
-                <div class="nav-item active">
-                    <a href="/pages/dashboard">
-                        <i class="fas fa-th-large"></i>
-                        <span>لوحة التحكم</span>
-                    </a>
-                </div>
+            <!-- 2. منطقة التنقل -->
+            <nav class="sidebar-menu">
+                <ul class="nav-list">
+                    <!-- لوحة التحكم -->
+                    <li class="nav-item active">
+                        <a href="/pages/dashboard">
+                            <i class="fas fa-th-large"></i>
+                            <span class="nav-label">لوحة التحكم</span>
+                        </a>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span>الاستثمارات</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
-                        <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
-                        <li><a href="/pages/investments/completed-investments.html">الاستثمارات المكتملة</a></li>
-                        <li><a href="/pages/investments/cancelled-investments.html">الاستثمارات الملغاة</a></li>
-                        <li><a href="/pages/investments/extended-investments.html">الاستثمارات الممددة</a></li>
-                        <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
-                    </ul>
-                </div>
+                    <!-- الاستثمارات -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-chart-line"></i>
+                            <span class="nav-label">الاستثمارات</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
+                            <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
+                            <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
+                            <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
+                            <li><a href="/pages/investments/extended-investments.html">الشراكة الممتدة</a></li>
+                            <li><a href="/pages/investments/investment-details.html">تفاصيل الاستثمار</a></li>
+                        </ul>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-wallet"></i>
-                        <span>المحفظة</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                        <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
-                        <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
-                        <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
-                        <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
-                        <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
-                    </ul>
-                </div>
+                    <!-- المحفظة -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-wallet"></i>
+                            <span class="nav-label">المحفظة</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                            <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
+                            <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
+                            <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
+                            <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                            <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
+                        </ul>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-file-alt"></i>
-                        <span>التقارير</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                        <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
-                        <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
-                        <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
-                        <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
-                    </ul>
-                </div>
+                    <!-- التقارير -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-file-alt"></i>
+                            <span class="nav-label">التقارير</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
+                            <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
+                            <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
+                            <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
+                            <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
+                        </ul>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-user-circle"></i>
-                        <span>الملف الشخصي</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                        <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
-                        <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
-                        <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                        <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
-                    </ul>
-                </div>
+                    <!-- الملف الشخصي -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="nav-label">الملف الشخصي</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
+                            <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
+                            <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
+                            <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                            <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
+                        </ul>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>الأمان</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
-                        <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
-                        <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
-                        <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                        <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
-                        <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
-                    </ul>
-                </div>
+                    <!-- الأمان -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-shield-alt"></i>
+                            <span class="nav-label">الأمان</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
+                            <li><a href="/pages/security/change-email.html">تغيير البريد الإلكتروني</a></li>
+                            <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
+                            <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                            <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
+                            <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
+                        </ul>
+                    </li>
 
-                <div class="nav-item has-submenu">
-                    <a href="#">
-                        <i class="fas fa-headset"></i>
-                        <span>الدعم</span>
-                        <i class="fas fa-chevron-down submenu-toggle"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
-                        <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
-                        <li><a href="/pages/support/tickets.html">التذاكر</a></li>
-                        <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
-                        <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
-                        <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
-                    </ul>
-                </div>
+                    <!-- الدعم -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-headset"></i>
+                            <span class="nav-label">الدعم</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
+                            <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
+                            <li><a href="/pages/support/tickets.html">التذاكر</a></li>
+                            <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
+                            <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
+                            <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </nav>
 
+            <!-- 3. منطقة الإجراءات (تسجيل الخروج) -->
             <div class="sidebar-footer">
-                <a href="/auth/auth/login/login.html" class="logout-btn">
+                <button class="logout-btn" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>تسجيل الخروج</span>
-                </a>
+                    <span class="nav-label">تسجيل الخروج</span>
+                </button>
             </div>
         </aside>
 
+        <!-- ====== المحتوى الرئيسي ====== -->
         <main class="main-content">
 
+            <!-- ====== الهيدر ====== -->
             <header class="header">
                 <div class="header-left">
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <!-- تم تعديل زر العودة إلى رابط مباشر Hard Link -->
+                    <!-- زر العودة إلى لوحة التحكم (يختفي في هذه الصفحة عبر كلاس page-dashboard) -->
                     <a href="/pages/dashboard" class="back-to-dashboard" id="backToDashboard">
                         <i class="fas fa-arrow-right"></i>
                         <span>العودة للوحة التحكم</span>
@@ -180,6 +194,7 @@
                 </div>
             </header>
 
+            <!-- ====== محتوى لوحة التحكم ====== -->
             <section class="dashboard-content">
 
                 <div class="stats-grid">
@@ -308,6 +323,7 @@
 
             </section>
 
+            <!-- ====== الفوتر ====== -->
             <footer class="footer">
                 <div class="footer-content">
                     <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
@@ -322,7 +338,7 @@
         </main>
     </div>
 
-    <!-- جميع الملفات المشتركة -->
+    <!-- ====== جميع الملفات المشتركة ====== -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/app.js"></script>
@@ -334,12 +350,148 @@
         (function() {
             'use strict';
 
+            // ============================================================
+            // 1. تبديل القائمة الجانبية (دعم وضع الانهيار + الفتح/الإغلاق)
+            // ============================================================
             function toggleSidebar() {
                 var sidebar = document.getElementById('sidebar');
-                if (sidebar) sidebar.classList.toggle('sidebar-open');
+                var toggleBtn = document.getElementById('sidebarToggle');
+                if (!sidebar) return;
+
+                // في الشاشات الكبيرة نبدل وضع الانهيار، وفي الصغيرة نفتح/نغلق القائمة
+                if (window.innerWidth > 991) {
+                    sidebar.classList.toggle('collapsed');
+                    // حفظ الحالة في localStorage
+                    try {
+                        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                    } catch (e) { /* ignore */ }
+                } else {
+                    sidebar.classList.toggle('sidebar-open');
+                }
             }
 
+            // استعادة حالة الانهيار من localStorage
+            function restoreSidebarState() {
+                var sidebar = document.getElementById('sidebar');
+                if (!sidebar) return;
+
+                if (window.innerWidth > 991) {
+                    try {
+                        var saved = localStorage.getItem('sidebarCollapsed');
+                        if (saved === 'true') {
+                            sidebar.classList.add('collapsed');
+                        } else if (saved === 'false') {
+                            sidebar.classList.remove('collapsed');
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+            }
+
+            // ============================================================
+            // 2. زر تسجيل الخروج مع Toast
+            // ============================================================
+            function showToast(message, type) {
+                type = type || 'info';
+                var existing = document.querySelector('.custom-toast');
+                if (existing) existing.remove();
+
+                var toast = document.createElement('div');
+                toast.className = 'custom-toast';
+                toast.innerHTML = `
+                    <div class="toast-content ${type}">
+                        <span>${message}</span>
+                        <button class="toast-close">&times;</button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+
+                // أنماط الـ Toast (تُضاف مرة واحدة فقط)
+                if (!document.getElementById('toastStyles')) {
+                    var style = document.createElement('style');
+                    style.id = 'toastStyles';
+                    style.textContent = `
+                        .custom-toast {
+                            position: fixed;
+                            bottom: 30px;
+                            left: 30px;
+                            z-index: 99999;
+                            direction: rtl;
+                            animation: slideUp 0.4s ease;
+                        }
+                        .toast-content {
+                            background: #fff;
+                            padding: 14px 24px;
+                            border-radius: 10px;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+                            display: flex;
+                            align-items: center;
+                            gap: 16px;
+                            border-right: 4px solid #028090;
+                            color: #1e293b;
+                            font-weight: 500;
+                            min-width: 200px;
+                        }
+                        .toast-content.info { border-right-color: #0D6EFD; }
+                        .toast-content.success { border-right-color: #10b981; }
+                        .toast-content.error { border-right-color: #ef4444; }
+                        .toast-content .toast-close {
+                            background: none;
+                            border: none;
+                            font-size: 22px;
+                            cursor: pointer;
+                            color: #94a3b8;
+                            padding: 0 4px;
+                        }
+                        @keyframes slideUp {
+                            from { opacity: 0; transform: translateY(20px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                        @media (prefers-color-scheme: dark) {
+                            .toast-content {
+                                background: #1e293b;
+                                color: #f8f9fa;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                // زر الإغلاق
+                toast.querySelector('.toast-close').addEventListener('click', function() {
+                    toast.remove();
+                });
+
+                // إزالة تلقائية بعد 4 ثوانٍ
+                setTimeout(function() {
+                    if (toast.parentElement) {
+                        toast.style.opacity = '0';
+                        toast.style.transition = 'opacity 0.3s';
+                        setTimeout(function() { toast.remove(); }, 300);
+                    }
+                }, 4000);
+            }
+
+            function handleLogout() {
+                var confirmLogout = confirm('🔒 هل أنت متأكد من رغبتك في تسجيل الخروج؟');
+                if (!confirmLogout) return;
+
+                showToast('جاري تسجيل الخروج...', 'info');
+                setTimeout(function() {
+                    if (typeof TeraAuth !== 'undefined' && TeraAuth.logout) {
+                        TeraAuth.logout();
+                    } else {
+                        localStorage.removeItem('tera_token');
+                        localStorage.removeItem('tera_user');
+                        window.location.href = '/auth/auth/login/login.html';
+                    }
+                }, 600);
+            }
+
+            // ============================================================
+            // 3. تهيئة الصفحة عند تحميل DOM
+            // ============================================================
             document.addEventListener('DOMContentLoaded', function() {
+                // زر تبديل القائمة الجانبية
                 var toggleBtn = document.getElementById('sidebarToggle');
                 if (toggleBtn) {
                     toggleBtn.addEventListener('click', function(e) {
@@ -348,6 +500,16 @@
                     });
                 }
 
+                // زر تسجيل الخروج
+                var logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        handleLogout();
+                    });
+                }
+
+                // إغلاق القائمة عند النقر خارجها (للشاشات الصغيرة)
                 document.addEventListener('click', function(e) {
                     if (window.innerWidth <= 991) {
                         var sidebar = document.getElementById('sidebar');
@@ -362,19 +524,38 @@
                     }
                 });
 
+                // إغلاق القائمة عند تغيير حجم النافذة
                 window.addEventListener('resize', function() {
                     if (window.innerWidth > 991) {
                         var sidebar = document.getElementById('sidebar');
-                        if (sidebar) sidebar.classList.remove('sidebar-open');
+                        if (sidebar) {
+                            sidebar.classList.remove('sidebar-open');
+                            // تطبيق حالة الانهيار المحفوظة
+                            try {
+                                var saved = localStorage.getItem('sidebarCollapsed');
+                                if (saved === 'true') {
+                                    sidebar.classList.add('collapsed');
+                                } else {
+                                    sidebar.classList.remove('collapsed');
+                                }
+                            } catch (e) { /* ignore */ }
+                        }
                     }
                 });
 
+                // القوائم الفرعية (فتح/إغلاق)
                 document.querySelectorAll('.has-submenu > a').forEach(function(link) {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopImmediatePropagation();
                         var parent = this.parentElement;
                         if (parent) {
+                            // في حالة الانهيار على سطح المكتب، لا نفتح القوائم الفرعية
+                            var sidebar = document.getElementById('sidebar');
+                            if (window.innerWidth > 991 && sidebar && sidebar.classList.contains('collapsed')) {
+                                showToast('افتح القائمة أولاً لعرض الخيارات', 'info');
+                                return;
+                            }
                             parent.classList.toggle('submenu-open');
                         }
                     });
@@ -383,8 +564,12 @@
                 // إضافة كلاس لإخفاء زر العودة في هذه الصفحة
                 document.body.classList.add('page-dashboard');
 
-                console.log('✅ تم تفعيل القوائم الجانبية ومنع التعارض');
+                // استعادة حالة القائمة الجانبية
+                restoreSidebarState();
+
+                console.log('✅ [Dashboard] تم تهيئة الصفحة بنجاح مع القائمة الجانبية المطورة');
             });
+
         })();
     </script>
 
