@@ -408,3 +408,505 @@
                                     <tr>
                                         <td>رسوم التحويل</td>
                                         <td>25.00</td>
+                                        <td>3.75</td>
+                                        <td>28.75</td>
+                                        <td>6</td>
+                                        <td>4.79</td>
+                                        <td><span class="badge status-pending">متأخرة</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>رسوم التحصيل و المعالجة</td>
+                                        <td>100.00</td>
+                                        <td>15.00</td>
+                                        <td>115.00</td>
+                                        <td>6</td>
+                                        <td>19.17</td>
+                                        <td><span class="badge status-pending">متأخرة</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>الاشتراك الذهبي بالفرصة</td>
+                                        <td>0.00</td>
+                                        <td>0.00</td>
+                                        <td>0.00</td>
+                                        <td>6</td>
+                                        <td>0.00</td>
+                                        <td><span class="badge status-pending">متأخرة</span></td>
+                                        <td>-</td>
+                                    </tr>
+                                    <tr style="background-color: #f1f5f9; font-weight: bold;">
+                                        <td>تفاصيل الإجمالي</td>
+                                        <td>145.00</td>
+                                        <td>21.75</td>
+                                        <td class="text-teal">166.75</td>
+                                        <td>-</td>
+                                        <td class="text-teal">27.79</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="actions-row no-print">
+                        <button onclick="closeDetails()" class="btn-action"><i class="fas fa-arrow-right"></i> العودة للجدول الرئيسي</button>
+                        <button onclick="printReport()" class="btn-action btn-print"><i class="fas fa-print"></i> أمر طباعة التقرير (A4)</button>
+                        <button onclick="exportReport('PDF')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تصدير نسخة PDF</button>
+                        <button onclick="exportReport('Excel')" class="btn-action btn-excel"><i class="fas fa-file-excel"></i> تصدير جداول إكسل</button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <footer class="page-footer no-print">
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. تم التطوير لدعم الشاشات المتقدمة (4K) ومقاسات الطباعة (A4).
+            </footer>
+            
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <script>
+        const clientName = "محمد_صالح_جميعان_الشمري";
+
+        function getDynamicDate(daysOffset) {
+            let d = new Date();
+            d.setDate(d.getDate() + daysOffset);
+            return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+        }
+
+        // بناء البيانات الخاصة بـ "فرصة شراكة" لتطابق الإكسل
+        const mockData = [
+            { 
+                id: "FTR-2026-06-27-001", oppDate: "2026/06/27", reqId: "46555", status: "قائم", 
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/07/15" 
+            },
+            { 
+                id: "FTR-2026-06-25-002", oppDate: getDynamicDate(-30), reqId: "46556", status: "بانتظار الاعتماد", 
+                sharesCount: 50, shareValue: 100, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: true, firstDate: getDynamicDate(5) 
+            },
+            { 
+                id: "FTR-2026-01-10-003", oppDate: getDynamicDate(-170), reqId: "46557", status: "مكتملة", 
+                sharesCount: 20, shareValue: 500, capital: 10000, expectedProfit: 4000, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140) 
+            },
+            { 
+                id: "FTR-EXP-004", oppDate: getDynamicDate(-170), reqId: "46558", status: "قائم", 
+                sharesCount: 15, shareValue: 1000, capital: 15000, expectedProfit: 7500, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140) 
+            },
+            { 
+                id: "FTR-2026-05-15-005", oppDate: "2026/05/15", reqId: "46559", status: "معلقة", 
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/06/15" 
+            },
+            { 
+                id: "FTR-2026-02-05-006", oppDate: "2026/02/05", reqId: "46560", status: "ملغاة", 
+                sharesCount: 5, shareValue: 1000, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2026/03/05" 
+            },
+            { 
+                id: "FTR-2023-11-11-007", oppDate: "2023/11/11", reqId: "46561", status: "مغلقة", 
+                sharesCount: 25, shareValue: 200, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2023/12/11" 
+            }
+        ];
+
+        function formatMoney(num) {
+            return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'قائم': return 'status-active';
+                case 'بانتظار الاعتماد': return 'status-pending';
+                case 'مكتملة': return 'status-completed';
+                case 'معلقة': return 'status-suspended';
+                case 'منتهية': return 'status-expired';
+                case 'ملغاة': return 'status-cancelled';
+                case 'مغلقة': return 'status-closed';
+                default: return 'status-expired';
+            }
+        }
+
+        function calculateDaysDiff(targetDateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const target = new Date(targetDateStr);
+            target.setHours(0,0,0,0);
+            const diffTime = target - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function getNextPaymentDays(contract) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            let baseDate = new Date(contract.firstDate);
+            baseDate.setHours(0,0,0,0);
+            for (let i = 0; i < contract.duration; i++) {
+                let payDate = new Date(baseDate);
+                payDate.setMonth(baseDate.getMonth() + i);
+                if (payDate >= today) {
+                    const diffTime = payDate - today;
+                    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+            }
+            return -1;
+        }
+
+        function generateSmartAlerts() {
+            const alertsContainer = document.getElementById('dynamicAlertsContainer');
+            alertsContainer.innerHTML = '';
+            
+            mockData.forEach(contract => {
+                if(contract.status === 'بانتظار الاعتماد') {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>تنبيه: الفرصة رقم <strong>${contract.id}</strong> بانتظار الاعتماد والمراجعة الإدارية.</span></div>`;
+                }
+                if(contract.hasNotes) {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>يوجد ملاحظات هامة على الفرصة رقم <strong>${contract.id}</strong> يرجى مراجعتها فوراً.</span></div>`;
+                }
+                if(contract.status === 'قائم') {
+                    // حساب تاريخ الانتهاء تقريبياً بناء على المدة
+                    let endDate = new Date(contract.firstDate);
+                    endDate.setMonth(endDate.getMonth() + contract.duration - 1);
+                    const daysToEnd = calculateDaysDiff(endDate);
+                    
+                    if(daysToEnd === 10 || (daysToEnd > 0 && daysToEnd <= 15)) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-exclamation-triangle"></i><span>الفرصة رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToEnd} ايام</strong> على انتهاء الشراكة.</span></div>`;
+                    }
+                    const daysToProfit = getNextPaymentDays(contract);
+                    if(daysToProfit === 5 || (daysToProfit > 0 && daysToProfit <= 7)) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-info"><i class="fas fa-hand-holding-usd"></i><span>الفرصة رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToProfit} ايام</strong> على صرف الارباح.</span></div>`;
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            generateSmartAlerts();
+            renderMainTable('all');
+            calculateSummary();
+            initChart();
+            initProfitGrowthChart();
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    renderMainTable(this.getAttribute('data-status'));
+                });
+            });
+
+            document.getElementById('searchInput').addEventListener('input', function() {
+                let val = this.value.trim().toLowerCase();
+                let rows = document.querySelectorAll('#mainTableBody tr');
+                let hasData = false;
+                rows.forEach(row => {
+                    let idText = row.cells[0].innerText.toLowerCase();
+                    if(idText.includes(val)) {
+                        row.style.display = '';
+                        hasData = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                document.getElementById('emptyState').style.display = hasData ? 'none' : 'block';
+                document.querySelector('.table-wrapper').style.display = hasData ? 'block' : 'none';
+            });
+        });
+
+        function calculateSummary() {
+            let tCap = 0, tProf = 0, totalCount = mockData.length, monthlyAvg = 0;
+            mockData.forEach(d => {
+                tCap += d.capital;
+                tProf += d.expectedProfit;
+                if(d.duration > 0) monthlyAvg += (d.expectedProfit / d.duration);
+            });
+            document.getElementById('totalContracts').innerText = totalCount;
+            document.getElementById('totalCapital').innerText = formatMoney(tCap) + ' ر.س';
+            document.getElementById('totalProfit').innerText = formatMoney(tProf) + ' ر.س';
+            document.getElementById('avgMonthlyProfit').innerText = formatMoney(monthlyAvg / totalCount) + ' ر.س';
+        }
+
+        function renderMainTable(filter) {
+            const tbody = document.getElementById('mainTableBody');
+            tbody.innerHTML = '';
+            
+            const filtered = mockData.filter(d => filter === 'all' || d.status === filter);
+            
+            if(filtered.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.querySelector('.table-wrapper').style.display = 'none';
+                return;
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                document.querySelector('.table-wrapper').style.display = 'block';
+            }
+
+            filtered.forEach(item => {
+                const sClass = getStatusClass(item.status);
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-family: monospace; font-weight: 700; color: var(--tera-teal);">${item.id}</td>
+                        <td style="font-family: monospace;">${item.oppDate}</td>
+                        <td style="font-family: monospace;">${item.reqId}</td>
+                        <td>${item.sharesCount}</td>
+                        <td>${formatMoney(item.shareValue)}</td>
+                        <td>${formatMoney(item.capital)}</td>
+                        <td><span class="badge ${sClass}">${item.status}</span></td>
+                        <td><button onclick="viewDetails('${item.id}')" class="btn-view">عرض التفاصيل</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.viewDetails = function(id) {
+            const contract = mockData.find(d => d.id === id);
+            if(!contract) return;
+
+            document.getElementById('mainSection').style.display = 'none';
+            document.getElementById('detailsSection').style.display = 'block';
+
+            const detailsAlerts = document.getElementById('detailsAlertsContainer');
+            detailsAlerts.innerHTML = '';
+            if(contract.status === 'بانتظار الاعتماد') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>الفرصة بانتظار الاعتماد والمراجعة الإدارية.</span></div>`;
+            }
+            if(contract.hasNotes) {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>يوجد ملاحظات هامة على هذه الفرصة يرجى مراجعتها.</span></div>`;
+            }
+            if(contract.status === 'قائم') {
+                let endDate = new Date(contract.firstDate);
+                endDate.setMonth(endDate.getMonth() + contract.duration - 1);
+                const daysToEnd = calculateDaysDiff(endDate);
+                
+                if(daysToEnd === 10 || (daysToEnd > 0 && daysToEnd <= 15)) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-exclamation-triangle"></i><span>متبقي <strong>${daysToEnd} ايام</strong> على انتهاء الشراكة.</span></div>`;
+                }
+                const daysToProfit = getNextPaymentDays(contract);
+                if(daysToProfit === 5 || (daysToProfit > 0 && daysToProfit <= 7)) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-info"><i class="fas fa-hand-holding-usd"></i><span>متبقي <strong>${daysToProfit} ايام</strong> على صرف الارباح القادمة.</span></div>`;
+                }
+            }
+
+            const sClass = getStatusClass(contract.status);
+            const badge = document.getElementById('detailStatusBadge');
+            badge.className = `badge ${sClass}`;
+            badge.innerText = "الحالة الحالية: " + contract.status;
+
+            document.getElementById('detOppId').innerText = contract.id;
+            document.getElementById('detReqId').innerText = contract.reqId;
+            document.getElementById('detReqDate').innerText = contract.oppDate;
+            
+            // حسابات الجدول التفصيلي للتحصيل بناء على الاكسل
+            let monthlyProfit = contract.expectedProfit / contract.duration;
+            let monthlyCapital = contract.capital / contract.duration;
+            let monthlyTotal = monthlyProfit + monthlyCapital;
+            
+            document.getElementById('detCapital').innerText = formatMoney(contract.capital) + " ر.س";
+            document.getElementById('detMonthlyProfit').innerText = formatMoney(monthlyProfit) + " ر.س";
+            document.getElementById('detTotalProfit').innerText = formatMoney(contract.expectedProfit) + " ر.س";
+            document.getElementById('detTotalReturn').innerText = formatMoney(contract.capital + contract.expectedProfit) + " ر.س";
+            document.getElementById('detFirstPayDate').innerText = contract.firstDate;
+
+            // توليد جدول التحصيل (القسم الخامس)
+            const collBody = document.getElementById('collectionTableBody');
+            collBody.innerHTML = '';
+            
+            let baseDate = new Date(contract.firstDate);
+            let statuses = ['تم التحصيل', 'متأخرة', 'متعثرة', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل']; // محاكاة للإكسل
+
+            for (let i = 0; i < contract.duration; i++) {
+                let pDate = new Date(baseDate);
+                pDate.setMonth(baseDate.getMonth() + i);
+                let dateStr = pDate.getFullYear() + '/' + String(pDate.getMonth() + 1).padStart(2, '0') + '/' + String(pDate.getDate()).padStart(2, '0');
+                
+                let sStatus = statuses[i] || 'قادمة';
+                let rowColor = sStatus === 'متأخرة' ? '#fef3c7' : (sStatus === 'متعثرة' ? '#fee2e2' : 'transparent');
+
+                collBody.innerHTML += `
+                    <tr style="background-color: ${rowColor};">
+                        <td style="font-family: monospace; color: #475569;">${dateStr}</td>
+                        <td style="font-family: monospace;">${formatMoney(monthlyCapital)}</td>
+                        <td style="font-family: monospace;">${formatMoney(monthlyProfit)}</td>
+                        <td style="color: var(--tera-teal); font-weight: 700; font-family: monospace;">${formatMoney(monthlyTotal)}</td>
+                        <td><span class="badge" style="border:1px solid #cbd5e1; background:#fff; color:#334155;">${sStatus}</span></td>
+                        <td>-</td>
+                    </tr>
+                `;
+            }
+            
+            // إضافة صف الإجمالي لجدول التحصيل
+            collBody.innerHTML += `
+                <tr style="background-color: var(--tera-bg); font-weight: 700;">
+                    <td class="text-navy">الإجمالي</td>
+                    <td class="text-navy" style="font-family: monospace;">${formatMoney(contract.capital)}</td>
+                    <td class="text-navy" style="font-family: monospace;">${formatMoney(contract.expectedProfit)}</td>
+                    <td class="text-teal" style="font-family: monospace; font-size:16px;">${formatMoney(contract.capital + contract.expectedProfit)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `;
+
+            window.scrollTo(0,0);
+        };
+
+        window.closeDetails = function() {
+            document.getElementById('detailsSection').style.display = 'none';
+            document.getElementById('mainSection').style.display = 'block';
+        };
+
+        window.printReport = function() {
+            const now = new Date();
+            document.getElementById('printDate').innerText = now.toLocaleDateString('ar-SA');
+            let hours = now.getHours(); let minutes = now.getMinutes(); let ampm = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12; hours = hours ? hours : 12; minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('printTime').innerText = hours + ':' + minutes + ' ' + ampm;
+            window.print();
+        };
+
+        window.exportReport = function(type) {
+            const now = new Date();
+            const dateStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+            const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+            const fileName = `تفاصيل_الفرصة_${clientName}_${dateStr}_${timeStr}`;
+            alert(`تم طلب استخراج بيانات التقرير بدقة عالية.\nسيتم حفظ الملف وتصديره بالاسم التالي:\n\n${fileName}.${type === 'PDF' ? 'pdf' : 'xlsx'}`);
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('statusChart');
+            if(ctx) {
+                let counts = { active: 0, pending: 0, completed: 0, suspended: 0, expired: 0, cancelled: 0, closed: 0 };
+                mockData.forEach(d => {
+                    if(d.status === 'قائم') counts.active++;
+                    else if(d.status === 'بانتظار الاعتماد') counts.pending++;
+                    else if(d.status === 'مكتملة') counts.completed++;
+                    else if(d.status === 'معلقة') counts.suspended++;
+                    else if(d.status === 'منتهية') counts.expired++;
+                    else if(d.status === 'ملغاة') counts.cancelled++;
+                    else if(d.status === 'مغلقة') counts.closed++;
+                });
+
+                if (typeof ChartDataLabels !== 'undefined') {
+                    Chart.register(ChartDataLabels);
+                }
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['قائم', 'بانتظار الاعتماد', 'مكتملة', 'معلقة', 'منتهية', 'ملغاة', 'مغلقة'],
+                        datasets: [{
+                            data: [counts.active, counts.pending, counts.completed, counts.suspended, counts.expired, counts.cancelled, counts.closed],
+                            backgroundColor: ['#10b981', '#f59e0b', '#0ea5e9', '#b45309', '#64748b', '#ef4444', '#1e293b'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        cutout: '65%',
+                        plugins: { 
+                            legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 14 } } },
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 16, family: 'Tajawal' },
+                                formatter: (value) => { return value > 0 ? value : ''; }
+                            }
+                        } 
+                    }
+                });
+            }
+        }
+
+        // المخطط المطور للنمو وتوزيع الأرباح مع السنوات
+        function initProfitGrowthChart() {
+            const ctxProfit = document.getElementById('profitGrowthChart');
+            if(ctxProfit) {
+                new Chart(ctxProfit, {
+                    type: 'bar',
+                    data: {
+                        labels: ['يناير 2026', 'فبراير 2026', 'مارس 2026', 'أبريل 2026', 'مايو 2026', 'يونيو 2026'],
+                        datasets: [
+                            {
+                                type: 'line',
+                                label: 'إجمالي الأرباح التراكمية (النمو)',
+                                data: [5000, 10200, 15700, 20800, 26600, 32600],
+                                borderColor: '#f59e0b',
+                                backgroundColor: '#f59e0b',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: false,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#f59e0b',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                datalabels: { display: false }
+                            },
+                            {
+                                type: 'bar',
+                                label: 'الأرباح المحققة شهرياً',
+                                data: [5000, 5200, 5500, 5100, 5800, 6000],
+                                backgroundColor: '#028090',
+                                borderRadius: 4,
+                                barPercentage: 0.6,
+                                categoryPercentage: 0.8,
+                                datalabels: { display: false }
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        plugins: {
+                            legend: { 
+                                position: 'top', 
+                                rtl: true, 
+                                labels: {
+                                    font: {family: 'Tajawal', size: 13, weight: 'bold'},
+                                    usePointStyle: true,
+                                    padding: 20
+                                } 
+                            },
+                            tooltip: {
+                                rtl: true,
+                                backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                                titleFont: { family: 'Tajawal', size: 14, weight: 'bold' },
+                                bodyFont: { family: 'Tajawal', size: 13 },
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + formatMoney(context.raw) + ' ر.س';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                grid: { color: '#f1f5f9', drawBorder: false },
+                                ticks: {
+                                    font: { family: 'Tajawal' },
+                                    callback: function(value) { return formatMoney(value); }
+                                }
+                            },
+                            x: { 
+                                grid: { display: false, drawBorder: false },
+                                ticks: { font: { family: 'Tajawal', size: 12 } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+    
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/main.js"></script>
+</body>
+</html>
