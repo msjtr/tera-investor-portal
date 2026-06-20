@@ -1,43 +1,59 @@
-/* ========================================
-   core.css - الأساسيات والمتغيرات
-   ======================================== */
+/* ============================================================
+   الملف الأساسي (Core CSS) | Tera Investor Portal
+   ============================================================ */
 
-/* ----- متغيرات الألوان (Color Variables) ----- */
+/* =========================================
+   1. استدعاء الخطوط (Typography)
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+/* =========================================
+   2. المتغيرات الجذرية (CSS Variables)
+   ========================================= */
 :root {
-    --primary-color: #0D6EFD;
-    --primary-dark: #0B5ED7;
-    --primary-light: #E6F0FF;
-    --secondary-color: #6C757D;
-    --success-color: #198754;
-    --danger-color: #DC3545;
-    --warning-color: #FFC107;
-    --info-color: #0DCAF0;
-    --dark-color: #212529;
-    --light-color: #F8F9FA;
-    --white-color: #FFFFFF;
-    --gray-100: #F8F9FA;
-    --gray-200: #E9ECEF;
-    --gray-300: #DEE2E6;
-    --gray-400: #CED4DA;
-    --gray-500: #ADB5BD;
-    --gray-600: #6C757D;
-    --gray-700: #495057;
-    --gray-800: #343A40;
-    --gray-900: #212529;
+    /* الألوان الرئيسية للهوية (Brand Colors) */
+    --tera-teal: #028090;      /* الأخضر المزرق الأساسي */
+    --tera-teal-light: rgba(2, 128, 144, 0.1); 
+    --tera-navy: #0A1B3F;      /* الكحلي الداكن للعناوين */
+    
+    /* الألوان المحايدة والخلفيات (Neutrals) */
+    --tera-gray: #64748b;      /* الرمادي للنصوص الثانوية */
+    --tera-gray-light: #94a3b8;
+    --tera-bg: #f8fafc;        /* لون خلفية النظام */
+    --tera-white: #ffffff;
+    
+    /* ألوان الحالات (Status Colors) */
+    --status-success: #10b981;
+    --status-success-bg: #dcfce7;
+    --status-warning: #f59e0b;
+    --status-warning-bg: #fef3c7;
+    --status-danger: #ef4444;
+    --status-danger-bg: #fee2e2;
+    --status-info: #0ea5e9;
+    --status-info-bg: #e0f2fe;
 
-    --sidebar-width: 260px;
-    --header-height: 70px;
-    --border-radius: 10px;
-    --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    --transition-speed: 0.3s;
-    --font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* الخطوط والأحجام */
+    --font-primary: 'Tajawal', sans-serif;
+    
+    /* الظلال والحدود (Shadows & Borders) */
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    --border-color: #e2e8f0;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    
+    /* الحركات (Transitions) */
+    --transition-fast: 0.2s ease-in-out;
+    --transition-normal: 0.3s ease-in-out;
 }
 
-/* ----- إعادة التعيين (Reset) ----- */
-* {
+/* =========================================
+   3. إعادة الضبط الأساسية (CSS Reset & Normalize)
+   ========================================= */
+*, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
 html {
@@ -45,111 +61,118 @@ html {
 }
 
 body {
-    font-family: var(--font-family);
-    background-color: #F4F7FC;
-    color: var(--gray-800);
-    direction: rtl;
-    text-align: right;
+    background-color: var(--tera-bg);
+    color: #334155;
+    font-family: var(--font-primary);
+    font-size: 14px;
     line-height: 1.6;
-    overflow-x: hidden;
+    direction: rtl; /* اتجاه النظام عربي */
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden; /* منع التمرير الأفقي العشوائي للصفحة */
 }
 
-/* ----- الأنماط الأساسية للعناصر ----- */
+/* إزالة تنسيقات الروابط الافتراضية */
 a {
     text-decoration: none;
-    color: var(--primary-color);
-    transition: color var(--transition-speed);
-}
-a:hover {
-    color: var(--primary-dark);
+    color: var(--tera-teal);
+    transition: color var(--transition-fast);
 }
 
-ul {
+a:hover {
+    color: var(--tera-navy);
+}
+
+/* إعادة ضبط القوائم */
+ul, ol {
     list-style: none;
-    padding: 0;
-    margin: 0;
+}
+
+/* إعادة ضبط الأزرار وحقول الإدخال */
+button, input, select, textarea {
+    font-family: var(--font-primary);
+    outline: none;
+}
+
+button {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+}
+
+/* العناوين الأساسية */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--tera-navy);
+    font-weight: 700;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
 }
 
 img {
     max-width: 100%;
     height: auto;
+    display: block;
 }
 
-/* ----- الأزرار الأساسية ----- */
-.btn {
-    display: inline-block;
-    padding: 8px 20px;
-    border-radius: var(--border-radius);
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-speed);
-    font-size: 14px;
-    background-color: var(--gray-200);
-    color: var(--gray-700);
-}
-.btn-primary {
-    background-color: var(--primary-color);
-    color: var(--white-color);
-}
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-    color: var(--white-color);
-}
+/* =========================================
+   4. فئات المساعدة (Utility Classes)
+   ========================================= */
 
-/* ----- البطاقات العامة (Card) ----- */
-.card {
-    background: var(--white-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid var(--gray-200);
-}
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--gray-200);
-}
-.card-header h3 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-.card-subtitle {
-    font-size: 13px;
-    color: var(--gray-600);
-}
-.view-all {
-    font-size: 13px;
-    font-weight: 600;
-}
+/* نصوص وألوان (Text Utilities) */
+.text-teal { color: var(--tera-teal) !important; }
+.text-navy { color: var(--tera-navy) !important; }
+.text-gray { color: var(--tera-gray) !important; }
+.text-success { color: var(--status-success) !important; }
+.text-danger { color: var(--status-danger) !important; }
+.text-warning { color: var(--status-warning) !important; }
+.text-white { color: var(--tera-white) !important; }
 
-/* ----- الشارات (Badges) ----- */
-.badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-}
-.status-active {
-    background-color: #D1E7DD;
-    color: #0F5132;
-}
-.status-completed {
-    background-color: #CCE5FF;
-    color: #084298;
-}
-.status-pending {
-    background-color: #FFF3CD;
-    color: #856404;
-}
-.status-danger {
-    background-color: #F8D7DA;
-    color: #721C24;
-}
+.font-bold { font-weight: 700 !important; }
+.font-medium { font-weight: 500 !important; }
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+/* المسافات (Spacing Utilities - Margin & Padding) */
+.m-0 { margin: 0 !important; }
+.mt-10 { margin-top: 10px !important; }
+.mt-20 { margin-top: 20px !important; }
+.mt-30 { margin-top: 30px !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+.mb-30 { margin-bottom: 30px !important; }
+
+.p-0 { padding: 0 !important; }
+.p-10 { padding: 10px !important; }
+.p-20 { padding: 20px !important; }
+.p-30 { padding: 30px !important; }
+
+/* المرونة والتخطيط (Flexbox Utilities) */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.align-items-center { align-items: center !important; }
+.align-items-start { align-items: flex-start !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-start { justify-content: flex-start !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.gap-10 { gap: 10px !important; }
+.gap-15 { gap: 15px !important; }
+.gap-20 { gap: 20px !important; }
+
+/* العرض والارتفاع (Sizing Utilities) */
+.w-100 { width: 100% !important; }
+.h-100 { height: 100% !important; }
+
+/* خلفيات (Backgrounds) */
+.bg-white { background-color: var(--tera-white) !important; }
+.bg-teal { background-color: var(--tera-teal) !important; }
+.bg-navy { background-color: var(--tera-navy) !important; }
+.bg-light { background-color: var(--tera-bg) !important; }
+
+/* الإخفاء والظهور (Visibility) */
+.d-none { display: none !important; }
+.d-block { display: block !important; }
+.invisible { visibility: hidden !important; }
