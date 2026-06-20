@@ -1,117 +1,124 @@
-<aside class="sidebar-container" id="sidebar">
+<aside class="sidebar-container no-print" id="sidebar">
     <div class="sidebar-brand">
-        <a href="/index.html">
-            <img src="/images/logo.svg" alt="Tera Logo" class="logo-img" />
+        <a href="/pages/dashboard/index.html" style="display: block; text-decoration: none;">
+            <img src="/images/logo.svg" 
+                 alt="Tera Logo" 
+                 class="logo-img"
+                 style="height: 45px; width: auto; margin: 0 auto; display: block; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; transform: translateZ(0); will-change: transform;" 
+                 onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
         </a>
+        <button class="sidebar-close-btn d-lg-none" id="closeSidebarBtn" style="position: absolute; left: 15px; top: 25px; background: none; border: none; color: var(--tera-gray); font-size: 20px; cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
-
-    <nav class="sidebar-menu" id="sidebarMenu">
+    
+    <nav class="sidebar-menu">
         <ul class="nav-list">
-            <li class="nav-item active">
-                <a href="/pages/dashboard/index.html" data-page="dashboard">
+            
+            <li class="nav-item">
+                <a href="/pages/dashboard/index.html">
                     <i class="fas fa-th-large"></i>
                     <span class="nav-label">لوحة التحكم</span>
                 </a>
             </li>
             
             <li class="nav-item has-submenu">
-                <a href="#" data-page="investments">
+                <a href="javascript:void(0)">
                     <i class="fas fa-chart-line"></i>
                     <span class="nav-label">الاستثمارات</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/investments/opportunities.html" data-page="opportunities">فرص الاستثمار</a></li>
-                    <li><a href="/pages/investments/active-investments.html" data-page="active-investments">الاستثمارات النشطة</a></li>
-                    <li><a href="/pages/investments/completed-investments.html" data-page="completed-investments">المكتملة</a></li>
-                    <li><a href="/pages/investments/cancelled-investments.html" data-page="cancelled-investments">الملغاة</a></li>
-                    <li><a href="/pages/investments/extended-investments.html" data-page="extended-investments">الشراكة الممتدة</a></li>
-                    <li><a href="/pages/investments/investment-details.html" data-page="investment-details">تفاصيل الاستثمار</a></li>
+                    <li><a href="/pages/investments/opportunities.html">فرص الاستثمار</a></li>
+                    <li><a href="/pages/investments/active-investments.html">الاستثمارات النشطة</a></li>
+                    <li><a href="/pages/investments/extended-investments.html">الشراكات الممتدة</a></li>
+                    <li><a href="/pages/investments/completed-investments.html">المكتملة</a></li>
+                    <li><a href="/pages/investments/cancelled-investments.html">الملغاة</a></li>
                 </ul>
             </li>
-            
+
             <li class="nav-item has-submenu">
-                <a href="#" data-page="portfolio">
+                <a href="javascript:void(0)">
                     <i class="fas fa-wallet"></i>
                     <span class="nav-label">المحفظة</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/portfolio/portfolio-overview.html" data-page="portfolio-overview">نظرة عامة</a></li>
-                    <li><a href="/pages/portfolio/transactions.html" data-page="transactions">المعاملات</a></li>
-                    <li><a href="/pages/portfolio/profits.html" data-page="profits">الأرباح</a></li>
-                    <li><a href="/pages/portfolio/withdraw-request.html" data-page="withdraw-request">طلب سحب</a></li>
-                    <li><a href="/pages/portfolio/withdrawal-history.html" data-page="withdrawal-history">سجل السحوبات</a></li>
-                    <li><a href="/pages/portfolio/account-statement.html" data-page="account-statement">كشف الحساب</a></li>
+                    <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
+                    <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
+                    <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
+                    <li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li>
+                    <li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li>
+                    <li><a href="/pages/portfolio/account-statement.html">كشف الحساب</a></li>
                 </ul>
             </li>
-            
+
             <li class="nav-item has-submenu">
-                <a href="#" data-page="reports">
+                <a href="javascript:void(0)">
                     <i class="fas fa-file-alt"></i>
                     <span class="nav-label">التقارير</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/reports/reports-dashboard.html" data-page="reports-dashboard">لوحة التقارير</a></li>
-                    <li><a href="/pages/reports/portfolio-report.html" data-page="portfolio-report">تقرير المحفظة</a></li>
-                    <li><a href="/pages/reports/investments-report.html" data-page="investments-report">تقرير الاستثمارات</a></li>
-                    <li><a href="/pages/reports/profits-report.html" data-page="profits-report">تقرير الأرباح</a></li>
-                    <li><a href="/pages/reports/withdrawals-report.html" data-page="withdrawals-report">تقرير السحوبات</a></li>
+                    <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
+                    <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
+                    <li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li>
+                    <li><a href="/pages/reports/profits-report.html">تقرير الأرباح</a></li>
+                    <li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li>
                 </ul>
             </li>
-            
+
             <li class="nav-item has-submenu">
-                <a href="#" data-page="profile">
+                <a href="javascript:void(0)">
                     <i class="fas fa-user-circle"></i>
                     <span class="nav-label">الملف الشخصي</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/profile/personal-information.html" data-page="personal-information">المعلومات الشخصية</a></li>
-                    <li><a href="/pages/profile/contact-information.html" data-page="contact-information">معلومات الاتصال</a></li>
-                    <li><a href="/pages/profile/national-address.html" data-page="national-address">العنوان الوطني</a></li>
-                    <li><a href="/pages/profile/bank-information.html" data-page="bank-information">المعلومات البنكية</a></li>
-                    <li><a href="/pages/profile/attachments.html" data-page="attachments">المرفقات</a></li>
+                    <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
+                    <li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li>
+                    <li><a href="/pages/profile/national-address.html">العنوان الوطني</a></li>
+                    <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                    <li><a href="/pages/profile/attachments.html">المرفقات</a></li>
                 </ul>
             </li>
-            
+
             <li class="nav-item has-submenu">
-                <a href="#" data-page="security">
+                <a href="javascript:void(0)">
                     <i class="fas fa-shield-alt"></i>
                     <span class="nav-label">الأمان</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/security/change-password.html" data-page="change-password">تغيير كلمة المرور</a></li>
-                    <li><a href="/pages/security/change-email.html" data-page="change-email">تغيير البريد الإلكتروني</a></li>
-                    <li><a href="/pages/security/change-mobile.html" data-page="change-mobile">تغيير رقم الجوال</a></li>
-                    <li><a href="/pages/security/two-factor-authentication.html" data-page="two-factor-authentication">المصادقة الثنائية</a></li>
-                    <li><a href="/pages/security/registered-devices.html" data-page="registered-devices">الأجهزة المسجلة</a></li>
-                    <li><a href="/pages/security/login-history.html" data-page="login-history">سجل الدخول</a></li>
+                    <li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li>
+                    <li><a href="/pages/security/change-email.html">تغيير البريد</a></li>
+                    <li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li>
+                    <li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li>
+                    <li><a href="/pages/security/registered-devices.html">الأجهزة المسجلة</a></li>
+                    <li><a href="/pages/security/login-history.html">سجل الدخول</a></li>
                 </ul>
             </li>
-            
+
             <li class="nav-item has-submenu">
-                <a href="#" data-page="support">
+                <a href="javascript:void(0)">
                     <i class="fas fa-headset"></i>
-                    <span class="nav-label">الدعم</span>
+                    <span class="nav-label">الدعم الفني</span>
                     <i class="fas fa-chevron-down submenu-toggle"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="/pages/support/help-center.html" data-page="help-center">مركز المساعدة</a></li>
-                    <li><a href="/pages/support/faq.html" data-page="faq">الأسئلة الشائعة</a></li>
-                    <li><a href="/pages/support/tickets.html" data-page="tickets">التذاكر</a></li>
-                    <li><a href="/pages/support/notifications.html" data-page="notifications">الإشعارات</a></li>
-                    <li><a href="/pages/support/privacy-policy.html" data-page="privacy-policy">سياسة الخصوصية</a></li>
-                    <li><a href="/pages/support/terms-and-conditions.html" data-page="terms-and-conditions">الشروط والأحكام</a></li>
+                    <li><a href="/pages/support/help-center.html">مركز المساعدة</a></li>
+                    <li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li>
+                    <li><a href="/pages/support/tickets.html">التذاكر</a></li>
+                    <li><a href="/pages/support/notifications.html">الإشعارات</a></li>
+                    <li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li>
+                    <li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li>
                 </ul>
             </li>
         </ul>
     </nav>
 
     <div class="sidebar-footer">
-        <button class="logout-btn" id="logoutBtn">
+        <button class="logout-btn" id="logoutBtn" style="width: 100%; display: flex; align-items: center; gap: 10px; padding: 15px 20px; background: none; border: none; border-top: 1px solid var(--border-color); color: #ef4444; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit;">
             <i class="fas fa-sign-out-alt"></i>
             <span class="nav-label">تسجيل الخروج</span>
         </button>
@@ -119,317 +126,97 @@
 </aside>
 
 <style>
-    /* ============================================================
-       القائمة الجانبية - الهيكل الأساسي
-       ============================================================ */
+    /* التنسيقات الإضافية المطلوبة لتشغيل القائمة بشكل مستقل */
     .sidebar-container {
+        width: 260px;
+        background: #fff;
+        border-left: 1px solid var(--border-color, #e2e8f0);
         display: flex;
         flex-direction: column;
+        transition: all 0.3s ease;
+        z-index: 101;
         height: 100vh;
-        width: var(--sidebar-width, 250px);
-        position: fixed;
+        position: sticky;
         top: 0;
-        right: 0;
-        background: var(--white-color, #ffffff);
-        border-left: 1px solid var(--gray-200, #e9ecef);
-        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.02);
-        z-index: 1050;
-        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow: hidden;
     }
-
-    /* منطقة الشعار */
-    .sidebar-brand {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 70px;
-        padding: 0 16px;
-        border-bottom: 1px solid var(--gray-200, #e9ecef);
-        flex-shrink: 0;
-    }
-    .sidebar-brand .logo-img {
-        width: 42px;
-        height: 42px;
-        transition: width 0.3s;
-    }
-
-    /* منطقة التنقل */
-    .sidebar-menu {
-        flex: 1;
-        overflow-y: auto;
-        padding: 12px 0;
-    }
-    .sidebar-menu::-webkit-scrollbar {
-        width: 4px;
-    }
-    .sidebar-menu::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .sidebar-menu::-webkit-scrollbar-thumb {
-        background: var(--gray-300, #dee2e6);
-        border-radius: 20px;
-    }
-
-    /* قائمة الروابط */
-    .nav-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .nav-item {
-        margin-bottom: 2px;
-    }
+    
+    .sidebar-brand { padding: 20px; text-align: center; border-bottom: 1px solid var(--border-color, #e2e8f0); position: relative; }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-list { list-style: none; padding: 0; margin: 0; }
+    
     .nav-item > a {
-        display: flex;
-        align-items: center;
-        padding: 10px 18px;
-        color: var(--gray-700, #475569);
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 15px;
-        gap: 14px;
-        border-radius: var(--border-radius, 8px);
-        transition: all 0.15s ease;
-        white-space: nowrap;
-        cursor: pointer;
-        position: relative;
+        display: flex; align-items: center; padding: 12px 25px; color: var(--tera-gray, #64748b);
+        text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; position: relative;
     }
-    .nav-item > a i {
-        font-size: 18px;
-        width: 24px;
-        text-align: center;
-        flex-shrink: 0;
-        color: var(--gray-500, #94a3b8);
-        transition: color 0.15s;
+    .nav-item > a i { width: 30px; font-size: 18px; text-align: center; margin-left: 10px; }
+    .submenu-toggle { margin-right: auto; font-size: 12px !important; transition: transform 0.3s ease; }
+    
+    .nav-item.active > a, .nav-item > a:hover {
+        color: var(--tera-teal, #028090);
+        background: rgba(2, 128, 144, 0.05);
+        border-right: 4px solid var(--tera-teal, #028090);
     }
-    .nav-item > a .nav-label {
-        flex: 1;
-        transition: opacity 0.2s;
-    }
-    .nav-item > a .submenu-toggle {
-        font-size: 12px;
-        margin-right: auto;
-        transition: transform 0.2s;
-    }
-
-    /* مؤشرات الحالة (Active States) - الخط الجانبي */
-    .nav-item.active > a::before {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 10%;
-        height: 80%;
-        width: 3px;
-        background: var(--primary-color, #028090);
-        border-radius: 0 4px 4px 0;
-    }
-    .nav-item.active > a {
-        background: var(--primary-light, rgba(2, 128, 144, 0.06));
-        color: var(--primary-color, #028090);
-    }
-    .nav-item.active > a i {
-        color: var(--primary-color, #028090);
-    }
-
-    .nav-item > a:hover {
-        background: var(--gray-100, #f8f9fa);
-        color: var(--gray-900, #0A2540);
-    }
-    .nav-item > a:hover i {
-        color: var(--primary-color, #028090);
-    }
-
+    
     /* القوائم الفرعية */
     .submenu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.25s ease, padding 0.25s ease;
-        padding-right: 0;
-    }
-    .nav-item.submenu-open .submenu {
-        max-height: 500px;
-        padding: 4px 0 8px 0;
+        list-style: none; padding: 0; margin: 0; background: #f8fafc;
+        max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
     }
     .submenu li a {
-        display: flex;
-        align-items: center;
-        padding: 8px 30px 8px 18px;
-        font-size: 14px;
-        color: var(--gray-600, #64748b);
-        text-decoration: none;
-        border-radius: var(--border-radius, 6px);
-        transition: all 0.15s;
-        white-space: nowrap;
-        position: relative;
+        display: block; padding: 10px 25px 10px 60px; color: var(--tera-gray, #64748b);
+        text-decoration: none; font-size: 13px; font-weight: 500; transition: 0.2s;
     }
-    .submenu li a:hover {
-        background: var(--gray-100, #f8f9fa);
-        color: var(--gray-900, #0A2540);
-    }
-    .submenu li.active a {
-        color: var(--primary-color, #028090);
-        font-weight: 600;
-        background: var(--primary-light, rgba(2, 128, 144, 0.04));
-    }
-    .submenu li.active a::before {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 20%;
-        height: 60%;
-        width: 2px;
-        background: var(--primary-color, #028090);
-        border-radius: 0 4px 4px 0;
-    }
+    .submenu li a:hover, .submenu li.active a { color: var(--tera-teal, #028090); padding-right: 20px; }
+    
+    .nav-item.submenu-open .submenu { max-height: 500px; /* رقم تقريبي لفتح القائمة */ }
+    .nav-item.submenu-open .submenu-toggle { transform: rotate(180deg); }
+    
+    .logout-btn:hover { background: #fee2e2 !important; }
 
-    /* منطقة الإجراءات (تسجيل الخروج) */
-    .sidebar-footer {
-        border-top: 1px solid var(--gray-200, #e9ecef);
-        padding: 12px 18px;
-        flex-shrink: 0;
-    }
-    .logout-btn {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        width: 100%;
-        padding: 10px 12px;
-        border: none;
-        background: transparent;
-        color: var(--danger-color, #DC3545);
-        font-weight: 600;
-        font-size: 15px;
-        border-radius: var(--border-radius, 8px);
-        cursor: pointer;
-        transition: background 0.15s;
-        font-family: inherit;
-    }
-    .logout-btn i {
-        font-size: 18px;
-        width: 24px;
-        text-align: center;
-    }
-    .logout-btn:hover {
-        background: rgba(220, 53, 69, 0.06);
-    }
-
-    /* ===== وضع الانهيار (Collapsed Mode) ===== */
-    .sidebar-container.collapsed {
-        width: 70px;
-    }
-    .sidebar-container.collapsed .sidebar-brand .logo-img {
-        width: 36px;
-        height: 36px;
-    }
-    .sidebar-container.collapsed .nav-label,
-    .sidebar-container.collapsed .submenu-toggle,
-    .sidebar-container.collapsed .submenu {
-        display: none;
-    }
-    .sidebar-container.collapsed .nav-item > a {
-        justify-content: center;
-        padding: 10px 0;
-    }
-    .sidebar-container.collapsed .nav-item > a i {
-        margin: 0;
-    }
-    .sidebar-container.collapsed .logout-btn .nav-label {
-        display: none;
-    }
-    .sidebar-container.collapsed .logout-btn {
-        justify-content: center;
-        padding: 10px 0;
-    }
-    .sidebar-container.collapsed .nav-item.active > a::before {
-        right: 0;
-        top: 15%;
-        height: 70%;
-    }
-
-    /* ===== التوافق مع الشاشات الصغيرة (Mobile) ===== */
-    @media (max-width: 991.98px) {
+    /* تجاوب الجوال (Mobile) */
+    @media (max-width: 991px) {
         .sidebar-container {
-            transform: translateX(100%);
-            width: 280px !important;
-            transition: transform 0.3s ease;
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.08);
+            position: fixed;
+            right: -260px; /* مخفية خارج الشاشة */
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
         }
         .sidebar-container.sidebar-open {
-            transform: translateX(0);
+            right: 0; /* إظهار القائمة */
         }
-        .sidebar-container.collapsed {
-            width: 280px !important;
-        }
-        .sidebar-container.collapsed .nav-label,
-        .sidebar-container.collapsed .submenu-toggle,
-        .sidebar-container.collapsed .submenu {
-            display: block;
-        }
-        .sidebar-container.collapsed .nav-item > a {
-            justify-content: flex-start;
-            padding: 10px 18px;
-        }
-        .sidebar-container.collapsed .nav-item > a i {
-            margin-left: 14px;
-        }
-        .sidebar-container.collapsed .logout-btn .nav-label {
-            display: inline;
-        }
-        .sidebar-container.collapsed .logout-btn {
-            justify-content: flex-start;
-            padding: 10px 12px;
-        }
+        .d-lg-none { display: block !important; }
     }
-
-    /* ===== دعم الوضع المظلم ===== */
-    @media (prefers-color-scheme: dark) {
-        .sidebar-container {
-            background: var(--gray-900, #0f172a);
-            border-left-color: var(--gray-700, #495057);
-        }
-        .sidebar-brand {
-            border-bottom-color: var(--gray-700, #495057);
-        }
-        .nav-item > a {
-            color: var(--gray-300, #dee2e6);
-        }
-        .nav-item > a i {
-            color: var(--gray-500, #94a3b8);
-        }
-        .nav-item.active > a {
-            background: rgba(20, 184, 166, 0.08);
-            color: var(--primary-color, #14b8a6);
-        }
-        .nav-item.active > a i {
-            color: var(--primary-color, #14b8a6);
-        }
-        .nav-item > a:hover {
-            background: var(--gray-800, #1e293b);
-            color: var(--gray-100, #f8f9fa);
-        }
-        .submenu li a {
-            color: var(--gray-400, #ced4da);
-        }
-        .submenu li a:hover {
-            background: var(--gray-800, #1e293b);
-            color: var(--gray-100, #f8f9fa);
-        }
-        .submenu li.active a {
-            color: var(--primary-color, #14b8a6);
-            background: rgba(20, 184, 166, 0.06);
-        }
-        .sidebar-footer {
-            border-top-color: var(--gray-700, #495057);
-        }
-        .logout-btn {
-            color: #f87171;
-        }
-        .logout-btn:hover {
-            background: rgba(248, 113, 113, 0.08);
-        }
+    @media (min-width: 992px) {
+        .d-lg-none { display: none !important; }
     }
 </style>
+
+<script>
+    // تفعيل وظائف القائمة الجانبية (تعمل بمجرد استدعاء المكون)
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. فتح وإغلاق القوائم الفرعية
+        const submenus = document.querySelectorAll('.sidebar-menu .has-submenu > a');
+        submenus.forEach(menu => {
+            menu.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parentLi = this.parentElement;
+                
+                // إغلاق باقي القوائم
+                document.querySelectorAll('.sidebar-menu .has-submenu').forEach(li => {
+                    if (li !== parentLi) li.classList.remove('submenu-open');
+                });
+                
+                // التبديل للفرع الحالي
+                parentLi.classList.toggle('submenu-open');
+            });
+        });
+
+        // 2. إغلاق القائمة في الجوال عند الضغط على زر X
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', () => {
+                sidebar.classList.remove('sidebar-open');
+            });
+        }
+    });
+</script>
