@@ -1,13 +1,141 @@
-<!-- ========================================
-     footer.html - الشريط السفلي (الفوتر)
-     ======================================== -->
-<footer class="footer">
-    <div class="footer-content">
-        <span>© 2026 Tera Investor Portal. جميع الحقوق محفوظة.</span>
-        <div class="footer-links">
-            <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
-            <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
-            <a href="../support/help-center.html">مركز الدعم</a>
+<footer class="page-footer no-print">
+    <div class="footer-container">
+        
+        <div class="footer-info">
+            <img src="/images/logo.svg" 
+                 alt="Tera Logo" 
+                 class="footer-logo"
+                 onerror="this.src='https://via.placeholder.com/80x25/028090/fff?text=Tera'" />
+            <p>© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</p>
         </div>
+
+        <div class="footer-links">
+            <a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a>
+            <a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a>
+            <a href="/pages/support/help-center.html">مركز المساعدة</a>
+        </div>
+        
     </div>
 </footer>
+
+<style>
+    .page-footer {
+        background: #fff;
+        border-top: 1px solid var(--border-color, #e2e8f0);
+        padding: 20px 30px;
+        margin-top: auto; /* لضمان بقائه دائماً في أسفل الصفحة */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .footer-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1500px;
+        margin: 0 auto;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .footer-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    /* حماية دقة الشعار في الفوتر */
+    .footer-logo {
+        height: 24px;
+        width: auto;
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        transform: translateZ(0);
+        will-change: transform;
+        opacity: 0.8; /* تخفيف سطوع الشعار في الفوتر ليتناسب مع التصميم */
+        transition: opacity 0.2s ease;
+    }
+
+    .footer-logo:hover {
+        opacity: 1;
+    }
+
+    .footer-info p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--tera-gray, #64748b);
+        font-weight: 500;
+    }
+
+    .footer-links {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-links a {
+        color: var(--tera-gray, #64748b);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+        color: var(--tera-teal, #028090);
+    }
+
+    /* =========================================
+       تجاوب الشاشات للفوتر
+       ========================================= */
+       
+    /* شاشات الجوال */
+    @media (max-width: 768px) {
+        .page-footer {
+            padding: 25px 15px;
+        }
+        
+        .footer-container {
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            gap: 15px;
+        }
+
+        .footer-info {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-links {
+            justify-content: center;
+            gap: 15px;
+        }
+    }
+
+    /* شاشات 4K العملاقة */
+    @media (min-width: 2560px) {
+        .page-footer {
+            padding: 30px 50px;
+        }
+        
+        .footer-container {
+            max-width: 2400px;
+        }
+
+        .footer-logo {
+            height: 35px;
+        }
+
+        .footer-info p,
+        .footer-links a {
+            font-size: 16px;
+        }
+        
+        .footer-links {
+            gap: 30px;
+        }
+    }
+</style>
