@@ -36,6 +36,7 @@
         .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; }
         .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
         
+        /* الهيدر الموحد للشركة */
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; width: 100%; }
         .header-logo { display: flex; align-items: center; gap: 20px; }
         .header-logo h1 { margin: 0; font-size: 20px; color: var(--tera-navy); font-weight: 700; }
@@ -46,117 +47,82 @@
 
         .container { max-width: 1600px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
 
-        /* البطاقات والشبكات الأساسية */
+        /* حاوية وشبكة الكروت */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-bottom: 30px; width: 100%; }
         
-        /* كروت الفرص الاستثمارية */
         .opp-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: 0.3s; background: #fff; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .opp-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(2, 128, 144, 0.1); border-color: var(--tera-teal); }
         .opp-header { background: var(--tera-navy); color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .opp-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+        .opp-header h3 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; }
         .opp-body { padding: 20px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .opp-metric { background: var(--tera-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
         .opp-metric span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 5px; }
-        .opp-metric strong { display: block; font-size: 16px; color: var(--tera-navy); font-weight: 700; font-family: monospace; }
+        .opp-metric strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 700; font-family: monospace; }
         .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
 
-        /* حاوية الفلاتر */
+        /* شريط التصفية المطور */
         .filters-container { margin-bottom: 25px; width: 100%; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .filters-controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; width: 100%; }
-        .search-input { padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; outline: none; font-size: 14px; background-color: #fff; color: var(--tera-navy); flex: 1; min-width: 200px; }
+        .search-input { padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; outline: none; font-size: 14px; background-color: #fff; color: var(--tera-navy); min-width: 180px; flex: 1; }
         .search-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
-        select.search-input { cursor: pointer; font-weight: 600; flex: 0 0 auto; min-width: 200px; }
+        select.search-input { cursor: pointer; font-weight: 600; flex: 0 0 auto; min-width: 180px; }
 
-        /* الأزرار */
         .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 13px; text-decoration: none; justify-content: center; font-family: inherit; }
         .btn-action:hover { background: #f1f5f9; }
         .btn-primary { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); }
         .btn-primary:hover { background: #026a77; color: #fff; }
         .btn-pdf { background: #ef4444; color: #fff; border-color: #ef4444; }
-        .btn-pdf:hover { background: #dc2626; color: #fff; }
 
-        /* شارات الحالات */
-        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; text-align: center; }
-        .status-active { background: #dcfce7; color: #10b981; border: 1px solid #bbf7d0; }
+        /* شارات الحالات المخصصة للفلاتر الجديدة */
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; text-align: center; border: 1px solid transparent; }
+        .status-completed { background: #dcfce7; color: #10b981; border-color: #bbf7d0; }
+        .status-upcoming { background: #e0f2fe; color: #0ea5e9; border-color: #bae6fd; }
+        .status-cancelled { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
+        .status-expired { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
 
-        /* =========================================
-           نظام النوافذ المنبثقة (Modals)
-           ========================================= */
+        /* نظام النوافذ (Modals) */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 27, 63, 0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 1100px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s ease; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
-        
         .modal-header { padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
-        .modal-header h2 { margin: 0; font-size: 20px; color: var(--tera-navy); display: flex; align-items: center; gap: 10px; }
-        .close-modal { background: none; border: none; font-size: 24px; color: var(--tera-gray); cursor: pointer; transition: 0.2s; }
-        .close-modal:hover { color: #ef4444; }
-        
+        .modal-header h2 { margin: 0; font-size: 19px; color: var(--tera-navy); display: flex; align-items: center; gap: 10px; }
+        .close-modal { background: none; border: none; font-size: 24px; color: var(--tera-gray); cursor: pointer; }
         .modal-body { padding: 30px; overflow-y: auto; flex: 1; background: #f8fafc; }
-
-        /* نافذة الحاسبة والانضمام (أصغر) */
         .modal-calc { max-width: 650px; }
 
-        /* جداول وتفاصيل داخل النافذة */
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
         .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 5px; }
-        .info-item strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 700; }
-        .info-item strong.mono { font-family: monospace; }
+        .info-item strong { display: block; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
         
         .tera-table { width: 100%; border-collapse: collapse; text-align: right; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
         .tera-table th { background: var(--tera-navy); padding: 12px 15px; color: #fff; font-size: 13px; font-weight: 700; }
-        .tera-table td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; font-weight: 500; font-family: monospace; }
+        .tera-table td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; font-family: monospace; }
         
-        /* حاسبة الانضمام */
         .calc-group { margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
         .calc-group label { display: block; margin-bottom: 12px; font-size: 15px; font-weight: 700; color: var(--tera-navy); }
-        .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 20px; font-family: monospace; font-weight: bold; outline: none; transition: 0.2s; text-align: center; color: var(--tera-teal); }
-        .calc-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
+        .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 20px; font-family: monospace; font-weight: bold; outline: none; text-align: center; color: var(--tera-teal); }
         
-        .calc-result-box { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .calc-result-box { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-top: 20px; }
         .calc-result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: var(--tera-gray); font-weight: 600; }
-        .calc-result-row span.mono { color: var(--tera-navy); font-size: 16px; }
         .calc-result-row.total { border-top: 2px dashed #e2e8f0; padding-top: 15px; margin-top: 15px; font-weight: 800; font-size: 18px; color: var(--tera-navy); }
-        .calc-result-row.total span.mono { color: var(--tera-teal); font-size: 22px; }
         
-        /* اتفاقية الإقرار */
-        .agreement-box { margin-top: 25px; padding: 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px; transition: 0.3s; }
-        .agreement-box:hover { background: #fef3c7; }
+        .agreement-box { margin-top: 25px; padding: 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px; }
         .agreement-box input[type="checkbox"] { margin-top: 4px; transform: scale(1.3); cursor: pointer; accent-color: var(--tera-teal); }
         .agreement-box label { font-size: 13px; color: #92400e; line-height: 1.6; cursor: pointer; font-weight: 600; }
 
-        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; width: 100%; }
-        
-        /* أزرار النافذة */
         .modal-actions-row { display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 25px; align-items: center; justify-content: space-between; }
         .modal-actions-group { display: flex; gap: 10px; }
 
-        /* التجاوب */
-        @media (max-width: 768px) {
-            .filters-controls { flex-direction: column; }
-            .filters-controls select, .filters-controls .search-box { width: 100%; }
-            .modal-content { max-height: 95vh; margin: 10px; }
-            .modal-actions-row { flex-direction: column; align-items: stretch; }
-            .modal-actions-group { justify-content: space-between; margin-bottom: 15px; }
-            .modal-actions-group button { flex: 1; }
-        }
-
-        /* الطباعة الاحترافية للنافذة النشطة فقط */
+        /* الطباعة الرسمية ورقة A4 */
         .print-only { display: none; }
         @media print {
             body * { visibility: hidden; }
-            /* إظهار محتوى النافذة الفعالة فقط */
             .modal-overlay.active, .modal-overlay.active .modal-content, .modal-overlay.active .modal-content * { visibility: visible; }
-            .modal-overlay.active { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: transparent; padding: 0; align-items: flex-start; }
-            .modal-overlay.active .modal-content { width: 100%; max-width: none; transform: none; box-shadow: none; border: none; background: #fff; }
-            .modal-header .close-modal, .modal-actions-row, .no-print { display: none !important; }
+            .modal-overlay.active { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: transparent; padding: 0; }
+            .modal-overlay.active .modal-content { width: 100%; transform: none; box-shadow: none; border: none; background: #fff; }
+            .close-modal, .modal-actions-row, .no-print { display: none !important; }
             .print-only { display: block; text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--tera-teal); padding-bottom: 15px; }
-            
-            /* تحسينات الطباعة لنموذج الانضمام */
-            .calc-result-box { border: 1px solid #000; background: transparent; }
-            .agreement-box { border: 1px solid #000; background: transparent; color: #000; }
-            .agreement-box label { color: #000; }
         }
     </style>
 </head>
@@ -168,12 +134,12 @@
             <header class="top-header no-print">
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html" class="btn-action btn-back" style="padding: 8px 20px; margin-left: 15px; border-radius: 8px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; image-rendering: crisp-edges;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; image-rendering: crisp-edges;" />
                     <h1>سوق الفرص والشركات المطروحة</h1>
                 </div>
                 <div class="header-user">
                     <div class="user-greeting">
-                        <h4 id="clientNameDisplay">محمد صالح جميعان الشمري</h4>
+                        <h4>محمد صالح جميعان الشمري</h4>
                         <p>بوابة الاستثمار، حائل</p>
                     </div>
                     <img src="https://ui-avatars.com/api/?name=محمد+صالح&background=0A1B3F&color=fff&size=45" style="border-radius: 50%; border: 2px solid #e2e8f0;" alt="Avatar" />
@@ -186,8 +152,16 @@
                     <div class="filters-controls">
                         <select id="typeFilter" class="search-input">
                             <option value="all">جميع أنواع الفرص</option>
-                            <option value="شراكة ممتدة">شراكة ممتدة (مرابحة)</option>
-                            <option value="شراكة مضاربة">شراكة مضاربة (تجارية)</option>
+                            <option value="شركات ممدة">شركات ممدة</option>
+                            <option value="فرص شراكة">فرص شراكة</option>
+                        </select>
+                        
+                        <select id="statusFilter" class="search-input">
+                            <option value="all">جميع الحالات الإدارية</option>
+                            <option value="مكتملة">مكتملة</option>
+                            <option value="قادمة">قادمة</option>
+                            <option value="ملغاة">ملغاة</option>
+                            <option value="منتهية">منتهية</option>
                         </select>
                         
                         <select id="sortFilter" class="search-input">
@@ -197,24 +171,22 @@
                         </select>
                         
                         <div class="search-box" style="flex: 1;">
-                            <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة أو اسم الشركة...">
+                            <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة أو اسم الشركة المحددة...">
                         </div>
                     </div>
                 </div>
 
-                <div id="opportunitiesGrid" class="dashboard-grid">
-                    </div>
+                <div id="opportunitiesGrid" class="dashboard-grid"></div>
                 
                 <div id="emptyState" style="display: none; text-align: center; padding: 50px 20px; color: var(--tera-gray);">
                     <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--tera-teal);"></i>
-                    <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد فرص مطابقة للبحث</h3>
-                    <p style="margin: 0;">الرجاء التحقق من المدخلات أو تغيير خيارات الفلتر.</p>
+                    <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد فرص مطابقة للبحث والحالة المحددة</h3>
                 </div>
 
             </div>
             
             <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق لوائح هيئة السوق المالية (CMA).
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص والشركات الممدة وفق لوائح هيئة السوق المالية.
             </footer>
         </main>
     </div>
@@ -228,9 +200,9 @@
             
             <div class="modal-body" id="detailsModalBody">
                 <div class="print-only">
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" onerror="this.src='https://via.placeholder.com/120x45/028090/fff?text=Tera'" />
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" />
                     <h2>الدليل الإرشادي لبيانات الفرصة الاستثمارية - منصة تيرا</h2>
-                    <p style="margin-bottom: 20px;">تاريخ استخراج الدليل: <span id="printDateStr"></span></p>
+                    <p>تاريخ استخراج الدليل: <span id="printDateStr"></span></p>
                 </div>
 
                 <div class="detail-block">
@@ -238,14 +210,14 @@
                     <div class="info-grid">
                         <div class="info-item"><span>رقم الفرصة / العقد</span><strong id="mDetId" class="mono highlight"></strong></div>
                         <div class="info-item"><span>اسم الشركة / المشروع</span><strong id="mDetCompany"></strong></div>
-                        <div class="info-item"><span>نوع الفرصة</span><strong id="mDetType"></strong></div>
+                        <div class="info-item"><span>نوع الفرصة التعاقدية</span><strong id="mDetType"></strong></div>
                         <div class="info-item"><span>القطاع التجاري</span><strong id="mDetSector"></strong></div>
                         <div class="info-item"><span>إجمالي رأس المال المطروح</span><strong id="mDetTotalCapital" class="mono text-teal"></strong></div>
                         <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono"></strong></div>
                         <div class="info-item"><span>العائد المتوقع (ROI)</span><strong id="mDetRoi" class="mono" style="color: #10b981;"></strong></div>
                         <div class="info-item"><span>مدة الاستثمار</span><strong id="mDetDuration"></strong></div>
                         <div class="info-item"><span>دورية توزيع الأرباح</span><strong id="mDetFreq"></strong></div>
-                        <div class="info-item"><span>فئة المخاطرة</span><strong id="mDetRisk" style="color:#f59e0b;"></strong></div>
+                        <div class="info-item"><span>فئة المخاطرة تعاقدياً</span><strong id="mDetRisk" style="color:#f59e0b;"></strong></div>
                     </div>
                 </div>
 
@@ -283,8 +255,8 @@
 
                 <div class="modal-actions-row no-print">
                     <div class="modal-actions-group">
-                        <button onclick="window.print()" class="btn-action btn-print"><i class="fas fa-print"></i> طباعة الدليل</button>
-                        <button onclick="alert('تم تنزيل الدليل الإرشادي بصيغة PDF بنجاح')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تحميل الدليل الإرشادي</button>
+                        <button onclick="window.print()" class="btn-action btn-print"><i class="fas fa-print"></i> طباعة الدليل المفتوح</button>
+                        <button onclick="alert('تم تنزيل الدليل الإرشادي بنجاح بصيغة PDF')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تحميل الدليل الإرشادي</button>
                     </div>
                     <button onclick="openInvestModal()" class="btn-action btn-primary" style="padding: 12px 40px; font-size: 16px;"><i class="fas fa-handshake"></i> طلب الانضمام للفرصة</button>
                 </div>
@@ -301,60 +273,45 @@
             
             <div class="modal-body">
                 <div class="print-only">
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" onerror="this.src='https://via.placeholder.com/120x45/028090/fff?text=Tera'" />
-                    <h2>نموذج طلب الانضمام لفرصة استثمارية</h2>
-                    <p style="margin-bottom: 20px;">اسم المستثمر: محمد صالح جميعان الشمري | تاريخ الطباعة: <span id="printDateStrJoin"></span></p>
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" />
+                    <h2>نموذج طلب الانضمام المعتمد وإقرار العمليات المالية</h2>
+                    <p>اسم المستثمر الحسابي: محمد صالح جميعان الشمري | تاريخ المعالجة: <span id="printDateStrJoin"></span></p>
                 </div>
 
                 <div style="background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                     <h3 id="invOppName" style="margin: 0 0 10px 0; color:#fff; font-size: 18px;"></h3>
-                    <p style="margin: 0; font-size: 14px; color:#cbd5e1;">رقم الفرصة: <span id="invOppId" class="mono text-teal" style="font-weight:bold;"></span> | قيمة السهم: <span id="invSharePrice" class="mono text-teal" style="font-weight:bold;"></span> ر.س</p>
+                    <p style="margin: 0; font-size: 14px; color:#cbd5e1;">رقم الفرصة المرجعي: <span id="invOppId" class="mono text-teal" style="font-weight:bold;"></span> | قيمة السهم: <span id="invSharePrice" class="mono text-teal" style="font-weight:bold;"></span> ر.س</p>
                 </div>
 
                 <div class="calc-group no-print">
-                    <label for="shareInput">أدخل عدد الأسهم التي ترغب بالانضمام بها:</label>
+                    <label for="shareInput">أدخل عدد الأسهم الحسابية التي ترغب بالانضمام بها:</label>
                     <input type="number" id="shareInput" class="calc-input" min="1" value="1" oninput="calculateInvestment()">
                 </div>
 
                 <div class="calc-result-box">
-                    <div class="calc-result-row">
-                        <span>إجمالي الأسهم المطلوبة:</span>
-                        <span class="mono" id="resSharesCount">1 سهم</span>
-                    </div>
-                    <div class="calc-result-row">
-                        <span>قيمة الأسهم الإجمالية (رأس المال):</span>
-                        <span class="mono" id="resCapital">0.00 ر.س</span>
-                    </div>
-                    <div class="calc-result-row">
-                        <span>رسوم الإدارة وضريبة القيمة المضافة (2.3%):</span>
-                        <span class="mono text-danger" id="resFees">0.00 ر.س</span>
-                    </div>
-                    <div class="calc-result-row total">
-                        <span>المبلغ الإجمالي لإتمام الانضمام:</span>
-                        <span class="mono highlight" id="resToPay">0.00 ر.س</span>
-                    </div>
+                    <div class="calc-result-row"><span>إجمالي الحصص / الأسهم المطلوبة:</span><span class="mono" id="resSharesCount">1 سهم</span></div>
+                    <div class="calc-result-row"><span>قيمة الأسهم الإجمالية (رأس المال):</span><span class="mono" id="resCapital">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>رسوم الإدارة وضريبة القيمة المضافة (2.3%):</span><span class="mono text-danger" id="resFees">0.00 ر.س</span></div>
+                    <div class="calc-result-row total"><span>المبلغ الإجمالي لإتمام الانضمام والدفع:</span><span class="mono highlight" id="resToPay">0.00 ر.س</span></div>
                 </div>
 
                 <div class="calc-result-box" style="background: #f0fdf4; border-color: #bbf7d0;">
-                    <h4 style="margin: 0 0 10px 0; color: #166534; font-size: 14px;"><i class="fas fa-chart-line"></i> العوائد المتوقعة من هذا الانضمام:</h4>
-                    <div class="calc-result-row" style="color: #15803d; font-weight: 700;">
-                        <span>إجمالي الأرباح المتوقعة بنهاية المدة:</span>
-                        <span class="mono" id="resExpectedProfit">0.00 ر.س</span>
-                    </div>
+                    <h4 style="margin: 0 0 10px 0; color: #166534; font-size: 14px;"><i class="fas fa-chart-line"></i> العوائد والتدفقات المتوقعة من هذا الانضمام:</h4>
+                    <div class="calc-result-row" style="color: #15803d; font-weight: 700;"><span>إجمالي الأرباح المتوقعة بنهاية المدة:</span><span class="mono" id="resExpectedProfit">0.00 ر.س</span></div>
                 </div>
 
                 <div class="agreement-box">
                     <input type="checkbox" id="agreeCheckbox" onchange="togglePayButton()">
-                    <label for="agreeCheckbox">أقر بأنني قرأت واطلعت على الدليل الإرشادي الشامل، وأوافق على شروط المخاطر، والرسوم الإدارية، وآلية توزيع الأرباح الموضحة بمنصة تيرا.</label>
+                    <label for="agreeCheckbox">أقر بأنني قرأت واطلعت على الدليل الإرشادي الشامل لكافة البيانات المحاسبية والضمانات، وأوافق على شروط المخاطر، والرسوم الإدارية، وآلية توزيع التدفقات المالية الدورية الموضحة بمنصة تيرا.</label>
                 </div>
 
                 <div class="modal-actions-row no-print">
                     <div class="modal-actions-group">
-                        <button onclick="window.print()" class="btn-action"><i class="fas fa-print"></i> طباعة</button>
-                        <button onclick="alert('تم تصدير نموذج الانضمام بصيغة PDF بنجاح')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تصدير</button>
+                        <button onclick="window.print()" class="btn-action"><i class="fas fa-print"></i> طباعة الطلب</button>
+                        <button onclick="alert('تم تصدير نموذج الانضمام المالي بصيغة PDF بنجاح')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تصدير الطلب</button>
                     </div>
                     <button id="btnPayNow" class="btn-action btn-primary" style="flex: 1; padding: 15px; font-size: 16px; opacity: 0.5; cursor: not-allowed;" disabled onclick="processPayment()">
-                        <i class="fas fa-lock"></i> تأكيد الانضمام والدفع
+                        <i class="fas fa-lock"></i> تأكيد الانضمام والدفع الفوري
                     </button>
                 </div>
             </div>
@@ -362,38 +319,42 @@
     </div>
 
     <script>
-        // ==========================================
-        // قاعدة البيانات: 14 فرصة استثمارية (7 شراكة ممتدة + 7 شراكة مضاربة)
-        // ==========================================
+        // =======================================================
+        // قاعدة البيانات المحدثة: 14 تجربة كاملة موزعة على الحالات والأنواع المطلوبة
+        // =======================================================
         const opportunitiesData = [
-            // 7 شراكة ممتدة
-            { id: "OPP-EX-001", type: "شراكة ممتدة", company: "مخابز وتمور الأحساء الحديثة", sector: "الأغذية والمشروبات", totalCap: 500000, sharePrice: 100, roi: 18, duration: 12, freq: "شهري", risk: "A (منخفضة)", desc: "تمويل رأس مال عامل لشراء مواد خام وتوسيع خط إنتاج التمور الفاخرة لتغطية طلبات شهر رمضان المبارك.", guarantees: ["سند لأمر بقيمة 120%", "كفالة غرم وأداء من الشركاء"], date: "2026-05-10" },
-            { id: "OPP-EX-002", type: "شراكة ممتدة", company: "مؤسسة الإتقان بلس لتقنية المعلومات", sector: "التقنية والتجارة الإلكترونية", totalCap: 250000, sharePrice: 50, roi: 22, duration: 6, freq: "ربع سنوي", risk: "B (متوسطة)", desc: "تمويل تكاليف استضافة وسيرفرات وحملات تسويقية لإطلاق تطبيق Fi Khidmatik المحدث في منطقة حائل.", guarantees: ["رهن الكود المصدري للتطبيق", "سند لأمر"], date: "2026-06-01" },
-            { id: "OPP-EX-003", type: "شراكة ممتدة", company: "عيادات الابتسامة المشرقة لطب الأسنان", sector: "الرعاية الصحية", totalCap: 400000, sharePrice: 200, roi: 15, duration: 12, freq: "شهري", risk: "A (منخفضة)", desc: "تمويل شراء كرسي أسنان حديث وجهاز أشعة بانورامية ألمانية الصنع للعيادة الجديدة.", guarantees: ["رهن الأجهزة الطبية الممولة", "سند لأمر من مالك العيادة"], date: "2026-06-15" },
-            { id: "OPP-EX-004", type: "شراكة ممتدة", company: "شركة قطرات المياه العذبة", sector: "التصنيع والتوزيع", totalCap: 600000, sharePrice: 150, roi: 19, duration: 12, freq: "شهري", risk: "B (متوسطة)", desc: "تمويل خط إنتاج جديد لتعبئة المياه سعة 330 مل لتغطية عقود توريد لمدارس ودوائر حكومية.", guarantees: ["عقود التوريد الحكومية", "كفالة شخصية"], date: "2026-05-20" },
-            { id: "OPP-EX-005", type: "شراكة ممتدة", company: "محامص وحلويات الريف", sector: "التجزئة", totalCap: 100000, sharePrice: 10, roi: 16, duration: 6, freq: "شهري", risk: "A (منخفضة)", desc: "دعم رأس مال عامل لافتتاح فرع جديد في حي الملقا وتجهيز الديكورات.", guarantees: ["سند لأمر بقيمة التمويل والأرباح"], date: "2026-06-10" },
-            { id: "OPP-EX-006", type: "شراكة ممتدة", company: "ورشة السيارات الحديثة المتقدمة", sector: "الخدمات", totalCap: 180000, sharePrice: 100, roi: 20, duration: 12, freq: "ربع سنوي", risk: "B (متوسطة)", desc: "استيراد معدات فحص سيارات كهربائية وكمبيوترات برمجة أمريكية لتقديم خدمات جديدة للعملاء.", guarantees: ["رهن المعدات المستوردة", "سند لأمر"], date: "2026-05-28" },
-            { id: "OPP-EX-007", type: "شراكة ممتدة", company: "مركز العناية المتقدمة للسيارات", sector: "الخدمات الاستهلاكية", totalCap: 120000, sharePrice: 50, roi: 17, duration: 9, freq: "شهري", risk: "A (منخفضة)", desc: "توسعة المركز وإضافة خطين جديدين لتركيب أفلام الحماية (PPF) والعزل الحراري.", guarantees: ["سند لأمر", "رهن البضاعة"], date: "2026-06-12" },
+            // 7 تجارب لـ "شركات ممدة"
+            { id: "OPP-EX-001", type: "شركات ممدة", company: "مخابز وتمور الأحساء الحديثة", sector: "الأغذية والمشروبات", totalCap: 500000, sharePrice: 100, roi: 18, duration: 12, freq: "شهري", risk: "A (منخفضة)", desc: "تمويل رأس مال عامل لشراء مواد خام وتوسيع خط إنتاج التمور الفاخرة لتغطية طلبات شهر رمضان المبارك.", guarantees: ["سند لأمر بقيمة 120%", "كفالة غرم وأداء من الشركاء"], date: "2026-05-10", status: "قادمة" },
+            { id: "OPP-EX-002", type: "شركات ممدة", company: "مؤسسة الإتقان بلس لتقنية المعلومات", sector: "التقنية والتجارة الإلكترونية", totalCap: 250000, sharePrice: 50, roi: 22, duration: 6, freq: "ربع سنوي", risk: "B (متوسطة)", desc: "تمويل تكاليف استضافة وسيرفرات وحملات تسويقية لإطلاق تطبيق Fi Khidmatik المحدث في منطقة حائل.", guarantees: ["رهن الكود المصدري للتطبيق", "سند لأمر"], date: "2026-06-01", status: "مكتملة" },
+            { id: "OPP-EX-003", type: "شركات ممدة", company: "عيادات الابتسامة المشرقة لطب الأسنان", sector: "الرعاية الصحية", totalCap: 400000, sharePrice: 200, roi: 15, duration: 12, freq: "شهري", risk: "A (منخفضة)", desc: "تمويل شراء كرسي أسنان حديث وجهاز أشعة بانورامية ألمانية الصنع للعيادة الجديدة.", guarantees: ["رهن الأجهزة الطبية الممولة", "سند لأمر من مالك العيادة"], date: "2026-06-15", status: "منتهية" },
+            { id: "OPP-EX-004", type: "شركات ممدة", company: "شركة قطرات المياه العذبة", sector: "التصنيع والتوزيع", totalCap: 600000, sharePrice: 150, roi: 19, duration: 12, freq: "شهري", risk: "B (متوسطة)", desc: "تمويل خط إنتاج جديد لتعبئة المياه سعة 330 مل لتغطية عقود توريد لمدارس ودوائر حكومية.", guarantees: ["عقود التوريد الحكومية", "كفالة شخصية"], date: "2026-05-20", status: "ملغاة" },
+            { id: "OPP-EX-005", type: "شركات ممدة", company: "محامص وحلويات الريف", sector: "التجزئة", totalCap: 100000, sharePrice: 10, roi: 16, duration: 6, freq: "شهري", risk: "A (منخفضة)", desc: "دعم رأس مال عامل لافتتاح فرع جديد في حي الملقا وتجهيز الديكورات.", guarantees: ["سند لأمر بقيمة التمويل والأرباح"], date: "2026-06-10", status: "قادمة" },
+            { id: "OPP-EX-006", type: "شركات ممدة", company: "ورشة السيارات الحديثة المتقدمة", sector: "الخدمات", totalCap: 180000, sharePrice: 100, roi: 20, duration: 12, freq: "ربع سنوي", risk: "B (متوسطة)", desc: "استيراد معدات فحص سيارات كهربائية وكمبيوترات برمجة أمريكية لتقديم خدمات جديدة للعملاء.", guarantees: ["رهن المعدات المستوردة", "سند لأمر"], date: "2026-05-28", status: "مكتملة" },
+            { id: "OPP-EX-007", type: "شركات ممدة", company: "مركز العناية المتقدمة للسيارات حائل", sector: "الخدمات الاستهلاكية", totalCap: 120000, sharePrice: 50, roi: 17, duration: 9, freq: "شهري", risk: "A (منخفضة)", desc: "توسعة المركز وإضافة خطين جديدين لتركيب أفلام الحماية (PPF) والعزل الحراري.", guarantees: ["سند لأمر", "رهن البضاعة"], date: "2026-06-12", status: "منتهية" },
             
-            // 7 شراكة مضاربة
-            { id: "OPP-MD-008", type: "شراكة مضاربة", company: "معرض الرونق للأثاث والمفروشات", sector: "التجزئة والأثاث", totalCap: 1000000, sharePrice: 1000, roi: 25, duration: 18, freq: "نصف سنوي", risk: "C (عالية)", desc: "شراء شحنة أثاث تركي وصيني فاخر لتأثيث مجمع سكني جديد في الرياض بناءً على عقد توريد موقع.", guarantees: ["التنازل عن عائدات عقد التوريد لصالح المستثمرين"], date: "2026-04-15" },
-            { id: "OPP-MD-009", type: "شراكة مضاربة", company: "مؤسسة البناء المتين للمقاولات", sector: "المقاولات والتشييد", totalCap: 1500000, sharePrice: 5000, roi: 28, duration: 12, freq: "بنهاية المدة", risk: "C (عالية)", desc: "مشاركة في أرباح تنفيذ أعمال التشطيبات لبرج تجاري في شمال الرياض (مستخلصات حكومية).", guarantees: ["رهن المستخلصات المالية للمشروع", "سند لأمر"], date: "2026-03-10" },
-            { id: "OPP-MD-010", type: "شراكة مضاربة", company: "مزارع القمح الذهبي", sector: "الزراعة", totalCap: 800000, sharePrice: 400, roi: 24, duration: 8, freq: "بنهاية الموسم", risk: "B (متوسطة)", desc: "تمويل شراء أسمدة وبذور وحصادات استعداداً لموسم زراعة القمح في منطقة القصيم.", guarantees: ["كفالة غرم وأداء من الشركة الزراعية الأم"], date: "2026-04-30" },
-            { id: "OPP-MD-011", type: "شراكة مضاربة", company: "مصنع الألومنيوم الوطني", sector: "الصناعة", totalCap: 2000000, sharePrice: 2000, roi: 26, duration: 24, freq: "سنوي", risk: "C (عالية)", desc: "توسعة خط إنتاج الألومنيوم لتغطية مشاريع الإسكان الكبرى.", guarantees: ["رهن المصنع", "سند لأمر مؤسسي"], date: "2026-01-20" },
-            { id: "OPP-MD-012", type: "شراكة مضاربة", company: "التقنية الحديثة للطاقة الشمسية", sector: "الطاقة", totalCap: 1200000, sharePrice: 600, roi: 30, duration: 18, freq: "ربع سنوي", risk: "D (مخاطرة جريئة)", desc: "استيراد وتوريد ألواح طاقة شمسية لمشاريع زراعية كبرى في الجوف.", guarantees: ["عقود التوريد الموقعة مسبقاً"], date: "2026-02-14" },
-            { id: "OPP-MD-013", type: "شراكة مضاربة", company: "مؤسسة النقل البري السريع", sector: "اللوجستيات", totalCap: 900000, sharePrice: 300, roi: 22, duration: 12, freq: "نصف سنوي", risk: "B (متوسطة)", desc: "تمويل شراء 5 شاحنات نقل جديدة لتغطية خط (الرياض - جدة).", guarantees: ["رهن الشاحنات", "تأمين شامل"], date: "2026-05-05" },
-            { id: "OPP-MD-014", type: "شراكة مضاربة", company: "شركة الاستيراد والتصدير العالمية", sector: "التجارة الدولية", totalCap: 3000000, sharePrice: 1500, roi: 35, duration: 12, freq: "بنهاية المدة", risk: "C (عالية)", desc: "تمويل صفقة استيراد مواد بناء أساسية بناءً على اعتمادات مستندية بنكية.", guarantees: ["الاعتمادات المستندية", "سند لأمر"], date: "2026-06-05" }
+            // 7 تجارب لـ "فرص شراكة"
+            { id: "OPP-MD-008", type: "فرص شراكة", company: "معرض الرونق للأثاث والمفروشات حائل", sector: "التجزئة والأثاث", totalCap: 1000000, sharePrice: 1000, roi: 25, duration: 18, freq: "نصف سنوي", risk: "C (عالية)", desc: "شراء شحنة أثاث تركي وصيني فاخر لتأثيث مجمع سكني جديد في الرياض بناءً على عقد توريد موقع.", guarantees: ["التنازل عن عائدات عقد التوريد لصالح المستثمرين"], date: "2026-04-15", status: "ملغاة" },
+            { id: "OPP-MD-009", type: "فرص شراكة", company: "مؤسسة البناء المتين للمقاولات", sector: "المقاولات والتشييد", totalCap: 1500000, sharePrice: 5000, roi: 28, duration: 12, freq: "بنهاية المدة", risk: "C (عالية)", desc: "مشاركة في أرباح تنفيذ أعمال التشطيبات لبرج تجاري في شمال الرياض (مستخلصات حكومية).", guarantees: ["رهن المستخلصات المالية للمشروع", "سند لأمر"], date: "2026-03-10", status: "منتهية" },
+            { id: "OPP-MD-010", type: "فرص شراكة", company: "مزارع القمح الذهبي حائل", sector: "الزراعة", totalCap: 800000, sharePrice: 400, roi: 24, duration: 8, freq: "بنهاية الموسم", risk: "B (متوسطة)", desc: "تمويل شراء أسمدة وبذور وحصادات استعداداً لموسم زراعة القمح في منطقة القصيم.", guarantees: ["كفالة غرم وأداء من الشركة الزراعية الأم"], date: "2026-04-30", status: "مكتملة" },
+            { id: "OPP-MD-011", type: "فرص شراكة", company: "مصنع الألومنيوم الوطني المطور", sector: "الصناعة", totalCap: 2000000, sharePrice: 2000, roi: 26, duration: 24, freq: "سنوي", risk: "C (عالية)", desc: "توسعة خط إنتاج الألومنيوم لتغطية مشاريع الإسكان الكبرى.", guarantees: ["رهن المصنع", "سند لأمر مؤسسي"], date: "2026-01-20", status: "قادمة" },
+            { id: "OPP-MD-012", type: "فرص شراكة", company: "التقنية الحديثة للطاقة الشمسية", sector: "الطاقة", totalCap: 1200000, sharePrice: 600, roi: 30, duration: 18, freq: "ربع سنوي", risk: "D (مخاطرة جريئة)", desc: "استيراد وتوريد ألواح طاقة شمسية لمشاريع زراعية كبرى في الجوف.", guarantees: ["عقود التوريد الموقعة مسبقاً"], date: "2026-02-14", status: "ملغاة" },
+            { id: "OPP-MD-013", type: "فرص شراكة", company: "مؤسسة النقل البري السريع", sector: "اللوجستيات", totalCap: 900000, sharePrice: 300, roi: 22, duration: 12, freq: "نصف سنوي", risk: "B (متوسطة)", desc: "تمويل شراء 5 شاحنات نقل جديدة لتغطية خطوط التوريد.", guarantees: ["رهن الشاحنات", "تأمين شامل"], date: "2026-05-05", status: "منتهية" },
+            { id: "OPP-MD-014", type: "فرص شراكة", company: "شركة الاستيراد والتصدير العالمية", sector: "التجارة الدولية", totalCap: 3000000, sharePrice: 1500, roi: 35, duration: 12, freq: "بنهاية المدة", risk: "C (عالية)", desc: "تمويل صفقة استيراد مواد بناء أساسية بناءً على اعتمادات مستندية بنكية.", guarantees: ["الاعتمادات المستندية", "سند لأمر"], date: "2026-06-05", status: "قادمة" }
         ];
 
         let currentActiveOpp = null;
 
-        function formatMoney(num) {
-            return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        function getBadgeStatusClass(status) {
+            switch(status) {
+                case 'مكتملة': return 'status-completed';
+                case 'قادمة': return 'status-upcoming';
+                case 'ملغاة': return 'status-cancelled';
+                case 'منتهية': return 'status-expired';
+                default: return 'status-completed';
+            }
         }
 
-        // ==========================================
-        // ريندر شبكة الفرص 
-        // ==========================================
+        // ريندر البطاقات
         function renderOpportunities(data) {
             const grid = document.getElementById('opportunitiesGrid');
             grid.innerHTML = '';
@@ -408,20 +369,21 @@
             }
 
             data.forEach(item => {
-                let fundedPercentage = Math.floor(Math.random() * 60) + 20; 
+                let fundedPercentage = item.status === 'مكتملة' || item.status === 'منتهية' ? 100 : Math.floor(Math.random() * 40) + 30; 
+                const sBadgeClass = getBadgeStatusClass(item.status);
 
                 grid.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
                             <h3>${item.company}</h3>
-                            <span class="badge status-active" style="border-radius: 4px;">متاح</span>
+                            <span class="badge ${sBadgeClass}">${item.status}</span>
                         </div>
                         <div style="padding: 15px 20px 0;">
                             <p style="margin: 0 0 10px 0; font-size: 12px; color: var(--tera-gray);"><i class="fas fa-tag"></i> ${item.type} | <i class="fas fa-briefcase"></i> ${item.sector}</p>
                             
                             <div style="margin-top: 15px;">
                                 <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight:700; color: var(--tera-navy); margin-bottom: 5px;">
-                                    <span>تم التغطية: ${fundedPercentage}%</span>
+                                    <span>التغطية الحالية: ${fundedPercentage}%</span>
                                     <span>المستهدف: ${formatMoney(item.totalCap)} ر.س</span>
                                 </div>
                                 <div style="background: #e2e8f0; height: 6px; border-radius: 10px; width: 100%; overflow: hidden;">
@@ -430,32 +392,32 @@
                             </div>
                         </div>
                         <div class="opp-body">
-                            <div class="opp-metric"><span>قيمة السهم</span><strong>${formatMoney(item.sharePrice)} <small>ر.س</small></strong></div>
+                            <div class="opp-metric"><span>قيمة السهم الواحد</span><strong>${formatMoney(item.sharePrice)} <small>ر.س</small></strong></div>
                             <div class="opp-metric"><span>العائد المتوقع</span><strong style="color:#10b981;">${item.roi}%</strong></div>
-                            <div class="opp-metric"><span>المدة</span><strong>${item.duration} شهر</strong></div>
-                            <div class="opp-metric"><span>التوزيع</span><strong>${item.freq}</strong></div>
+                            <div class="opp-metric"><span>المدة التمويلية</span><strong>${item.duration} شهر</strong></div>
+                            <div class="opp-metric"><span>توزيع الأرباح</span><strong>${item.freq}</strong></div>
                         </div>
                         <div class="opp-footer">
                             <span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span>
-                            <button onclick="openDetailsModal('${item.id}')" class="btn-action"><i class="fas fa-eye"></i> الدليل الشامل</button>
+                            <button onclick="openDetailsModal('${item.id}')" class="btn-action"><i class="fas fa-eye"></i> الدليل الإرشادي</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        // ==========================================
-        // الفلترة والبحث والترتيب
-        // ==========================================
+        // تطبيق الفلترة الشاملة التفاعلية
         function applyFilters() {
             let typeVal = document.getElementById('typeFilter').value;
+            let statusVal = document.getElementById('statusFilter').value;
             let sortVal = document.getElementById('sortFilter').value;
             let searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
 
             let filtered = opportunitiesData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
+                let mStatus = statusVal === 'all' || d.status === statusVal;
                 let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
-                return mType && mSearch;
+                return mType && mStatus && mSearch;
             });
 
             filtered.sort((a, b) => {
@@ -466,23 +428,23 @@
             });
 
             renderOpportunities(filtered);
+            calculateSummary(filtered);
+            updateCharts(filtered);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            applyFilters();
-            document.getElementById('typeFilter').addEventListener('change', applyFilters);
-            document.getElementById('sortFilter').addEventListener('change', applyFilters);
-            document.getElementById('searchInput').addEventListener('input', applyFilters);
-            
-            let now = new Date();
-            let dateString = now.toLocaleDateString('ar-SA');
-            document.getElementById('printDateStr').innerText = dateString;
-            document.getElementById('printDateStrJoin').innerText = dateString;
-        });
+        function calculateSummary(data) {
+            let tCap = 0, tProf = 0, monthlyAvg = 0;
+            data.forEach(d => {
+                tCap += d.totalCap;
+                tProf += (d.totalCap * (d.roi / 100));
+                monthlyAvg += ((d.totalCap * (d.roi / 100)) / d.duration);
+            });
+            document.getElementById('totalContracts').innerText = data.length;
+            document.getElementById('totalCapital').innerText = formatMoney(tCap) + ' ر.س';
+            document.getElementById('totalProfit').innerText = formatMoney(tProf) + ' ر.س';
+            document.getElementById('avgMonthlyProfit').innerText = formatMoney(data.length > 0 ? monthlyAvg : 0) + ' ر.س';
+        }
 
-        // ==========================================
-        // النافذة 1: الدليل الإرشادي الشامل
-        // ==========================================
         function openDetailsModal(id) {
             const opp = opportunitiesData.find(d => d.id === id);
             if(!opp) return;
@@ -498,7 +460,6 @@
             document.getElementById('mDetDuration').innerText = opp.duration + " شهر";
             document.getElementById('mDetFreq').innerText = opp.freq;
             document.getElementById('mDetRisk').innerText = opp.risk;
-            
             document.getElementById('mDetDesc').innerText = opp.desc;
 
             const guarDiv = document.getElementById('mDetGuarantees');
@@ -511,7 +472,7 @@
             let simProf = simCap * (opp.roi / 100); 
             document.getElementById('mSimCapital').innerText = formatMoney(simCap) + " ر.س";
             document.getElementById('mSimProfit').innerText = formatMoney(simProf) + " ر.س";
-            document.getElementById('mSimTotal').innerText = formatMoney(simCap + simProf) + " ر.س";
+            document.getElementById('mSimTotal').innerText = formatMoney(simCap + simProf) + " ر.s";
 
             document.getElementById('detailsModal').classList.add('active');
             document.body.style.overflow = 'hidden'; 
@@ -519,18 +480,11 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
-            // التأكد من إخفاء أي نوافذ أخرى عند الإغلاق لمنع تداخل CSS Print
-            if(modalId === 'detailsModal' || modalId === 'investModal') {
-                document.body.style.overflow = 'auto';
-            }
+            document.body.style.overflow = 'auto';
         }
 
-        // ==========================================
-        // النافذة 2: نموذج طلب الانضمام والحاسبة
-        // ==========================================
         function openInvestModal() {
             closeModal('detailsModal'); 
-            
             document.getElementById('invOppName').innerText = currentActiveOpp.company;
             document.getElementById('invOppId').innerText = currentActiveOpp.id;
             document.getElementById('invSharePrice').innerText = formatMoney(currentActiveOpp.sharePrice);
@@ -540,7 +494,6 @@
             togglePayButton();
             calculateInvestment();
 
-            // مهلة بسيطة لضمان إغلاق النافذة الأولى بالكامل قبل فتح الثانية (لضمان سلاسة التأثير الحركي والطباعة)
             setTimeout(() => {
                 document.getElementById('investModal').classList.add('active');
                 document.body.style.overflow = 'hidden';
@@ -552,9 +505,8 @@
             if (shares < 1) shares = 1;
             
             let capital = shares * currentActiveOpp.sharePrice;
-            let fees = capital * 0.023; // 2% إدارية + 15% ضريبة عليها = 2.3%
+            let fees = capital * 0.023; 
             let totalToPay = capital + fees;
-            
             let expectedProfit = capital * (currentActiveOpp.roi / 100);
 
             document.getElementById('resSharesCount').innerText = shares + " سهم";
@@ -567,22 +519,79 @@
         function togglePayButton() {
             const btn = document.getElementById('btnPayNow');
             const isChecked = document.getElementById('agreeCheckbox').checked;
-            
-            if(isChecked) {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            } else {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-            }
+            btn.disabled = !isChecked;
+            btn.style.opacity = isChecked ? '1' : '0.5';
+            btn.style.cursor = isChecked ? 'pointer' : 'not-allowed';
         }
 
         function processPayment() {
             let total = document.getElementById('resToPay').innerText;
-            alert(`✅ تم طلب الانضمام بنجاح!\n\nتم تنفيذ العملية وتجهيز الحوالة المالية بقيمة (${total}).\nالرجاء متابعة قسم (الاستثمارات النشطة) للاطلاع على العقد والسندات.`);
+            alert(`✅ تم طلب الانضمام ومعالجة نموذج الحساب المالي بمبلغ (${total}) بنجاح.`);
             closeModal('investModal');
+        }
+
+        // نظام الرسوم الديناميكية المتوافقة
+        let statusChartInstance = null;
+        let profitChartInstance = null;
+
+        function updateCharts(data) {
+            let counts = { completed: 0, upcoming: 0, cancelled: 0, expired: 0 };
+            let totalProfit = 0;
+            data.forEach(d => {
+                if(d.status === 'مكتملة') counts.completed++;
+                else if(d.status === 'قادمة') counts.upcoming++;
+                else if(d.status === 'ملغاة') counts.cancelled++;
+                else if(d.status === 'منتهية') counts.expired++;
+                totalProfit += (d.totalCap * (d.roi / 100));
+            });
+
+            // تحديث المخطط الدائري للحالات الجديدة
+            if(statusChartInstance) {
+                statusChartInstance.data.datasets[0].data = [counts.completed, counts.upcoming, counts.cancelled, counts.expired];
+                statusChartInstance.update();
+            } else {
+                const ctx = document.getElementById('statusChart');
+                if(ctx) {
+                    statusChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['مكتملة', 'قادمة', 'ملغاة', 'منتهية'],
+                            datasets: [{
+                                data: [counts.completed, counts.upcoming, counts.cancelled, counts.expired],
+                                backgroundColor: ['#10b981', '#0ea5e9', '#ef4444', '#64748b'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal' } } } } }
+                    });
+                }
+            }
+
+            // تحديث منحنى تحقيق الأرباح
+            let mVal = totalProfit / 6;
+            let barData = [mVal, mVal*1.1, mVal*0.9, mVal*1.2, mVal*0.8, mVal*1.3];
+            let lineData = [mVal, mVal*2.1, mVal*3, mVal*4.2, mVal*5, totalProfit];
+
+            if(profitChartInstance) {
+                profitChartInstance.data.datasets[0].data = lineData;
+                profitChartInstance.data.datasets[1].data = barData;
+                profitChartInstance.update();
+            } else {
+                const ctxProfit = document.getElementById('profitGrowthChart');
+                if(ctxProfit) {
+                    profitChartInstance = new Chart(ctxProfit, {
+                        type: 'bar',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                            datasets: [
+                                { type: 'line', label: 'النمو التراكمي', data: lineData, borderColor: '#f59e0b', fill: false, tension: 0.4 },
+                                { type: 'bar', label: 'الأرباح المحققة شهرياً', data: barData, backgroundColor: '#028090', borderRadius: 4 }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', rtl: true, labels: { font: { family: 'Tajawal' } } } } }
+                    });
+                }
+            }
         }
     </script>
 </body>
