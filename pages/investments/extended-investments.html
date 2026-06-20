@@ -44,6 +44,7 @@
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; }
         .header-logo { display: flex; align-items: center; gap: 20px; }
         .header-logo h1 { margin: 0; font-size: 20px; color: var(--tera-navy); font-weight: 700; }
+        .header-logo img { image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; transform: translateZ(0); }
         .header-user { display: flex; align-items: center; gap: 15px; }
         .user-greeting { text-align: left; }
         .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
@@ -57,6 +58,7 @@
         .custom-alert { display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 14px; border: 1px solid transparent; animation: slideDown 0.4s ease-out; }
         .custom-alert-info { background-color: #e0f2fe; color: #075985; border-color: #bae6fd; }
         .custom-alert-warning { background-color: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .custom-alert-danger { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
         .custom-alert i { font-size: 20px; }
         .custom-alert strong { font-family: monospace; font-size: 15px; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -82,9 +84,9 @@
         .search-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; width: 260px; font-family: inherit; outline: none; font-size: 14px; max-width: 100%; }
         .search-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
 
-        /* الجداول (مع منع التمدد) */
-        .table-wrapper { overflow-x: auto; width: 100%; max-width: 100%; border-radius: 8px; }
-        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: 800px; }
+        /* الجداول والحاوية (محدثة لمنع التشوه) */
+        .table-wrapper { overflow-x: auto; width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; }
+        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: 900px; }
         .tera-table th { background: #f8fafc; padding: 14px 15px; color: var(--tera-navy); font-size: 13px; font-weight: 700; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
         .tera-table td { padding: 16px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 500; white-space: nowrap; }
         .tera-table tr:hover td { background: #f8fafc; }
@@ -92,7 +94,7 @@
         .btn-view { padding: 8px 20px; background: rgba(2, 128, 144, 0.1); color: var(--tera-teal); border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; font-family: inherit; }
         .btn-view:hover { background: var(--tera-teal); color: #fff; }
 
-        /* حالة الفراغ (Empty State) */
+        /* حالة الفراغ */
         .empty-state { display: none; text-align: center; padding: 50px 20px; color: var(--tera-gray); }
         .empty-state i { font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--tera-teal); }
 
@@ -130,7 +132,11 @@
            دعم الشاشات (Responsive & 4K)
            ========================================= */
         @media (max-width: 768px) {
+            /* تحسين الشعار في الجوال */
+            .header-logo img { height: 45px !important; }
+            .header-logo h1 { font-size: 16px; margin-right: 10px; }
             .header-user .user-greeting { display: none; }
+            
             .info-grid { grid-template-columns: 1fr 1fr; }
             .actions-row .btn-action { width: 100%; justify-content: center; }
             .filters-container { flex-direction: column; align-items: stretch; }
@@ -156,7 +162,7 @@
         @media print {
             @page { size: A4 portrait; margin: 1.2cm; }
             body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer { display: none !important; }
+            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer { display: none !important; }
             #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; width: 100%; page-break-inside: avoid; }
             .print-only-header { display: flex; justify-content: space-between; align-items: flex-start; }
             .info-grid { background: transparent; border: 1px solid #cbd5e1; grid-template-columns: repeat(3, 1fr); padding: 15px; gap: 15px; page-break-inside: avoid; }
@@ -175,7 +181,7 @@
             <header class="top-header no-print">
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html" class="btn-action btn-back" style="padding: 8px 20px; margin-left: 15px; border-radius: 8px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 38px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
                     <h1>الشراكات الممتدة</h1>
                 </div>
                 <div class="header-user">
@@ -363,21 +369,25 @@
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
-        // البيانات التجريبية الشاملة + تجارب ذكية تنتهي وتستحق قريباً بناءً على تاريخ جهازك
+        // ==========================================
+        // البيانات التجريبية الشاملة مع إضافة (الملاحظات)
+        // ==========================================
         const mockData = [
-            // تجربة ذكية: عقد يتبقى له 10 أيام للانتهاء (لتفعيل التنبيه)
-            { id: "TR-EXP-001", startDate: getDynamicDate(-355), endDate: getDynamicDate(10), partnerRatio: "6%", capital: 45000, expectedProfit: 27000, status: "قائم", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(-325) },
-            // تجربة ذكية: عقد يتبقى 5 أيام على موعد صرف الأرباح القادم (لتفعيل التنبيه)
-            { id: "TR-PROFIT-002", startDate: getDynamicDate(-60), endDate: getDynamicDate(305), partnerRatio: "5%", capital: 20000, expectedProfit: 10000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(5) },
+            // تجربة ذكية: عقد يتبقى له 10 أيام للانتهاء (تنبيه انتهاء العقد)
+            { id: "TR-EXP-001", startDate: getDynamicDate(-355), endDate: getDynamicDate(10), partnerRatio: "6%", capital: 45000, expectedProfit: 27000, status: "قائم", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(-325), hasNotes: false },
             
-            // البيانات التجريبية القديمة للشمولية
-            { id: "TR-2026-06-27-001", startDate: "2026/06/27", endDate: "2027/06/17", partnerRatio: "5%", capital: 100000, expectedProfit: 50000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/08/15" },
-            { id: "TR-2026-07-01-002", startDate: "2026/07/01", endDate: "2027/07/01", partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: "2026/09/01" },
-            { id: "TR-2025-01-10-003", startDate: "2025/01/10", endDate: "2026/01/10", partnerRatio: "6%", capital: 50000, expectedProfit: 30000, status: "مكتملة", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: "2025/02/10" },
-            { id: "TR-2026-05-15-004", startDate: "2026/05/15", endDate: "2027/05/15", partnerRatio: "5%", capital: 15000, expectedProfit: 7500, status: "معلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/06/15" },
-            { id: "TR-2024-03-20-005", startDate: "2024/03/20", endDate: "2025/03/20", partnerRatio: "7%", capital: 30000, expectedProfit: 21000, status: "منتهية", monthlyRatio: "1.4%", yearlyRatio: "7%", duration: 12, mechanism: "شهري", firstDate: "2024/04/20" },
-            { id: "TR-2026-02-05-006", startDate: "2026/02/05", endDate: "2026/08/05", partnerRatio: "5%", capital: 20000, expectedProfit: 5000, status: "ملغاة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 6, mechanism: "شهري", firstDate: "2026/03/05" },
-            { id: "TR-2023-11-11-007", startDate: "2023/11/11", endDate: "2024/11/11", partnerRatio: "5%", capital: 10000, expectedProfit: 5000, status: "مغلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2023/12/11" }
+            // تجربة ذكية: عقد يتبقى 5 أيام على موعد صرف الأرباح القادم (تنبيه صرف أرباح)
+            { id: "TR-PROFIT-002", startDate: getDynamicDate(-60), endDate: getDynamicDate(305), partnerRatio: "5%", capital: 20000, expectedProfit: 10000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(5), hasNotes: false },
+            
+            // تجربة ذكية: عقد بانتظار الاعتماد + يحتوي على ملاحظات (تنبيه مخصص)
+            { id: "TR-PEND-003", startDate: getDynamicDate(-1), endDate: getDynamicDate(364), partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(30), hasNotes: true },
+
+            // البيانات الشاملة لباقي الحالات
+            { id: "TR-2025-01-10-004", startDate: "2025/01/10", endDate: "2026/01/10", partnerRatio: "6%", capital: 50000, expectedProfit: 30000, status: "مكتملة", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: "2025/02/10", hasNotes: false },
+            { id: "TR-2026-05-15-005", startDate: "2026/05/15", endDate: "2027/05/15", partnerRatio: "5%", capital: 15000, expectedProfit: 7500, status: "معلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/06/15", hasNotes: true },
+            { id: "TR-2024-03-20-006", startDate: "2024/03/20", endDate: "2025/03/20", partnerRatio: "7%", capital: 30000, expectedProfit: 21000, status: "منتهية", monthlyRatio: "1.4%", yearlyRatio: "7%", duration: 12, mechanism: "شهري", firstDate: "2024/04/20", hasNotes: false },
+            { id: "TR-2026-02-05-007", startDate: "2026/02/05", endDate: "2026/08/05", partnerRatio: "5%", capital: 20000, expectedProfit: 5000, status: "ملغاة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 6, mechanism: "شهري", firstDate: "2026/03/05", hasNotes: false },
+            { id: "TR-2023-11-11-008", startDate: "2023/11/11", endDate: "2024/11/11", partnerRatio: "5%", capital: 10000, expectedProfit: 5000, status: "مغلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2023/12/11", hasNotes: false }
         ];
 
         // القواعد المحاسبية
@@ -399,7 +409,7 @@
         }
 
         // ==========================================
-        // منطق التنبيهات الذكية (أيام الانتهاء / صرف الأرباح)
+        // منطق التنبيهات الذكية
         // ==========================================
         function calculateDaysDiff(targetDateStr) {
             const today = new Date();
@@ -410,7 +420,6 @@
             return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
 
-        // جلب أقرب تاريخ دفع أرباح بناءً على الدفعات الشهرية
         function getNextPaymentDays(contract) {
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -426,7 +435,7 @@
                     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 }
             }
-            return -1; // لا توجد دفعات قادمة
+            return -1;
         }
 
         function generateSmartAlerts() {
@@ -434,26 +443,47 @@
             alertsContainer.innerHTML = '';
             
             mockData.forEach(contract => {
-                if(contract.status !== 'قائم') return;
-
-                const daysToEnd = calculateDaysDiff(contract.endDate);
-                if(daysToEnd > 0 && daysToEnd <= 15) {
+                // تنبيه (بانتظار الاعتماد)
+                if(contract.status === 'بانتظار الاعتماد') {
                     alertsContainer.innerHTML += `
-                        <div class="custom-alert custom-alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>تنبيه هام: العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToEnd} أيام</strong> على انتهاء الشراكة.</span>
+                        <div class="custom-alert custom-alert-warning" style="background:#fef3c7; color:#92400e;">
+                            <i class="fas fa-clock"></i>
+                            <span>تنبيه: الشراكة رقم <strong>${contract.id}</strong> بانتظار الاعتماد والمراجعة الإدارية.</span>
                         </div>
                     `;
                 }
 
-                const daysToProfit = getNextPaymentDays(contract);
-                if(daysToProfit > 0 && daysToProfit <= 7) {
+                // تنبيه (يوجد ملاحظات على العقد)
+                if(contract.hasNotes) {
                     alertsContainer.innerHTML += `
-                        <div class="custom-alert custom-alert-info">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            <span>تحديث دوري: العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToProfit} أيام</strong> على صرف الأرباح القادمة.</span>
+                        <div class="custom-alert custom-alert-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>يوجد ملاحظات هامة على العقد رقم <strong>${contract.id}</strong> يرجى مراجعتها فوراً.</span>
                         </div>
                     `;
+                }
+
+                // تنبيهات وقتية للعقود القائمة
+                if(contract.status === 'قائم') {
+                    const daysToEnd = calculateDaysDiff(contract.endDate);
+                    if(daysToEnd > 0 && daysToEnd <= 15) {
+                        alertsContainer.innerHTML += `
+                            <div class="custom-alert custom-alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>تنبيه هام: العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToEnd} أيام</strong> على انتهاء الشراكة.</span>
+                            </div>
+                        `;
+                    }
+
+                    const daysToProfit = getNextPaymentDays(contract);
+                    if(daysToProfit > 0 && daysToProfit <= 7) {
+                        alertsContainer.innerHTML += `
+                            <div class="custom-alert custom-alert-info">
+                                <i class="fas fa-hand-holding-usd"></i>
+                                <span>تحديث دوري: العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToProfit} أيام</strong> على صرف الأرباح القادمة.</span>
+                            </div>
+                        `;
+                    }
                 }
             });
         }
@@ -544,9 +574,16 @@
             document.getElementById('mainSection').style.display = 'none';
             document.getElementById('detailsSection').style.display = 'block';
 
-            // تفريغ وتوليد التنبيه المخصص داخل صفحة التفاصيل إن وُجد
+            // تفريغ وتوليد التنبيه المخصص داخل صفحة التفاصيل
             const detailsAlerts = document.getElementById('detailsAlertsContainer');
             detailsAlerts.innerHTML = '';
+            
+            if(contract.status === 'بانتظار الاعتماد') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>الشراكة بانتظار الاعتماد والمراجعة الإدارية.</span></div>`;
+            }
+            if(contract.hasNotes) {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>يوجد ملاحظات هامة على هذا العقد يرجى مراجعتها.</span></div>`;
+            }
             if(contract.status === 'قائم') {
                 const daysToEnd = calculateDaysDiff(contract.endDate);
                 if(daysToEnd > 0 && daysToEnd <= 15) {
@@ -637,12 +674,16 @@
         function initChart() {
             const ctx = document.getElementById('statusChart');
             if(ctx) {
-                let counts = { active: 0, pending: 0, completed: 0, other: 0 };
+                // تجميع البيانات لكل الحالات الـ 7
+                let counts = { active: 0, pending: 0, completed: 0, suspended: 0, expired: 0, cancelled: 0, closed: 0 };
                 mockData.forEach(d => {
                     if(d.status === 'قائم') counts.active++;
                     else if(d.status === 'بانتظار الاعتماد') counts.pending++;
                     else if(d.status === 'مكتملة') counts.completed++;
-                    else counts.other++;
+                    else if(d.status === 'معلقة') counts.suspended++;
+                    else if(d.status === 'منتهية') counts.expired++;
+                    else if(d.status === 'ملغاة') counts.cancelled++;
+                    else if(d.status === 'مغلقة') counts.closed++;
                 });
 
                 if (typeof ChartDataLabels !== 'undefined') {
@@ -652,10 +693,10 @@
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['شراكات نشطة', 'بانتظار الاعتماد', 'شراكات مكتملة', 'حالات أخرى'],
+                        labels: ['قائم', 'بانتظار الاعتماد', 'مكتملة', 'معلقة', 'منتهية', 'ملغاة', 'مغلقة'],
                         datasets: [{
-                            data: [counts.active, counts.pending, counts.completed, counts.other],
-                            backgroundColor: ['#10b981', '#f59e0b', '#028090', '#64748b'],
+                            data: [counts.active, counts.pending, counts.completed, counts.suspended, counts.expired, counts.cancelled, counts.closed],
+                            backgroundColor: ['#10b981', '#f59e0b', '#0ea5e9', '#b45309', '#64748b', '#ef4444', '#1e293b'],
                             borderWidth: 0,
                             hoverOffset: 4
                         }]
