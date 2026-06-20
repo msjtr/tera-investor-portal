@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الشراكة الممتدة | Tera Investor Portal</title>
+    <title>الشراكات الممتدة | Tera Investor Portal</title>
     
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     
@@ -142,8 +142,6 @@
             .search-input { width: 100%; }
             .dashboard-grid { gap: 15px; }
             .content-card { padding: 15px; }
-            .quick-actions { flex-direction: column; width: 100%; }
-            .quick-actions button { width: 100%; }
         }
         @media (min-width: 2560px) {
             .container { max-width: 2400px; padding: 50px; }
@@ -164,7 +162,7 @@
         @media print {
             @page { size: A4 portrait; margin: 1.2cm; }
             body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer, .quick-actions { display: none !important; }
+            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer { display: none !important; }
             #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; width: 100%; page-break-inside: avoid; }
             .print-only-header { display: flex; justify-content: space-between; align-items: flex-start; }
             .info-grid { background: transparent; border: 1px solid #cbd5e1; grid-template-columns: repeat(3, 1fr); padding: 15px; gap: 15px; page-break-inside: avoid; }
@@ -248,11 +246,6 @@
                             <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 15px;"><i class="fas fa-chart-line" style="color: var(--tera-teal); margin-left: 8px;"></i> نمو وتحقيق الأرباح (آخر 6 أشهر)</h3>
                             <div style="height: 250px; position: relative;"><canvas id="profitGrowthChart"></canvas></div>
                         </div>
-                    </div>
-
-                    <div class="quick-actions no-print" style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <button class="btn-action" style="background-color: var(--tera-teal); color: #fff; border:none;"><i class="fas fa-money-bill-wave"></i> طلب سحب أرباح متاحة</button>
-                        <button class="btn-action"><i class="fas fa-file-invoice-dollar"></i> استخراج كشف حساب ضريبي</button>
                     </div>
 
                     <div class="content-card" style="margin-bottom: 0;">
@@ -377,20 +370,14 @@
     <script>
         const clientName = "محمد_صالح_الشمري";
 
-        // ==========================================
-        // وظائف مساعدة لإنشاء تواريخ ديناميكية للتجارب
-        // ==========================================
         function getDynamicDate(daysOffset) {
             let d = new Date();
             d.setDate(d.getDate() + daysOffset);
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
-        // البيانات التجريبية الشاملة + تجارب ذكية تنتهي وتستحق قريباً بناءً على تاريخ جهازك
         const mockData = [
-            // تجربة ذكية: عقد يتبقى له 10 أيام للانتهاء (لتفعيل التنبيه)
             { id: "TR-EXP-001", startDate: getDynamicDate(-355), endDate: getDynamicDate(10), partnerRatio: "6%", capital: 45000, expectedProfit: 27000, status: "قائم", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(-325), hasNotes: false },
-            // تجربة ذكية: عقد يتبقى 5 أيام على موعد صرف الأرباح القادم (لتفعيل التنبيه)
             { id: "TR-PROFIT-002", startDate: getDynamicDate(-60), endDate: getDynamicDate(305), partnerRatio: "5%", capital: 20000, expectedProfit: 10000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(5), hasNotes: false },
             { id: "TR-PEND-003", startDate: getDynamicDate(-1), endDate: getDynamicDate(364), partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(30), hasNotes: true },
             { id: "TR-2025-01-10-004", startDate: "2025/01/10", endDate: "2026/01/10", partnerRatio: "6%", capital: 50000, expectedProfit: 30000, status: "مكتملة", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: "2025/02/10", hasNotes: false },
@@ -471,7 +458,7 @@
             renderMainTable('all');
             calculateSummary();
             initChart();
-            initProfitGrowthChart(); // استدعاء المخطط الحقيقي
+            initProfitGrowthChart(); 
 
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -499,7 +486,6 @@
             });
         });
 
-        // المؤشرات وشريط التقدم الديناميكي الحقيقي
         function calculateSummary() {
             let tCap = 0, tProf = 0, totalCount = mockData.length, monthlyAvg = 0;
             let realizedProfit = 0;
@@ -512,7 +498,6 @@
                 if(d.duration > 0) {
                     monthlyAvg += (d.expectedProfit / d.duration);
                     
-                    // حساب الأرباح التي تم تحقيقها (التي حل تاريخ استحقاقها) لجميع العقود
                     let monthlyProfitRaw = d.expectedProfit / d.duration;
                     let baseDate = new Date(d.firstDate);
                     baseDate.setHours(0,0,0,0);
@@ -531,7 +516,6 @@
             document.getElementById('totalProfit').innerText = formatMoney(tProf) + ' ر.س';
             document.getElementById('avgMonthlyProfit').innerText = formatMoney(monthlyAvg / totalCount) + ' ر.س';
 
-            // تطبيق النسبة على شريط التقدم المرئي
             let progressPercent = tProf > 0 ? Math.min(100, Math.round((realizedProfit / tProf) * 100)) : 0;
             document.getElementById('profitProgressBar').style.width = progressPercent + '%';
             document.getElementById('profitProgressText').innerText = `تم تحقيق الأرباح بنسبة ${progressPercent}% من المستهدف (${formatMoney(realizedProfit)} ر.س)`;
@@ -715,9 +699,6 @@
             }
         }
 
-        // ==========================================
-        // حساب ورسم مخطط النمو الحقيقي للأرباح
-        // ==========================================
         function initProfitGrowthChart() {
             const ctxProfit = document.getElementById('profitGrowthChart');
             if(!ctxProfit) return;
@@ -728,16 +709,14 @@
             const monthlyProfits = [0, 0, 0, 0, 0, 0];
             const targetMonths = [];
 
-            // تحديد الأشهر الـ 6 الأخيرة بناءً على تاريخ اليوم (تنازلياً)
             for (let i = 5; i >= 0; i--) {
                 let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                 labels.push(monthNames[d.getMonth()]);
                 targetMonths.push({ year: d.getFullYear(), month: d.getMonth() });
             }
 
-            let historicalBase = 0; // الرصيد المتراكم قبل الـ 6 أشهر
+            let historicalBase = 0; 
 
-            // جلب الأرباح الحقيقية من العقود الموجودة (النشطة والمكتملة والمنتهية)
             mockData.forEach(contract => {
                 if (['قائم', 'مكتملة', 'منتهية', 'معلقة'].includes(contract.status)) {
                     let monthlyProfitRaw = contract.expectedProfit / contract.duration;
@@ -747,14 +726,12 @@
                         let payDate = new Date(baseDate);
                         payDate.setMonth(baseDate.getMonth() + i);
                         
-                        // إضافة الأرباح لخانة الشهر المناسب
                         for (let j = 0; j < 6; j++) {
                             if (payDate.getFullYear() === targetMonths[j].year && payDate.getMonth() === targetMonths[j].month) {
                                 monthlyProfits[j] += monthlyProfitRaw;
                             }
                         }
 
-                        // الأرباح القديمة تدخل في الرصيد التراكمي
                         if (payDate.getFullYear() < targetMonths[0].year || 
                            (payDate.getFullYear() === targetMonths[0].year && payDate.getMonth() < targetMonths[0].month)) {
                             historicalBase += monthlyProfitRaw;
@@ -763,7 +740,6 @@
                 }
             });
 
-            // حساب النمو التراكمي للخط البياني
             const cumulativeProfits = [];
             let currentCum = historicalBase;
             for (let i = 0; i < 6; i++) {
@@ -785,7 +761,7 @@
                             borderWidth: 3,
                             tension: 0.4,
                             fill: false,
-                            datalabels: { display: false } // تعطيل الأرقام على الخط للوضوح
+                            datalabels: { display: false }
                         },
                         {
                             type: 'bar',
@@ -793,7 +769,7 @@
                             data: monthlyProfits,
                             backgroundColor: '#028090',
                             borderRadius: 4,
-                            datalabels: { display: false } // تعطيل الأرقام على الأعمدة
+                            datalabels: { display: false }
                         }
                     ]
                 },
