@@ -295,9 +295,9 @@
                             <div class="info-item"><span>نوع الاشتراك</span><strong id="detSubPlan" style="color:#0ea5e9;"></strong></div>
                             <div class="info-item"><span>النسبة على كامل المدة</span><strong id="detTotalRatio">50%</strong></div>
                             <div class="info-item"><span>مدة الفرصة (بالأشهر)</span><strong id="detDuration">6</strong></div>
-                            <div class="info-item"><span>إجمالي الربح الشهري</span><strong id="detMonthlyProfit"></strong></div>
-                            <div class="info-item"><span>إجمالي رباح الفرصة على كامل المدة</span><strong id="detTotalProfit"></strong></div>
-                            <div class="info-item"><span>إجمالي رأس المال والارباح</span><strong id="detTotalReturn" class="highlight"></strong></div>
+                            <div class="info-item"><span>إجمالي الربح الشهري</span><strong id="detMonthlyProfit" class="mono text-teal"></strong></div>
+                            <div class="info-item"><span>إجمالي رباح الفرصة على كامل المدة</span><strong id="detTotalProfit" class="mono"></strong></div>
+                            <div class="info-item"><span>إجمالي رأس المال والارباح</span><strong id="detTotalReturn" class="highlight mono"></strong></div>
                             <div class="info-item"><span>آلية صرف ارباح الشراكة ورأس المال</span><strong>شهري</strong></div>
                             <div class="info-item"><span>موعد صرف ارباح الشراكة</span><strong id="detFirstPayDate" class="mono"></strong></div>
                         </div>
@@ -420,34 +420,43 @@
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
+        // بناء تجارب متفاوتة تغطي جميع الحالات المطلوبة وأنواع الاشتراكات
         const mockData = [
-            { 
-                id: "FTR-2026-06-27-001", oppDate: "2026/06/27", reqId: "46555", status: "قائم", subPlan: "الاشتراك الذهبي",
-                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/07/15", fees: 0 
-            },
-            { 
-                id: "FTR-2026-06-25-002", oppDate: getDynamicDate(-30), reqId: "46556", status: "بانتظار الاعتماد", subPlan: "الاشتراك البلاتينيوم",
-                sharesCount: 50, shareValue: 100, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: true, firstDate: getDynamicDate(5), fees: 0 
-            },
-            { 
-                id: "FTR-2026-01-10-003", oppDate: getDynamicDate(-170), reqId: "46557", status: "مكتملة", subPlan: "الاشتراك الفضي",
-                sharesCount: 20, shareValue: 500, capital: 10000, expectedProfit: 4000, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140), fees: 50 
-            },
-            { 
-                id: "FTR-EXP-004", oppDate: getDynamicDate(-170), reqId: "46558", status: "قائم", subPlan: "الاشتراك الذهبي",
-                sharesCount: 15, shareValue: 1000, capital: 15000, expectedProfit: 7500, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140), fees: 0 
-            },
-            { 
-                id: "FTR-2026-05-15-005", oppDate: "2026/05/15", reqId: "46559", status: "معلقة", subPlan: "الاشتراك كلاسيك",
-                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/06/15", fees: 100 
-            },
-            { 
-                id: "FTR-2026-02-05-006", oppDate: "2026/02/05", reqId: "46560", status: "ملغاة", subPlan: "الاشتراك الذهبي",
-                sharesCount: 5, shareValue: 1000, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2026/03/05", fees: 0 
-            },
+            // 1. تجربة مطابقة للإكسل (قائم - يحتوي على تم التحصيل، متأخرة، متعثرة)
             { 
                 id: "FTR-2023-11-11-007", oppDate: "2023/11/11", reqId: "46561", status: "مغلقة", subPlan: "الاشتراك الفضي",
-                sharesCount: 25, shareValue: 200, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2023/12/11", fees: 50 
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/07/15", fees: 50,
+                paymentStatuses: ['تم التحصيل', 'متأخرة', 'متعثرة', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] 
+            },
+            // 2. تجربة جديدة: قائم ومستمر بشكل سليم
+            { 
+                id: "FTR-2026-06-27-001", oppDate: "2026/06/27", reqId: "46555", status: "قائم", subPlan: "الاشتراك الذهبي",
+                sharesCount: 15, shareValue: 1000, capital: 15000, expectedProfit: 7500, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140), fees: 0,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'قادمة'] 
+            },
+            // 3. تجربة جديدة: بانتظار الاعتماد (كل الدفعات قادمة)
+            { 
+                id: "FTR-2026-06-25-002", oppDate: getDynamicDate(-30), reqId: "46556", status: "بانتظار الاعتماد", subPlan: "الاشتراك البلاتينيوم",
+                sharesCount: 50, shareValue: 100, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: true, firstDate: getDynamicDate(5), fees: 200,
+                paymentStatuses: ['قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة'] 
+            },
+            // 4. تجربة جديدة: مكتملة (كل الدفعات تم التحصيل)
+            { 
+                id: "FTR-2026-01-10-003", oppDate: getDynamicDate(-170), reqId: "46557", status: "مكتملة", subPlan: "الاشتراك الفضي",
+                sharesCount: 20, shareValue: 500, capital: 10000, expectedProfit: 4000, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140), fees: 50,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] 
+            },
+            // 5. تجربة جديدة: معلقة (تحتوي على متعثرة ومعلقة)
+            { 
+                id: "FTR-2026-05-15-005", oppDate: "2026/05/15", reqId: "46559", status: "معلقة", subPlan: "الاشتراك كلاسيك",
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/06/15", fees: 100,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'متعثرة', 'معلقة', 'معلقة', 'معلقة'] 
+            },
+            // 6. تجربة جديدة: ملغاة
+            { 
+                id: "FTR-2026-02-05-006", oppDate: "2026/02/05", reqId: "46560", status: "ملغاة", subPlan: "الاشتراك الذهبي",
+                sharesCount: 5, shareValue: 1000, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2026/03/05", fees: 0,
+                paymentStatuses: ['ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة'] 
             }
         ];
 
@@ -606,6 +615,7 @@
             document.getElementById('mainSection').style.display = 'none';
             document.getElementById('detailsSection').style.display = 'block';
 
+            // تفريغ التنبيهات الخاصة بالتفاصيل
             const detailsAlerts = document.getElementById('detailsAlertsContainer');
             detailsAlerts.innerHTML = '';
             if(contract.status === 'بانتظار الاعتماد') {
@@ -633,6 +643,7 @@
             badge.className = `badge ${sClass}`;
             badge.innerText = "الحالة الحالية: " + contract.status;
 
+            // تحديث بيانات القسم الأول والرابع مطابقة لحجم الفرصة
             document.getElementById('detOppId').innerText = contract.id;
             document.getElementById('detSubPlan').innerText = contract.subPlan;
             document.getElementById('detSubPlan5').innerText = contract.subPlan; 
@@ -655,30 +666,29 @@
             let monthlyCapital = contract.capital / contract.duration;
             let monthlyTotal = monthlyProfit + monthlyCapital;
             
-            document.getElementById('detCapital').innerText = formatMoney(contract.capital) + " ر.س";
             document.getElementById('detMonthlyProfit').innerText = formatMoney(monthlyProfit) + " ر.س";
             document.getElementById('detTotalProfit').innerText = formatMoney(contract.expectedProfit) + " ر.س";
             document.getElementById('detTotalReturn').innerText = formatMoney(contract.capital + contract.expectedProfit) + " ر.س";
             document.getElementById('detFirstPayDate').innerText = contract.firstDate;
 
+            // بناء جدول التحصيل بناءً على المصفوفة الخاصة بكل تجربة (contract.paymentStatuses)
             const collBody = document.getElementById('collectionTableBodyDetails');
             collBody.innerHTML = '';
             
             let baseDate = new Date(contract.firstDate);
-            let statuses = ['تم التحصيل', 'متأخرة', 'متعثرة', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'];
-
+            
             for (let i = 0; i < contract.duration; i++) {
                 let pDate = new Date(baseDate);
                 pDate.setMonth(baseDate.getMonth() + i);
                 let dateStr = pDate.getFullYear() + '/' + String(pDate.getMonth() + 1).padStart(2, '0') + '/' + String(pDate.getDate()).padStart(2, '0');
                 
-                let sStatus = statuses[i] || 'قادمة';
+                let sStatus = contract.paymentStatuses[i] || 'قادمة';
                 let rowColor = sStatus === 'متأخرة' ? '#fef3c7' : (sStatus === 'متعثرة' ? '#fee2e2' : 'transparent');
                 
                 let badgeStyle = "";
                 if(sStatus === 'تم التحصيل') badgeStyle = "background:#dcfce7; color:#10b981;";
                 else if(sStatus === 'متأخرة') badgeStyle = "background:#fef3c7; color:#b45309;";
-                else if(sStatus === 'متعثرة') badgeStyle = "background:#fee2e2; color:#ef4444;";
+                else if(sStatus === 'متعثرة' || sStatus === 'ملغاة') badgeStyle = "background:#fee2e2; color:#ef4444;";
                 else badgeStyle = "background:#f1f5f9; color:#64748b;";
 
                 collBody.innerHTML += `
@@ -692,6 +702,8 @@
                     </tr>
                 `;
             }
+            
+            // صف الإجمالي
             collBody.innerHTML += `
                 <tr style="background-color: var(--tera-bg); font-weight: 700;">
                     <td class="text-navy">الإجمالي</td>
@@ -703,6 +715,7 @@
                 </tr>
             `;
 
+            // بناء جدول الرسوم بناءً على التجربة
             const feesBody = document.getElementById('feesTableBodyDetails');
             feesBody.innerHTML = '';
             
@@ -716,7 +729,11 @@
             let processingTax = processingFee * 0.15;
             let subTax = subFee * 0.15;
 
-            function generateFeeRow(name, fee, tax, duration, status) {
+            // تحديد حالة الرسوم بناءً على حالة العقد بشكل منطقي
+            let generalFeeStatus = contract.status === 'مكتملة' ? 'تم التحصيل' : (contract.status === 'بانتظار الاعتماد' ? 'قادمة' : 'متأخرة');
+            if(contract.id === "FTR-2023-11-11-007") generalFeeStatus = 'متأخرة'; // للتجربة المطابقة للصورة
+
+            function generateFeeRow(name, fee, tax, duration, statusOverride) {
                 let total = fee + tax;
                 let monthly = total / duration;
                 return `
@@ -727,16 +744,16 @@
                         <td>${formatMoney(total)}</td>
                         <td>${duration}</td>
                         <td>${formatMoney(monthly)}</td>
-                        <td><span class="badge ${status === 'تم التحصيل' ? 'status-active' : 'status-pending'}">${status}</span></td>
+                        <td><span class="badge ${statusOverride === 'تم التحصيل' ? 'status-active' : (statusOverride === 'قادمة' ? 'status-expired' : 'status-pending')}">${statusOverride}</span></td>
                         <td>-</td>
                     </tr>
                 `;
             }
 
-            feesBody.innerHTML += generateFeeRow('الرسوم الادارية', adminFee, adminTax, contract.duration, 'تم التحصيل');
-            feesBody.innerHTML += generateFeeRow('رسوم التحويل', transferFee, transferTax, contract.duration, 'متأخرة');
-            feesBody.innerHTML += generateFeeRow('رسوم التحصيل و المعالجة', processingFee, processingTax, contract.duration, 'متأخرة');
-            feesBody.innerHTML += generateFeeRow(`اشتراك الفرصة (${contract.subPlan})`, subFee, subTax, contract.duration, 'متأخرة');
+            feesBody.innerHTML += generateFeeRow('الرسوم الادارية', adminFee, adminTax, contract.duration, contract.status === 'بانتظار الاعتماد' ? 'قادمة' : 'تم التحصيل');
+            feesBody.innerHTML += generateFeeRow('رسوم التحويل', transferFee, transferTax, contract.duration, generalFeeStatus);
+            feesBody.innerHTML += generateFeeRow('رسوم التحصيل و المعالجة', processingFee, processingTax, contract.duration, generalFeeStatus);
+            feesBody.innerHTML += generateFeeRow(`اشتراك الفرصة (${contract.subPlan})`, subFee, subTax, contract.duration, generalFeeStatus);
             
             let totalFees = adminFee + transferFee + processingFee + subFee;
             let totalTaxes = adminTax + transferTax + processingTax + subTax;
