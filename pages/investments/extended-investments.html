@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الشراكة الممتدة | Tera Investor Portal</title>
+    <title>الشراكات الممتدة | Tera Investor Portal</title>
     
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     
@@ -32,21 +32,18 @@
             font-family: 'Tajawal', sans-serif; 
             margin: 0; 
             padding: 0;
-            overflow-x: hidden; /* يمنع التمدد الجانبي نهائياً */
+            overflow-x: hidden;
             width: 100vw;
             max-width: 100%;
             box-sizing: border-box;
         }
 
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
         
-        /* تمديد المحتوى بالكامل وإلغاء أي هوامش للقائمة الجانبية */
         .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; }
         .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
         
-        /* الهيدر المخصص لصفحة الويب */
+        /* الهيدر */
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; width: 100%; }
         .header-logo { display: flex; align-items: center; gap: 20px; }
         .header-logo h1 { margin: 0; font-size: 20px; color: var(--tera-navy); font-weight: 700; }
@@ -57,27 +54,26 @@
 
         .container { max-width: 1500px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
 
-        /* =========================================
-           تنبيهات النظام الذكية (Smart Alerts)
-           ========================================= */
+        /* تنبيهات النظام الذكية */
         .custom-alert { display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 14px; border: 1px solid transparent; animation: slideDown 0.4s ease-out; width: 100%; }
         .custom-alert-info { background-color: #e0f2fe; color: #075985; border-color: #bae6fd; }
         .custom-alert-warning { background-color: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .custom-alert-danger { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
         .custom-alert i { font-size: 20px; }
         .custom-alert strong { font-family: monospace; font-size: 16px; color: var(--tera-navy); }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* المؤشرات والملخص */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; width: 100%; }
-        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-right: 4px solid var(--tera-teal); box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; }
+        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-right: 4px solid var(--tera-teal); box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; position: relative; }
         .summary-card .icon-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .summary-card i { font-size: 24px; color: var(--tera-teal); opacity: 0.8; }
         .summary-card p { margin: 0; font-size: 14px; color: var(--tera-gray); font-weight: 600; }
         .summary-card h3 { margin: 0; font-size: 26px; color: var(--tera-navy); font-weight: 700; }
 
-        /* التخطيط (الرسم البياني + الجدول) */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 30px; width: 100%; }
-        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 2.5fr; } }
+        /* التخطيط الجديد (رسوم بيانية بجانب بعضها، ثم جدول بكامل العرض) */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px; width: 100%; }
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 2fr; } }
         .content-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; max-width: 100%; overflow: hidden; }
         
         /* الفلاتر والبحث */
@@ -88,9 +84,9 @@
         .search-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; width: 260px; font-family: inherit; outline: none; font-size: 14px; max-width: 100%; }
         .search-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
 
-        /* الجداول (مع منع التمدد) */
-        .table-wrapper { overflow-x: auto; width: 100%; max-width: 100%; border-radius: 8px; -webkit-overflow-scrolling: touch; border: 1px solid #e2e8f0; }
-        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: 800px; }
+        /* الجداول (مع منع التمدد وضبط الحاوية) */
+        .table-wrapper { overflow-x: auto; width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; }
+        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: 900px; }
         .tera-table th { background: #f8fafc; padding: 14px 15px; color: var(--tera-navy); font-size: 13px; font-weight: 700; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
         .tera-table td { padding: 16px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 500; white-space: nowrap; }
         .tera-table tr:hover td { background: #f8fafc; }
@@ -137,6 +133,8 @@
            ========================================= */
         @media (max-width: 768px) {
             .top-header { padding: 15px; }
+            .header-logo img { height: 45px !important; }
+            .header-logo h1 { font-size: 16px; margin-right: 10px; }
             .header-user .user-greeting { display: none; }
             .info-grid { grid-template-columns: 1fr 1fr; }
             .actions-row .btn-action { width: 100%; justify-content: center; }
@@ -144,6 +142,8 @@
             .search-input { width: 100%; }
             .dashboard-grid { gap: 15px; }
             .content-card { padding: 15px; }
+            .quick-actions { flex-direction: column; width: 100%; }
+            .quick-actions button { width: 100%; }
         }
         @media (min-width: 2560px) {
             .container { max-width: 2400px; padding: 50px; }
@@ -164,7 +164,7 @@
         @media print {
             @page { size: A4 portrait; margin: 1.2cm; }
             body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer { display: none !important; }
+            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer, .quick-actions { display: none !important; }
             #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; width: 100%; page-break-inside: avoid; }
             .print-only-header { display: flex; justify-content: space-between; align-items: flex-start; }
             .info-grid { background: transparent; border: 1px solid #cbd5e1; grid-template-columns: repeat(3, 1fr); padding: 15px; gap: 15px; page-break-inside: avoid; }
@@ -216,13 +216,19 @@
                             </div>
                             <h3 id="totalCapital">0.00 ر.س</h3>
                         </div>
+                        
                         <div class="summary-card" style="border-right-color: #10b981;">
                             <div class="icon-wrapper">
                                 <p>إجمالي الأرباح المتوقعة</p>
                                 <i class="fas fa-arrow-trend-up" style="color: #10b981;"></i>
                             </div>
                             <h3 id="totalProfit" style="color: #10b981;">0.00 ر.س</h3>
+                            <div style="margin-top:12px; background:#f1f5f9; border-radius:10px; height:6px; overflow:hidden; width: 100%;">
+                                <div style="width: 45%; background:#10b981; height:100%; border-radius:10px;"></div>
+                            </div>
+                            <p style="font-size:11px; margin-top:8px; color:var(--tera-gray);">تم تحقيق 45% من المستهدف</p>
                         </div>
+
                         <div class="summary-card" style="border-right-color: #f59e0b;">
                             <div class="icon-wrapper">
                                 <p>متوسط العائد الشهري التقريبي</p>
@@ -233,56 +239,65 @@
                     </div>
 
                     <div class="dashboard-grid">
-                        
-                        <div class="content-card chart-container" style="margin-bottom: 0;">
-                            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px;"><i class="fas fa-chart-pie" style="color: var(--tera-teal); margin-left: 8px;"></i> توزيع حالة الشراكات</h3>
-                            <div style="height: 300px; position: relative;"><canvas id="statusChart"></canvas></div>
+                        <div class="content-card chart-container" style="margin-bottom: 0; padding: 20px;">
+                            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 15px;"><i class="fas fa-chart-pie" style="color: var(--tera-teal); margin-left: 8px;"></i> توزيع حالة الشراكات</h3>
+                            <div style="height: 250px; position: relative;"><canvas id="statusChart"></canvas></div>
                         </div>
 
-                        <div class="content-card" style="margin-bottom: 0;">
-                            <div class="filters-container">
-                                <div class="filters-row" style="margin: 0;">
-                                    <button class="filter-btn active" data-status="all">الكل</button>
-                                    <button class="filter-btn" data-status="قائم">قائم / نشط</button>
-                                    <button class="filter-btn" data-status="بانتظار الاعتماد">بانتظار الاعتماد</button>
-                                    <button class="filter-btn" data-status="مكتملة">مكتملة</button>
-                                    <button class="filter-btn" data-status="معلقة">معلقة</button>
-                                    <button class="filter-btn" data-status="منتهية">منتهية</button>
-                                    <button class="filter-btn" data-status="ملغاة">ملغاة</button>
-                                    <button class="filter-btn" data-status="مغلقة">مغلقة</button>
-                                </div>
-                                <div class="search-box">
-                                    <input type="text" id="searchInput" class="search-input" placeholder="بحث برقم الشراكة...">
-                                </div>
-                            </div>
-
-                            <div class="table-wrapper">
-                                <table class="tera-table">
-                                    <thead>
-                                        <tr>
-                                            <th>رقم الشراكة</th>
-                                            <th>تاريخ البدء</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>نسبة الشريك</th>
-                                            <th>قيمة الشراكة</th>
-                                            <th>إجمالي الأرباح</th>
-                                            <th>الحالة</th>
-                                            <th>التفاصيل</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="mainTableBody">
-                                        </tbody>
-                                </table>
-                            </div>
-                            
-                            <div id="emptyState" class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد شراكات مطابقة</h3>
-                                <p style="margin: 0;">لم يتم العثور على أي عقود شراكة ممتدة تتطابق مع الفلتر أو البحث المحدد.</p>
-                            </div>
+                        <div class="content-card chart-container" style="margin-bottom: 0; padding: 20px;">
+                            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 15px;"><i class="fas fa-chart-line" style="color: var(--tera-teal); margin-left: 8px;"></i> نمو وتحقيق الأرباح (آخر 6 أشهر)</h3>
+                            <div style="height: 250px; position: relative;"><canvas id="profitGrowthChart"></canvas></div>
                         </div>
-                        
                     </div>
+
+                    <div class="quick-actions no-print" style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <button class="btn-action" style="background-color: var(--tera-teal); color: #fff; border:none;"><i class="fas fa-money-bill-wave"></i> طلب سحب أرباح متاحة</button>
+                        <button class="btn-action"><i class="fas fa-file-invoice-dollar"></i> استخراج كشف حساب ضريبي</button>
+                    </div>
+
+                    <div class="content-card" style="margin-bottom: 0;">
+                        <div class="filters-container">
+                            <div class="filters-row" style="margin: 0;">
+                                <button class="filter-btn active" data-status="all">الكل</button>
+                                <button class="filter-btn" data-status="قائم">قائم / نشط</button>
+                                <button class="filter-btn" data-status="بانتظار الاعتماد">بانتظار الاعتماد</button>
+                                <button class="filter-btn" data-status="مكتملة">مكتملة</button>
+                                <button class="filter-btn" data-status="معلقة">معلقة</button>
+                                <button class="filter-btn" data-status="منتهية">منتهية</button>
+                                <button class="filter-btn" data-status="ملغاة">ملغاة</button>
+                                <button class="filter-btn" data-status="مغلقة">مغلقة</button>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" id="searchInput" class="search-input" placeholder="بحث برقم الشراكة...">
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table class="tera-table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الشراكة</th>
+                                        <th>تاريخ البدء</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>نسبة الشريك</th>
+                                        <th>قيمة الشراكة</th>
+                                        <th>إجمالي الأرباح</th>
+                                        <th>الحالة</th>
+                                        <th>التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mainTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="emptyState" class="empty-state">
+                            <i class="fas fa-folder-open"></i>
+                            <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد شراكات مطابقة</h3>
+                            <p style="margin: 0;">لم يتم العثور على أي عقود شراكة ممتدة تتطابق مع الفلتر أو البحث المحدد.</p>
+                        </div>
+                    </div>
+                        
                 </div>
 
                 <div id="detailsSection" class="content-card">
@@ -362,30 +377,21 @@
     <script>
         const clientName = "محمد_صالح_الشمري";
 
-        // ==========================================
-        // وظائف مساعدة لإنشاء تواريخ ديناميكية للتجارب
-        // ==========================================
         function getDynamicDate(daysOffset) {
             let d = new Date();
             d.setDate(d.getDate() + daysOffset);
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
-        // البيانات التجريبية الشاملة التي تم طلب إضافتها بدقة
         const mockData = [
-            // تجربة ذكية: عقد يتبقى 10 أيام للانتهاء (لتفعيل تنبيه الانتهاء)
-            { id: "TR-EXP-001", startDate: getDynamicDate(-355), endDate: getDynamicDate(10), partnerRatio: "6%", capital: 45000, expectedProfit: 27000, status: "قائم", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(-325) },
-            // تجربة ذكية: عقد يتبقى 5 أيام على صرف الأرباح (لتفعيل تنبيه صرف الأرباح)
-            { id: "TR-PROFIT-002", startDate: getDynamicDate(-60), endDate: getDynamicDate(305), partnerRatio: "5%", capital: 20000, expectedProfit: 10000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(5) },
-            
-            // البيانات الشاملة للحالات الأخرى
-            { id: "TR-2026-06-27-001", startDate: "2026/06/27", endDate: "2027/06/17", partnerRatio: "5%", capital: 100000, expectedProfit: 50000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/08/15" },
-            { id: "TR-2026-07-01-002", startDate: "2026/07/01", endDate: "2027/07/01", partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: "2026/09/01" },
-            { id: "TR-2025-01-10-003", startDate: "2025/01/10", endDate: "2026/01/10", partnerRatio: "6%", capital: 50000, expectedProfit: 30000, status: "مكتملة", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: "2025/02/10" },
-            { id: "TR-2026-05-15-004", startDate: "2026/05/15", endDate: "2027/05/15", partnerRatio: "5%", capital: 15000, expectedProfit: 7500, status: "معلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/06/15" },
-            { id: "TR-2024-03-20-005", startDate: "2024/03/20", endDate: "2025/03/20", partnerRatio: "7%", capital: 30000, expectedProfit: 21000, status: "منتهية", monthlyRatio: "1.4%", yearlyRatio: "7%", duration: 12, mechanism: "شهري", firstDate: "2024/04/20" },
-            { id: "TR-2026-02-05-006", startDate: "2026/02/05", endDate: "2026/08/05", partnerRatio: "5%", capital: 20000, expectedProfit: 5000, status: "ملغاة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 6, mechanism: "شهري", firstDate: "2026/03/05" },
-            { id: "TR-2023-11-11-007", startDate: "2023/11/11", endDate: "2024/11/11", partnerRatio: "5%", capital: 10000, expectedProfit: 5000, status: "مغلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2023/12/11" }
+            { id: "TR-EXP-001", startDate: getDynamicDate(-355), endDate: getDynamicDate(10), partnerRatio: "6%", capital: 45000, expectedProfit: 27000, status: "قائم", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(-325), hasNotes: false },
+            { id: "TR-PROFIT-002", startDate: getDynamicDate(-60), endDate: getDynamicDate(305), partnerRatio: "5%", capital: 20000, expectedProfit: 10000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(5), hasNotes: false },
+            { id: "TR-PEND-003", startDate: getDynamicDate(-1), endDate: getDynamicDate(364), partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: getDynamicDate(30), hasNotes: true },
+            { id: "TR-2025-01-10-004", startDate: "2025/01/10", endDate: "2026/01/10", partnerRatio: "6%", capital: 50000, expectedProfit: 30000, status: "مكتملة", monthlyRatio: "1.2%", yearlyRatio: "6%", duration: 12, mechanism: "شهري", firstDate: "2025/02/10", hasNotes: false },
+            { id: "TR-2026-05-15-005", startDate: "2026/05/15", endDate: "2027/05/15", partnerRatio: "5%", capital: 15000, expectedProfit: 7500, status: "معلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/06/15", hasNotes: true },
+            { id: "TR-2024-03-20-006", startDate: "2024/03/20", endDate: "2025/03/20", partnerRatio: "7%", capital: 30000, expectedProfit: 21000, status: "منتهية", monthlyRatio: "1.4%", yearlyRatio: "7%", duration: 12, mechanism: "شهري", firstDate: "2024/04/20", hasNotes: false },
+            { id: "TR-2026-02-05-007", startDate: "2026/02/05", endDate: "2026/08/05", partnerRatio: "5%", capital: 20000, expectedProfit: 5000, status: "ملغاة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 6, mechanism: "شهري", firstDate: "2026/03/05", hasNotes: false },
+            { id: "TR-2023-11-11-008", startDate: "2023/11/11", endDate: "2024/11/11", partnerRatio: "5%", capital: 10000, expectedProfit: 5000, status: "مغلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2023/12/11", hasNotes: false }
         ];
 
         function formatMoney(num) {
@@ -405,9 +411,6 @@
             }
         }
 
-        // ==========================================
-        // منطق التنبيهات الذكية (أيام الانتهاء / صرف الأرباح) المطابق لطلبك
-        // ==========================================
         function calculateDaysDiff(targetDateStr) {
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -422,11 +425,9 @@
             today.setHours(0,0,0,0);
             let baseDate = new Date(contract.firstDate);
             baseDate.setHours(0,0,0,0);
-            
             for (let i = 0; i < contract.duration; i++) {
                 let payDate = new Date(baseDate);
                 payDate.setMonth(baseDate.getMonth() + i);
-                
                 if (payDate >= today) {
                     const diffTime = payDate - today;
                     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -440,26 +441,21 @@
             alertsContainer.innerHTML = '';
             
             mockData.forEach(contract => {
-                if(contract.status !== 'قائم') return;
-
-                const daysToEnd = calculateDaysDiff(contract.endDate);
-                if(daysToEnd === 10 || (daysToEnd > 0 && daysToEnd <= 15)) {
-                    alertsContainer.innerHTML += `
-                        <div class="custom-alert custom-alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToEnd} ايام</strong> على انتهاء الشراكة.</span>
-                        </div>
-                    `;
+                if(contract.status === 'بانتظار الاعتماد') {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning" style="background:#fef3c7; color:#92400e;"><i class="fas fa-clock"></i><span>تنبيه: الشراكة رقم <strong>${contract.id}</strong> بانتظار الاعتماد والمراجعة الإدارية.</span></div>`;
                 }
-
-                const daysToProfit = getNextPaymentDays(contract);
-                if(daysToProfit === 5 || (daysToProfit > 0 && daysToProfit <= 7)) {
-                    alertsContainer.innerHTML += `
-                        <div class="custom-alert custom-alert-info">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            <span>العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToProfit} ايام</strong> على صرف الارباح.</span>
-                        </div>
-                    `;
+                if(contract.hasNotes) {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>يوجد ملاحظات هامة على العقد رقم <strong>${contract.id}</strong> يرجى مراجعتها فوراً.</span></div>`;
+                }
+                if(contract.status === 'قائم') {
+                    const daysToEnd = calculateDaysDiff(contract.endDate);
+                    if(daysToEnd === 10 || (daysToEnd > 0 && daysToEnd <= 15)) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-exclamation-triangle"></i><span>العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToEnd} ايام</strong> على انتهاء الشراكة.</span></div>`;
+                    }
+                    const daysToProfit = getNextPaymentDays(contract);
+                    if(daysToProfit === 5 || (daysToProfit > 0 && daysToProfit <= 7)) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-info"><i class="fas fa-hand-holding-usd"></i><span>العقد رقم <strong>${contract.id}</strong> متبقي <strong style="font-size:18px;">${daysToProfit} ايام</strong> على صرف الارباح.</span></div>`;
+                    }
                 }
             });
         }
@@ -469,6 +465,7 @@
             renderMainTable('all');
             calculateSummary();
             initChart();
+            initProfitGrowthChart();
 
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -482,7 +479,6 @@
                 let val = this.value.trim().toLowerCase();
                 let rows = document.querySelectorAll('#mainTableBody tr');
                 let hasData = false;
-                
                 rows.forEach(row => {
                     let idText = row.cells[0].innerText.toLowerCase();
                     if(idText.includes(val)) {
@@ -492,7 +488,6 @@
                         row.style.display = 'none';
                     }
                 });
-                
                 document.getElementById('emptyState').style.display = hasData ? 'none' : 'block';
                 document.querySelector('.table-wrapper').style.display = hasData ? 'block' : 'none';
             });
@@ -550,6 +545,25 @@
             document.getElementById('mainSection').style.display = 'none';
             document.getElementById('detailsSection').style.display = 'block';
 
+            const detailsAlerts = document.getElementById('detailsAlertsContainer');
+            detailsAlerts.innerHTML = '';
+            if(contract.status === 'بانتظار الاعتماد') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>الشراكة بانتظار الاعتماد والمراجعة الإدارية.</span></div>`;
+            }
+            if(contract.hasNotes) {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>يوجد ملاحظات هامة على هذا العقد يرجى مراجعتها.</span></div>`;
+            }
+            if(contract.status === 'قائم') {
+                const daysToEnd = calculateDaysDiff(contract.endDate);
+                if(daysToEnd === 10 || (daysToEnd > 0 && daysToEnd <= 15)) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-exclamation-triangle"></i><span>متبقي <strong>${daysToEnd} ايام</strong> على انتهاء الشراكة.</span></div>`;
+                }
+                const daysToProfit = getNextPaymentDays(contract);
+                if(daysToProfit === 5 || (daysToProfit > 0 && daysToProfit <= 7)) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-info"><i class="fas fa-hand-holding-usd"></i><span>متبقي <strong>${daysToProfit} ايام</strong> على صرف الارباح.</span></div>`;
+                }
+            }
+
             const sClass = getStatusClass(contract.status);
             const badge = document.getElementById('detailStatusBadge');
             badge.className = `badge ${sClass}`;
@@ -576,10 +590,8 @@
             let remaining = contract.expectedProfit;
             let baseDate = new Date(contract.firstDate);
 
-            // تصفير الشهر الأخير برمجياً
             for (let i = 1; i <= contract.duration; i++) {
                 let currentEntitlement = monthlyProfitRaw;
-
                 if (i === contract.duration) {
                     currentEntitlement = remaining;
                     remaining = 0;
@@ -667,6 +679,50 @@
                                 formatter: (value) => { return value > 0 ? value : ''; }
                             }
                         } 
+                    }
+                });
+            }
+        }
+
+        function initProfitGrowthChart() {
+            const ctxProfit = document.getElementById('profitGrowthChart');
+            if(ctxProfit) {
+                new Chart(ctxProfit, {
+                    type: 'bar',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        datasets: [
+                            {
+                                type: 'line',
+                                label: 'النمو التراكمي (ر.س)',
+                                data: [5000, 10200, 15700, 20800, 26600, 32600],
+                                borderColor: '#f59e0b',
+                                backgroundColor: '#f59e0b',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: false,
+                                datalabels: { display: false } // تعطيل الأرقام على الخط
+                            },
+                            {
+                                type: 'bar',
+                                label: 'الأرباح المحققة شهرياً',
+                                data: [5000, 5200, 5500, 5100, 5800, 6000],
+                                backgroundColor: '#028090',
+                                borderRadius: 4,
+                                datalabels: { display: false } // تعطيل الأرقام على الأعمدة لمنع الفوضى
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', rtl: true, labels: {font: {family: 'Tajawal', size: 13}} }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#e2e8f0' } },
+                            x: { grid: { display: false } }
+                        }
                     }
                 });
             }
