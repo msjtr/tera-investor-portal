@@ -10,6 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
@@ -20,19 +24,13 @@
             --tera-bg: #f8fafc;
         }
 
-        html, body { 
-            background-color: var(--tera-bg); 
-            font-family: 'Tajawal', sans-serif; 
-            margin: 0; padding: 0; overflow-x: hidden; width: 100vw; max-width: 100%; box-sizing: border-box; 
-        }
-
+        html, body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; box-sizing: border-box; }
         *, *::before, *::after { box-sizing: border-box; }
+        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; }
+        .main-content { width: 100%; flex: 1; display: flex; flex-direction: column; }
         
-        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; }
-        .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
-        
-        /* الهيدر */
-        .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; width: 100%; }
+        /* Header */
+        .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; }
         .header-logo { display: flex; align-items: center; gap: 20px; }
         .header-logo h1 { margin: 0; font-size: 20px; color: var(--tera-navy); font-weight: 700; }
         .header-user { display: flex; align-items: center; gap: 15px; }
@@ -40,126 +38,111 @@
         .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
         .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
 
-        .container { max-width: 1600px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
 
-        /* المؤشرات العلوية (3 كروت فقط حسب الطلب) */
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; width: 100%; }
-        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; }
-        .summary-card.active-card { border-right: 4px solid var(--tera-teal); }
-        .summary-card.upcoming-card { border-right: 4px solid #10b981; }
-        .summary-card.completed-card { border-right: 4px solid #6366f1; }
+        /* Summary Cards */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; border-right: 4px solid var(--tera-gray); }
+        .summary-card.active-card { border-right-color: #028090; }
+        .summary-card.upcoming-card { border-right-color: #10b981; }
+        .summary-card.completed-card { border-right-color: #6366f1; }
         .summary-card .icon-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
         .summary-card i { font-size: 24px; opacity: 0.8; }
-        .active-card i { color: var(--tera-teal); }
-        .upcoming-card i { color: #10b981; }
-        .completed-card i { color: #6366f1; }
+        .active-card i { color: #028090; } .upcoming-card i { color: #10b981; } .completed-card i { color: #6366f1; }
         .summary-card p { margin: 0; font-size: 15px; color: var(--tera-gray); font-weight: 700; }
         .summary-card h3 { margin: 0; font-size: 32px; color: var(--tera-navy); font-weight: 800; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px; width: 100%; }
-        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 2.5fr; } }
-        .content-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; max-width: 100%; overflow: hidden; }
+        /* Chart */
+        .content-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; }
         
-        /* الفلاتر وشريط الأدوات */
-        .filters-container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .filters-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; flex: 1; }
-        .search-input { padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; outline: none; font-size: 14px; background-color: #fff; color: var(--tera-navy); min-width: 180px; }
-        .search-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
-        select.search-input { cursor: pointer; font-weight: 600; }
-        
-        /* أزرار تبديل العرض (شبكة / قائمة) */
-        .view-toggles { display: flex; gap: 5px; background: #f1f5f9; padding: 5px; border-radius: 8px; }
-        .view-btn { border: none; background: transparent; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: var(--tera-gray); font-size: 16px; transition: 0.2s; }
+        /* Filters */
+        .filters-container { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 25px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .search-input { padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; background: #fff; color: var(--tera-navy); outline: none; min-width: 160px; }
+        .search-input:focus { border-color: var(--tera-teal); }
+        .view-toggles { display: flex; gap: 5px; background: #f1f5f9; padding: 5px; border-radius: 8px; margin-right: auto; }
+        .view-btn { border: none; background: transparent; padding: 8px 12px; border-radius: 6px; cursor: pointer; color: var(--tera-gray); font-size: 16px; }
         .view-btn.active { background: #fff; color: var(--tera-teal); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* شارات الحالات (الألوان المطلوبة) */
-        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; text-align: center; border: 1px solid transparent; }
-        .status-upcoming { background: #dcfce7; color: #10b981; border-color: #bbf7d0; } /* القادمة = أخضر */
-        .status-active { background: #e0f2fe; color: #028090; border-color: #bae6fd; } /* النشطة */
-        .status-completed { background: #e0e7ff; color: #6366f1; border-color: #c7d2fe; } /* المكتملة */
-        .status-expired { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; } /* المنتهية */
-        .status-closed { background: #e2e8f0; color: #334155; border-color: #94a3b8; } /* المغلقة */
-        .status-cancelled { background: #fee2e2; color: #ef4444; border-color: #fecaca; } /* الملغاة */
+        /* Badges & Colors */
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid transparent; }
+        .status-upcoming { background: #dcfce7; color: #10b981; border-color: #bbf7d0; } /* قادمة - أخضر */
+        .status-active { background: #e0f2fe; color: #028090; border-color: #bae6fd; } /* نشطة - أزرق مخضر */
+        .status-completed { background: #e0e7ff; color: #6366f1; border-color: #c7d2fe; } /* مكتملة - بنفسجي */
+        .status-expired { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; } /* منتهية - رصاصي */
+        .status-closed { background: #e2e8f0; color: #334155; border-color: #94a3b8; } /* مغلقة - رمادي داكن */
+        .status-cancelled { background: #fee2e2; color: #ef4444; border-color: #fecaca; } /* ملغاة - أحمر */
 
-        /* تمييز نوع الفرصة */
-        .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; }
-        .type-extended { background: rgba(10, 27, 63, 0.1); color: var(--tera-navy); } /* ممتدة */
-        .type-opportunity { background: rgba(2, 128, 144, 0.1); color: var(--tera-teal); } /* فرصة */
+        .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+        .type-extended { background: #fef3c7; color: #d97706; } /* شراكة ممتدة */
+        .type-opportunity { background: #fce7f3; color: #db2777; } /* فرصة شراكة */
 
-        /* عرض البطاقات (Grid View) */
-        .grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; width: 100%; }
-        .opp-card { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: 0.3s; background: #fff; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        /* Grid View */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; width: 100%; }
+        .opp-card { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; display: flex; flex-direction: column; transition: 0.3s; }
         .opp-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(2, 128, 144, 0.1); border-color: var(--tera-teal); }
-        .opp-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
-        .opp-header h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: var(--tera-navy); line-height: 1.4; }
-        .opp-body { padding: 20px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .opp-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; }
+        .opp-header h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: var(--tera-navy); }
+        .opp-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .opp-metric { background: var(--tera-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
         .opp-metric span { display: block; font-size: 11px; color: var(--tera-gray); margin-bottom: 5px; }
-        .opp-metric strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 700; font-family: monospace; }
+        .opp-metric strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 700; }
         .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #fff; display: flex; justify-content: space-between; align-items: center; }
 
-        /* عرض القائمة (List/Table View) */
-        .list-view-container { display: none; width: 100%; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: max-content; }
+        /* List View */
+        .list-view-container { display: none; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .tera-table { width: 100%; border-collapse: collapse; text-align: right; }
         .tera-table th { background: #f8fafc; padding: 16px 20px; color: var(--tera-navy); font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        .tera-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 500; white-space: nowrap; vertical-align: middle; }
+        .tera-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 500; white-space: nowrap; }
         .tera-table tr:hover td { background: #f8fafc; }
 
-        /* الأزرار العامة */
-        .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 13px; text-decoration: none; justify-content: center; font-family: inherit; }
+        /* Buttons */
+        .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 13px; font-family: inherit; }
         .btn-action:hover { background: #f1f5f9; }
         .btn-primary { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); }
         .btn-primary:hover { background: #026a77; color: #fff; }
-        .btn-view { background: rgba(2, 128, 144, 0.1); color: var(--tera-teal); border: none; padding: 8px 16px; }
-        .btn-view:hover { background: var(--tera-teal); color: #fff; }
+        .btn-primary:disabled { background: #94a3b8; border-color: #94a3b8; cursor: not-allowed; }
 
-        /* النوافذ المنبثقة (Modals) */
+        /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10, 27, 63, 0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; padding: 20px; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s ease; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s ease; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .modal-header { padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; }
-        .modal-header h2 { margin: 0; font-size: 19px; color: var(--tera-navy); display: flex; align-items: center; gap: 10px; }
+        .modal-header h2 { margin: 0; font-size: 19px; color: var(--tera-navy); }
         .close-modal { background: none; border: none; font-size: 24px; color: var(--tera-gray); cursor: pointer; }
         .modal-body { padding: 30px; overflow-y: auto; flex: 1; background: #f8fafc; }
+        
         .modal-calc { max-width: 650px; }
 
         .detail-block { margin-bottom: 30px; }
-        .detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
         .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 5px; }
         .info-item strong { display: block; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
         
+        /* Calc & Form */
         .calc-group { margin-bottom: 20px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .calc-group label { display: block; margin-bottom: 12px; font-size: 15px; font-weight: 700; color: var(--tera-navy); }
-        .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 20px; font-family: monospace; font-weight: bold; outline: none; text-align: center; color: var(--tera-teal); }
+        .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 20px; font-family: monospace; font-weight: bold; outline: none; text-align: center; color: var(--tera-teal); margin-top: 10px; }
         .calc-result-box { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-top: 20px; }
         .calc-result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: var(--tera-gray); font-weight: 600; }
         .calc-result-row.total { border-top: 2px dashed #e2e8f0; padding-top: 15px; margin-top: 15px; font-weight: 800; font-size: 18px; color: var(--tera-navy); }
-        
-        .agreement-box { margin-top: 25px; padding: 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px; }
-        .agreement-box input[type="checkbox"] { margin-top: 4px; transform: scale(1.3); cursor: pointer; accent-color: var(--tera-teal); }
-        .agreement-box label { font-size: 13px; color: #92400e; line-height: 1.6; cursor: pointer; font-weight: 600; }
+        .agreement-box { margin-top: 25px; padding: 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; display: flex; gap: 12px; }
 
-        .modal-actions-row { display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 25px; align-items: center; justify-content: space-between; }
+        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; }
 
         @media (max-width: 768px) {
             .summary-grid { grid-template-columns: 1fr; }
             .filters-container { flex-direction: column; align-items: stretch; }
-            .filters-controls select, .filters-controls .search-box { width: 100%; flex: 100%; }
-            .modal-content { max-height: 95vh; margin: 10px; }
-            .modal-actions-row { flex-direction: column; align-items: stretch; }
-            .modal-actions-row button { width: 100%; margin-bottom: 10px; }
+            .filters-container select, .search-box { width: 100%; }
         }
 
-        /* الطباعة */
         .print-only { display: none; }
         @media print {
             body * { visibility: hidden; }
             .modal-overlay.active, .modal-overlay.active .modal-content, .modal-overlay.active .modal-content * { visibility: visible; }
             .modal-overlay.active { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: transparent; padding: 0; }
             .modal-overlay.active .modal-content { width: 100%; max-width: none; transform: none; box-shadow: none; border: none; background: #fff; }
-            .close-modal, .modal-actions-row, .no-print { display: none !important; }
+            .close-modal, .no-print { display: none !important; }
             .print-only { display: block; text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--tera-teal); padding-bottom: 15px; }
             .info-grid { border: 1px solid #000; background: transparent; grid-template-columns: repeat(2, 1fr); }
         }
@@ -172,16 +155,15 @@
             
             <header class="top-header no-print">
                 <div class="header-logo">
-                    <a href="/pages/dashboard/index.html" class="btn-action btn-back" style="padding: 8px 20px; margin-left: 15px; border-radius: 8px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
+                    <a href="/pages/dashboard/index.html" class="btn-action" style="padding: 8px 20px; margin-left: 15px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
                     <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; image-rendering: crisp-edges;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
                     <h1>سوق الفرص والشركات المطروحة</h1>
                 </div>
                 <div class="header-user">
                     <div class="user-greeting">
-                        <h4 id="clientNameDisplay">محمد صالح الشمري</h4>
+                        <h4>محمد صالح الشمري</h4>
                         <p>بوابة الاستثمار، حائل</p>
                     </div>
-                    <img src="https://ui-avatars.com/api/?name=محمد+صالح&background=0A1B3F&color=fff&size=45" style="border-radius: 50%; border: 2px solid #e2e8f0;" alt="Avatar" />
                 </div>
             </header>
 
@@ -193,7 +175,7 @@
                         <h3 id="sumActive">0</h3>
                     </div>
                     <div class="summary-card upcoming-card">
-                        <div class="icon-wrapper"><p>الفرص القادمة</p><i class="fas fa-clock"></i></div>
+                        <div class="icon-wrapper"><p>الفرص القادمة (المتاحة)</p><i class="fas fa-bullhorn"></i></div>
                         <h3 id="sumUpcoming">0</h3>
                     </div>
                     <div class="summary-card completed-card">
@@ -202,29 +184,27 @@
                     </div>
                 </div>
 
-                <div class="dashboard-grid">
-                    <div class="content-card chart-container" style="margin-bottom: 0;">
-                        <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px;"><i class="fas fa-chart-pie text-teal"></i> توزيع الحالات لجميع الفرص</h3>
-                        <div style="height: 300px; position: relative;"><canvas id="statusChart"></canvas></div>
-                    </div>
+                <div class="content-card chart-container" style="padding: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: var(--tera-navy); font-size: 16px;"><i class="fas fa-chart-pie text-teal"></i> توزيع ومؤشر الحالات (يحتوي على العدد)</h3>
+                    <div style="height: 280px; position: relative;"><canvas id="statusChart"></canvas></div>
                 </div>
                 
                 <div class="filters-container no-print">
                     <div class="filters-controls">
                         <select id="typeFilter" class="search-input">
                             <option value="all">جميع أنواع الفرص</option>
-                            <option value="ممتدة">شراكة ممتدة</option>
-                            <option value="فرصة">فرصة شراكة</option>
+                            <option value="شراكة ممتدة">شراكات ممتدة</option>
+                            <option value="فرصة شراكة">فرص شراكة</option>
                         </select>
                         
                         <select id="statusFilter" class="search-input">
                             <option value="all">جميع الحالات</option>
                             <option value="النشطة">النشطة</option>
                             <option value="القادمة">القادمة</option>
+                            <option value="المكتملة">المكتملة</option>
                             <option value="المنتهية">المنتهية</option>
                             <option value="المغلقة">المغلقة</option>
                             <option value="الملغاة">الملغاة</option>
-                            <option value="المكتملة">المكتملة</option>
                         </select>
                         
                         <select id="sortFilter" class="search-input">
@@ -238,31 +218,30 @@
                         </select>
                         
                         <div class="search-box" style="flex: 1; min-width: 200px;">
-                            <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة أو المشروع...">
+                            <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة أو اسم المشروع...">
                         </div>
 
                         <div class="view-toggles">
-                            <button id="btnGrid" class="view-btn active" onclick="switchView('grid')" title="عرض البطاقات"><i class="fas fa-th-large"></i></button>
-                            <button id="btnList" class="view-btn" onclick="switchView('list')" title="عرض القائمة"><i class="fas fa-bars"></i></button>
+                            <button id="btnGrid" class="view-btn active" onclick="switchView('grid')" title="عرض بطاقات"><i class="fas fa-th-large"></i></button>
+                            <button id="btnList" class="view-btn" onclick="switchView('list')" title="عرض قائمة"><i class="fas fa-bars"></i></button>
                         </div>
                     </div>
                 </div>
 
-                <div id="gridContainer" class="grid-view-container"></div>
+                <div id="gridContainer" class="dashboard-grid"></div>
                 
                 <div id="listContainer" class="list-view-container">
                     <table class="tera-table">
                         <thead>
                             <tr>
                                 <th>رقم الفرصة</th>
-                                <th>تاريخ الإدراج</th>
-                                <th>نوع الفرصة</th>
-                                <th>اسم المشروع</th>
+                                <th>النوع</th>
+                                <th>المشروع</th>
                                 <th>قيمة السهم</th>
                                 <th>العائد</th>
                                 <th>المدة</th>
                                 <th>الحالة</th>
-                                <th>التفاصيل</th>
+                                <th>الإجراء</th>
                             </tr>
                         </thead>
                         <tbody id="listTableBody"></tbody>
@@ -270,7 +249,7 @@
                 </div>
                 
                 <div id="emptyState" style="display: none; text-align: center; padding: 50px 20px; color: var(--tera-gray);">
-                    <i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--tera-teal);"></i>
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--tera-teal);"></i>
                     <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد نتائج مطابقة</h3>
                     <p style="margin: 0;">قم بتغيير إعدادات الفلتر أو البحث.</p>
                 </div>
@@ -278,7 +257,7 @@
             </div>
             
             <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق لوائح هيئة السوق المالية.
             </footer>
         </main>
     </div>
@@ -286,13 +265,13 @@
     <div id="detailsModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header no-print">
-                <h2><i class="fas fa-book-open text-teal"></i> الدليل الإرشادي الشامل للفرصة</h2>
+                <h2><i class="fas fa-book-open text-teal"></i> الدليل الإرشادي الشامل</h2>
                 <button class="close-modal" onclick="closeModal('detailsModal')"><i class="fas fa-times"></i></button>
             </div>
             
             <div class="modal-body">
                 <div class="print-only">
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" />
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 50px; margin-bottom: 10px;" onerror="this.src='https://via.placeholder.com/120x45/028090/fff?text=Tera'" />
                     <h2>الدليل الإرشادي لبيانات الفرصة الاستثمارية - منصة تيرا</h2>
                     <p>تاريخ الاستخراج: <span id="printDateStr1"></span></p>
                 </div>
@@ -300,23 +279,62 @@
                 <div class="detail-block">
                     <h3 class="detail-block-title"><i class="fas fa-info-circle"></i> القسم الأول: البيانات الأساسية</h3>
                     <div class="info-grid">
-                        <div class="info-item"><span>رقم الفرصة</span><strong id="mDetId" class="mono highlight"></strong></div>
+                        <div class="info-item"><span>رقم الفرصة</span><strong id="mDetId" style="font-family:monospace; color:var(--tera-teal);"></strong></div>
                         <div class="info-item"><span>نوع الفرصة</span><strong id="mDetType"></strong></div>
-                        <div class="info-item"><span>اسم المشروع</span><strong id="mDetCompany"></strong></div>
-                        <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono text-teal"></strong></div>
-                        <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono"></strong></div>
-                        <div class="info-item"><span>العائد المتوقع (ROI)</span><strong id="mDetRoi" class="mono" style="color: #10b981;"></strong></div>
+                        <div class="info-item" style="grid-column: span 2;"><span>اسم المشروع</span><strong id="mDetCompany"></strong></div>
+                        
+                        <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" style="font-family:monospace;"></strong></div>
+                        <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" style="font-family:monospace;"></strong></div>
+                        <div class="info-item"><span>العائد المتوقع (ROI)</span><strong id="mDetRoi" style="color:#10b981; font-family:monospace;"></strong></div>
+                        
                         <div class="info-item"><span>مدة الاستثمار</span><strong id="mDetDuration"></strong></div>
-                        <div class="info-item"><span>حالة الفرصة</span><strong id="mDetStatus"></strong></div>
+                        <div class="info-item"><span>حالة الفرصة الحالية</span><strong id="mDetStatus"></strong></div>
+                        <div class="info-item"><span>فئة المخاطرة</span><strong id="mDetRisk" style="color:#f59e0b;"></strong></div>
                     </div>
                 </div>
 
-                <div class="modal-actions-row no-print">
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="window.print()" class="btn-action btn-print"><i class="fas fa-print"></i> طباعة الدليل</button>
-                        <button onclick="alert('تم تنزيل الدليل بصيغة PDF بنجاح')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-align-right"></i> القسم الثاني: الوصف التنفيذي ودواعي التمويل</h3>
+                    <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.8; font-size: 14px;" id="mDetDesc"></div>
+                </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الثالث: الضمانات القانونية والمخاطر</h3>
+                    <div class="info-grid">
+                        <div class="info-item" style="grid-column: span 2;"><span>الضمانات الموثقة</span><strong id="mDetGuarantees"></strong></div>
                     </div>
-                    <button onclick="openInvestModal()" class="btn-action btn-primary" style="padding: 12px 30px; font-size: 16px;"><i class="fas fa-handshake"></i> الانضمام للفرصة</button>
+                </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-calculator"></i> القسم الرابع: المحاكاة الاسترشادية (بناءً على 10 أسهم)</h3>
+                    <div class="table-wrapper">
+                        <table class="tera-table" style="text-align:center;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">عدد الأسهم المفترض</th>
+                                    <th style="text-align:center;">رأس المال المطلوب</th>
+                                    <th style="text-align:center;">إجمالي الربح المتوقع</th>
+                                    <th style="text-align:center;">إجمالي العائد المتوقع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-family:monospace;">10 أسهم</td>
+                                    <td style="font-family:monospace;" id="mSimCapital"></td>
+                                    <td style="font-family:monospace; color:#10b981;" id="mSimProfit"></td>
+                                    <td style="font-family:monospace; font-weight:800;" id="mSimTotal"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-actions-row no-print" style="display:flex; justify-content:space-between; margin-top:30px;">
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="window.print()" class="btn-action"><i class="fas fa-print"></i> طباعة</button>
+                        <button onclick="alert('تم تنزيل الدليل بنجاح')" class="btn-action" style="background:#ef4444; color:#fff; border-color:#ef4444;"><i class="fas fa-file-pdf"></i> تحميل PDF</button>
+                    </div>
+                    <button id="btnInvestModalOpen" onclick="openInvestModal()" class="btn-action btn-primary" style="padding:12px 30px; font-size:15px;"></button>
                 </div>
             </div>
         </div>
@@ -337,8 +355,8 @@
                 </div>
 
                 <div style="background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;" class="no-print">
-                    <h3 id="invOppName" style="margin: 0 0 10px 0; color:#fff; font-size: 18px;"></h3>
-                    <p style="margin: 0; font-size: 14px; color:#cbd5e1;">قيمة السهم الواحد: <span id="invSharePrice" class="mono text-teal" style="font-weight:bold;"></span> ر.س</p>
+                    <h3 id="invOppName" style="margin: 0 0 10px 0; font-size: 18px;"></h3>
+                    <p style="margin: 0; font-size: 14px; color:#cbd5e1;">قيمة السهم الواحد: <span id="invSharePrice" style="font-family:monospace; font-weight:bold; color:var(--tera-teal);"></span> ر.س</p>
                 </div>
 
                 <div class="calc-group no-print">
@@ -347,9 +365,9 @@
                 </div>
 
                 <div class="calc-result-box">
-                    <div class="calc-result-row"><span>عدد الأسهم:</span><span class="mono" id="resSharesCount">1 سهم</span></div>
-                    <div class="calc-result-row"><span>إجمالي رأس المال:</span><span class="mono" id="resCapital">0.00 ر.س</span></div>
-                    <div class="calc-result-row total"><span>المبلغ الإجمالي للدفع:</span><span class="mono highlight" id="resToPay">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>عدد الأسهم:</span><span style="font-family:monospace;" id="resSharesCount">1 سهم</span></div>
+                    <div class="calc-result-row"><span>إجمالي رأس المال:</span><span style="font-family:monospace;" id="resCapital">0.00 ر.س</span></div>
+                    <div class="calc-result-row total"><span>المبلغ الإجمالي للدفع:</span><span style="font-family:monospace; color:var(--tera-teal); font-size:22px;" id="resToPay">0.00 ر.س</span></div>
                 </div>
 
                 <div class="agreement-box">
@@ -357,13 +375,13 @@
                     <label for="agreeCheckbox">أقر بأنني اطلعت على الدليل الإرشادي الشامل وأوافق على كافة الشروط والمخاطر الموضحة.</label>
                 </div>
 
-                <div class="modal-actions-row no-print" style="flex-direction: column;">
+                <div class="modal-actions-row no-print" style="flex-direction: column; gap: 15px; margin-top:20px;">
                     <button id="btnPayNow" class="btn-action btn-primary" style="width: 100%; padding: 15px; font-size: 16px; opacity: 0.5; cursor: not-allowed;" disabled onclick="processPayment()">
                         <i class="fas fa-lock"></i> ادفع وانضم الآن
                     </button>
                     <div style="width: 100%; display: flex; gap: 10px;">
-                        <button onclick="window.print()" class="btn-action" style="flex:1; background: #f1f5f9; color: var(--tera-navy);"><i class="fas fa-print"></i> طباعة النموذج</button>
-                        <button onclick="alert('تم التصدير بنجاح')" class="btn-action btn-pdf" style="flex:1;"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+                        <button onclick="window.print()" class="btn-action" style="flex:1;"><i class="fas fa-print"></i> طباعة النموذج</button>
+                        <button onclick="alert('تم التصدير بنجاح')" class="btn-action" style="flex:1; background:#ef4444; color:#fff; border-color:#ef4444;"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
                     </div>
                 </div>
             </div>
@@ -380,25 +398,28 @@
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
-        // 14 تجربة - مطابقة للشروط والحالات والأنواع
+        // ==========================================
+        // قاعدة البيانات: 14 تجربة (7 شراكة ممتدة + 7 فرص شراكة)
+        // الحالات تشمل (النشطة، القادمة، المكتملة، المنتهية، المغلقة، الملغاة)
+        // ==========================================
         const mockData = [
-            // نوع: ممتدة
-            { id: "EX-001", type: "ممتدة", status: "النشطة", company: "مخابز الأحساء", totalCap: 500000, sharePrice: 100, roi: 18, duration: 12, date: getDynamicDate(-30) },
-            { id: "EX-002", type: "ممتدة", status: "القادمة", company: "مؤسسة الإتقان", totalCap: 250000, sharePrice: 50, roi: 22, duration: 6, date: getDynamicDate(-5) },
-            { id: "EX-003", type: "ممتدة", status: "المكتملة", company: "عيادات الابتسامة", totalCap: 400000, sharePrice: 200, roi: 15, duration: 12, date: getDynamicDate(-200) },
-            { id: "EX-004", type: "ممتدة", status: "الملغاة", company: "شركة قطرات", totalCap: 600000, sharePrice: 150, roi: 19, duration: 12, date: getDynamicDate(-10) },
-            { id: "EX-005", type: "ممتدة", status: "المغلقة", company: "محامص الريف", totalCap: 100000, sharePrice: 10, roi: 16, duration: 6, date: getDynamicDate(-150) },
-            { id: "EX-006", type: "ممتدة", status: "المنتهية", company: "ورشة السيارات", totalCap: 180000, sharePrice: 100, roi: 20, duration: 12, date: getDynamicDate(-400) },
-            { id: "EX-007", type: "ممتدة", status: "النشطة", company: "مركز العناية", totalCap: 120000, sharePrice: 50, roi: 17, duration: 9, date: getDynamicDate(-45) },
+            // نوع: شراكة ممتدة
+            { id: "EX-001", type: "شراكة ممتدة", status: "النشطة", company: "مخابز الأحساء", totalCap: 500000, sharePrice: 100, roi: 18, duration: 12, freq: "شهري", risk: "A", desc: "تمويل شراء مواد خام وتوسيع خط إنتاج التمور الفاخرة.", guarantees: "سند لأمر + كفالة غرم", date: getDynamicDate(-30) },
+            { id: "EX-002", type: "شراكة ممتدة", status: "القادمة", company: "مؤسسة الإتقان", totalCap: 250000, sharePrice: 50, roi: 22, duration: 6, freq: "ربع سنوي", risk: "B", desc: "إطلاق تطبيق خدمات التوصيل في منطقة حائل.", guarantees: "رهن الكود المصدري", date: getDynamicDate(-5) },
+            { id: "EX-003", type: "شراكة ممتدة", status: "المكتملة", company: "عيادات الابتسامة", totalCap: 400000, sharePrice: 200, roi: 15, duration: 12, freq: "شهري", risk: "A", desc: "تمويل شراء كراسي أسنان حديثة.", guarantees: "رهن الأجهزة الطبية", date: getDynamicDate(-200) },
+            { id: "EX-004", type: "شراكة ممتدة", status: "الملغاة", company: "شركة قطرات", totalCap: 600000, sharePrice: 150, roi: 19, duration: 12, freq: "شهري", risk: "B", desc: "تمويل خط إنتاج لتعبئة المياه.", guarantees: "عقود توريد", date: getDynamicDate(-10) },
+            { id: "EX-005", type: "شراكة ممتدة", status: "المغلقة", company: "محامص الريف", totalCap: 100000, sharePrice: 10, roi: 16, duration: 6, freq: "شهري", risk: "A", desc: "افتتاح فرع جديد في مدينة الرياض.", guarantees: "سند لأمر", date: getDynamicDate(-150) },
+            { id: "EX-006", type: "شراكة ممتدة", status: "المنتهية", company: "ورشة السيارات", totalCap: 180000, sharePrice: 100, roi: 20, duration: 12, freq: "ربع سنوي", risk: "B", desc: "استيراد معدات فحص سيارات.", guarantees: "رهن المعدات", date: getDynamicDate(-400) },
+            { id: "EX-007", type: "شراكة ممتدة", status: "القادمة", company: "مركز العناية", totalCap: 120000, sharePrice: 50, roi: 17, duration: 9, freq: "شهري", risk: "A", desc: "إضافة خطوط تظليل وحماية للسيارات.", guarantees: "رهن البضاعة", date: getDynamicDate(-45) },
 
-            // نوع: فرصة
-            { id: "OPP-008", type: "فرصة", status: "القادمة", company: "معرض الرونق", totalCap: 1000000, sharePrice: 1000, roi: 25, duration: 18, date: getDynamicDate(-2) },
-            { id: "OPP-009", type: "فرصة", status: "المكتملة", company: "البناء المتين", totalCap: 1500000, sharePrice: 5000, roi: 28, duration: 12, date: getDynamicDate(-180) },
-            { id: "OPP-010", type: "فرصة", status: "المنتهية", company: "مزارع القمح", totalCap: 800000, sharePrice: 400, roi: 24, duration: 8, date: getDynamicDate(-350) },
-            { id: "OPP-011", type: "فرصة", status: "الملغاة", company: "مصنع الألومنيوم", totalCap: 2000000, sharePrice: 2000, roi: 26, duration: 24, date: getDynamicDate(-12) },
-            { id: "OPP-012", type: "فرصة", status: "النشطة", company: "الطاقة الشمسية", totalCap: 1200000, sharePrice: 600, roi: 30, duration: 18, date: getDynamicDate(-60) },
-            { id: "OPP-013", type: "فرصة", status: "المغلقة", company: "النقل البري", totalCap: 900000, sharePrice: 300, roi: 22, duration: 12, date: getDynamicDate(-100) },
-            { id: "OPP-014", type: "فرصة", status: "القادمة", company: "الاستيراد والتصدير", totalCap: 3000000, sharePrice: 1500, roi: 35, duration: 12, date: getDynamicDate(0) }
+            // نوع: فرص شراكة
+            { id: "OPP-008", type: "فرصة شراكة", status: "القادمة", company: "معرض الرونق", totalCap: 1000000, sharePrice: 1000, roi: 25, duration: 18, freq: "نصف سنوي", risk: "C", desc: "شراء شحنة أثاث تركي لتأثيث مجمع سكني.", guarantees: "التنازل عن الدفعات الحكومية", date: getDynamicDate(-2) },
+            { id: "OPP-009", type: "فرصة شراكة", status: "المكتملة", company: "البناء المتين", totalCap: 1500000, sharePrice: 5000, roi: 28, duration: 12, freq: "بنهاية المدة", risk: "C", desc: "تنفيذ أعمال تشطيبات مستعجلة.", guarantees: "رهن المستخلصات المالية", date: getDynamicDate(-180) },
+            { id: "OPP-010", type: "فرصة شراكة", status: "المنتهية", company: "مزارع القمح", totalCap: 800000, sharePrice: 400, roi: 24, duration: 8, freq: "بنهاية الموسم", risk: "B", desc: "توفير بذور وأسمدة لموسم القمح.", guarantees: "كفالة أداء", date: getDynamicDate(-350) },
+            { id: "OPP-011", type: "فرصة شراكة", status: "الملغاة", company: "مصنع الألومنيوم", totalCap: 2000000, sharePrice: 2000, roi: 26, duration: 24, freq: "سنوي", risk: "C", desc: "توسعة خط الإنتاج لتغطية طلبات الإسكان.", guarantees: "رهن عقاري للمصنع", date: getDynamicDate(-12) },
+            { id: "OPP-012", type: "فرصة شراكة", status: "النشطة", company: "الطاقة الشمسية", totalCap: 1200000, sharePrice: 600, roi: 30, duration: 18, freq: "ربع سنوي", risk: "D", desc: "استيراد ألواح شمسية لمشاريع الجوف.", guarantees: "التنازل المباشر عن العقود", date: getDynamicDate(-60) },
+            { id: "OPP-013", type: "فرصة شراكة", status: "المغلقة", company: "النقل البري", totalCap: 900000, sharePrice: 300, roi: 22, duration: 12, freq: "نصف سنوي", risk: "B", desc: "تمويل شراء أسطول شاحنات لخط الرياض-جدة.", guarantees: "رهن الشاحنات", date: getDynamicDate(-100) },
+            { id: "OPP-014", type: "فرصة شراكة", status: "القادمة", company: "الاستيراد والتصدير", totalCap: 3000000, sharePrice: 1500, roi: 35, duration: 12, freq: "بنهاية المدة", risk: "C", desc: "فتح اعتمادات مستندية لاستيراد حديد تسليح.", guarantees: "وثائق الاعتماد المستندي", date: getDynamicDate(0) }
         ];
 
         let currentActiveOpp = null;
@@ -406,27 +427,30 @@
 
         function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
+        // ألوان الحالات والأنواع
         function getBadgeClass(status) {
             switch(status) {
-                case 'القادمة': return 'status-upcoming'; // اخضر
-                case 'النشطة': return 'status-active';
-                case 'المكتملة': return 'status-completed';
-                case 'المنتهية': return 'status-expired';
-                case 'المغلقة': return 'status-closed';
-                case 'الملغاة': return 'status-cancelled';
+                case 'القادمة': return 'status-upcoming'; // أخضر
+                case 'النشطة': return 'status-active'; // أزرق مخضر
+                case 'المكتملة': return 'status-completed'; // بنفسجي
+                case 'المنتهية': return 'status-expired'; // رصاصي فاتح
+                case 'المغلقة': return 'status-closed'; // رمادي غامق
+                case 'الملغاة': return 'status-cancelled'; // أحمر
                 default: return 'status-active';
             }
         }
 
-        function getTypeBadgeClass(type) { return type === 'ممتدة' ? 'type-extended' : 'type-opportunity'; }
+        function getTypeBadgeClass(type) { return type === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; }
 
+        // التبديل بين عرض القائمة وعرض البطاقات
         function switchView(view) {
             currentViewStyle = view;
             document.getElementById('btnGrid').classList.toggle('active', view === 'grid');
             document.getElementById('btnList').classList.toggle('active', view === 'list');
-            applyFilters();
+            applyFilters(); // لإعادة الريندر
         }
 
+        // ريندر الفرص بالنوعين (شبكة + قائمة)
         function renderOpportunities(data) {
             const gridCont = document.getElementById('gridContainer');
             const listCont = document.getElementById('listContainer');
@@ -473,7 +497,7 @@
                         </div>
                         <div class="opp-footer">
                             <span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span>
-                            <button onclick="openDetailsModal('${item.id}')" class="btn-action btn-view"><i class="fas fa-eye"></i> التفاصيل</button>
+                            <button onclick="openDetailsModal('${item.id}')" class="btn-action btn-view"><i class="fas fa-book-open"></i> التفاصيل</button>
                         </div>
                     </div>
                 `;
@@ -485,7 +509,7 @@
                         <td style="font-family: monospace;">${item.date}</td>
                         <td><span class="type-badge ${typeBadge}">${item.type}</span></td>
                         <td style="font-weight: bold;">${item.company}</td>
-                        <td>${formatMoney(item.sharePrice)} ر.س</td>
+                        <td style="font-family: monospace;">${formatMoney(item.sharePrice)} ر.س</td>
                         <td style="color:#10b981; font-weight:bold;">${item.roi}%</td>
                         <td>${item.duration} شهر</td>
                         <td><span class="badge ${badge}">${item.status}</span></td>
@@ -495,6 +519,7 @@
             });
         }
 
+        // تطبيق كل الفلاتر
         function applyFilters() {
             let typeVal = document.getElementById('typeFilter').value;
             let statusVal = document.getElementById('statusFilter').value;
@@ -524,6 +549,7 @@
             updateStatusChart(filtered);
         }
 
+        // تحديث ملخص الأرقام العلوية (3 كروت فقط)
         function calculateSummary(data) {
             let active = 0, upcoming = 0, completed = 0;
             data.forEach(d => {
@@ -538,21 +564,25 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             applyFilters();
+            
+            // مستمعو الأحداث للفلاتر
             document.getElementById('typeFilter').addEventListener('change', applyFilters);
             document.getElementById('statusFilter').addEventListener('change', applyFilters);
             document.getElementById('sortFilter').addEventListener('change', applyFilters);
             document.getElementById('searchInput').addEventListener('input', applyFilters);
             
-            document.getElementById('printDateStr1').innerText = new Date().toLocaleDateString('ar-SA');
-            document.getElementById('printDateStrJoin').innerText = new Date().toLocaleDateString('ar-SA');
+            let dstr = new Date().toLocaleDateString('ar-SA');
+            document.getElementById('printDateStr1').innerText = dstr;
+            document.getElementById('printDateStrJoin').innerText = dstr;
         });
 
-        // المودالز
+        // المودالز والنوافذ
         function openDetailsModal(id) {
             const opp = mockData.find(d => d.id === id);
             if(!opp) return;
             currentActiveOpp = opp;
 
+            // إملاء بيانات الدليل
             document.getElementById('mDetId').innerText = opp.id;
             document.getElementById('mDetCompany').innerText = opp.company;
             document.getElementById('mDetType').innerText = opp.type;
@@ -561,7 +591,32 @@
             document.getElementById('mDetRoi').innerText = opp.roi + "%";
             document.getElementById('mDetDuration').innerText = opp.duration + " شهر";
             document.getElementById('mDetStatus').innerText = opp.status;
-            
+            document.getElementById('mDetRisk').innerText = opp.risk;
+            document.getElementById('mDetFreq').innerText = opp.freq;
+            document.getElementById('mDetDesc').innerText = opp.desc;
+            document.getElementById('mDetGuarantees').innerText = opp.guarantees;
+
+            // المحاكاة
+            let simCap = opp.sharePrice * 10;
+            let simProf = simCap * (opp.roi / 100); 
+            document.getElementById('mSimCapital').innerText = formatMoney(simCap) + " ر.س";
+            document.getElementById('mSimProfit').innerText = formatMoney(simProf) + " ر.س";
+            document.getElementById('mSimTotal').innerText = formatMoney(simCap + simProf) + " ر.س";
+
+            // فحص زر الانضمام بناءً على الحالة (يفتح فقط إذا كانت "القادمة")
+            const btnInvest = document.getElementById('btnInvestModalOpen');
+            if(opp.status === 'القادمة') {
+                btnInvest.innerHTML = `<i class="fas fa-handshake"></i> الانضمام للفرصة`;
+                btnInvest.style.background = 'var(--tera-teal)';
+                btnInvest.style.cursor = 'pointer';
+                btnInvest.onclick = openInvestModal;
+            } else {
+                btnInvest.innerHTML = `<i class="fas fa-ban"></i> غير متاح للانضمام`;
+                btnInvest.style.background = '#94a3b8';
+                btnInvest.style.cursor = 'not-allowed';
+                btnInvest.onclick = function() { alert(`عذراً، هذه الفرصة في حالة (${opp.status})، الاستثمار متاح فقط للفرص القادمة.`); };
+            }
+
             document.getElementById('detailsModal').classList.add('active');
             document.body.style.overflow = 'hidden'; 
         }
@@ -572,10 +627,6 @@
         }
 
         function openInvestModal() {
-            if(currentActiveOpp.status !== 'القادمة') {
-                alert(`عذراً، لا يمكن الانضمام. هذه الفرصة حالة: (${currentActiveOpp.status}). فقط الفرص (القادمة) متاحة للاستثمار.`);
-                return;
-            }
             closeModal('detailsModal'); 
             
             document.getElementById('invOppName').innerText = currentActiveOpp.company;
@@ -592,11 +643,11 @@
 
         function calculateInvestment() {
             let shares = parseInt(document.getElementById('shareInput').value) || 0;
-            if (shares < 1) shares = 1;
+            if (shares < 1) { shares = 1; document.getElementById('shareInput').value = 1; }
             let capital = shares * currentActiveOpp.sharePrice;
             document.getElementById('resSharesCount').innerText = shares + " سهم";
             document.getElementById('resCapital').innerText = formatMoney(capital) + " ر.س";
-            document.getElementById('resToPay').innerText = formatMoney(capital) + " ر.س";
+            document.getElementById('resToPay').innerText = formatMoney(capital) + " ر.س"; // افترضنا بدون رسوم اضافية بالمثال
         }
 
         function togglePayButton() {
@@ -611,7 +662,7 @@
             closeModal('investModal');
         }
 
-        // المخطط البياني للحالات
+        // المخطط البياني لتوزيع الحالات (مؤشر ديناميكي يظهر العدد)
         let statusChartInstance = null;
         function updateStatusChart(data) {
             let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
@@ -630,17 +681,29 @@
             } else {
                 const ctx = document.getElementById('statusChart');
                 if(ctx) {
+                    // تفعيل DataLabels لإظهار العدد داخل الشارت
+                    if (typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
+                    
                     statusChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
                             labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
                             datasets: [{
                                 data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed],
-                                backgroundColor: ['#0ea5e9', '#10b981', '#64748b', '#334155', '#ef4444', '#6366f1'],
+                                backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'],
                                 borderWidth: 0
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal' } } } } }
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, cutout: '65%',
+                            plugins: { 
+                                legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size:13 } } },
+                                datalabels: {
+                                    color: '#fff', font: { weight: 'bold', size: 16, family: 'Tajawal' },
+                                    formatter: (value) => { return value > 0 ? value : ''; } // يخفي الصفر ويعرض الأعداد
+                                }
+                            } 
+                        }
                     });
                 }
             }
