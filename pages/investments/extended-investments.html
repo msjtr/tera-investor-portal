@@ -22,8 +22,8 @@
         body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; }
         
         /* تمديد المحتوى بالكامل وإلغاء أي هوامش للقائمة الجانبية */
-        .app-wrapper { display: block; }
-        .main-content { width: 100% !important; margin: 0 !important; min-height: 100vh; padding-bottom: 50px; }
+        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+        .main-content { width: 100% !important; margin: 0 !important; flex: 1; }
         
         /* الهيدر المخصص لصفحة الويب */
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; }
@@ -88,19 +88,40 @@
         .status-cancelled { background: #fee2e2; color: #ef4444; }
         .status-closed { background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; }
 
+        /* تذليل الصفحة (Footer) */
+        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; }
+
         /* =========================================
-           إعدادات الطباعة المخصصة (تظهر المحتوى التفصيلي فقط)
+           دعم الشاشات (Responsive & 4K)
+           ========================================= */
+        @media (max-width: 768px) {
+            .header-user .user-greeting { display: none; }
+            .info-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 2560px) { /* دقة 4K */
+            .container { max-width: 2400px; padding: 50px; }
+            .summary-card h3 { font-size: 36px; }
+            .tera-table th, .tera-table td { font-size: 16px; padding: 20px; }
+        }
+
+        /* =========================================
+           إعدادات الطباعة المخصصة A4 (تظهر المحتوى التفصيلي فقط)
            ========================================= */
         .print-only-header { display: none; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px; }
         @media print {
-            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
-            .top-header, .summary-grid, #mainSection, .actions-row, .filters-row, .chart-container, .footer { display: none !important; }
-            #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; }
+            @page { size: A4; margin: 1.5cm; } /* ضبط مقاس A4 */
+            body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
+            /* إخفاء صفحة الويب تماماً عدا التفاصيل */
+            .top-header, .summary-grid, #mainSection, .actions-row, .filters-row, .chart-container, .page-footer { display: none !important; }
+            
+            #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; width: 100%; page-break-inside: avoid; }
             .print-only-header { display: block; }
-            .info-grid { background: transparent; border: 1px solid #ccc; break-inside: avoid; }
-            .tera-table { border: 1px solid #ccc; }
-            .tera-table th { background: #f1f5f9 !important; color: #000; border: 1px solid #ccc; }
-            .tera-table td { border: 1px solid #ccc; }
+            
+            .info-grid { background: transparent; border: 1px solid #cbd5e1; grid-template-columns: repeat(3, 1fr); padding: 15px; }
+            .tera-table { border: 1px solid #cbd5e1; font-size: 12px; }
+            .tera-table th { background: #f1f5f9 !important; color: #000; border: 1px solid #cbd5e1; padding: 8px; }
+            .tera-table td { border: 1px solid #cbd5e1; padding: 8px; }
         }
     </style>
 </head>
@@ -112,7 +133,6 @@
             <header class="top-header no-print">
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html" class="btn-action btn-back" style="padding: 6px 15px; margin-left: 15px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
-                    
                     <img src="/images/logo.svg" alt="Tera Logo" style="height: 38px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
                     <h1>الشراكة الممتدة</h1>
                 </div>
@@ -265,17 +285,20 @@
                 </div>
 
             </div>
+            
+            <footer class="page-footer no-print">
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. تم التطوير بدقة 4K ودعم مقاسات A4.
+            </footer>
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <script>
         const clientName = "محمد_صالح_الشمري";
 
-        // ==========================================
         // البيانات التجريبية الشاملة لجميع الحالات الـ 7
-        // ==========================================
         const mockData = [
             { id: "TR-2026-06-27-001", startDate: "2026/06/27", endDate: "2027/06/17", partnerRatio: "5%", capital: 100000, expectedProfit: 50000, status: "قائم", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2026/08/15" },
             { id: "TR-2026-07-01-002", startDate: "2026/07/01", endDate: "2027/07/01", partnerRatio: "4%", capital: 25000, expectedProfit: 12000, status: "بانتظار الاعتماد", monthlyRatio: "0.8%", yearlyRatio: "4%", duration: 12, mechanism: "شهري", firstDate: "2026/09/01" },
@@ -286,7 +309,7 @@
             { id: "TR-2023-11-11-007", startDate: "2023/11/11", endDate: "2024/11/11", partnerRatio: "5%", capital: 10000, expectedProfit: 5000, status: "مغلقة", monthlyRatio: "1%", yearlyRatio: "5%", duration: 12, mechanism: "شهري", firstDate: "2023/12/11" }
         ];
 
-        // التنسيقات المحاسبية [cite: 44, 46, 47]
+        // التنسيقات المحاسبية
         function formatMoney(num) {
             return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
@@ -330,7 +353,7 @@
             document.getElementById('totalContracts').innerText = totalCount;
             document.getElementById('totalCapital').innerText = formatMoney(tCap) + ' ر.س';
             document.getElementById('totalProfit').innerText = formatMoney(tProf) + ' ر.س';
-            document.getElementById('avgMonthlyProfit').innerText = formatMoney(monthlyAvg) + ' ر.س';
+            document.getElementById('avgMonthlyProfit').innerText = formatMoney(monthlyAvg / totalCount) + ' ر.س';
         }
 
         // بناء الجدول
@@ -396,7 +419,7 @@
             let remaining = contract.expectedProfit;
             let baseDate = new Date(contract.firstDate);
 
-            // تصفير الشهر الأخير [cite: 49]
+            // تصفير الشهر الأخير برمجياً
             for (let i = 1; i <= contract.duration; i++) {
                 let currentEntitlement = monthlyProfitRaw;
 
@@ -445,11 +468,11 @@
             alert(`تم طلب استخراج بيانات التقرير.\nسيتم حفظ الملف وتصديره بالاسم التالي:\n\n${fileName}.${type === 'PDF' ? 'pdf' : 'xlsx'}`);
         };
 
-        // الرسم البياني (Doughnut Chart) ليعطي منظراً احترافياً بجانب الجدول
+        // الرسم البياني (Doughnut Chart) مع عرض الأرقام بداخله
         function initChart() {
             const ctx = document.getElementById('statusChart');
             if(ctx) {
-                // تجميع البيانات للحالات لرسم المخطط
+                // تجميع البيانات
                 let counts = { active: 0, pending: 0, completed: 0, other: 0 };
                 mockData.forEach(d => {
                     if(d.status === 'قائم') counts.active++;
@@ -457,6 +480,9 @@
                     else if(d.status === 'مكتملة') counts.completed++;
                     else counts.other++;
                 });
+
+                // تسجيل الإضافة لعرض الأرقام على الشارت
+                Chart.register(ChartDataLabels);
 
                 new Chart(ctx, {
                     type: 'doughnut',
@@ -472,9 +498,14 @@
                     options: { 
                         responsive: true, 
                         maintainAspectRatio: false, 
-                        cutout: '70%',
+                        cutout: '65%',
                         plugins: { 
-                            legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal' } } } 
+                            legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 14 } } },
+                            datalabels: {
+                                color: '#fff',
+                                font: { weight: 'bold', size: 16, family: 'Tajawal' },
+                                formatter: (value) => { return value > 0 ? value : ''; }
+                            }
                         } 
                     }
                 });
