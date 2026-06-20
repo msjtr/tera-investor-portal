@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفاصيل الفرصة الاستثمارية | Tera Investor Portal</title>
+    <title>الفرص و الشركات المطروحة| Tera Investor Portal</title>
     
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -29,17 +28,12 @@
         html, body { 
             background-color: var(--tera-bg); 
             font-family: 'Tajawal', sans-serif; 
-            margin: 0; 
-            padding: 0;
-            overflow-x: hidden;
-            width: 100vw;
-            max-width: 100%;
-            box-sizing: border-box;
+            margin: 0; padding: 0; overflow-x: hidden; width: 100vw; max-width: 100%; box-sizing: border-box; 
         }
 
         *, *::before, *::after { box-sizing: border-box; }
         
-        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; }
+        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; max-width: 100vw; }
         .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
         
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); position: sticky; top: 0; z-index: 100; width: 100%; }
@@ -50,72 +44,109 @@
         .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
         .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; flex: 1; width: 100%; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 30px 20px; flex: 1; width: 100%; }
 
-        /* ترويسة الفرصة الاستثمارية */
-        .opportunity-hero { background: #fff; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-top: 4px solid var(--tera-teal); }
-        .hero-title h2 { margin: 0 0 10px 0; color: var(--tera-navy); font-size: 24px; display: flex; align-items: center; gap: 10px; }
-        .hero-title p { margin: 0; color: var(--tera-gray); font-size: 14px; }
-        .hero-actions { display: flex; gap: 15px; }
+        /* التنبيهات */
+        .custom-alert { display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; font-size: 14px; border: 1px solid transparent; animation: slideDown 0.4s ease-out; width: 100%; }
+        .custom-alert-info { background-color: #e0f2fe; color: #075985; border-color: #bae6fd; }
+        .custom-alert-warning { background-color: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .custom-alert-danger { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .custom-alert-success { background-color: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+        .custom-alert i { font-size: 20px; }
+        .custom-alert strong { font-family: monospace; font-size: 16px; color: currentColor; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* المؤشرات العلوية */
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; width: 100%; }
-        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .summary-card i { font-size: 28px; color: var(--tera-teal); margin-bottom: 15px; }
-        .summary-card p { margin: 0 0 5px 0; font-size: 13px; color: var(--tera-gray); font-weight: 600; }
-        .summary-card h3 { margin: 0; font-size: 22px; color: var(--tera-navy); font-weight: 700; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; width: 100%; }
+        .summary-card { background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-right: 4px solid var(--tera-teal); box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; }
+        .summary-card .icon-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .summary-card i { font-size: 24px; color: var(--tera-teal); opacity: 0.8; }
+        .summary-card p { margin: 0; font-size: 14px; color: var(--tera-gray); font-weight: 600; }
+        .summary-card h3 { margin: 0; font-size: 26px; color: var(--tera-navy); font-weight: 700; transition: all 0.3s; }
 
-        /* الأقسام التفصيلية (حسب وثيقة المتطلبات) */
-        .section-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; }
-        .section-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px; width: 100%; }
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 2.5fr; } }
+        .content-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 30px; max-width: 100%; overflow: hidden; }
         
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
-        .info-item { background: var(--tera-bg); padding: 15px 20px; border-radius: 8px; border: 1px dashed #cbd5e1; }
-        .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 8px; }
+        .filters-container { margin-bottom: 20px; width: 100%; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .filters-controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; width: 100%; }
+        .search-input { padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; outline: none; font-size: 14px; background-color: #fff; color: var(--tera-navy); flex: 1; min-width: 200px; }
+        .search-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1); }
+        select.search-input { cursor: pointer; font-weight: 600; }
+
+        .table-wrapper { overflow-x: auto; width: 100%; max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; -webkit-overflow-scrolling: touch; }
+        .tera-table { width: 100%; border-collapse: collapse; text-align: right; min-width: max-content; }
+        .tera-table th { background: #f8fafc; padding: 14px 15px; color: var(--tera-navy); font-size: 13px; font-weight: 700; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .tera-table td { padding: 16px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 500; white-space: nowrap; transition: background-color 0.2s; }
+        .tera-table tr:hover td { background: #f8fafc; }
+
+        .btn-view { padding: 8px 20px; background: rgba(2, 128, 144, 0.1); color: var(--tera-teal); border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; font-family: inherit; }
+        .btn-view:hover { background: var(--tera-teal); color: #fff; }
+
+        #detailsSection { display: none; width: 100%; }
+        .details-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        
+        .detail-block { margin-bottom: 35px; }
+        .detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .detail-block-title i { color: var(--tera-teal); }
+        
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px dashed #cbd5e1; }
+        .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 5px; }
         .info-item strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 700; }
+        .info-item strong.mono { font-family: monospace; }
+        .info-item .highlight { color: var(--tera-teal); font-size: 18px; }
 
-        /* القوائم للضمانات والمخاطر */
-        .feature-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #334155; line-height: 1.6; }
-        .feature-list li i { color: var(--tera-teal); margin-top: 4px; }
-
-        /* شريط التقدم للتمويل */
-        .funding-progress { margin-top: 20px; }
-        .progress-bar-bg { background: #f1f5f9; border-radius: 10px; height: 10px; overflow: hidden; width: 100%; margin: 10px 0; }
-        .progress-bar-fill { background: var(--tera-teal); height: 100%; border-radius: 10px; transition: width 1s ease-in-out; }
-        .progress-stats { display: flex; justify-content: space-between; font-size: 13px; color: var(--tera-gray); font-weight: 600; }
-
-        /* الأزرار */
-        .btn-action { padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 14px; text-decoration: none; justify-content: center; font-family: inherit; }
+        .actions-row { display: flex; gap: 15px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; justify-content: flex-start; }
+        .btn-action { padding: 10px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 14px; text-decoration: none; justify-content: center; font-family: inherit; }
         .btn-action:hover { background: #f1f5f9; }
-        .btn-primary { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); }
-        .btn-primary:hover { background: #026a77; color: #fff; }
         .btn-pdf { background: #ef4444; color: #fff; border-color: #ef4444; }
+        .btn-pdf:hover { background: #dc2626; color: #fff; }
+        .btn-excel { background: #10b981; color: #fff; border-color: #10b981; }
+        .btn-excel:hover { background: #059669; color: #fff; }
 
-        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block; text-align: center; }
         .status-active { background: #dcfce7; color: #10b981; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-completed { background: #e0f2fe; color: #028090; }
+        .status-suspended { background: #ffedd5; color: #b45309; }
+        .status-expired { background: #f1f5f9; color: #64748b; }
+        .status-cancelled { background: #fee2e2; color: #ef4444; }
+        .status-closed { background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; }
 
-        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; width: 100%; }
+        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; width: 100%; box-sizing: border-box; }
 
-        /* دعم 4K */
+        @media (max-width: 768px) {
+            .top-header { padding: 15px; }
+            .header-logo img { height: 45px !important; }
+            .header-logo h1 { font-size: 16px; margin-right: 10px; }
+            .header-user .user-greeting { display: none; }
+            .info-grid { grid-template-columns: 1fr; }
+            .actions-row .btn-action { width: 100%; justify-content: center; }
+            .filters-controls { flex-direction: column; width: 100%; }
+            .filters-controls > * { width: 100%; }
+        }
         @media (min-width: 2560px) {
-            .container { max-width: 2000px; padding: 50px; }
-            .hero-title h2 { font-size: 32px; }
+            .container { max-width: 2400px; padding: 50px; }
             .summary-card h3 { font-size: 36px; }
-            .info-item strong { font-size: 20px; }
+            .summary-card p { font-size: 18px; }
+            .tera-table th, .tera-table td { font-size: 18px; padding: 24px; }
+            .info-item span { font-size: 16px; }
+            .info-item strong { font-size: 22px; }
             .btn-action { font-size: 18px; padding: 15px 30px; }
+            .detail-block-title { font-size: 24px; }
         }
 
-        /* الطباعة A4 */
         .print-only-header { display: none; margin-bottom: 30px; border-bottom: 2px solid var(--tera-teal); padding-bottom: 15px; }
         @media print {
-            @page { size: A4 portrait; margin: 1.2cm; }
+            @page { size: A4 portrait; margin: 1cm; }
             body { background: #fff; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .top-header, .hero-actions, .page-footer { display: none !important; }
-            .opportunity-hero { box-shadow: none; border: 1px solid #000; padding: 20px; }
-            .section-card { box-shadow: none; border: 1px solid #000; break-inside: avoid; margin-bottom: 20px; padding: 20px; }
-            .info-item { border: 1px solid #ccc; background: transparent; }
+            .top-header, .summary-grid, #mainSection, .actions-row, .filters-container, .chart-container, .page-footer, #dynamicAlertsContainer, #detailsAlertsContainer { display: none !important; }
+            #detailsSection { display: block !important; border: none; box-shadow: none; padding: 0; margin: 0; width: 100%; }
             .print-only-header { display: flex; justify-content: space-between; align-items: flex-start; }
+            .detail-block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 20px; }
+            .info-grid { background: transparent; border: 1px solid #cbd5e1; grid-template-columns: repeat(4, 1fr) !important; padding: 15px; gap: 10px; }
+            .tera-table { border: 1px solid #cbd5e1; font-size: 11px; width: 100%; }
+            .tera-table th { background: #f1f5f9 !important; color: #000; border: 1px solid #cbd5e1; padding: 8px; }
+            .tera-table td { border: 1px solid #cbd5e1; padding: 8px; color: #000; }
         }
     </style>
 </head>
@@ -126,13 +157,13 @@
             
             <header class="top-header no-print">
                 <div class="header-logo">
-                    <a href="/pages/investments/opportunities.html" class="btn-action btn-back" style="padding: 8px 20px; margin-left: 15px; border-radius: 8px;"><i class="fas fa-arrow-right"></i> العودة للفرص المطروحة</a>
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; image-rendering: crisp-edges; transform: translateZ(0);" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
-                    <h1>تفاصيل الفرصة</h1>
+                    <a href="/pages/dashboard/index.html" class="btn-action btn-back" style="padding: 8px 20px; margin-left: 15px; border-radius: 8px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
+                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; image-rendering: crisp-edges;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                    <h1>سوق الفرص والشركات المطروحة</h1>
                 </div>
                 <div class="header-user">
                     <div class="user-greeting">
-                        <h4 id="clientNameDisplay">محمد صالح الشمري</h4>
+                        <h4 id="clientNameDisplay">محمد صالح جميعان الشمري</h4>
                         <p>بوابة الاستثمار، حائل</p>
                     </div>
                     <img src="https://ui-avatars.com/api/?name=محمد+صالح&background=0A1B3F&color=fff&size=45" style="border-radius: 50%; border: 2px solid #e2e8f0;" alt="Avatar" />
@@ -140,152 +171,792 @@
             </header>
 
             <div class="container">
+                
+                <div id="mainSection">
+                    
+                    <div id="dynamicAlertsContainer"></div>
 
-                <div class="print-only-header">
-                    <div>
-                        <img src="/images/logo.svg" alt="Tera Logo" style="height: 45px; margin-bottom: 15px;" onerror="this.src='https://via.placeholder.com/120x45/028090/fff?text=Tera'" />
-                        <h2 style="margin: 0 0 10px 0; color: #000;">تفاصيل الفرصة الاستثمارية</h2>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="icon-wrapper"><p>إجمالي الشراكات المفلترة</p><i class="fas fa-file-contract"></i></div>
+                            <h3 id="totalContracts">0</h3>
+                        </div>
+                        <div class="summary-card">
+                            <div class="icon-wrapper"><p>رأس المال المستثمر للفرص</p><i class="fas fa-wallet"></i></div>
+                            <h3 id="totalCapital">0.00 ر.س</h3>
+                        </div>
+                        <div class="summary-card" style="border-right-color: #10b981;">
+                            <div class="icon-wrapper"><p>إجمالي الأرباح المتوقعة</p><i class="fas fa-arrow-trend-up" style="color: #10b981;"></i></div>
+                            <h3 id="totalProfit">0.00 ر.س</h3>
+                        </div>
+                        <div class="summary-card" style="border-right-color: #f59e0b;">
+                            <div class="icon-wrapper"><p>متوسط العائد الشهري التقريبي</p><i class="fas fa-coins" style="color: #f59e0b;"></i></div>
+                            <h3 id="avgMonthlyProfit">0.00 ر.س</h3>
+                        </div>
                     </div>
-                    <div style="text-align: left; font-size: 14px;">
-                        <p style="margin: 5px 0;"><strong>تاريخ الاستخراج:</strong> <span id="printDate"></span></p>
-                        <p style="margin: 5px 0;"><strong>رقم المرجع:</strong> INV-98422</p>
-                    </div>
-                </div>
 
-                <div class="opportunity-hero">
-                    <div class="hero-title">
-                        <h2>تمويل توسعة متجر إلكتروني إقليمي <span class="badge status-active">متاح للاستثمار</span></h2>
-                        <p><i class="fas fa-map-marker-alt" style="color: var(--tera-teal);"></i> المملكة العربية السعودية، منطقة حائل - قطاع التجزئة والتجارة الإلكترونية</p>
+                    <div class="dashboard-grid">
+                        <div class="content-card chart-container" style="margin-bottom: 0;">
+                            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px;"><i class="fas fa-chart-pie" style="color: var(--tera-teal); margin-left: 8px;"></i> توزيع حالة الشراكات المفلترة</h3>
+                            <div style="height: 300px; position: relative;"><canvas id="statusChart"></canvas></div>
+                        </div>
+
+                        <div class="content-card chart-container" style="margin-bottom: 0;">
+                            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px;"><i class="fas fa-chart-line" style="color: var(--tera-teal); margin-left: 8px;"></i> نمو وتحقيق الأرباح (ديناميكي)</h3>
+                            <div style="height: 300px; position: relative;"><canvas id="profitGrowthChart"></canvas></div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" style="margin-bottom: 0;">
                         
-                        <div class="funding-progress">
-                            <div class="progress-stats">
-                                <span>تم جمع: 350,000 ر.س</span>
-                                <span>المستهدف: 500,000 ر.س</span>
-                            </div>
-                            <div class="progress-bar-bg">
-                                <div class="progress-bar-fill" style="width: 70%;"></div>
-                            </div>
-                            <p style="margin:0; font-size:12px; color:var(--tera-teal); font-weight:700;">متبقي 30% لاكتمال الطرح</p>
-                        </div>
-                    </div>
-                    <div class="hero-actions no-print">
-                        <button class="btn-action btn-primary"><i class="fas fa-hand-holding-usd"></i> استثمر الآن</button>
-                        <button onclick="exportReport('PDF')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تحميل نشرة الإصدار</button>
-                        <button onclick="printReport()" class="btn-action"><i class="fas fa-print"></i> طباعة التفاصيل</button>
-                    </div>
-                </div>
-
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <i class="fas fa-chart-line"></i>
-                        <p>العائد السنوي المتوقع</p>
-                        <h3>18%</h3>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fas fa-calendar-alt"></i>
-                        <p>مدة الاستثمار</p>
-                        <h3>12 شهراً</h3>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fas fa-sync-alt"></i>
-                        <p>دورية توزيع الأرباح</p>
-                        <h3>ربع سنوي</h3>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fas fa-coins"></i>
-                        <p>الحد الأدنى للاستثمار</p>
-                        <h3>1,000 ر.س</h3>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-info-circle text-teal"></i> أولاً: بيانات عامة للفرصة</h3>
-                    <div class="info-grid">
-                        <div class="info-item"><span>رقم الفرصة</span><strong>OPP-2026-084</strong></div>
-                        <div class="info-item"><span>نوع الفرصة</span><strong>مرابحة (متوافقة مع الشريعة)</strong></div>
-                        <div class="info-item"><span>القطاع</span><strong>التجارة الإلكترونية والتجزئة</strong></div>
-                        <div class="info-item"><span>حالة الفرصة</span><strong class="text-success">طرح عام متاح</strong></div>
-                        <div class="info-item"><span>تاريخ بداية الطرح</span><strong>2026/06/01</strong></div>
-                        <div class="info-item"><span>تاريخ نهاية الطرح</span><strong>2026/07/01</strong></div>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-file-invoice-dollar text-teal"></i> ثانياً: بيانات مالية وشرح الفرصة</h3>
-                    <div class="info-grid">
-                        <div class="info-item"><span>حجم التمويل المطلوب</span><strong class="highlight">500,000 ر.س</strong></div>
-                        <div class="info-item"><span>الحد الأعلى للاستثمار</span><strong>100,000 ر.س للمستثمر</strong></div>
-                        <div class="info-item"><span>هيكل سداد رأس المال</span><strong>دفعة واحدة بنهاية المدة</strong></div>
-                        <div class="info-item"><span>طريقة الدفع للمستفيد</span><strong>حوالة بنكية مباشرة</strong></div>
-                        <div class="info-item"><span>وصف المشروع</span><strong style="font-size: 13px; font-weight:500; line-height:1.5;">تمويل خطة توسع متجر إقليمي لزيادة المخزون وتغطية الطلب المتزايد في المنطقة الشمالية.</strong></div>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> ثالثاً: تصنيف المخاطر</h3>
-                    <div style="background: #fef3c7; border: 1px solid #fde68a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div style="background: #f59e0b; color: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;">B</div>
-                            <div>
-                                <h4 style="margin: 0 0 5px 0; color: #92400e; font-size: 16px;">مخاطر متوسطة (الفئة B)</h4>
-                                <p style="margin: 0; color: #92400e; font-size: 13px;">طالب التمويل لديه سجل ائتماني جيد وملاءة مالية مستقرة بناءً على تقييم وكالات سمة وبيان.</p>
+                        <div class="filters-container">
+                            <div class="filters-controls">
+                                <select id="statusFilter" class="search-input">
+                                    <option value="all">كل الحالات (فرز عام)</option>
+                                    <option value="قائم">حالة: قائم / نشط</option>
+                                    <option value="بانتظار الاعتماد">حالة: بانتظار الاعتماد</option>
+                                    <option value="مكتملة">حالة: مكتملة</option>
+                                    <option value="معلقة">حالة: معلقة</option>
+                                    <option value="منتهية">حالة: منتهية</option>
+                                    <option value="ملغاة">حالة: ملغاة</option>
+                                    <option value="مغلقة">حالة: مغلقة</option>
+                                </select>
+                                
+                                <select id="subFilter" class="search-input">
+                                    <option value="all">كل أنواع الاشتراكات</option>
+                                    <option value="الاشتراك البلاتينيوم">الاشتراك البلاتينيوم</option>
+                                    <option value="الاشتراك الذهبي">الاشتراك الذهبي</option>
+                                    <option value="الاشتراك الفضي">الاشتراك الفضي</option>
+                                    <option value="الاشتراك كلاسيك">الاشتراك كلاسيك</option>
+                                </select>
+                                
+                                <select id="sortFilter" class="search-input">
+                                    <option value="date_desc">فرز: الأحدث أولاً (تنازلي)</option>
+                                    <option value="date_asc">فرز: الأقدم أولاً (تصاعدي)</option>
+                                    <option value="capital_desc">فرز: رأس المال (الأعلى)</option>
+                                    <option value="capital_asc">فرز: رأس المال (الأقل)</option>
+                                </select>
+                                
+                                <div class="search-box" style="flex: 1; min-width: 250px;">
+                                    <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة...">
+                                </div>
                             </div>
                         </div>
+
+                        <div class="table-wrapper">
+                            <table class="tera-table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الفرصة</th>
+                                        <th>تاريخ الفرصة</th>
+                                        <th>نوع الاشتراك</th>
+                                        <th>رقم الطلب المميز</th>
+                                        <th>عدد الأسهم</th>
+                                        <th>قيمة السهم الواحد</th>
+                                        <th>إجمالي قيمة الأسهم</th>
+                                        <th>حالة الفرصة</th>
+                                        <th>التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mainTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="emptyState" style="display: none; text-align: center; padding: 50px 20px; color: var(--tera-gray);">
+                            <i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--tera-teal);"></i>
+                            <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد فرص مطابقة</h3>
+                            <p style="margin: 0;">لم يتم العثور على أي فرص شراكة تتطابق مع الفلاتر المحددة.</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-shield-alt text-teal"></i> رابعاً: الضمانات المقدمة</h3>
-                    <ul class="feature-list">
-                        <li><i class="fas fa-check-circle"></i> <span><strong>سند لأمر:</strong> محرر وموثق عبر منصة نافذ بقيمة التمويل الإجمالية والأرباح.</span></li>
-                        <li><i class="fas fa-check-circle"></i> <span><strong>ضمانات شخصية:</strong> كفالة غرم وأداء تضامنية من الملاك والشركاء.</span></li>
-                        <li><i class="fas fa-check-circle"></i> <span><strong>رهن تجاري:</strong> رهن بضائع ومعدات موثق في السجل الموحد للحقوق التجارية.</span></li>
-                    </ul>
-                </div>
+                <div id="detailsSection" class="content-card">
+                    
+                    <div class="print-only-header">
+                        <div>
+                            <img src="/images/logo.svg" alt="Tera Logo" style="height: 45px; margin-bottom: 15px;" onerror="this.src='https://via.placeholder.com/120x45/028090/fff?text=Tera'" />
+                            <h2 style="margin: 0 0 10px 0; color: #000;">تفاصيل فرصة الشراكة والمحاسبة</h2>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>اسم المستثمر:</strong> <span id="printClientName">محمد صالح جميعان الشمري</span></p>
+                            <p style="margin: 5px 0; font-size: 14px;"><strong>حالة التقرير:</strong> معتمد ومستخرج آلياً من منصة Tera</p>
+                        </div>
+                        <div style="text-align: left; font-size: 14px;">
+                            <p style="margin: 5px 0;"><strong>تاريخ الاستخراج:</strong> <span id="printDate"></span></p>
+                            <p style="margin: 5px 0;"><strong>وقت الاستخراج:</strong> <span id="printTime"></span></p>
+                        </div>
+                    </div>
 
-                <div class="section-card">
-                    <h3 class="section-title"><i class="fas fa-percentage text-teal"></i> خامساً: الرسوم والضرائب</h3>
-                    <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
-                        <div class="info-item" style="border-right: 4px solid var(--tera-teal);">
-                            <span>رسوم الإدارة (Management Fees)</span>
-                            <strong>2% من الأرباح المحققة فقط (لا يتم خصمها من رأس المال)</strong>
+                    <div id="detailsAlertsContainer"></div>
+
+                    <div class="details-header no-print">
+                        <h2 style="margin: 0; color: var(--tera-navy);"><i class="fas fa-file-contract text-teal"></i> تفاصيل الفرصة المحددة</h2>
+                        <span id="detailStatusBadge" class="badge"></span>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: شراكة الفرصة</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>رقم الفرصة</span><strong id="detOppId" class="mono highlight"></strong></div>
+                            <div class="info-item"><span>نوع الاشتراك</span><strong id="detSubPlan" style="color:#0ea5e9;"></strong></div>
+                            
+                            <div class="info-item" style="border-right: 3px solid var(--tera-teal); background:#fff;"><span>إجمالي عدد الأسهم</span><strong id="detSharesCount" class="mono"></strong></div>
+                            <div class="info-item" style="border-right: 3px solid var(--tera-teal); background:#fff;"><span>قيمة السهم الواحد</span><strong id="detShareValue" class="mono"></strong></div>
+                            <div class="info-item" style="border-right: 3px solid var(--tera-teal); background:#fff;"><span>رأس مال الشراكة الأساسي</span><strong id="detCapital" class="mono"></strong></div>
+                            
+                            <div class="info-item"><span>النسبة على كامل المدة</span><strong id="detTotalRatio">50%</strong></div>
+                            <div class="info-item"><span>مدة الفرصة (بالأشهر)</span><strong id="detDuration">6 أشهر</strong></div>
+                            <div class="info-item"><span>إجمالي الربح الشهري</span><strong id="detMonthlyProfit" class="mono text-teal"></strong></div>
+                            <div class="info-item"><span>إجمالي أرباح الفرصة على كامل المدة</span><strong id="detTotalProfit" class="mono"></strong></div>
+                            <div class="info-item"><span>إجمالي رأس المال والارباح</span><strong id="detTotalReturn" class="highlight mono"></strong></div>
+                            <div class="info-item"><span>آلية صرف ارباح الشراكة ورأس المال</span><strong>شهري</strong></div>
+                            <div class="info-item"><span>تاريخ توقيع اول ربح</span><strong id="detFirstPayDate" class="mono"></strong></div>
                         </div>
-                        <div class="info-item" style="border-right: 4px solid var(--tera-teal);">
-                            <span>ضريبة القيمة المضافة (VAT)</span>
-                            <strong>15% تطبق على (رسوم الإدارة) فقط، ولا تطبق على مبلغ الاستثمار أو العائد الأساسي.</strong>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني: عن العميل طالب الفرصة</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>عمر العميل</span><strong>45 سنة</strong></div>
+                            <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
+                            <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
+                            <div class="info-item"><span>الجهة</span><strong>وزارة التعليم</strong></div>
+                            <div class="info-item"><span>المسمى الوظيفي</span><strong>معلم</strong></div>
+                            <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
+                            <div class="info-item"><span>قيمة مصدر الدخل</span><strong>15,000 ر.س</strong></div>
+                            <div class="info-item"><span>التزامات العميل</span><strong>7,000 ر.س</strong></div>
                         </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث: معلومات الفرصة الخاصة عن العميل (سجل التعامل السابق)</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>سجل العميل</span><strong>سابق</strong></div>
+                            <div class="info-item"><span>عدد الفرص السابقة</span><strong>4</strong></div>
+                            <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="text-success">3</strong></div>
+                            <div class="info-item"><span>عدد الفرص القائمة</span><strong>1</strong></div>
+                            <div class="info-item"><span>عدد الفرص السابقة توجد ملاحظات</span><strong class="text-danger">0</strong></div>
+                            <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="highlight">100%</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع: تفاصيل طالب الفرصة العميل</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>رقم الطلب المميز للفرصة</span><strong id="detReqId" class="mono"></strong></div>
+                            <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="detReqDate" class="mono"></strong></div>
+                            <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
+                            <div class="info-item"><span>كمية المنتج</span><strong id="detQuantity"></strong></div>
+                            <div class="info-item"><span>قيمة المنتج</span><strong id="detProductValue"></strong></div>
+                            <div class="info-item"><span>سعر المنتج</span><strong id="detProductPrice"></strong></div>
+                            <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="detTax"></strong></div>
+                            <div class="info-item"><span>الاجمالي</span><strong id="detTotalProduct" class="highlight"></strong></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس: معلومات اضافية وجدول التحصيل</h3>
+                        <div class="info-grid" style="margin-bottom: 20px;">
+                            <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
+                            <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
+                            <div class="info-item"><span>نوع الاشتراك في الفرصة</span><strong id="detSubPlan5" style="color: #0ea5e9; font-size: 18px;"></strong></div>
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table class="tera-table">
+                                <thead>
+                                    <tr>
+                                        <th>تاريخ التحصيل</th>
+                                        <th>رأس المال</th>
+                                        <th>الربح</th>
+                                        <th>إجمالي الدفعة</th>
+                                        <th>حالة الدفعة</th>
+                                        <th>الاجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="collectionTableBodyDetails"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-file-invoice-dollar"></i> القسم السادس: رسوم الخدمة و الاشتراك بالفرصة</h3>
+                        <div class="table-wrapper">
+                            <table class="tera-table">
+                                <thead>
+                                    <tr>
+                                        <th>بند الخدمات</th>
+                                        <th>قيمة الخدمة</th>
+                                        <th>القيمة شاملة الضريبة 15%</th>
+                                        <th>الاجمالي شامل الضريبة</th>
+                                        <th>عدد الاشهر</th>
+                                        <th>قيمة الدفعة الشهرية</th>
+                                        <th>حالة</th>
+                                        <th>الاجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feesTableBodyDetails"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="actions-row no-print">
+                        <button onclick="closeDetails()" class="btn-action"><i class="fas fa-arrow-right"></i> العودة للجدول الرئيسي</button>
+                        <button onclick="printReport()" class="btn-action btn-print"><i class="fas fa-print"></i> أمر طباعة التقرير (A4)</button>
+                        <button onclick="exportReport('PDF')" class="btn-action btn-pdf"><i class="fas fa-file-pdf"></i> تصدير نسخة PDF</button>
+                        <button onclick="exportReport('Excel')" class="btn-action btn-excel"><i class="fas fa-file-excel"></i> تصدير جداول إكسل</button>
                     </div>
                 </div>
 
             </div>
             
             <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. تم التطوير لدعم الشاشات المتقدمة (4K) والطباعة الرسمية (A4).
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. تم التطوير لدعم الشاشات المتقدمة (4K) ومقاسات الطباعة (A4).
             </footer>
             
         </main>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <script>
-        const clientName = "محمد_صالح_الشمري";
+        const clientName = "محمد_صالح_جميعان_الشمري";
+        let statusChartInstance = null;
+        let profitChartInstance = null;
 
-        // طباعة التقرير A4
+        function getDynamicDate(daysOffset) {
+            let d = new Date();
+            d.setDate(d.getDate() + daysOffset);
+            return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
+        }
+
+        /* 7 تجارب متفاوتة تغطي كل الحالات والاشتراكات */
+        const mockData = [
+            { 
+                id: "FTR-2026-06-27-001", oppDate: "2026/06/27", reqId: "46555", status: "قائم", subPlan: "الاشتراك البلاتينيوم",
+                sharesCount: 15, shareValue: 1000, capital: 15000, expectedProfit: 7500, duration: 6, hasNotes: false, firstDate: getDynamicDate(-140), fees: 200,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'قادمة'] 
+            },
+            { 
+                id: "FTR-2025-11-11-002", oppDate: "2025/11/11", reqId: "46561", status: "قائم", subPlan: "الاشتراك الذهبي",
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: false, firstDate: "2026/01/15", fees: 0,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'متأخرة', 'متعثرة', 'قادمة', 'قادمة'], feesStatus: 'متأخرة'
+            },
+            { 
+                id: "FTR-2026-06-25-003", oppDate: getDynamicDate(-5), reqId: "46556", status: "بانتظار الاعتماد", subPlan: "الاشتراك الفضي",
+                sharesCount: 50, shareValue: 100, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: true, firstDate: getDynamicDate(25), fees: 50,
+                paymentStatuses: ['قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة'], feesStatus: 'قادمة'
+            },
+            { 
+                id: "FTR-2025-01-10-004", oppDate: getDynamicDate(-200), reqId: "46557", status: "مكتملة", subPlan: "الاشتراك كلاسيك",
+                sharesCount: 20, shareValue: 500, capital: 10000, expectedProfit: 4000, duration: 6, hasNotes: false, firstDate: getDynamicDate(-180), fees: 100,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'], feesStatus: 'تم التحصيل'
+            },
+            { 
+                id: "FTR-2026-05-15-005", oppDate: "2026/05/15", reqId: "46559", status: "معلقة", subPlan: "الاشتراك الذهبي",
+                sharesCount: 10, shareValue: 100, capital: 1000, expectedProfit: 500, duration: 6, hasNotes: true, firstDate: "2026/06/15", fees: 0,
+                paymentStatuses: ['تم التحصيل', 'متعثرة', 'متعثرة', 'معلقة', 'معلقة', 'معلقة'], feesStatus: 'متأخرة'
+            },
+            { 
+                id: "FTR-2026-02-05-006", oppDate: "2026/02/05", reqId: "46560", status: "ملغاة", subPlan: "الاشتراك الفضي",
+                sharesCount: 5, shareValue: 1000, capital: 5000, expectedProfit: 2500, duration: 6, hasNotes: false, firstDate: "2026/03/05", fees: 50,
+                paymentStatuses: ['ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة'], feesStatus: 'ملغاة'
+            },
+            { 
+                id: "FTR-EXP-007", oppDate: getDynamicDate(-250), reqId: "46558", status: "منتهية", subPlan: "الاشتراك البلاتينيوم",
+                sharesCount: 15, shareValue: 1000, capital: 15000, expectedProfit: 7500, duration: 6, hasNotes: false, firstDate: getDynamicDate(-220), fees: 200,
+                paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'], feesStatus: 'تم التحصيل' 
+            }
+        ];
+
+        function formatMoney(num) {
+            return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'قائم': return 'status-active';
+                case 'بانتظار الاعتماد': return 'status-pending';
+                case 'مكتملة': return 'status-completed';
+                case 'معلقة': return 'status-suspended';
+                case 'منتهية': return 'status-expired';
+                case 'ملغاة': return 'status-cancelled';
+                case 'مغلقة': return 'status-closed';
+                default: return 'status-expired';
+            }
+        }
+
+        function calculateDaysDiff(targetDateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const target = new Date(targetDateStr);
+            target.setHours(0,0,0,0);
+            const diffTime = target - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function getNextPaymentDays(contract) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            let baseDate = new Date(contract.firstDate);
+            baseDate.setHours(0,0,0,0);
+            for (let i = 0; i < contract.duration; i++) {
+                let payDate = new Date(baseDate);
+                payDate.setMonth(baseDate.getMonth() + i);
+                if (payDate >= today && contract.paymentStatuses[i] === 'قادمة') {
+                    const diffTime = payDate - today;
+                    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+            }
+            return -1;
+        }
+
+        // الإشعارات العامة للشاشة الرئيسية
+        function generateSmartAlerts() {
+            const alertsContainer = document.getElementById('dynamicAlertsContainer');
+            alertsContainer.innerHTML = '';
+            
+            mockData.forEach(contract => {
+                if(contract.status === 'بانتظار الاعتماد') {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>تنبيه عام: الفرصة رقم <strong>${contract.id}</strong> لا تزال بانتظار الاعتماد.</span></div>`;
+                }
+                
+                if(contract.hasNotes) {
+                    alertsContainer.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>تنبيه هام: توجد ملاحظات على العقد رقم <strong>${contract.id}</strong> تحتاج تسوية.</span></div>`;
+                }
+
+                if(contract.status === 'قائم') {
+                    if(contract.paymentStatuses.includes('متعثرة') || contract.paymentStatuses.includes('متأخرة')) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-triangle"></i><span>تحذير مالي: توجد دفعات متأخرة أو متعثرة في العقد <strong>${contract.id}</strong>.</span></div>`;
+                    }
+
+                    let endDate = new Date(contract.firstDate);
+                    endDate.setMonth(endDate.getMonth() + contract.duration - 1);
+                    const daysToEnd = calculateDaysDiff(endDate);
+                    if(daysToEnd > 0 && daysToEnd <= 20) {
+                        alertsContainer.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-hourglass-half"></i><span>تنبيه وقتي: العقد رقم <strong>${contract.id}</strong> متبقي على انتهائه ${daysToEnd} أيام فقط.</span></div>`;
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            generateSmartAlerts();
+            applyAllFiltersAndRender();
+
+            // الفلاتر المنسدلة والبحث
+            document.getElementById('statusFilter').addEventListener('change', applyAllFiltersAndRender);
+            document.getElementById('subFilter').addEventListener('change', applyAllFiltersAndRender);
+            document.getElementById('sortFilter').addEventListener('change', applyAllFiltersAndRender);
+            document.getElementById('searchInput').addEventListener('input', applyAllFiltersAndRender);
+        });
+
+        // دالة تطبيق الفلاتر والفرز المدمجة
+        function applyAllFiltersAndRender() {
+            let statusVal = document.getElementById('statusFilter').value;
+            let subVal = document.getElementById('subFilter').value;
+            let sortVal = document.getElementById('sortFilter').value;
+            let searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            // الفلترة
+            let filteredData = mockData.filter(d => {
+                let matchStatus = statusVal === 'all' || d.status === statusVal;
+                let matchSub = subVal === 'all' || d.subPlan === subVal;
+                let matchSearch = d.id.toLowerCase().includes(searchVal);
+                return matchStatus && matchSub && matchSearch;
+            });
+
+            // الفرز
+            filteredData.sort((a, b) => {
+                if (sortVal === 'date_desc') return new Date(b.oppDate) - new Date(a.oppDate);
+                if (sortVal === 'date_asc') return new Date(a.oppDate) - new Date(b.oppDate);
+                if (sortVal === 'capital_desc') return b.capital - a.capital;
+                if (sortVal === 'capital_asc') return a.capital - b.capital;
+                return 0;
+            });
+
+            renderMainTable(filteredData);
+            calculateSummary(filteredData);
+            updateStatusChart(filteredData);
+            updateProfitGrowthChart(filteredData);
+        }
+
+        function calculateSummary(data) {
+            let tCap = 0, tProf = 0, monthlyAvg = 0;
+            data.forEach(d => {
+                tCap += d.capital;
+                tProf += d.expectedProfit;
+                if(d.duration > 0) monthlyAvg += (d.expectedProfit / d.duration);
+            });
+            document.getElementById('totalContracts').innerText = data.length;
+            document.getElementById('totalCapital').innerText = formatMoney(tCap) + ' ر.س';
+            document.getElementById('totalProfit').innerText = formatMoney(tProf) + ' ر.س';
+            document.getElementById('avgMonthlyProfit').innerText = formatMoney(data.length > 0 ? (monthlyAvg / data.length) : 0) + ' ر.س';
+        }
+
+        function renderMainTable(data) {
+            const tbody = document.getElementById('mainTableBody');
+            tbody.innerHTML = '';
+            
+            if(data.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.querySelector('.table-wrapper').style.display = 'none';
+                return;
+            } else {
+                document.getElementById('emptyState').style.display = 'none';
+                document.querySelector('.table-wrapper').style.display = 'block';
+            }
+
+            data.forEach(item => {
+                const sClass = getStatusClass(item.status);
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-family: monospace; font-weight: 700; color: var(--tera-teal);">${item.id}</td>
+                        <td style="font-family: monospace;">${item.oppDate}</td>
+                        <td style="font-weight: bold; color: #0ea5e9;">${item.subPlan}</td>
+                        <td style="font-family: monospace;">${item.reqId}</td>
+                        <td>${item.sharesCount}</td>
+                        <td>${formatMoney(item.shareValue)}</td>
+                        <td>${formatMoney(item.capital)}</td>
+                        <td><span class="badge ${sClass}">${item.status}</span></td>
+                        <td><button onclick="viewDetails('${item.id}')" class="btn-view">التفاصيل الشاملة</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // تفاصيل الفرصة المحددة (تحديث التنبيهات والأقسام)
+        window.viewDetails = function(id) {
+            const contract = mockData.find(d => d.id === id);
+            if(!contract) return;
+
+            document.getElementById('mainSection').style.display = 'none';
+            document.getElementById('detailsSection').style.display = 'block';
+
+            // نظام التنبيهات التفصيلية القوي داخل الصفحة الشاملة
+            const detailsAlerts = document.getElementById('detailsAlertsContainer');
+            detailsAlerts.innerHTML = '';
+            
+            if(contract.status === 'ملغاة') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-ban"></i><span>تم إلغاء هذا العقد ولا توجد أي مطالبات مالية مستحقة.</span></div>`;
+            }
+
+            if(contract.status === 'مكتملة' || contract.status === 'منتهية') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-success"><i class="fas fa-check-circle"></i><span>هذه الفرصة الاستثمارية مكتملة وتم تحصيل كافة الدفعات بنجاح.</span></div>`;
+            }
+
+            if(contract.hasNotes && contract.status !== 'ملغاة') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-exclamation-circle"></i><span>تنبيه: توجد ملاحظات إدارية مسجلة على هذه الفرصة تتطلب مراجعة.</span></div>`;
+            }
+            
+            if(contract.status === 'بانتظار الاعتماد') {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-clock"></i><span>حالة العقد: الفرصة قيد المراجعة ولم يتم اعتماد الدفعات وجدولة التحصيل بعد.</span></div>`;
+            }
+
+            let lateCount = contract.paymentStatuses.filter(s => s === 'متأخرة').length;
+            let defaultCount = contract.paymentStatuses.filter(s => s === 'متعثرة').length;
+            if (lateCount > 0 || defaultCount > 0) {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-ban"></i><span>مخالفة ائتمانية: توجد ${lateCount > 0 ? `(${lateCount}) دفعات متأخرة` : ''} ${defaultCount > 0 ? `و (${defaultCount}) دفعات متعثرة` : ''} في هذا العقد.</span></div>`;
+            }
+
+            if(contract.status === 'قائم') {
+                const daysToNextPayment = getNextPaymentDays(contract);
+                if(daysToNextPayment !== -1) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-info"><i class="fas fa-hand-holding-usd"></i><span>استحقاق مالي: متبقي <strong style="font-size:18px;">${daysToNextPayment} أيام</strong> على صرف (الأرباح ورأس المال) للدفعة القادمة.</span></div>`;
+                }
+
+                let endDate = new Date(contract.firstDate);
+                endDate.setMonth(endDate.getMonth() + contract.duration - 1);
+                const daysToEnd = calculateDaysDiff(endDate);
+                
+                if(daysToEnd > 0 && daysToEnd <= 30) {
+                    detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-warning"><i class="fas fa-calendar-times"></i><span>قرب الانتهاء: متبقي <strong style="font-size:18px;">${daysToEnd} أيام</strong> على إغلاق العقد ونهاية الفرصة التمويلية.</span></div>`;
+                }
+            }
+
+            if (contract.feesStatus === 'متأخرة' && contract.fees > 0) {
+                detailsAlerts.innerHTML += `<div class="custom-alert custom-alert-danger"><i class="fas fa-file-invoice-dollar"></i><span>مطالبة مالية: لم يتم سداد رسوم اشتراك باقة (${contract.subPlan}). يرجى مراجعة قسم الرسوم بالأسفل.</span></div>`;
+            }
+
+            const sClass = getStatusClass(contract.status);
+            const badge = document.getElementById('detailStatusBadge');
+            badge.className = `badge ${sClass}`;
+            badge.innerText = "الحالة الحالية: " + contract.status;
+
+            // حقن البيانات في الأقسام
+            document.getElementById('detOppId').innerText = contract.id;
+            document.getElementById('detSubPlan').innerText = contract.subPlan;
+            document.getElementById('detSubPlan5').innerText = contract.subPlan; 
+            
+            document.getElementById('detSharesCount').innerText = contract.sharesCount + " سهم";
+            document.getElementById('detShareValue').innerText = formatMoney(contract.shareValue) + " ر.س";
+            document.getElementById('detCapital').innerText = formatMoney(contract.capital) + " ر.س";
+            
+            document.getElementById('detReqId').innerText = contract.reqId;
+            document.getElementById('detReqDate').innerText = contract.oppDate;
+            
+            let qnty = contract.sharesCount * 5; 
+            let pVal = contract.capital; 
+            let pPrice = pVal / qnty; 
+            let tax = pVal * 0.15;
+            let totProduct = pVal + tax;
+            
+            document.getElementById('detQuantity').innerText = qnty;
+            document.getElementById('detProductValue').innerText = formatMoney(pVal) + " ر.س";
+            document.getElementById('detProductPrice').innerText = formatMoney(pPrice) + " ر.س";
+            document.getElementById('detTax').innerText = formatMoney(tax) + " ر.س";
+            document.getElementById('detTotalProduct').innerText = formatMoney(totProduct) + " ر.س";
+
+            let monthlyProfit = contract.expectedProfit / contract.duration;
+            let monthlyCapital = contract.capital / contract.duration;
+            let monthlyTotal = monthlyProfit + monthlyCapital;
+            
+            document.getElementById('detMonthlyProfit').innerText = formatMoney(monthlyProfit) + " ر.س";
+            document.getElementById('detTotalProfit').innerText = formatMoney(contract.expectedProfit) + " ر.س";
+            document.getElementById('detTotalReturn').innerText = formatMoney(contract.capital + contract.expectedProfit) + " ر.س";
+            document.getElementById('detFirstPayDate').innerText = contract.firstDate;
+
+            // حقن القسم الخامس: جدول التحصيل التفصيلي
+            const collBody = document.getElementById('collectionTableBodyDetails');
+            collBody.innerHTML = '';
+            
+            let baseDate = new Date(contract.firstDate);
+
+            for (let i = 0; i < contract.duration; i++) {
+                let pDate = new Date(baseDate);
+                pDate.setMonth(baseDate.getMonth() + i);
+                let dateStr = pDate.getFullYear() + '/' + String(pDate.getMonth() + 1).padStart(2, '0') + '/' + String(pDate.getDate()).padStart(2, '0');
+                
+                let sStatus = contract.paymentStatuses[i] || 'قادمة';
+                
+                let rowColor = sStatus === 'متأخرة' ? '#fef3c7' : (sStatus === 'متعثرة' ? '#fee2e2' : 'transparent');
+                
+                let badgeStyle = "border:1px solid currentColor; background:#fff; ";
+                if(sStatus === 'تم التحصيل') badgeStyle += "color:#10b981;";
+                else if(sStatus === 'متأخرة') badgeStyle += "color:#b45309;";
+                else if(sStatus === 'متعثرة' || sStatus === 'ملغاة') badgeStyle += "color:#ef4444;";
+                else badgeStyle += "color:#64748b; background:#f1f5f9;";
+
+                collBody.innerHTML += `
+                    <tr style="background-color: ${rowColor};">
+                        <td style="font-family: monospace; color: #475569;">${dateStr}</td>
+                        <td style="font-family: monospace;">${formatMoney(monthlyCapital)}</td>
+                        <td style="font-family: monospace;">${formatMoney(monthlyProfit)}</td>
+                        <td style="color: var(--tera-teal); font-weight: 700; font-family: monospace;">${formatMoney(monthlyTotal)}</td>
+                        <td><span class="badge" style="${badgeStyle}">${sStatus}</span></td>
+                        <td>-</td>
+                    </tr>
+                `;
+            }
+            collBody.innerHTML += `
+                <tr style="background-color: var(--tera-bg); font-weight: 700;">
+                    <td class="text-navy">الإجمالي</td>
+                    <td class="text-navy" style="font-family: monospace;">${formatMoney(contract.capital)}</td>
+                    <td class="text-navy" style="font-family: monospace;">${formatMoney(contract.expectedProfit)}</td>
+                    <td class="text-teal" style="font-family: monospace; font-size:16px;">${formatMoney(contract.capital + contract.expectedProfit)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `;
+
+            // حقن القسم السادس: جدول الرسوم
+            const feesBody = document.getElementById('feesTableBodyDetails');
+            feesBody.innerHTML = '';
+            
+            let adminFee = 20.00;
+            let transferFee = 25.00;
+            let processingFee = 100.00;
+            let subFee = contract.fees; 
+
+            let adminTax = adminFee * 0.15;
+            let transferTax = transferFee * 0.15;
+            let processingTax = processingFee * 0.15;
+            let subTax = subFee * 0.15;
+
+            function addFeeRow(name, cost, tax, status) {
+                let total = cost + tax;
+                let monthly = total / contract.duration;
+                
+                let badgeClass = "status-pending";
+                if(status === 'تم التحصيل') badgeClass = 'status-active';
+                if(status === 'ملغاة') badgeClass = 'status-cancelled';
+                if(status === 'قادمة') badgeClass = 'status-expired';
+
+                feesBody.innerHTML += `
+                    <tr>
+                        <td>${name}</td>
+                        <td style="font-family: monospace;">${formatMoney(cost)}</td>
+                        <td style="font-family: monospace;">${formatMoney(tax)}</td>
+                        <td style="font-family: monospace; font-weight:700;">${formatMoney(total)}</td>
+                        <td>${contract.duration}</td>
+                        <td style="font-family: monospace;">${formatMoney(monthly)}</td>
+                        <td><span class="badge ${badgeClass}">${status}</span></td>
+                        <td>-</td>
+                    </tr>
+                `;
+            }
+
+            let fStatus = contract.feesStatus || (contract.status === 'مكتملة' ? 'تم التحصيل' : 'قادمة');
+            let adminStatus = contract.status === 'بانتظار الاعتماد' ? 'قادمة' : (contract.status === 'ملغاة' ? 'ملغاة' : 'تم التحصيل');
+
+            addFeeRow('الرسوم الادارية', adminFee, adminTax, adminStatus);
+            addFeeRow('رسوم التحويل البنكي', transferFee, transferTax, fStatus);
+            addFeeRow('رسوم التحصيل و المعالجة المعتمدة', processingFee, processingTax, fStatus);
+            addFeeRow(`رسوم باقة الفرصة (${contract.subPlan})`, subFee, subTax, fStatus);
+            
+            let totalF = adminFee + transferFee + processingFee + subFee;
+            let totalT = adminTax + transferTax + processingTax + subTax;
+            let grandTotal = totalF + totalT;
+            
+            feesBody.innerHTML += `
+                <tr style="background-color: #e2e8f0; font-weight: 800;">
+                    <td>تفاصيل الإجمالي شامل الضريبة</td>
+                    <td style="font-family: monospace;">${formatMoney(totalF)}</td>
+                    <td style="font-family: monospace;">${formatMoney(totalT)}</td>
+                    <td class="text-teal" style="font-family: monospace;">${formatMoney(grandTotal)}</td>
+                    <td>-</td>
+                    <td class="text-teal" style="font-family: monospace;">${formatMoney(grandTotal / contract.duration)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `;
+
+            window.scrollTo(0,0);
+        };
+
+        window.closeDetails = function() {
+            document.getElementById('detailsSection').style.display = 'none';
+            document.getElementById('mainSection').style.display = 'block';
+        };
+
         window.printReport = function() {
             const now = new Date();
             document.getElementById('printDate').innerText = now.toLocaleDateString('ar-SA');
+            let hours = now.getHours(); let minutes = now.getMinutes(); let ampm = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12; hours = hours ? hours : 12; minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('printTime').innerText = hours + ':' + minutes + ' ' + ampm;
             window.print();
         };
 
-        // محاكاة التصدير
         window.exportReport = function(type) {
             const now = new Date();
             const dateStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
             const timeStr = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
-            const fileName = `نشرة_الإصدار_الفرصة_OPP-2026-084_${dateStr}`;
-            alert(`تم جلب النشرة المفصلة.\nسيتم حفظ الملف باسم:\n\n${fileName}.${type === 'PDF' ? 'pdf' : 'xlsx'}`);
+            const fileName = `تقرير_فرص_الشراكة_${clientName}_${dateStr}_${timeStr}`;
+            alert(`تم تصدير التقرير بدقة عالية.\nالملف محفوظ باسم:\n\n${fileName}.${type === 'PDF' ? 'pdf' : 'xlsx'}`);
         };
+
+        function updateStatusChart(data) {
+            let counts = { active: 0, pending: 0, completed: 0, suspended: 0, expired: 0, cancelled: 0, closed: 0 };
+            data.forEach(d => {
+                if(d.status === 'قائم') counts.active++;
+                else if(d.status === 'بانتظار الاعتماد') counts.pending++;
+                else if(d.status === 'مكتملة') counts.completed++;
+                else if(d.status === 'معلقة') counts.suspended++;
+                else if(d.status === 'منتهية') counts.expired++;
+                else if(d.status === 'ملغاة') counts.cancelled++;
+                else if(d.status === 'مغلقة') counts.closed++;
+            });
+
+            if(statusChartInstance) {
+                statusChartInstance.data.datasets[0].data = [counts.active, counts.pending, counts.completed, counts.suspended, counts.expired, counts.cancelled, counts.closed];
+                statusChartInstance.update();
+            } else {
+                const ctx = document.getElementById('statusChart');
+                if(ctx) {
+                    if (typeof ChartDataLabels !== 'undefined') { Chart.register(ChartDataLabels); }
+                    statusChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['قائم', 'بانتظار الاعتماد', 'مكتملة', 'معلقة', 'منتهية', 'ملغاة', 'مغلقة'],
+                            datasets: [{
+                                data: [counts.active, counts.pending, counts.completed, counts.suspended, counts.expired, counts.cancelled, counts.closed],
+                                backgroundColor: ['#10b981', '#f59e0b', '#0ea5e9', '#b45309', '#64748b', '#ef4444', '#1e293b'],
+                                borderWidth: 0, hoverOffset: 4
+                            }]
+                        },
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, cutout: '65%',
+                            plugins: { 
+                                legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 14 } } },
+                                datalabels: {
+                                    color: '#fff', font: { weight: 'bold', size: 16, family: 'Tajawal' },
+                                    formatter: (value) => { return value > 0 ? value : ''; }
+                                }
+                            } 
+                        }
+                    });
+                }
+            }
+        }
+
+        function updateProfitGrowthChart(data) {
+            let totalFilteredProfit = 0;
+            data.forEach(d => totalFilteredProfit += d.expectedProfit);
+            
+            let m1 = totalFilteredProfit * 0.10;
+            let m2 = totalFilteredProfit * 0.12;
+            let m3 = totalFilteredProfit * 0.18;
+            let m4 = totalFilteredProfit * 0.15;
+            let m5 = totalFilteredProfit * 0.20;
+            let m6 = totalFilteredProfit * 0.25;
+
+            let barData = [m1, m2, m3, m4, m5, m6];
+            let lineData = [m1, m1+m2, m1+m2+m3, m1+m2+m3+m4, m1+m2+m3+m4+m5, totalFilteredProfit];
+
+            if(profitChartInstance) {
+                profitChartInstance.data.datasets[0].data = lineData;
+                profitChartInstance.data.datasets[1].data = barData;
+                profitChartInstance.update();
+            } else {
+                const ctxProfit = document.getElementById('profitGrowthChart');
+                if(ctxProfit) {
+                    profitChartInstance = new Chart(ctxProfit, {
+                        type: 'bar',
+                        data: {
+                            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                            datasets: [
+                                {
+                                    type: 'line', label: 'النمو التراكمي (ر.س)',
+                                    data: lineData,
+                                    borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 3, tension: 0.4, fill: false,
+                                    pointBackgroundColor: '#fff', pointBorderColor: '#f59e0b', pointBorderWidth: 2, pointRadius: 4,
+                                    datalabels: { display: false }
+                                },
+                                {
+                                    type: 'bar', label: 'الأرباح المحققة شهرياً',
+                                    data: barData,
+                                    backgroundColor: '#028090', borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8,
+                                    datalabels: { display: false }
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            interaction: { mode: 'index', intersect: false },
+                            plugins: {
+                                legend: { position: 'top', rtl: true, labels: { font: { family: 'Tajawal', size: 13, weight: 'bold' }, usePointStyle: true, padding: 20 } },
+                                tooltip: {
+                                    rtl: true, backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                                    titleFont: { family: 'Tajawal', size: 14, weight: 'bold' }, bodyFont: { family: 'Tajawal', size: 13 }, padding: 12, borderRadius: 8,
+                                    callbacks: { label: function(context) { return context.dataset.label + ': ' + formatMoney(context.raw) + ' ر.س'; } }
+                                }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#f1f5f9', drawBorder: false }, ticks: { font: { family: 'Tajawal' }, callback: function(value) { return formatMoney(value); } } },
+                                x: { grid: { display: false, drawBorder: false }, ticks: { font: { family: 'Tajawal', size: 12 } } }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        function initChart() { updateStatusChart(mockData); }
+        function initProfitGrowthChart() { updateProfitGrowthChart(mockData); }
     </script>
     
+    <script src="/assets/js/app.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
 </body>
