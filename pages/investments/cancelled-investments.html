@@ -25,7 +25,7 @@
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         
-        .join-container { max-width: 950px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
+        .join-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
         .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
         .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
@@ -47,7 +47,7 @@
         #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 30px; }
+        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 40px; }
 
         .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
@@ -63,11 +63,12 @@
         .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 15px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; font-family: monospace; }
         .package-card.selected .fee { background: var(--tera-teal); color: #fff; }
 
-        .tera-table { width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 20px; font-size: 13px; }
-        .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; }
+        /* جداول الرسوم والتوزيع */
+        .tera-table { width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-size: 13px; }
+        .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; white-space: nowrap; }
         .tera-table td { padding: 12px; border: 1px solid #e2e8f0; color: #334155; font-family: monospace; font-weight: bold; }
-        .tera-table td:first-child { font-family: 'Tajawal', sans-serif; font-weight: 600; }
-        .tera-table td:last-child { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
+        .tera-table td.text-start { text-align: right; font-family: 'Tajawal', sans-serif; font-weight: 600; }
+        .tera-table td.notes { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
         .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
 
         .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
@@ -122,7 +123,7 @@
             
             <div class="opp-summary">
                 <h3 id="invOppName">جاري التحميل...</h3>
-                <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span></p>
+                <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span> <span id="invOppTypeBadge" class="type-badge" style="background:#fef3c7; color:#d97706; margin-right:10px;"></span></p>
                 <p style="margin-top: 8px;">قيمة السهم الواحد: <span id="invSharePrice" class="price"></span></p>
                 <p style="margin-top: 5px; font-size: 12px; color: #94a3b8;">مدة الفرصة: <span id="invDuration" style="font-family:monospace; font-weight:bold; color:#fff;"></span></p>
             </div>
@@ -209,6 +210,18 @@
                     </table>
                 </div>
 
+                <h4 class="section-title">
+                    <i class="fas fa-calendar-alt text-teal"></i> جدول توزيع الدفعات المتوقعة
+                </h4>
+                <div style="overflow-x: auto; margin-bottom: 30px;">
+                    <table class="tera-table">
+                        <thead id="distributionTableHeader">
+                            </thead>
+                        <tbody id="distributionTableBody">
+                            </tbody>
+                    </table>
+                </div>
+
                 <h4 class="section-title"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
                 <div class="calc-result-box">
                     <div class="calc-result-row"><span>عدد الأسهم المحددة:</span><span id="sumShares" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
@@ -244,18 +257,9 @@
                     <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
                 </div>
 
-                <div class="important-notes">
-                    <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
-                    <ul>
-                        <li>جميع الباقات المذكورة تعتبر خدمات إضافية اختيارية وليست إلزامية.</li>
-                        <li>رسوم الباقات المحددة (99، 149، 199 ر.س) هي رسوم ثابتة يتم خصمها من الأرباح بالتوزيع على مدة الفرصة.</li>
-                        <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
-                    </ul>
-                </div>
-
                 <div class="agreement-box">
                     <input type="checkbox" id="agreeCheckbox" onchange="togglePayButton()">
-                    <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة والرسوم الموضحة في الدليل الإرشادي.</label>
+                    <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة وجدول التوزيع والرسوم الموضحة في الدليل الإرشادي.</label>
                 </div>
 
                 <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="processPayment()">
@@ -330,6 +334,17 @@
 
             document.getElementById('invOppName').innerText = currentActiveOpp.company;
             document.getElementById('invOppId').innerText = currentActiveOpp.id;
+            
+            let badgeEl = document.getElementById('invOppTypeBadge');
+            badgeEl.innerText = currentActiveOpp.type;
+            if(currentActiveOpp.type === 'فرصة شراكة') {
+                badgeEl.style.background = '#fce7f3';
+                badgeEl.style.color = '#db2777';
+            } else {
+                badgeEl.style.background = '#fef3c7';
+                badgeEl.style.color = '#d97706';
+            }
+
             document.getElementById('invSharePrice').innerText = formatMoney(currentActiveOpp.sharePrice) + " ر.س";
             document.getElementById('invDuration').innerText = currentActiveOpp.duration + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
@@ -379,67 +394,68 @@
             if (shares > 0) {
                 extendedDiv.style.display = 'block';
                 
+                let duration = currentActiveOpp.duration || 6;
                 let capital = shares * currentActiveOpp.sharePrice;
                 let productVat = capital * 0.15; 
-                let duration = currentActiveOpp.duration || 6;
+                
+                let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
+                let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات الثابتة (كما في الإكسل)
+                // رسوم الخدمات
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
                 
-                // حساب رسوم الباقة الاختيارية الثابتة
                 let pkgFee = selectedPackageFixedFee;
                 let pkgVat = pkgFee * 0.15;
                 let pkgTotal = pkgFee + pkgVat;
 
-                // حساب قيمة الدفعة الشهرية لكل بند
                 let adminMonthly = adminTotal / duration;
                 let transferMonthly = transferTotal / duration;
                 let collectionMonthly = collectionTotal / duration;
                 let pkgMonthly = pkgTotal > 0 ? (pkgTotal / duration) : 0;
 
-                // المجاميع
                 let totalServiceBase = adminFee + transferFee + collectionFee + pkgFee;
                 let totalServiceVat = adminVat + transferVat + collectionVat + pkgVat; 
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
+                // جدول الرسوم
                 let tableBody = `
                     <tr>
-                        <td>الرسوم الإدارية</td>
+                        <td class="text-start">الرسوم الإدارية</td>
                         <td>${formatMoney(adminFee)}</td>
                         <td>${formatMoney(adminVat)}</td>
                         <td>${formatMoney(adminTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(adminMonthly)}</td>
-                        <td>تخصم شهرياً من الأرباح</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(adminMonthly)}</td>
+                        <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
-                        <td>رسوم التحويل</td>
+                        <td class="text-start">رسوم التحويل</td>
                         <td>${formatMoney(transferFee)}</td>
                         <td>${formatMoney(transferVat)}</td>
                         <td>${formatMoney(transferTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(transferMonthly)}</td>
-                        <td>تخصم شهرياً من الأرباح</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(transferMonthly)}</td>
+                        <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
-                        <td>رسوم التحصيل والمعالجة</td>
+                        <td class="text-start">رسوم التحصيل والمعالجة</td>
                         <td>${formatMoney(collectionFee)}</td>
                         <td>${formatMoney(collectionVat)}</td>
                         <td>${formatMoney(collectionTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(collectionMonthly)}</td>
-                        <td>تخصم شهرياً من الأرباح</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(collectionMonthly)}</td>
+                        <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
-                        <td style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
+                        <td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgFee)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgVat)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(pkgMonthly)}</td>
-                        <td style="color:var(--tera-teal); font-weight:bold;">تخصم شهرياً من الأرباح</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(pkgMonthly)}</td>
+                        <td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr class="total-row">
-                        <td>الإجمالي للخدمات</td>
+                        <td class="text-start">الإجمالي للخدمات</td>
                         <td>${formatMoney(totalServiceBase)}</td>
                         <td>${formatMoney(totalServiceVat)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(totalServiceFinal)}</td>
@@ -448,6 +464,63 @@
                     </tr>
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
+
+                // بناء جدول توزيع الدفعات بناءً على نوع الفرصة
+                let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
+                
+                let distHeader = `<tr>
+                    <th>تاريخ التحصيل</th>`;
+                if(!isExtended) distHeader += `<th>رأس المال</th>`;
+                distHeader += `
+                    <th>الربح</th>
+                    <th>إجمالي الدفعة</th>
+                    <th>قيمة خصم الرسوم والخدمات</th>
+                    <th>المتبقي</th>
+                    <th>حالة الدفعة</th>
+                    <th>الاجراءات</th>
+                </tr>`;
+                document.getElementById('distributionTableHeader').innerHTML = distHeader;
+
+                let monthlyCapital = capital / duration;
+                let monthlyProfit = expectedProfitForSelectedShares / duration;
+                let monthlyTotalPayment = isExtended ? monthlyProfit : (monthlyCapital + monthlyProfit);
+                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
+
+                let distBody = '';
+                let tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
+
+                let startDate = new Date();
+                for(let i=1; i<=duration; i++) {
+                    let payDate = new Date(startDate);
+                    payDate.setMonth(startDate.getMonth() + i);
+                    let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+
+                    distBody += `<tr>`;
+                    distBody += `<td>${dateStr}</td>`;
+                    if(!isExtended) distBody += `<td>${formatMoney(monthlyCapital)}</td>`;
+                    distBody += `<td>${formatMoney(monthlyProfit)}</td>`;
+                    distBody += `<td>${formatMoney(monthlyTotalPayment)}</td>`;
+                    distBody += `<td style="color:#ef4444;">${formatMoney(totalMonthlyFinal)}</td>`;
+                    distBody += `<td style="color:var(--tera-teal);">${formatMoney(monthlyRemaining)}</td>`;
+                    distBody += `<td><span class="badge" style="background:#f1f5f9; color:#64748b;">جديد</span></td>`;
+                    distBody += `<td>-</td>`;
+                    distBody += `</tr>`;
+
+                    tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; 
+                    tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                }
+
+                distBody += `<tr class="total-row">`;
+                distBody += `<td class="text-start">الإجمالي</td>`;
+                if(!isExtended) distBody += `<td>${formatMoney(tCap)}</td>`;
+                distBody += `<td>${formatMoney(tProf)}</td>`;
+                distBody += `<td>${formatMoney(tPay)}</td>`;
+                distBody += `<td style="color:#ef4444;">${formatMoney(tFee)}</td>`;
+                distBody += `<td style="color:var(--tera-teal); font-size:15px;">${formatMoney(tRem)}</td>`;
+                distBody += `<td></td><td></td>`;
+                distBody += `</tr>`;
+
+                document.getElementById('distributionTableBody').innerHTML = distBody;
 
                 // تحديث ملخص الدفع النهائي
                 let totalToPayNow = capital + productVat;
