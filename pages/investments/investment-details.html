@@ -78,10 +78,20 @@
         .opp-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(2, 128, 144, 0.1); border-color: var(--tera-teal); }
         .opp-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; border-radius: 12px 12px 0 0;}
         .opp-header h3 { margin: 0 0 8px 0; font-size: 15px; font-weight: 700; color: var(--tera-navy); line-height: 1.4; }
-        .opp-body { padding: 20px 20px 10px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .opp-metric { background: var(--tera-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
+        
+        .opp-body { padding: 20px 20px 10px; flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* تصميم جديد للبطاقة لتطابق القائمة */
+        .opp-details-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; }
+        .opp-details-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .opp-details-row span { font-size: 12px; color: var(--tera-gray); font-weight: 600; }
+        .opp-details-row strong { font-size: 13px; color: var(--tera-navy); font-weight: 800; font-family: monospace; text-align: left;}
+        
+        .opp-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .opp-metric { background: var(--tera-bg); padding: 10px; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
         .opp-metric span { display: block; font-size: 11px; color: var(--tera-gray); margin-bottom: 5px; font-weight:700;}
         .opp-metric strong { display: block; font-size: 14px; color: var(--tera-navy); font-weight: 700; font-family: monospace; }
+        
         .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #fff; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 12px 12px;}
         
         .list-view-container { display: block; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; }
@@ -207,7 +217,7 @@
     <script src="../../assets/js/investments.js"></script>
     
     <script>
-        // دالة إنشاء المعرفات (في حال لم يتم توفيرها من الملف المشترك)
+        // دالة إنشاء المعرفات للاحتياطية (14 تجربة حقيقية)
         function getDynamicDateLocal(daysOffset) {
             let d = new Date(); d.setDate(d.getDate() + daysOffset);
             return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
@@ -218,7 +228,6 @@
             return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
         }
         
-        // البيانات الموحدة الحقيقية (نفس البيانات في كل الصفحات)
         const localMockData = [
             { id: generateIdLocal("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46550", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
             { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(5), 2), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46551", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -237,10 +246,10 @@
             { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-1), 14), type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46566", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        // تعيين البيانات الموحدة
+        // تعيين البيانات
         window.appData = typeof window.mockData !== 'undefined' && window.mockData.length > 0 ? window.mockData : localMockData;
 
-        // دوال التنسيق المساعدة
+        // دوال مساعدة
         function formatMoneyLocal(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         
         function getBadgeClassLocal(status) {
@@ -286,12 +295,12 @@
             data.forEach(item => {
                 const badge = getBadgeClassLocal(item.status);
                 const typeBadge = getTypeBadgeClassLocal(item.type);
-                // تأكدنا من أن الرابط هو investment-details.html وليس completed-investments.html
+                // تأكد من أن الرابط يوجه لصفحة investment-details.html بدقة مع الـ ID الحقيقي
                 const detailUrl = `investment-details.html?id=${item.id}`;
                 const formattedShare = formatMoneyLocal(item.sharePrice);
                 const formattedCapital = formatMoneyLocal(item.capital);
 
-                // بطاقة الشبكة مطابقة تماماً للمعلومات
+                // بناء بطاقة الشبكة (Grid) متطابقة تماماً مع بيانات القائمة
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
@@ -303,19 +312,23 @@
                             <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${item.fundedPercentage}%"></div></div>
                         </div>
                         <div class="opp-body">
-                            <div class="opp-metric"><span>قيمة السهم</span><strong>${formattedShare}</strong></div>
-                            <div class="opp-metric"><span>إجمالي رأس المال</span><strong style="color:var(--tera-teal);">${formattedCapital}</strong></div>
-                            <div class="opp-metric"><span>المدة</span><strong>${item.duration} شهر</strong></div>
-                            <div class="opp-metric"><span>عدد الأسهم</span><strong>${item.sharesCount}</strong></div>
+                            <div class="opp-details-row"><span>الجهة الطالبة</span><strong>${item.reqEntity}</strong></div>
+                            <div class="opp-details-row"><span>فترة الطرح</span><strong style="font-size:12px;">${item.offeringPeriod}</strong></div>
+                            
+                            <div class="opp-metric-grid">
+                                <div class="opp-metric"><span>عدد الأسهم</span><strong>${item.sharesCount}</strong></div>
+                                <div class="opp-metric"><span>قيمة السهم</span><strong>${formattedShare}</strong></div>
+                            </div>
+                            <div class="opp-metric" style="margin-top:0;"><span>إجمالي رأس المال</span><strong style="color:var(--tera-teal); font-size:16px;">${formattedCapital}</strong></div>
                         </div>
                         <div class="opp-footer">
-                            <span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span>
+                            <span style="font-size:12px; font-family:monospace; color:var(--tera-gray); font-weight:bold;">${item.id}</span>
                             <a href="${detailUrl}" class="btn-action btn-view"><i class="fas fa-book-open"></i> التفاصيل</a>
                         </div>
                     </div>
                 `;
 
-                // صف القائمة مطابق تماماً للمعلومات
+                // بناء صفوف القائمة (List)
                 listBody.innerHTML += `
                     <tr>
                         <td style="font-family: monospace; font-weight: 700; color:var(--tera-navy);">${item.id}</td>
@@ -346,7 +359,7 @@
             let filtered = window.appData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 
-                // دمج النشطة وقائم معاً بنجاح
+                // دمج "النشطة" و "قائم" في الفلتر
                 let mStatus = false;
                 if (statusVal === 'all') mStatus = true;
                 else if (statusVal === 'النشطة_قائم') mStatus = (d.status === 'النشطة' || d.status === 'قائم');
