@@ -28,8 +28,11 @@
         .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
         .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
 
-        .details-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
-        .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .details-container { max-width: 1400px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 350px; gap: 30px; align-items: start; }
+        @media (max-width: 1024px) { .details-container { grid-template-columns: 1fr; } }
+        
+        .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .side-action-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 10px 25px rgba(2, 128, 144, 0.05); position: sticky; top: 100px; }
 
         .alert-banner { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; }
         .alert-warning { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; }
@@ -49,19 +52,25 @@
         .info-item strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 800; }
         .mono { font-family: monospace; font-size: 16px !important; }
 
-        .btn-action { padding: 12px 25px; border-radius: 8px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; font-size: 15px; font-family: inherit; transition: 0.2s; text-decoration: none; }
+        .btn-action { padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; font-family: inherit; transition: 0.2s; text-decoration: none; }
+        .btn-action.full-width { width: 100%; }
+        .btn-action.auto-width { width: auto; padding: 10px 20px; display: inline-flex; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
-        .btn-primary:hover { background: #026a77; }
+        .btn-primary:hover { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.3); }
         .btn-secondary { background: #f1f5f9; color: var(--tera-navy); border: 1px solid #cbd5e1; }
         .btn-secondary:hover { background: #e2e8f0; }
+        .btn-danger { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fee2e2; }
 
-        .action-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 25px; border-top: 1px solid #e2e8f0; }
-        
+        .opp-mini-summary { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .opp-mini-summary span { display: block; font-size: 13px; color: var(--tera-gray); margin-bottom: 5px; }
+        .opp-mini-summary strong { font-size: 24px; color: var(--tera-teal); font-family: monospace; }
+
         @media print {
             body * { visibility: hidden; }
             .main-details, .main-details * { visibility: visible; }
-            .main-details { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; padding: 0; }
-            .top-header, .action-footer, .no-print { display: none !important; }
+            .main-details { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
+            .top-header, .side-action-card, .bottom-return, .no-print { display: none !important; }
             .info-item { border: 1px solid #000; background: #fff; }
         }
     </style>
@@ -70,7 +79,7 @@
 
     <header class="top-header no-print">
         <div class="header-right">
-            <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
+            <a href="../dashboard/index.html" class="btn-action btn-secondary auto-width" style="font-size: 13px;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
             <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
             <h1 id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h1>
         </div>
@@ -83,104 +92,122 @@
     </header>
 
     <div class="details-container">
-        <main class="main-details">
-            <div id="mDetAlertsContainer" class="no-print"></div>
+        <div>
+            <main class="main-details">
+                <div id="mDetAlertsContainer" class="no-print"></div>
 
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
-                <div class="progress-wrapper">
-                    <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText"></span></div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar"></div></div>
-                </div>
-                
-                <div class="info-grid">
-                    <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal"></strong></div>
-                    <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType"></strong></div>
-                    <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus"></strong></div>
-                    <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono"></strong></div>
-                    <div class="info-item"><span>رقم الطلب المميز للفرصة</span><strong id="mDetReqId" class="mono"></strong></div>
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
+                    <div class="progress-wrapper">
+                        <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText"></span></div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar"></div></div>
+                    </div>
                     
-                    <div class="info-item"><span>إجمالي عدد الأسهم</span><strong id="mDetSharesCount" class="mono"></strong></div>
-                    <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono"></strong></div>
-                    <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono"></strong></div>
-                    
-                    <div class="info-item"><span>النسبة على كامل المدة</span><strong id="mDetRatio" class="mono text-teal"></strong></div>
-                    <div class="info-item"><span>مدة الفرصة</span><strong id="mDetDuration" class="mono"></strong></div>
-                    
-                    <div class="info-item"><span>اجمالي الربح الشهري</span><strong id="mDetMonthlyProfit" class="mono"></strong></div>
-                    <div class="info-item"><span>اجمالي ارباح الفرصة</span><strong id="mDetTotalProfit" class="mono"></strong></div>
-                    <div class="info-item"><span>اجمالي راس المال و الارباح</span><strong id="mDetTotalReturn" class="mono"></strong></div>
-                    
-                    <div class="info-item"><span>آلية الصرف</span><strong id="mDetFreq">شهري</strong></div>
-                    <div class="info-item"><span>موعد صرف الارباح</span><strong id="mDetFirstPayDate" class="mono">2026/07/15</strong></div>
+                    <div class="info-grid">
+                        <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal"></strong></div>
+                        <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType"></strong></div>
+                        <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus"></strong></div>
+                        <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono"></strong></div>
+                        <div class="info-item"><span>رقم الطلب المميز للفرصة</span><strong id="mDetReqId" class="mono"></strong></div>
+                        
+                        <div class="info-item"><span>إجمالي عدد الأسهم</span><strong id="mDetSharesCount" class="mono"></strong></div>
+                        <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono"></strong></div>
+                        <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono"></strong></div>
+                        
+                        <div class="info-item"><span>النسبة على كامل المدة</span><strong id="mDetRatio" class="mono text-teal"></strong></div>
+                        <div class="info-item"><span>مدة الفرصة</span><strong id="mDetDuration" class="mono"></strong></div>
+                        
+                        <div class="info-item"><span>اجمالي الربح الشهري</span><strong id="mDetMonthlyProfit" class="mono"></strong></div>
+                        <div class="info-item"><span>اجمالي ارباح الفرصة</span><strong id="mDetTotalProfit" class="mono"></strong></div>
+                        <div class="info-item"><span>اجمالي راس المال و الارباح</span><strong id="mDetTotalReturn" class="mono"></strong></div>
+                        
+                        <div class="info-item"><span>آلية الصرف</span><strong id="mDetFreq">شهري</strong></div>
+                        <div class="info-item"><span>موعد صرف الارباح</span><strong id="mDetFirstPayDate" class="mono">2026/07/15</strong></div>
+                    </div>
                 </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
+                        <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
+                        <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
+                        <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
+                        <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
+                        <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
+                        <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
+                        <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
+                        <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
+                        <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
+                    </div>
+                </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
+                        <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
+                        <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
+                        <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
+                        <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
+                        <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
+                    </div>
+                </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono"></strong></div>
+                        <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
+                        <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono"></strong></div>
+                        <div class="info-item"><span>قيمة المنتج</span><strong id="mDetProdVal" class="mono"></strong></div>
+                        <div class="info-item"><span>سعر المنتج</span><strong id="mDetProdPrice" class="mono"></strong></div>
+                        <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono"></strong></div>
+                        <div class="info-item"><span>الاجمالي</span><strong id="mDetTotalProd" class="mono"></strong></div>
+                    </div>
+                </div>
+
+                <div class="detail-block">
+                    <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
+                        <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
+                    </div>
+                </div>
+            </main>
+
+            <div class="bottom-return no-print" style="margin-top: 20px; text-align: right;">
+                <a href="opportunities.html" class="btn-action btn-secondary auto-width" style="box-shadow: 0 4px 10px rgba(0,0,0,0.05);"><i class="fas fa-arrow-right"></i> العودة لسوق الفرص المطروحة</a>
+            </div>
+        </div>
+
+        <aside class="side-action-card no-print">
+            <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <i class="fas fa-rocket text-teal"></i> اتخاذ إجراء
+            </h3>
+
+            <div class="opp-mini-summary">
+                <span>الأسهم المتاحة للانضمام:</span>
+                <strong id="mDetAvailableShares">0</strong>
             </div>
 
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
-                    <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
-                    <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
-                    <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
-                    <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
-                    <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
-                    <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
-                    <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
-                    <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
-                    <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
-                </div>
-            </div>
-
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
-                    <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
-                    <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
-                    <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
-                    <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
-                    <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
-                </div>
-            </div>
-
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono"></strong></div>
-                    <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
-                    <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono"></strong></div>
-                    <div class="info-item"><span>قيمة المنتج</span><strong id="mDetProdVal" class="mono"></strong></div>
-                    <div class="info-item"><span>سعر المنتج</span><strong id="mDetProdPrice" class="mono"></strong></div>
-                    <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono"></strong></div>
-                    <div class="info-item"><span>الاجمالي</span><strong id="mDetTotalProd" class="mono"></strong></div>
-                </div>
-            </div>
-
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
-                    <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
-                </div>
-            </div>
-
-            <div class="action-footer no-print">
-                <div style="display: flex; gap: 10px;">
-                    <a href="opportunities.html" class="btn-action btn-secondary"><i class="fas fa-arrow-right"></i> العودة للسوق</a>
-                    <button onclick="window.print()" class="btn-action btn-secondary"><i class="fas fa-print"></i> طباعة الدليل</button>
-                </div>
-                <a id="btnRedirectToJoin" href="#" class="btn-action btn-primary" style="display: none;">
-                    <i class="fas fa-handshake"></i> طلب الانضمام للفرصة
-                </a>
-            </div>
-        </main>
+            <a id="btnRedirectToJoin" href="#" class="btn-action full-width btn-primary" style="display: none;">
+                <i class="fas fa-handshake"></i> طلب الانضمام للفرصة
+            </a>
+            
+            <div id="investWarningMsg" style="color:#ef4444; font-size:12px; font-weight:bold; text-align:center; display:none; margin-top:10px;">الفرصة غير متاحة للانضمام حالياً</div>
+            
+            <hr style="border:none; border-top: 1px solid #e2e8f0; margin: 25px 0 20px;">
+            
+            <h4 style="font-size: 14px; color: var(--tera-gray); margin-bottom: 15px;">خدمات الدليل الإرشادي:</h4>
+            <button onclick="window.print()" class="btn-action full-width btn-secondary"><i class="fas fa-print"></i> طباعة الدليل</button>
+            <button onclick="alert('جاري تنزيل ملف PDF...')" class="btn-action full-width btn-danger"><i class="fas fa-file-pdf"></i> تصدير بصيغة PDF</button>
+        </aside>
     </div>
 
     <script>
         function getDynamicDate(daysOffset) {
-            let d = new Date();
-            d.setDate(d.getDate() + daysOffset);
+            let d = new Date(); d.setDate(d.getDate() + daysOffset);
             return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
         }
 
@@ -190,10 +217,10 @@
             const mm = parts[1].padStart(2, '0');
             const dd = parts[0].padStart(2, '0');
             const seq = String(sequence).padStart(3, '0');
-            const prefix = type === 'شراكة ممتدة' ? 'TR' : 'FTR';
-            return `${prefix}-${yyyy}-${mm}-${dd}-${seq}`;
+            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
+        // نفس قاعدة البيانات المشتركة لضمان جلب البيانات بناءً على الرابط
         const mockData = [
             { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToJoin: 0, daysLeftToStart: 5, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
@@ -211,6 +238,8 @@
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(3), 14), type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46568", sharesCount: 20, sharePrice: 1500, capital: 30000, expectedProfit: 15000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(3) + " - " + getDynamicDate(13), reqDate: "2026/05/25" }
         ];
 
+        let currentActiveOpp = null;
+
         function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -220,12 +249,14 @@
             if (oppId) {
                 const opp = mockData.find(d => d.id === oppId);
                 if (opp) {
+                    currentActiveOpp = opp;
                     renderDetails(opp);
                 } else {
                     alert("عذراً، الفرصة غير موجودة أو تم حذفها.");
                     window.location.href = "opportunities.html";
                 }
             } else {
+                currentActiveOpp = mockData[0];
                 renderDetails(mockData[0]);
             }
         });
@@ -234,6 +265,7 @@
             document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
 
             let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
+            document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
 
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = '';
@@ -296,16 +328,29 @@
             document.getElementById('mDetTax').innerText = formatMoney(tax);
             document.getElementById('mDetTotalProd').innerText = formatMoney(opp.capital + tax);
 
-            // تفعيل زر الانضمام المستقل بناءً على الحالة والأسهم
+            // تفعيل زر الانضمام المستقل (ينقلك للصفحة الأخرى مع إرفاق المعرف)
             const btnJoin = document.getElementById('btnRedirectToJoin');
+            const warnMsg = document.getElementById('investWarningMsg');
+            
             if ((opp.status === 'قائم' || opp.status === 'النشطة') && availableSharesToBuy > 0) {
-                btnJoin.style.display = 'inline-flex';
-                // توجيه المستخدم لصفحة طلب الانضمام المخصصة (cancelled-investments.html) مع رقم الفرصة
+                btnJoin.style.display = 'flex';
+                // السطر السحري الذي يحل المشكلة! تمرير رقم الفرصة عبر الرابط
                 btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
+                warnMsg.style.display = 'none';
             } else {
                 btnJoin.style.display = 'none';
+                
+                if (availableSharesToBuy <= 0 && (opp.status === 'قائم' || opp.status === 'النشطة')) {
+                    warnMsg.innerText = "اكتملت جميع أسهم هذه الفرصة";
+                } else {
+                    warnMsg.innerText = "الفرصة غير متاحة للانضمام حالياً";
+                }
+                warnMsg.style.display = 'block';
             }
         }
     </script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
