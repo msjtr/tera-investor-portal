@@ -76,8 +76,8 @@
         /* تصميم استايل التنبيهات */
         .alert-banner { padding: 15px 20px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; border: 1px solid transparent; animation: fadeIn 0.3s ease; }
         .alert-warning { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; }
-        .alert-info { background-color: #f0fdfa; color: #0f766e; border-color: #ccfbf1; }
-        .alert-danger { background-color: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+        .alert-info { background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+        .alert-success { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -646,52 +646,50 @@
             currentActiveOpp = opp;
 
             // ==========================================
-            // معالجة وإظهار التنبيهات المطلوبة برمجياً
+            // معالجة التنبيهات
             // ==========================================
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = '';
             let hasAlerts = false;
 
-            // 1- تنبيه متبقي 5 أيام لتكون متاحة
-            if (opp.status === 'القادمة' && opp.daysLeftToStart === 5) {
+            // 1- تنبيه الفرصة القادمة (متبقي 5 أيام أو أقل)
+            if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && opp.daysLeftToStart <= 5) {
                 alertsCont.innerHTML += `
                     <div class="alert-banner alert-info">
-                        <i class="fas fa-bell"></i>
-                        <span>تنبيه: الفرصة متبقي لها 5 أيام وتكون متاحة للاستثمار والاصدار.</span>
+                        <i class="fas fa-bell" style="font-size:18px;"></i>
+                        <span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart} أيام وتكون متاحة للاستثمار.</span>
                     </div>`;
                 hasAlerts = true;
             }
 
-            // تنبيهات الفرص الجارية (النشطة أو قائم)
             if (opp.status === 'قائم' || opp.status === 'النشطة') {
-                // 2- تنبيه الفرصة قربت على الاكتمال (عند تخطي نسبة 80%)
+                // 2- تنبيه الفرصة قربت على الاكتمال
                 if (opp.fundedPercentage >= 80 && opp.fundedPercentage < 100) {
                     alertsCont.innerHTML += `
-                        <div class="alert-banner alert-success" style="background-color: #f0fdf4; color: #166534; border-color: #bbf7d0;">
-                            <i class="fas fa-chart-line"></i>
+                        <div class="alert-banner alert-success">
+                            <i class="fas fa-chart-line" style="font-size:18px;"></i>
                             <span>تنبيه: الفرصة قربت على الاكتمال! (نسبة الإنجاز الحالية: ${opp.fundedPercentage}%).</span>
                         </div>`;
                     hasAlerts = true;
                 }
-                // 3- تنبيه متبقي على الفرصة وينتهي الانضمام (أقل من أو يساوي 3 أيام)
-                if (opp.daysLeftToJoin && opp.daysLeftToJoin <= 3) {
+                // 3- تنبيه متبقي على الفرصة وينتهي الانضمام
+                if (opp.daysLeftToJoin !== undefined && opp.daysLeftToJoin <= 3) {
                     alertsCont.innerHTML += `
                         <div class="alert-banner alert-warning">
-                            <i class="fas fa-clock"></i>
-                            <span>تنبيه عاجل: متبقي ${opp.daysLeftToJoin} أيام على الفرصة الاستثمارية وينتهي الانضمام تماماً.</span>
+                            <i class="fas fa-clock" style="font-size:18px;"></i>
+                            <span>تنبيه عاجل: متبقي ${opp.daysLeftToJoin} أيام على الفرصة وينتهي الانضمام تماماً.</span>
                         </div>`;
                     hasAlerts = true;
                 }
             }
 
-            // إظهار أو إخفاء الحاوية بناء على وجود تنبيهات
             alertsCont.style.display = hasAlerts ? 'block' : 'none';
 
             // تحديث مؤشر التقدم في النافذة
             document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
             document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
 
-            // القسم الأول (تفاصيل الفرصة)
+            // القسم الأول
             document.getElementById('mDetOppId').innerText = opp.id;
             document.getElementById('mDetOppType').innerText = opp.type;
             document.getElementById('mDetOppStatus').innerText = opp.status;
@@ -708,7 +706,7 @@
             document.getElementById('mDetTotalProfit').innerText = formatMoney(opp.expectedProfit);
             document.getElementById('mDetTotalReturn').innerText = formatMoney(opp.capital + opp.expectedProfit);
 
-            // القسم الرابع (بيانات المنتج)
+            // القسم الرابع
             document.getElementById('mDetReqDate').innerText = opp.reqDate || "2025/12/29";
             let qnty = opp.sharesCount * 5; 
             document.getElementById('mDetProductQty').innerText = qnty;
@@ -719,7 +717,7 @@
             document.getElementById('mDetTax').innerText = tax;
             document.getElementById('mDetTotalProd').innerText = opp.capital + tax;
 
-            // زر الانضمام: متاح فقط لحالة "قائم" أو "النشطة"
+            // زر الانضمام
             const btnInvest = document.getElementById('btnInvestModalOpen');
             if(opp.status === 'قائم' || opp.status === 'النشطة') {
                 btnInvest.innerHTML = `<i class="fas fa-handshake"></i> الانضمام للفرصة`;
@@ -893,5 +891,9 @@
             if(elP1) elP1.innerText = dStr;
         });
     </script>
+
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/main.js"></script>
 </body>
 </html>
