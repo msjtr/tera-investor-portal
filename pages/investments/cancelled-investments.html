@@ -25,11 +25,8 @@
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         
         .header-left { display: flex; align-items: center; gap: 15px; }
-        .user-greeting { text-align: left; }
-        .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
-        .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
         
-        .join-container { max-width: 650px; margin: 50px auto; padding: 0 20px; }
+        .join-container { max-width: 900px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
         
         .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
@@ -39,12 +36,50 @@
         .opp-summary .price { font-family: monospace; font-weight: bold; color: #38bdf8; font-size: 18px; }
 
         .calc-group { margin-bottom: 25px; }
-        .calc-group label { display: block; font-size: 14px; font-weight: 700; color: var(--tera-navy); margin-bottom: 10px; }
+        .calc-group label { display: block; font-size: 15px; font-weight: 800; color: var(--tera-navy); margin-bottom: 12px; }
         .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 24px; font-family: monospace; font-weight: bold; text-align: center; color: var(--tera-teal); outline: none; transition: 0.3s; }
         .calc-input:focus { border-color: var(--tera-teal); }
         
         .available-shares-hint { font-size: 13px; color: var(--tera-teal); font-weight: bold; margin-top: 10px; display: block; text-align: center; }
 
+        /* الأقسام المضافة حديثاً المخفية في البداية */
+        #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+
+        /* طرق الدفع */
+        .payment-methods { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+        .pay-method-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; background: #f8fafc; }
+        .pay-method-card:hover { border-color: var(--tera-teal); background: #f0fdfa; }
+        .pay-method-card input { transform: scale(1.3); accent-color: var(--tera-teal); }
+        .pay-method-card strong { color: var(--tera-navy); font-size: 14px; }
+        .pay-method-card span { font-size: 12px; color: var(--tera-gray); display: block; margin-top: 4px; }
+
+        .disclaimer-text { font-size: 12px; color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 30px; line-height: 1.6; }
+
+        /* جداول الرسوم */
+        .tera-table { width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 30px; font-size: 13px; }
+        .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; }
+        .tera-table td { padding: 12px; border: 1px solid #e2e8f0; color: #334155; font-family: monospace; font-weight: bold; }
+        .tera-table td:first-child { font-family: 'Tajawal', sans-serif; font-weight: 600; }
+        .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
+
+        /* باقات الحماية */
+        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; }
+        .package-card:hover { border-color: var(--tera-teal); box-shadow: 0 5px 15px rgba(2, 128, 144, 0.1); }
+        .package-card input[type="radio"] { position: absolute; top: 15px; right: 15px; transform: scale(1.3); accent-color: var(--tera-teal); }
+        .package-card i { font-size: 30px; margin-bottom: 15px; }
+        .package-card.basic i { color: #64748b; }
+        .package-card.silver i { color: #94a3b8; }
+        .package-card.gold i { color: #eab308; }
+        .package-card.platinum i { color: #0ea5e9; }
+        .package-card h4 { margin: 0 0 10px 0; font-size: 16px; color: var(--tera-navy); }
+        .package-card p { margin: 0 0 10px 0; font-size: 12px; color: var(--tera-gray); line-height: 1.5; height: 60px; overflow: hidden; }
+        .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 13px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; }
+        
+        /* الصندوق النهائي */
         .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
         .calc-result-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; color: var(--tera-gray); font-weight: 700; }
         .calc-result-row:last-child { margin-bottom: 0; }
@@ -52,6 +87,10 @@
 
         .agreement-box { display: flex; gap: 12px; font-size: 14px; color: var(--tera-gray); margin-bottom: 30px; line-height: 1.5; background: #fffbeb; padding: 20px; border-radius: 12px; border: 1px solid #fde68a; }
         .agreement-box input { margin-top: 2px; transform: scale(1.3); accent-color: var(--tera-teal); cursor: pointer; }
+
+        .important-notes { background: #f8fafc; padding: 20px; border-radius: 12px; border-right: 4px solid var(--tera-teal); margin-bottom: 30px; }
+        .important-notes ul { margin: 0; padding-right: 20px; font-size: 13px; color: var(--tera-gray); line-height: 1.8; }
+        .important-notes li { margin-bottom: 8px; }
 
         .btn-action { width: 100%; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
@@ -89,25 +128,146 @@
 
             <div class="calc-group">
                 <label>حدد عدد الأسهم التي ترغب بالانضمام بها:</label>
-                <input type="number" id="shareInput" class="calc-input" min="1" value="1" oninput="calculateInvestment()">
+                <input type="number" id="shareInput" class="calc-input" min="0" value="0" placeholder="0" oninput="calculateInvestment()">
                 <span class="available-shares-hint">الأسهم المتاحة لك: <span id="maxShares" style="font-family:monospace; font-size:15px;">0</span></span>
             </div>
 
-            <div class="calc-result-box">
-                <div class="calc-result-row"><span>الأسهم المحددة:</span><span id="resSharesCount" style="font-family:monospace; font-weight:bold; color:var(--tera-navy);">1 سهم</span></div>
-                <div class="calc-result-row"><span>رأس المال المستثمر:</span><span id="resCapital" style="font-family:monospace; font-weight:bold; color:var(--tera-navy);">0.00 ر.س</span></div>
-                <div class="calc-result-row total"><span>المبلغ الإجمالي للدفع:</span><span id="resToPay" style="font-family:monospace; color:var(--tera-teal);">0.00 ر.س</span></div>
-            </div>
+            <div id="extendedDetails">
+                
+                <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
+                <div class="payment-methods">
+                    <label class="pay-method-card">
+                        <input type="radio" name="pay_method" checked>
+                        <div>
+                            <strong>الخصم من المحفظة</strong>
+                            <span class="mono">يظهر رصيد المحفظة الحالي: 15,400.00 ر.س</span>
+                        </div>
+                    </label>
+                    <label class="pay-method-card">
+                        <input type="radio" name="pay_method">
+                        <div>
+                            <strong>دفع مباشر من خلال بوابة الدفع</strong>
+                            <span>مدى، فيزا، ماستركارد، آبل باي</span>
+                        </div>
+                    </label>
+                </div>
 
-            <div class="agreement-box">
-                <input type="checkbox" id="agreeCheckbox" onchange="togglePayButton()">
-                <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة والموضحة في الدليل الإرشادي الشامل.</label>
-            </div>
+                <div class="disclaimer-text">
+                    <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال الغاء الفرصة او عدم الاكتمال يتم اعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 أيام عمل.
+                </div>
 
-            <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="processPayment()">
-                <i class="fas fa-lock"></i> إتمام الدفع والانضمام
-            </button>
-        </div>
+                <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمة والاشتراك بالفرصة</h4>
+                <table class="tera-table">
+                    <thead>
+                        <tr>
+                            <th>بند الخدمات</th>
+                            <th>قيمة الخدمة</th>
+                            <th>الضريبة 15%</th>
+                            <th>الإجمالي شامل الضريبة</th>
+                            <th>قيمة الدفعة الشهرية</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>الرسوم الإدارية</td>
+                            <td>20.00</td>
+                            <td>3.00</td>
+                            <td>23.00</td>
+                            <td>3.83</td>
+                            <td style="font-family:'Tajawal', sans-serif; font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        </tr>
+                        <tr>
+                            <td>رسوم التحويل</td>
+                            <td>25.00</td>
+                            <td>3.75</td>
+                            <td>28.75</td>
+                            <td>4.79</td>
+                            <td style="font-family:'Tajawal', sans-serif; font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        </tr>
+                        <tr>
+                            <td>رسوم التحصيل والمعالجة</td>
+                            <td>100.00</td>
+                            <td>15.00</td>
+                            <td>115.00</td>
+                            <td>19.17</td>
+                            <td style="font-family:'Tajawal', sans-serif; font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>الإجمالي</td>
+                            <td>145.00</td>
+                            <td>21.75</td>
+                            <td style="color:var(--tera-teal);">166.75</td>
+                            <td>27.79</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="section-title"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
+                <p style="font-size: 13px; color: var(--tera-gray); margin-bottom: 15px;">نوفر باقات حماية ومتابعة مرنة تمنح المستثمر راحة أكبر في إدارة استثماراته وفق المزايا التي تناسب احتياجاته.</p>
+                
+                <div class="packages-grid">
+                    <label class="package-card basic" onclick="selectPackage(this)">
+                        <input type="radio" name="protection_pkg" value="0" checked>
+                        <i class="fas fa-star"></i>
+                        <h4>الباقة الأساسية</h4>
+                        <p>الاستفادة من فرص الشراكة عبر المنصة دون أي مزايا إضافية للحماية أو التسوية المبكرة.</p>
+                        <span class="fee">متاحة للجميع مجاناً</span>
+                    </label>
+
+                    <label class="package-card silver" onclick="selectPackage(this)">
+                        <input type="radio" name="protection_pkg" value="1">
+                        <i class="fas fa-medal"></i>
+                        <h4>الباقة الفضية</h4>
+                        <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً دون الحاجة لانتظار التحصيل.</p>
+                        <span class="fee">20% من الأرباح أو 200 ريال كحد أقصى</span>
+                    </label>
+
+                    <label class="package-card gold" onclick="selectPackage(this)">
+                        <input type="radio" name="protection_pkg" value="2">
+                        <i class="fas fa-trophy"></i>
+                        <h4>الباقة الذهبية</h4>
+                        <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً دون الحاجة لانتظار التحصيل.</p>
+                        <span class="fee">20% من الأرباح أو 200 ريال كحد أقصى</span>
+                    </label>
+
+                    <label class="package-card platinum" onclick="selectPackage(this)">
+                        <input type="radio" name="protection_pkg" value="3">
+                        <i class="fas fa-gem"></i>
+                        <h4>الباقة البلاتينية</h4>
+                        <p>ضمان صرف رأس المال والأرباح في موعد الاستحقاق المحدد شهرياً دون انتظار السداد. أعلى مستوى أولوية.</p>
+                        <span class="fee">20% من الأرباح أو 200 ريال كحد أقصى</span>
+                    </label>
+                </div>
+
+                <div class="important-notes">
+                    <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
+                    <ul>
+                        <li>جميع الباقات المذكورة خدمات إضافية اختيارية وليست إلزامية.</li>
+                        <li>يمكن للمستثمر اختيار الباقة المناسبة أو الاستمرار على الباقة الأساسية المجانية.</li>
+                        <li>رسوم الاشتراك بواقع 20% من الأرباح المستحقة أو 200 ريال كحد أقصى (أيهما أقل).</li>
+                        <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
+                    </ul>
+                </div>
+
+                <div class="calc-result-box">
+                    <div class="calc-result-row"><span>الأسهم المحددة:</span><span id="resSharesCount" style="font-family:monospace; font-weight:bold; color:var(--tera-navy);">0 سهم</span></div>
+                    <div class="calc-result-row"><span>رأس المال المستثمر (قيمة الأسهم):</span><span id="resCapital" style="font-family:monospace; font-weight:bold; color:var(--tera-navy);">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>إجمالي رسوم الخدمة (تخصم من الأرباح):</span><span style="font-family:monospace; font-weight:bold; color:var(--tera-gray);">166.75 ر.س</span></div>
+                    <div class="calc-result-row total"><span>المبلغ المطلوب دفعه الآن:</span><span id="resToPay" style="font-family:monospace; color:var(--tera-teal);">0.00 ر.س</span></div>
+                </div>
+
+                <div class="agreement-box">
+                    <input type="checkbox" id="agreeCheckbox" onchange="togglePayButton()">
+                    <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة والرسوم الموضحة في الدليل الإرشادي.</label>
+                </div>
+
+                <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="processPayment()">
+                    <i class="fas fa-lock"></i> إتمام الدفع والانضمام
+                </button>
+
+            </div> </div>
     </div>
 
     <script>
@@ -139,14 +299,9 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
-            // الآلية الاحتياطية (Fallback) في حالة الفتح المباشر للملف (للتجربة)
             if (!oppId) {
-                // البحث عن أول فرصة نشطة ومتاحة للاستثمار
                 const defaultOpp = mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.fundedPercentage < 100);
-                if (defaultOpp) {
-                    oppId = defaultOpp.id;
-                    console.warn("تم تعيين فرصة افتراضية للتجربة لعدم وجود ID في الرابط.");
-                }
+                if (defaultOpp) { oppId = defaultOpp.id; }
             }
 
             document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
@@ -181,9 +336,6 @@
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
             document.getElementById('shareInput').max = availableSharesToBuy;
-            document.getElementById('shareInput').value = 1;
-            
-            calculateInvestment();
         }
 
         function calculateInvestment() {
@@ -191,14 +343,27 @@
             
             let inputEl = document.getElementById('shareInput');
             let shares = parseInt(inputEl.value) || 0;
+            let extendedDiv = document.getElementById('extendedDetails');
             
-            if (shares < 1) { shares = 1; inputEl.value = 1; }
-            if (shares > availableSharesToBuy) { shares = availableSharesToBuy; inputEl.value = availableSharesToBuy; }
-            
-            let capital = shares * currentActiveOpp.sharePrice;
-            document.getElementById('resSharesCount').innerText = shares + " سهم";
-            document.getElementById('resCapital').innerText = formatMoney(capital) + " ر.س";
-            document.getElementById('resToPay').innerText = formatMoney(capital) + " ر.س"; 
+            if (shares > 0) {
+                extendedDiv.style.display = 'block';
+                
+                if (shares > availableSharesToBuy) { shares = availableSharesToBuy; inputEl.value = availableSharesToBuy; }
+                
+                let capital = shares * currentActiveOpp.sharePrice;
+                // مبلغ الدفع الأساسي هو رأس المال المطلوب فقط (الرسوم تخصم لاحقاً من الأرباح كما في الصورة)
+                document.getElementById('resSharesCount').innerText = shares + " سهم";
+                document.getElementById('resCapital').innerText = formatMoney(capital) + " ر.س";
+                document.getElementById('resToPay').innerText = formatMoney(capital) + " ر.س"; 
+            } else {
+                extendedDiv.style.display = 'none';
+            }
+        }
+
+        function selectPackage(labelElement) {
+            // إزالة التأثير المرئي من جميع البطاقات ثم إضافته للمختارة
+            document.querySelectorAll('.package-card').forEach(el => el.style.borderColor = '#cbd5e1');
+            labelElement.style.borderColor = 'var(--tera-teal)';
         }
 
         function togglePayButton() {
