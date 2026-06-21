@@ -54,8 +54,6 @@
         .btn-primary:hover { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
         .btn-secondary { background: #f1f5f9; color: var(--tera-navy); border: 1px solid #cbd5e1; }
         .btn-secondary:hover { background: #e2e8f0; }
-        .btn-danger { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
-        .btn-danger:hover { background: #fee2e2; }
 
         .action-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding-top: 25px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; gap: 15px; }
         .action-footer .right-actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -82,8 +80,7 @@
 
     <header class="top-header no-print">
         <div class="header-right">
-            <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
-            <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px; margin-right: 15px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+            <a href="opportunities.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-arrow-right"></i> العودة للسوق</a>
             <h1 id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h1>
         </div>
         <div class="header-left">
@@ -108,9 +105,9 @@
                 <div class="info-grid">
                     <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal"></strong></div>
                     <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType" class="type-badge"></strong></div>
+                    <div class="info-item"><span>اسم المشروع / الفرصة</span><strong id="mDetOppCompany"></strong></div>
                     <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus"></strong></div>
                     <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono"></strong></div>
-                    
                     <div class="info-item"><span>إجمالي عدد الأسهم</span><strong id="mDetSharesCount" class="mono"></strong></div>
                     <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono"></strong></div>
                     <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono"></strong></div>
@@ -119,59 +116,18 @@
             </div>
 
             <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
-                    <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
-                    <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
-                    <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
-                    <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
-                    <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
-                    <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
-                    <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
-                    <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
-                    <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
-                </div>
-            </div>
-
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
-                    <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
-                    <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
-                    <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
-                    <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
-                    <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
-                </div>
-            </div>
-
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
+                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الثاني : تفاصيل المنتج والضرائب</h3>
                 <div class="info-grid">
                     <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono"></strong></div>
-                    <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
-                    <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono"></strong></div>
                     <div class="info-item"><span>قيمة المنتج الأساسية</span><strong id="mDetProdVal" class="mono"></strong></div>
-                    <div class="info-item"><span>سعر المنتج الواحد</span><strong id="mDetProdPrice" class="mono"></strong></div>
                     <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono"></strong></div>
                     <div class="info-item"><span>الإجمالي شامل الضريبة</span><strong id="mDetTotalProd" class="mono text-teal"></strong></div>
                 </div>
             </div>
 
-            <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
-                <div class="info-grid">
-                    <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
-                    <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
-                </div>
-            </div>
-
             <div class="action-footer no-print">
                 <div class="right-actions">
-                    <a href="opportunities.html" class="btn-action btn-secondary"><i class="fas fa-arrow-right"></i> العودة لسوق الفرص</a>
                     <button onclick="window.print()" class="btn-action btn-secondary"><i class="fas fa-print"></i> طباعة الدليل</button>
-                    <button onclick="alert('جاري تنزيل ملف PDF...')" class="btn-action btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
                 </div>
                 
                 <div class="left-actions">
@@ -179,6 +135,7 @@
                         <span>الأسهم المتاحة:</span>
                         <strong id="mDetAvailableShares">0</strong>
                     </div>
+                    <!-- الزر يوجه المستخدم لصفحة الانضمام مع إرسال رقم الفرصة -->
                     <a id="btnRedirectToJoin" href="#" class="btn-action btn-primary" style="display: none;">
                         <i class="fas fa-handshake"></i> طلب الانضمام للفرصة
                     </a>
@@ -191,37 +148,27 @@
     <script src="../../assets/js/investments.js"></script>
 
     <script>
-        function getDynamicDateLocal(daysOffset) {
-            let d = new Date(); d.setDate(d.getDate() + daysOffset);
-            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-        }
-        function generateIdLocal(type, dateStr, sequence) {
-            const parts = dateStr.split('/');
-            const yyyy = parts[2] || parts[0]; const mm = parts[1].padStart(2, '0'); const dd = parts[0].padStart(2, '0'); const seq = String(sequence).padStart(3, '0');
-            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
-        }
-        
-        const localMockData = [
-            { id: generateIdLocal("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46550", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(5), 2), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46551", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(10), 3), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", reqId: "46552", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-15), 4), type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", reqId: "46553", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, freq: "شهري", offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-60), 5), type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", reqId: "46554", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-100), 6), type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", reqId: "46555", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-5), 7), type: "شراكة ممتدة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46556", sharesCount: 30, sharePrice: 100, capital: 3000, expectedProfit: 900, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "12/06/2026 - 27/06/2026", reqDate: "2026/06/01" },
+        // === قاعدة البيانات الثابتة والموحدة بـ 12 حالة ===
+        const unifiedDatabase = [
+            // نوع: شراكة ممتدة (6 حالات)
+            { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
+            { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
+            { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
+            { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
+            { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
+            { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
             
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(2), 8), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", reqId: "46560", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(8), 9), type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", reqId: "46561", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(25), 10), type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", reqId: "46562", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-40), 11), type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", reqId: "46563", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-80), 12), type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46564", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-120), 13), type: "فرصة شراكة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - خدمات لوجستية", reqId: "46565", sharesCount: 30, sharePrice: 300, capital: 9000, expectedProfit: 2700, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "15/02/2026 - 02/03/2026", reqDate: "2026/01/25" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-1), 14), type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46566", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
+            // نوع: فرصة شراكة (6 حالات)
+            { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
+            { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
+            { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
+            { id: "FTR-2026-06-20-010", type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
+            { id: "FTR-2026-06-20-011", type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
+            { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        window.appData = typeof window.mockData !== 'undefined' && window.mockData.length > 0 ? window.mockData : localMockData;
+        window.appData = unifiedDatabase;
 
-        // دالة تنسيق تحمي من الأخطاء إذا كانت القيمة نصية
         function formatMoneyLocal(num) { 
             let n = parseFloat(num);
             if(isNaN(n)) return "0.00";
@@ -232,27 +179,28 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
+            // التقاط الفرصة بناءً على الرابط، وإذا لم يوجد رابط نلتقط أول فرصة متاحة للتجربة
             if (!oppId) {
                 const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
-                if (defaultOpp) { 
-                    oppId = defaultOpp.id; 
-                } else if(window.appData.length > 0) {
-                    oppId = window.appData[0].id;
-                }
+                if (defaultOpp) { oppId = defaultOpp.id; } 
+                else if(window.appData.length > 0) { oppId = window.appData[0].id; }
             }
 
             if (oppId) {
-                // تم إضافة String() لضمان تطابق الأرقام مع النصوص بدون أخطاء
+                // استخدام String() يضمن عدم حدوث أخطاء إذا كان المعرف نَصاً أو رقماً
                 const opp = window.appData.find(d => String(d.id) === String(oppId));
-                if (opp) renderDetails(opp);
-                else { alert("عذراً، الفرصة غير موجودة أو تم حذفها."); window.location.href = "opportunities.html"; }
+                if (opp) {
+                    renderDetails(opp);
+                } else { 
+                    alert("عذراً، الفرصة غير موجودة أو تم حذفها."); 
+                    window.location.href = "opportunities.html";
+                }
             }
         });
 
         function renderDetails(opp) {
             document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + (opp.company || '');
 
-            // تحويل القيم بصرامة إلى أرقام لمنع أخطاء الدمج (Concatenation)
             let sharesCountNum = parseInt(opp.sharesCount) || 0;
             let fundedPercNum = parseFloat(opp.fundedPercentage) || 0;
             let capitalNum = parseFloat(opp.capital) || 0;
@@ -263,57 +211,40 @@
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = ''; let hasAlerts = false;
 
-            if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && parseInt(opp.daysLeftToStart) <= 5) {
-                alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart} أيام وتكون متاحة للاستثمار.</span></div>`;
+            if (opp.status === 'القادمة') {
+                alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart || 3} أيام وتكون متاحة للاستثمار.</span></div>`;
                 hasAlerts = true;
             }
             if (opp.status === 'قائم' || opp.status === 'النشطة') {
                 if (fundedPercNum >= 80 && fundedPercNum < 100) {
-                    alertsCont.innerHTML += `<div class="alert-banner alert-success"><i class="fas fa-chart-line" style="font-size:18px;"></i><span>تنبيه: الفرصة قربت على الاكتمال! (نسبة الإنجاز الحالية: ${fundedPercNum}%).</span></div>`;
-                    hasAlerts = true;
-                }
-                if (opp.daysLeftToJoin !== undefined && parseInt(opp.daysLeftToJoin) <= 3) {
-                    alertsCont.innerHTML += `<div class="alert-banner alert-warning"><i class="fas fa-clock" style="font-size:18px;"></i><span>تنبيه عاجل: متبقي ${opp.daysLeftToJoin} أيام على الفرصة وينتهي الانضمام تماماً.</span></div>`;
+                    alertsCont.innerHTML += `<div class="alert-banner alert-success"><i class="fas fa-chart-line" style="font-size:18px;"></i><span>تنبيه: الفرصة قاربت على الاكتمال! (نسبة الإنجاز الحالية: ${fundedPercNum}%).</span></div>`;
                     hasAlerts = true;
                 }
             }
             alertsCont.style.display = hasAlerts ? 'block' : 'none';
 
-            // بيانات القسم الأول
             document.getElementById('mDetProgressText').innerText = fundedPercNum + '%';
             document.getElementById('mDetProgressBar').style.width = fundedPercNum + '%';
             document.getElementById('mDetOppId').innerText = opp.id;
+            document.getElementById('mDetOppCompany').innerText = opp.company;
             
             let typeBadgeEl = document.getElementById('mDetOppType');
             typeBadgeEl.innerText = opp.type;
-            if(opp.type === 'فرصة شراكة') {
-                typeBadgeEl.className = 'type-badge type-opportunity';
-            } else {
-                typeBadgeEl.className = 'type-badge type-extended';
-            }
+            typeBadgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
 
             document.getElementById('mDetOppStatus').innerText = opp.status;
             document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
             document.getElementById('mDetSharesCount').innerText = sharesCountNum;
-            
             document.getElementById('mDetSharePrice').innerText = formatMoneyLocal(sharePriceNum) + ' ر.س';
             document.getElementById('mDetTotalCapital').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
             document.getElementById('mDetRatio').innerText = (opp.roi || 0) + "%";
 
-            // بيانات القسم الرابع 
             document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
-            let qnty = sharesCountNum * 5; 
-            document.getElementById('mDetProductQty').innerText = qnty;
-            
             document.getElementById('mDetProdVal').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
-            document.getElementById('mDetProdPrice').innerText = formatMoneyLocal(sharePriceNum / 5) + ' ر.س'; 
-            
-            // الحساب بعد التأكد أن capitalNum هو رقم حقيقي
             let tax = capitalNum * 0.15;
             document.getElementById('mDetTax').innerText = formatMoneyLocal(tax) + ' ر.س';
             document.getElementById('mDetTotalProd').innerText = formatMoneyLocal(capitalNum + tax) + ' ر.س';
 
-            // أزرار الانضمام
             const btnJoin = document.getElementById('btnRedirectToJoin');
             const warnMsg = document.getElementById('investWarningMsg');
             const miniSharesBox = document.getElementById('miniSharesBox');
@@ -323,7 +254,9 @@
                 miniSharesBox.style.display = 'inline-flex';
                 document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                 
-                btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
+                // توجيه سليم لصفحة الانضمام
+                // تأكد أن اسم ملف صفحة الانضمام لديك هو "join-opportunity.html"، إذا كان مختلفاً قم بتعديله هنا.
+                btnJoin.href = `join-opportunity.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
                 btnJoin.style.display = 'none';
