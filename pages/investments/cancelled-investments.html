@@ -102,6 +102,8 @@
 
         .btn-nav { padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; color: var(--tera-navy); text-decoration: none; font-size: 13px; transition: 0.2s; }
         .btn-nav:hover { background: #e2e8f0; }
+        
+        .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; display: inline-block;}
     </style>
 </head>
 <body>
@@ -229,10 +231,13 @@
                     
                     <div style="margin: 10px 0; border-top: 1px solid #e2e8f0; padding-top: 10px;"></div>
                     
-                    <div class="calc-result-row"><span>إجمالي ضرائب المنتج 15%:</span><span id="sumProdTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
-                    <div class="calc-result-row"><span>إجمالي ضرائب الخدمات والاشتراك 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>إجمالي ضرائب المنتج لوحدها 15%:</span><span id="sumProdTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>والخدمات لوحدها 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
+                    
+                    <div class="calc-result-row" style="margin-top: 10px;"><span>الإجمالي العام (رأس المال + جميع الرسوم والضرائب):</span><span id="sumTotalAll" style="font-family:monospace; color:var(--tera-gray);">0.00 ر.س</span></div>
                     
                     <div class="calc-result-row total"><span>المبلغ المطالب بدفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal);">0.00 ر.س</span></div>
+                    <div style="font-size: 11px; color: var(--tera-gray); text-align: left; margin-top: 5px;">* رسوم الخدمات والاشتراكات لا تُدفع الآن، بل تُجدول وتُخصم من الدفعات الدورية.</div>
                 </div>
 
                 <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
@@ -290,6 +295,7 @@
             return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
+        // قاعدة البيانات
         const mockData = [
             { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
@@ -410,7 +416,7 @@
                 let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
                 let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات الثابتة
+                // حساب رسوم الخدمات كما هي في الإكسل
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
@@ -429,7 +435,7 @@
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // 1. جدول الرسوم
+                // 1. تحديث جدول الرسوم
                 let tableBody = `
                     <tr>
                         <td class="text-start">الرسوم الإدارية</td>
@@ -474,10 +480,9 @@
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                // 2. بناء جدول توزيع الدفعات بناءً على نوع الفرصة
+                // 2. تحديث جدول توزيع الدفعات
                 let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
-                
-                document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات شراكة ممتدة" : "جدول توزيع الدفعات فرصة شراكة";
+                document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
 
                 let distHeader = `<tr>
                     <th>تاريخ التحصيل</th>`;
@@ -533,14 +538,17 @@
 
                 document.getElementById('distributionTableBody').innerHTML = distBody;
 
-                // تحديث ملخص الدفع النهائي
+                // 3. تحديث ملخص الدفع النهائي كما طلبت (فصل الضرائب عن المبلغ المطلوب الدفع الآن)
                 let totalToPayNow = capital + productVat;
+                let totalOverall = capital + productVat + totalServiceFinal;
 
                 document.getElementById('sumShares').innerText = shares;
                 document.getElementById('sumCapital').innerText = formatMoney(capital) + " ر.س";
                 document.getElementById('sumProdTax').innerText = formatMoney(productVat) + " ر.س";
                 document.getElementById('sumServTax').innerText = formatMoney(totalServiceVat) + " ر.س";
+                document.getElementById('sumTotalAll').innerText = formatMoney(totalOverall) + " ر.س";
                 
+                // المبلغ المطلوب الآن هو فقط (رأس المال + ضريبة المنتج) لأن الخدمات تخصم من الأرباح مستقبلاً
                 document.getElementById('resToPayNow').innerText = formatMoney(totalToPayNow) + " ر.س"; 
 
             } else {
