@@ -53,7 +53,7 @@
         .mono { font-family: monospace; font-size: 16px !important; }
 
         .btn-action { padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; font-family: inherit; transition: 0.2s; text-decoration: none; }
-        .btn-action.full-width { width: 100%; }
+        .btn-action.full-width { width: 100%; margin-bottom: 10px; }
         .btn-action.auto-width { width: auto; padding: 10px 20px; display: inline-flex; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
         .btn-primary:hover { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.3); }
@@ -62,9 +62,10 @@
         .btn-danger { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
         .btn-danger:hover { background: #fee2e2; }
 
+        /* الصندوق المبسط الجانبي */
         .opp-mini-summary { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
-        .opp-mini-summary span { display: block; font-size: 13px; color: var(--tera-gray); margin-bottom: 5px; }
-        .opp-mini-summary strong { font-size: 24px; color: var(--tera-teal); font-family: monospace; }
+        .opp-mini-summary span { display: block; font-size: 13px; color: var(--tera-gray); margin-bottom: 5px; font-weight: 700; }
+        .opp-mini-summary strong { font-size: 28px; color: var(--tera-teal); font-family: monospace; }
 
         @media print {
             body * { visibility: hidden; }
@@ -217,10 +218,10 @@
             const mm = parts[1].padStart(2, '0');
             const dd = parts[0].padStart(2, '0');
             const seq = String(sequence).padStart(3, '0');
-            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
+            const prefix = type === 'شراكة ممتدة' ? 'TR' : 'FTR';
+            return `${prefix}-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
-        // نفس قاعدة البيانات المشتركة لضمان جلب البيانات بناءً على الرابط
         const mockData = [
             { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToJoin: 0, daysLeftToStart: 5, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
@@ -249,14 +250,12 @@
             if (oppId) {
                 const opp = mockData.find(d => d.id === oppId);
                 if (opp) {
-                    currentActiveOpp = opp;
                     renderDetails(opp);
                 } else {
                     alert("عذراً، الفرصة غير موجودة أو تم حذفها.");
                     window.location.href = "opportunities.html";
                 }
             } else {
-                currentActiveOpp = mockData[0];
                 renderDetails(mockData[0]);
             }
         });
@@ -328,13 +327,13 @@
             document.getElementById('mDetTax').innerText = formatMoney(tax);
             document.getElementById('mDetTotalProd').innerText = formatMoney(opp.capital + tax);
 
-            // تفعيل زر الانضمام المستقل (ينقلك للصفحة الأخرى مع إرفاق المعرف)
+            // تفعيل زر الانضمام المستقل الذي ينقل المستخدم لصفحة الدفع
             const btnJoin = document.getElementById('btnRedirectToJoin');
             const warnMsg = document.getElementById('investWarningMsg');
             
             if ((opp.status === 'قائم' || opp.status === 'النشطة') && availableSharesToBuy > 0) {
-                btnJoin.style.display = 'flex';
-                // السطر السحري الذي يحل المشكلة! تمرير رقم الفرصة عبر الرابط
+                btnJoin.style.display = 'inline-flex';
+                // التوجيه إلى cancelled-investments.html مع تمرير الـ id
                 btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
