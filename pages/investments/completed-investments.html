@@ -256,7 +256,8 @@
                 
                 // توجيه سليم لصفحة الانضمام
                 // تأكد أن اسم ملف صفحة الانضمام لديك هو "join-opportunity.html"، إذا كان مختلفاً قم بتعديله هنا.
-                btnJoin.href = `join-opportunity.html?id=${opp.id}`;
+                btnJoin.href = `
+cancelled-investments.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
                 btnJoin.style.display = 'none';
