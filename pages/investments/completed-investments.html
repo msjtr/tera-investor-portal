@@ -116,12 +116,51 @@
             </div>
 
             <div class="detail-block">
-                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الثاني : تفاصيل المنتج والضرائب</h3>
+                <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
+                    <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
+                    <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
+                    <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
+                    <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
+                    <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
+                    <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
+                    <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
+                    <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
+                    <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
+                    <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
+                    <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
+                    <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
+                    <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
+                    <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
                 <div class="info-grid">
                     <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono"></strong></div>
+                    <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
+                    <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono"></strong></div>
                     <div class="info-item"><span>قيمة المنتج الأساسية</span><strong id="mDetProdVal" class="mono"></strong></div>
+                    <div class="info-item"><span>سعر المنتج الواحد</span><strong id="mDetProdPrice" class="mono"></strong></div>
                     <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono"></strong></div>
                     <div class="info-item"><span>الإجمالي شامل الضريبة</span><strong id="mDetTotalProd" class="mono text-teal"></strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
+                    <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
                 </div>
             </div>
 
@@ -135,7 +174,6 @@
                         <span>الأسهم المتاحة:</span>
                         <strong id="mDetAvailableShares">0</strong>
                     </div>
-                    <!-- الزر يوجه المستخدم لصفحة الانضمام مع إرسال رقم الفرصة -->
                     <a id="btnRedirectToJoin" href="#" class="btn-action btn-primary" style="display: none;">
                         <i class="fas fa-handshake"></i> طلب الانضمام للفرصة
                     </a>
@@ -148,7 +186,7 @@
     <script src="../../assets/js/investments.js"></script>
 
     <script>
-        // === قاعدة البيانات الثابتة والموحدة بـ 12 حالة ===
+        // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
         const unifiedDatabase = [
             // نوع: شراكة ممتدة (6 حالات)
             { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
@@ -179,15 +217,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
-            // التقاط الفرصة بناءً على الرابط، وإذا لم يوجد رابط نلتقط أول فرصة متاحة للتجربة
-            if (!oppId) {
+            if (oppId) oppId = oppId.trim();
+
+            if (!oppId && window.appData.length > 0) {
                 const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
                 if (defaultOpp) { oppId = defaultOpp.id; } 
                 else if(window.appData.length > 0) { oppId = window.appData[0].id; }
             }
 
             if (oppId) {
-                // استخدام String() يضمن عدم حدوث أخطاء إذا كان المعرف نَصاً أو رقماً
                 const opp = window.appData.find(d => String(d.id) === String(oppId));
                 if (opp) {
                     renderDetails(opp);
@@ -211,8 +249,8 @@
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = ''; let hasAlerts = false;
 
-            if (opp.status === 'القادمة') {
-                alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart || 3} أيام وتكون متاحة للاستثمار.</span></div>`;
+            if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && parseInt(opp.daysLeftToStart) <= 5) {
+                alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart} أيام وتكون متاحة للاستثمار.</span></div>`;
                 hasAlerts = true;
             }
             if (opp.status === 'قائم' || opp.status === 'النشطة') {
@@ -226,7 +264,6 @@
             document.getElementById('mDetProgressText').innerText = fundedPercNum + '%';
             document.getElementById('mDetProgressBar').style.width = fundedPercNum + '%';
             document.getElementById('mDetOppId').innerText = opp.id;
-            document.getElementById('mDetOppCompany').innerText = opp.company;
             
             let typeBadgeEl = document.getElementById('mDetOppType');
             typeBadgeEl.innerText = opp.type;
@@ -239,8 +276,14 @@
             document.getElementById('mDetTotalCapital').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
             document.getElementById('mDetRatio').innerText = (opp.roi || 0) + "%";
 
+            // القسم الرابع (الحسابات)
             document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
+            let qnty = sharesCountNum * 5; 
+            document.getElementById('mDetProductQty').innerText = qnty;
+            
             document.getElementById('mDetProdVal').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
+            document.getElementById('mDetProdPrice').innerText = formatMoneyLocal(sharePriceNum / 5) + ' ر.س'; 
+            
             let tax = capitalNum * 0.15;
             document.getElementById('mDetTax').innerText = formatMoneyLocal(tax) + ' ر.س';
             document.getElementById('mDetTotalProd').innerText = formatMoneyLocal(capitalNum + tax) + ' ر.س';
@@ -254,10 +297,9 @@
                 miniSharesBox.style.display = 'inline-flex';
                 document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                 
-                // توجيه سليم لصفحة الانضمام
-                // تأكد أن اسم ملف صفحة الانضمام لديك هو "join-opportunity.html"، إذا كان مختلفاً قم بتعديله هنا.
-                btnJoin.href = `
-cancelled-investments.html?id=${opp.id}`;
+                // ===== استبدال الرابط برابطك الحقيقي =====
+                btnJoin.href = "cancelled-investments.html?id=" + opp.id;
+
                 warnMsg.style.display = 'none';
             } else {
                 btnJoin.style.display = 'none';
