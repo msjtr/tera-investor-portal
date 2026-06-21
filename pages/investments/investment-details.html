@@ -332,8 +332,9 @@
             data.forEach(item => {
                 const badge = getBadgeClass(item.status);
                 const typeBadge = getTypeBadgeClass(item.type);
-                // هنا يتم تحويل الزر إلى رابط URL حقيقي لصفحة التفاصيل
-                const detailUrl = `opportunity-details.html?id=${item.id}`;
+                
+                // الرابط المعتمد بناءً على طلبك
+                const detailUrl = `/tera-investor-portal/pages/investments/completed-investments.html?id=${item.id}`;
 
                 gridCont.innerHTML += `
                     <div class="opp-card">
