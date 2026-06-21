@@ -73,6 +73,14 @@
         .progress-bar-bg { background-color: #e2e8f0; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; }
         .progress-bar-fill { background-color: var(--tera-teal); height: 100%; transition: width 0.4s ease; border-radius: 8px; }
 
+        /* تصميم استايل التنبيهات */
+        .alert-banner { padding: 15px 20px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; border: 1px solid transparent; animation: fadeIn 0.3s ease; }
+        .alert-warning { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+        .alert-info { background-color: #f0fdfa; color: #0f766e; border-color: #ccfbf1; }
+        .alert-danger { background-color: #fef2f2; color: #b91c1c; border-color: #fee2e2; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
         /* الشارات والألوان للتمييز */
         .badge { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; text-align: center; border: 1px solid transparent; }
         .status-upcoming { background: #dcfce7; color: #10b981; border-color: #bbf7d0; } 
@@ -302,6 +310,8 @@
                     <p>تاريخ الاستخراج: <span id="printDateStr1"></span></p>
                 </div>
 
+                <div id="mDetAlertsContainer" class="no-print"></div>
+
                 <div class="detail-block">
                     <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
                     <div class="progress-wrapper" style="margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -459,25 +469,31 @@
             return `${prefix}-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
-        // ==========================================
-        // قاعدة البيانات: تمت إضافة fundedPercentage (نسبة الاكتمال)
-        // ==========================================
+        // =========================================================================
+        // قاعدة البيانات: تم دعم الخصائص (daysLeftToStart و daysLeftToJoin) لتوليد التنبيهات
+        // =========================================================================
         const mockData = [
-            // 7: شراكة ممتدة
-            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 65, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
-            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
+            // فرصة 1: "قائم" + قربت على الاكتمال (85%) + متبقي يومين وينتهي الانضمام
+            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
+            
+            // فرصة 2: "القادمة" + متبقي 5 أيام لتكون متاحة
+            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToJoin: 0, daysLeftToStart: 5, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
+            
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(-150), 3), type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", reqId: "46557", sharesCount: 20, sharePrice: 200, capital: 4000, expectedProfit: 1200, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "10/01/2026 - 20/01/2026", reqDate: "2025/11/05" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(-10), 4), type: "شراكة ممتدة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "تمويل أفراد - سيارة", reqId: "46558", sharesCount: 40, sharePrice: 150, capital: 6000, expectedProfit: 1200, roi: 20, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-10) + " - " + getDynamicDate(0), reqDate: "2026/03/15" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(-120), 5), type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", reqId: "46559", sharesCount: 100, sharePrice: 10, capital: 1000, expectedProfit: 400, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "01/01/2026 - 15/01/2026", reqDate: "2025/12/01" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(-200), 6), type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", reqId: "46560", sharesCount: 18, sharePrice: 100, capital: 1800, expectedProfit: 720, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "01/10/2025 - 15/10/2025", reqDate: "2025/09/20" },
-            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
+            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
 
             // 7: فرصة شراكة
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تأثيث", reqId: "46562", sharesCount: 10, sharePrice: 1000, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-140), 9), type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - سفر", reqId: "46563", sharesCount: 30, sharePrice: 500, capital: 15000, expectedProfit: 6000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "01/12/2025 - 15/12/2025", reqDate: "2025/11/15" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-160), 10), type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", reqId: "46564", sharesCount: 20, sharePrice: 400, capital: 8000, expectedProfit: 2400, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "15/11/2025 - 30/11/2025", reqDate: "2025/10/25" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-5), 11), type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - عقار", reqId: "46565", sharesCount: 10, sharePrice: 2000, capital: 20000, expectedProfit: 10000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-5) + " - " + getDynamicDate(5), reqDate: "2026/06/01" },
-            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-30), 12), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 40, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46566", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-35) + " - " + getDynamicDate(-25), reqDate: "2026/04/20" },
+            
+            // فرصة نشطة قربت على الاكتمال (90%)
+            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-30), 12), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 90, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46566", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-35) + " - " + getDynamicDate(-25), reqDate: "2026/04/20" },
+            
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-100), 13), type: "فرصة شراكة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - خدمات لوجستية", reqId: "46567", sharesCount: 30, sharePrice: 300, capital: 9000, expectedProfit: 2700, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "01/03/2026 - 15/03/2026", reqDate: "2026/01/20" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(3), 14), type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46568", sharesCount: 20, sharePrice: 1500, capital: 30000, expectedProfit: 15000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(3) + " - " + getDynamicDate(13), reqDate: "2026/05/25" }
         ];
@@ -597,7 +613,6 @@
             });
 
             filtered.sort((a, b) => {
-                if(sortVal === 'newest') return 0; 
                 if(sortVal === 'lowest_share') return a.sharePrice - b.sharePrice;
                 if(sortVal === 'highest_share') return b.sharePrice - a.sharePrice;
                 if(sortVal === 'highest_roi') return (b.expectedProfit/b.capital) - (a.expectedProfit/a.capital);
@@ -630,11 +645,53 @@
             if(!opp) return;
             currentActiveOpp = opp;
 
+            // ==========================================
+            // معالجة وإظهار التنبيهات المطلوبة برمجياً
+            // ==========================================
+            const alertsCont = document.getElementById('mDetAlertsContainer');
+            alertsCont.innerHTML = '';
+            let hasAlerts = false;
+
+            // 1- تنبيه متبقي 5 أيام لتكون متاحة
+            if (opp.status === 'القادمة' && opp.daysLeftToStart === 5) {
+                alertsCont.innerHTML += `
+                    <div class="alert-banner alert-info">
+                        <i class="fas fa-bell"></i>
+                        <span>تنبيه: الفرصة متبقي لها 5 أيام وتكون متاحة للاستثمار والاصدار.</span>
+                    </div>`;
+                hasAlerts = true;
+            }
+
+            // تنبيهات الفرص الجارية (النشطة أو قائم)
+            if (opp.status === 'قائم' || opp.status === 'النشطة') {
+                // 2- تنبيه الفرصة قربت على الاكتمال (عند تخطي نسبة 80%)
+                if (opp.fundedPercentage >= 80 && opp.fundedPercentage < 100) {
+                    alertsCont.innerHTML += `
+                        <div class="alert-banner alert-success" style="background-color: #f0fdf4; color: #166534; border-color: #bbf7d0;">
+                            <i class="fas fa-chart-line"></i>
+                            <span>تنبيه: الفرصة قربت على الاكتمال! (نسبة الإنجاز الحالية: ${opp.fundedPercentage}%).</span>
+                        </div>`;
+                    hasAlerts = true;
+                }
+                // 3- تنبيه متبقي على الفرصة وينتهي الانضمام (أقل من أو يساوي 3 أيام)
+                if (opp.daysLeftToJoin && opp.daysLeftToJoin <= 3) {
+                    alertsCont.innerHTML += `
+                        <div class="alert-banner alert-warning">
+                            <i class="fas fa-clock"></i>
+                            <span>تنبيه عاجل: متبقي ${opp.daysLeftToJoin} أيام على الفرصة الاستثمارية وينتهي الانضمام تماماً.</span>
+                        </div>`;
+                    hasAlerts = true;
+                }
+            }
+
+            // إظهار أو إخفاء الحاوية بناء على وجود تنبيهات
+            alertsCont.style.display = hasAlerts ? 'block' : 'none';
+
             // تحديث مؤشر التقدم في النافذة
             document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
             document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
 
-            // القسم الأول (تم دمج معلومات الجدول هنا)
+            // القسم الأول (تفاصيل الفرصة)
             document.getElementById('mDetOppId').innerText = opp.id;
             document.getElementById('mDetOppType').innerText = opp.type;
             document.getElementById('mDetOppStatus').innerText = opp.status;
@@ -651,7 +708,7 @@
             document.getElementById('mDetTotalProfit').innerText = formatMoney(opp.expectedProfit);
             document.getElementById('mDetTotalReturn').innerText = formatMoney(opp.capital + opp.expectedProfit);
 
-            // القسم الرابع (بيانات المنتج وتاريخ الطلب)
+            // القسم الرابع (بيانات المنتج)
             document.getElementById('mDetReqDate').innerText = opp.reqDate || "2025/12/29";
             let qnty = opp.sharesCount * 5; 
             document.getElementById('mDetProductQty').innerText = qnty;
