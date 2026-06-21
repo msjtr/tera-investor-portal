@@ -5,26 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>سوق الفرص والشركات المطروحة | Tera Investor Portal</title>
     
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="/assets/css/app.css">
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/responsive.css">
-    <link rel="stylesheet" href="/assets/css/investments.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="../../assets/css/investments.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
-        :root {
-            --tera-teal: #028090;
-            --tera-navy: #0A1B3F;
-            --tera-gray: #64748b;
-            --tera-bg: #f8fafc;
-        }
-
+        :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-gray: #64748b; --tera-bg: #f8fafc; }
         html, body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100vw; max-width: 100%; box-sizing: border-box; }
         *, *::before, *::after { box-sizing: border-box; }
         
@@ -73,7 +67,7 @@
         .progress-bar-bg { background-color: #e2e8f0; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; }
         .progress-bar-fill { background-color: var(--tera-teal); height: 100%; transition: width 0.4s ease; border-radius: 8px; }
 
-        /* الشارات والألوان للتمييز */
+        /* الشارات والألوان */
         .badge { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; text-align: center; border: 1px solid transparent; }
         .status-upcoming { background: #dcfce7; color: #10b981; border-color: #bbf7d0; } 
         .status-active { background: #e0f2fe; color: #028090; border-color: #bae6fd; } 
@@ -126,8 +120,8 @@
             
             <header class="top-header no-print">
                 <div class="header-logo">
-                    <a href="/dashboard" class="btn-action" style="border:none; padding: 8px 20px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
-                    <img src="/images/logo.svg" alt="Tera Logo" style="height: 40px; margin-right: 15px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                    <a href="../dashboard/index.html" class="btn-action" style="border:none; padding: 8px 20px;"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
+                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px; margin-right: 15px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
                     <h1>سوق الفرص والشركات المطروحة</h1>
                 </div>
                 <div class="header-user">
@@ -174,7 +168,6 @@
                             <option value="شراكة ممتدة">شراكة ممتدة</option>
                             <option value="فرصة شراكة">فرصة شراكة</option>
                         </select>
-                        
                         <select id="statusFilter" class="search-input">
                             <option value="all">جميع الحالات</option>
                             <option value="النشطة">النشطة / قائم</option>
@@ -184,7 +177,6 @@
                             <option value="المغلقة">المغلقة</option>
                             <option value="الملغاة">الملغاة</option>
                         </select>
-                        
                         <select id="sortFilter" class="search-input">
                             <option value="newest">الاحداث</option>
                             <option value="lowest_share">الاقل في قيمة السهم</option>
@@ -194,11 +186,9 @@
                             <option value="shortest_duration">اقل مده</option>
                             <option value="longest_duration">اعلى مده</option>
                         </select>
-                        
                         <div class="search-box" style="flex: 1; min-width: 200px;">
                             <input type="text" id="searchInput" class="search-input" style="width: 100%; box-sizing:border-box;" placeholder="بحث برقم الفرصة أو اسم المشروع...">
                         </div>
-
                         <div class="view-toggles">
                             <button id="btnList" class="view-btn active" onclick="window.switchView('list')" title="عرض قائمة"><i class="fas fa-bars"></i></button>
                             <button id="btnGrid" class="view-btn" onclick="window.switchView('grid')" title="عرض بطاقات"><i class="fas fa-th-large"></i></button>
@@ -333,8 +323,8 @@
                 const badge = getBadgeClass(item.status);
                 const typeBadge = getTypeBadgeClass(item.type);
                 
-                // الرابط المعتمد بناءً على طلبك
-                const detailUrl = `/tera-investor-portal/pages/investments/completed-investments.html?id=${item.id}`;
+                // مسار نسبي مباشر لنفس المجلد كما طلبت لتفادي الـ 404
+                const detailUrl = `completed-investments.html?id=${item.id}`;
 
                 gridCont.innerHTML += `
                     <div class="opp-card">
@@ -531,9 +521,8 @@
             document.getElementById('searchInput').addEventListener('input', window.applyFilters);
         });
     </script>
-
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/main.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
