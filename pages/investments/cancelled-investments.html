@@ -25,7 +25,7 @@
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         
-        .join-container { max-width: 900px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
+        .join-container { max-width: 950px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
         .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
         .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
@@ -36,7 +36,6 @@
         .calc-group { margin-bottom: 25px; text-align: center; }
         .calc-group label { display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; }
         
-        /* عداد الأسهم الجديد (أزرار بارزة) */
         .share-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; direction: ltr; }
         .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; }
         .share-selector button:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
@@ -50,9 +49,8 @@
 
         .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 30px; }
 
-        /* باقات الحماية بتسعير متفاوت */
         .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; }
+        .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
         .package-card.selected { border-color: var(--tera-teal); box-shadow: 0 5px 15px rgba(2, 128, 144, 0.1); background: #f0fdfa; }
         .package-card input[type="radio"] { position: absolute; top: 15px; right: 15px; transform: scale(1.3); accent-color: var(--tera-teal); pointer-events: none; }
         .package-card i { font-size: 30px; margin-bottom: 15px; }
@@ -62,12 +60,14 @@
         .package-card.platinum i { color: #0ea5e9; }
         .package-card h4 { margin: 0 0 10px 0; font-size: 16px; color: var(--tera-navy); }
         .package-card p { margin: 0 0 10px 0; font-size: 12px; color: var(--tera-gray); line-height: 1.5; height: 60px; overflow: hidden; }
-        .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 13px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; }
+        .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 15px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; font-family: monospace; }
+        .package-card.selected .fee { background: var(--tera-teal); color: #fff; }
 
         .tera-table { width: 100%; border-collapse: collapse; text-align: right; margin-bottom: 20px; font-size: 13px; }
         .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; }
         .tera-table td { padding: 12px; border: 1px solid #e2e8f0; color: #334155; font-family: monospace; font-weight: bold; }
         .tera-table td:first-child { font-family: 'Tajawal', sans-serif; font-weight: 600; }
+        .tera-table td:last-child { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
         .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
 
         .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
@@ -124,6 +124,7 @@
                 <h3 id="invOppName">جاري التحميل...</h3>
                 <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span></p>
                 <p style="margin-top: 8px;">قيمة السهم الواحد: <span id="invSharePrice" class="price"></span></p>
+                <p style="margin-top: 5px; font-size: 12px; color: #94a3b8;">مدة الفرصة: <span id="invDuration" style="font-family:monospace; font-weight:bold; color:#fff;"></span></p>
             </div>
 
             <div class="calc-group">
@@ -139,39 +140,47 @@
             <div id="extendedDetails">
                 
                 <h4 class="section-title" style="margin-top: 0;"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
-                <p style="font-size: 13px; color: var(--tera-gray); margin-bottom: 15px;">نوفر باقات حماية ومتابعة مرنة تمنح المستثمر راحة أكبر في إدارة استثماراته.</p>
+                <p style="font-size: 13px; color: var(--tera-gray); margin-bottom: 15px;">نوفر باقات حماية ومتابعة مرنة تمنح المستثمر راحة أكبر في إدارة استثماراته وتضمن التحصيل الموثوق.</p>
                 
                 <div class="packages-grid">
-                    <label class="package-card basic selected" onclick="selectPackage(this, 'basic', 'الباقة الأساسية')">
+                    <label class="package-card basic selected" onclick="selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
                         <input type="radio" name="protection_pkg" value="basic" checked>
                         <i class="fas fa-star"></i>
-                        <h4>الباقة الأساسية</h4>
-                        <p>الاستفادة من الفرص عبر المنصة دون مزايا إضافية للحماية أو التسوية المبكرة.</p>
-                        <span class="fee">متاحة للجميع مجاناً</span>
+                        <div>
+                            <h4>الباقة الأساسية</h4>
+                            <p>الاستفادة من الفرص عبر المنصة دون مزايا إضافية للحماية أو التسوية المبكرة.</p>
+                        </div>
+                        <span class="fee">مجاناً</span>
                     </label>
 
-                    <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية')">
+                    <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية', 99)">
                         <input type="radio" name="protection_pkg" value="silver">
                         <i class="fas fa-medal"></i>
-                        <h4>الباقة الفضية</h4>
-                        <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً.</p>
-                        <span class="fee">10% من الأرباح بحد أقصى 100 ر.س</span>
+                        <div>
+                            <h4>الباقة الفضية</h4>
+                            <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً.</p>
+                        </div>
+                        <span class="fee">99 ر.س</span>
                     </label>
 
-                    <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية')">
+                    <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
                         <input type="radio" name="protection_pkg" value="gold">
                         <i class="fas fa-trophy"></i>
-                        <h4>الباقة الذهبية</h4>
-                        <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً.</p>
-                        <span class="fee">15% من الأرباح بحد أقصى 150 ر.س</span>
+                        <div>
+                            <h4>الباقة الذهبية</h4>
+                            <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً.</p>
+                        </div>
+                        <span class="fee">149 ر.س</span>
                     </label>
 
-                    <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية')">
+                    <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
                         <input type="radio" name="protection_pkg" value="platinum">
                         <i class="fas fa-gem"></i>
-                        <h4>الباقة البلاتينية</h4>
-                        <p>ضمان الصرف في موعد الاستحقاق المحدد شهرياً دون انتظار المقترض.</p>
-                        <span class="fee">20% من الأرباح بحد أقصى 200 ر.س</span>
+                        <div>
+                            <h4>الباقة البلاتينية</h4>
+                            <p>ضمان الصرف في موعد الاستحقاق المحدد شهرياً دون انتظار المقترض.</p>
+                        </div>
+                        <span class="fee">199 ر.س</span>
                     </label>
                 </div>
 
@@ -180,22 +189,25 @@
                 </h4>
                 <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-info-circle"></i>
-                    <span>جميع رسوم الخدمات والاشتراكات الموضحة بالجدول تُخصم بشكل شهري ودوري من الأرباح، ولا تتطلب منك دفعها الآن.</span>
+                    <span>توضيح: جميع رسوم الخدمات والاشتراكات الموضحة بالجدول تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة، ولا تُدفع نقداً الآن.</span>
                 </div>
 
-                <table class="tera-table">
-                    <thead>
-                        <tr>
-                            <th>بند الخدمات</th>
-                            <th>قيمة الخدمة</th>
-                            <th>الضريبة 15%</th>
-                            <th>الإجمالي شامل الضريبة</th>
-                            <th>ملاحظات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="servicesTableBody">
-                        </tbody>
-                </table>
+                <div style="overflow-x: auto;">
+                    <table class="tera-table">
+                        <thead>
+                            <tr>
+                                <th>بند الخدمات</th>
+                                <th>قيمة الخدمة</th>
+                                <th>الضريبة 15%</th>
+                                <th>الإجمالي شامل الضريبة</th>
+                                <th style="color:var(--tera-teal);">قيمة الدفعة الشهرية</th>
+                                <th>ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="servicesTableBody">
+                            </tbody>
+                    </table>
+                </div>
 
                 <h4 class="section-title"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
                 <div class="calc-result-box">
@@ -235,8 +247,8 @@
                 <div class="important-notes">
                     <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
                     <ul>
-                        <li>جميع الباقات المذكورة خدمات إضافية اختيارية وليست إلزامية.</li>
-                        <li>رسوم الاشتراك المئوية تُحسب من إجمالي الأرباح المتوقعة للأسهم المحددة فقط، ولا تمس رأس المال.</li>
+                        <li>جميع الباقات المذكورة تعتبر خدمات إضافية اختيارية وليست إلزامية.</li>
+                        <li>رسوم الباقات المحددة (99، 149، 199 ر.س) هي رسوم ثابتة يتم خصمها من الأرباح بالتوزيع على مدة الفرصة.</li>
                         <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
                     </ul>
                 </div>
@@ -266,9 +278,9 @@
         }
 
         const mockData = [
-            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
-            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة (فرصة جديدة)", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
-            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "قائم", fundedPercentage: 10, daysLeftToJoin: 8, reqEntity: "افراد", company: "فرصة شراكة - تأثيث (فرصة متاحة)", reqId: "46562", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
+            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
+            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
+            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "قائم", fundedPercentage: 10, daysLeftToJoin: 8, reqEntity: "افراد", company: "فرصة شراكة - تأثيث", reqId: "46562", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-30), 12), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 90, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46566", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-35) + " - " + getDynamicDate(-25), reqDate: "2026/04/20" }
         ];
 
@@ -277,6 +289,7 @@
         
         let selectedPackageType = 'basic';
         let selectedPackageName = 'الباقة الأساسية';
+        let selectedPackageFixedFee = 0;
 
         function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -318,12 +331,12 @@
             document.getElementById('invOppName').innerText = currentActiveOpp.company;
             document.getElementById('invOppId').innerText = currentActiveOpp.id;
             document.getElementById('invSharePrice').innerText = formatMoney(currentActiveOpp.sharePrice) + " ر.س";
+            document.getElementById('invDuration').innerText = currentActiveOpp.duration + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
             updateButtonsState();
         }
 
-        // أزرار التحكم بالأسهم
         function changeShares(delta) {
             let inputEl = document.getElementById('shareInput');
             let currentShares = parseInt(inputEl.value) || 0;
@@ -343,7 +356,7 @@
             document.getElementById('btnPlus').disabled = (currentShares >= availableSharesToBuy);
         }
 
-        function selectPackage(el, type, name) {
+        function selectPackage(el, type, name, feeValue) {
             document.querySelectorAll('.package-card').forEach(card => {
                 card.classList.remove('selected');
                 card.querySelector('input').checked = false;
@@ -353,6 +366,7 @@
             
             selectedPackageType = type;
             selectedPackageName = name;
+            selectedPackageFixedFee = feeValue;
             
             triggerCalculations();
         }
@@ -365,75 +379,77 @@
             if (shares > 0) {
                 extendedDiv.style.display = 'block';
                 
-                // حسابات القيم للأسهم المحددة
                 let capital = shares * currentActiveOpp.sharePrice;
-                let productVat = capital * 0.15; // 15% من قيمة المنتج
-                
-                // حساب الربح المتوقع للأسهم المحددة
-                let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
-                let expectedProfitForSelectedShares = shares * profitPerShare;
+                let productVat = capital * 0.15; 
+                let duration = currentActiveOpp.duration || 6;
 
-                // رسوم الخدمات الأساسية
+                // رسوم الخدمات الثابتة (كما في الإكسل)
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
                 
-                // حساب رسوم الباقة الاختيارية
-                let pkgFee = 0;
-                if (selectedPackageType === 'silver') pkgFee = Math.min(expectedProfitForSelectedShares * 0.10, 100);
-                else if (selectedPackageType === 'gold') pkgFee = Math.min(expectedProfitForSelectedShares * 0.15, 150);
-                else if (selectedPackageType === 'platinum') pkgFee = Math.min(expectedProfitForSelectedShares * 0.20, 200);
-                
+                // حساب رسوم الباقة الاختيارية الثابتة
+                let pkgFee = selectedPackageFixedFee;
                 let pkgVat = pkgFee * 0.15;
                 let pkgTotal = pkgFee + pkgVat;
+
+                // حساب قيمة الدفعة الشهرية لكل بند
+                let adminMonthly = adminTotal / duration;
+                let transferMonthly = transferTotal / duration;
+                let collectionMonthly = collectionTotal / duration;
+                let pkgMonthly = pkgTotal > 0 ? (pkgTotal / duration) : 0;
 
                 // المجاميع
                 let totalServiceBase = adminFee + transferFee + collectionFee + pkgFee;
                 let totalServiceVat = adminVat + transferVat + collectionVat + pkgVat; 
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
+                let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // بناء الجدول
                 let tableBody = `
                     <tr>
                         <td>الرسوم الإدارية</td>
                         <td>${formatMoney(adminFee)}</td>
                         <td>${formatMoney(adminVat)}</td>
                         <td>${formatMoney(adminTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(adminMonthly)}</td>
+                        <td>تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td>رسوم التحويل</td>
                         <td>${formatMoney(transferFee)}</td>
                         <td>${formatMoney(transferVat)}</td>
                         <td>${formatMoney(transferTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(transferMonthly)}</td>
+                        <td>تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td>رسوم التحصيل والمعالجة</td>
                         <td>${formatMoney(collectionFee)}</td>
                         <td>${formatMoney(collectionVat)}</td>
                         <td>${formatMoney(collectionTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(collectionMonthly)}</td>
+                        <td>تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgFee)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgVat)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgTotal)}</td>
-                        <td style="font-size:11px; color:var(--tera-teal); font-weight:bold;">تخصم من الأرباح فقط</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(pkgMonthly)}</td>
+                        <td style="color:var(--tera-teal); font-weight:bold;">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr class="total-row">
                         <td>الإجمالي للخدمات</td>
                         <td>${formatMoney(totalServiceBase)}</td>
                         <td>${formatMoney(totalServiceVat)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(totalServiceFinal)}</td>
+                        <td style="color:var(--tera-teal); font-size:16px;">${formatMoney(totalMonthlyFinal)}</td>
                         <td>-</td>
                     </tr>
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
                 // تحديث ملخص الدفع النهائي
-                // المبلغ المطالب بدفعه الآن = رأس المال + ضريبة المنتج (لأن رسوم الخدمة تخصم من الأرباح لاحقاً)
                 let totalToPayNow = capital + productVat;
 
                 document.getElementById('sumShares').innerText = shares;
