@@ -95,8 +95,6 @@
         
         .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 20px; transition: 0.2s; }
         .btn-back:hover { color: var(--tera-navy); }
-        .btn-nav { padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; color: var(--tera-navy); text-decoration: none; font-size: 13px; transition: 0.2s; }
-        .btn-nav:hover { background: #e2e8f0; }
         .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; display: inline-block;}
     </style>
 </head>
@@ -108,15 +106,15 @@
             <h1>طلب الانضمام لفرصة استثمارية</h1>
         </div>
         <div class="header-left">
-            <a href="../dashboard/index.html" class="btn-nav"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
+            <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px; background:#f1f5f9; border: 1px solid #cbd5e1;"><i class="fas fa-home"></i> لوحة التحكم</a>
         </div>
     </header>
 
     <div class="join-container">
+        <!-- زر العودة لصفحة التفاصيل، سيتم تحديث رابطه بالجافاسكريبت ليعود للفرصة الصحيحة -->
         <a href="opportunities.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
-            
             <div class="opp-summary">
                 <h3 id="invOppName">جاري التحميل...</h3>
                 <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span> <span id="invOppTypeBadge" class="type-badge" style="background:#fef3c7; color:#d97706; margin-right:10px;"></span></p>
@@ -135,7 +133,6 @@
             </div>
 
             <div id="extendedDetails">
-                
                 <h4 class="section-title" style="margin-top: 0;"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
                 <div class="packages-grid">
                     <label class="package-card basic selected" onclick="selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
@@ -144,21 +141,18 @@
                         <div><h4>الباقة الأساسية</h4><p>بدون مزايا إضافية للحماية.</p></div>
                         <span class="fee">مجاناً</span>
                     </label>
-
                     <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية', 99)">
                         <input type="radio" name="protection_pkg" value="silver">
                         <i class="fas fa-medal"></i>
                         <div><h4>الباقة الفضية</h4><p>صرف الأرباح عند تأخر العميل 60 يوماً.</p></div>
                         <span class="fee">99 ر.س</span>
                     </label>
-
                     <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
                         <input type="radio" name="protection_pkg" value="gold">
                         <i class="fas fa-trophy"></i>
                         <div><h4>الباقة الذهبية</h4><p>صرف الأرباح عند تأخر العميل 30 يوماً.</p></div>
                         <span class="fee">149 ر.س</span>
                     </label>
-
                     <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
                         <input type="radio" name="protection_pkg" value="platinum">
                         <i class="fas fa-gem"></i>
@@ -170,7 +164,7 @@
                 <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
                 <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-info-circle"></i>
-                    <span>توضيح: جميع رسوم الخدمات والاشتراكات الموضحة بالجدول تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة، ولا تُدفع نقداً الآن.</span>
+                    <span>توضيح: جميع رسوم الخدمات والاشتراكات تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة، ولا تُدفع نقداً الآن.</span>
                 </div>
                 <div style="overflow-x: auto;">
                     <table class="tera-table">
@@ -250,29 +244,27 @@
     <script src="../../assets/js/investments.js"></script>
 
     <script>
-        // دالة إنشاء المعرفات للاحتياط
-        function getDynamicDateLocal(daysOffset) {
-            let d = new Date(); d.setDate(d.getDate() + daysOffset);
-            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-        }
-        function generateIdLocal(type, dateStr, sequence) {
-            const parts = dateStr.split('/');
-            const yyyy = parts[2] || parts[0]; const mm = parts[1].padStart(2, '0'); const dd = parts[0].padStart(2, '0'); const seq = String(sequence).padStart(3, '0');
-            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
-        }
-        
-        // البيانات الموحدة الحقيقية كخيار احتياطي لضمان العمل 100%
-        const localMockData = [
-            { id: generateIdLocal("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46550", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
-            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(5), 2), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46551", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(2), 8), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", reqId: "46560", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
-            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(8), 9), type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", reqId: "46561", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" }
+        // === قاعدة البيانات الموحدة 100% ===
+        const unifiedDatabase = [
+            // نوع: شراكة ممتدة (6 حالات)
+            { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
+            { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
+            { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
+            { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
+            { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
+            { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
+            
+            // نوع: فرصة شراكة (6 حالات)
+            { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
+            { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
+            { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
+            { id: "FTR-2026-06-20-010", type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
+            { id: "FTR-2026-06-20-011", type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
+            { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        // توحيد مصدر البيانات لمنع أي أخطاء undefined
-        window.appData = typeof window.mockData !== 'undefined' && window.mockData.length > 0 ? window.mockData : localMockData;
+        window.appData = unifiedDatabase;
 
-        // دالة تنسيق تحمي من الأخطاء إذا كانت القيمة نصية
         function formatMoneyLocal(num) { 
             let n = parseFloat(num);
             if(isNaN(n)) return "0.00";
@@ -289,16 +281,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
-            // إذا لم يتم تمرير ID، يتم أخذ أول فرصة نشطة تلقائياً للمعاينة
             if (!oppId && window.appData.length > 0) {
                 const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
                 if (defaultOpp) { oppId = defaultOpp.id; }
             }
 
+            // تحديث زر العودة ليعود لصفحة التفاصيل للفرصة الحالية
             document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
 
-            if (oppId && window.appData) {
-                // استخدام String() لمنع أخطاء المطابقة
+            if (oppId) {
                 const opp = window.appData.find(d => String(d.id) === String(oppId));
                 if (opp && (opp.status === 'قائم' || opp.status === 'النشطة') && parseFloat(opp.fundedPercentage) < 100) {
                     currentActiveOpp = opp;
@@ -314,7 +305,6 @@
         });
 
         function initForm() {
-            // تحويل القيم بصرامة لأرقام
             let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 0;
             let fundedPercNum = parseFloat(currentActiveOpp.fundedPercentage) || 0;
             let sharePriceNum = parseFloat(currentActiveOpp.sharePrice) || 0;
@@ -384,11 +374,10 @@
             if (shares > 0) {
                 extendedDiv.style.display = 'block';
                 
-                // تحويل جميع القيم المالية المرتبطة بالحسبة إلى أرقام
                 let duration = parseInt(currentActiveOpp.duration) || 6;
                 let sharePriceNum = parseFloat(currentActiveOpp.sharePrice) || 0;
                 let expectedProfitNum = parseFloat(currentActiveOpp.expectedProfit) || 0;
-                let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 1; // لتجنب القسمة على صفر
+                let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 1; 
                 
                 let capital = shares * sharePriceNum;
                 let productVat = capital * 0.15; 
@@ -396,7 +385,7 @@
                 let profitPerShare = expectedProfitNum / sharesCountNum;
                 let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات الثابتة الموحدة
+                // رسوم الخدمات
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
@@ -415,60 +404,20 @@
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // ----- 1. تعبئة جدول الرسوم -----
                 let tableBody = `
-                    <tr>
-                        <td class="text-start">الرسوم الإدارية</td>
-                        <td>${formatMoneyLocal(adminFee)}</td>
-                        <td>${formatMoneyLocal(adminVat)}</td>
-                        <td>${formatMoneyLocal(adminTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(adminMonthly)}</td>
-                        <td class="notes">تخصم شهرياً من الأرباح</td>
-                    </tr>
-                    <tr>
-                        <td class="text-start">رسوم التحويل</td>
-                        <td>${formatMoneyLocal(transferFee)}</td>
-                        <td>${formatMoneyLocal(transferVat)}</td>
-                        <td>${formatMoneyLocal(transferTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(transferMonthly)}</td>
-                        <td class="notes">تخصم شهرياً من الأرباح</td>
-                    </tr>
-                    <tr>
-                        <td class="text-start">رسوم التحصيل والمعالجة</td>
-                        <td>${formatMoneyLocal(collectionFee)}</td>
-                        <td>${formatMoneyLocal(collectionVat)}</td>
-                        <td>${formatMoneyLocal(collectionTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(collectionMonthly)}</td>
-                        <td class="notes">تخصم شهرياً من الأرباح</td>
-                    </tr>
-                    <tr>
-                        <td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
-                        <td style="color:var(--tera-teal);">${formatMoneyLocal(pkgFee)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoneyLocal(pkgVat)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoneyLocal(pkgTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(pkgMonthly)}</td>
-                        <td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td>
-                    </tr>
-                    <tr class="total-row">
-                        <td class="text-start">الإجمالي للخدمات</td>
-                        <td>${formatMoneyLocal(totalServiceBase)}</td>
-                        <td>${formatMoneyLocal(totalServiceVat)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoneyLocal(totalServiceFinal)}</td>
-                        <td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(totalMonthlyFinal)}</td>
-                        <td>-</td>
-                    </tr>
+                    <tr><td class="text-start">الرسوم الإدارية</td><td>${formatMoneyLocal(adminFee)}</td><td>${formatMoneyLocal(adminVat)}</td><td>${formatMoneyLocal(adminTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(adminMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                    <tr><td class="text-start">رسوم التحويل</td><td>${formatMoneyLocal(transferFee)}</td><td>${formatMoneyLocal(transferVat)}</td><td>${formatMoneyLocal(transferTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(transferMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                    <tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${formatMoneyLocal(collectionFee)}</td><td>${formatMoneyLocal(collectionVat)}</td><td>${formatMoneyLocal(collectionTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(collectionMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                    <tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgFee)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td></tr>
+                    <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${formatMoneyLocal(totalServiceBase)}</td><td>${formatMoneyLocal(totalServiceVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(totalServiceFinal)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(totalMonthlyFinal)}</td><td>-</td></tr>
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                // ----- 2. تعبئة جدول توزيع الدفعات (ديناميكي حسب نوع الفرصة) -----
                 let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
-                
                 document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
 
                 let distHeader = `<tr><th>تاريخ التحصيل</th>`;
-                // إخفاء عمود رأس المال المسترد من الشراكة الممتدة
                 if(!isExtended) distHeader += `<th>رأس المال المسترد</th>`;
-                
                 distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
                 document.getElementById('distributionTableHeader').innerHTML = distHeader;
 
@@ -480,43 +429,20 @@
                 let startDate = new Date();
 
                 if(isExtended) {
-                    // توزيع الشراكة الممتدة (أرباح فقط، ورأس المال في آخر شهر)
                     for(let i=1; i<=duration; i++) {
                         let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
                         let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
                         
                         let currentPayment = monthlyProfit;
                         let noteText = "توزيع أرباح";
-                        
-                        if(i === duration) {
-                            currentPayment += capital;
-                            noteText = "أرباح + استرداد رأس المال";
-                        }
+                        if(i === duration) { currentPayment += capital; noteText = "أرباح + استرداد رأس المال"; }
                         let currentRemaining = currentPayment - totalMonthlyFinal;
 
-                        distBody += `<tr>
-                            <td>${dateStr}</td>
-                            <td>${formatMoneyLocal(monthlyProfit)}</td>
-                            <td>${formatMoneyLocal(currentPayment)}</td>
-                            <td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td>
-                            <td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(currentRemaining)}</td>
-                            <td style="font-size:11px; color:#64748b;">${noteText}</td>
-                        </tr>`;
-
+                        distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(currentPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">${noteText}</td></tr>`;
                         tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
                     }
-                    
-                    distBody += `<tr class="total-row">
-                        <td class="text-start">الإجمالي</td>
-                        <td>${formatMoneyLocal(tProf)}</td>
-                        <td>${formatMoneyLocal(tPay)}</td>
-                        <td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td>
-                        <td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td>
-                        <td>-</td>
-                    </tr>`;
-
+                    distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
                 } else {
-                    // توزيع فرصة الشراكة (رأس مال + أرباح بشكل مقسم)
                     let monthlyTotalPayment = monthlyCapital + monthlyProfit;
                     let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
 
@@ -524,34 +450,14 @@
                         let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
                         let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
 
-                        distBody += `<tr>
-                            <td>${dateStr}</td>
-                            <td>${formatMoneyLocal(monthlyCapital)}</td>
-                            <td>${formatMoneyLocal(monthlyProfit)}</td>
-                            <td>${formatMoneyLocal(monthlyTotalPayment)}</td>
-                            <td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td>
-                            <td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(monthlyRemaining)}</td>
-                            <td><span class="badge" style="background:#f1f5f9; color:#64748b; padding: 4px 8px; border-radius: 4px; font-size: 11px;">مجدولة</span></td>
-                        </tr>`;
-
-                        tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; 
-                        tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                        distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyCapital)}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(monthlyTotalPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(monthlyRemaining)}</td><td><span class="badge" style="background:#f1f5f9; color:#64748b; padding: 4px 8px;">مجدولة</span></td></tr>`;
+                        tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
                     }
-
-                    distBody += `<tr class="total-row">
-                        <td class="text-start">الإجمالي</td>
-                        <td>${formatMoneyLocal(tCap)}</td>
-                        <td>${formatMoneyLocal(tProf)}</td>
-                        <td>${formatMoneyLocal(tPay)}</td>
-                        <td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td>
-                        <td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td>
-                        <td>-</td>
-                    </tr>`;
+                    distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tCap)}</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
                 }
-
                 document.getElementById('distributionTableBody').innerHTML = distBody;
 
-                // ----- 3. ملخص الدفع لطلب الانضمام -----
+                // ملخص الدفع
                 let totalToPayNow = capital + productVat;
                 let totalOverall = capital + productVat + totalServiceFinal;
 
@@ -570,14 +476,8 @@
             }
         }
 
-        function togglePayButton() {
-            document.getElementById('btnPayNow').disabled = !document.getElementById('agreeCheckbox').checked;
-        }
-
-        function processPayment() {
-            alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`);
-            window.location.href = "../dashboard/index.html"; 
-        }
+        function togglePayButton() { document.getElementById('btnPayNow').disabled = !document.getElementById('agreeCheckbox').checked; }
+        function processPayment() { alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); window.location.href = "../dashboard/index.html"; }
     </script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
