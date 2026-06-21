@@ -111,7 +111,7 @@
     </header>
 
     <div class="join-container">
-        <a href="javascript:history.back()" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
+        <a href="opportunities.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
             <div class="opp-summary">
@@ -280,21 +280,28 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
-            if (oppId) oppId = oppId.trim();
+            // فك التشفير للرابط لضمان عدم وجود أخطاء في الرموز
+            if (oppId) oppId = decodeURIComponent(oppId).trim();
 
             if (!oppId && window.appData.length > 0) {
-                const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
-                if (defaultOpp) { oppId = defaultOpp.id; }
+                // إذا لم يتم تحديد فرصة، افتح أول فرصة نشطة كمعاينة
+                const defaultOpp = window.appData.find(d => parseFloat(d.fundedPercentage) < 100);
+                if (defaultOpp) { oppId = defaultOpp.id; } 
+                else { oppId = window.appData[0].id; }
             }
 
+            // تحديث زر العودة ليعود لصفحة التفاصيل للفرصة الحالية
+            document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
+
             if (oppId) {
-                const opp = window.appData.find(d => String(d.id) === String(oppId));
-                if (opp && (opp.status === 'قائم' || opp.status === 'النشطة') && parseFloat(opp.fundedPercentage) < 100) {
+                // تم إزالة الشروط الصارمة من هنا، الكود سيعرض الفرصة مهما كانت حالتها لضمان الانعكاس
+                const opp = window.appData.find(d => String(d.id).trim() === String(oppId));
+                if (opp) {
                     currentActiveOpp = opp;
                     initForm();
                 } else {
-                    alert("عذراً، الفرصة المطلوبة غير متاحة للانضمام حالياً أو مكتملة.");
-                    window.location.href = opp ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
+                    alert("عذراً، الفرصة المطلوبة غير موجودة في قاعدة البيانات.");
+                    window.location.href = "opportunities.html";
                 }
             } else {
                 alert("لم يتم تحديد فرصة للاستثمار.");
@@ -308,7 +315,9 @@
             let sharePriceNum = parseFloat(currentActiveOpp.sharePrice) || 0;
             let durationNum = parseInt(currentActiveOpp.duration) || 6;
 
+            // حساب الأسهم المتاحة
             availableSharesToBuy = Math.floor(sharesCountNum * (1 - (fundedPercNum / 100)));
+            if(availableSharesToBuy < 0) availableSharesToBuy = 0;
             
             document.getElementById('invOppName').innerText = currentActiveOpp.company || 'بدون اسم';
             document.getElementById('invOppId').innerText = currentActiveOpp.id;
@@ -327,11 +336,21 @@
             document.getElementById('invDuration').innerText = durationNum + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
-            // ===== التعديل الجذري هنا =====
-            // لكي تظهر الجداول والحسابات مباشرة للمستخدم دون أن تبدو كأنها "لا تنعكس"
+            // ===== التعديل الجذري: عرض البيانات تلقائياً =====
             if (availableSharesToBuy > 0) {
                 document.getElementById('shareInput').value = 1;
                 triggerCalculations();
+            } else {
+                // إذا كانت الفرصة مكتملة (عدد الأسهم 0)، سنقوم بإجراء الحسابات على سهم واحد كمعاينة فقط ثم نعطل الأزرار
+                document.getElementById('shareInput').value = 1;
+                triggerCalculations();
+                
+                document.getElementById('shareInput').value = 0;
+                document.getElementById('btnPlus').disabled = true;
+                document.getElementById('btnMinus').disabled = true;
+                document.getElementById('btnPayNow').disabled = true;
+                
+                setTimeout(() => alert("هذه الفرصة مكتملة أو غير متاحة. لا يوجد أسهم باقية للانضمام."), 500);
             }
 
             updateButtonsState();
@@ -373,115 +392,119 @@
 
         function triggerCalculations() {
             let inputEl = document.getElementById('shareInput');
-            let shares = parseInt(inputEl.value) || 0;
-            let extendedDiv = document.getElementById('extendedDetails');
+            // استخدمنا قيمة (1) كحد أدنى لحساب الجداول وعرضها في حال كانت القيمة 0
+            let shares = parseInt(inputEl.value) || 1; 
             
-            if (shares > 0) {
-                extendedDiv.style.display = 'block';
-                
-                let duration = parseInt(currentActiveOpp.duration) || 6;
-                let sharePriceNum = parseFloat(currentActiveOpp.sharePrice) || 0;
-                let expectedProfitNum = parseFloat(currentActiveOpp.expectedProfit) || 0;
-                let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 1; 
-                
-                let capital = shares * sharePriceNum;
-                let productVat = capital * 0.15; 
-                
-                let profitPerShare = expectedProfitNum / sharesCountNum;
-                let expectedProfitForSelectedShares = shares * profitPerShare;
+            // دائماً أظهر التفاصيل، الشروط السابقة كانت تخفيها!
+            document.getElementById('extendedDetails').style.display = 'block';
+            
+            let duration = parseInt(currentActiveOpp.duration) || 6;
+            let sharePriceNum = parseFloat(currentActiveOpp.sharePrice) || 0;
+            let expectedProfitNum = parseFloat(currentActiveOpp.expectedProfit) || 0;
+            let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 1; 
+            
+            let capital = shares * sharePriceNum;
+            let productVat = capital * 0.15; 
+            
+            let profitPerShare = expectedProfitNum / sharesCountNum;
+            let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات
-                let adminFee = 20; let adminVat = 3; let adminTotal = 23;
-                let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
-                let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
-                
-                let pkgFee = selectedPackageFixedFee;
-                let pkgVat = pkgFee * 0.15;
-                let pkgTotal = pkgFee + pkgVat;
+            // رسوم الخدمات
+            let adminFee = 20; let adminVat = 3; let adminTotal = 23;
+            let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
+            let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
+            
+            let pkgFee = selectedPackageFixedFee;
+            let pkgVat = pkgFee * 0.15;
+            let pkgTotal = pkgFee + pkgVat;
 
-                let adminMonthly = adminTotal / duration;
-                let transferMonthly = transferTotal / duration;
-                let collectionMonthly = collectionTotal / duration;
-                let pkgMonthly = pkgTotal > 0 ? (pkgTotal / duration) : 0;
+            let adminMonthly = adminTotal / duration;
+            let transferMonthly = transferTotal / duration;
+            let collectionMonthly = collectionTotal / duration;
+            let pkgMonthly = pkgTotal > 0 ? (pkgTotal / duration) : 0;
 
-                let totalServiceBase = adminFee + transferFee + collectionFee + pkgFee;
-                let totalServiceVat = adminVat + transferVat + collectionVat + pkgVat; 
-                let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
-                let totalMonthlyFinal = totalServiceFinal / duration;
+            let totalServiceBase = adminFee + transferFee + collectionFee + pkgFee;
+            let totalServiceVat = adminVat + transferVat + collectionVat + pkgVat; 
+            let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
+            let totalMonthlyFinal = totalServiceFinal / duration;
 
-                let tableBody = `
-                    <tr><td class="text-start">الرسوم الإدارية</td><td>${formatMoneyLocal(adminFee)}</td><td>${formatMoneyLocal(adminVat)}</td><td>${formatMoneyLocal(adminTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(adminMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
-                    <tr><td class="text-start">رسوم التحويل</td><td>${formatMoneyLocal(transferFee)}</td><td>${formatMoneyLocal(transferVat)}</td><td>${formatMoneyLocal(transferTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(transferMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
-                    <tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${formatMoneyLocal(collectionFee)}</td><td>${formatMoneyLocal(collectionVat)}</td><td>${formatMoneyLocal(collectionTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(collectionMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
-                    <tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgFee)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td></tr>
-                    <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${formatMoneyLocal(totalServiceBase)}</td><td>${formatMoneyLocal(totalServiceVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(totalServiceFinal)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(totalMonthlyFinal)}</td><td>-</td></tr>
-                `;
-                document.getElementById('servicesTableBody').innerHTML = tableBody;
+            let tableBody = `
+                <tr><td class="text-start">الرسوم الإدارية</td><td>${formatMoneyLocal(adminFee)}</td><td>${formatMoneyLocal(adminVat)}</td><td>${formatMoneyLocal(adminTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(adminMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                <tr><td class="text-start">رسوم التحويل</td><td>${formatMoneyLocal(transferFee)}</td><td>${formatMoneyLocal(transferVat)}</td><td>${formatMoneyLocal(transferTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(transferMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                <tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${formatMoneyLocal(collectionFee)}</td><td>${formatMoneyLocal(collectionVat)}</td><td>${formatMoneyLocal(collectionTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(collectionMonthly)}</td><td class="notes">تخصم شهرياً من الأرباح</td></tr>
+                <tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgFee)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(pkgTotal)}</td><td style="color:var(--tera-teal); font-family:monospace;">${formatMoneyLocal(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td></tr>
+                <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${formatMoneyLocal(totalServiceBase)}</td><td>${formatMoneyLocal(totalServiceVat)}</td><td style="color:var(--tera-teal);">${formatMoneyLocal(totalServiceFinal)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(totalMonthlyFinal)}</td><td>-</td></tr>
+            `;
+            document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
-                document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
+            let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
+            document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
 
-                let distHeader = `<tr><th>تاريخ التحصيل</th>`;
-                if(!isExtended) distHeader += `<th>رأس المال المسترد</th>`;
-                distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
-                document.getElementById('distributionTableHeader').innerHTML = distHeader;
+            let distHeader = `<tr><th>تاريخ التحصيل</th>`;
+            if(!isExtended) distHeader += `<th>رأس المال المسترد</th>`;
+            distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
+            document.getElementById('distributionTableHeader').innerHTML = distHeader;
 
-                let monthlyCapital = capital / duration;
-                let monthlyProfit = expectedProfitForSelectedShares / duration;
-                
-                let distBody = '';
-                let tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
-                let startDate = new Date();
+            let monthlyCapital = capital / duration;
+            let monthlyProfit = expectedProfitForSelectedShares / duration;
+            
+            let distBody = '';
+            let tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
+            let startDate = new Date();
 
-                if(isExtended) {
-                    for(let i=1; i<=duration; i++) {
-                        let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
-                        let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
-                        
-                        let currentPayment = monthlyProfit;
-                        let noteText = "توزيع أرباح";
-                        if(i === duration) { currentPayment += capital; noteText = "أرباح + استرداد رأس المال"; }
-                        let currentRemaining = currentPayment - totalMonthlyFinal;
+            if(isExtended) {
+                for(let i=1; i<=duration; i++) {
+                    let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
+                    let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+                    
+                    let currentPayment = monthlyProfit;
+                    let noteText = "توزيع أرباح";
+                    if(i === duration) { currentPayment += capital; noteText = "أرباح + استرداد رأس المال"; }
+                    let currentRemaining = currentPayment - totalMonthlyFinal;
 
-                        distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(currentPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">${noteText}</td></tr>`;
-                        tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
-                    }
-                    distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
-                } else {
-                    let monthlyTotalPayment = monthlyCapital + monthlyProfit;
-                    let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
-
-                    for(let i=1; i<=duration; i++) {
-                        let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
-                        let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
-
-                        distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyCapital)}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(monthlyTotalPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(monthlyRemaining)}</td><td><span class="badge" style="background:#f1f5f9; color:#64748b; padding: 4px 8px;">مجدولة</span></td></tr>`;
-                        tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
-                    }
-                    distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tCap)}</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
+                    distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(currentPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">${noteText}</td></tr>`;
+                    tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
                 }
-                document.getElementById('distributionTableBody').innerHTML = distBody;
-
-                // ملخص الدفع
-                let totalToPayNow = capital + productVat;
-                let totalOverall = capital + productVat + totalServiceFinal;
-
-                document.getElementById('sumShares').innerText = shares;
-                document.getElementById('sumCapital').innerText = formatMoneyLocal(capital) + " ر.س";
-                document.getElementById('sumProdTax').innerText = formatMoneyLocal(productVat) + " ر.س";
-                document.getElementById('sumServTax').innerText = formatMoneyLocal(totalServiceVat) + " ر.س";
-                document.getElementById('sumTotalAll').innerText = formatMoneyLocal(totalOverall) + " ر.س";
-                
-                document.getElementById('resToPayNow').innerText = formatMoneyLocal(totalToPayNow) + " ر.س"; 
-
+                distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
             } else {
-                extendedDiv.style.display = 'none';
-                document.getElementById('agreeCheckbox').checked = false;
-                togglePayButton();
+                let monthlyTotalPayment = monthlyCapital + monthlyProfit;
+                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
+
+                for(let i=1; i<=duration; i++) {
+                    let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
+                    let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+
+                    distBody += `<tr><td>${dateStr}</td><td>${formatMoneyLocal(monthlyCapital)}</td><td>${formatMoneyLocal(monthlyProfit)}</td><td>${formatMoneyLocal(monthlyTotalPayment)}</td><td style="color:#ef4444;">${formatMoneyLocal(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${formatMoneyLocal(monthlyRemaining)}</td><td><span class="badge" style="background:#f1f5f9; color:#64748b; padding: 4px 8px;">مجدولة</span></td></tr>`;
+                    tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                }
+                distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td><td>${formatMoneyLocal(tCap)}</td><td>${formatMoneyLocal(tProf)}</td><td>${formatMoneyLocal(tPay)}</td><td style="color:#ef4444;">${formatMoneyLocal(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${formatMoneyLocal(tRem)}</td><td>-</td></tr>`;
             }
+            document.getElementById('distributionTableBody').innerHTML = distBody;
+
+            // ملخص الدفع
+            // إذا كانت الأسهم المحددة صفر، نجعل المبالغ صفر لكيلا يظهر للمستخدم أنه سيدفع شيئاً
+            let actualShares = parseInt(document.getElementById('shareInput').value) || 0;
+            let actualCapital = actualShares * sharePriceNum;
+            let actualProductVat = actualCapital * 0.15;
+            
+            let totalToPayNow = actualCapital + actualProductVat;
+            let totalOverall = actualCapital + actualProductVat + totalServiceFinal;
+
+            document.getElementById('sumShares').innerText = actualShares;
+            document.getElementById('sumCapital').innerText = formatMoneyLocal(actualCapital) + " ر.س";
+            document.getElementById('sumProdTax').innerText = formatMoneyLocal(actualProductVat) + " ر.س";
+            document.getElementById('sumServTax').innerText = formatMoneyLocal(totalServiceVat) + " ر.س";
+            document.getElementById('sumTotalAll').innerText = formatMoneyLocal(totalOverall) + " ر.س";
+            
+            document.getElementById('resToPayNow').innerText = formatMoneyLocal(totalToPayNow) + " ر.س"; 
         }
 
-        function togglePayButton() { document.getElementById('btnPayNow').disabled = !document.getElementById('agreeCheckbox').checked; }
+        function togglePayButton() { 
+            let actualShares = parseInt(document.getElementById('shareInput').value) || 0;
+            let isChecked = document.getElementById('agreeCheckbox').checked;
+            document.getElementById('btnPayNow').disabled = !(isChecked && actualShares > 0); 
+        }
+        
         function processPayment() { alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); window.location.href = "../dashboard/index.html"; }
     </script>
     <script src="../../assets/js/app.js"></script>
