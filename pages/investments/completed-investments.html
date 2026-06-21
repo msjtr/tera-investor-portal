@@ -24,10 +24,7 @@
         .header-right { display: flex; align-items: center; gap: 20px; }
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
-        .user-greeting { text-align: left; }
-        .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
-        .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
-
+        
         .details-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
         .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
 
@@ -63,7 +60,6 @@
         .opp-mini-summary span { font-size: 13px; color: var(--tera-gray); font-weight: 700; }
         .opp-mini-summary strong { font-size: 18px; color: var(--tera-teal); font-family: monospace; }
         
-        /* ألوان الشارات لنوع الفرصة */
         .type-badge { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; font-family: monospace; display: inline-block; }
         .type-extended { background: #fef3c7; color: #d97706; } 
         .type-opportunity { background: #fce7f3; color: #db2777; } 
@@ -169,8 +165,6 @@
             <div class="action-footer no-print">
                 <div class="right-actions">
                     <a href="opportunities.html" class="btn-action btn-secondary"><i class="fas fa-arrow-right"></i> العودة لسوق الفرص</a>
-                    <button onclick="window.print()" class="btn-action btn-secondary"><i class="fas fa-print"></i> طباعة الدليل</button>
-                    <button onclick="alert('جاري تنزيل ملف PDF...')" class="btn-action btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
                 </div>
                 
                 <div class="left-actions">
@@ -209,6 +203,7 @@
 
             let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
 
+            // تنبيهات الحالات
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = ''; let hasAlerts = false;
 
@@ -228,9 +223,9 @@
             }
             alertsCont.style.display = hasAlerts ? 'block' : 'none';
 
+            // بيانات القسم الأول
             document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
             document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
-
             document.getElementById('mDetOppId').innerText = opp.id;
             
             // تحديث الشارة لنوع الفرصة
@@ -250,9 +245,24 @@
                 document.getElementById('mDetSharePrice').innerText = window.formatMoney(opp.sharePrice) + ' ر.س';
                 document.getElementById('mDetTotalCapital').innerText = window.formatMoney(opp.capital) + ' ر.س';
             }
-
             document.getElementById('mDetRatio').innerText = opp.roi + "%";
 
+            // بيانات القسم الرابع (تم استعادتها وتعبئتها)
+            document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
+            
+            // معادلات حساب المنتج بناءً على رأس المال
+            let qnty = opp.sharesCount * 5; // افتراض أن كل سهم يعادل 5 منتجات
+            document.getElementById('mDetProductQty').innerText = qnty;
+            
+            if(typeof window.formatMoney === 'function'){
+                document.getElementById('mDetProdVal').innerText = window.formatMoney(opp.capital);
+                document.getElementById('mDetProdPrice').innerText = window.formatMoney(opp.sharePrice / 5); 
+                let tax = opp.capital * 0.15;
+                document.getElementById('mDetTax').innerText = window.formatMoney(tax);
+                document.getElementById('mDetTotalProd').innerText = window.formatMoney(opp.capital + tax);
+            }
+
+            // أزرار الانضمام
             const btnJoin = document.getElementById('btnRedirectToJoin');
             const warnMsg = document.getElementById('investWarningMsg');
             const miniSharesBox = document.getElementById('miniSharesBox');
@@ -262,7 +272,7 @@
                 miniSharesBox.style.display = 'inline-flex';
                 document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                 
-                // توجيه صحيح لصفحة الانضمام مع المعرف
+                // توجيه لصفحة الانضمام مع المعرف
                 btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
