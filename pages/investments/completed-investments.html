@@ -69,6 +69,9 @@
         .agreement-box { display: flex; gap: 10px; font-size: 13px; color: var(--tera-gray); margin-bottom: 20px; line-height: 1.5; }
         .agreement-box input { margin-top: 3px; transform: scale(1.2); accent-color: var(--tera-teal); cursor: pointer; }
 
+        /* إضافة مؤشر لعدد الأسهم المتاحة */
+        .available-shares-hint { font-size: 12px; color: var(--tera-teal); text-align: left; font-weight: bold; margin-top: 8px; display: block; }
+
         @media print {
             body * { visibility: hidden; }
             .main-details, .main-details * { visibility: visible; }
@@ -185,6 +188,7 @@
             <div class="calc-group">
                 <label style="font-size: 13px; font-weight: 700; color: var(--tera-gray);">أدخل عدد الأسهم المطلوبة:</label>
                 <input type="number" id="shareInput" class="calc-input" min="1" value="1" oninput="calculateInvestment()">
+                <span id="availableSharesHint" class="available-shares-hint">الأسهم المتاحة: <span id="mDetAvailableShares" class="mono"></span></span>
             </div>
 
             <div class="calc-result-box">
@@ -228,7 +232,7 @@
             return `${prefix}-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
-        // نفس قاعدة البيانات المشتركة لضمان جلب البيانات بناءً على الرابط
+        // نفس قاعدة البيانات لضمان تطابق البيانات
         const mockData = [
             { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToJoin: 0, daysLeftToStart: 5, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
@@ -247,6 +251,7 @@
         ];
 
         let currentActiveOpp = null;
+        let availableSharesToBuy = 0; // متغير لتخزين عدد الأسهم المتاحة فعلياً
 
         function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -270,6 +275,13 @@
 
         function renderDetails(opp) {
             document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
+
+            // حساب عدد الأسهم المتاحة للشراء
+            availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
+            document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
+            
+            // تعيين الحد الأقصى لحقل الإدخال
+            document.getElementById('shareInput').max = availableSharesToBuy;
 
             // معالجة التنبيهات
             const alertsCont = document.getElementById('mDetAlertsContainer');
@@ -337,16 +349,27 @@
             const btnPay = document.getElementById('btnPayNow');
             const warnMsg = document.getElementById('investWarningMsg');
             const chkBox = document.getElementById('agreeCheckbox');
+            const shareInput = document.getElementById('shareInput');
             
-            if (opp.status === 'قائم' || opp.status === 'النشطة') {
+            if ((opp.status === 'قائم' || opp.status === 'النشطة') && availableSharesToBuy > 0) {
                 btnPay.style.display = 'flex';
                 warnMsg.style.display = 'none';
                 chkBox.disabled = false;
+                shareInput.disabled = false;
+                shareInput.value = 1; // تعيين القيمة الافتراضية
                 calculateInvestment();
             } else {
                 btnPay.style.display = 'none';
-                warnMsg.style.display = 'block';
                 chkBox.disabled = true;
+                shareInput.disabled = true;
+                shareInput.value = 0;
+                
+                if (availableSharesToBuy <= 0 && (opp.status === 'قائم' || opp.status === 'النشطة')) {
+                    warnMsg.innerText = "اكتملت جميع أسهم هذه الفرصة";
+                } else {
+                    warnMsg.innerText = "الفرصة غير متاحة للانضمام حالياً";
+                }
+                warnMsg.style.display = 'block';
                 
                 document.getElementById('resSharesCount').innerText = "-";
                 document.getElementById('resCapital').innerText = "-";
@@ -355,9 +378,20 @@
         }
 
         function calculateInvestment() {
-            if (!currentActiveOpp) return;
-            let shares = parseInt(document.getElementById('shareInput').value) || 0;
-            if (shares < 1) { shares = 1; document.getElementById('shareInput').value = 1; }
+            if (!currentActiveOpp || availableSharesToBuy <= 0) return;
+            
+            let inputEl = document.getElementById('shareInput');
+            let shares = parseInt(inputEl.value) || 0;
+            
+            // التحقق من أن القيمة ليست أقل من 1 وليست أكبر من المتاح
+            if (shares < 1) { 
+                shares = 1; 
+                inputEl.value = 1; 
+            }
+            if (shares > availableSharesToBuy) {
+                shares = availableSharesToBuy;
+                inputEl.value = availableSharesToBuy;
+            }
             
             let capital = shares * currentActiveOpp.sharePrice;
             document.getElementById('resSharesCount').innerText = shares + " سهم";
