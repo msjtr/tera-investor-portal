@@ -24,7 +24,10 @@
         .header-right { display: flex; align-items: center; gap: 20px; }
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
-        
+        .user-greeting { text-align: left; }
+        .user-greeting h4 { margin: 0; font-size: 14px; color: var(--tera-navy); font-weight: 700; }
+        .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); }
+
         .details-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
         .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
 
@@ -59,6 +62,19 @@
         .opp-mini-summary { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px 20px; border-radius: 8px; display: inline-flex; align-items: center; gap: 10px; }
         .opp-mini-summary span { font-size: 13px; color: var(--tera-gray); font-weight: 700; }
         .opp-mini-summary strong { font-size: 18px; color: var(--tera-teal); font-family: monospace; }
+        
+        /* ألوان الشارات لنوع الفرصة */
+        .type-badge { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; font-family: monospace; display: inline-block; }
+        .type-extended { background: #fef3c7; color: #d97706; } 
+        .type-opportunity { background: #fce7f3; color: #db2777; } 
+
+        @media print {
+            body * { visibility: hidden; }
+            .main-details, .main-details * { visibility: visible; }
+            .main-details { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; padding: 0; }
+            .top-header, .action-footer, .no-print { display: none !important; }
+            .info-item { border: 1px solid #000; background: #fff; }
+        }
     </style>
 </head>
 <body>
@@ -68,6 +84,12 @@
             <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
             <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
             <h1 id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h1>
+        </div>
+        <div class="header-left">
+            <div class="user-greeting">
+                <h4>محمد صالح جميعان الشمري</h4>
+                <p>بوابة الاستثمار، حائل</p>
+            </div>
         </div>
     </header>
 
@@ -84,7 +106,7 @@
                 
                 <div class="info-grid">
                     <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal"></strong></div>
-                    <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType"></strong></div>
+                    <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType" class="type-badge"></strong></div>
                     <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus"></strong></div>
                     <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono"></strong></div>
                     
@@ -95,9 +117,60 @@
                 </div>
             </div>
 
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
+                    <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
+                    <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
+                    <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
+                    <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
+                    <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
+                    <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
+                    <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
+                    <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
+                    <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
+                    <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
+                    <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
+                    <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
+                    <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
+                    <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono"></strong></div>
+                    <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
+                    <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono"></strong></div>
+                    <div class="info-item"><span>قيمة المنتج</span><strong id="mDetProdVal" class="mono"></strong></div>
+                    <div class="info-item"><span>سعر المنتج</span><strong id="mDetProdPrice" class="mono"></strong></div>
+                    <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono"></strong></div>
+                    <div class="info-item"><span>الاجمالي</span><strong id="mDetTotalProd" class="mono"></strong></div>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
+                <div class="info-grid">
+                    <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
+                    <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
+                </div>
+            </div>
+
             <div class="action-footer no-print">
                 <div class="right-actions">
                     <a href="opportunities.html" class="btn-action btn-secondary"><i class="fas fa-arrow-right"></i> العودة لسوق الفرص</a>
+                    <button onclick="window.print()" class="btn-action btn-secondary"><i class="fas fa-print"></i> طباعة الدليل</button>
+                    <button onclick="alert('جاري تنزيل ملف PDF...')" class="btn-action btn-danger"><i class="fas fa-file-pdf"></i> PDF</button>
                 </div>
                 
                 <div class="left-actions">
@@ -122,11 +195,11 @@
             const oppId = urlParams.get('id');
 
             // القراءة من الملف المشترك
-            if (oppId) {
+            if (oppId && typeof window.mockData !== 'undefined') {
                 const opp = window.mockData.find(d => d.id === oppId);
                 if (opp) renderDetails(opp);
                 else { alert("عذراً، الفرصة غير موجودة أو تم حذفها."); window.location.href = "opportunities.html"; }
-            } else {
+            } else if (typeof window.mockData !== 'undefined') {
                 renderDetails(window.mockData[0]); 
             }
         });
@@ -159,12 +232,25 @@
             document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
 
             document.getElementById('mDetOppId').innerText = opp.id;
-            document.getElementById('mDetOppType').innerText = opp.type;
+            
+            // تحديث الشارة لنوع الفرصة
+            let typeBadgeEl = document.getElementById('mDetOppType');
+            typeBadgeEl.innerText = opp.type;
+            if(opp.type === 'فرصة شراكة') {
+                typeBadgeEl.className = 'type-badge type-opportunity';
+            } else {
+                typeBadgeEl.className = 'type-badge type-extended';
+            }
+
             document.getElementById('mDetOppStatus').innerText = opp.status;
             document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
             document.getElementById('mDetSharesCount').innerText = opp.sharesCount;
-            document.getElementById('mDetSharePrice').innerText = window.formatMoney(opp.sharePrice) + ' ر.س';
-            document.getElementById('mDetTotalCapital').innerText = window.formatMoney(opp.capital) + ' ر.س';
+            
+            if(typeof window.formatMoney === 'function'){
+                document.getElementById('mDetSharePrice').innerText = window.formatMoney(opp.sharePrice) + ' ر.س';
+                document.getElementById('mDetTotalCapital').innerText = window.formatMoney(opp.capital) + ' ر.س';
+            }
+
             document.getElementById('mDetRatio').innerText = opp.roi + "%";
 
             const btnJoin = document.getElementById('btnRedirectToJoin');
@@ -176,6 +262,7 @@
                 miniSharesBox.style.display = 'inline-flex';
                 document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                 
+                // توجيه صحيح لصفحة الانضمام مع المعرف
                 btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
