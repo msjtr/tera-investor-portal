@@ -111,8 +111,7 @@
     </header>
 
     <div class="join-container">
-        <!-- زر العودة لصفحة التفاصيل، سيتم تحديث رابطه بالجافاسكريبت ليعود للفرصة الصحيحة -->
-        <a href="opportunities.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
+        <a href="javascript:history.back()" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
             <div class="opp-summary">
@@ -244,7 +243,7 @@
     <script src="../../assets/js/investments.js"></script>
 
     <script>
-        // === قاعدة البيانات الموحدة 100% ===
+        // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
         const unifiedDatabase = [
             // نوع: شراكة ممتدة (6 حالات)
             { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
@@ -281,13 +280,12 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
+            if (oppId) oppId = oppId.trim();
+
             if (!oppId && window.appData.length > 0) {
                 const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
                 if (defaultOpp) { oppId = defaultOpp.id; }
             }
-
-            // تحديث زر العودة ليعود لصفحة التفاصيل للفرصة الحالية
-            document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
 
             if (oppId) {
                 const opp = window.appData.find(d => String(d.id) === String(oppId));
@@ -329,6 +327,13 @@
             document.getElementById('invDuration').innerText = durationNum + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
+            // ===== التعديل الجذري هنا =====
+            // لكي تظهر الجداول والحسابات مباشرة للمستخدم دون أن تبدو كأنها "لا تنعكس"
+            if (availableSharesToBuy > 0) {
+                document.getElementById('shareInput').value = 1;
+                triggerCalculations();
+            }
+
             updateButtonsState();
         }
 
