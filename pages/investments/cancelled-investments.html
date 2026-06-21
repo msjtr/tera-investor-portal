@@ -23,6 +23,7 @@
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .header-right { display: flex; align-items: center; gap: 20px; }
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
         
         .join-container { max-width: 650px; margin: 50px auto; padding: 0 20px; }
         
@@ -50,13 +51,12 @@
 
         .btn-action { width: 100%; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
-        .btn-primary:hover { background: #026a77; }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
+        .btn-primary:hover { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; transform: none; box-shadow: none; }
         
         .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 20px; transition: 0.2s; }
         .btn-back:hover { color: var(--tera-navy); }
 
-        .nav-actions { margin-right: auto; }
         .btn-nav { padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); text-decoration: none; font-size: 13px; transition: 0.2s; }
         .btn-nav:hover { background: #f1f5f9; }
     </style>
@@ -68,7 +68,7 @@
             <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
             <h1>طلب الانضمام لفرصة استثمارية</h1>
         </div>
-        <div class="nav-actions">
+        <div class="header-left">
             <a href="../dashboard/index.html" class="btn-nav"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
         </div>
     </header>
@@ -118,7 +118,6 @@
             return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
         }
 
-        // تم إضافة جميع الفرص الـ 14 هنا لحل مشكلة عدم عثور النظام على الفرصة
         const mockData = [
             { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
             { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(5), 2), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToJoin: 0, daysLeftToStart: 5, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(5) + " - " + getDynamicDate(15), reqDate: "2026/01/10" },
@@ -145,8 +144,8 @@
             const urlParams = new URLSearchParams(window.location.search);
             const oppId = urlParams.get('id');
 
-            // إعداد زر العودة للتفاصيل
-            document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'completed-investments.html';
+            // إعداد زر العودة لتفاصيل الفرصة
+            document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
 
             if (oppId) {
                 const opp = mockData.find(d => d.id === oppId);
