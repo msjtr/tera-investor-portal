@@ -207,7 +207,58 @@
     <script src="../../assets/js/investments.js"></script>
     
     <script>
+        // دالة إنشاء المعرفات (في حال لم يتم توفيرها من الملف المشترك)
+        function getDynamicDateLocal(daysOffset) {
+            let d = new Date(); d.setDate(d.getDate() + daysOffset);
+            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+        }
+        function generateIdLocal(type, dateStr, sequence) {
+            const parts = dateStr.split('/');
+            const yyyy = parts[2] || parts[0]; const mm = parts[1].padStart(2, '0'); const dd = parts[0].padStart(2, '0'); const seq = String(sequence).padStart(3, '0');
+            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
+        }
+        
+        // البيانات الموحدة الحقيقية (نفس البيانات في كل الصفحات)
+        const localMockData = [
+            { id: generateIdLocal("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46550", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(5), 2), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46551", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(10), 3), type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", reqId: "46552", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-15), 4), type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", reqId: "46553", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, freq: "شهري", offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-60), 5), type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", reqId: "46554", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-100), 6), type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", reqId: "46555", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
+            { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(-5), 7), type: "شراكة ممتدة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46556", sharesCount: 30, sharePrice: 100, capital: 3000, expectedProfit: 900, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "12/06/2026 - 27/06/2026", reqDate: "2026/06/01" },
+            
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(2), 8), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", reqId: "46560", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(8), 9), type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", reqId: "46561", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(25), 10), type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", reqId: "46562", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-40), 11), type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", reqId: "46563", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-80), 12), type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46564", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-120), 13), type: "فرصة شراكة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - خدمات لوجستية", reqId: "46565", sharesCount: 30, sharePrice: 300, capital: 9000, expectedProfit: 2700, roi: 30, duration: 6, freq: "شهري", offeringPeriod: "15/02/2026 - 02/03/2026", reqDate: "2026/01/25" },
+            { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-1), 14), type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46566", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
+        ];
+
+        // تعيين البيانات الموحدة
+        window.appData = typeof window.mockData !== 'undefined' && window.mockData.length > 0 ? window.mockData : localMockData;
+
+        // دوال التنسيق المساعدة
+        function formatMoneyLocal(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        
+        function getBadgeClassLocal(status) {
+            switch(status) {
+                case 'القادمة': return 'status-upcoming'; 
+                case 'قائم': case 'النشطة': return 'status-active';
+                case 'المكتملة': return 'status-completed';
+                case 'المنتهية': return 'status-expired';
+                case 'المغلقة': return 'status-closed';
+                case 'الملغاة': return 'status-cancelled';
+                default: return 'status-active';
+            }
+        }
+        function getTypeBadgeClassLocal(type) { return type === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; }
+
         let currentViewStyle = 'list'; 
+        let statusChartInstance = null;
+        let oppChartInstance = null;
 
         window.switchView = function(view) {
             currentViewStyle = view;
@@ -233,14 +284,14 @@
             }
 
             data.forEach(item => {
-                // توحيد استخدام الدوال المشتركة من investments.js
-                const badge = window.getBadgeClass ? window.getBadgeClass(item.status) : 'status-active';
-                const typeBadge = window.getTypeBadgeClass ? window.getTypeBadgeClass(item.type) : 'type-opportunity';
-                const detailUrl = `completed-investments.html?id=${item.id}`;
-                const formattedShare = window.formatMoney ? window.formatMoney(item.sharePrice) : item.sharePrice;
-                const formattedCapital = window.formatMoney ? window.formatMoney(item.capital) : item.capital;
+                const badge = getBadgeClassLocal(item.status);
+                const typeBadge = getTypeBadgeClassLocal(item.type);
+                // تأكدنا من أن الرابط هو investment-details.html وليس completed-investments.html
+                const detailUrl = `investment-details.html?id=${item.id}`;
+                const formattedShare = formatMoneyLocal(item.sharePrice);
+                const formattedCapital = formatMoneyLocal(item.capital);
 
-                // بناء بطاقة الشبكة (Grid)
+                // بطاقة الشبكة مطابقة تماماً للمعلومات
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
@@ -264,7 +315,7 @@
                     </div>
                 `;
 
-                // بناء صفوف القائمة (List) بشكل متطابق مع البيانات
+                // صف القائمة مطابق تماماً للمعلومات
                 listBody.innerHTML += `
                     <tr>
                         <td style="font-family: monospace; font-weight: 700; color:var(--tera-navy);">${item.id}</td>
@@ -292,26 +343,16 @@
             let statusVal = document.getElementById('statusFilter').value;
             let searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
 
-            // التأكد من تحميل البيانات من الملف المشترك
-            let dataToFilter = window.mockData || [];
-
-            let filtered = dataToFilter.filter(d => {
-                // 1. فلتر النوع
+            let filtered = window.appData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 
-                // 2. فلتر الحالة (السر هنا: دمج "قائم" و "النشطة" في بحث واحد)
+                // دمج النشطة وقائم معاً بنجاح
                 let mStatus = false;
-                if (statusVal === 'all') {
-                    mStatus = true;
-                } else if (statusVal === 'النشطة_قائم') {
-                    mStatus = (d.status === 'النشطة' || d.status === 'قائم');
-                } else {
-                    mStatus = (d.status === statusVal);
-                }
+                if (statusVal === 'all') mStatus = true;
+                else if (statusVal === 'النشطة_قائم') mStatus = (d.status === 'النشطة' || d.status === 'قائم');
+                else mStatus = (d.status === statusVal);
 
-                // 3. فلتر البحث النصي
                 let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
-                
                 return mType && mStatus && mSearch;
             });
 
@@ -332,14 +373,75 @@
             document.getElementById('sumCompleted').innerText = completed;
         };
 
+        window.updateCharts = function(data) {
+            if(typeof Chart === 'undefined') return;
+
+            let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
+            data.forEach(d => {
+                if(d.status === 'النشطة' || d.status === 'قائم') counts.active++;
+                else if(d.status === 'القادمة') counts.upcoming++;
+                else if(d.status === 'المنتهية') counts.finished++;
+                else if(d.status === 'المغلقة') counts.closed++;
+                else if(d.status === 'الملغاة') counts.cancelled++;
+                else if(d.status === 'المكتملة') counts.completed++;
+            });
+
+            const ctxStatus = document.getElementById('statusChart');
+            if(ctxStatus) {
+                if(statusChartInstance) statusChartInstance.destroy();
+                if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+                statusChartInstance = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['النشطة/قائم', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
+                        datasets: [{
+                            data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed],
+                            backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, cutout: '70%', 
+                        plugins: { 
+                            legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } },
+                            datalabels: { color: '#fff', font: { weight: 'bold', size: 16 }, formatter: (v) => v > 0 ? v : '' } 
+                        } 
+                    }
+                });
+            }
+
+            const ctxOpp = document.getElementById('opportunitiesChart');
+            if(ctxOpp) {
+                if(oppChartInstance) oppChartInstance.destroy();
+                let mVal = data.length > 0 ? data[0].capital : 10000;
+                let cVal = Math.max(1, Math.floor(data.length / 6));
+                
+                oppChartInstance = new Chart(ctxOpp, {
+                    type: 'bar',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        datasets: [
+                            { type: 'line', label: 'إجمالي المبالغ', data: [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.4, yAxisID: 'y1' },
+                            { type: 'bar', label: 'الفرص المطروحة', data: [cVal, cVal+1, cVal, cVal+2, cVal+1, data.length], backgroundColor: '#028090', borderRadius: 4, yAxisID: 'y' }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { datalabels: { display: false } },
+                        scales: {
+                            y: { position: 'right', grid: { display: false } },
+                            y1: { position: 'left' }
+                        }
+                    }
+                });
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
-            // تأخير بسيط للتأكد من تحميل ملف investments.js
-            setTimeout(() => {
-                window.applyFilters();
-                document.getElementById('typeFilter').addEventListener('change', window.applyFilters);
-                document.getElementById('statusFilter').addEventListener('change', window.applyFilters);
-                document.getElementById('searchInput').addEventListener('input', window.applyFilters);
-            }, 100);
+            window.applyFilters();
+            document.getElementById('typeFilter').addEventListener('change', window.applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', window.applyFilters);
+            document.getElementById('searchInput').addEventListener('input', window.applyFilters);
         });
     </script>
     <script src="../../assets/js/app.js"></script>
