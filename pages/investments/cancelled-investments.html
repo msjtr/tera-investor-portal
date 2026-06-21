@@ -211,7 +211,7 @@
                 </div>
 
                 <h4 class="section-title">
-                    <i class="fas fa-calendar-alt text-teal"></i> جدول توزيع الدفعات المتوقعة
+                    <i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span>
                 </h4>
                 <div style="overflow-x: auto; margin-bottom: 30px;">
                     <table class="tera-table">
@@ -255,6 +255,15 @@
 
                 <div class="disclaimer-text">
                     <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
+                </div>
+
+                <div class="important-notes">
+                    <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
+                    <ul>
+                        <li>جميع الباقات المذكورة تعتبر خدمات إضافية اختيارية وليست إلزامية.</li>
+                        <li>رسوم الباقات المحددة (99، 149، 199 ر.س) هي رسوم ثابتة يتم خصمها من الأرباح بالتوزيع على مدة الفرصة.</li>
+                        <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
+                    </ul>
                 </div>
 
                 <div class="agreement-box">
@@ -401,7 +410,7 @@
                 let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
                 let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات
+                // رسوم الخدمات الثابتة
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
@@ -420,14 +429,14 @@
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // جدول الرسوم
+                // 1. جدول الرسوم
                 let tableBody = `
                     <tr>
                         <td class="text-start">الرسوم الإدارية</td>
                         <td>${formatMoney(adminFee)}</td>
                         <td>${formatMoney(adminVat)}</td>
                         <td>${formatMoney(adminTotal)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(adminMonthly)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(adminMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
@@ -435,7 +444,7 @@
                         <td>${formatMoney(transferFee)}</td>
                         <td>${formatMoney(transferVat)}</td>
                         <td>${formatMoney(transferTotal)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(transferMonthly)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(transferMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
@@ -443,7 +452,7 @@
                         <td>${formatMoney(collectionFee)}</td>
                         <td>${formatMoney(collectionVat)}</td>
                         <td>${formatMoney(collectionTotal)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(collectionMonthly)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(collectionMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
@@ -451,7 +460,7 @@
                         <td style="color:var(--tera-teal);">${formatMoney(pkgFee)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgVat)}</td>
                         <td style="color:var(--tera-teal);">${formatMoney(pkgTotal)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(pkgMonthly)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(pkgMonthly)}</td>
                         <td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr class="total-row">
@@ -465,9 +474,11 @@
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                // بناء جدول توزيع الدفعات بناءً على نوع الفرصة
+                // 2. بناء جدول توزيع الدفعات بناءً على نوع الفرصة
                 let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
                 
+                document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات شراكة ممتدة" : "جدول توزيع الدفعات فرصة شراكة";
+
                 let distHeader = `<tr>
                     <th>تاريخ التحصيل</th>`;
                 if(!isExtended) distHeader += `<th>رأس المال</th>`;
