@@ -28,7 +28,8 @@
         .join-container { max-width: 950px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
         .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
-        .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
+        .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; overflow: hidden; }
+        .opp-summary::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--tera-teal); }
         .opp-summary h3 { margin: 0 0 10px 0; font-size: 18px; }
         .opp-summary p { margin: 0; font-size: 14px; color: #cbd5e1; }
         .opp-summary .price { font-family: monospace; font-weight: bold; color: #38bdf8; font-size: 18px; }
@@ -37,7 +38,7 @@
         .calc-group label { display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; }
         
         .share-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; direction: ltr; }
-        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
+        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; }
         .share-selector button:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
         .share-selector button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
         .calc-input-custom { width: 120px; text-align: center; font-size: 28px; font-weight: bold; font-family: monospace; border: 2px solid var(--tera-teal); border-radius: 12px; height: 50px; color: var(--tera-navy); outline: none; background: #f8fafc; pointer-events: none; }
@@ -47,7 +48,7 @@
         #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 30px; }
+        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
 
         .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
@@ -70,10 +71,10 @@
         .tera-table td.notes { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
         .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
 
-        .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
         .calc-result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--tera-gray); font-weight: 700; }
         .calc-result-row.highlight { color: var(--tera-navy); }
-        .calc-result-row.total { border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 5px; color: var(--tera-navy); font-size: 20px; }
+        .calc-result-row.total { border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 15px; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
 
         .payment-methods { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
         .pay-method-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; background: #f8fafc; }
@@ -84,12 +85,8 @@
 
         .disclaimer-text { font-size: 12px; color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 30px; line-height: 1.6; }
 
-        .agreement-box { display: flex; gap: 12px; font-size: 14px; color: var(--tera-gray); margin-bottom: 30px; line-height: 1.5; background: #fffbeb; padding: 20px; border-radius: 12px; border: 1px solid #fde68a; }
+        .agreement-box { display: flex; gap: 12px; font-size: 14px; color: var(--tera-gray); margin-bottom: 30px; line-height: 1.5; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 1px solid #ccfbf1; }
         .agreement-box input { margin-top: 2px; transform: scale(1.3); accent-color: var(--tera-teal); cursor: pointer; }
-
-        .important-notes { background: #f8fafc; padding: 20px; border-radius: 12px; border-right: 4px solid var(--tera-teal); margin-bottom: 30px; }
-        .important-notes ul { margin: 0; padding-right: 20px; font-size: 13px; color: var(--tera-gray); line-height: 1.8; }
-        .important-notes li { margin-bottom: 8px; }
 
         .btn-action { width: 100%; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
@@ -124,7 +121,7 @@
                 <h3 id="invOppName">جاري التحميل...</h3>
                 <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span> <span id="invOppTypeBadge" class="type-badge" style="background:#fef3c7; color:#d97706; margin-right:10px;"></span></p>
                 <p style="margin-top: 8px;">قيمة السهم الواحد: <span id="invSharePrice" class="price"></span></p>
-                <p style="margin-top: 5px; font-size: 12px; color: #94a3b8;">مدة الفرصة: <span id="invDuration" style="font-family:monospace; font-weight:bold; color:#fff;"></span></p>
+                <p style="margin-top: 5px; font-size: 13px; color: #cbd5e1;">مدة الفرصة: <span id="invDuration" style="font-family:monospace; font-weight:bold; color:#fff;"></span></p>
             </div>
 
             <div class="calc-group">
@@ -147,18 +144,21 @@
                         <div><h4>الباقة الأساسية</h4><p>بدون مزايا إضافية للحماية.</p></div>
                         <span class="fee">مجاناً</span>
                     </label>
+
                     <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية', 99)">
                         <input type="radio" name="protection_pkg" value="silver">
                         <i class="fas fa-medal"></i>
                         <div><h4>الباقة الفضية</h4><p>صرف الأرباح عند تأخر العميل 60 يوماً.</p></div>
                         <span class="fee">99 ر.س</span>
                     </label>
+
                     <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
                         <input type="radio" name="protection_pkg" value="gold">
                         <i class="fas fa-trophy"></i>
                         <div><h4>الباقة الذهبية</h4><p>صرف الأرباح عند تأخر العميل 30 يوماً.</p></div>
                         <span class="fee">149 ر.س</span>
                     </label>
+
                     <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
                         <input type="radio" name="protection_pkg" value="platinum">
                         <i class="fas fa-gem"></i>
@@ -199,17 +199,17 @@
                 <h4 class="section-title"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
                 <div class="calc-result-box">
                     <div class="calc-result-row"><span>عدد الأسهم المحددة:</span><span id="sumShares" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
-                    <div class="calc-result-row highlight"><span>رأس المال المستثمر (قيمة المنتج):</span><span id="sumCapital" style="font-family:monospace;">0.00 ر.س</span></div>
+                    <div class="calc-result-row highlight"><span>رأس المال المستثمر (قيمة المنتج):</span><span id="sumCapital" style="font-family:monospace; font-size:16px;">0.00 ر.س</span></div>
                     
                     <div style="margin: 10px 0; border-top: 1px solid #e2e8f0; padding-top: 10px;"></div>
                     
                     <div class="calc-result-row"><span>إجمالي ضرائب المنتج لوحدها 15%:</span><span id="sumProdTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
-                    <div class="calc-result-row"><span>والخدمات لوحدها 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>إجمالي ضرائب الخدمات والاشتراك 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
                     
-                    <div class="calc-result-row" style="margin-top: 10px;"><span>الإجمالي العام (رأس المال + جميع الرسوم والضرائب):</span><span id="sumTotalAll" style="font-family:monospace; color:var(--tera-gray);">0.00 ر.س</span></div>
+                    <div class="calc-result-row" style="margin-top: 10px; font-weight:800;"><span>الإجمالي العام (رأس المال + جميع الرسوم والضرائب):</span><span id="sumTotalAll" style="font-family:monospace; color:var(--tera-gray);">0.00 ر.س</span></div>
                     
-                    <div class="calc-result-row total"><span>المبلغ المطالب بدفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal);">0.00 ر.س</span></div>
-                    <div style="font-size: 11px; color: var(--tera-gray); text-align: left; margin-top: 5px;">* رسوم الخدمات والاشتراكات لا تُدفع الآن، بل تُجدول وتُخصم من الدفعات الدورية.</div>
+                    <div class="calc-result-row total"><span>المبلغ المطالب بدفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal); font-size:24px;">0.00 ر.س</span></div>
+                    <div style="font-size: 12px; color: var(--tera-gray); text-align: left; margin-top: 8px;">* رسوم الخدمات والاشتراكات لا تُدفع الآن، بل تُجدول وتُخصم من الدفعات الدورية كنسبة.</div>
                 </div>
 
                 <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
@@ -234,18 +234,9 @@
                     <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
                 </div>
 
-                <div class="important-notes">
-                    <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
-                    <ul>
-                        <li>جميع الباقات المذكورة تعتبر خدمات إضافية اختيارية وليست إلزامية.</li>
-                        <li>رسوم الباقات المحددة (99، 149، 199 ر.س) هي رسوم ثابتة يتم خصمها من الأرباح بالتوزيع على مدة الفرصة.</li>
-                        <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
-                    </ul>
-                </div>
-
                 <div class="agreement-box">
                     <input type="checkbox" id="agreeCheckbox" onchange="togglePayButton()">
-                    <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة وجدول التوزيع والرسوم الموضحة في الدليل الإرشادي.</label>
+                    <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة، وجدول التوزيع، والرسوم الموضحة في الدليل الإرشادي الشامل.</label>
                 </div>
 
                 <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="processPayment()">
@@ -269,14 +260,15 @@
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
-            if (!oppId) {
+            // إذا لم يتم تمرير ID، يتم أخذ أول فرصة نشطة تلقائياً للمعاينة
+            if (!oppId && typeof window.mockData !== 'undefined') {
                 const defaultOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.fundedPercentage < 100);
                 if (defaultOpp) { oppId = defaultOpp.id; }
             }
 
             document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
 
-            if (oppId) {
+            if (oppId && typeof window.mockData !== 'undefined') {
                 const opp = window.mockData.find(d => d.id === oppId);
                 if (opp && (opp.status === 'قائم' || opp.status === 'النشطة') && opp.fundedPercentage < 100) {
                     currentActiveOpp = opp;
@@ -363,7 +355,7 @@
                 let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
                 let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // رسوم الخدمات الثابتة
+                // رسوم الخدمات الثابتة الموحدة
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
@@ -382,7 +374,7 @@
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // 1. جدول الرسوم
+                // ----- 1. تعبئة جدول الرسوم -----
                 let tableBody = `
                     <tr>
                         <td class="text-start">الرسوم الإدارية</td>
@@ -427,43 +419,98 @@
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                // 2. جدول توزيع الدفعات بناءً على نوع الفرصة
+                // ----- 2. تعبئة جدول توزيع الدفعات (ديناميكي حسب نوع الفرصة) -----
                 let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
+                
                 document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
 
                 let distHeader = `<tr><th>تاريخ التحصيل</th>`;
-                if(!isExtended) distHeader += `<th>رأس المال</th>`;
-                distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي</th><th>حالة الدفعة</th><th>الاجراءات</th></tr>`;
+                // إخفاء عمود رأس المال المسترد من الشراكة الممتدة
+                if(!isExtended) distHeader += `<th>رأس المال المسترد</th>`;
+                
+                distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
                 document.getElementById('distributionTableHeader').innerHTML = distHeader;
 
                 let monthlyCapital = capital / duration;
                 let monthlyProfit = expectedProfitForSelectedShares / duration;
-                let monthlyTotalPayment = isExtended ? monthlyProfit : (monthlyCapital + monthlyProfit);
-                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
-
+                
                 let distBody = '';
                 let tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
-
                 let startDate = new Date();
-                for(let i=1; i<=duration; i++) {
-                    let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
-                    let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
 
-                    distBody += `<tr><td>${dateStr}</td>`;
-                    if(!isExtended) distBody += `<td>${window.formatMoney(monthlyCapital)}</td>`;
-                    distBody += `<td>${window.formatMoney(monthlyProfit)}</td><td>${window.formatMoney(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoney(totalMonthlyFinal)}</td><td style="color:var(--tera-teal);">${window.formatMoney(monthlyRemaining)}</td><td><span class="badge" style="background:#f1f5f9; color:#64748b;">جديد</span></td><td>-</td></tr>`;
+                if(isExtended) {
+                    // توزيع الشراكة الممتدة (أرباح فقط، ورأس المال في آخر شهر)
+                    for(let i=1; i<=duration; i++) {
+                        let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
+                        let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+                        
+                        let currentPayment = monthlyProfit;
+                        let noteText = "توزيع أرباح";
+                        
+                        if(i === duration) {
+                            currentPayment += capital;
+                            noteText = "أرباح + استرداد رأس المال";
+                        }
+                        let currentRemaining = currentPayment - totalMonthlyFinal;
 
-                    tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; 
-                    tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                        distBody += `<tr>
+                            <td>${dateStr}</td>
+                            <td>${window.formatMoney(monthlyProfit)}</td>
+                            <td>${window.formatMoney(currentPayment)}</td>
+                            <td style="color:#ef4444;">${window.formatMoney(totalMonthlyFinal)}</td>
+                            <td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoney(currentRemaining)}</td>
+                            <td style="font-size:11px; color:#64748b;">${noteText}</td>
+                        </tr>`;
+
+                        tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
+                    }
+                    
+                    distBody += `<tr class="total-row">
+                        <td class="text-start">الإجمالي</td>
+                        <td>${window.formatMoney(tProf)}</td>
+                        <td>${window.formatMoney(tPay)}</td>
+                        <td style="color:#ef4444;">${window.formatMoney(tFee)}</td>
+                        <td style="color:var(--tera-teal); font-size:16px;">${window.formatMoney(tRem)}</td>
+                        <td>-</td>
+                    </tr>`;
+
+                } else {
+                    // توزيع فرصة الشراكة (رأس مال + أرباح بشكل مقسم)
+                    let monthlyTotalPayment = monthlyCapital + monthlyProfit;
+                    let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
+
+                    for(let i=1; i<=duration; i++) {
+                        let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
+                        let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+
+                        distBody += `<tr>
+                            <td>${dateStr}</td>
+                            <td>${window.formatMoney(monthlyCapital)}</td>
+                            <td>${window.formatMoney(monthlyProfit)}</td>
+                            <td>${window.formatMoney(monthlyTotalPayment)}</td>
+                            <td style="color:#ef4444;">${window.formatMoney(totalMonthlyFinal)}</td>
+                            <td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoney(monthlyRemaining)}</td>
+                            <td><span class="badge" style="background:#f1f5f9; color:#64748b;">مجدولة</span></td>
+                        </tr>`;
+
+                        tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; 
+                        tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                    }
+
+                    distBody += `<tr class="total-row">
+                        <td class="text-start">الإجمالي</td>
+                        <td>${window.formatMoney(tCap)}</td>
+                        <td>${window.formatMoney(tProf)}</td>
+                        <td>${window.formatMoney(tPay)}</td>
+                        <td style="color:#ef4444;">${window.formatMoney(tFee)}</td>
+                        <td style="color:var(--tera-teal); font-size:16px;">${window.formatMoney(tRem)}</td>
+                        <td>-</td>
+                    </tr>`;
                 }
-
-                distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>`;
-                if(!isExtended) distBody += `<td>${window.formatMoney(tCap)}</td>`;
-                distBody += `<td>${window.formatMoney(tProf)}</td><td>${window.formatMoney(tPay)}</td><td style="color:#ef4444;">${window.formatMoney(tFee)}</td><td style="color:var(--tera-teal); font-size:15px;">${window.formatMoney(tRem)}</td><td></td><td></td></tr>`;
 
                 document.getElementById('distributionTableBody').innerHTML = distBody;
 
-                // 3. ملخص الدفع النهائي
+                // ----- 3. ملخص الدفع لطلب الانضمام -----
                 let totalToPayNow = capital + productVat;
                 let totalOverall = capital + productVat + totalServiceFinal;
 
@@ -472,6 +519,7 @@
                 document.getElementById('sumProdTax').innerText = window.formatMoney(productVat) + " ر.س";
                 document.getElementById('sumServTax').innerText = window.formatMoney(totalServiceVat) + " ر.س";
                 document.getElementById('sumTotalAll').innerText = window.formatMoney(totalOverall) + " ر.س";
+                
                 document.getElementById('resToPayNow').innerText = window.formatMoney(totalToPayNow) + " ر.س"; 
 
             } else {
