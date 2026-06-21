@@ -33,11 +33,17 @@
         .opp-summary p { margin: 0; font-size: 14px; color: #cbd5e1; }
         .opp-summary .price { font-family: monospace; font-weight: bold; color: #38bdf8; font-size: 18px; }
 
-        .calc-group { margin-bottom: 25px; }
-        .calc-group label { display: block; font-size: 15px; font-weight: 800; color: var(--tera-navy); margin-bottom: 12px; }
-        .calc-input { width: 100%; padding: 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 24px; font-family: monospace; font-weight: bold; text-align: center; color: var(--tera-teal); outline: none; transition: 0.3s; }
-        .calc-input:focus { border-color: var(--tera-teal); }
-        .available-shares-hint { font-size: 13px; color: var(--tera-teal); font-weight: bold; margin-top: 10px; display: block; text-align: center; }
+        .calc-group { margin-bottom: 25px; text-align: center; }
+        .calc-group label { display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; }
+        
+        /* عداد الأسهم الجديد (أزرار بارزة) */
+        .share-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; direction: ltr; }
+        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; }
+        .share-selector button:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
+        .share-selector button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        .calc-input-custom { width: 120px; text-align: center; font-size: 28px; font-weight: bold; font-family: monospace; border: 2px solid var(--tera-teal); border-radius: 12px; height: 50px; color: var(--tera-navy); outline: none; background: #f8fafc; pointer-events: none; }
+        
+        .available-shares-hint { font-size: 14px; color: var(--tera-teal); font-weight: bold; display: block; text-align: center; }
 
         #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -87,8 +93,8 @@
 
         .btn-action { width: 100%; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; }
         .btn-primary { background: var(--tera-teal); color: #fff; }
-        .btn-primary:hover { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; transform: none; box-shadow: none; }
+        .btn-primary:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
         
         .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 20px; transition: 0.2s; }
         .btn-back:hover { color: var(--tera-navy); }
@@ -122,8 +128,12 @@
 
             <div class="calc-group">
                 <label>حدد عدد الأسهم التي ترغب بالانضمام بها:</label>
-                <input type="number" id="shareInput" class="calc-input" min="0" value="0" placeholder="0" oninput="triggerCalculations()">
-                <span class="available-shares-hint">الأسهم المتاحة لك: <span id="maxShares" style="font-family:monospace; font-size:15px;">0</span></span>
+                <div class="share-selector">
+                    <button type="button" id="btnPlus" onclick="changeShares(1)"><i class="fas fa-plus"></i></button>
+                    <input type="number" id="shareInput" class="calc-input-custom" value="0" readonly>
+                    <button type="button" id="btnMinus" onclick="changeShares(-1)"><i class="fas fa-minus"></i></button>
+                </div>
+                <span class="available-shares-hint">الأسهم المتاحة لك: <span id="maxShares" style="font-family:monospace; font-size:16px;">0</span></span>
             </div>
 
             <div id="extendedDetails">
@@ -132,7 +142,7 @@
                 <p style="font-size: 13px; color: var(--tera-gray); margin-bottom: 15px;">نوفر باقات حماية ومتابعة مرنة تمنح المستثمر راحة أكبر في إدارة استثماراته.</p>
                 
                 <div class="packages-grid">
-                    <label class="package-card basic selected" onclick="selectPackage(this, 'الباقة الأساسية', 'مجاناً')">
+                    <label class="package-card basic selected" onclick="selectPackage(this, 'basic', 'الباقة الأساسية')">
                         <input type="radio" name="protection_pkg" value="basic" checked>
                         <i class="fas fa-star"></i>
                         <h4>الباقة الأساسية</h4>
@@ -140,32 +150,39 @@
                         <span class="fee">متاحة للجميع مجاناً</span>
                     </label>
 
-                    <label class="package-card silver" onclick="selectPackage(this, 'الباقة الفضية', '10% من الأرباح كحد أقصى 100 ر.س')">
+                    <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية')">
                         <input type="radio" name="protection_pkg" value="silver">
                         <i class="fas fa-medal"></i>
                         <h4>الباقة الفضية</h4>
                         <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً.</p>
-                        <span class="fee">10% من الأرباح</span>
+                        <span class="fee">10% من الأرباح بحد أقصى 100 ر.س</span>
                     </label>
 
-                    <label class="package-card gold" onclick="selectPackage(this, 'الباقة الذهبية', '15% من الأرباح كحد أقصى 150 ر.س')">
+                    <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية')">
                         <input type="radio" name="protection_pkg" value="gold">
                         <i class="fas fa-trophy"></i>
                         <h4>الباقة الذهبية</h4>
                         <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً.</p>
-                        <span class="fee">15% من الأرباح</span>
+                        <span class="fee">15% من الأرباح بحد أقصى 150 ر.س</span>
                     </label>
 
-                    <label class="package-card platinum" onclick="selectPackage(this, 'الباقة البلاتينية', '20% من الأرباح كحد أقصى 200 ر.س')">
+                    <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية')">
                         <input type="radio" name="protection_pkg" value="platinum">
                         <i class="fas fa-gem"></i>
                         <h4>الباقة البلاتينية</h4>
                         <p>ضمان الصرف في موعد الاستحقاق المحدد شهرياً دون انتظار المقترض.</p>
-                        <span class="fee">20% من الأرباح</span>
+                        <span class="fee">20% من الأرباح بحد أقصى 200 ر.س</span>
                     </label>
                 </div>
 
-                <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
+                <h4 class="section-title">
+                    <i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة
+                </h4>
+                <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>جميع رسوم الخدمات والاشتراكات الموضحة بالجدول تُخصم بشكل شهري ودوري من الأرباح، ولا تتطلب منك دفعها الآن.</span>
+                </div>
+
                 <table class="tera-table">
                     <thead>
                         <tr>
@@ -188,10 +205,9 @@
                     <div style="margin: 10px 0; border-top: 1px solid #e2e8f0; padding-top: 10px;"></div>
                     
                     <div class="calc-result-row"><span>إجمالي ضرائب المنتج 15%:</span><span id="sumProdTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
-                    <div class="calc-result-row"><span>إجمالي ضرائب الخدمات 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">21.75 ر.س</span></div>
+                    <div class="calc-result-row"><span>إجمالي ضرائب الخدمات والاشتراك 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
                     
                     <div class="calc-result-row total"><span>المبلغ المطالب بدفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal);">0.00 ر.س</span></div>
-                    <div style="font-size: 11px; color: var(--tera-gray); text-align: left; margin-top: 5px;">* رسوم الخدمات والاشتراكات تُخصم لاحقاً من الأرباح المحصلة.</div>
                 </div>
 
                 <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
@@ -220,7 +236,7 @@
                     <h4 style="margin:0 0 10px 0; font-size: 15px; color: var(--tera-navy);">ملاحظات مهمة:</h4>
                     <ul>
                         <li>جميع الباقات المذكورة خدمات إضافية اختيارية وليست إلزامية.</li>
-                        <li>رسوم الاشتراك المئوية (10%، 15%، 20%) تُحسب من الأرباح المستحقة فقط، ولا تمس رأس المال.</li>
+                        <li>رسوم الاشتراك المئوية تُحسب من إجمالي الأرباح المتوقعة للأسهم المحددة فقط، ولا تمس رأس المال.</li>
                         <li>تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.</li>
                     </ul>
                 </div>
@@ -250,17 +266,17 @@
         }
 
         const mockData = [
-            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
-            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
-            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "قائم", fundedPercentage: 10, daysLeftToJoin: 8, reqEntity: "افراد", company: "فرصة شراكة - تأثيث", reqId: "46562", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
+            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
+            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة (فرصة جديدة)", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
+            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "قائم", fundedPercentage: 10, daysLeftToJoin: 8, reqEntity: "افراد", company: "فرصة شراكة - تأثيث (فرصة متاحة)", reqId: "46562", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
             { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-30), 12), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 90, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46566", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-35) + " - " + getDynamicDate(-25), reqDate: "2026/04/20" }
         ];
 
         let currentActiveOpp = null;
         let availableSharesToBuy = 0;
         
+        let selectedPackageType = 'basic';
         let selectedPackageName = 'الباقة الأساسية';
-        let selectedPackageFeeNote = 'مجاناً';
 
         function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -304,10 +320,30 @@
             document.getElementById('invSharePrice').innerText = formatMoney(currentActiveOpp.sharePrice) + " ر.س";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
-            document.getElementById('shareInput').max = availableSharesToBuy;
+            updateButtonsState();
         }
 
-        function selectPackage(el, name, feeNote) {
+        // أزرار التحكم بالأسهم
+        function changeShares(delta) {
+            let inputEl = document.getElementById('shareInput');
+            let currentShares = parseInt(inputEl.value) || 0;
+            let newShares = currentShares + delta;
+
+            if (newShares < 0) newShares = 0;
+            if (newShares > availableSharesToBuy) newShares = availableSharesToBuy;
+
+            inputEl.value = newShares;
+            updateButtonsState();
+            triggerCalculations();
+        }
+
+        function updateButtonsState() {
+            let currentShares = parseInt(document.getElementById('shareInput').value) || 0;
+            document.getElementById('btnMinus').disabled = (currentShares <= 0);
+            document.getElementById('btnPlus').disabled = (currentShares >= availableSharesToBuy);
+        }
+
+        function selectPackage(el, type, name) {
             document.querySelectorAll('.package-card').forEach(card => {
                 card.classList.remove('selected');
                 card.querySelector('input').checked = false;
@@ -315,8 +351,8 @@
             el.classList.add('selected');
             el.querySelector('input').checked = true;
             
+            selectedPackageType = type;
             selectedPackageName = name;
-            selectedPackageFeeNote = feeNote;
             
             triggerCalculations();
         }
@@ -327,49 +363,64 @@
             let extendedDiv = document.getElementById('extendedDetails');
             
             if (shares > 0) {
-                if (shares > availableSharesToBuy) { shares = availableSharesToBuy; inputEl.value = availableSharesToBuy; }
-                
                 extendedDiv.style.display = 'block';
                 
+                // حسابات القيم للأسهم المحددة
                 let capital = shares * currentActiveOpp.sharePrice;
-                let productVat = capital * 0.15; 
+                let productVat = capital * 0.15; // 15% من قيمة المنتج
                 
+                // حساب الربح المتوقع للأسهم المحددة
+                let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
+                let expectedProfitForSelectedShares = shares * profitPerShare;
+
+                // رسوم الخدمات الأساسية
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
                 
-                let totalServiceBase = adminFee + transferFee + collectionFee;
-                let totalServiceVat = adminVat + transferVat + collectionVat; 
-                let totalServiceFinal = adminTotal + transferTotal + collectionTotal; 
+                // حساب رسوم الباقة الاختيارية
+                let pkgFee = 0;
+                if (selectedPackageType === 'silver') pkgFee = Math.min(expectedProfitForSelectedShares * 0.10, 100);
+                else if (selectedPackageType === 'gold') pkgFee = Math.min(expectedProfitForSelectedShares * 0.15, 150);
+                else if (selectedPackageType === 'platinum') pkgFee = Math.min(expectedProfitForSelectedShares * 0.20, 200);
+                
+                let pkgVat = pkgFee * 0.15;
+                let pkgTotal = pkgFee + pkgVat;
 
+                // المجاميع
+                let totalServiceBase = adminFee + transferFee + collectionFee + pkgFee;
+                let totalServiceVat = adminVat + transferVat + collectionVat + pkgVat; 
+                let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
+
+                // بناء الجدول
                 let tableBody = `
                     <tr>
                         <td>الرسوم الإدارية</td>
                         <td>${formatMoney(adminFee)}</td>
                         <td>${formatMoney(adminVat)}</td>
                         <td>${formatMoney(adminTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td>رسوم التحويل</td>
                         <td>${formatMoney(transferFee)}</td>
                         <td>${formatMoney(transferVat)}</td>
                         <td>${formatMoney(transferTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td>رسوم التحصيل والمعالجة</td>
                         <td>${formatMoney(collectionFee)}</td>
                         <td>${formatMoney(collectionVat)}</td>
                         <td>${formatMoney(collectionTotal)}</td>
-                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً من الأرباح</td>
+                        <td style="font-size:11px; color:#64748b;">تخصم شهرياً دورياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
-                        <td>0.00</td>
-                        <td>0.00</td>
-                        <td>0.00</td>
-                        <td style="font-size:11px; color:var(--tera-teal); font-weight:bold;">${selectedPackageFeeNote}</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(pkgFee)}</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(pkgVat)}</td>
+                        <td style="color:var(--tera-teal);">${formatMoney(pkgTotal)}</td>
+                        <td style="font-size:11px; color:var(--tera-teal); font-weight:bold;">تخصم من الأرباح فقط</td>
                     </tr>
                     <tr class="total-row">
                         <td>الإجمالي للخدمات</td>
@@ -381,6 +432,8 @@
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
+                // تحديث ملخص الدفع النهائي
+                // المبلغ المطالب بدفعه الآن = رأس المال + ضريبة المنتج (لأن رسوم الخدمة تخصم من الأرباح لاحقاً)
                 let totalToPayNow = capital + productVat;
 
                 document.getElementById('sumShares').innerText = shares;
