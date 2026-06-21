@@ -70,7 +70,7 @@
         /* الشارات والألوان للتمييز */
         .badge { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; text-align: center; border: 1px solid transparent; }
         .status-upcoming { background: #dcfce7; color: #10b981; border-color: #bbf7d0; } /* خضراء للقادمة */
-        .status-active { background: #e0f2fe; color: #028090; border-color: #bae6fd; } /* أزرق للنشطة */
+        .status-active { background: #e0f2fe; color: #028090; border-color: #bae6fd; } /* أزرق للنشطة/قائم */
         .status-completed { background: #e0e7ff; color: #6366f1; border-color: #c7d2fe; } /* بنفسجي للمكتملة */
         .status-expired { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; } /* رصاصي للمنتهية */
         .status-closed { background: #e2e8f0; color: #334155; border-color: #94a3b8; } /* غامق للمغلقة */
@@ -92,7 +92,7 @@
         .opp-metric strong { display: block; font-size: 14px; color: var(--tera-navy); font-weight: 700; font-family: monospace; }
         .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #fff; display: flex; justify-content: space-between; align-items: center; }
 
-        /* عرض القائمة (الجدول مطابق تماما للإكسل) */
+        /* عرض القائمة */
         .list-view-container { display: block; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; }
         .tera-table { width: 100%; border-collapse: collapse; text-align: right; }
         .tera-table th { background: #f8fafc; padding: 16px 15px; color: var(--tera-navy); font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
@@ -183,7 +183,7 @@
                 
                 <div class="summary-grid no-print">
                     <div class="summary-card active-card">
-                        <div class="icon-wrapper"><p>الفرص الحالية (النشطة)</p><i class="fas fa-bolt"></i></div>
+                        <div class="icon-wrapper"><p>الفرص الحالية (النشطة/قائم)</p><i class="fas fa-bolt"></i></div>
                         <h3 id="sumActive">0</h3>
                     </div>
                     <div class="summary-card upcoming-card">
@@ -218,7 +218,7 @@
                         
                         <select id="statusFilter" class="search-input">
                             <option value="all">جميع الحالات</option>
-                            <option value="النشطة">النشطة</option>
+                            <option value="النشطة">النشطة / قائم</option>
                             <option value="القادمة">القادمة</option>
                             <option value="المكتملة">المكتملة</option>
                             <option value="المنتهية">المنتهية</option>
@@ -301,7 +301,7 @@
                         <div class="info-item"><span>النسبة على كامل المدة</span><strong id="mDetRatio" class="mono text-teal">50%</strong></div>
                         <div class="info-item"><span>مدة الفرصة</span><strong id="mDetDuration" class="mono"></strong></div>
                         <div class="info-item"><span>اجمالي الربح الشهري</span><strong id="mDetMonthlyProfit" class="mono"></strong></div>
-                        <div class="info-item"><span>اجمالي رباح الفرصة على كامل المدة</span><strong id="mDetTotalProfit" class="mono"></strong></div>
+                        <div class="info-item"><span>اجمالي ارباح الفرصة على كامل المدة</span><strong id="mDetTotalProfit" class="mono"></strong></div>
                         <div class="info-item"><span>اجمالي راس المال و الارباح</span><strong id="mDetTotalReturn" class="mono highlight"></strong></div>
                         <div class="info-item"><span>ألية صرف ارباح الشراكة و راس المال</span><strong id="mDetFreq">شهري</strong></div>
                         <div class="info-item"><span>موعد صرف ارباح الشراكة</span><strong id="mDetFirstPayDate" class="mono"></strong></div>
@@ -350,7 +350,7 @@
                 </div>
 
                 <div class="detail-block">
-                    <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم لخامس : معلومات اضافية</h3>
+                    <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
                     <div class="info-grid" style="margin-bottom: 20px;">
                         <div class="info-item"><span>نوع الضمان</span><strong>عقد اكتروني + سند لامر</strong></div>
                         <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 18px;">B</strong></div>
@@ -442,13 +442,22 @@
             return d.getFullYear() + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getDate()).padStart(2, '0');
         }
 
+        // دالة إنشاء معرف الفرصة تلقائياً (FTR-Year-Month-Day-Number)
+        function generateOpportunityId(dateStr, sequence) {
+            const parts = dateStr.split('/');
+            const yyyy = parts[0];
+            const mm = parts[1].padStart(2, '0');
+            const dd = parts[2].padStart(2, '0');
+            const seq = String(sequence).padStart(3, '0');
+            return `FTR-${yyyy}-${mm}-${dd}-${seq}`;
+        }
+
         // ==========================================
-        // قاعدة البيانات: 14 تجربة (7 شراكة ممتدة + 7 فرصة شراكة)
-        // تغطي جميع الحالات المطلوبة تماماً
+        // قاعدة البيانات المحدثة 
         // ==========================================
         const mockData = [
-            // 7: شراكة ممتدة
-            { id: "FTR-2026-06-27-001", type: "شراكة ممتدة", status: "النشطة", reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", date: "2026/06/27", paymentStatuses: ['تم التحصيل', 'متاخرة', 'متعثرة', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
+            // تحديث بيانات الفرصة الأولى لتتطابق مع المعطيات المطلوبة بالضبط وتوليد المعرف تلقائياً
+            { id: generateOpportunityId("2026/06/27", 1), type: "شراكة ممتدة", status: "قائم", reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", date: "2026/06/27", paymentStatuses: ['تم التحصيل', 'متاخرة', 'متعثرة', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
             { id: "EX-002", type: "شراكة ممتدة", status: "القادمة", reqEntity: "مؤسسة", company: "مؤسسة الإتقان", reqId: "46556", sharesCount: 50, sharePrice: 50, capital: 2500, expectedProfit: 1000, roi: 40, duration: 6, freq: "شهري", date: getDynamicDate(5), paymentStatuses: ['قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة'] },
             { id: "EX-003", type: "شراكة ممتدة", status: "المكتملة", reqEntity: "افراد", company: "عيادات الابتسامة", reqId: "46557", sharesCount: 20, sharePrice: 200, capital: 4000, expectedProfit: 1200, roi: 30, duration: 6, freq: "شهري", date: getDynamicDate(-150), paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
             { id: "EX-004", type: "شراكة ممتدة", status: "الملغاة", reqEntity: "مؤسسة", company: "شركة قطرات", reqId: "46558", sharesCount: 40, sharePrice: 150, capital: 6000, expectedProfit: 1200, roi: 20, duration: 6, freq: "شهري", date: getDynamicDate(-10), paymentStatuses: ['ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة', 'ملغاة'] },
@@ -456,7 +465,6 @@
             { id: "EX-006", type: "شراكة ممتدة", status: "المنتهية", reqEntity: "مؤسسة", company: "ورشة السيارات", reqId: "46560", sharesCount: 18, sharePrice: 100, capital: 1800, expectedProfit: 720, roi: 40, duration: 6, freq: "شهري", date: getDynamicDate(-200), paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
             { id: "EX-007", type: "شراكة ممتدة", status: "القادمة", reqEntity: "افراد", company: "مركز العناية", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", date: getDynamicDate(2), paymentStatuses: ['قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة'] },
 
-            // 7: فرصة شراكة
             { id: "OPP-008", type: "فرصة شراكة", status: "القادمة", reqEntity: "مؤسسة", company: "معرض الرونق", reqId: "46562", sharesCount: 10, sharePrice: 1000, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", date: getDynamicDate(1), paymentStatuses: ['قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة', 'قادمة'] },
             { id: "OPP-009", type: "فرصة شراكة", status: "المكتملة", reqEntity: "مؤسسة", company: "البناء المتين", reqId: "46563", sharesCount: 30, sharePrice: 500, capital: 15000, expectedProfit: 6000, roi: 40, duration: 6, freq: "شهري", date: getDynamicDate(-140), paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
             { id: "OPP-010", type: "فرصة شراكة", status: "المنتهية", reqEntity: "افراد", company: "مزارع القمح", reqId: "46564", sharesCount: 20, sharePrice: 400, capital: 8000, expectedProfit: 2400, roi: 30, duration: 6, freq: "شهري", date: getDynamicDate(-160), paymentStatuses: ['تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل', 'تم التحصيل'] },
@@ -567,7 +575,7 @@
 
             let filtered = mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
-                let normalizedStatus = d.status === 'قائم' ? 'النشطة' : d.status;
+                let normalizedStatus = d.status === 'قائم' ? 'النشطة' : d.status; // مطابقة التسميات في البحث
                 let mStatus = statusVal === 'all' || normalizedStatus === statusVal;
                 let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
                 return mType && mStatus && mSearch;
@@ -608,9 +616,7 @@
             if(!opp) return;
             currentActiveOpp = opp;
 
-            // إملاء الدليل بدقة تطابق الإكسل
-            document.getElementById('mDetId').innerText = opp.id;
-            document.getElementById('mDetDate').innerText = opp.date;
+            // إملاء الدليل بدقة
             document.getElementById('mDetRatio').innerText = opp.roi + "%";
             document.getElementById('mDetDuration').innerText = opp.duration;
             
@@ -628,9 +634,11 @@
 
             document.getElementById('mDetReqId2').innerText = opp.reqId;
             document.getElementById('mDetReqDate').innerText = opp.date;
+            
             let qnty = opp.sharesCount * 5; 
             document.getElementById('mDetProductQty').innerText = qnty;
             document.getElementById('mDetProdVal').innerText = opp.capital;
+            
             let tax = opp.capital * 0.15;
             document.getElementById('mDetTax').innerText = tax;
             document.getElementById('mDetTotalProd').innerText = opp.capital + tax;
@@ -677,7 +685,6 @@
                 </tr>
             `;
 
-            // زر الانضمام المتقدم (يقبل النقر فقط لـ "القادمة")
             const btnInvest = document.getElementById('btnInvestModalOpen');
             if(opp.status === 'القادمة') {
                 btnInvest.innerHTML = `<i class="fas fa-handshake"></i> الانضمام للفرصة`;
@@ -743,7 +750,7 @@
         };
 
         // ==========================================
-        // الرسوم البيانية المتفاعلة مع الفلاتر
+        // الرسوم البيانية
         // ==========================================
         let statusChartInstance = null;
         let opportunitiesChartInstance = null;
@@ -751,7 +758,6 @@
         window.updateCharts = function(data) {
             if(typeof Chart === 'undefined') return;
 
-            // المخطط الأول
             let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
             data.forEach(d => {
                 if(d.status === 'النشطة' || d.status === 'قائم') counts.active++;
@@ -772,7 +778,7 @@
                     statusChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
-                            labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
+                            labels: ['النشطة/قائم', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
                             datasets: [{
                                 data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed],
                                 backgroundColor: ['#0ea5e9', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'],
@@ -793,7 +799,6 @@
                 }
             }
 
-            // المخطط الثاني: مؤشر 6 أشهر (عدد الفرص مطروحة)
             let oppCount = data.length;
             let totalCap = 0; data.forEach(d => totalCap += d.capital);
             let mVal = totalCap / 6;
