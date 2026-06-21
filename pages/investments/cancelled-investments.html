@@ -25,7 +25,7 @@
         .header-right h1 { margin: 0; font-size: 18px; color: var(--tera-navy); font-weight: 700; border-right: 2px solid #e2e8f0; padding-right: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         
-        .join-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
+        .join-container { max-width: 950px; margin: 40px auto; padding: 0 20px; padding-bottom: 50px;}
         .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         
         .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; }
@@ -37,7 +37,7 @@
         .calc-group label { display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; }
         
         .share-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; direction: ltr; }
-        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; }
+        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
         .share-selector button:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
         .share-selector button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
         .calc-input-custom { width: 120px; text-align: center; font-size: 28px; font-weight: bold; font-family: monospace; border: 2px solid var(--tera-teal); border-radius: 12px; height: 50px; color: var(--tera-navy); outline: none; background: #f8fafc; pointer-events: none; }
@@ -47,7 +47,7 @@
         #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 40px; }
+        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 30px; }
 
         .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
@@ -63,7 +63,6 @@
         .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 15px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; font-family: monospace; }
         .package-card.selected .fee { background: var(--tera-teal); color: #fff; }
 
-        /* جداول الرسوم والتوزيع */
         .tera-table { width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-size: 13px; }
         .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; white-space: nowrap; }
         .tera-table td { padding: 12px; border: 1px solid #e2e8f0; color: #334155; font-family: monospace; font-weight: bold; }
@@ -99,10 +98,8 @@
         
         .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 20px; transition: 0.2s; }
         .btn-back:hover { color: var(--tera-navy); }
-
         .btn-nav { padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #f1f5f9; color: var(--tera-navy); text-decoration: none; font-size: 13px; transition: 0.2s; }
         .btn-nav:hover { background: #e2e8f0; }
-        
         .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; display: inline-block;}
     </style>
 </head>
@@ -143,58 +140,38 @@
             <div id="extendedDetails">
                 
                 <h4 class="section-title" style="margin-top: 0;"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
-                <p style="font-size: 13px; color: var(--tera-gray); margin-bottom: 15px;">نوفر باقات حماية ومتابعة مرنة تمنح المستثمر راحة أكبر في إدارة استثماراته وتضمن التحصيل الموثوق.</p>
-                
                 <div class="packages-grid">
                     <label class="package-card basic selected" onclick="selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
                         <input type="radio" name="protection_pkg" value="basic" checked>
                         <i class="fas fa-star"></i>
-                        <div>
-                            <h4>الباقة الأساسية</h4>
-                            <p>الاستفادة من الفرص عبر المنصة دون مزايا إضافية للحماية أو التسوية المبكرة.</p>
-                        </div>
+                        <div><h4>الباقة الأساسية</h4><p>بدون مزايا إضافية للحماية.</p></div>
                         <span class="fee">مجاناً</span>
                     </label>
-
                     <label class="package-card silver" onclick="selectPackage(this, 'silver', 'الباقة الفضية', 99)">
                         <input type="radio" name="protection_pkg" value="silver">
                         <i class="fas fa-medal"></i>
-                        <div>
-                            <h4>الباقة الفضية</h4>
-                            <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً.</p>
-                        </div>
+                        <div><h4>الباقة الفضية</h4><p>صرف الأرباح عند تأخر العميل 60 يوماً.</p></div>
                         <span class="fee">99 ر.س</span>
                     </label>
-
                     <label class="package-card gold" onclick="selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
                         <input type="radio" name="protection_pkg" value="gold">
                         <i class="fas fa-trophy"></i>
-                        <div>
-                            <h4>الباقة الذهبية</h4>
-                            <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً.</p>
-                        </div>
+                        <div><h4>الباقة الذهبية</h4><p>صرف الأرباح عند تأخر العميل 30 يوماً.</p></div>
                         <span class="fee">149 ر.س</span>
                     </label>
-
                     <label class="package-card platinum" onclick="selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
                         <input type="radio" name="protection_pkg" value="platinum">
                         <i class="fas fa-gem"></i>
-                        <div>
-                            <h4>الباقة البلاتينية</h4>
-                            <p>ضمان الصرف في موعد الاستحقاق المحدد شهرياً دون انتظار المقترض.</p>
-                        </div>
+                        <div><h4>الباقة البلاتينية</h4><p>ضمان الصرف في موعد الاستحقاق دون انتظار.</p></div>
                         <span class="fee">199 ر.س</span>
                     </label>
                 </div>
 
-                <h4 class="section-title">
-                    <i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة
-                </h4>
+                <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
                 <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-info-circle"></i>
                     <span>توضيح: جميع رسوم الخدمات والاشتراكات الموضحة بالجدول تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة، ولا تُدفع نقداً الآن.</span>
                 </div>
-
                 <div style="overflow-x: auto;">
                     <table class="tera-table">
                         <thead>
@@ -207,20 +184,15 @@
                                 <th>ملاحظات</th>
                             </tr>
                         </thead>
-                        <tbody id="servicesTableBody">
-                            </tbody>
+                        <tbody id="servicesTableBody"></tbody>
                     </table>
                 </div>
 
-                <h4 class="section-title">
-                    <i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span>
-                </h4>
+                <h4 class="section-title"><i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span></h4>
                 <div style="overflow-x: auto; margin-bottom: 30px;">
                     <table class="tera-table">
-                        <thead id="distributionTableHeader">
-                            </thead>
-                        <tbody id="distributionTableBody">
-                            </tbody>
+                        <thead id="distributionTableHeader"></thead>
+                        <tbody id="distributionTableBody"></tbody>
                     </table>
                 </div>
 
@@ -280,52 +252,33 @@
                     <i class="fas fa-lock"></i> إتمام الدفع والانضمام
                 </button>
 
-            </div> </div>
+            </div>
+        </div>
     </div>
 
+    <script src="../../assets/js/investments.js"></script>
+
     <script>
-        function getDynamicDate(daysOffset) {
-            let d = new Date(); d.setDate(d.getDate() + daysOffset);
-            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-        }
-
-        function generateOpportunityId(type, dateStr, sequence) {
-            const parts = dateStr.split('/');
-            const yyyy = parts[2] || parts[0]; const mm = parts[1].padStart(2, '0'); const dd = parts[0].padStart(2, '0'); const seq = String(sequence).padStart(3, '0');
-            return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
-        }
-
-        // قاعدة البيانات
-        const mockData = [
-            { id: generateOpportunityId("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, daysLeftToJoin: 2, daysLeftToStart: 0, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46555", sharesCount: 10, sharePrice: 100, capital: 1000, expectedProfit: 500, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/02/2026 - 28/02/2026", reqDate: "2025/12/29" },
-            { id: generateOpportunityId("شراكة ممتدة", getDynamicDate(2), 7), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 0, daysLeftToJoin: 10, reqEntity: "افراد", company: "تمويل أفراد - دراسة", reqId: "46561", sharesCount: 24, sharePrice: 50, capital: 1200, expectedProfit: 360, roi: 30, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-2) + " - " + getDynamicDate(12), reqDate: "2026/04/01" },
-            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(1), 8), type: "فرصة شراكة", status: "قائم", fundedPercentage: 10, daysLeftToJoin: 8, reqEntity: "افراد", company: "فرصة شراكة - تأثيث", reqId: "46562", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-1) + " - " + getDynamicDate(11), reqDate: "2026/05/10" },
-            { id: generateOpportunityId("فرصة شراكة", getDynamicDate(-30), 12), type: "فرصة شراكة", status: "النشطة", fundedPercentage: 90, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", reqId: "46566", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, freq: "شهري", offeringPeriod: getDynamicDate(-35) + " - " + getDynamicDate(-25), reqDate: "2026/04/20" }
-        ];
-
         let currentActiveOpp = null;
         let availableSharesToBuy = 0;
-        
         let selectedPackageType = 'basic';
         let selectedPackageName = 'الباقة الأساسية';
         let selectedPackageFixedFee = 0;
-
-        function formatMoney(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
             if (!oppId) {
-                const defaultOpp = mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.fundedPercentage < 100);
+                const defaultOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.fundedPercentage < 100);
                 if (defaultOpp) { oppId = defaultOpp.id; }
             }
 
             document.getElementById('btnBackToDetails').href = oppId ? `completed-investments.html?id=${oppId}` : 'opportunities.html';
 
             if (oppId) {
-                const opp = mockData.find(d => d.id === oppId);
-                if (opp && (opp.status === 'قائم' || opp.status === 'النشطة')) {
+                const opp = window.mockData.find(d => d.id === oppId);
+                if (opp && (opp.status === 'قائم' || opp.status === 'النشطة') && opp.fundedPercentage < 100) {
                     currentActiveOpp = opp;
                     initForm();
                 } else {
@@ -341,12 +294,6 @@
         function initForm() {
             availableSharesToBuy = Math.floor(currentActiveOpp.sharesCount * (1 - (currentActiveOpp.fundedPercentage / 100)));
             
-            if (availableSharesToBuy <= 0) {
-                alert("لقد اكتملت جميع الأسهم لهذه الفرصة.");
-                window.location.href = `completed-investments.html?id=${currentActiveOpp.id}`;
-                return;
-            }
-
             document.getElementById('invOppName').innerText = currentActiveOpp.company;
             document.getElementById('invOppId').innerText = currentActiveOpp.id;
             
@@ -360,7 +307,7 @@
                 badgeEl.style.color = '#d97706';
             }
 
-            document.getElementById('invSharePrice').innerText = formatMoney(currentActiveOpp.sharePrice) + " ر.س";
+            document.getElementById('invSharePrice').innerText = window.formatMoney(currentActiveOpp.sharePrice) + " ر.س";
             document.getElementById('invDuration').innerText = currentActiveOpp.duration + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
@@ -416,7 +363,7 @@
                 let profitPerShare = currentActiveOpp.expectedProfit / currentActiveOpp.sharesCount;
                 let expectedProfitForSelectedShares = shares * profitPerShare;
 
-                // حساب رسوم الخدمات كما هي في الإكسل
+                // رسوم الخدمات الثابتة
                 let adminFee = 20; let adminVat = 3; let adminTotal = 23;
                 let transferFee = 25; let transferVat = 3.75; let transferTotal = 28.75;
                 let collectionFee = 100; let collectionVat = 15; let collectionTotal = 115;
@@ -435,66 +382,58 @@
                 let totalServiceFinal = adminTotal + transferTotal + collectionTotal + pkgTotal; 
                 let totalMonthlyFinal = totalServiceFinal / duration;
 
-                // 1. تحديث جدول الرسوم
+                // 1. جدول الرسوم
                 let tableBody = `
                     <tr>
                         <td class="text-start">الرسوم الإدارية</td>
-                        <td>${formatMoney(adminFee)}</td>
-                        <td>${formatMoney(adminVat)}</td>
-                        <td>${formatMoney(adminTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(adminMonthly)}</td>
+                        <td>${window.formatMoney(adminFee)}</td>
+                        <td>${window.formatMoney(adminVat)}</td>
+                        <td>${window.formatMoney(adminTotal)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoney(adminMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td class="text-start">رسوم التحويل</td>
-                        <td>${formatMoney(transferFee)}</td>
-                        <td>${formatMoney(transferVat)}</td>
-                        <td>${formatMoney(transferTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(transferMonthly)}</td>
+                        <td>${window.formatMoney(transferFee)}</td>
+                        <td>${window.formatMoney(transferVat)}</td>
+                        <td>${window.formatMoney(transferTotal)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoney(transferMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td class="text-start">رسوم التحصيل والمعالجة</td>
-                        <td>${formatMoney(collectionFee)}</td>
-                        <td>${formatMoney(collectionVat)}</td>
-                        <td>${formatMoney(collectionTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(collectionMonthly)}</td>
+                        <td>${window.formatMoney(collectionFee)}</td>
+                        <td>${window.formatMoney(collectionVat)}</td>
+                        <td>${window.formatMoney(collectionTotal)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoney(collectionMonthly)}</td>
                         <td class="notes">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr>
                         <td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${selectedPackageName}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(pkgFee)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(pkgVat)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(pkgTotal)}</td>
-                        <td style="color:var(--tera-teal); font-family:monospace;">${formatMoney(pkgMonthly)}</td>
+                        <td style="color:var(--tera-teal);">${window.formatMoney(pkgFee)}</td>
+                        <td style="color:var(--tera-teal);">${window.formatMoney(pkgVat)}</td>
+                        <td style="color:var(--tera-teal);">${window.formatMoney(pkgTotal)}</td>
+                        <td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoney(pkgMonthly)}</td>
                         <td class="notes" style="color:var(--tera-teal);">تخصم شهرياً من الأرباح</td>
                     </tr>
                     <tr class="total-row">
                         <td class="text-start">الإجمالي للخدمات</td>
-                        <td>${formatMoney(totalServiceBase)}</td>
-                        <td>${formatMoney(totalServiceVat)}</td>
-                        <td style="color:var(--tera-teal);">${formatMoney(totalServiceFinal)}</td>
-                        <td style="color:var(--tera-teal); font-size:16px;">${formatMoney(totalMonthlyFinal)}</td>
+                        <td>${window.formatMoney(totalServiceBase)}</td>
+                        <td>${window.formatMoney(totalServiceVat)}</td>
+                        <td style="color:var(--tera-teal);">${window.formatMoney(totalServiceFinal)}</td>
+                        <td style="color:var(--tera-teal); font-size:16px;">${window.formatMoney(totalMonthlyFinal)}</td>
                         <td>-</td>
                     </tr>
                 `;
                 document.getElementById('servicesTableBody').innerHTML = tableBody;
 
-                // 2. تحديث جدول توزيع الدفعات
+                // 2. جدول توزيع الدفعات بناءً على نوع الفرصة
                 let isExtended = currentActiveOpp.type === 'شراكة ممتدة';
                 document.getElementById('distTableTitleText').innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
 
-                let distHeader = `<tr>
-                    <th>تاريخ التحصيل</th>`;
+                let distHeader = `<tr><th>تاريخ التحصيل</th>`;
                 if(!isExtended) distHeader += `<th>رأس المال</th>`;
-                distHeader += `
-                    <th>الربح</th>
-                    <th>إجمالي الدفعة</th>
-                    <th>قيمة خصم الرسوم والخدمات</th>
-                    <th>المتبقي</th>
-                    <th>حالة الدفعة</th>
-                    <th>الاجراءات</th>
-                </tr>`;
+                distHeader += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم والخدمات</th><th>المتبقي</th><th>حالة الدفعة</th><th>الاجراءات</th></tr>`;
                 document.getElementById('distributionTableHeader').innerHTML = distHeader;
 
                 let monthlyCapital = capital / duration;
@@ -507,49 +446,33 @@
 
                 let startDate = new Date();
                 for(let i=1; i<=duration; i++) {
-                    let payDate = new Date(startDate);
-                    payDate.setMonth(startDate.getMonth() + i);
+                    let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
                     let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
 
-                    distBody += `<tr>`;
-                    distBody += `<td>${dateStr}</td>`;
-                    if(!isExtended) distBody += `<td>${formatMoney(monthlyCapital)}</td>`;
-                    distBody += `<td>${formatMoney(monthlyProfit)}</td>`;
-                    distBody += `<td>${formatMoney(monthlyTotalPayment)}</td>`;
-                    distBody += `<td style="color:#ef4444;">${formatMoney(totalMonthlyFinal)}</td>`;
-                    distBody += `<td style="color:var(--tera-teal);">${formatMoney(monthlyRemaining)}</td>`;
-                    distBody += `<td><span class="badge" style="background:#f1f5f9; color:#64748b;">جديد</span></td>`;
-                    distBody += `<td>-</td>`;
-                    distBody += `</tr>`;
+                    distBody += `<tr><td>${dateStr}</td>`;
+                    if(!isExtended) distBody += `<td>${window.formatMoney(monthlyCapital)}</td>`;
+                    distBody += `<td>${window.formatMoney(monthlyProfit)}</td><td>${window.formatMoney(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoney(totalMonthlyFinal)}</td><td style="color:var(--tera-teal);">${window.formatMoney(monthlyRemaining)}</td><td><span class="badge" style="background:#f1f5f9; color:#64748b;">جديد</span></td><td>-</td></tr>`;
 
                     tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; 
                     tFee += totalMonthlyFinal; tRem += monthlyRemaining;
                 }
 
-                distBody += `<tr class="total-row">`;
-                distBody += `<td class="text-start">الإجمالي</td>`;
-                if(!isExtended) distBody += `<td>${formatMoney(tCap)}</td>`;
-                distBody += `<td>${formatMoney(tProf)}</td>`;
-                distBody += `<td>${formatMoney(tPay)}</td>`;
-                distBody += `<td style="color:#ef4444;">${formatMoney(tFee)}</td>`;
-                distBody += `<td style="color:var(--tera-teal); font-size:15px;">${formatMoney(tRem)}</td>`;
-                distBody += `<td></td><td></td>`;
-                distBody += `</tr>`;
+                distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>`;
+                if(!isExtended) distBody += `<td>${window.formatMoney(tCap)}</td>`;
+                distBody += `<td>${window.formatMoney(tProf)}</td><td>${window.formatMoney(tPay)}</td><td style="color:#ef4444;">${window.formatMoney(tFee)}</td><td style="color:var(--tera-teal); font-size:15px;">${window.formatMoney(tRem)}</td><td></td><td></td></tr>`;
 
                 document.getElementById('distributionTableBody').innerHTML = distBody;
 
-                // 3. تحديث ملخص الدفع النهائي كما طلبت (فصل الضرائب عن المبلغ المطلوب الدفع الآن)
+                // 3. ملخص الدفع النهائي
                 let totalToPayNow = capital + productVat;
                 let totalOverall = capital + productVat + totalServiceFinal;
 
                 document.getElementById('sumShares').innerText = shares;
-                document.getElementById('sumCapital').innerText = formatMoney(capital) + " ر.س";
-                document.getElementById('sumProdTax').innerText = formatMoney(productVat) + " ر.س";
-                document.getElementById('sumServTax').innerText = formatMoney(totalServiceVat) + " ر.س";
-                document.getElementById('sumTotalAll').innerText = formatMoney(totalOverall) + " ر.س";
-                
-                // المبلغ المطلوب الآن هو فقط (رأس المال + ضريبة المنتج) لأن الخدمات تخصم من الأرباح مستقبلاً
-                document.getElementById('resToPayNow').innerText = formatMoney(totalToPayNow) + " ر.س"; 
+                document.getElementById('sumCapital').innerText = window.formatMoney(capital) + " ر.س";
+                document.getElementById('sumProdTax').innerText = window.formatMoney(productVat) + " ر.س";
+                document.getElementById('sumServTax').innerText = window.formatMoney(totalServiceVat) + " ر.س";
+                document.getElementById('sumTotalAll').innerText = window.formatMoney(totalOverall) + " ر.س";
+                document.getElementById('resToPayNow').innerText = window.formatMoney(totalToPayNow) + " ر.س"; 
 
             } else {
                 extendedDiv.style.display = 'none';
@@ -567,5 +490,8 @@
             window.location.href = "../dashboard/index.html"; 
         }
     </script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
