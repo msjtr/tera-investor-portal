@@ -191,7 +191,6 @@
     <script src="../../assets/js/investments.js"></script>
 
     <script>
-        // دالة إنشاء المعرفات للاحتياط
         function getDynamicDateLocal(daysOffset) {
             let d = new Date(); d.setDate(d.getDate() + daysOffset);
             return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
@@ -202,7 +201,6 @@
             return (type === 'شراكة ممتدة' ? 'TR' : 'FTR') + `-${yyyy}-${mm}-${dd}-${seq}`;
         }
         
-        // البيانات الموحدة الحقيقية (نفس البيانات في كل الصفحات) كخيار احتياطي لضمان العمل 100%
         const localMockData = [
             { id: generateIdLocal("شراكة ممتدة", "27/06/2026", 1), type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", reqId: "46550", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
             { id: generateIdLocal("شراكة ممتدة", getDynamicDateLocal(5), 2), type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", reqId: "46551", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, freq: "شهري", offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -221,48 +219,60 @@
             { id: generateIdLocal("فرصة شراكة", getDynamicDateLocal(-1), 14), type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", reqId: "46566", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, freq: "شهري", offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        // توحيد مصدر البيانات (الاعتماد على الملف الخارجي، وإن لم يوجد يستخدم الداخلي)
         window.appData = typeof window.mockData !== 'undefined' && window.mockData.length > 0 ? window.mockData : localMockData;
 
-        function formatMoneyLocal(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        // دالة تنسيق تحمي من الأخطاء إذا كانت القيمة نصية
+        function formatMoneyLocal(num) { 
+            let n = parseFloat(num);
+            if(isNaN(n)) return "0.00";
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             let oppId = urlParams.get('id');
 
             if (!oppId) {
-                // التقاط أول فرصة نشطة كافتراضي في حال فتح الصفحة بدون ID
-                const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.fundedPercentage < 100);
-                if (defaultOpp) { oppId = defaultOpp.id; }
+                const defaultOpp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
+                if (defaultOpp) { 
+                    oppId = defaultOpp.id; 
+                } else if(window.appData.length > 0) {
+                    oppId = window.appData[0].id;
+                }
             }
 
             if (oppId) {
-                const opp = window.appData.find(d => d.id === oppId);
+                // تم إضافة String() لضمان تطابق الأرقام مع النصوص بدون أخطاء
+                const opp = window.appData.find(d => String(d.id) === String(oppId));
                 if (opp) renderDetails(opp);
                 else { alert("عذراً، الفرصة غير موجودة أو تم حذفها."); window.location.href = "opportunities.html"; }
-            } else {
-                renderDetails(window.appData[0]); 
             }
         });
 
         function renderDetails(opp) {
-            document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
+            document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + (opp.company || '');
 
-            let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
+            // تحويل القيم بصرامة إلى أرقام لمنع أخطاء الدمج (Concatenation)
+            let sharesCountNum = parseInt(opp.sharesCount) || 0;
+            let fundedPercNum = parseFloat(opp.fundedPercentage) || 0;
+            let capitalNum = parseFloat(opp.capital) || 0;
+            let sharePriceNum = parseFloat(opp.sharePrice) || 0;
+
+            let availableSharesToBuy = Math.floor(sharesCountNum * (1 - (fundedPercNum / 100)));
 
             const alertsCont = document.getElementById('mDetAlertsContainer');
             alertsCont.innerHTML = ''; let hasAlerts = false;
 
-            if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && opp.daysLeftToStart <= 5) {
+            if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && parseInt(opp.daysLeftToStart) <= 5) {
                 alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart} أيام وتكون متاحة للاستثمار.</span></div>`;
                 hasAlerts = true;
             }
             if (opp.status === 'قائم' || opp.status === 'النشطة') {
-                if (opp.fundedPercentage >= 80 && opp.fundedPercentage < 100) {
-                    alertsCont.innerHTML += `<div class="alert-banner alert-success"><i class="fas fa-chart-line" style="font-size:18px;"></i><span>تنبيه: الفرصة قربت على الاكتمال! (نسبة الإنجاز الحالية: ${opp.fundedPercentage}%).</span></div>`;
+                if (fundedPercNum >= 80 && fundedPercNum < 100) {
+                    alertsCont.innerHTML += `<div class="alert-banner alert-success"><i class="fas fa-chart-line" style="font-size:18px;"></i><span>تنبيه: الفرصة قربت على الاكتمال! (نسبة الإنجاز الحالية: ${fundedPercNum}%).</span></div>`;
                     hasAlerts = true;
                 }
-                if (opp.daysLeftToJoin !== undefined && opp.daysLeftToJoin <= 3) {
+                if (opp.daysLeftToJoin !== undefined && parseInt(opp.daysLeftToJoin) <= 3) {
                     alertsCont.innerHTML += `<div class="alert-banner alert-warning"><i class="fas fa-clock" style="font-size:18px;"></i><span>تنبيه عاجل: متبقي ${opp.daysLeftToJoin} أيام على الفرصة وينتهي الانضمام تماماً.</span></div>`;
                     hasAlerts = true;
                 }
@@ -270,11 +280,10 @@
             alertsCont.style.display = hasAlerts ? 'block' : 'none';
 
             // بيانات القسم الأول
-            document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
-            document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
+            document.getElementById('mDetProgressText').innerText = fundedPercNum + '%';
+            document.getElementById('mDetProgressBar').style.width = fundedPercNum + '%';
             document.getElementById('mDetOppId').innerText = opp.id;
             
-            // تحديث الشارة لنوع الفرصة
             let typeBadgeEl = document.getElementById('mDetOppType');
             typeBadgeEl.innerText = opp.type;
             if(opp.type === 'فرصة شراكة') {
@@ -285,22 +294,24 @@
 
             document.getElementById('mDetOppStatus').innerText = opp.status;
             document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
-            document.getElementById('mDetSharesCount').innerText = opp.sharesCount;
+            document.getElementById('mDetSharesCount').innerText = sharesCountNum;
             
-            document.getElementById('mDetSharePrice').innerText = formatMoneyLocal(opp.sharePrice) + ' ر.س';
-            document.getElementById('mDetTotalCapital').innerText = formatMoneyLocal(opp.capital) + ' ر.س';
-            document.getElementById('mDetRatio').innerText = opp.roi + "%";
+            document.getElementById('mDetSharePrice').innerText = formatMoneyLocal(sharePriceNum) + ' ر.س';
+            document.getElementById('mDetTotalCapital').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
+            document.getElementById('mDetRatio').innerText = (opp.roi || 0) + "%";
 
-            // بيانات القسم الرابع (تعبئة بيانات المنتج)
+            // بيانات القسم الرابع 
             document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
-            let qnty = opp.sharesCount * 5; 
+            let qnty = sharesCountNum * 5; 
             document.getElementById('mDetProductQty').innerText = qnty;
             
-            document.getElementById('mDetProdVal').innerText = formatMoneyLocal(opp.capital) + ' ر.س';
-            document.getElementById('mDetProdPrice').innerText = formatMoneyLocal(opp.sharePrice / 5) + ' ر.س'; 
-            let tax = opp.capital * 0.15;
+            document.getElementById('mDetProdVal').innerText = formatMoneyLocal(capitalNum) + ' ر.س';
+            document.getElementById('mDetProdPrice').innerText = formatMoneyLocal(sharePriceNum / 5) + ' ر.س'; 
+            
+            // الحساب بعد التأكد أن capitalNum هو رقم حقيقي
+            let tax = capitalNum * 0.15;
             document.getElementById('mDetTax').innerText = formatMoneyLocal(tax) + ' ر.س';
-            document.getElementById('mDetTotalProd').innerText = formatMoneyLocal(opp.capital + tax) + ' ر.س';
+            document.getElementById('mDetTotalProd').innerText = formatMoneyLocal(capitalNum + tax) + ' ر.س';
 
             // أزرار الانضمام
             const btnJoin = document.getElementById('btnRedirectToJoin');
@@ -312,7 +323,6 @@
                 miniSharesBox.style.display = 'inline-flex';
                 document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                 
-                // التوجيه بدقة لصفحة الدفع مع المعرف
                 btnJoin.href = `cancelled-investments.html?id=${opp.id}`;
                 warnMsg.style.display = 'none';
             } else {
