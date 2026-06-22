@@ -1,166 +1,145 @@
-/* ============================================================
-   ملف التجاوب والشاشات (Responsive CSS) | Tera Investor Portal
-   ============================================================ */
+الشعار في الجوال يكون خاص ودقيق جداً  مقاس و مقاسات الجوال متغيرة فا احتاج اكثر ظبط و دقة /* ============================================================
+   ملف التجاوب والشاشات (Responsive CSS) | Tera Investor Portal
+   ============================================================ */
 
 /* =========================================
-   1. حماية دقة وصفاوة الشعار (الرئيسي)
-   ========================================= */
-.header-logo img, 
+   1. حماية دقة وصفاوة الشعار (الرئيسي)
+   ========================================= */
+.header-logo img, 
 .logo-img {
-    object-fit: contain;
-    /* تحسين عرض الصور بصيغة SVG و PNG لمنع البهتان */
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    transform: translateZ(0); /* تفعيل تسريع الهاردوير للصفاوة */
-    will-change: transform; /* إخبار المتصفح بإعطاء أولوية أداء الشعار */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: 100%;
-    width: auto; /* الحفاظ على أبعاد سهم تيرا بدقة */
-}
-
-/* دعم شاشات الجوال عالية الدقة (Retina & Super Retina) */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .header-logo img, .logo-img {
-        -webkit-font-smoothing: antialiased;
-    }
+    object-fit: contain;
+    /* تحسين عرض الصور بصيغة SVG و PNG لمنع البهتان */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transform: translateZ(0); /* تفعيل تسريع الهاردوير للصفاوة */
+    backface-visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 100%;
 }
 
 /* =========================================
-   2. شاشات الكمبيوتر العملاقة (4K و Ultra-wide)
-   (أكبر من 2560px)
-   ========================================= */
+   2. شاشات الكمبيوتر العملاقة (4K و Ultra-wide)
+   (أكبر من 2560px)
+   ========================================= */
 @media (min-width: 2560px) {
-    .container { 
-        max-width: 2200px; 
-        padding: 50px 40px; 
-    }
-    
-    /* تكبير الشعار بصفاوة عالية */
-    .header-logo img { height: 65px !important; }
-    .header-logo h1 { font-size: 28px !important; }
-    
-    .top-header { padding: 25px 50px; }
-    .summary-card { padding: 35px 30px; }
-    .summary-card i { font-size: 34px; }
-    .summary-card p { font-size: 18px; }
-    .summary-card h3 { font-size: 42px; }
-    
-    .tera-table th, .tera-table td { font-size: 18px; padding: 24px 20px; }
-    .info-item span { font-size: 16px; }
-    .info-item strong { font-size: 22px; }
-    .btn-action { font-size: 18px; padding: 15px 35px; }
+    .container { 
+        max-width: 2200px; 
+        padding: 50px 40px; 
+    }
+    
+    /* تكبير الشعار بصفاوة عالية */
+    .header-logo img { height: 65px !important; }
+    .header-logo h1 { font-size: 28px !important; }
+    
+    .top-header { padding: 25px 50px; }
+    .summary-card { padding: 35px 30px; }
+    .summary-card i { font-size: 34px; }
+    .summary-card p { font-size: 18px; }
+    .summary-card h3 { font-size: 42px; }
+    
+    .tera-table th, .tera-table td { font-size: 18px; padding: 24px 20px; }
+    .info-item span { font-size: 16px; }
+    .info-item strong { font-size: 22px; }
+    .btn-action { font-size: 18px; padding: 15px 35px; }
 }
 
 /* =========================================
-   3. شاشات اللابتوب الصغيرة والآيباد العرضي
-   (أصغر من 1024px)
-   ========================================= */
+   3. شاشات اللابتوب الصغيرة والآيباد العرضي
+   (أصغر من 1024px)
+   ========================================= */
 @media (max-width: 1024px) {
-    .dashboard-grid { 
-        grid-template-columns: 1fr; /* جعل الرسم البياني والجدول تحت بعض */
-    }
-    .summary-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-    }
-    .info-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-    }
+    .dashboard-grid { 
+        grid-template-columns: 1fr; /* جعل الرسم البياني والجدول تحت بعض */
+    }
+    .summary-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+    .info-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
 }
 
 /* =========================================
-   4. شاشات الجوال العامة (أصغر من 768px)
-   ========================================= */
+   4. شاشات الجوال العامة (أصغر من 768px)
+   ========================================= */
 @media (max-width: 768px) {
-    /* ضبط الهيدر */
-    .top-header { padding: 12px 15px; }
-    
-    /* استخدام clamp لمرونة الشعار:
-       (الحد الأدنى 28px، الحجم المفضل نسبة لعرض الشاشة 6vw، الحد الأقصى 38px)
-    */
-    .header-logo img { 
-        height: clamp(28px, 6vw, 38px) !important; 
-        min-width: 80px; /* يمنع انضغاط الشعار أفقياً */
-    } 
-    .header-logo h1 { font-size: 16px !important; }
-    
-    /* إخفاء اسم المستخدم للحفاظ على المساحة، وإبقاء الصورة */
-    .header-user .user-greeting { display: none; }
-    .header-user img { width: 35px; height: 35px; }
+    /* ضبط الهيدر */
+    .top-header { padding: 12px 15px; }
+    .header-logo img { height: 32px !important; } /* حجم مثالي للجوال */
+    .header-logo h1 { font-size: 16px !important; }
+    
+    /* إخفاء اسم المستخدم للحفاظ على المساحة، وإبقاء الصورة */
+    .header-user .user-greeting { display: none; }
+    .header-user img { width: 35px; height: 35px; }
 
-    .container { padding: 15px 10px; }
-    
-    /* البطاقات */
-    .summary-grid { grid-template-columns: 1fr; gap: 15px; }
-    .summary-card { padding: 20px 15px; }
-    .summary-card h3 { font-size: 22px; }
+    .container { padding: 15px 10px; }
+    
+    /* البطاقات */
+    .summary-grid { grid-template-columns: 1fr; gap: 15px; }
+    .summary-card { padding: 20px 15px; }
+    .summary-card h3 { font-size: 22px; }
 
-    /* جعل الفلاتر قابلة للسحب الجانبي (Scrollable) مثل التطبيقات */
-    .filters-row { 
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        padding-bottom: 10px; 
-        -webkit-overflow-scrolling: touch; /* تمرير ناعم في الآيفون */
-        scrollbar-width: none; /* إخفاء شريط التمرير */
-    }
-    .filters-row::-webkit-scrollbar { display: none; }
-    .filter-btn { flex: 0 0 auto; font-size: 12px; padding: 6px 12px; }
+    /* جعل الفلاتر قابلة للسحب الجانبي (Scrollable) مثل التطبيقات */
+    .filters-row { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        padding-bottom: 10px; 
+        -webkit-overflow-scrolling: touch; /* تمرير ناعم في الآيفون */
+        scrollbar-width: none; /* إخفاء شريط التمرير */
+    }
+    .filters-row::-webkit-scrollbar { display: none; }
+    .filter-btn { flex: 0 0 auto; font-size: 12px; padding: 6px 12px; }
 
-    /* حقل البحث يمتد بكامل الشاشة */
-    .search-input { width: 100%; margin-top: 10px; }
-    .filters-container { flex-direction: column; align-items: stretch; }
+    /* حقل البحث يمتد بكامل الشاشة */
+    .search-input { width: 100%; margin-top: 10px; }
+    .filters-container { flex-direction: column; align-items: stretch; }
 
-    /* الجداول في الجوال */
-    .table-wrapper { 
-        border-radius: 8px; 
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.02); 
-    }
-    .tera-table th, .tera-table td { 
-        font-size: 12px; 
-        padding: 12px 10px; 
-    }
-    .btn-view { padding: 6px 12px; font-size: 11px; }
+    /* الجداول في الجوال */
+    .table-wrapper { 
+        border-radius: 8px; 
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.02); 
+    }
+    .tera-table th, .tera-table td { 
+        font-size: 12px; 
+        padding: 12px 10px; 
+    }
+    .btn-view { padding: 6px 12px; font-size: 11px; }
 
-    /* قسم التفاصيل والأزرار */
-    .info-grid { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
-    .actions-row { flex-direction: column; gap: 10px; }
-    .btn-action { width: 100%; justify-content: center; padding: 12px; font-size: 13px; }
-    
-    .print-only-header img { height: 30px !important; }
+    /* قسم التفاصيل والأزرار */
+    .info-grid { grid-template-columns: 1fr; gap: 15px; padding: 15px; }
+    .actions-row { flex-direction: column; gap: 10px; }
+    .btn-action { width: 100%; justify-content: center; padding: 12px; font-size: 13px; }
+    
+    .print-only-header img { height: 30px !important; }
 }
 
 /* =========================================
-   5. شاشات الجوال الصغيرة جداً (مثل الهواتف القديمة)
-   (أصغر من 480px)
-   ========================================= */
+   5. شاشات الجوال الصغيرة جداً (مثل iPhone SE القديم)
+   (أصغر من 480px)
+   ========================================= */
 @media (max-width: 480px) {
-    /* إخفاء النص في الهيدر ليبقى الشعار فقط بوضوح */
-    .header-logo h1 { display: none !important; }
-    
-    /* مرونة مخصصة للشاشات النحيفة جداً */
-    .header-logo img { 
-        height: clamp(24px, 7vw, 32px) !important; 
-        min-width: 70px;
-    }
-    
-    /* تصغير الأيقونات */
-    .summary-card i { font-size: 20px; }
-    .summary-card h3 { font-size: 20px; }
-    .content-card { padding: 15px; }
-    
-    .details-header h2 { font-size: 14px; }
-    #detailStatusBadge { font-size: 10px; padding: 4px 8px; }
+    /* إخفاء النص في الهيدر ليبقى الشعار فقط بوضوح */
+    .header-logo h1 { display: none !important; }
+    .header-logo img { height: 28px !important; }
+    
+    /* تصغير الأيقونات */
+    .summary-card i { font-size: 20px; }
+    .summary-card h3 { font-size: 20px; }
+    .content-card { padding: 15px; }
+    
+    .details-header h2 { font-size: 14px; }
+    #detailStatusBadge { font-size: 10px; padding: 4px 8px; }
 }
 
 /* =========================================
-   6. إعدادات الطباعة للورق (A4) 
-   (يمنع تكسر الصفحات والجداول)
-   ========================================= */
+   6. إعدادات الطباعة للورق (A4) 
+   (يمنع تكسر الصفحات والجداول)
+   ========================================= */
 @media print {
-    .container { max-width: 100% !important; padding: 0 !important; }
-    .header-logo img { 
-        height: 45px !important; /* حجم ممتاز للورق */
-        image-rendering: crisp-edges; 
-    }
+    /* الإعدادات موجودة مسبقاً في ملفاتك، هذا للتأكيد المشترك */
+    .container { max-width: 100% !important; padding: 0 !important; }
+    .header-logo img { 
+        height: 45px !important; /* حجم ممتاز للورق */
+        image-rendering: crisp-edges; 
+    }
 }
