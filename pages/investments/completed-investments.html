@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+نفس الفكرة <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -8,16 +8,88 @@
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- استدعاء خطوط المنصة المعتمدة (Cairo للعناوين و Tajawal للنصوص) -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- ملفات التنسيق الخارجية (الأساس، الهيكل، الاستثمارات، التجاوب) -->
+    <link rel="stylesheet" href="../../assets/css/app.css">
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/app.css">
-    <link rel="stylesheet" href="../../assets/css/investments.css">
-    <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-gray: #64748b; --tera-bg: #f8fafc; }
+        html, body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        *, *::before, *::after { box-sizing: border-box; }
+        
+        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        
+        .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .header-right { display: flex; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+
+        .sub-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .page-title { margin: 0; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
+        
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.2s; margin: 0; }
+        .btn-back:hover { color: var(--tera-navy); }
+
+        .details-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; padding-bottom: 50px; width: 100%;}
+        .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+
+        .alert-banner { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 800; }
+        .alert-warning { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; border: 1px solid;}
+        .alert-info { background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; border: 1px solid;}
+        .alert-success { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; border: 1px solid;}
+        .alert-danger { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; border: 1px solid;}
+
+        .progress-wrapper { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 30px; }
+        .progress-text { font-size: 13px; font-weight: 700; color: var(--tera-navy); display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .progress-bar-bg { background-color: #e2e8f0; border-radius: 8px; height: 10px; width: 100%; overflow: hidden; }
+        .progress-bar-fill { background-color: var(--tera-teal); height: 100%; border-radius: 8px; transition: width 0.4s ease; }
+
+        .detail-block { margin-bottom: 35px; }
+        .detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display:flex; align-items:center; gap:8px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .info-item { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; flex-direction: column; justify-content: center;}
+        .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 8px; }
+        .info-item strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 800; }
+        .mono { font-family: monospace; font-size: 16px !important; }
+
+        .risk-badge { background: #fffbeb; color: #d97706; padding: 8px 20px; border-radius: 10px; border: 2px solid #fde68a; font-size: 24px !important; font-weight: 900 !important; display: inline-block; text-align: center; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.1); }
+
+        /* تنسيق الدليل الاسترشادي الشامل */
+        .guideline-manual { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 30px; max-height: 500px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #334155; }
+        .guideline-manual h4 { color: var(--tera-navy); margin-top: 35px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; align-items: center; gap: 8px;}
+        .guideline-manual h4:first-child { margin-top: 0; }
+        .guideline-manual h5 { color: var(--tera-teal); margin-top: 20px; margin-bottom: 10px; font-size: 16px; font-weight: 800;}
+        .guideline-manual ul, .guideline-manual ol { margin-top: 10px; margin-bottom: 20px; padding-right: 25px; }
+        .guideline-manual li { margin-bottom: 8px; }
+        .guideline-manual p { margin-bottom: 15px; }
+        .guideline-manual strong { color: var(--tera-navy); }
+        .warning-text { color: #ef4444; font-weight: 800; background: #fef2f2; padding: 15px; border-radius: 6px; border-right: 4px solid #ef4444; display: block; margin-top: 15px; margin-bottom: 15px; line-height: 1.6;}
+
+        /* الإقرار والأزرار */
+        .agreement-box { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--tera-navy); margin-top: 30px; margin-bottom: 20px; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 2px solid #028090; font-weight: 700; line-height: 1.6; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.1);}
+        .agreement-box input { margin-top: 4px; transform: scale(1.5); accent-color: var(--tera-teal); cursor: pointer; }
+        
+        .disabled-link { pointer-events: none !important; opacity: 0.5 !important; filter: grayscale(100%); cursor: not-allowed !important; }
+
+        .btn-action { padding: 16px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; font-size: 16px; transition: 0.3s; text-decoration: none; width: 100%; text-align: center;}
+        .btn-primary { background: var(--tera-teal); color: #fff; box-shadow: 0 4px 15px rgba(2,128,144,0.3); }
+        .btn-primary:hover:not(.disabled-link) { background: #026a77; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(2,128,144,0.4); }
+        
+        .type-badge { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; font-family: monospace; display: inline-block; }
+        .type-extended { background: #fef3c7; color: #d97706; } 
+        .type-opportunity { background: #fce7f3; color: #db2777; } 
+
+        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; }
+
+        .guideline-manual::-webkit-scrollbar { width: 8px; }
+        .guideline-manual::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .guideline-manual::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .guideline-manual::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
 <body>
 
@@ -336,7 +408,6 @@
         </main>
     </div>
 
-    <!-- ملفات الجافاسكريبت -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
