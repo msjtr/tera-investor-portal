@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات 
+ * investments.js - ملف التحكم المركزي للاستثمارات
  * ============================================================
  */
 
@@ -201,7 +201,7 @@
         document.getElementById('extendedDetails').style.display = 'block';
 
         let duration = parseInt(opp.duration) || 6;
-        let capital = shares * (parseFloat(opp.sharePrice) || 0);
+        let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); // رأس مال الشريك
         let profitPerShare = (parseFloat(opp.expectedProfit) || 0) / (parseInt(opp.sharesCount) || 1);
         let totalProfit = shares * profitPerShare;
         
@@ -209,29 +209,26 @@
         let baseFeeAdmin = 20, baseFeeTransfer = 25, baseFeeCol = 100, pkgFee = window.selectedPackageFixedFee || 0;
         let totalBaseFees = baseFeeAdmin + baseFeeTransfer + baseFeeCol + pkgFee;
         let totalFeesVat = totalBaseFees * 0.15;
-        let totalFeesWithVat = totalBaseFees + totalFeesVat;
+        let oppCostsWithVat = totalBaseFees + totalFeesVat; // إجمالي تكاليف الفرصة
 
         let adminMonthly = (baseFeeAdmin * 1.15) / duration;
         let transMonthly = (baseFeeTransfer * 1.15) / duration;
         let colMonthly = (baseFeeCol * 1.15) / duration;
         let pkgMonthly = (pkgFee * 1.15) / duration;
-        let totalMonthlyFinal = totalFeesWithVat / duration;
+        let totalMonthlyFinal = oppCostsWithVat / duration;
 
-        // 1. حقن جدول الرسوم
         document.getElementById('servicesTableBody').innerHTML = `
             <tr><td class="text-start">الرسوم الإدارية</td><td>${window.formatMoneySafe(baseFeeAdmin)}</td><td>${window.formatMoneySafe(baseFeeAdmin*0.15)}</td><td>${window.formatMoneySafe(baseFeeAdmin*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(adminMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
             <tr><td class="text-start">رسوم التحويل</td><td>${window.formatMoneySafe(baseFeeTransfer)}</td><td>${window.formatMoneySafe(baseFeeTransfer*0.15)}</td><td>${window.formatMoneySafe(baseFeeTransfer*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(transMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
             <tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${window.formatMoneySafe(baseFeeCol)}</td><td>${window.formatMoneySafe(baseFeeCol*0.15)}</td><td>${window.formatMoneySafe(baseFeeCol*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(colMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
             <tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${window.selectedPackageName}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*0.15)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً</td></tr>
-            <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(totalFeesWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td>-</td></tr>
+            <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(oppCostsWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td>-</td></tr>
         `;
 
-        // 2. تحديث نصوص ملخص الرسوم
         document.getElementById('txtBaseFees').innerText = window.formatMoneySafe(totalBaseFees) + " ر.س";
         document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
-        document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(totalFeesWithVat) + " ر.س";
+        document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
 
-        // 3. بناء جدول التوزيع (الشراكة الممتدة vs فرصة شراكة)
         let isExtended = opp.type === 'شراكة ممتدة';
         let distTitle = document.getElementById('distTableTitleText');
         if(distTitle) distTitle.innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
@@ -241,7 +238,7 @@
         theadHtml += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
         document.getElementById('distributionTableHeader').innerHTML = theadHtml;
 
-        let monthlyCapital = capital / duration;
+        let monthlyCapital = partnerCapital / duration;
         let monthlyProfit = totalProfit / duration;
         let distBody = '', tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
         let startDate = new Date();
@@ -251,13 +248,11 @@
             let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
             
             if(isExtended) {
-                // الشراكة الممتدة: أرباح فقط شهرياً
                 let currentPayment = monthlyProfit;
                 let currentRemaining = currentPayment - totalMonthlyFinal;
                 distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(currentPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">توزيع أرباح</td></tr>`;
                 tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
             } else {
-                // فرصة شراكة: رأس مال + أرباح شهرياً
                 let monthlyTotalPayment = monthlyCapital + monthlyProfit;
                 let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
                 distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyCapital)}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(monthlyRemaining)}</td><td>مجدولة</td></tr>`;
@@ -267,30 +262,29 @@
         
         distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>${!isExtended ? `<td>${window.formatMoneySafe(tCap)}</td>` : ''}<td>${window.formatMoneySafe(tProf)}</td><td>${window.formatMoneySafe(tPay)}</td><td style="color:#ef4444;">${window.formatMoneySafe(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(tRem)}</td><td>-</td></tr>`;
         
-        // إذا كانت شراكة ممتدة، نضيف صف رأس المال المسترد تحت الإجمالي
-        if(isExtended && capital > 0) {
+        if(isExtended && partnerCapital > 0) {
             document.getElementById('extendedCapitalNote').style.display = 'block';
-            distBody += `<tr class="highlight-row"><td colspan="2" class="text-start" style="font-weight:800;">رأس المال المسترد (في نهاية المدة)</td><td colspan="4" style="text-align:center; font-weight:800; font-size:18px;">${window.formatMoneySafe(capital)} ر.س</td></tr>`;
+            distBody += `<tr class="highlight-row"><td colspan="2" class="text-start" style="font-weight:800;">رأس المال المسترد (في نهاية المدة)</td><td colspan="4" style="text-align:center; font-weight:800; font-size:18px;">${window.formatMoneySafe(partnerCapital)} ر.س</td></tr>`;
         } else {
             document.getElementById('extendedCapitalNote').style.display = 'none';
         }
 
         document.getElementById('distributionTableBody').innerHTML = distBody;
 
-        // 4. تحديث ملخص العوائد الجديد
-        let netProfitFinal = totalProfit - totalFeesWithVat;
-        let totalReturnFinal = capital + netProfitFinal;
-        document.getElementById('finalCapital').innerText = window.formatMoneySafe(capital) + " ر.س";
+        // 🌟 تحديث "ملخص الفرصة" بالأقسام الأربعة التي طلبتها
+        let netProfitFinal = totalProfit - oppCostsWithVat; // الأرباح الصافية
+        let totalReturnFinal = partnerCapital + netProfitFinal; // الفرق (العائد النهائي)
+        
+        document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
         document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
         document.getElementById('finalDifference').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
 
-        // 5. تحديث ملخص الدفع النهائي
+        // تحديث ملخص الدفع لطلب الانضمام (حذف الضرائب من الدفع الآن)
         document.getElementById('sumShares').innerText = shares;
         document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
-        document.getElementById('sumCapital').innerText = window.formatMoneySafe(capital) + " ر.س";
-        
-        // المطلوب دفعه الآن = رأس المال فقط (بدون ضرائب)
-        document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(capital) + " ر.س" : "0.00 ر.س";
+        document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(partnerCapital) + " ر.س" : "0.00 ر.س";
     };
 
     window.changeShares = function(delta) {
@@ -306,9 +300,8 @@
 
     window.syncButtonsState = function() {
         let currentShares = parseInt(document.getElementById('shareInput').value) || 0;
-        const btnMinus = document.getElementById('btnMinus');
-        const btnPlus = document.getElementById('btnPlus');
-        if(btnMinus) btnMinus.disabled = (currentShares <= 1); // لا يمكن أن يكون أقل من 1
+        const btnMinus = document.getElementById('btnMinus'), btnPlus = document.getElementById('btnPlus');
+        if(btnMinus) btnMinus.disabled = (currentShares <= 1);
         if(btnPlus) btnPlus.disabled = (currentShares >= window.availableSharesToBuy);
         window.togglePayButton();
     };
@@ -342,9 +335,6 @@
         window.location.href = "../dashboard/index.html"; 
     };
 
-    // ============================================================
-    // 6. المشغل الذكي والمراقب الديناميكي للـ SPA
-    // ============================================================
     window.initInvestments = function() {
         initOpportunities();
         initInvestmentDetails();
