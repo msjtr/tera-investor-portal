@@ -1,327 +1,350 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طلب الانضمام | Tera Investor Portal</title>
-    
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="../../assets/css/app.css">
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <style>
-        :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-gray: #64748b; --tera-bg: #f8fafc; }
-        html, body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; }
-        *, *::before, *::after { box-sizing: border-box; }
+/**
+ * ============================================================
+ * investments.js - ملف التحكم المركزي للاستثمارات
+ * ============================================================
+ */
+
+(function() {
+    'use strict';
+
+    if (window.InvestmentsManagerLoaded) return;
+    window.InvestmentsManagerLoaded = true;
+
+    window.mockData = [
+        { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
+        { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
+        { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
+        { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
+        { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
+        { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
+        { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
+        { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
+        { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
+        { id: "FTR-2026-06-20-010", type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
+        { id: "FTR-2026-06-20-011", type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
+        { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
+    ];
+
+    window.formatMoneySafe = function(num) { return parseFloat(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    window.getBadgeClass = function(s) { return ['قائم', 'النشطة'].includes(s) ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); };
+    window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
+
+    document.addEventListener('click', function(e) {
+        let link = e.target.closest('a');
+        if (link && link.href && link.href.includes('id=')) {
+            try {
+                let url = new URL(link.href);
+                let id = url.searchParams.get('id');
+                if (id) localStorage.setItem('tera_active_opp_id', id.trim().toLowerCase());
+            } catch(err) {}
+        }
+    });
+
+    function getSafeOppId() {
+        let urlParams = new URLSearchParams(window.location.search);
+        let id = urlParams.get('id');
+        if (!id) id = localStorage.getItem('tera_active_opp_id');
+        return id ? id.trim().toLowerCase() : null;
+    }
+
+    function initOpportunities() {
+        let gridCont = document.getElementById('gridContainer');
+        if (!gridCont || gridCont.innerHTML.trim() !== '') return;
+
+        window.currentViewStyle = 'list';
+
+        window.switchView = function(view) {
+            window.currentViewStyle = view;
+            const gridBtn = document.getElementById('btnGrid'), listBtn = document.getElementById('btnList');
+            if(gridBtn) gridBtn.classList.toggle('active', view === 'grid');
+            if(listBtn) listBtn.classList.toggle('active', view === 'list');
+            window.applyFilters();
+        };
+
+        window.renderOpportunities = function(data) {
+            const listBody = document.getElementById('listTableBody'), listCont = document.getElementById('listContainer'), emptyState = document.getElementById('emptyState');
+            if(!gridCont || !listBody) return;
+
+            gridCont.innerHTML = ''; listBody.innerHTML = '';
+            
+            if(data.length === 0) {
+                if(emptyState) emptyState.style.display = 'block';
+                gridCont.style.display = 'none'; 
+                if(listCont) listCont.style.display = 'none'; 
+                return;
+            } else {
+                if(emptyState) emptyState.style.display = 'none';
+                if(window.currentViewStyle === 'grid') { gridCont.style.display = 'grid'; if(listCont) listCont.style.display = 'none'; } 
+                else { gridCont.style.display = 'none'; if(listCont) listCont.style.display = 'block'; }
+            }
+
+            data.forEach(item => {
+                const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type), detailUrl = `completed-investments.html?id=${item.id}`;
+                gridCont.innerHTML += `<div class="opp-card"><div class="opp-header"><div><span class="type-badge ${typeBadge}">${item.type}</span><h3 style="margin-top:8px;">${item.company}</h3></div><span class="badge ${badge}">${item.status}</span></div><div class="progress-wrapper" style="padding: 10px 20px 0;"><div class="progress-text"><span>نسبة الاكتمال</span><span>${item.fundedPercentage}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${item.fundedPercentage}%"></div></div></div><div class="opp-body"><div class="opp-metric"><span>قيمة السهم</span><strong>${window.formatMoneySafe(item.sharePrice)}</strong></div><div class="opp-metric"><span>إجمالي رأس المال</span><strong style="color:var(--tera-teal);">${window.formatMoneySafe(item.capital)}</strong></div><div class="opp-metric"><span>المدة</span><strong>${item.duration} شهر</strong></div><div class="opp-metric"><span>عدد الأسهم</span><strong>${item.sharesCount}</strong></div></div><div class="opp-footer"><span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span><a href="${detailUrl}" class="btn-action btn-view"><i class="fas fa-book-open"></i> التفاصيل</a></div></div>`;
+                listBody.innerHTML += `<tr><td style="font-family: monospace; font-weight: 700; color:var(--tera-navy);">${item.id}</td><td><span class="type-badge ${typeBadge}">${item.type}</span></td><td style="font-weight:700;">${item.reqEntity}</td><td style="font-family: monospace;">${item.offeringPeriod}</td><td style="font-weight: 800; color:var(--tera-navy);">${item.sharesCount}</td><td style="font-family:monospace;">${window.formatMoneySafe(item.sharePrice)}</td><td style="font-family:monospace; color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(item.capital)}</td><td><div style="display:flex; align-items:center; gap:8px;"><span style="font-weight:700; font-size:12px;">${item.fundedPercentage}%</span><div class="progress-bar-bg" style="width:60px; height:6px;"><div class="progress-bar-fill" style="width:${item.fundedPercentage}%"></div></div></div></td><td><span class="badge ${badge}">${item.status}</span></td><td><a href="${detailUrl}" class="btn-action btn-view">عرض</a></td></tr>`;
+            });
+        };
+
+        window.applyFilters = function() {
+            const typeFilter = document.getElementById('typeFilter'), statusFilter = document.getElementById('statusFilter'), searchInput = document.getElementById('searchInput');
+            let typeVal = typeFilter ? typeFilter.value : 'all', statusVal = statusFilter ? statusFilter.value : 'all', searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let filtered = window.mockData.filter(d => {
+                let mType = typeVal === 'all' || d.type === typeVal;
+                let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
+                let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
+                return mType && mStatus && mSearch;
+            });
+
+            window.renderOpportunities(filtered);
+            
+            let active = 0, upcoming = 0, completed = 0;
+            filtered.forEach(d => {
+                if(d.status === 'النشطة' || d.status === 'قائم') active++;
+                if(d.status === 'القادمة') upcoming++;
+                if(d.status === 'المكتملة') completed++;
+            });
+            if(document.getElementById('sumActive')) document.getElementById('sumActive').innerText = active;
+            if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
+            if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
+        };
+
+        window.applyFilters();
+    }
+
+    function initInvestmentDetails() {
+        let idEl = document.getElementById('mDetOppId');
+        if (!idEl || idEl.innerText !== '-') return;
+
+        let oppId = getSafeOppId();
+        let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
+        if (!opp) opp = window.mockData[0];
+
+        document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
+        document.getElementById('mDetOppId').innerText = opp.id;
+        document.getElementById('mDetOppCompany').innerText = opp.company;
+        document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
+        document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
+        document.getElementById('mDetOppStatus').innerText = opp.status;
+        document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
+        document.getElementById('mDetSharesCount').innerText = opp.sharesCount;
+        document.getElementById('mDetSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + ' ر.س';
+        document.getElementById('mDetTotalCapital').innerText = window.formatMoneySafe(opp.capital) + ' ر.س';
+        document.getElementById('mDetRatio').innerText = opp.roi + "%";
         
-        /* هيكلة الصفحة لضمان بقاء التذييل في الأسفل */
-        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-        .main-content { flex: 1; display: flex; flex-direction: column; }
+        let typeBadgeEl = document.getElementById('mDetOppType');
+        typeBadgeEl.innerText = opp.type;
+        typeBadgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
+
+        document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
+        document.getElementById('mDetProductQty').innerText = opp.sharesCount * 5;
+        document.getElementById('mDetProdVal').innerText = window.formatMoneySafe(opp.capital) + ' ر.س';
+        document.getElementById('mDetProdPrice').innerText = window.formatMoneySafe(opp.sharePrice / 5) + ' ر.س';
+        document.getElementById('mDetTax').innerText = window.formatMoneySafe(opp.capital * 0.15) + ' ر.س';
+        document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
+
+        let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
+        const btnJoin = document.getElementById('btnRedirectToJoin');
+        if (btnJoin && availableSharesToBuy > 0) {
+            btnJoin.href = "cancelled-investments.html?id=" + opp.id;
+            btnJoin.style.display = 'inline-flex';
+            document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
+            document.getElementById('miniSharesBox').style.display = 'inline-flex';
+        }
+    }
+
+    function initCancelledInvestments() {
+        let nameEl = document.getElementById('invOppName');
+        if (!nameEl || nameEl.innerText !== 'جاري تحميل البيانات...') return;
+
+        let oppId = getSafeOppId();
+        let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
+        if (!opp) opp = window.mockData[0];
+
+        window.currentActiveOpp = opp;
+        window.availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
+        if(window.availableSharesToBuy < 1) window.availableSharesToBuy = 0;
         
-        /* الهيدر العلوي */
-        .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .header-right { display: flex; align-items: center; }
-        .header-left { display: flex; align-items: center; gap: 15px; }
+        window.selectedPackageType = 'basic';
+        window.selectedPackageName = 'الباقة الأساسية';
+        window.selectedPackageFixedFee = 0;
 
-        /* شريط التنقل الفرعي (تحت الهيدر) */
-        .sub-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .page-title { margin: 0; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
-        .btn-back { display: inline-flex; align-items: center; gap: 8px; color: var(--tera-gray); font-weight: 700; font-size: 14px; text-decoration: none; transition: 0.2s; margin: 0; }
-        .btn-back:hover { color: var(--tera-navy); }
+        nameEl.innerText = opp.company;
+        document.getElementById('invOppId').innerText = opp.id;
+        document.getElementById('invSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
+        document.getElementById('invDuration').innerText = opp.duration + " أشهر";
+        document.getElementById('maxShares').innerText = window.availableSharesToBuy;
         
-        .join-container { max-width: 950px; margin: 30px auto; padding: 0 20px; padding-bottom: 50px; width: 100%;}
-        .join-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        let badgeEl = document.getElementById('invOppTypeBadge');
+        badgeEl.innerText = opp.type;
+        badgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
+
+        let backBtn = document.getElementById('btnBackToDetails');
+        if(backBtn) backBtn.href = `completed-investments.html?id=${opp.id}`;
+
+        if (window.availableSharesToBuy >= 1) {
+            document.getElementById('shareInput').value = 1;
+            window.executeCalculations();
+        } else {
+            document.getElementById('shareInput').value = 0;
+            if(document.getElementById('btnPlus')) document.getElementById('btnPlus').disabled = true;
+            if(document.getElementById('btnMinus')) document.getElementById('btnMinus').disabled = true;
+        }
+        window.syncButtonsState();
+    }
+
+    window.executeCalculations = function() {
+        let opp = window.currentActiveOpp;
+        if(!opp || !document.getElementById('servicesTableBody')) return;
+
+        let shares = parseInt(document.getElementById('shareInput').value) || 0;
+        document.getElementById('extendedDetails').style.display = 'block';
+
+        let duration = parseInt(opp.duration) || 6;
+        let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); // رأس مال الشريك
+        let profitPerShare = (parseFloat(opp.expectedProfit) || 0) / (parseInt(opp.sharesCount) || 1);
+        let totalProfit = shares * profitPerShare;
         
-        .opp-summary { background: var(--tera-navy); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; text-align: center; position: relative; overflow: hidden; }
-        .opp-summary::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--tera-teal); }
-        .opp-summary h3 { margin: 0 0 10px 0; font-size: 18px; }
-        .opp-summary p { margin: 0; font-size: 14px; color: #cbd5e1; }
-        .opp-summary .price { font-family: monospace; font-weight: bold; color: #38bdf8; font-size: 18px; }
+        // حساب الرسوم
+        let baseFeeAdmin = 20, baseFeeTransfer = 25, baseFeeCol = 100, pkgFee = window.selectedPackageFixedFee || 0;
+        let totalBaseFees = baseFeeAdmin + baseFeeTransfer + baseFeeCol + pkgFee;
+        let totalFeesVat = totalBaseFees * 0.15;
+        let oppCostsWithVat = totalBaseFees + totalFeesVat; // إجمالي تكاليف الفرصة
 
-        .calc-group { margin-bottom: 25px; text-align: center; }
-        .calc-group label { display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; }
+        let adminMonthly = (baseFeeAdmin * 1.15) / duration;
+        let transMonthly = (baseFeeTransfer * 1.15) / duration;
+        let colMonthly = (baseFeeCol * 1.15) / duration;
+        let pkgMonthly = (pkgFee * 1.15) / duration;
+        let totalMonthlyFinal = oppCostsWithVat / duration;
+
+        document.getElementById('servicesTableBody').innerHTML = `
+            <tr><td class="text-start">الرسوم الإدارية</td><td>${window.formatMoneySafe(baseFeeAdmin)}</td><td>${window.formatMoneySafe(baseFeeAdmin*0.15)}</td><td>${window.formatMoneySafe(baseFeeAdmin*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(adminMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
+            <tr><td class="text-start">رسوم التحويل</td><td>${window.formatMoneySafe(baseFeeTransfer)}</td><td>${window.formatMoneySafe(baseFeeTransfer*0.15)}</td><td>${window.formatMoneySafe(baseFeeTransfer*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(transMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
+            <tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${window.formatMoneySafe(baseFeeCol)}</td><td>${window.formatMoneySafe(baseFeeCol*0.15)}</td><td>${window.formatMoneySafe(baseFeeCol*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(colMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
+            <tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${window.selectedPackageName}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*0.15)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً</td></tr>
+            <tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(oppCostsWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td>-</td></tr>
+        `;
+
+        document.getElementById('txtBaseFees').innerText = window.formatMoneySafe(totalBaseFees) + " ر.س";
+        document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
+        document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
+
+        let isExtended = opp.type === 'شراكة ممتدة';
+        let distTitle = document.getElementById('distTableTitleText');
+        if(distTitle) distTitle.innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
         
-        .share-selector { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px; direction: ltr; }
-        .share-selector button { width: 50px; height: 50px; border-radius: 12px; border: none; background: var(--tera-teal); color: #fff; font-size: 20px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; }
-        .share-selector button:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
-        .share-selector button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
-        .calc-input-custom { width: 120px; text-align: center; font-size: 28px; font-weight: bold; font-family: monospace; border: 2px solid var(--tera-teal); border-radius: 12px; height: 50px; color: var(--tera-navy); outline: none; background: #f8fafc; pointer-events: none; }
+        let theadHtml = `<tr><th>تاريخ التحصيل</th>`;
+        if(!isExtended) theadHtml += `<th>رأس المال المسترد</th>`;
+        theadHtml += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
+        document.getElementById('distributionTableHeader').innerHTML = theadHtml;
+
+        let monthlyCapital = partnerCapital / duration;
+        let monthlyProfit = totalProfit / duration;
+        let distBody = '', tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
+        let startDate = new Date();
+
+        for(let i = 1; i <= duration; i++) {
+            let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
+            let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
+            
+            if(isExtended) {
+                let currentPayment = monthlyProfit;
+                let currentRemaining = currentPayment - totalMonthlyFinal;
+                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(currentPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">توزيع أرباح</td></tr>`;
+                tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
+            } else {
+                let monthlyTotalPayment = monthlyCapital + monthlyProfit;
+                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
+                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyCapital)}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(monthlyRemaining)}</td><td>مجدولة</td></tr>`;
+                tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+            }
+        }
         
-        .available-shares-hint { font-size: 14px; color: var(--tera-teal); font-weight: bold; display: block; text-align: center; }
-        .min-shares-alert { color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 8px; display: block; }
-
-        #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .section-title { font-size: 16px; color: var(--tera-navy); font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; margin-top: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-
-        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
-        .package-card.selected { border-color: var(--tera-teal); box-shadow: 0 5px 15px rgba(2, 128, 144, 0.1); background: #f0fdfa; }
-        .package-card input[type="radio"] { position: absolute; top: 15px; right: 15px; transform: scale(1.3); accent-color: var(--tera-teal); pointer-events: none; }
-        .package-card i { font-size: 30px; margin-bottom: 15px; }
-        .package-card.basic i { color: #64748b; }
-        .package-card.silver i { color: #94a3b8; }
-        .package-card.gold i { color: #eab308; }
-        .package-card.platinum i { color: #0ea5e9; }
-        .package-card h4 { margin: 0 0 10px 0; font-size: 16px; color: var(--tera-navy); }
-        .package-card p { margin: 0 0 10px 0; font-size: 12px; color: var(--tera-gray); line-height: 1.5; height: 60px; overflow: hidden; }
-        .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 15px; background: #f1f5f9; padding: 5px 10px; border-radius: 6px; display: inline-block; font-family: monospace; }
-        .package-card.selected .fee { background: var(--tera-teal); color: #fff; }
-
-        .tera-table { width: 100%; border-collapse: collapse; text-align: center; margin-bottom: 20px; font-size: 13px; }
-        .tera-table th { background: #f1f5f9; padding: 12px; color: var(--tera-navy); font-weight: 800; border: 1px solid #e2e8f0; white-space: nowrap; }
-        .tera-table td { padding: 12px; border: 1px solid #e2e8f0; color: #334155; font-family: monospace; font-weight: bold; }
-        .tera-table td.text-start { text-align: right; font-family: 'Tajawal', sans-serif; font-weight: 600; }
-        .tera-table td.notes { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
-        .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
-        .tera-table .highlight-row td { background: #fffbeb; color: #b45309; font-size: 14px; }
-
-        .fees-summary-box { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 15px; font-size: 14px; font-weight: 700; line-height: 2; }
-        .fees-summary-row { display: flex; justify-content: space-between; align-items: center; }
-
-        .returns-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; margin-bottom: 30px; }
-        .returns-card { padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .returns-card span { display:block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-        .returns-card strong { font-size: 20px; font-family: monospace; font-weight: 800; }
-        .card-capital { background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; }
-        .card-costs { background: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; }
-        .card-profit { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-        .card-diff { background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; }
-
-        .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
-        .calc-result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; color: var(--tera-gray); font-weight: 700; }
-        .calc-result-row.highlight { color: var(--tera-navy); font-size: 18px; border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 10px; }
-        .calc-result-row.total { border-top: 2px solid #028090; padding-top: 15px; margin-top: 15px; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
-
-        .payment-methods { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
-        .pay-method-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; background: #f8fafc; }
-        .pay-method-card:hover { border-color: var(--tera-teal); background: #f0fdfa; }
-        .pay-method-card input { transform: scale(1.3); accent-color: var(--tera-teal); }
-        .pay-method-card strong { color: var(--tera-navy); font-size: 14px; }
-        .pay-method-card span { font-size: 12px; color: var(--tera-gray); display: block; margin-top: 4px; }
-
-        .disclaimer-text { font-size: 12px; color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 20px; line-height: 1.6; }
+        distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>${!isExtended ? `<td>${window.formatMoneySafe(tCap)}</td>` : ''}<td>${window.formatMoneySafe(tProf)}</td><td>${window.formatMoneySafe(tPay)}</td><td style="color:#ef4444;">${window.formatMoneySafe(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(tRem)}</td><td>-</td></tr>`;
         
-        .strict-warning { background: #fef2f2; border-right: 4px solid #ef4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 800; color: #991b1b; font-size: 16px; line-height: 1.6; }
+        if(isExtended && partnerCapital > 0) {
+            document.getElementById('extendedCapitalNote').style.display = 'block';
+            distBody += `<tr class="highlight-row"><td colspan="2" class="text-start" style="font-weight:800;">رأس المال المسترد (في نهاية المدة)</td><td colspan="4" style="text-align:center; font-weight:800; font-size:18px;">${window.formatMoneySafe(partnerCapital)} ر.س</td></tr>`;
+        } else {
+            document.getElementById('extendedCapitalNote').style.display = 'none';
+        }
 
-        .agreement-box { display: flex; gap: 12px; font-size: 14px; color: var(--tera-gray); margin-bottom: 30px; line-height: 1.5; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 1px solid #ccfbf1; }
-        .agreement-box input { margin-top: 2px; transform: scale(1.3); accent-color: var(--tera-teal); cursor: pointer; }
+        document.getElementById('distributionTableBody').innerHTML = distBody;
 
-        .btn-action { width: 100%; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; }
-        .btn-primary { background: var(--tera-teal); color: #fff; }
-        .btn-primary:hover:not(:disabled) { background: #026a77; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.6; }
+        // 🌟 تحديث "ملخص الفرصة" بالأقسام الأربعة التي طلبتها
+        let netProfitFinal = totalProfit - oppCostsWithVat; // الأرباح الصافية
+        let totalReturnFinal = partnerCapital + netProfitFinal; // الفرق (العائد النهائي)
         
-        .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; display: inline-block;}
+        document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
+        document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
+        document.getElementById('finalDifference').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
+
+        // تحديث ملخص الدفع لطلب الانضمام (حذف الضرائب من الدفع الآن)
+        document.getElementById('sumShares').innerText = shares;
+        document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
+        document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(partnerCapital) + " ر.س" : "0.00 ر.س";
+    };
+
+    window.changeShares = function(delta) {
+        let input = document.getElementById('shareInput');
+        if(!input) return;
+        let val = (parseInt(input.value) || 0) + delta;
+        if (val >= 1 && val <= window.availableSharesToBuy) {
+            input.value = val;
+            window.syncButtonsState();
+            window.executeCalculations();
+        }
+    };
+
+    window.syncButtonsState = function() {
+        let currentShares = parseInt(document.getElementById('shareInput').value) || 0;
+        const btnMinus = document.getElementById('btnMinus'), btnPlus = document.getElementById('btnPlus');
+        if(btnMinus) btnMinus.disabled = (currentShares <= 1);
+        if(btnPlus) btnPlus.disabled = (currentShares >= window.availableSharesToBuy);
+        window.togglePayButton();
+    };
+
+    window.selectPackage = function(el, type, name, feeValue) {
+        document.querySelectorAll('.package-card').forEach(card => {
+            card.classList.remove('selected');
+            let radio = card.querySelector('input');
+            if(radio) radio.checked = false;
+        });
+        el.classList.add('selected');
+        let currentRadio = el.querySelector('input');
+        if(currentRadio) currentRadio.checked = true;
         
-        .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; }
-    </style>
-</head>
-<body>
+        window.selectedPackageType = type;
+        window.selectedPackageName = name;
+        window.selectedPackageFixedFee = parseFloat(feeValue) || 0;
+        window.executeCalculations();
+    };
 
-    <div class="app-wrapper">
-        <main class="main-content">
-            <!-- الهيدر العلوي -->
-            <header class="top-header no-print">
-                <div class="header-right">
-                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
-                </div>
-                <div class="header-left">
-                    <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy);"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
-                </div>
-            </header>
+    window.togglePayButton = function() { 
+        let shares = parseInt(document.getElementById('shareInput').value) || 0;
+        let checkEl = document.getElementById('agreeCheckbox');
+        let isChecked = checkEl ? checkEl.checked : false;
+        const payBtn = document.getElementById('btnPayNow');
+        if(payBtn) payBtn.disabled = !(isChecked && shares >= 1); 
+    };
 
-            <div class="join-container">
-                <!-- شريط التنقل الفرعي تحت الهيدر -->
-                <div class="sub-header-nav no-print">
-                    <div class="nav-links">
-                        <a href="completed-investments.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
-                        <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
-                    </div>
-                    <h2 class="page-title">طلب الانضمام لفرصة استثمارية</h2>
-                </div>
-                
-                <div class="join-card">
-                    <div class="opp-summary">
-                        <h3 id="invOppName">جاري تحميل البيانات...</h3>
-                        <p>رقم الفرصة: <span id="invOppId" style="font-family:monospace;"></span> <span id="invOppTypeBadge" class="type-badge" style="background:#fef3c7; color:#d97706; margin-right:10px;"></span></p>
-                        <p style="margin-top: 8px;">قيمة السهم الواحد: <span id="invSharePrice" class="price"></span></p>
-                        <p style="margin-top: 5px; font-size: 13px; color: #cbd5e1;">مدة الفرصة: <span id="invDuration" style="font-family:monospace; font-weight:bold; color:#fff;"></span></p>
-                    </div>
+    window.processPayment = function() { 
+        alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); 
+        window.location.href = "../dashboard/index.html"; 
+    };
 
-                    <div class="calc-group">
-                        <label>حدد عدد الأسهم التي ترغب بالانضمام بها:</label>
-                        <div class="share-selector">
-                            <button type="button" id="btnPlus" onclick="window.changeShares(1)"><i class="fas fa-plus"></i></button>
-                            <input type="number" id="shareInput" class="calc-input-custom" value="1" readonly>
-                            <button type="button" id="btnMinus" onclick="window.changeShares(-1)"><i class="fas fa-minus"></i></button>
-                        </div>
-                        <span class="available-shares-hint">الأسهم المتاحة لك: <span id="maxShares" style="font-family:monospace; font-size:16px;">0</span></span>
-                        <span class="min-shares-alert">عزيزي الشريك، أقل عدد للأسهم هو 1 سهم</span>
-                    </div>
+    window.initInvestments = function() {
+        initOpportunities();
+        initInvestmentDetails();
+        initCancelledInvestments();
+    };
 
-                    <div id="extendedDetails">
-                        <h4 class="section-title" style="margin-top: 0;"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
-                        <div class="packages-grid">
-                            <label class="package-card basic selected" onclick="window.selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
-                                <input type="radio" name="protection_pkg" value="basic" checked>
-                                <i class="fas fa-star"></i>
-                                <div><h4>الباقة الأساسية</h4><p>بدون مزايا إضافية للحماية.</p></div>
-                                <span class="fee">مجاناً</span>
-                            </label>
-                            <label class="package-card silver" onclick="window.selectPackage(this, 'silver', 'الباقة الفضية', 99)">
-                                <input type="radio" name="protection_pkg" value="silver">
-                                <i class="fas fa-medal"></i>
-                                <div><h4>الباقة الفضية</h4><p>صرف الأرباح عند تأخر العميل 60 يوماً.</p></div>
-                                <span class="fee">99 ر.س</span>
-                            </label>
-                            <label class="package-card gold" onclick="window.selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
-                                <input type="radio" name="protection_pkg" value="gold">
-                                <i class="fas fa-trophy"></i>
-                                <div><h4>الباقة الذهبية</h4><p>صرف الأرباح عند تأخر العميل 30 يوماً.</p></div>
-                                <span class="fee">149 ر.س</span>
-                            </label>
-                            <label class="package-card platinum" onclick="window.selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
-                                <input type="radio" name="protection_pkg" value="platinum">
-                                <i class="fas fa-gem"></i>
-                                <div><h4>الباقة البلاتينية</h4><p>ضمان الصرف في موعد الاستحقاق دون انتظار.</p></div>
-                                <span class="fee">199 ر.س</span>
-                            </label>
-                        </div>
+    new MutationObserver(() => {
+        window.initInvestments();
+    }).observe(document.body, { childList: true, subtree: true });
 
-                        <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
-                        <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-info-circle"></i>
-                            <span>توضيح: رسوم الخدمات والاشتراكات تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة.</span>
-                        </div>
-                        
-                        <div style="overflow-x: auto;">
-                            <table class="tera-table">
-                                <thead>
-                                    <tr>
-                                        <th>بند الخدمات</th>
-                                        <th>قيمة الخدمة</th>
-                                        <th>الضريبة 15%</th>
-                                        <th>الإجمالي شامل الضريبة</th>
-                                        <th style="color:var(--tera-teal);">قيمة الدفعة الشهرية</th>
-                                        <th>ملاحظات</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="servicesTableBody"></tbody>
-                            </table>
-                        </div>
+    window.initInvestments();
 
-                        <div class="fees-summary-box">
-                            <p style="color: #028090; margin-top: 0;">عزيزي العميل، أنتم مطالبون بدفع الرسوم والاشتراكات حسب خطة الدفع المعلن عنها أعلاه:</p>
-                            <div class="fees-summary-row"><span>إجمالي رسوم الخدمة والاشتراكات:</span><span id="txtBaseFees" style="font-family:monospace; color:#0A1B3F;">0</span></div>
-                            <div class="fees-summary-row" style="color:#ef4444;"><span>إجمالي قيمة الضريبة المضافة 15%:</span><span id="txtFeesVat" style="font-family:monospace;">0</span></div>
-                            <div class="fees-summary-row" style="font-size:16px; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:5px; color:#028090;">
-                                <span>إجمالي المبلغ شامل الضريبة هو:</span>
-                                <div>
-                                    <span id="txtTotalFeesWithVat" style="font-family:monospace; font-size:18px;">0</span>
-                                    <span style="font-size:12px; color:#64748b; margin-right:5px;">(يُقسم ويُخصم حسب الجدول)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h4 class="section-title"><i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span></h4>
-                        <div id="extendedCapitalNote" style="display:none; background: #fffbeb; border: 2px solid #f59e0b; color: #b45309; padding: 15px; border-radius: 8px; font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px;">
-                            عزيزي الشريك، استرداد رأس المال يكون متاحاً بحد أقصى 60 يوماً من آخر استلام أرباح.
-                        </div>
-                        
-                        <div style="overflow-x: auto; margin-bottom: 10px;">
-                            <table class="tera-table">
-                                <thead id="distributionTableHeader"></thead>
-                                <tbody id="distributionTableBody"></tbody>
-                            </table>
-                        </div>
-
-                        <h4 class="section-title"><i class="fas fa-chart-pie text-teal"></i> ملخص الفرصة</h4>
-                        <div class="returns-summary-grid">
-                            <div class="returns-card card-capital">
-                                <span>رأس مال الشريك</span>
-                                <strong id="finalPartnerCapital">0</strong>
-                            </div>
-                            <div class="returns-card card-costs">
-                                <span>إجمالي تكاليف الفرصة</span>
-                                <strong id="finalOppCosts">0</strong>
-                            </div>
-                            <div class="returns-card card-profit">
-                                <span>الأرباح الصافية</span>
-                                <strong id="finalNetProfit">0</strong>
-                            </div>
-                            <div class="returns-card card-diff">
-                                <span>الفرق</span>
-                                <strong id="finalDifference">0</strong>
-                            </div>
-                        </div>
-
-                        <h4 class="section-title"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
-                        <div class="calc-result-box">
-                            <div class="calc-result-row"><span>عدد الأسهم:</span><span id="sumShares" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
-                            <div class="calc-result-row"><span>قيمة السهم الواحد:</span><span id="sumSharePrice" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
-                            <div class="calc-result-row highlight"><span>إجمالي قيمة الأسهم:</span><span id="sumCapital" style="font-family:monospace; font-size:20px;">0.00 ر.س</span></div>
-                            
-                            <div class="calc-result-row total"><span>المبلغ المطلوب دفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal); font-size:28px;">0.00 ر.س</span></div>
-                        </div>
-
-                        <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
-                        <div class="payment-methods">
-                            <label class="pay-method-card">
-                                <input type="radio" name="pay_method" checked>
-                                <div>
-                                    <strong>الخصم من المحفظة</strong>
-                                    <span class="mono">يظهر رصيد المحفظة الحالي: 15,400.00 ر.س</span>
-                                </div>
-                            </label>
-                            <label class="pay-method-card">
-                                <input type="radio" name="pay_method">
-                                <div>
-                                    <strong>دفع مباشر من خلال بوابة الدفع</strong>
-                                    <span>مدى، فيزا، ماستركارد، آبل باي</span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div class="disclaimer-text">
-                            <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة من قبل المنصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
-                        </div>
-
-                        <div class="strict-warning">
-                            <i class="fas fa-exclamation-triangle"></i> عزيزي الشريك: لا يمكنك إلغاء الانضمام بعد الدفع. مجرد الدفع يعتبر إقراراً بالانضمام، ولا يحق لك التراجع بعد الانضمام بأي شكل من الأشكال.
-                        </div>
-
-                        <div class="agreement-box">
-                            <input type="checkbox" id="agreeCheckbox" onchange="window.togglePayButton()">
-                            <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة، وجدول التوزيع، والرسوم الموضحة في الدليل الإرشادي الشامل.</label>
-                        </div>
-
-                        <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="window.processPayment()">
-                            <i class="fas fa-lock"></i> إتمام الدفع والانضمام
-                        </button>
-
-                    </div>
-                </div>
-            </div>
-
-            <!-- التذييل -->
-            <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
-            </footer>
-        </main>
-    </div>
-
-    <script src="../../assets/js/investments.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/main.js"></script>
-</body>
-</html>
+})();
