@@ -12,9 +12,19 @@
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
     transform: translateZ(0); /* تفعيل تسريع الهاردوير للصفاوة */
+    will-change: transform; /* إخبار المتصفح بإعطاء أولوية أداء الشعار */
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     max-width: 100%;
+    width: auto; /* الحفاظ على أبعاد سهم تيرا بدقة */
+}
+
+/* دعم شاشات الجوال عالية الدقة (Retina & Super Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .header-logo img, .logo-img {
+        -webkit-font-smoothing: antialiased;
+    }
 }
 
 /* =========================================
@@ -65,7 +75,14 @@
 @media (max-width: 768px) {
     /* ضبط الهيدر */
     .top-header { padding: 12px 15px; }
-    .header-logo img { height: 32px !important; } /* حجم مثالي للجوال */
+    
+    /* استخدام clamp لمرونة الشعار:
+       (الحد الأدنى 28px، الحجم المفضل نسبة لعرض الشاشة 6vw، الحد الأقصى 38px)
+    */
+    .header-logo img { 
+        height: clamp(28px, 6vw, 38px) !important; 
+        min-width: 80px; /* يمنع انضغاط الشعار أفقياً */
+    } 
     .header-logo h1 { font-size: 16px !important; }
     
     /* إخفاء اسم المستخدم للحفاظ على المساحة، وإبقاء الصورة */
@@ -114,13 +131,18 @@
 }
 
 /* =========================================
-   5. شاشات الجوال الصغيرة جداً (مثل iPhone SE القديم)
+   5. شاشات الجوال الصغيرة جداً (مثل الهواتف القديمة)
    (أصغر من 480px)
    ========================================= */
 @media (max-width: 480px) {
     /* إخفاء النص في الهيدر ليبقى الشعار فقط بوضوح */
     .header-logo h1 { display: none !important; }
-    .header-logo img { height: 28px !important; }
+    
+    /* مرونة مخصصة للشاشات النحيفة جداً */
+    .header-logo img { 
+        height: clamp(24px, 7vw, 32px) !important; 
+        min-width: 70px;
+    }
     
     /* تصغير الأيقونات */
     .summary-card i { font-size: 20px; }
@@ -136,7 +158,6 @@
    (يمنع تكسر الصفحات والجداول)
    ========================================= */
 @media print {
-    /* الإعدادات موجودة مسبقاً في ملفاتك، هذا للتأكيد المشترك */
     .container { max-width: 100% !important; padding: 0 !important; }
     .header-logo img { 
         height: 45px !important; /* حجم ممتاز للورق */
