@@ -20,16 +20,13 @@
         html, body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
         *, *::before, *::after { box-sizing: border-box; }
         
-        /* هيكلة الصفحة الأساسية */
         .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
         .main-content { flex: 1; display: flex; flex-direction: column; }
         
-        /* الهيدر العلوي */
         .top-header { background: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .header-right { display: flex; align-items: center; }
         .header-left { display: flex; align-items: center; gap: 15px; }
 
-        /* شريط التنقل الفرعي (تحت الهيدر) */
         .sub-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
         .nav-links { display: flex; gap: 20px; align-items: center; }
         .page-title { margin: 0; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
@@ -40,7 +37,6 @@
         .details-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; padding-bottom: 50px; width: 100%;}
         .main-details { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
 
-        /* التنبيهات */
         .alert-banner { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 800; }
         .alert-warning { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; border: 1px solid;}
         .alert-info { background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; border: 1px solid;}
@@ -55,34 +51,46 @@
         .detail-block { margin-bottom: 35px; }
         .detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display:flex; align-items:center; gap:8px; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .info-item { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; }
+        .info-item { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; flex-direction: column; justify-content: center;}
         .info-item span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 8px; }
         .info-item strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 800; }
         .mono { font-family: monospace; font-size: 16px !important; }
 
-        /* الدليل الاسترشادي */
-        .guideline-manual { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 25px; max-height: 400px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #334155; }
-        .guideline-manual h4 { color: var(--tera-teal); margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        /* تصميم مميز لفئة المخاطر */
+        .risk-badge { background: #fffbeb; color: #d97706; padding: 8px 20px; border-radius: 10px; border: 2px solid #fde68a; font-size: 24px !important; font-weight: 900 !important; display: inline-block; text-align: center; box-shadow: 0 4px 10px rgba(217, 119, 6, 0.1); }
+
+        /* الدليل الاسترشادي (منسق ومرقم) */
+        .guideline-manual { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 30px; max-height: 500px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #334155; }
+        .guideline-manual h4 { color: var(--tera-navy); margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 18px; display: flex; align-items: center; gap: 8px;}
         .guideline-manual h4:first-child { margin-top: 0; }
-        .guideline-manual h5 { color: var(--tera-navy); margin-top: 15px; margin-bottom: 5px; font-size: 15px; }
-        .guideline-manual ul { margin-top: 5px; padding-right: 20px; }
-        .guideline-manual li { margin-bottom: 5px; }
+        .guideline-manual h5 { color: var(--tera-teal); margin-top: 20px; margin-bottom: 10px; font-size: 16px; font-weight: 800;}
+        .guideline-manual ul, .guideline-manual ol { margin-top: 10px; margin-bottom: 20px; padding-right: 25px; }
+        .guideline-manual li { margin-bottom: 8px; }
+        .guideline-manual p { margin-bottom: 15px; }
+        .guideline-manual strong { color: var(--tera-navy); }
+        .warning-text { color: #ef4444; font-weight: 800; background: #fef2f2; padding: 10px; border-radius: 6px; border-right: 4px solid #ef4444; display: block; margin-top: 10px;}
 
         /* الإقرار والأزرار */
-        .agreement-box { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--tera-navy); margin-top: 30px; margin-bottom: 20px; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 1px solid #028090; font-weight: 700; line-height: 1.6;}
-        .agreement-box input { margin-top: 4px; transform: scale(1.4); accent-color: var(--tera-teal); cursor: pointer; }
+        .agreement-box { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--tera-navy); margin-top: 30px; margin-bottom: 20px; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 2px solid #028090; font-weight: 700; line-height: 1.6; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.1);}
+        .agreement-box input { margin-top: 4px; transform: scale(1.5); accent-color: var(--tera-teal); cursor: pointer; }
         
-        .disabled-link { pointer-events: none; opacity: 0.5; filter: grayscale(100%); }
+        .disabled-link { pointer-events: none !important; opacity: 0.5 !important; filter: grayscale(100%); cursor: not-allowed !important; }
 
-        .btn-action { padding: 16px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; font-size: 16px; transition: 0.2s; text-decoration: none; width: 100%; text-align: center;}
-        .btn-primary { background: var(--tera-teal); color: #fff; box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
-        .btn-primary:hover:not(.disabled-link) { background: #026a77; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2,128,144,0.3); }
+        .btn-action { padding: 16px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; font-size: 16px; transition: 0.3s; text-decoration: none; width: 100%; text-align: center;}
+        .btn-primary { background: var(--tera-teal); color: #fff; box-shadow: 0 4px 15px rgba(2,128,144,0.3); }
+        .btn-primary:hover:not(.disabled-link) { background: #026a77; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(2,128,144,0.4); }
         
         .type-badge { padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; font-family: monospace; display: inline-block; }
         .type-extended { background: #fef3c7; color: #d97706; } 
         .type-opportunity { background: #fce7f3; color: #db2777; } 
 
         .page-footer { background: #fff; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; margin-top: auto; }
+
+        /* تخصيص الـ Scrollbar للدليل */
+        .guideline-manual::-webkit-scrollbar { width: 8px; }
+        .guideline-manual::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .guideline-manual::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .guideline-manual::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -90,18 +98,18 @@
     <div class="app-wrapper">
         <main class="main-content">
             <!-- الهيدر العلوي -->
-            <header class="top-header">
+            <header class="top-header no-print">
                 <div class="header-right">
                     <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
                 </div>
                 <div class="header-left">
-                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy);"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
+                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
                 </div>
             </header>
 
             <div class="details-container">
                 <!-- شريط التنقل الفرعي -->
-                <div class="sub-header-nav">
+                <div class="sub-header-nav no-print">
                     <div class="nav-links">
                         <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
                     </div>
@@ -128,7 +136,7 @@
                             <div class="info-item"><span>إجمالي عدد الأسهم</span><strong id="mDetSharesCount" class="mono">-</strong></div>
                             <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono">-</strong></div>
                             <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono">-</strong></div>
-                            <div class="info-item"><span>النسبة على كامل المدة</span><strong id="mDetRatio" class="mono text-teal">-</strong></div>
+                            <div class="info-item"><span>النسبة المتوقعة للمستثمر</span><strong id="mDetRatio" class="mono text-teal">-</strong></div>
                         </div>
                     </div>
 
@@ -136,14 +144,14 @@
                         <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
                         <div class="info-grid">
                             <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
-                            <div class="info-item"><span>عمر العميل:</span><strong>45</strong></div>
+                            <div class="info-item"><span>عمر العميل</span><strong>45 سنة</strong></div>
                             <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
                             <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
-                            <div class="info-item"><span>الوزارة الجهة</span><strong>وزارة التعليم</strong></div>
-                            <div class="info-item"><span>مسمى الوظيفي</span><strong>معلم</strong></div>
+                            <div class="info-item"><span>الوزارة / الجهة</span><strong>وزارة التعليم</strong></div>
+                            <div class="info-item"><span>المسمى الوظيفي</span><strong>معلم</strong></div>
                             <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
-                            <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000</strong></div>
-                            <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000</strong></div>
+                            <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000 ر.س</strong></div>
+                            <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000 ر.س</strong></div>
                             <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
                         </div>
                     </div>
@@ -151,8 +159,8 @@
                     <div class="detail-block">
                         <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
                         <div class="info-grid">
-                            <div class="info-item"><span>سجل العميل:</span><strong>سابق</strong></div>
-                            <div class="info-item"><span>عدد الفرص السابقة:</span><strong class="mono">4</strong></div>
+                            <div class="info-item"><span>سجل العميل</span><strong>سابق</strong></div>
+                            <div class="info-item"><span>عدد الفرص السابقة</span><strong class="mono">4</strong></div>
                             <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
                             <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
                             <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
@@ -174,26 +182,33 @@
                     </div>
 
                     <div class="detail-block">
-                        <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات اضافية</h3>
-                        <div class="info-grid">
-                            <div class="info-item"><span>نوع الضمان</span><strong>عقد الكتروني + سند لامر</strong></div>
-                            <div class="info-item"><span>فئة المخاطرة</span><strong style="color: #f59e0b; font-size: 20px;">B</strong></div>
+                        <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات إضافية والمخاطر</h3>
+                        <div class="info-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="info-item">
+                                <span>نوع الضمانات المعتمدة</span>
+                                <strong><i class="fas fa-file-contract text-teal"></i> عقد إلكتروني موثق + <i class="fas fa-money-check-alt text-teal"></i> سند لأمر</strong>
+                            </div>
+                            <div class="info-item" style="align-items: center; background: #fffbeb; border-color: #fde68a;">
+                                <span>فئة المخاطرة المحددة للفرصة</span>
+                                <strong class="risk-badge">B</strong>
+                            </div>
                         </div>
                     </div>
 
                     <div class="detail-block">
                         <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس : الدليل الاسترشادي والشروط والأحكام</h3>
                         <div class="guideline-manual">
-                            <h4>أولاً: الشروط والأحكام العامة</h4>
+                            <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
+                            
                             <h5>المشاركة في الفرص</h5>
-                            <ul>
+                            <ol>
                                 <li>تعتبر المشاركة في الفرص المعروضة عبر المنصة اختيارية وتتم بعد اطلاع الشريك على كافة بيانات الفرصة.</li>
                                 <li>يعد إتمام عملية المشاركة موافقة صريحة ونهائية على جميع الشروط والأحكام والسياسات المعمول بها في المنصة.</li>
                                 <li>لا يجوز للشريك إلغاء مشاركته بعد اعتمادها أو اكتمال الفرصة إلا وفق ما تسمح به سياسات المنصة.</li>
                                 <li>تعتمد الفرصة على اكتمال إجمالي قيمة المنتج المطلوب خلال المدة المحددة للفرصة.</li>
                                 <li>يجوز للمنصة إغلاق الفرصة قبل انتهاء مدتها عند اكتمال قيمة المنتج المطلوبة.</li>
                                 <li>في حال عدم اكتمال الفرصة خلال المدة المحددة يتم إعادة المبالغ المدفوعة إلى محفظة الشريك أو حسابه وفق سياسة المنصة.</li>
-                            </ul>
+                            </ol>
                             
                             <h5>إدارة الفرص</h5>
                             <ul>
@@ -219,73 +234,101 @@
                                 <li>تلتزم المنصة ببذل العناية المهنية واتخاذ الإجراءات اللازمة للمحافظة على حقوق الشركاء دون تقديم أي ضمان مالي.</li>
                             </ul>
 
-                            <h4>ثانياً: شرح المصطلحات والمؤشرات</h4>
+                            <h4><i class="fas fa-list-alt"></i> ثانياً: شرح المصطلحات والمؤشرات</h4>
                             <ul>
-                                <li><strong>رقم الفرصة:</strong> رقم تعريفي فريد لكل فرصة يتم من خلاله متابعة الفرصة.</li>
+                                <li><strong>رقم الفرصة:</strong> رقم تعريفي فريد لكل فرصة يتم من خلاله متابعة الفرصة ومراجعة بياناتها.</li>
                                 <li><strong>عمر العميل:</strong> العمر التقريبي للعميل وقت دراسة الطلب.</li>
+                                <li><strong>قطاع العميل:</strong> القطاع الوظيفي أو المهني الذي ينتمي إليه العميل.</li>
                                 <li><strong>عميل جديد:</strong> عميل يشارك لأول مرة عبر المنصة.</li>
                                 <li><strong>عميل سابق:</strong> عميل سبق له الاستفادة من فرصة أو أكثر.</li>
                                 <li><strong>عميل متكرر:</strong> عميل لديه أكثر من فرصة سابقة مكتملة.</li>
                                 <li><strong>عميل مميز:</strong> عميل يتمتع بسجل التزام مرتفع وتاريخ إيجابي.</li>
+                                <li><strong>عميل عالي المخاطر:</strong> عميل تم قبوله مع وجود عوامل مخاطر أعلى من المتوسط.</li>
+                                <li><strong>نوع المنتج:</strong> المنتج أو الخدمة المطلوب شراؤها لصالح العميل.</li>
+                                <li><strong>قيمة المنتج:</strong> القيمة المالية للوحدة الواحدة من المنتج.</li>
+                                <li><strong>إجمالي قيمة المنتج:</strong> القيمة الإجمالية لجميع المنتجات أو الخدمات محل الفرصة.</li>
+                                <li><strong>نسبة الأرباح المطروحة:</strong> العائد المتوقع توزيعه على الشركاء المشاركين في الفرصة.</li>
+                                <li><strong>مدة الفرصة:</strong> الفترة الزمنية المحددة لاكتمال طرح الفرصة.</li>
+                                <li><strong>نسبة اكتمال الفرصة:</strong> النسبة التي تمثل مقدار ما تم جمعه من إجمالي قيمة المنتج.</li>
                             </ul>
 
-                            <h4>ثالثاً: شرح فئات المخاطر</h4>
+                            <h4><i class="fas fa-exclamation-triangle"></i> ثالثاً: شرح فئات المخاطر</h4>
                             <ul>
-                                <li><strong>A+ مخاطر منخفضة جداً:</strong> سجل التزام ممتاز. ضمانات قوية ومتعددة. نسبة تعثر منخفضة.</li>
-                                <li><strong>A مخاطر منخفضة:</strong> سجل جيد. انتظام مرتفع بالسداد. ضمانات مناسبة.</li>
-                                <li><strong>B مخاطر متوسطة:</strong> مستوى مخاطر مقبول. سجل ائتماني جيد. ضمانات متوسطة إلى جيدة.</li>
-                                <li><strong>C مخاطر مرتفعة نسبياً:</strong> احتمالية تأخير أعلى من المتوسط. تتطلب دراسة أكبر من الشريك.</li>
-                                <li><strong>D مخاطر مرتفعة:</strong> مستوى مخاطر مرتفع. احتمالية تعثر أعلى. مناسبة للشركاء ذوي تقبل المخاطر المرتفع.</li>
+                                <li><strong>A+ (مخاطر منخفضة جداً):</strong> سجل التزام ممتاز، ضمانات قوية ومتعددة، نسبة تعثر منخفضة.</li>
+                                <li><strong>A (مخاطر منخفضة):</strong> سجل جيد، انتظام مرتفع بالسداد، ضمانات مناسبة.</li>
+                                <li><strong>B (مخاطر متوسطة):</strong> مستوى مخاطر مقبول، سجل ائتماني جيد، ضمانات متوسطة إلى جيدة.</li>
+                                <li><strong>C (مخاطر مرتفعة نسبياً):</strong> احتمالية تأخير أعلى من المتوسط، تتطلب دراسة أكبر من الشريك.</li>
+                                <li><strong>D (مخاطر مرتفعة):</strong> مستوى مخاطر مرتفع، احتمالية تعثر أعلى، مناسبة للشركاء ذوي تقبل المخاطر المرتفع.</li>
                             </ul>
-                            <p style="color:#ef4444; font-weight:bold;">تنبيه: تصنيف المخاطر مؤشر استرشادي فقط ولا يمثل ضماناً للأرباح أو لرأس المال.</p>
+                            <span class="warning-text"><i class="fas fa-info-circle"></i> تنبيه: تصنيف المخاطر مؤشر استرشادي فقط ولا يمثل ضماناً للأرباح أو لرأس المال.</span>
 
-                            <h4>رابعاً: شرح الضمانات</h4>
+                            <h4><i class="fas fa-file-signature"></i> رابعاً: شرح الضمانات</h4>
                             <ul>
                                 <li><strong>العقد الإلكتروني:</strong> اتفاق إلكتروني ملزم بين الأطراف وفق الأنظمة المعمول بها.</li>
                                 <li><strong>السند لأمر:</strong> مستند نظامي يتعهد العميل بموجبه بسداد المبالغ المستحقة.</li>
+                                <li><strong>الشيكات البنكية:</strong> شيكات مقدمة من العميل كوسيلة ضمان إضافية.</li>
+                                <li><strong>الاستقطاع البنكي:</strong> استقطاع دوري من الحساب البنكي وفق الآلية المعتمدة.</li>
+                                <li><strong>تحويل الراتب:</strong> تحويل راتب العميل للحساب المحدد كوسيلة تعزيز للسداد.</li>
+                                <li><strong>الكفيل الغارم:</strong> شخص يلتزم بسداد الالتزامات في حال إخلال العميل بها.</li>
+                            </ul>
+                            <span class="warning-text"><i class="fas fa-info-circle"></i> تنبيه: وجود الضمانات لا يعني ضمان استرداد رأس المال أو الأرباح بشكل كامل.</span>
+
+                            <h4><i class="fas fa-file-invoice-dollar"></i> خامساً: الرسوم والضرائب</h4>
+                            <ul>
+                                <li><strong>رسوم المشاركة:</strong> قد تفرض رسوم اشتراك أو رسوم خدمات أو رسوم إدارة مخاطر بحسب نوع الفرصة.</li>
+                                <li><strong>الرسوم التشغيلية:</strong> يجوز للمنصة فرض رسوم تشغيلية أو إدارية أو تقنية مرتبطة بالخدمات المقدمة.</li>
+                                <li><strong>الرسوم الحكومية:</strong> تطبق كافة الرسوم الحكومية أو التنظيمية التي تفرضها الجهات المختصة.</li>
+                                <li><strong>الضرائب:</strong> تطبق ضريبة القيمة المضافة وأي ضرائب حالية أو مستقبلية متى كانت واجبة التطبيق نظاماً.</li>
+                                <li><strong>رسوم مزودي الخدمات:</strong> قد تطبق رسوم على (بوابات الدفع، التحويلات البنكية، المحافظ، خدمات التوثيق).</li>
                             </ul>
 
-                            <h4>خامساً: الرسوم والضرائب</h4>
+                            <h4><i class="fas fa-user-secret"></i> سادساً: سياسة الخصوصية وسرية البيانات</h4>
                             <ul>
-                                <li><strong>الرسوم التشغيلية:</strong> يجوز للمنصة فرض رسوم تشغيلية أو إدارية.</li>
-                                <li><strong>الضرائب:</strong> تطبق ضريبة القيمة المضافة وأي ضرائب متى كانت واجبة التطبيق نظاماً.</li>
+                                <li><strong>حماية البيانات:</strong> تلتزم المنصة بحماية البيانات والمعلومات وفق الأنظمة والتعليمات المعمول بها.</li>
+                                <li><strong>بيانات العملاء:</strong> لا يتم مشاركة أو إظهار (رقم الهوية، رقم الجوال، البريد، العنوان، بيانات الحسابات البنكية).</li>
+                                <li><strong>التواصل مع العملاء:</strong> يمنع منعاً باتاً طلب بيانات العميل أو التواصل معه بشكل مباشر أو مع جهة عمله.</li>
+                                <li><strong>المخالفات:</strong> في حال مخالفة هذه السياسة يحق للمنصة تعليق الحساب، إلغاء العضوية، واتخاذ الإجراءات النظامية.</li>
                             </ul>
 
-                            <h4>سادساً: سياسة الخصوصية وسرية البيانات</h4>
+                            <h4><i class="fas fa-clipboard-list"></i> سابعاً: حقوق والتزامات الشريك</h4>
+                            <h5>حقوق الشريك</h5>
                             <ul>
-                                <li><strong>بيانات العملاء:</strong> لا يتم مشاركة رقم الهوية، الجوال، البريد، العنوان أو أي بيانات تمكن من التعرف على العميل.</li>
-                                <li><strong>التواصل مع العملاء:</strong> يمنع منعاً باتاً طلب بيانات العميل أو التواصل معه بأي شكل.</li>
+                                <li>الاطلاع على بيانات الفرص ونوع المنتج وفئة المخاطر والضمانات.</li>
+                                <li>متابعة حالة مشاركاته واستلام حصته من الأرباح ورأس المال.</li>
                             </ul>
-
-                            <h4>سابعاً: حقوق والتزامات الشريك</h4>
+                            <h5>التزامات الشريك</h5>
                             <ul>
-                                <li><strong>التزامات الشريك:</strong> قراءة بيانات الفرصة، فهم المخاطر والرسوم، عدم التواصل مع العملاء.</li>
-                                <li><strong>إقرار المخاطر:</strong> يقر الشريك بأن المشاركة تتضمن مخاطر استثمارية، والأرباح ورأس المال غير مضمونة.</li>
+                                <li>قراءة بيانات الفرصة قبل المشاركة وفهم فئة المخاطر ومستوى المخاطرة.</li>
+                                <li>مراجعة الرسوم والضرائب والمحافظة على سرية البيانات وعدم التواصل مع العملاء.</li>
                             </ul>
+                            
+                            <span class="warning-text"><i class="fas fa-check-double"></i> إقرار نهائي: بالمشاركة في أي فرصة، يقر الشريك بأنه قرأ وفهم جميع الشروط والأحكام والسياسات وشرح المصطلحات وفئات المخاطر والضمانات والرسوم والضرائب، ويوافق عليها موافقة كاملة ونهائية وملزمة.</span>
                         </div>
                     </div>
 
-                    <!-- إقرار الموافقة وزر الانضمام (يظهران فقط للفرص المتاحة) -->
+                    <!-- إقرار الموافقة الإلزامي وزر الانتقال لطلب الانضمام -->
                     <div id="joinActionWrapper" style="display: none;">
                         <div class="agreement-box" id="detailsAgreementBox">
                             <input type="checkbox" id="detailsAgreeCheckbox" onchange="document.getElementById('btnRedirectToJoin').classList.toggle('disabled-link', !this.checked)">
-                            <label for="detailsAgreeCheckbox">بالمشاركة في هذه الفرصة، أقر بأنني قرأت وفهمت جميع الشروط والأحكام والسياسات وشرح المصطلحات وفئات المخاطر والضمانات والرسوم والضرائب الموجودة في الدليل الاسترشادي أعلاه، وأوافق عليها موافقة كاملة ونهائية وملزمة.</label>
+                            <label for="detailsAgreeCheckbox">أقر بأنني اطلعت على جميع تفاصيل الفرصة والدليل الاسترشادي والشروط والأحكام والسياسات، وأوافق عليها بشكل نهائي وملزم، وأعي تماماً المخاطر الاستثمارية المرتبطة بها.</label>
                         </div>
                         
                         <a id="btnRedirectToJoin" href="#" class="btn-action btn-primary disabled-link">
                             <i class="fas fa-handshake"></i> الانتقال إلى طلب الانضمام
                         </a>
                     </div>
+
                 </main>
             </div>
 
             <!-- التذييل -->
-            <footer class="page-footer">
+            <footer class="page-footer no-print">
                 © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
             </footer>
         </main>
     </div>
 
+    <!-- الملفات الأساسية -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
