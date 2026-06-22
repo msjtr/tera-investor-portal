@@ -1,9 +1,11 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات (SPA Smart Fix)
+ * investments.js - التحكم المركزي الشامل (النسخة النهائية)
  * ============================================================
- * 1. تمرير الـ ID عبر localStorage لحماية البيانات من ضياع الروابط.
- * 2. نظام مراقبة ذكي (Smart Observer) يعبئ البيانات فور ظهور الصفحة.
+ * - يغذي السوق (12 فرصة)
+ * - يعكس التفاصيل
+ * - يشغل الآلة الحاسبة للانضمام
+ * - يتوافق تماماً مع الـ SPA بدون أخطاء
  * ============================================================
  */
 
@@ -36,7 +38,7 @@
     window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
 
     // ============================================================
-    // 2. حماية الـ ID عبر التخزين المؤقت (الحل الجذري)
+    // 2. حماية الـ ID للـ SPA
     // ============================================================
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
@@ -57,38 +59,158 @@
     }
 
     // ============================================================
-    // 3. تهيئة الصفحات
+    // 3. تهيئة صفحة السوق (الفرص) - كانت مفقودة وأعدتها
     // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
-        if (!gridCont || gridCont.innerHTML.trim() !== '') return; // إذا كان مليئاً، نتجاوز
+        if (!gridCont || gridCont.innerHTML.trim() !== '') return;
+
+        window.currentViewStyle = 'list';
+
+        window.switchView = function(view) {
+            window.currentViewStyle = view;
+            const gridBtn = document.getElementById('btnGrid');
+            const listBtn = document.getElementById('btnList');
+            if(gridBtn) gridBtn.classList.toggle('active', view === 'grid');
+            if(listBtn) listBtn.classList.toggle('active', view === 'list');
+            window.applyFilters();
+        };
 
         window.renderOpportunities = function(data) {
             const listBody = document.getElementById('listTableBody');
+            const listCont = document.getElementById('listContainer');
+            const emptyState = document.getElementById('emptyState');
+            
             if(!gridCont || !listBody) return;
 
             gridCont.innerHTML = ''; listBody.innerHTML = '';
             
+            if(data.length === 0) {
+                if(emptyState) emptyState.style.display = 'block';
+                gridCont.style.display = 'none'; 
+                if(listCont) listCont.style.display = 'none'; 
+                return;
+            } else {
+                if(emptyState) emptyState.style.display = 'none';
+                if(window.currentViewStyle === 'grid') { 
+                    gridCont.style.display = 'grid'; 
+                    if(listCont) listCont.style.display = 'none'; 
+                } else { 
+                    gridCont.style.display = 'none'; 
+                    if(listCont) listCont.style.display = 'block'; 
+                }
+            }
+
             data.forEach(item => {
-                const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type);
-                gridCont.innerHTML += `<div class="opp-card"><div class="opp-header"><div><span class="type-badge ${typeBadge}">${item.type}</span><h3 style="margin-top:8px;">${item.company}</h3></div><span class="badge ${badge}">${item.status}</span></div><div class="opp-body"><div class="opp-metric"><span>قيمة السهم</span><strong>${window.formatMoneySafe(item.sharePrice)}</strong></div><div class="opp-metric"><span>رأس المال</span><strong>${window.formatMoneySafe(item.capital)}</strong></div></div><div class="opp-footer"><span>${item.id}</span><a href="completed-investments.html?id=${item.id}" class="btn-action btn-view">التفاصيل</a></div></div>`;
-                listBody.innerHTML += `<tr><td>${item.id}</td><td><span class="type-badge ${typeBadge}">${item.type}</span></td><td>${item.reqEntity}</td><td>${item.offeringPeriod}</td><td>${item.sharesCount}</td><td>${window.formatMoneySafe(item.sharePrice)}</td><td>${window.formatMoneySafe(item.capital)}</td><td>${item.fundedPercentage}%</td><td><span class="badge ${badge}">${item.status}</span></td><td><a href="completed-investments.html?id=${item.id}" class="btn-action btn-view">عرض</a></td></tr>`;
+                const badge = window.getBadgeClass(item.status);
+                const typeBadge = window.getTypeBadgeClass(item.type);
+                const detailUrl = `completed-investments.html?id=${item.id}`;
+                const formattedShare = window.formatMoneySafe(item.sharePrice);
+                const formattedCapital = window.formatMoneySafe(item.capital);
+
+                gridCont.innerHTML += `
+                    <div class="opp-card">
+                        <div class="opp-header">
+                            <div><span class="type-badge ${typeBadge}">${item.type}</span><h3 style="margin-top:8px;">${item.company}</h3></div>
+                            <span class="badge ${badge}">${item.status}</span>
+                        </div>
+                        <div class="progress-wrapper" style="padding: 10px 20px 0;">
+                            <div class="progress-text"><span>نسبة الاكتمال</span><span>${item.fundedPercentage}%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${item.fundedPercentage}%"></div></div>
+                        </div>
+                        <div class="opp-body">
+                            <div class="opp-metric"><span>قيمة السهم</span><strong>${formattedShare}</strong></div>
+                            <div class="opp-metric"><span>إجمالي رأس المال</span><strong style="color:var(--tera-teal);">${formattedCapital}</strong></div>
+                            <div class="opp-metric"><span>المدة</span><strong>${item.duration} شهر</strong></div>
+                            <div class="opp-metric"><span>عدد الأسهم</span><strong>${item.sharesCount}</strong></div>
+                        </div>
+                        <div class="opp-footer">
+                            <span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span>
+                            <a href="${detailUrl}" class="btn-action btn-view"><i class="fas fa-book-open"></i> التفاصيل</a>
+                        </div>
+                    </div>
+                `;
+
+                listBody.innerHTML += `
+                    <tr>
+                        <td style="font-family: monospace; font-weight: 700; color:var(--tera-navy);">${item.id}</td>
+                        <td><span class="type-badge ${typeBadge}">${item.type}</span></td>
+                        <td style="font-weight:700;">${item.reqEntity}</td>
+                        <td style="font-family: monospace;">${item.offeringPeriod}</td>
+                        <td style="font-weight: 800; color:var(--tera-navy);">${item.sharesCount}</td>
+                        <td style="font-family:monospace;">${formattedShare}</td>
+                        <td style="font-family:monospace; color:var(--tera-teal); font-weight:bold;">${formattedCapital}</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-weight:700; font-size:12px;">${item.fundedPercentage}%</span>
+                                <div class="progress-bar-bg" style="width:60px; height:6px;"><div class="progress-bar-fill" style="width:${item.fundedPercentage}%"></div></div>
+                            </div>
+                        </td>
+                        <td><span class="badge ${badge}">${item.status}</span></td>
+                        <td><a href="${detailUrl}" class="btn-action btn-view">عرض</a></td>
+                    </tr>
+                `;
             });
         };
 
-        window.renderOpportunities(window.mockData);
+        window.applyFilters = function() {
+            const typeFilter = document.getElementById('typeFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const searchInput = document.getElementById('searchInput');
+
+            let typeVal = typeFilter ? typeFilter.value : 'all';
+            let statusVal = statusFilter ? statusFilter.value : 'all';
+            let searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let filtered = window.mockData.filter(d => {
+                let mType = typeVal === 'all' || d.type === typeVal;
+                let mStatus = false;
+                if (statusVal === 'all') mStatus = true;
+                else if (statusVal === 'النشطة_قائم') mStatus = (d.status === 'النشطة' || d.status === 'قائم');
+                else mStatus = (d.status === statusVal);
+                let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
+                return mType && mStatus && mSearch;
+            });
+
+            window.renderOpportunities(filtered);
+            
+            // تحديث الإحصائيات العلوية
+            let active = 0, upcoming = 0, completed = 0;
+            filtered.forEach(d => {
+                if(d.status === 'النشطة' || d.status === 'قائم') active++;
+                if(d.status === 'القادمة') upcoming++;
+                if(d.status === 'المكتملة') completed++;
+            });
+            if(document.getElementById('sumActive')) document.getElementById('sumActive').innerText = active;
+            if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
+            if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
+        };
+
+        // تشغيل الفلاتر لأول مرة
+        window.applyFilters();
+        
+        // ربط الأحداث بمربعات الفلترة
+        const typeF = document.getElementById('typeFilter');
+        const statusF = document.getElementById('statusFilter');
+        const searchI = document.getElementById('searchInput');
+        if(typeF) typeF.addEventListener('change', window.applyFilters);
+        if(statusF) statusF.addEventListener('change', window.applyFilters);
+        if(searchI) searchI.addEventListener('input', window.applyFilters);
     }
 
+    // ============================================================
+    // 4. تهيئة صفحة التفاصيل (completed-investments.html)
+    // ============================================================
     function initInvestmentDetails() {
         let idEl = document.getElementById('mDetOppId');
-        if (!idEl || idEl.innerText !== '-') return; // إذا كان معبأً مسبقاً لا نفعل شيئاً
+        if (!idEl || idEl.innerText !== '-') return;
 
         let oppId = getSafeOppId();
         let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
-        if (!opp) opp = window.mockData[0]; // فرصة احتياطية
+        if (!opp) opp = window.mockData[0];
 
         document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
-        document.getElementById('mDetOppId').innerText = opp.id; // بمجرد تعبئته يتوقف الـ Observer عن التكرار
+        document.getElementById('mDetOppId').innerText = opp.id;
         document.getElementById('mDetOppCompany').innerText = opp.company;
         document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
         document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
@@ -120,6 +242,9 @@
         }
     }
 
+    // ============================================================
+    // 5. تهيئة صفحة الانضمام (cancelled-investments.html)
+    // ============================================================
     function initCancelledInvestments() {
         let nameEl = document.getElementById('invOppName');
         if (!nameEl || nameEl.innerText !== 'جاري تحميل البيانات...') return;
@@ -131,7 +256,7 @@
         window.currentActiveOpp = opp;
         window.availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
         
-        nameEl.innerText = opp.company; // إيقاف الـ Observer
+        nameEl.innerText = opp.company;
         document.getElementById('invOppId').innerText = opp.id;
         document.getElementById('invSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
         document.getElementById('invDuration').innerText = opp.duration + " أشهر";
@@ -150,7 +275,7 @@
         }
     }
 
-    // دوال الحسابات لصفحة الانضمام
+    // دوال الحسابات (تسجل في window لتعمل من الـ HTML مباشرة)
     window.executeCalculations = function() {
         let opp = window.currentActiveOpp;
         if(!opp) return;
@@ -165,6 +290,8 @@
         document.getElementById('sumCapital').innerText = window.formatMoneySafe(capital) + " ر.س";
         document.getElementById('sumProdTax').innerText = window.formatMoneySafe(vat) + " ر.س";
         document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(totalToPay) + " ر.س" : "0.00 ر.س";
+        
+        // يمكننا إضافة منطق تحديث جدول الرسوم هنا إذا أردت لاحقاً
     };
 
     window.changeShares = function(delta) {
@@ -176,10 +303,13 @@
         }
     };
 
-    window.processPayment = function() { alert("تم الدفع والانضمام بنجاح!"); window.location.href = "../dashboard/index.html"; };
+    window.processPayment = function() { 
+        alert("تم الدفع والانضمام بنجاح!"); 
+        window.location.href = "../dashboard/index.html"; 
+    };
 
     // ============================================================
-    // 4. المراقب الذكي (Smart Observer)
+    // 6. المشغل الذكي
     // ============================================================
     window.initInvestments = function() {
         initOpportunities();
@@ -187,12 +317,11 @@
         initCancelledInvestments();
     };
 
-    // هذا المراقب يراقب الصفحة، فإذا رأى خانة بيانات فارغة، يستدعي دالة التعبئة فوراً
+    // المراقب لمشكلة الـ SPA
     new MutationObserver(() => {
         window.initInvestments();
     }).observe(document.body, { childList: true, subtree: true });
 
-    // التشغيل الأول
     window.initInvestments();
 
 })();
