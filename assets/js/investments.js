@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات
+ * investments.js - ملف التحكم المركزي للاستثمارات (معالجة بنكية)
  * ============================================================
  */
 
@@ -10,6 +10,9 @@
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
+    // ============================================================
+    // 1. قاعدة البيانات (12 فرصة استثمارية مطابقة تماماً)
+    // ============================================================
     window.mockData = [
         { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
         { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -29,6 +32,9 @@
     window.getBadgeClass = function(s) { return ['قائم', 'النشطة'].includes(s) ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); };
     window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
 
+    // ============================================================
+    // 2. حماية الـ ID عبر التخزين المؤقت
+    // ============================================================
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.includes('id=')) {
@@ -47,6 +53,9 @@
         return id ? id.trim().toLowerCase() : null;
     }
 
+    // ============================================================
+    // 3. تهيئة صفحة السوق
+    // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
         if (!gridCont || gridCont.innerHTML.trim() !== '') return;
@@ -112,6 +121,9 @@
         window.applyFilters();
     }
 
+    // ============================================================
+    // 4. تهيئة صفحة التفاصيل
+    // ============================================================
     function initInvestmentDetails() {
         let idEl = document.getElementById('mDetOppId');
         if (!idEl || idEl.innerText !== '-') return;
@@ -153,6 +165,9 @@
         }
     }
 
+    // ============================================================
+    // 5. تهيئة صفحة الانضمام والآلة الحاسبة البنكية الدقيقة
+    // ============================================================
     function initCancelledInvestments() {
         let nameEl = document.getElementById('invOppName');
         if (!nameEl || nameEl.innerText !== 'جاري تحميل البيانات...') return;
@@ -201,7 +216,7 @@
         document.getElementById('extendedDetails').style.display = 'block';
 
         let duration = parseInt(opp.duration) || 6;
-        let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); // رأس مال الشريك
+        let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); 
         let profitPerShare = (parseFloat(opp.expectedProfit) || 0) / (parseInt(opp.sharesCount) || 1);
         let totalProfit = shares * profitPerShare;
         
@@ -209,13 +224,14 @@
         let baseFeeAdmin = 20, baseFeeTransfer = 25, baseFeeCol = 100, pkgFee = window.selectedPackageFixedFee || 0;
         let totalBaseFees = baseFeeAdmin + baseFeeTransfer + baseFeeCol + pkgFee;
         let totalFeesVat = totalBaseFees * 0.15;
-        let oppCostsWithVat = totalBaseFees + totalFeesVat; // إجمالي تكاليف الفرصة
+        let oppCostsWithVat = totalBaseFees + totalFeesVat;
 
-        let adminMonthly = (baseFeeAdmin * 1.15) / duration;
-        let transMonthly = (baseFeeTransfer * 1.15) / duration;
-        let colMonthly = (baseFeeCol * 1.15) / duration;
-        let pkgMonthly = (pkgFee * 1.15) / duration;
-        let totalMonthlyFinal = oppCostsWithVat / duration;
+        // جبر محاسبي دقيق للرسوم
+        let adminMonthly = Math.floor((baseFeeAdmin * 1.15 / duration) * 100) / 100;
+        let transMonthly = Math.floor((baseFeeTransfer * 1.15 / duration) * 100) / 100;
+        let colMonthly = Math.floor((baseFeeCol * 1.15 / duration) * 100) / 100;
+        let pkgMonthly = Math.floor((pkgFee * 1.15 / duration) * 100) / 100;
+        let totalMonthlyFinal = Math.floor((oppCostsWithVat / duration) * 100) / 100;
 
         document.getElementById('servicesTableBody').innerHTML = `
             <tr><td class="text-start">الرسوم الإدارية</td><td>${window.formatMoneySafe(baseFeeAdmin)}</td><td>${window.formatMoneySafe(baseFeeAdmin*0.15)}</td><td>${window.formatMoneySafe(baseFeeAdmin*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(adminMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>
@@ -229,6 +245,7 @@
         document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
         document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
 
+        // بناء وتوزيع الدفعات (المعادلة المحاسبية الدقيقة)
         let isExtended = opp.type === 'شراكة ممتدة';
         let distTitle = document.getElementById('distTableTitleText');
         if(distTitle) distTitle.innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
@@ -238,8 +255,14 @@
         theadHtml += `<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
         document.getElementById('distributionTableHeader').innerHTML = theadHtml;
 
-        let monthlyCapital = partnerCapital / duration;
-        let monthlyProfit = totalProfit / duration;
+        // لتلافي فوارق الهللات، سنقوم بحساب الدفعة الأساسية بدقة، ورمي المتبقي في الشهر الأخير
+        let baseCap = Math.floor((partnerCapital / duration) * 100) / 100;
+        let baseProf = Math.floor((totalProfit / duration) * 100) / 100;
+        
+        let capRem = partnerCapital;
+        let profRem = totalProfit;
+        let feeRem = oppCostsWithVat;
+
         let distBody = '', tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
         let startDate = new Date();
 
@@ -247,19 +270,31 @@
             let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
             let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
             
+            let isLastMonth = (i === duration);
+            let mCap = isLastMonth ? capRem : baseCap;
+            let mProf = isLastMonth ? profRem : baseProf;
+            let mFee = isLastMonth ? feeRem : totalMonthlyFinal;
+            
+            capRem -= mCap;
+            profRem -= mProf;
+            feeRem -= mFee;
+            
             if(isExtended) {
-                let currentPayment = monthlyProfit;
-                let currentRemaining = currentPayment - totalMonthlyFinal;
-                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(currentPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">توزيع أرباح</td></tr>`;
-                tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
+                // شراكة ممتدة (رأس المال يُرد في النهاية منفصلاً، لا يدرج هنا)
+                let currentPayment = mProf;
+                let currentRemaining = currentPayment - mFee;
+                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(mProf)}</td><td>${window.formatMoneySafe(currentPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(mFee)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(currentRemaining)}</td><td style="font-size:11px; color:#64748b;">توزيع أرباح</td></tr>`;
+                tProf += mProf; tPay += currentPayment; tFee += mFee; tRem += currentRemaining;
             } else {
-                let monthlyTotalPayment = monthlyCapital + monthlyProfit;
-                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
-                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(monthlyCapital)}</td><td>${window.formatMoneySafe(monthlyProfit)}</td><td>${window.formatMoneySafe(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(monthlyRemaining)}</td><td>مجدولة</td></tr>`;
-                tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
+                // فرصة شراكة (رأس المال + الربح معاً)
+                let monthlyTotalPayment = mCap + mProf;
+                let monthlyRemaining = monthlyTotalPayment - mFee;
+                distBody += `<tr><td>${dateStr}</td><td>${window.formatMoneySafe(mCap)}</td><td>${window.formatMoneySafe(mProf)}</td><td>${window.formatMoneySafe(monthlyTotalPayment)}</td><td style="color:#ef4444;">${window.formatMoneySafe(mFee)}</td><td style="color:var(--tera-teal); font-weight:bold;">${window.formatMoneySafe(monthlyRemaining)}</td><td>مجدولة</td></tr>`;
+                tCap += mCap; tProf += mProf; tPay += monthlyTotalPayment; tFee += mFee; tRem += monthlyRemaining;
             }
         }
         
+        // طباعة صفوف الإجمالي
         distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>${!isExtended ? `<td>${window.formatMoneySafe(tCap)}</td>` : ''}<td>${window.formatMoneySafe(tProf)}</td><td>${window.formatMoneySafe(tPay)}</td><td style="color:#ef4444;">${window.formatMoneySafe(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(tRem)}</td><td>-</td></tr>`;
         
         if(isExtended && partnerCapital > 0) {
@@ -271,16 +306,16 @@
 
         document.getElementById('distributionTableBody').innerHTML = distBody;
 
-        // 🌟 تحديث "ملخص الفرصة" بالأقسام الأربعة التي طلبتها
-        let netProfitFinal = totalProfit - oppCostsWithVat; // الأرباح الصافية
-        let totalReturnFinal = partnerCapital + netProfitFinal; // الفرق (العائد النهائي)
+        // ملخص الفرصة النهائي (الأقسام الأربعة)
+        let netProfitFinal = totalProfit - oppCostsWithVat;
+        let totalReturnFinal = partnerCapital + netProfitFinal;
         
         document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
         document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
         document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
         document.getElementById('finalDifference').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
 
-        // تحديث ملخص الدفع لطلب الانضمام (حذف الضرائب من الدفع الآن)
+        // ملخص الدفع الفوري (رأس المال فقط)
         document.getElementById('sumShares').innerText = shares;
         document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
         document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
