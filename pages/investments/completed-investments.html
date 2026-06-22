@@ -82,7 +82,8 @@
 
     <header class="top-header no-print">
         <div class="header-right">
-            <a href="opportunities.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-arrow-right"></i> العودة للسوق</a>
+            <a href="investment-details.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-arrow-right"></i> العودة للسوق</a>
+            <img src="../../images/logo.svg" alt="Tera Logo" style="height: 30px; margin-right: 15px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
             <h1 id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h1>
         </div>
         <div class="header-left">
@@ -176,7 +177,6 @@
                         <span>الأسهم المتاحة:</span>
                         <strong id="mDetAvailableShares">0</strong>
                     </div>
-                    <!-- الزر يوجه المستخدم لصفحة الانضمام مع إرسال رقم الفرصة -->
                     <a id="btnRedirectToJoin" href="#" class="btn-action btn-primary" style="display: none;">
                         <i class="fas fa-handshake"></i> طلب الانضمام للفرصة
                     </a>
@@ -186,10 +186,8 @@
         </main>
     </div>
 
-    <!-- 1. تم عزل السكريبت الخاص بنا ليعمل بشكل مستقل وأولاً (IIFE Pattern) لمنع التخريب من الملفات الخارجية -->
     <script>
         (function() {
-            // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
             const safeDatabase = [
                 { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
                 { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -212,19 +210,17 @@
                 return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
             }
 
-            // هذا الجزء هو الشرارة التي كانت مفقودة، وتخبر المتصفح أن ينفذ الكود!
             document.addEventListener('DOMContentLoaded', () => {
                 const urlParams = new URLSearchParams(window.location.search);
-                let oppId = urlParams.get('id');
-
-                if (oppId) oppId = decodeURIComponent(oppId).trim().toLowerCase();
+                // توحيد الحروف إلى صغيرة عند البحث
+                let rawId = urlParams.get('id');
+                let oppId = rawId ? rawId.trim().toLowerCase() : null;
 
                 let opp = null;
                 if (oppId) {
                     opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
                 }
 
-                // الحماية القوية: إذا لم يجد الفرصة (أو لم يكن هناك ID)، اعرض أول فرصة متاحة إجبارياً بدلاً من التوقف
                 if (!opp) {
                     console.warn("لم يتم العثور على الفرصة المطلوبة، سيتم عرض فرصة افتراضية للمعاينة.");
                     opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
@@ -299,7 +295,7 @@
                     miniSharesBox.style.display = 'inline-flex';
                     document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                     
-                    // الزر سيوجه المستخدم لصفحة cancelled-investments.html بناءً على طلبك
+                    // توجيه لصفحة الانضمام معرّف بشكل دقيق
                     btnJoin.href = "cancelled-investments.html?id=" + opp.id;
 
                     warnMsg.style.display = 'none';
@@ -312,8 +308,6 @@
             }
         })();
     </script>
-    
-    <!-- تم إزالة ملف investments.js نهائياً من هذه الصفحة لمنع أي أعطال أو مسح للبيانات -->
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/main.js"></script>
