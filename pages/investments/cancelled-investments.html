@@ -111,7 +111,6 @@
     </header>
 
     <div class="join-container">
-        <!-- زر العودة لصفحة التفاصيل -->
         <a href="javascript:history.back()" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
@@ -241,7 +240,11 @@
         </div>
     </div>
 
-    <!-- وضعنا السكريبت الأساسي لتجنب تعارض الملفات الخارجية -->
+    <script src="../../assets/js/investments.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
+
     <script>
         // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
         const unifiedDatabase = [
@@ -262,6 +265,7 @@
             { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
+        // تعيين المصفوفة كبيانات أساسية للمشروع لتغطي على أي بيانات وهمية
         window.appData = unifiedDatabase;
 
         function formatMoneyLocal(num) { 
@@ -276,24 +280,25 @@
         let selectedPackageName = 'الباقة الأساسية';
         let selectedPackageFixedFee = 0;
 
-        // استخدمنا دالة لضمان التحميل حتى لو فشلت الملفات الخارجية
-        window.addEventListener('load', () => {
+        // 3. تم استبدال (window.load) بـ (DOMContentLoaded) لضمان السرعة وعدم التعليق في حال نقص الصور
+        document.addEventListener('DOMContentLoaded', () => {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 let oppId = urlParams.get('id');
 
-                if (oppId) oppId = decodeURIComponent(oppId).trim();
+                // تنظيف المتغيرات من الفراغات وتحويلها لحروف صغيرة لتجنب أخطاء المطابقة
+                if (oppId) oppId = decodeURIComponent(oppId).trim().toLowerCase();
 
                 let opp = null;
                 
-                // البحث عن الفرصة المطلوبة بالـ ID
+                // البحث الدقيق في قاعدة البيانات
                 if (oppId) {
-                    opp = window.appData.find(d => String(d.id).trim() === String(oppId));
+                    opp = window.appData.find(d => String(d.id).trim().toLowerCase() === oppId);
                 }
 
-                // الحماية القوية: إذا لم يجد الفرصة (أو لم يكن هناك ID)، اعرض أول فرصة نشطة إجبارياً بدلاً من التوقف
+                // الحماية: إذا لم يتم العثور، اعرض أول فرصة نشطة بدلاً من الشاشة الفارغة
                 if (!opp) {
-                    console.warn("لم يتم العثور على الفرصة المطلوبة، سيتم عرض فرصة افتراضية للمعاينة.");
+                    console.warn("لم يتم العثور على الفرصة بالمعرّف الممرر. يتم عرض المعاينة الافتراضية.");
                     opp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
                     if (!opp && window.appData.length > 0) opp = window.appData[0];
                 }
@@ -336,12 +341,12 @@
             document.getElementById('invDuration').innerText = durationNum + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
-            // تحديد تلقائي لسهم واحد لضمان ظهور البيانات والمشتريات مباشرة
+            // 4. الانعكاس الفوري: عرض البيانات تلقائياً بمجرد الدخول
             if (availableSharesToBuy > 0) {
                 document.getElementById('shareInput').value = 1;
                 triggerCalculations();
             } else {
-                // إذا لم تكن هناك أسهم، نعرض الحسابات لسهم واحد كمعاينة ثم نعطل الأزرار
+                // إذا كانت الفرصة مكتملة يتم تفعيل الجداول كشكل توضيحي وتعطيل الأزرار
                 document.getElementById('shareInput').value = 1;
                 triggerCalculations();
                 document.getElementById('shareInput').value = 0;
@@ -501,10 +506,5 @@
         
         function processPayment() { alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); window.location.href = "../dashboard/index.html"; }
     </script>
-    
-    <script src="../../assets/js/investments.js"></script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
