@@ -106,12 +106,12 @@
             <h1>طلب الانضمام لفرصة استثمارية</h1>
         </div>
         <div class="header-left">
-            <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px; background:#f1f5f9; border: 1px solid #cbd5e1;"><i class="fas fa-home"></i> لوحة التحكم</a>
+            <a href="../dashboard/index.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy);"><i class="fas fa-home"></i> لوحة التحكم</a>
         </div>
     </header>
 
     <div class="join-container">
-        <a href="javascript:history.back()" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
+        <a href="completed-investments.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
             <div class="opp-summary">
@@ -245,9 +245,7 @@
     <script src="../../assets/js/main.js"></script>
 
     <script>
-        // استخدام setTimeout لضمان عمل الكود الخاص بنا كآخر خطوة في الصفحة
         setTimeout(function() {
-            // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
             const safeDatabase = [
                 { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
                 { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -278,16 +276,15 @@
 
             try {
                 const urlParams = new URLSearchParams(window.location.search);
+                // توحيد الحروف للـ ID
                 let rawId = urlParams.get('id');
-                let oppId = rawId ? rawId.trim() : null;
+                let oppId = rawId ? rawId.trim().toLowerCase() : null;
 
                 let opp = null;
                 if (oppId) {
-                    // مقارنة خفيفة لتفادي أخطاء التشفير
-                    opp = safeDatabase.find(d => String(d.id).trim() === oppId || String(d.id).includes(oppId));
+                    opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
                 }
 
-                // الحماية: عرض أول فرصة متاحة إجبارياً في حال عدم وجود ID سليم لكي لا تكون الصفحة فارغة
                 if (!opp) {
                     opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
                     if (!opp) opp = safeDatabase[0];
@@ -296,9 +293,8 @@
                 if (opp) {
                     currentActiveOpp = opp;
                     
-                    // تحديث زر العودة
                     let backBtn = document.getElementById('btnBackToDetails');
-                    if(backBtn) backBtn.href = `investment-details.html?id=${opp.id}`;
+                    if(backBtn) backBtn.href = `completed-investments.html?id=${opp.id}`;
                     
                     initSafeForm();
                 } else {
@@ -333,7 +329,6 @@
                 document.getElementById('invDuration').innerText = durationNum + " أشهر";
                 document.getElementById('maxShares').innerText = availableSharesToBuy;
                 
-                // تحديد تلقائي لسهم واحد لضمان ظهور البيانات والمشتريات مباشرة
                 if (availableSharesToBuy > 0) {
                     document.getElementById('shareInput').value = 1;
                     executeCalculations();
@@ -498,7 +493,7 @@
                 window.location.href = "../dashboard/index.html"; 
             }
             
-        }, 100); // تأخير بسيط 100 جزء من الثانية لضمان ألا يتم مسح البيانات من قبل أي ملف خارجي
+        }, 100);
     </script>
 </body>
 </html>
