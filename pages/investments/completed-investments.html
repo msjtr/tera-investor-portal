@@ -82,6 +82,7 @@
 
     <header class="top-header no-print">
         <div class="header-right">
+            <!-- التوجيه للسوق -->
             <a href="investment-details.html" class="btn-action btn-secondary" style="font-size: 13px; padding: 8px 15px;"><i class="fas fa-arrow-right"></i> العودة للسوق</a>
             <img src="../../images/logo.svg" alt="Tera Logo" style="height: 30px; margin-right: 15px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
             <h1 id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h1>
@@ -186,130 +187,9 @@
         </main>
     </div>
 
-    <!-- جلب ملفات السكريبت الخارجية أولاً لتنهي عملها -->
+    <!-- الملفات الخارجية فقط، ولا يوجد أي كود بيانات مدمج هنا -->
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/main.js"></script>
-
-    <!-- وضعنا سكريبت البيانات هنا واستخدمنا setTimeout لضمان عمله في آخر خطوة تماماً وعدم مسحه من قبل main.js -->
-    <script>
-        setTimeout(function() {
-            const safeDatabase = [
-                { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
-                { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
-                { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
-                { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
-                { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
-                { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
-                
-                { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
-                { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
-                { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
-                { id: "FTR-2026-06-20-010", type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
-                { id: "FTR-2026-06-20-011", type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
-                { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
-            ];
-
-            function formatMoneySafe(num) { 
-                let n = parseFloat(num);
-                if(isNaN(n)) return "0.00";
-                return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            let rawId = urlParams.get('id');
-            let oppId = rawId ? rawId.trim().toLowerCase() : null;
-
-            let opp = null;
-            if (oppId) {
-                opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
-            }
-
-            if (!opp) {
-                console.warn("لم يتم العثور على الفرصة المطلوبة، سيتم عرض فرصة افتراضية للمعاينة.");
-                opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
-                if (!opp && safeDatabase.length > 0) opp = safeDatabase[0];
-            }
-
-            if (opp) {
-                renderSafeDetails(opp);
-            } else {
-                document.getElementById('pageMainTitle').innerText = "خطأ: قاعدة البيانات فارغة";
-            }
-
-            function renderSafeDetails(opp) {
-                document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + (opp.company || '');
-
-                let sharesCountNum = parseInt(opp.sharesCount) || 0;
-                let fundedPercNum = parseFloat(opp.fundedPercentage) || 0;
-                let capitalNum = parseFloat(opp.capital) || 0;
-                let sharePriceNum = parseFloat(opp.sharePrice) || 0;
-
-                let availableSharesToBuy = Math.floor(sharesCountNum * (1 - (fundedPercNum / 100)));
-
-                const alertsCont = document.getElementById('mDetAlertsContainer');
-                alertsCont.innerHTML = ''; let hasAlerts = false;
-
-                if (opp.status === 'القادمة' && opp.daysLeftToStart !== undefined && parseInt(opp.daysLeftToStart) <= 5) {
-                    alertsCont.innerHTML += `<div class="alert-banner alert-info"><i class="fas fa-bell" style="font-size:18px;"></i><span>تنبيه: الفرصة متبقي لها ${opp.daysLeftToStart} أيام وتكون متاحة للاستثمار.</span></div>`;
-                    hasAlerts = true;
-                }
-                if (opp.status === 'قائم' || opp.status === 'النشطة') {
-                    if (fundedPercNum >= 80 && fundedPercNum < 100) {
-                        alertsCont.innerHTML += `<div class="alert-banner alert-success"><i class="fas fa-chart-line" style="font-size:18px;"></i><span>تنبيه: الفرصة قاربت على الاكتمال! (نسبة الإنجاز الحالية: ${fundedPercNum}%).</span></div>`;
-                        hasAlerts = true;
-                    }
-                }
-                alertsCont.style.display = hasAlerts ? 'block' : 'none';
-
-                document.getElementById('mDetProgressText').innerText = fundedPercNum + '%';
-                document.getElementById('mDetProgressBar').style.width = fundedPercNum + '%';
-                document.getElementById('mDetOppId').innerText = opp.id;
-                document.getElementById('mDetOppCompany').innerText = opp.company;
-                
-                let typeBadgeEl = document.getElementById('mDetOppType');
-                typeBadgeEl.innerText = opp.type;
-                typeBadgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
-
-                document.getElementById('mDetOppStatus').innerText = opp.status;
-                document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
-                document.getElementById('mDetSharesCount').innerText = sharesCountNum;
-                document.getElementById('mDetSharePrice').innerText = formatMoneySafe(sharePriceNum) + ' ر.س';
-                document.getElementById('mDetTotalCapital').innerText = formatMoneySafe(capitalNum) + ' ر.س';
-                document.getElementById('mDetRatio').innerText = (opp.roi || 0) + "%";
-
-                document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
-                let qnty = sharesCountNum * 5; 
-                document.getElementById('mDetProductQty').innerText = qnty;
-                
-                document.getElementById('mDetProdVal').innerText = formatMoneySafe(capitalNum) + ' ر.س';
-                document.getElementById('mDetProdPrice').innerText = formatMoneySafe(sharePriceNum / 5) + ' ر.س'; 
-                
-                let tax = capitalNum * 0.15;
-                document.getElementById('mDetTax').innerText = formatMoneySafe(tax) + ' ر.س';
-                document.getElementById('mDetTotalProd').innerText = formatMoneySafe(capitalNum + tax) + ' ر.س';
-
-                const btnJoin = document.getElementById('btnRedirectToJoin');
-                const warnMsg = document.getElementById('investWarningMsg');
-                const miniSharesBox = document.getElementById('miniSharesBox');
-                
-                if ((opp.status === 'قائم' || opp.status === 'النشطة') && availableSharesToBuy > 0) {
-                    btnJoin.style.display = 'inline-flex';
-                    miniSharesBox.style.display = 'inline-flex';
-                    document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
-                    
-                    // توجيه لصفحة الانضمام
-                    btnJoin.href = "cancelled-investments.html?id=" + opp.id;
-
-                    warnMsg.style.display = 'none';
-                } else {
-                    btnJoin.style.display = 'none';
-                    miniSharesBox.style.display = 'none';
-                    warnMsg.innerText = availableSharesToBuy <= 0 ? "اكتملت جميع أسهم هذه الفرصة" : "الفرصة غير متاحة للانضمام حالياً";
-                    warnMsg.style.display = 'block';
-                }
-            }
-        }, 200); // تأخير التنفيذ 200 جزء من الثانية لكي نجبره على العمل بعد main.js
-    </script>
 </body>
 </html>
