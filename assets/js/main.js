@@ -6,7 +6,8 @@
  * * تم التحديث:
  * 1. إزالة كود القائمة الجانبية (Sidebar) لمنع التعارض مع core.js.
  * 2. إزالة كود التوجيه (Routing) لمنع التعارض مع app.js.
- * 3. الإبقاء على دالة Toast وتحديث الرابط النشط وزر العودة فقط.
+ * 3. الإبقاء على دالة Toast وتحديث الرابط النشط وزر العودة.
+ * 4. تحسينات الأداء ومنع السلوك الافتراضي (PreventDefault) للأزرار.
  * ============================================================
  */
 
@@ -80,14 +81,14 @@
     // 3. تمييز الرابط النشط في القائمة
     // ============================================================
     function setActiveNavItem() {
-        const currentPath = window.location.pathname;
+        const currentPath = window.location.pathname.toLowerCase();
         const navLinks = document.querySelectorAll('.nav-list a[href]');
 
         document.querySelectorAll('.nav-item.active').forEach(function(el) { el.classList.remove('active'); });
         document.querySelectorAll('.submenu li.active').forEach(function(el) { el.classList.remove('active'); });
 
         navLinks.forEach(function(link) {
-            const href = link.getAttribute('href');
+            const href = link.getAttribute('href').toLowerCase();
             if (!href || href === '#') return;
 
             const isMatch = href === currentPath || (href !== '/' && currentPath.startsWith(href) && href.length > 1);
@@ -132,7 +133,7 @@
     }
 
     function updateDashboardStyling() {
-        const currentPath = window.location.pathname;
+        const currentPath = window.location.pathname.toLowerCase();
         const isDashboard = currentPath.includes('/dashboard/') || currentPath.endsWith('dashboard/index.html') || currentPath === '/pages/dashboard/index.html' || currentPath === '/dashboard' || currentPath === '/';
 
         if (isDashboard) {
@@ -162,6 +163,7 @@
             // زر الإشعارات
             const notifIcon = e.target.closest('.notifications');
             if (notifIcon) {
+                e.preventDefault(); // منع قفز الصفحة إذا كان الرابط #
                 showToast('📬 لديك إشعارات جديدة', 'info');
             }
 
