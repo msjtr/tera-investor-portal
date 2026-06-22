@@ -204,10 +204,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="../../assets/js/investments.js"></script>
     
     <script>
-        // === قاعدة البيانات الثابتة والموحدة (بدون دوال توليد ديناميكية لتجنب تغير الـ IDs) ===
+        // === قاعدة البيانات الثابتة والموحدة بـ 12 حالة ===
         const unifiedDatabase = [
             // نوع: شراكة ممتدة (6 حالات)
             { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
@@ -226,10 +225,8 @@
             { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        // تعيين البيانات الموحدة
         window.appData = unifiedDatabase;
 
-        // دوال التنسيق المساعدة
         function formatMoneyLocal(num) { return parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         
         function getBadgeClassLocal(status) {
@@ -276,13 +273,12 @@
                 const badge = getBadgeClassLocal(item.status);
                 const typeBadge = getTypeBadgeClassLocal(item.type);
                 
-                // الرابط المحدث الذي يرسل رقم الفرصة (ID) في الاستعلام (?id=...)
-                const detailUrl = `https://tera-investor-portal.onrender.com/pages/investments/completed-investments?id=${item.id}`;
+                // ===== تم تغيير الرابط هنا ليصبح investment-details.html بناءً على طلبك =====
+                const detailUrl = `investment-details.html?id=${item.id}`;
                 
                 const formattedShare = formatMoneyLocal(item.sharePrice);
                 const formattedCapital = formatMoneyLocal(item.capital);
 
-                // بطاقة الشبكة
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
@@ -306,7 +302,6 @@
                     </div>
                 `;
 
-                // صف القائمة
                 listBody.innerHTML += `
                     <tr>
                         <td style="font-family: monospace; font-weight: 700; color:var(--tera-navy);">${item.id}</td>
@@ -434,8 +429,5 @@
             document.getElementById('searchInput').addEventListener('input', window.applyFilters);
         });
     </script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
