@@ -1,9 +1,9 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات (نسخة الحماية القصوى)
+ * investments.js - ملف التحكم المركزي للاستثمارات (تحديث العرض الشبكي الشامل)
  * ============================================================
- * تم حل مشكلة التجميد نهائياً باستخدام قفل برمجائي (isUpdating)
- * لمنع الـ MutationObserver من الدخول في حلقة تكرار لا نهائية.
+ * تم إعادة هيكلة العرض الشبكي ليعرض كافة المؤشرات والبيانات 
+ * بالتطابق الكامل مع خانات جدول قائمة الاستثمارات.
  * ============================================================
  */
 
@@ -13,11 +13,11 @@
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
-    // قفل الحماية لمنع التكرار اللانهائي
+    // قفل حماية الـ DOM من التكرار والتعليق
     let isUpdating = false;
 
     // ============================================================
-    // 1. قاعدة البيانات المركزية الموحدة (12 تجربة كاملة)
+    // 1. قاعدة البيانات المركزية (12 تجربة كاملة)
     // ============================================================
     window.mockData = [
         // 6 فرص: شراكة ممتدة
@@ -41,7 +41,6 @@
     window.getBadgeClass = function(s) { return s === 'النشطة' ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); };
     window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
 
-    // الاحتفاظ بمعرف الفرصة للـ SPA
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.includes('id=')) {
@@ -61,7 +60,7 @@
     }
 
     // ============================================================
-    // 2. تهيئة صفحة السوق (opportunities.html)
+    // 2. دالة تهيئة صفحة السوق (opportunities.html) العرض الشبكي + القائمة
     // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
@@ -96,6 +95,7 @@
             data.forEach(item => {
                 const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type), detailUrl = `completed-investments.html?id=${item.id}`;
                 
+                // 🌟 العرض الشبكي الشامل لجميع المؤشرات المطلوبة بالتطابق التام مع الجدول
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
@@ -108,13 +108,13 @@
                         </div>
                         <div class="opp-body">
                             <div class="opp-metric"><span>الجهة الطالبة</span><strong>${item.reqEntity}</strong></div>
-                            <div class="opp-metric"><span>فترة الطرح</span><strong style="font-size:11px;">${item.offeringPeriod}</strong></div>
+                            <div class="opp-metric"><span>فترة الطرح</span><strong style="font-size:11px; font-family:monospace;">${item.offeringPeriod}</strong></div>
                             <div class="opp-metric"><span>عدد الأسهم</span><strong>${item.sharesCount}</strong></div>
                             <div class="opp-metric"><span>قيمة السهم</span><strong>${window.formatMoneySafe(item.sharePrice)} ر.س</strong></div>
                             <div class="opp-metric" style="grid-column: span 2;"><span>إجمالي رأس المال</span><strong style="color:var(--tera-teal); font-size:15px;">${window.formatMoneySafe(item.capital)} ر.س</strong></div>
                         </div>
-                        <div class="opp-footer">
-                            <span style="font-size:12px; font-family:monospace; color:var(--tera-gray);">${item.id}</span>
+                        <div class="opp-footer" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0;">
+                            <span style="font-size:12px; font-family:monospace; color:var(--tera-gray); font-weight:700;">${item.id}</span>
                             <a href="${detailUrl}" class="btn-action btn-view"><i class="fas fa-book-open"></i> التفاصيل</a>
                         </div>
                     </div>`;
@@ -246,7 +246,7 @@
     }
 
     // ============================================================
-    // 4. تهيئة صفحة طلب الانضمام (cancelled-investments.html)
+    // 4. تهيئة صفحة طلب الانضمام والعمليات الحسابية (cancelled-investments.html)
     // ============================================================
     function initCancelledInvestments() {
         if (!document.getElementById('invOppName')) return;
@@ -409,24 +409,27 @@
         if(payBtn) payBtn.disabled = !(isChecked && shares >= 1); 
     };
 
+    window.processPayment = function() { 
+        alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); 
+        window.location.href = "../dashboard/index.html"; 
+    };
+
     // ============================================================
     // 5. موجه ومراقب التهيئة المركزي للـ SPA (مع قفل لمنع التجميد)
     // ============================================================
     window.initInvestments = function() {
-        if (isUpdating) return; // الحماية القصوى: منع الدخول في حلقة مفرغة
+        if (isUpdating) return; 
         isUpdating = true;
 
         initOpportunities();
         initInvestmentDetails();
         initCancelledInvestments();
 
-        // فك القفل فور انتهاء العمليات الحسابية وحقن عناصر الـ HTML
         setTimeout(() => {
             isUpdating = false;
         }, 150);
     };
 
-    // مراقبة ذكية وآمنة للتنقل عبر الـ SPA
     new MutationObserver(() => {
         if (!isUpdating) window.initInvestments();
     }).observe(document.body, { childList: true, subtree: true });
