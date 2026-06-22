@@ -4,61 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفاصيل الفرصة | Tera Investor Portal</title>
-    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/investments.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/investments.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
     <div class="app-wrapper">
         <main class="main-content">
             <header class="top-header no-print">
-                <div class="header-right"><img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;"></div>
+                <div class="header-right">
+                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                </div>
                 <div class="header-left">
                     <a href="../dashboard/index.html" class="btn-action"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
                 </div>
             </header>
 
             <div class="details-container">
-                <div class="sub-header-nav">
+                <div class="sub-header-nav no-print">
                     <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
-                    <h2 class="page-title">تفاصيل الفرصة الاستثمارية</h2>
+                    <h2 class="page-title" id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h2>
                 </div>
 
-                <div class="main-details">
+                <main class="main-details">
                     <div id="mDetAlertsContainer"></div>
 
                     <div class="detail-block">
                         <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
+                        <div class="progress-wrapper">
+                            <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText">0%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div></div>
+                        </div>
                         <div class="info-grid">
                             <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal">-</strong></div>
                             <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType">-</strong></div>
                             <div class="info-item"><span>اسم المشروع</span><strong id="mDetOppCompany">-</strong></div>
                             <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus">-</strong></div>
-                            <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono">-</strong></div>
+                            <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono">-</strong></div>
                         </div>
                     </div>
 
                     <div class="detail-block">
-                        <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني: عن العميل</h3>
-                        <div class="info-grid">
-                            <div class="info-item"><span>المسمى الوظيفي</span><strong>معلم</strong></div>
-                            <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
-                            <div class="info-item"><span>قيمة الدخل</span><strong class="mono">15,000 ر.س</strong></div>
-                        </div>
-                    </div>
-
-                    <div class="detail-block">
-                        <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس: الدليل الاسترشادي</h3>
+                        <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس: الدليل الاسترشادي والشروط والأحكام</h3>
                         <div class="guideline-manual">
                             <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
-                            <p>نص الشروط والأحكام...</p>
+                            <ul>
+                                <li>تعتبر المشاركة اختيارية وتتم بعد اطلاع الشريك على كافة البيانات.</li>
+                                <li>يعد إتمام المشاركة موافقة نهائية على سياسات المنصة.</li>
+                            </ul>
+                            <h4><i class="fas fa-list-alt"></i> ثانياً: شرح المصطلحات</h4>
+                            <ul>
+                                <li><strong>رقم الفرصة:</strong> معرف فريد للفرصة.</li>
+                                <li><strong>نسبة الاكتمال:</strong> مقدار ما تم جمعه من إجمالي الطلب.</li>
+                            </ul>
+                            <h4><i class="fas fa-exclamation-triangle"></i> ثالثاً: فئات المخاطر</h4>
+                            <ul>
+                                <li><strong>A+:</strong> مخاطر منخفضة جداً.</li>
+                                <li><strong>B:</strong> مخاطر متوسطة.</li>
+                            </ul>
                         </div>
                     </div>
-                </div>
+
+                </main>
             </div>
         </main>
     </div>
