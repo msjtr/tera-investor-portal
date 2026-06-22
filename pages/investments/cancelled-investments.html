@@ -240,15 +240,12 @@
         </div>
     </div>
 
-    <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/main.js"></script>
-
     <script>
-        // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
+        // === 2. قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
         const unifiedDatabase = [
-            // نوع: شراكة ممتدة (6 حالات)
             { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
             { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
             { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
@@ -256,7 +253,6 @@
             { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
             { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
             
-            // نوع: فرصة شراكة (6 حالات)
             { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
             { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "قائم", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
             { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
@@ -265,7 +261,6 @@
             { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
         ];
 
-        // تعيين المصفوفة كبيانات أساسية للمشروع لتغطي على أي بيانات وهمية
         window.appData = unifiedDatabase;
 
         function formatMoneyLocal(num) { 
@@ -280,38 +275,32 @@
         let selectedPackageName = 'الباقة الأساسية';
         let selectedPackageFixedFee = 0;
 
-        // 3. تم استبدال (window.load) بـ (DOMContentLoaded) لضمان السرعة وعدم التعليق في حال نقص الصور
+        // 3. التنفيذ المباشر بمجرد قراءة الـ DOM 
         document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                let oppId = urlParams.get('id');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            let oppId = urlParams.get('id');
 
-                // تنظيف المتغيرات من الفراغات وتحويلها لحروف صغيرة لتجنب أخطاء المطابقة
-                if (oppId) oppId = decodeURIComponent(oppId).trim().toLowerCase();
+            if (oppId) oppId = oppId.trim(); // تنظيف سريع
 
-                let opp = null;
-                
-                // البحث الدقيق في قاعدة البيانات
-                if (oppId) {
-                    opp = window.appData.find(d => String(d.id).trim().toLowerCase() === oppId);
-                }
+            let opp = null;
+            
+            // البحث عن الفرصة المطلوبة بالـ ID
+            if (oppId) {
+                opp = window.appData.find(d => String(d.id).trim() === oppId);
+            }
 
-                // الحماية: إذا لم يتم العثور، اعرض أول فرصة نشطة بدلاً من الشاشة الفارغة
-                if (!opp) {
-                    console.warn("لم يتم العثور على الفرصة بالمعرّف الممرر. يتم عرض المعاينة الافتراضية.");
-                    opp = window.appData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
-                    if (!opp && window.appData.length > 0) opp = window.appData[0];
-                }
+            // الحماية المطلقة: إذا لم يجد الفرصة (أو لم يكن هناك ID في الرابط)، اعرض أول فرصة متاحة إجبارياً للضمان
+            if (!opp) {
+                opp = window.appData.find(d => parseFloat(d.fundedPercentage) < 100);
+                if (!opp && window.appData.length > 0) opp = window.appData[0];
+            }
 
-                if (opp) {
-                    currentActiveOpp = opp;
-                    initForm();
-                } else {
-                    document.getElementById('invOppName').innerText = "خطأ: قاعدة البيانات فارغة";
-                }
-            } catch (error) {
-                console.error("حدث خطأ:", error);
-                document.getElementById('invOppName').innerText = "حدث خطأ أثناء تحميل البيانات.";
+            if (opp) {
+                currentActiveOpp = opp;
+                initForm();
+            } else {
+                document.getElementById('invOppName').innerText = "خطأ: قاعدة البيانات فارغة أو غير متوفرة.";
             }
         });
 
@@ -341,12 +330,12 @@
             document.getElementById('invDuration').innerText = durationNum + " أشهر";
             document.getElementById('maxShares').innerText = availableSharesToBuy;
             
-            // 4. الانعكاس الفوري: عرض البيانات تلقائياً بمجرد الدخول
+            // 4. عرض الجداول تلقائياً
             if (availableSharesToBuy > 0) {
                 document.getElementById('shareInput').value = 1;
                 triggerCalculations();
             } else {
-                // إذا كانت الفرصة مكتملة يتم تفعيل الجداول كشكل توضيحي وتعطيل الأزرار
+                // في حال كانت الفرصة مكتملة
                 document.getElementById('shareInput').value = 1;
                 triggerCalculations();
                 document.getElementById('shareInput').value = 0;
@@ -481,7 +470,7 @@
             }
             document.getElementById('distributionTableBody').innerHTML = distBody;
 
-            // تحديث ملخص الدفع النهائي بناءً على الأسهم المختارة فقط
+            // تحديث ملخص الدفع النهائي
             let actualShares = parseInt(document.getElementById('shareInput').value) || 0;
             let actualCapital = actualShares * sharePriceNum;
             let actualProductVat = actualCapital * 0.15;
@@ -494,6 +483,9 @@
             document.getElementById('sumProdTax').innerText = formatMoneyLocal(actualProductVat) + " ر.س";
             document.getElementById('sumServTax').innerText = formatMoneyLocal(totalServiceVat) + " ر.س";
             document.getElementById('sumTotalAll').innerText = formatMoneyLocal(totalOverall) + " ر.س";
+            
+            // في حال كانت الأسهم صفر لا تعرض مبلغ للدفع
+            if (actualShares === 0) totalToPayNow = 0;
             
             document.getElementById('resToPayNow').innerText = formatMoneyLocal(totalToPayNow) + " ر.س"; 
         }
