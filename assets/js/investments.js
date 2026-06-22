@@ -1,9 +1,9 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات (تحديث العرض الشبكي الشامل)
+ * investments.js - ملف التحكم المركزي للاستثمارات (الإصدار المحسن)
  * ============================================================
- * تم إعادة هيكلة العرض الشبكي ليعرض كافة المؤشرات والبيانات 
- * بالتطابق الكامل مع خانات جدول قائمة الاستثمارات.
+ * تم حذف اسم المشروع من العرض الشبكي.
+ * تم إصلاح عمل المؤشرات والرسوم البيانية لتعمل بثبات مع الـ SPA.
  * ============================================================
  */
 
@@ -13,22 +13,18 @@
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
-    // قفل حماية الـ DOM من التكرار والتعليق
     let isUpdating = false;
 
     // ============================================================
-    // 1. قاعدة البيانات المركزية (12 تجربة كاملة)
+    // 1. قاعدة البيانات المركزية الموحدة (12 تجربة كاملة)
     // ============================================================
     window.mockData = [
-        // 6 فرص: شراكة ممتدة
         { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
         { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
         { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
         { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
         { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
         { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
-        
-        // 6 فرص: فرصة شراكة
         { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
         { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
         { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
@@ -60,7 +56,7 @@
     }
 
     // ============================================================
-    // 2. دالة تهيئة صفحة السوق (opportunities.html) العرض الشبكي + القائمة
+    // 2. تهيئة صفحة السوق (opportunities.html) 
     // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
@@ -95,11 +91,11 @@
             data.forEach(item => {
                 const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type), detailUrl = `completed-investments.html?id=${item.id}`;
                 
-                // 🌟 العرض الشبكي الشامل لجميع المؤشرات المطلوبة بالتطابق التام مع الجدول
+                // تم حذف اسم المشروع (item.company) من العرض الشبكي هنا
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
-                            <div><span class="type-badge ${typeBadge}">${item.type}</span><h3 style="margin-top:8px;">${item.company}</h3></div>
+                            <div><span class="type-badge ${typeBadge}">${item.type}</span></div>
                             <span class="badge ${badge}">${item.status}</span>
                         </div>
                         <div class="progress-wrapper" style="padding: 10px 20px 0;">
@@ -146,6 +142,7 @@
             if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
             if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
 
+            // إصلاح المؤشرات والرسوم البيانية (Chart.js)
             try {
                 if(typeof Chart !== 'undefined') {
                     let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
@@ -160,15 +157,46 @@
 
                     const ctxStatus = document.getElementById('statusChart');
                     if(ctxStatus) {
-                        if(window.statusChartInstance) window.statusChartInstance.destroy();
-                        window.statusChartInstance = new Chart(ctxStatus, {
-                            type: 'doughnut',
-                            data: {
-                                labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
-                                datasets: [{ data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed], backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'], borderWidth: 0 }]
-                            },
-                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } }, datalabels: { display: false } } }
-                        });
+                        let existingStatusChart = Chart.getChart(ctxStatus);
+                        if(existingStatusChart) {
+                            existingStatusChart.data.datasets[0].data = [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed];
+                            existingStatusChart.update();
+                        } else {
+                            if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+                            new Chart(ctxStatus, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
+                                    datasets: [{ data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed], backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'], borderWidth: 0 }]
+                                },
+                                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 16 }, formatter: (v) => v > 0 ? v : '' } } }
+                            });
+                        }
+                    }
+
+                    const ctxOpp = document.getElementById('opportunitiesChart');
+                    if(ctxOpp) {
+                        let existingOppChart = Chart.getChart(ctxOpp);
+                        let mVal = filtered.length > 0 ? filtered[0].capital : 10000;
+                        let cVal = Math.max(1, Math.floor(filtered.length / 6));
+                        
+                        if(existingOppChart) {
+                            existingOppChart.data.datasets[0].data = [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5];
+                            existingOppChart.data.datasets[1].data = [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length];
+                            existingOppChart.update();
+                        } else {
+                            new Chart(ctxOpp, {
+                                type: 'bar',
+                                data: {
+                                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                                    datasets: [
+                                        { type: 'line', label: 'إجمالي المبالغ', data: [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.4, yAxisID: 'y1' },
+                                        { type: 'bar', label: 'الفرص المطروحة', data: [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length], backgroundColor: '#028090', borderRadius: 4, yAxisID: 'y' }
+                                    ]
+                                },
+                                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { y: { position: 'right', grid: { display: false } }, y1: { position: 'left' } } }
+                            });
+                        }
                     }
                 }
             } catch(e) {}
@@ -184,7 +212,8 @@
         if (!document.getElementById('mDetOppId')) return;
 
         let oppId = getSafeOppId();
-        let opp = window.mockData.find(d => d.id.toLowerCase() === oppId) || window.mockData[0];
+        let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
+        if (!opp) opp = window.mockData[0];
 
         document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
         document.getElementById('mDetOppId').innerText = opp.id;
@@ -246,13 +275,14 @@
     }
 
     // ============================================================
-    // 4. تهيئة صفحة طلب الانضمام والعمليات الحسابية (cancelled-investments.html)
+    // 4. تهيئة صفحة طلب الانضمام (cancelled-investments.html)
     // ============================================================
     function initCancelledInvestments() {
         if (!document.getElementById('invOppName')) return;
 
         let oppId = getSafeOppId();
-        let opp = window.mockData.find(d => d.id.toLowerCase() === oppId) || window.mockData[0];
+        let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
+        if (!opp) opp = window.mockData[0];
 
         window.currentActiveOpp = opp;
         window.availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
