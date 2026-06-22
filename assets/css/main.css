@@ -31,6 +31,10 @@
 /* =========================================
    2. الإعدادات العامة (Global & Body)
    ========================================= */
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--tera-bg);
     font-family: 'Tajawal', sans-serif;
@@ -38,6 +42,23 @@ body {
     padding: 0;
     color: #334155;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* تخصيص شريط التمرير (Scrollbar) ليطابق هوية المنصة */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--tera-teal);
 }
 
 /* الحاوية الرئيسية للتطبيق (تدعم وجود أو غياب القائمة الجانبية) */
@@ -45,6 +66,7 @@ body {
     display: flex;
     min-height: 100vh;
     flex-direction: row;
+    width: 100%;
 }
 
 /* المحتوى الرئيسي */
@@ -57,11 +79,10 @@ body {
 }
 
 .container {
-    max-width: 1500px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 30px 20px;
     width: 100%;
-    box-sizing: border-box;
     flex: 1;
 }
 
@@ -79,6 +100,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
 }
 
 .header-logo {
@@ -253,7 +275,7 @@ body {
     padding: 14px 15px;
     color: var(--tera-navy);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 800;
     border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
 }
@@ -325,14 +347,13 @@ body {
     color: #fff;
 }
 
-/* أزرار التصدير (PDF / Excel) */
 .btn-pdf { background: var(--status-danger); color: #fff; border-color: var(--status-danger); }
 .btn-pdf:hover { background: #dc2626; color: #fff; }
 
 .btn-excel { background: var(--status-success); color: #fff; border-color: var(--status-success); }
 .btn-excel:hover { background: #059669; color: #fff; }
 
-/* الفلاتر */
+/* הפلاتر */
 .filters-row {
     display: flex;
     flex-wrap: wrap;
