@@ -186,8 +186,14 @@
         </main>
     </div>
 
+    <!-- جلب ملفات السكريبت الخارجية أولاً لتنهي عملها -->
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
+
+    <!-- وضعنا سكريبت البيانات هنا واستخدمنا setTimeout لضمان عمله في آخر خطوة تماماً وعدم مسحه من قبل main.js -->
     <script>
-        (function() {
+        setTimeout(function() {
             const safeDatabase = [
                 { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
                 { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "قائم", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -210,29 +216,26 @@
                 return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const urlParams = new URLSearchParams(window.location.search);
-                // توحيد الحروف إلى صغيرة عند البحث
-                let rawId = urlParams.get('id');
-                let oppId = rawId ? rawId.trim().toLowerCase() : null;
+            const urlParams = new URLSearchParams(window.location.search);
+            let rawId = urlParams.get('id');
+            let oppId = rawId ? rawId.trim().toLowerCase() : null;
 
-                let opp = null;
-                if (oppId) {
-                    opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
-                }
+            let opp = null;
+            if (oppId) {
+                opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
+            }
 
-                if (!opp) {
-                    console.warn("لم يتم العثور على الفرصة المطلوبة، سيتم عرض فرصة افتراضية للمعاينة.");
-                    opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
-                    if (!opp && safeDatabase.length > 0) opp = safeDatabase[0];
-                }
+            if (!opp) {
+                console.warn("لم يتم العثور على الفرصة المطلوبة، سيتم عرض فرصة افتراضية للمعاينة.");
+                opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
+                if (!opp && safeDatabase.length > 0) opp = safeDatabase[0];
+            }
 
-                if (opp) {
-                    renderSafeDetails(opp);
-                } else {
-                    document.getElementById('pageMainTitle').innerText = "خطأ: قاعدة البيانات فارغة";
-                }
-            });
+            if (opp) {
+                renderSafeDetails(opp);
+            } else {
+                document.getElementById('pageMainTitle').innerText = "خطأ: قاعدة البيانات فارغة";
+            }
 
             function renderSafeDetails(opp) {
                 document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + (opp.company || '');
@@ -295,7 +298,7 @@
                     miniSharesBox.style.display = 'inline-flex';
                     document.getElementById('mDetAvailableShares').innerText = availableSharesToBuy;
                     
-                    // توجيه لصفحة الانضمام معرّف بشكل دقيق
+                    // توجيه لصفحة الانضمام
                     btnJoin.href = "cancelled-investments.html?id=" + opp.id;
 
                     warnMsg.style.display = 'none';
@@ -306,10 +309,7 @@
                     warnMsg.style.display = 'block';
                 }
             }
-        })();
+        }, 200); // تأخير التنفيذ 200 جزء من الثانية لكي نجبره على العمل بعد main.js
     </script>
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
