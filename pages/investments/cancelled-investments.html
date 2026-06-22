@@ -111,7 +111,6 @@
     </header>
 
     <div class="join-container">
-        <!-- زر العودة لصفحة التفاصيل -->
         <a href="javascript:history.back()" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
         
         <div class="join-card">
@@ -241,9 +240,13 @@
         </div>
     </div>
 
-    <!-- 1. تم عزل السكريبت الخاص بنا ليعمل بشكل مستقل وأولاً (IIFE Pattern) لمنع التخريب من الملفات الخارجية -->
+    <script src="../../assets/js/app.js"></script>
+    <script src="../../assets/js/core.js"></script>
+    <script src="../../assets/js/main.js"></script>
+
     <script>
-        (function() {
+        // استخدام setTimeout لضمان عمل الكود الخاص بنا كآخر خطوة في الصفحة
+        setTimeout(function() {
             // === قاعدة البيانات الموحدة 100% (12 حالة ثابتة) ===
             const safeDatabase = [
                 { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
@@ -273,30 +276,38 @@
                 return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
+            try {
                 const urlParams = new URLSearchParams(window.location.search);
-                let oppId = urlParams.get('id');
-
-                if (oppId) oppId = decodeURIComponent(oppId).trim().toLowerCase();
+                let rawId = urlParams.get('id');
+                let oppId = rawId ? rawId.trim() : null;
 
                 let opp = null;
                 if (oppId) {
-                    opp = safeDatabase.find(d => String(d.id).trim().toLowerCase() === oppId);
+                    // مقارنة خفيفة لتفادي أخطاء التشفير
+                    opp = safeDatabase.find(d => String(d.id).trim() === oppId || String(d.id).includes(oppId));
                 }
 
-                // الحماية: إذا لم يتم إرسال ID صحيح، اعرض أول فرصة نشطة كافتراضي
+                // الحماية: عرض أول فرصة متاحة إجبارياً في حال عدم وجود ID سليم لكي لا تكون الصفحة فارغة
                 if (!opp) {
-                    opp = safeDatabase.find(d => (d.status === 'النشطة' || d.status === 'قائم') && parseFloat(d.fundedPercentage) < 100);
-                    if (!opp && safeDatabase.length > 0) opp = safeDatabase[0];
+                    opp = safeDatabase.find(d => parseFloat(d.fundedPercentage) < 100);
+                    if (!opp) opp = safeDatabase[0];
                 }
 
                 if (opp) {
                     currentActiveOpp = opp;
+                    
+                    // تحديث زر العودة
+                    let backBtn = document.getElementById('btnBackToDetails');
+                    if(backBtn) backBtn.href = `investment-details.html?id=${opp.id}`;
+                    
                     initSafeForm();
                 } else {
-                    document.getElementById('invOppName').innerText = "خطأ: تعذر تحميل البيانات.";
+                    document.getElementById('invOppName').innerText = "خطأ: قاعدة البيانات فارغة.";
                 }
-            });
+            } catch (error) {
+                console.error("حدث خطأ:", error);
+                document.getElementById('invOppName').innerText = "حدث خطأ أثناء تحميل البيانات.";
+            }
 
             function initSafeForm() {
                 let sharesCountNum = parseInt(currentActiveOpp.sharesCount) || 0;
@@ -322,6 +333,7 @@
                 document.getElementById('invDuration').innerText = durationNum + " أشهر";
                 document.getElementById('maxShares').innerText = availableSharesToBuy;
                 
+                // تحديد تلقائي لسهم واحد لضمان ظهور البيانات والمشتريات مباشرة
                 if (availableSharesToBuy > 0) {
                     document.getElementById('shareInput').value = 1;
                     executeCalculations();
@@ -485,12 +497,8 @@
                 alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); 
                 window.location.href = "../dashboard/index.html"; 
             }
-        })();
+            
+        }, 100); // تأخير بسيط 100 جزء من الثانية لضمان ألا يتم مسح البيانات من قبل أي ملف خارجي
     </script>
-    
-    <!-- تم إزالة ملف investments.js نهائياً من هذه الصفحة لمنع أي أعطال -->
-    <script src="../../assets/js/app.js"></script>
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/main.js"></script>
 </body>
 </html>
