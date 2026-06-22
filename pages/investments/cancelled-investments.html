@@ -44,6 +44,7 @@
         .calc-input-custom { width: 120px; text-align: center; font-size: 28px; font-weight: bold; font-family: monospace; border: 2px solid var(--tera-teal); border-radius: 12px; height: 50px; color: var(--tera-navy); outline: none; background: #f8fafc; pointer-events: none; }
         
         .available-shares-hint { font-size: 14px; color: var(--tera-teal); font-weight: bold; display: block; text-align: center; }
+        .min-shares-alert { color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 8px; display: block; }
 
         #extendedDetails { display: none; margin-top: 30px; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -70,11 +71,23 @@
         .tera-table td.text-start { text-align: right; font-family: 'Tajawal', sans-serif; font-weight: 600; }
         .tera-table td.notes { font-family: 'Tajawal', sans-serif; font-size: 11px; color: #64748b; font-weight: 600; }
         .tera-table .total-row td { background: #f8fafc; font-weight: 800; color: var(--tera-navy); }
+        .tera-table .highlight-row td { background: #fffbeb; color: #b45309; font-size: 14px; }
+
+        .fees-summary-box { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 15px; font-size: 14px; font-weight: 700; line-height: 2; }
+        .fees-summary-row { display: flex; justify-content: space-between; align-items: center; }
+
+        .returns-summary-grid { display: flex; justify-content: space-between; gap: 15px; margin-top: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+        .returns-card { flex: 1; min-width: 150px; padding: 20px; border-radius: 12px; text-align: center; }
+        .returns-card span { display:block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+        .returns-card strong { font-size: 22px; font-family: monospace; font-weight: 800; }
+        .card-capital { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; }
+        .card-profit { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .card-diff { background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; }
 
         .calc-result-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
-        .calc-result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--tera-gray); font-weight: 700; }
-        .calc-result-row.highlight { color: var(--tera-navy); }
-        .calc-result-row.total { border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 15px; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
+        .calc-result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; color: var(--tera-gray); font-weight: 700; }
+        .calc-result-row.highlight { color: var(--tera-navy); font-size: 18px; border-top: 2px dashed #cbd5e1; padding-top: 15px; margin-top: 10px; }
+        .calc-result-row.total { border-top: 2px solid #028090; padding-top: 15px; margin-top: 15px; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
 
         .payment-methods { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
         .pay-method-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; background: #f8fafc; }
@@ -83,7 +96,9 @@
         .pay-method-card strong { color: var(--tera-navy); font-size: 14px; }
         .pay-method-card span { font-size: 12px; color: var(--tera-gray); display: block; margin-top: 4px; }
 
-        .disclaimer-text { font-size: 12px; color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 30px; line-height: 1.6; }
+        .disclaimer-text { font-size: 12px; color: #b45309; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; margin-bottom: 20px; line-height: 1.6; }
+        
+        .strict-warning { background: #fef2f2; border-right: 4px solid #ef4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: 800; color: #991b1b; font-size: 16px; line-height: 1.6; }
 
         .agreement-box { display: flex; gap: 12px; font-size: 14px; color: var(--tera-gray); margin-bottom: 30px; line-height: 1.5; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 1px solid #ccfbf1; }
         .agreement-box input { margin-top: 2px; transform: scale(1.3); accent-color: var(--tera-teal); cursor: pointer; }
@@ -125,10 +140,11 @@
                 <label>حدد عدد الأسهم التي ترغب بالانضمام بها:</label>
                 <div class="share-selector">
                     <button type="button" id="btnPlus" onclick="window.changeShares(1)"><i class="fas fa-plus"></i></button>
-                    <input type="number" id="shareInput" class="calc-input-custom" value="0" readonly>
+                    <input type="number" id="shareInput" class="calc-input-custom" value="1" readonly>
                     <button type="button" id="btnMinus" onclick="window.changeShares(-1)"><i class="fas fa-minus"></i></button>
                 </div>
                 <span class="available-shares-hint">الأسهم المتاحة لك: <span id="maxShares" style="font-family:monospace; font-size:16px;">0</span></span>
+                <span class="min-shares-alert">عزيزي الشريك، أقل عدد للأسهم هو 1 سهم</span>
             </div>
 
             <div id="extendedDetails">
@@ -163,8 +179,9 @@
                 <h4 class="section-title"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
                 <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-info-circle"></i>
-                    <span>توضيح: جميع رسوم الخدمات والاشتراكات تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة، ولا تُدفع نقداً الآن.</span>
+                    <span>توضيح: رسوم الخدمات والاشتراكات تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة.</span>
                 </div>
+                
                 <div style="overflow-x: auto;">
                     <table class="tera-table">
                         <thead>
@@ -181,28 +198,54 @@
                     </table>
                 </div>
 
+                <div class="fees-summary-box">
+                    <p style="color: #028090; margin-top: 0;">عزيزي العميل، أنتم مطالبون بدفع الرسوم والاشتراكات حسب خطة الدفع المعلن عنها أعلاه:</p>
+                    <div class="fees-summary-row"><span>إجمالي رسوم الخدمة والاشتراكات:</span><span id="txtBaseFees" style="font-family:monospace; color:#0A1B3F;">0</span></div>
+                    <div class="fees-summary-row" style="color:#ef4444;"><span>إجمالي قيمة الضريبة المضافة 15%:</span><span id="txtFeesVat" style="font-family:monospace;">0</span></div>
+                    <div class="fees-summary-row" style="font-size:16px; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:5px; color:#028090;">
+                        <span>إجمالي المبلغ شامل الضريبة هو:</span>
+                        <div>
+                            <span id="txtTotalFeesWithVat" style="font-family:monospace; font-size:18px;">0</span>
+                            <span style="font-size:12px; color:#64748b; margin-right:5px;">(يُقسم ويُخصم حسب الجدول)</span>
+                        </div>
+                    </div>
+                </div>
+
                 <h4 class="section-title"><i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span></h4>
-                <div style="overflow-x: auto; margin-bottom: 30px;">
+                <div id="extendedCapitalNote" style="display:none; background: #fffbeb; border: 2px solid #f59e0b; color: #b45309; padding: 15px; border-radius: 8px; font-size: 17px; font-weight: 800; text-align: center; margin-bottom: 20px;">
+                    عزيزي الشريك، استرداد رأس المال يكون متاح بحد أقصى 60 يوماً من آخر استلام أرباح.
+                </div>
+                
+                <div style="overflow-x: auto; margin-bottom: 10px;">
                     <table class="tera-table">
                         <thead id="distributionTableHeader"></thead>
                         <tbody id="distributionTableBody"></tbody>
                     </table>
                 </div>
 
+                <!-- ملخص العوائد الجديد -->
+                <div class="returns-summary-grid">
+                    <div class="returns-card card-capital">
+                        <span>رأس المال المستثمر</span>
+                        <strong id="finalCapital">0</strong>
+                    </div>
+                    <div class="returns-card card-profit">
+                        <span>الأرباح الصافية المتوقعة</span>
+                        <strong id="finalNetProfit">0</strong>
+                    </div>
+                    <div class="returns-card card-diff">
+                        <span>الفرق (إجمالي العائد)</span>
+                        <strong id="finalDifference">0</strong>
+                    </div>
+                </div>
+
                 <h4 class="section-title"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
                 <div class="calc-result-box">
-                    <div class="calc-result-row"><span>عدد الأسهم المحددة:</span><span id="sumShares" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
-                    <div class="calc-result-row highlight"><span>رأس المال المستثمر (قيمة المنتج):</span><span id="sumCapital" style="font-family:monospace; font-size:16px;">0.00 ر.س</span></div>
+                    <div class="calc-result-row"><span>عدد الأسهم:</span><span id="sumShares" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
+                    <div class="calc-result-row"><span>كمية الأسهم (قيمة السهم الواحد):</span><span id="sumSharePrice" style="font-family:monospace; color:var(--tera-navy);">0</span></div>
+                    <div class="calc-result-row highlight"><span>إجمالي الأسهم (رأس المال المستثمر):</span><span id="sumCapital" style="font-family:monospace; font-size:20px;">0.00 ر.س</span></div>
                     
-                    <div style="margin: 10px 0; border-top: 1px solid #e2e8f0; padding-top: 10px;"></div>
-                    
-                    <div class="calc-result-row"><span>إجمالي ضرائب المنتج لوحدها 15%:</span><span id="sumProdTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
-                    <div class="calc-result-row"><span>إجمالي ضرائب الخدمات والاشتراك 15%:</span><span id="sumServTax" style="font-family:monospace; color:#ef4444;">0.00 ر.س</span></div>
-                    
-                    <div class="calc-result-row" style="margin-top: 10px; font-weight:800;"><span>الإجمالي العام (رأس المال + جميع الرسوم والضرائب):</span><span id="sumTotalAll" style="font-family:monospace; color:var(--tera-gray);">0.00 ر.س</span></div>
-                    
-                    <div class="calc-result-row total"><span>المبلغ المطالب بدفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal); font-size:24px;">0.00 ر.س</span></div>
-                    <div style="font-size: 12px; color: var(--tera-gray); text-align: left; margin-top: 8px;">* رسوم الخدمات والاشتراكات لا تُدفع الآن، بل تُجدول وتُخصم من الدفعات الدورية كنسبة.</div>
+                    <div class="calc-result-row total"><span>المبلغ المطلوب دفعه الآن:</span><span id="resToPayNow" style="font-family:monospace; color:var(--tera-teal); font-size:28px;">0.00 ر.س</span></div>
                 </div>
 
                 <h4 class="section-title"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
@@ -224,7 +267,11 @@
                 </div>
 
                 <div class="disclaimer-text">
-                    <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
+                    <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة من قبل المنصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
+                </div>
+
+                <div class="strict-warning">
+                    <i class="fas fa-exclamation-triangle"></i> عزيزي الشريك: لا يمكنك إلغاء الانضمام بعد الدفع. مجرد الدفع يعتبر إقراراً بالانضمام، ولا يحق لك التراجع بعد الانضمام بأي شكل من الأشكال.
                 </div>
 
                 <div class="agreement-box">
