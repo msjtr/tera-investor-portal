@@ -1,9 +1,9 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات (الإصدار الشامل)
+ * investments.js - ملف التحكم المركزي للاستثمارات (نسخة الحماية القصوى)
  * ============================================================
- * تم توحيد حالات العرض الحية تحت مسمى "النشطة" لمنع التكرار
- * وتطوير العرض الشبكي ليتطابق بنيوياً مع خانات جدول القائمة.
+ * تم حل مشكلة التجميد نهائياً باستخدام قفل برمجائي (isUpdating)
+ * لمنع الـ MutationObserver من الدخول في حلقة تكرار لا نهائية.
  * ============================================================
  */
 
@@ -13,8 +13,11 @@
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
+    // قفل الحماية لمنع التكرار اللانهائي
+    let isUpdating = false;
+
     // ============================================================
-    // 1. قاعدة البيانات المركزية الموحدة الحالات (12 تجربة كاملة)
+    // 1. قاعدة البيانات المركزية الموحدة (12 تجربة كاملة)
     // ============================================================
     window.mockData = [
         // 6 فرص: شراكة ممتدة
@@ -38,7 +41,7 @@
     window.getBadgeClass = function(s) { return s === 'النشطة' ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); };
     window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
 
-    // إدارة تناغم الروابط وحفظ المعرف للـ SPA
+    // الاحتفاظ بمعرف الفرصة للـ SPA
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.includes('id=')) {
@@ -58,7 +61,7 @@
     }
 
     // ============================================================
-    // 2. إدارة وتغذية صفحة السوق والمؤشرات والرسوم البيانية
+    // 2. تهيئة صفحة السوق (opportunities.html)
     // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
@@ -93,7 +96,6 @@
             data.forEach(item => {
                 const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type), detailUrl = `completed-investments.html?id=${item.id}`;
                 
-                // 🌟 العرض الشبكي المطور ليطابق حقول القائمة والجدول تماماً
                 gridCont.innerHTML += `
                     <div class="opp-card">
                         <div class="opp-header">
@@ -127,7 +129,7 @@
 
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
-                let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة' ? d.status === 'النشطة' : d.status === statusVal);
+                let mStatus = (statusVal === 'all') ? true : (d.status === statusVal);
                 let mSearch = d.id.toLowerCase().includes(searchVal) || d.company.toLowerCase().includes(searchVal);
                 return mType && mStatus && mSearch;
             });
@@ -159,32 +161,13 @@
                     const ctxStatus = document.getElementById('statusChart');
                     if(ctxStatus) {
                         if(window.statusChartInstance) window.statusChartInstance.destroy();
-                        if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
                         window.statusChartInstance = new Chart(ctxStatus, {
                             type: 'doughnut',
                             data: {
                                 labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
                                 datasets: [{ data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed], backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'], borderWidth: 0 }]
                             },
-                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 16 }, formatter: (v) => v > 0 ? v : '' } } }
-                        });
-                    }
-
-                    const ctxOpp = document.getElementById('opportunitiesChart');
-                    if(ctxOpp) {
-                        if(window.oppChartInstance) window.oppChartInstance.destroy();
-                        let mVal = filtered.length > 0 ? filtered[0].capital : 10000;
-                        let cVal = Math.max(1, Math.floor(filtered.length / 6));
-                        window.oppChartInstance = new Chart(ctxOpp, {
-                            type: 'bar',
-                            data: {
-                                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                                datasets: [
-                                    { type: 'line', label: 'إجمالي المبالغ', data: [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.4, yAxisID: 'y1' },
-                                    { type: 'bar', label: 'الفرص المطروحة', data: [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length], backgroundColor: '#028090', borderRadius: 4, yAxisID: 'y' }
-                                ]
-                            },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { y: { position: 'right', grid: { display: false } }, y1: { position: 'left' } } }
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true, labels: { font: { family: 'Tajawal', size: 12 } } }, datalabels: { display: false } } }
                         });
                     }
                 }
@@ -195,7 +178,7 @@
     }
 
     // ============================================================
-    // 3. تهيئة صفحة التفاصيل وعرض المؤشرات والدليل الاسترشادي
+    // 3. تهيئة صفحة التفاصيل (completed-investments.html)
     // ============================================================
     function initInvestmentDetails() {
         if (!document.getElementById('mDetOppId')) return;
@@ -263,7 +246,7 @@
     }
 
     // ============================================================
-    // 4. تهيئة صفحة طلب الانضمام والعمليات الحسابية المتقدمة
+    // 4. تهيئة صفحة طلب الانضمام (cancelled-investments.html)
     // ============================================================
     function initCancelledInvestments() {
         if (!document.getElementById('invOppName')) return;
@@ -284,18 +267,10 @@
         document.getElementById('invSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
         document.getElementById('invDuration').innerText = opp.duration + " أشهر";
         document.getElementById('maxShares').innerText = window.availableSharesToBuy;
-        
-        let badgeEl = document.getElementById('invOppTypeBadge');
-        if(badgeEl) {
-            badgeEl.innerText = opp.type;
-            badgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
-        }
 
         if (window.availableSharesToBuy >= 1) {
             document.getElementById('shareInput').value = 1;
             window.executeCalculations();
-        } else {
-            document.getElementById('shareInput').value = 0;
         }
         window.syncButtonsState();
     }
@@ -434,22 +409,26 @@
         if(payBtn) payBtn.disabled = !(isChecked && shares >= 1); 
     };
 
-    window.processPayment = function() { 
-        alert(`تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.`); 
-        window.location.href = "../dashboard/index.html"; 
-    };
-
     // ============================================================
-    // 5. موجه ومراقب التهيئة المركزي للـ SPA
+    // 5. موجه ومراقب التهيئة المركزي للـ SPA (مع قفل لمنع التجميد)
     // ============================================================
     window.initInvestments = function() {
+        if (isUpdating) return; // الحماية القصوى: منع الدخول في حلقة مفرغة
+        isUpdating = true;
+
         initOpportunities();
         initInvestmentDetails();
         initCancelledInvestments();
+
+        // فك القفل فور انتهاء العمليات الحسابية وحقن عناصر الـ HTML
+        setTimeout(() => {
+            isUpdating = false;
+        }, 150);
     };
 
+    // مراقبة ذكية وآمنة للتنقل عبر الـ SPA
     new MutationObserver(() => {
-        window.initInvestments();
+        if (!isUpdating) window.initInvestments();
     }).observe(document.body, { childList: true, subtree: true });
 
     window.initInvestments();
