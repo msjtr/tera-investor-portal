@@ -1,128 +1,123 @@
-/* ============================================================
-   الملف الأساسي (Core CSS) | Tera Investor Portal
-   ============================================================ */
+ /* ============================================================
+   الملف الأساسي (Core CSS) | Tera Investor Portal
+   ============================================================ */
 
 /* =========================================
-   1. استدعاء الخطوط (Typography من Google Fonts)
-   ========================================= */
-/* الخط الأساسي للعناوين */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
-/* الخط الفرعي للنصوص */
+   1. استدعاء الخطوط (Typography)
+   ========================================= */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
 /* =========================================
-   2. المتغيرات الجذرية (CSS Variables)
-   ========================================= */
+   2. المتغيرات الجذرية (CSS Variables)
+   ========================================= */
 :root {
-    /* الألوان الرئيسية للهوية (Brand Colors) */
-    --tera-teal: #028090;      /* الأخضر المزرق الأساسي */
-    --tera-teal-light: rgba(2, 128, 144, 0.1); 
-    --tera-navy: #0A1B3F;      /* الكحلي الداكن للعناوين */
-    
-    /* الألوان المحايدة والخلفيات (Neutrals) */
-    --tera-gray: #64748b;      /* الرمادي للنصوص الثانوية */
-    --tera-gray-light: #94a3b8;
-    --tera-bg: #f8fafc;        /* لون خلفية النظام */
-    --tera-white: #ffffff;
-    
-    /* ألوان الحالات (Status Colors) */
-    --status-success: #10b981;
-    --status-success-bg: #dcfce7;
-    --status-warning: #f59e0b;
-    --status-warning-bg: #fef3c7;
-    --status-danger: #ef4444;
-    --status-danger-bg: #fee2e2;
-    --status-info: #0ea5e9;
-    --status-info-bg: #e0f2fe;
+    /* الألوان الرئيسية للهوية (Brand Colors) */
+    --tera-teal: #028090;      /* الأخضر المزرق الأساسي */
+    --tera-teal-light: rgba(2, 128, 144, 0.1); 
+    --tera-navy: #0A1B3F;      /* الكحلي الداكن للعناوين */
+    
+    /* الألوان المحايدة والخلفيات (Neutrals) */
+    --tera-gray: #64748b;      /* الرمادي للنصوص الثانوية */
+    --tera-gray-light: #94a3b8;
+    --tera-bg: #f8fafc;        /* لون خلفية النظام */
+    --tera-white: #ffffff;
+    
+    /* ألوان الحالات (Status Colors) */
+    --status-success: #10b981;
+    --status-success-bg: #dcfce7;
+    --status-warning: #f59e0b;
+    --status-warning-bg: #fef3c7;
+    --status-danger: #ef4444;
+    --status-danger-bg: #fee2e2;
+    --status-info: #0ea5e9;
+    --status-info-bg: #e0f2fe;
 
-    /* الخطوط والأحجام المحدثة */
-    --font-primary: 'Cairo', sans-serif;    /* للعناوين */
-    --font-secondary: 'Tajawal', sans-serif; /* للنصوص العادية */
-    
-    /* الظلال والحدود (Shadows & Borders) */
-    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-    --border-color: #e2e8f0;
-    --border-radius-sm: 6px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    
-    /* الحركات (Transitions) */
-    --transition-fast: 0.2s ease-in-out;
-    --transition-normal: 0.3s ease-in-out;
+    /* الخطوط والأحجام */
+    --font-primary: 'Tajawal', sans-serif;
+    
+    /* الظلال والحدود (Shadows & Borders) */
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    --border-color: #e2e8f0;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    
+    /* الحركات (Transitions) */
+    --transition-fast: 0.2s ease-in-out;
+    --transition-normal: 0.3s ease-in-out;
 }
 
 /* =========================================
-   3. إعادة الضبط الأساسية (CSS Reset & Normalize)
-   ========================================= */
+   3. إعادة الضبط الأساسية (CSS Reset & Normalize)
+   ========================================= */
 *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: smooth;
 }
 
 body {
-    background-color: var(--tera-bg);
-    color: #334155;
-    font-family: var(--font-secondary);
-    font-size: 14px;
-    line-height: 1.6;
-    direction: rtl; /* اتجاه النظام عربي */
-    text-align: right;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden; /* منع التمرير الأفقي العشوائي للصفحة */
+    background-color: var(--tera-bg);
+    color: #334155;
+    font-family: var(--font-primary);
+    font-size: 14px;
+    line-height: 1.6;
+    direction: rtl; /* اتجاه النظام عربي */
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden; /* منع التمرير الأفقي العشوائي للصفحة */
 }
 
 /* إزالة تنسيقات الروابط الافتراضية */
 a {
-    text-decoration: none;
-    color: var(--tera-teal);
-    transition: color var(--transition-fast);
+    text-decoration: none;
+    color: var(--tera-teal);
+    transition: color var(--transition-fast);
 }
 
 a:hover {
-    color: var(--tera-navy);
+    color: var(--tera-navy);
 }
 
 /* إعادة ضبط القوائم */
 ul, ol {
-    list-style: none;
+    list-style: none;
 }
 
 /* إعادة ضبط الأزرار وحقول الإدخال */
 button, input, select, textarea {
-    font-family: var(--font-secondary);
-    outline: none;
+    font-family: var(--font-primary);
+    outline: none;
 }
 
 button {
-    cursor: pointer;
-    background: transparent;
-    border: none;
+    cursor: pointer;
+    background: transparent;
+    border: none;
 }
 
-/* العناوين الأساسية (استخدام الخط الأساسي) */
+/* العناوين الأساسية */
 h1, h2, h3, h4, h5, h6 {
-    color: var(--tera-navy);
-    font-family: var(--font-primary);
-    font-weight: 700;
-    margin-bottom: 0.5em;
-    line-height: 1.3;
+    color: var(--tera-navy);
+    font-weight: 700;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
 }
 
 img {
-    max-width: 100%;
-    height: auto;
-    display: block;
+    max-width: 100%;
+    height: auto;
+    display: block;
 }
 
 /* =========================================
-   4. فئات المساعدة (Utility Classes)
-   ========================================= */
+   4. فئات المساعدة (Utility Classes)
+   ========================================= */
 
 /* نصوص وألوان (Text Utilities) */
 .text-teal { color: var(--tera-teal) !important; }
@@ -133,8 +128,6 @@ img {
 .text-warning { color: var(--status-warning) !important; }
 .text-white { color: var(--tera-white) !important; }
 
-.font-primary { font-family: var(--font-primary) !important; }
-.font-secondary { font-family: var(--font-secondary) !important; }
 .font-bold { font-weight: 700 !important; }
 .font-medium { font-weight: 500 !important; }
 .text-center { text-align: center !important; }
