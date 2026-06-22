@@ -1,79 +1,274 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تفاصيل الفرصة | Tera Investor Portal</title>
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/investments.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الفرصة | Tera Investor Portal</title>
+    
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/investments.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-wrapper">
-        <main class="main-content">
-            <header class="top-header no-print">
-                <div class="header-right">
-                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
-                </div>
-                <div class="header-left">
-                    <a href="../dashboard/index.html" class="btn-action"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
-                </div>
-            </header>
+    <div class="app-wrapper">
+        <main class="main-content">
+            <header class="top-header no-print">
+                <div class="header-right">
+                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                </div>
+                <div class="header-left">
+                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
+                </div>
+            </header>
 
-            <div class="details-container">
-                <div class="sub-header-nav no-print">
-                    <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
-                    <h2 class="page-title" id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h2>
-                </div>
+            <div class="details-container">
+                <div class="sub-header-nav no-print">
+                    <div class="nav-links">
+                        <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
+                    </div>
+                    <h2 class="page-title" id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h2>
+                </div>
 
-                <main class="main-details">
-                    <div id="mDetAlertsContainer"></div>
+                <main class="main-details">
+                    <div id="mDetAlertsContainer"></div>
 
-                    <div class="detail-block">
-                        <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
-                        <div class="progress-wrapper">
-                            <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText">0%</span></div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div></div>
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal">-</strong></div>
-                            <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType">-</strong></div>
-                            <div class="info-item"><span>اسم المشروع</span><strong id="mDetOppCompany">-</strong></div>
-                            <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus">-</strong></div>
-                            <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono">-</strong></div>
-                        </div>
-                    </div>
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
+                        <div class="progress-wrapper">
+                            <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText">0%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div></div>
+                        </div>
+                        
+                        <div class="info-grid">
+                            <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal">-</strong></div>
+                            <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType" class="type-badge">-</strong></div>
+                            <div class="info-item"><span>اسم المشروع / الفرصة</span><strong id="mDetOppCompany">-</strong></div>
+                            <div class="info-item"><span>حالة الفرصة</span><strong id="mDetOppStatus">-</strong></div>
+                            <div class="info-item"><span>فترة الطرح</span><strong id="mDetOfferingPeriod" class="mono">-</strong></div>
+                            <div class="info-item"><span>إجمالي عدد الأسهم</span><strong id="mDetSharesCount" class="mono">-</strong></div>
+                            <div class="info-item"><span>قيمة السهم الواحد</span><strong id="mDetSharePrice" class="mono">-</strong></div>
+                            <div class="info-item"><span>إجمالي رأس المال</span><strong id="mDetTotalCapital" class="mono">-</strong></div>
+                            <div class="info-item"><span>النسبة المتوقعة للمستثمر</span><strong id="mDetRatio" class="mono text-teal">-</strong></div>
+                        </div>
+                    </div>
 
-                    <div class="detail-block">
-                        <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس: الدليل الاسترشادي والشروط والأحكام</h3>
-                        <div class="guideline-manual">
-                            <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
-                            <ul>
-                                <li>تعتبر المشاركة اختيارية وتتم بعد اطلاع الشريك على كافة البيانات.</li>
-                                <li>يعد إتمام المشاركة موافقة نهائية على سياسات المنصة.</li>
-                            </ul>
-                            <h4><i class="fas fa-list-alt"></i> ثانياً: شرح المصطلحات</h4>
-                            <ul>
-                                <li><strong>رقم الفرصة:</strong> معرف فريد للفرصة.</li>
-                                <li><strong>نسبة الاكتمال:</strong> مقدار ما تم جمعه من إجمالي الطلب.</li>
-                            </ul>
-                            <h4><i class="fas fa-exclamation-triangle"></i> ثالثاً: فئات المخاطر</h4>
-                            <ul>
-                                <li><strong>A+:</strong> مخاطر منخفضة جداً.</li>
-                                <li><strong>B:</strong> مخاطر متوسطة.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-user-tie"></i> القسم الثاني : عن العميل طالب الفرصة</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>الجهة الطالبة</span><strong>أفراد</strong></div>
+                            <div class="info-item"><span>عمر العميل</span><strong>45 سنة</strong></div>
+                            <div class="info-item"><span>موظف</span><strong>نعم</strong></div>
+                            <div class="info-item"><span>القطاع</span><strong>حكومي</strong></div>
+                            <div class="info-item"><span>الوزارة / الجهة</span><strong>وزارة التعليم</strong></div>
+                            <div class="info-item"><span>المسمى الوظيفي</span><strong>معلم</strong></div>
+                            <div class="info-item"><span>مصدر الدخل</span><strong>راتب</strong></div>
+                            <div class="info-item"><span>قيمة مصدر الدخل</span><strong class="mono">15,000 ر.س</strong></div>
+                            <div class="info-item"><span>التزامات العميل</span><strong class="mono">7,000 ر.س</strong></div>
+                            <div class="info-item"><span>سبب الطلب</span><strong>شراء احتياجات</strong></div>
+                        </div>
+                    </div>
 
-                </main>
-            </div>
-        </main>
-    </div>
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-history"></i> القسم الثالث : السجل السابق للعميل</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>سجل العميل</span><strong>سابق</strong></div>
+                            <div class="info-item"><span>عدد الفرص السابقة</span><strong class="mono">4</strong></div>
+                            <div class="info-item"><span>عدد الفرص المكتملة</span><strong class="mono" style="color:#10b981;">3</strong></div>
+                            <div class="info-item"><span>عدد الفرص القائمة</span><strong class="mono">1</strong></div>
+                            <div class="info-item"><span>فرص بملاحظات</span><strong class="mono">0</strong></div>
+                            <div class="info-item"><span>نسبة الالتزام بالسداد</span><strong class="mono text-teal">100%</strong></div>
+                        </div>
+                    </div>
 
-    <script src="../../assets/js/investments.js"></script>
-</body>
-</html>
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-shopping-cart"></i> القسم الرابع : تفاصيل المنتج</h3>
+                        <div class="info-grid">
+                            <div class="info-item"><span>تاريخ تقديم الطلب</span><strong id="mDetReqDate" class="mono">-</strong></div>
+                            <div class="info-item"><span>نوع المنتج</span><strong>بطاقة سوى مسبقة الدفع</strong></div>
+                            <div class="info-item"><span>كمية المنتج</span><strong id="mDetProductQty" class="mono">-</strong></div>
+                            <div class="info-item"><span>قيمة المنتج الأساسية</span><strong id="mDetProdVal" class="mono">-</strong></div>
+                            <div class="info-item"><span>سعر المنتج الواحد</span><strong id="mDetProdPrice" class="mono">-</strong></div>
+                            <div class="info-item"><span>قيمة الضريبة 15%</span><strong id="mDetTax" class="mono">-</strong></div>
+                            <div class="info-item"><span>الإجمالي شامل الضريبة</span><strong id="mDetTotalProd" class="mono text-teal">-</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-shield-alt"></i> القسم الخامس : معلومات إضافية والمخاطر</h3>
+                        <div class="info-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="info-item">
+                                <span>نوع الضمانات المعتمدة</span>
+                                <strong><i class="fas fa-file-contract text-teal"></i> عقد إلكتروني موثق + <i class="fas fa-money-check-alt text-teal"></i> سند لأمر</strong>
+                            </div>
+                            <div class="info-item" style="align-items: center; background: #fffbeb; border-color: #fde68a;">
+                                <span>فئة المخاطرة المحددة للفرصة</span>
+                                <strong class="risk-badge">B</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-block">
+                        <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس : الدليل الاسترشادي والشروط والأحكام</h3>
+                        <div class="guideline-manual">
+                            
+                            <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
+                            
+                            <h5>المشاركة في الفرص</h5>
+                            <ul>
+                                <li>تعتبر المشاركة في الفرص المعروضة عبر المنصة اختيارية وتتم بعد اطلاع الشريك على كافة بيانات الفرصة.</li>
+                                <li>يعد إتمام عملية المشاركة موافقة صريحة ونهائية على جميع الشروط والأحكام والسياسات المعمول بها في المنصة.</li>
+                                <li>لا يجوز للشريك إلغاء مشاركته بعد اعتمادها أو اكتمال الفرصة إلا وفق ما تسمح به سياسات المنصة.</li>
+                                <li>تعتمد الفرصة على اكتمال إجمالي قيمة المنتج المطلوب خلال المدة المحددة للفرصة.</li>
+                                <li>يجوز للمنصة إغلاق الفرصة قبل انتهاء مدتها عند اكتمال قيمة المنتج المطلوبة.</li>
+                                <li>في حال عدم اكتمال الفرصة خلال المدة المحددة يتم إعادة المبالغ المدفوعة إلى محفظة الشريك أو حسابه وفق سياسة المنصة.</li>
+                            </ul>
+                            
+                            <h5>إدارة الفرص</h5>
+                            <ul>
+                                <li>تتولى المنصة دراسة العملاء والتحقق من البيانات والضمانات قبل طرح الفرص.</li>
+                                <li>يحق للمنصة رفض أو إلغاء أو تعليق أي فرصة إذا تبين وجود مخاطر أو معلومات غير صحيحة أو أسباب تشغيلية أو تنظيمية.</li>
+                                <li>تحتفظ المنصة بحق تعديل بيانات الفرصة أو تحديثها متى دعت الحاجة لذلك.</li>
+                            </ul>
+
+                            <h5>الأرباح والتوزيعات</h5>
+                            <ul>
+                                <li>يتم توزيع الأرباح ورأس المال وفق جدول السداد الخاص بكل فرصة.</li>
+                                <li>يرتبط استحقاق الأرباح ورأس المال بسداد العميل للدفعات المستحقة.</li>
+                                <li>قد يتأخر صرف الأرباح أو رأس المال في حال تأخر العميل عن السداد.</li>
+                                <li>يتم تحويل المستحقات خلال مدة لا تتجاوز ثلاثة أيام عمل وقد تمتد إلى سبعة أيام عمل من تاريخ تحصيل الدفعة.</li>
+                                <li>لا تحتسب أيام العطل الرسمية والإجازات ضمن مدة المعالجة والتحويل.</li>
+                            </ul>
+
+                            <h5>المخاطر</h5>
+                            <ul>
+                                <li>المشاركة في الفرص تتضمن مخاطر مالية وتشغيلية مرتبطة بسداد العميل.</li>
+                                <li>لا تعتبر الأرباح أو المؤشرات أو التصنيفات المعروضة ضماناً لنتائج مستقبلية.</li>
+                                <li>لا تضمن المنصة تحقيق الأرباح المتوقعة أو استرداد رأس المال بشكل كامل أو جزئي.</li>
+                                <li>تلتزم المنصة ببذل العناية المهنية واتخاذ الإجراءات اللازمة للمحافظة على حقوق الشركاء دون تقديم أي ضمان مالي.</li>
+                            </ul>
+
+                            <h4><i class="fas fa-list-alt"></i> ثانياً: شرح المصطلحات والمؤشرات</h4>
+                            <ul>
+                                <li><strong>رقم الفرصة:</strong> رقم تعريفي فريد لكل فرصة يتم من خلاله متابعة الفرصة ومراجعة بياناتها.</li>
+                                <li><strong>عمر العميل:</strong> العمر التقريبي للعميل وقت دراسة الطلب.</li>
+                                <li><strong>قطاع العميل:</strong> القطاع الوظيفي أو المهني الذي ينتمي إليه العميل.</li>
+                                <li><strong>عميل جديد:</strong> عميل يشارك لأول مرة عبر المنصة.</li>
+                                <li><strong>عميل سابق:</strong> عميل سبق له الاستفادة من فرصة أو أكثر.</li>
+                                <li><strong>عميل متكرر:</strong> عميل لديه أكثر من فرصة سابقة مكتملة.</li>
+                                <li><strong>عميل مميز:</strong> عميل يتمتع بسجل التزام مرتفع وتاريخ إيجابي.</li>
+                                <li><strong>عميل عالي المخاطر:</strong> عميل تم قبوله مع وجود عوامل مخاطر أعلى من المتوسط.</li>
+                                <li><strong>نوع المنتج:</strong> المنتج أو الخدمة المطلوب شراؤها لصالح العميل.</li>
+                                <li><strong>قيمة المنتج:</strong> القيمة المالية للوحدة الواحدة من المنتج.</li>
+                                <li><strong>كمية المنتج:</strong> عدد الوحدات المطلوب شراؤها.</li>
+                                <li><strong>إجمالي قيمة المنتج:</strong> القيمة الإجمالية لجميع المنتجات أو الخدمات محل الفرصة.</li>
+                                <li><strong>مدة السداد:</strong> عدد الأشهر أو الدفعات المحددة لسداد قيمة المنتج.</li>
+                                <li><strong>نسبة الأرباح المطروحة للشركاء:</strong> العائد المتوقع توزيعه على الشركاء المشاركين في الفرصة.</li>
+                                <li><strong>قيمة السهم:</strong> قيمة الوحدة الواحدة للمشاركة في الفرصة.</li>
+                                <li><strong>أقل مساهمة:</strong> الحد الأدنى للمبلغ المطلوب للمشاركة.</li>
+                                <li><strong>مدة الفرصة:</strong> الفترة الزمنية المحددة لاكتمال الفرصة.</li>
+                                <li><strong>عدد الشركاء الحاليين:</strong> عدد الشركاء المشاركين حالياً في الفرصة.</li>
+                                <li><strong>عدد الأسهم المتاحة:</strong> عدد الأسهم المتبقية المتاحة للمشاركة.</li>
+                                <li><strong>عدد الأسهم الممولة:</strong> عدد الأسهم التي تم تمويلها من قبل الشركاء.</li>
+                                <li><strong>نسبة اكتمال الفرصة:</strong> النسبة التي تمثل مقدار ما تم جمعه من إجمالي قيمة المنتج.</li>
+                            </ul>
+
+                            <h4><i class="fas fa-exclamation-triangle"></i> ثالثاً: شرح فئات المخاطر</h4>
+                            <ul>
+                                <li><strong>A+ مخاطر منخفضة جداً:</strong> سجل التزام ممتاز. ضمانات قوية ومتعددة. نسبة تعثر منخفضة.</li>
+                                <li><strong>A مخاطر منخفضة:</strong> سجل جيد. انتظام مرتفع بالسداد. ضمانات مناسبة.</li>
+                                <li><strong>B مخاطر متوسطة:</strong> مستوى مخاطر مقبول. سجل ائتماني جيد. ضمانات متوسطة إلى جيدة.</li>
+                                <li><strong>C مخاطر مرتفعة نسبياً:</strong> احتمالية تأخير أعلى من المتوسط. تتطلب دراسة أكبر من الشريك.</li>
+                                <li><strong>D مخاطر مرتفعة:</strong> مستوى مخاطر مرتفع. احتمالية تعثر أعلى. مناسبة للشركاء ذوي تقبل المخاطر المرتفع.</li>
+                            </ul>
+                            <span class="warning-text"><i class="fas fa-info-circle"></i> تنبيه: تصنيف المخاطر مؤشر استرشادي فقط ولا يمثل ضماناً للأرباح أو لرأس المال.</span>
+
+                            <h4><i class="fas fa-file-signature"></i> رابعاً: شرح الضمانات</h4>
+                            <ul>
+                                <li><strong>العقد الإلكتروني:</strong> اتفاق إلكتروني ملزم بين الأطراف وفق الأنظمة المعمول بها.</li>
+                                <li><strong>السند لأمر:</strong> مستند نظامي يتعهد العميل بموجبه بسداد المبالغ المستحقة.</li>
+                                <li><strong>الشيكات البنكية:</strong> شيكات مقدمة من العميل كوسيلة ضمان إضافية.</li>
+                                <li><strong>الاستقطاع البنكي:</strong> استقطاع دوري من الحساب البنكي وفق الآلية المعتمدة.</li>
+                                <li><strong>تحويل الراتب:</strong> تحويل راتب العميل للحساب المحدد كوسيلة تعزيز للسداد.</li>
+                                <li><strong>الكفيل الغارم:</strong> شخص يلتزم بسداد الالتزامات في حال إخلال العميل بها وفق الأنظمة.</li>
+                            </ul>
+                            
+                            <h5>نوع الضمان</h5>
+                            <p>قد تحتوي الفرصة على ضمان واحد أو أكثر حسب تقييم المخاطر.</p>
+                            
+                            <h5>قوة الضمانات</h5>
+                            <ul>
+                                <li><strong>مرتفعة:</strong> وجود عدة ضمانات قوية ومفعلة.</li>
+                                <li><strong>متوسطة:</strong> وجود ضمانات مناسبة بمستوى حماية متوسط.</li>
+                                <li><strong>منخفضة:</strong> وجود ضمانات محدودة أو أقل من المتوسط.</li>
+                            </ul>
+                            <span class="warning-text"><i class="fas fa-info-circle"></i> تنبيه: وجود الضمانات لا يعني ضمان استرداد رأس المال أو الأرباح بشكل كامل.</span>
+
+                            <h4><i class="fas fa-file-invoice-dollar"></i> خامساً: الرسوم والضرائب</h4>
+                            <ul>
+                                <li><strong>رسوم المشاركة:</strong> قد تفرض رسوم اشتراك أو رسوم خدمات أو رسوم إدارة مخاطر بحسب نوع الفرصة.</li>
+                                <li><strong>الرسوم التشغيلية:</strong> يجوز للمنصة فرض رسوم تشغيلية أو إدارية أو تقنية مرتبطة بالخدمات المقدمة.</li>
+                                <li><strong>الرسوم الحكومية:</strong> تطبق كافة الرسوم الحكومية أو التنظيمية التي تفرضها الجهات المختصة.</li>
+                                <li><strong>الضرائب:</strong> تطبق ضريبة القيمة المضافة وأي ضرائب حالية أو مستقبلية متى كانت واجبة التطبيق نظاماً.</li>
+                                <li><strong>الرسوم المستقبلية:</strong> في حال استحداث رسوم أو ضرائب أو تكاليف تشغيلية أو تنظيمية مستقبلاً يحق للمنصة تحميلها على الفرصة أو الشركاء وفق الأنظمة والتعليمات المعمول بها.</li>
+                            </ul>
+
+                            <h5>رسوم مزودي الخدمات</h5>
+                            <p>قد تطبق رسوم على:</p>
+                            <ul>
+                                <li>بوابات الدفع.</li>
+                                <li>التحويلات البنكية.</li>
+                                <li>المحافظ الإلكترونية.</li>
+                                <li>خدمات التحقق والتوثيق.</li>
+                            </ul>
+
+                            <h5>الإفصاح عن الرسوم</h5>
+                            <p>تظهر الرسوم المستحقة للشريك قبل إتمام عملية المشاركة متى كانت قابلة للتحديد مسبقاً.</p>
+
+                            <h4><i class="fas fa-user-secret"></i> سادساً: سياسة الخصوصية وسرية البيانات</h4>
+                            
+                            <h5>حماية البيانات</h5>
+                            <p>تلتزم المنصة بحماية البيانات والمعلومات وفق الأنظمة والتعليمات المعمول بها.</p>
+
+                            <h5>بيانات العملاء</h5>
+                            <p>لا يتم مشاركة أو إظهار:</p>
+                            <ul>
+                                <li>رقم الهوية.</li>
+                                <li>رقم الجوال.</li>
+                                <li>البريد الإلكتروني.</li>
+                                <li>العنوان.</li>
+                                <li>بيانات الحسابات البنكية.</li>
+                                <li>أي بيانات شخصية تمكن من التعرف على العميل.</li>
+                            </ul>
+
+                            <h5>التواصل مع العملاء</h5>
+                            <p>لا يحق للشريك:</p>
+                            <ul>
+                                <li>طلب بيانات العميل.</li>
+                                <li>التواصل مع العميل مباشرة.</li>
+                                <li>التواصل مع أقارب العميل.</li>
+                                <li>التواصل مع جهة عمل العميل.</li>
+                                <li>محاولة الوصول للعميل بأي وسيلة مباشرة أو غير مباشرة.</li>
+                            </ul>
+
+                            <h5>سرية المعلومات</h5>
+                            <p>يلتزم الشريك بالحفاظ على سرية كافة المعلومات والبيانات والمستندات التي يطلع عليها من خلال المنصة.</p>
+
+                            <h5>المخالفات</h5>
+                            <p>في حال مخالفة هذه السياسة يحق للمنصة:</p>
+                            <ul>
+                                <li>تعليق الحساب.</li>
+                                <li>إيقاف الحساب.</li>
+                                <li>إلغاء العضوية.</li>
+                                <li>اتخاذ الإجراءات النظامية المناسبة.</li>
+                            </ul>
+
+                            <h4><i class="fas fa-clipboard-list"></i> سابع
