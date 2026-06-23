@@ -26,16 +26,17 @@
         /* ===== 1. تصميم الهيدر العلوي ===== */
         .top-header { background: #fff; padding: 20px 45px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; width: 100%; }
         
-        /* حل جذري لمشكلة الشعار (الضغط والبهتان) */
+        /* حل مشكلة دقة الشعار على جميع الشاشات */
         .header-logo { display: flex; align-items: center; flex-shrink: 0; }
         .header-logo img { 
-            height: 75px; /* زيادة حجم الشعار */
+            height: 75px; 
             width: auto; 
-            max-width: none; /* منع ضغط الصورة أفقياً */
+            max-width: none; 
             object-fit: contain; 
-            image-rendering: -webkit-optimize-contrast; /* إجبار دقة عالية وتباين عالي */
-            image-rendering: crisp-edges;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.05)); /* إبراز حواف الشعار */
+            /* إجبار معالج الرسوميات في الجوال على عرض الصورة بدقة فائقة */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
             transition: transform 0.3s ease; 
         }
         .header-logo img:hover { transform: scale(1.02); }
@@ -144,7 +145,7 @@
             /* الهيدر */
             .top-header { flex-direction: column; gap: 15px; text-align: center; padding-top: 25px; }
             .header-logo { justify-content: center; width: 100%; }
-            .header-logo img { height: 65px !important; }
+            .header-logo img { height: 60px !important; width: auto !important; max-width: 100% !important; }
             .header-user { width: 100%; justify-content: center; flex-direction: row-reverse; }
             .user-greeting { text-align: right; }
             
@@ -300,11 +301,9 @@
         </main>
     </div>
 
-    <!-- استدعاء المكتبات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- الملفات الخارجية لدعم الهيكلة الجديدة -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/investment-details.js"></script>
     <script src="../../assets/js/app.js"></script>
