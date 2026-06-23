@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 2. investment-details.js - سوق الفرص والشركات المطروحة
+ * 2. investment-details.js - سوق الفرص والشركات المطروحة (نسخة التشغيل الفوري)
  * ============================================================
  */
 
@@ -9,7 +9,9 @@
 
     window.initOpportunities = function() {
         let gridCont = document.getElementById('gridContainer');
-        if (!gridCont) return;
+        let listBody = document.getElementById('listTableBody');
+        // إذا لم تكن هذه العناصر في الصفحة الحالية، أوقف التنفيذ فوراً لحماية النظام
+        if (!gridCont && !listBody) return;
 
         window.currentViewStyle = window.currentViewStyle || 'list';
 
@@ -22,7 +24,6 @@
         };
 
         window.renderOpportunities = function(data) {
-            const listBody = document.getElementById('listTableBody');
             const listCont = document.getElementById('listContainer');
             const emptyState = document.getElementById('emptyState');
             if(!gridCont || !listBody) return;
@@ -52,7 +53,7 @@
                 const detailUrl = 'completed-investments.html?id=' + item.id;
                 
                 gridCont.innerHTML += `
-                    <div class="opp-card glass-panel">
+                    <div class="opp-card">
                         <div class="opp-header">
                             <div><span class="type-badge ${typeBadge}">${item.type}</span></div>
                             <span class="badge ${badge}">${item.status}</span>
@@ -95,7 +96,6 @@
             });
         };
 
-        // دالة الفلترة وتحديث الرسوم البيانية الديناميكي
         window.applyFilters = function() {
             const typeFilter = document.getElementById('typeFilter');
             const statusFilter = document.getElementById('statusFilter');
@@ -105,7 +105,6 @@
             let statusVal = statusFilter ? statusFilter.value : 'all';
             let searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-            // 1. تصفية البيانات
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
@@ -115,9 +114,7 @@
 
             window.renderOpportunities(filtered);
             
-            // 2. حساب مؤشرات البطاقات العلوية والحالات للرسم الدائري
             let statusCounts = { active:0, upcoming:0, completed:0, ended:0, closed:0, cancelled:0 };
-            
             filtered.forEach(d => {
                 if(d.status === 'النشطة' || d.status === 'قائم') statusCounts.active++;
                 else if(d.status === 'القادمة') statusCounts.upcoming++;
@@ -131,16 +128,14 @@
             if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = statusCounts.upcoming;
             if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = statusCounts.completed;
 
-            // 3. حساب رؤوس الأموال للأشهر الستة (من يناير إلى يونيو) للرسم البياني العمودي
             let extendedCapital = [0, 0, 0, 0, 0, 0];
             let opportunityCapital = [0, 0, 0, 0, 0, 0];
 
             filtered.forEach(d => {
                 if (d.reqDate) {
-                    // استخراج الشهر من صيغة التاريخ "YYYY/MM/DD"
                     let parts = d.reqDate.split('/');
                     if (parts.length === 3) {
-                        let monthIndex = parseInt(parts[1]) - 1; // 0 ليناير، 5 ليونيو
+                        let monthIndex = parseInt(parts[1]) - 1;
                         if (monthIndex >= 0 && monthIndex <= 5) {
                             if (d.type === 'شراكة ممتدة') extendedCapital[monthIndex] += d.capital;
                             else opportunityCapital[monthIndex] += d.capital;
@@ -149,111 +144,14 @@
                 }
             });
 
-            // 4. تحديث الرسوم البيانية بالبيانات الحية
-            updateDashboardCharts(statusCounts, extendedCapital, opportunityCapital);
+            if(typeof window.updateDashboardCharts === 'function') {
+                window.updateDashboardCharts(statusCounts, extendedCapital, opportunityCapital);
+            } else if (typeof window.initCharts === 'function') {
+                window.initCharts();
+            }
         };
 
-        function updateDashboardCharts(statusCounts, extCap, oppCap) {
-            if (typeof Chart === 'undefined' || typeof ChartDataLabels === 'undefined') return;
-            Chart.register(ChartDataLabels);
-
-            // -- المخطط الدائري (توزيع الحالات) --
-            const statusCanvas = document.getElementById('statusChart');
-            if (statusCanvas) {
-                let existingChart = Chart.getChart('statusChart');
-                if (existingChart) existingChart.destroy();
-                
-                new Chart(statusCanvas.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['نشطة', 'قادمة', 'مكتملة', 'منتهية', 'مغلقة', 'ملغاة'],
-                        datasets: [{
-                            data: [statusCounts.active, statusCounts.upcoming, statusCounts.completed, statusCounts.ended, statusCounts.closed, statusCounts.cancelled],
-                            backgroundColor: ['#028090', '#10b981', '#6366f1', '#cbd5e1', '#334155', '#ef4444'],
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                rtl: true,
-                                labels: { font: { family: 'Tajawal', size: 12, weight: '700' }, color: '#334155' }
-                            },
-                            datalabels: {
-                                color: '#ffffff',
-                                font: { family: 'Tajawal', weight: '800', size: 14 },
-                                formatter: (value) => value > 0 ? value : '' // إخفاء الصفر لعدم الازدحام
-                            }
-                        }
-                    }
-                });
-            }
-
-            // -- المخطط العمودي (الفرص خلال 6 أشهر) --
-            const oppCanvas = document.getElementById('opportunitiesChart');
-            if (oppCanvas) {
-                let existingOppChart = Chart.getChart('opportunitiesChart');
-                if (existingOppChart) existingOppChart.destroy();
-
-                new Chart(oppCanvas.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                        datasets: [
-                            { 
-                                label: 'شراكة ممتدة (ر.س)', 
-                                data: extCap, 
-                                backgroundColor: '#0A1B3F', 
-                                borderRadius: 6 
-                            },
-                            { 
-                                label: 'فرصة شراكة (ر.س)', 
-                                data: oppCap, 
-                                backgroundColor: '#028090', 
-                                borderRadius: 6 
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grace: '20%', // مساحة فارغة في الأعلى لمنع قص الأرقام
-                                grid: { color: '#f1f5f9' },
-                                ticks: { font: { family: 'Tajawal', size: 12 }, callback: function(value) { return window.formatMoneySafe(value); } }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { family: 'Tajawal', size: 13, weight: '700' } }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                rtl: true,
-                                labels: { font: { family: 'Tajawal', size: 13, weight: '700' } }
-                            },
-                            datalabels: {
-                                anchor: 'end',
-                                align: 'top', // رفع الأرقام فوق الأعمدة
-                                offset: 4,
-                                color: '#0A1B3F',
-                                font: { family: 'Tajawal', weight: '800', size: 11 },
-                                formatter: (value) => value > 0 ? window.formatMoneySafe(value) : '' // عرض المبالغ المالية وتجاهل الأصفار
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // توليد التنبيهات في لوحة عرض السوق
+        // حقن التنبيهات المنظمة بلون متناسق
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
@@ -264,13 +162,18 @@
                     htmlAlerts += window.buildAlertBanner(opp); 
                 });
             }
-
             marketAlertContainer.innerHTML = htmlAlerts;
             marketAlertContainer.setAttribute('data-loaded', 'true');
         }
 
-        // تنفيذ الفلترة وتحديث كل شيء عند التحميل
         window.applyFilters();
     };
+
+    // 🌟 القوة الضاربة للتحديث الجذري: التشغيل التلقائي فور قراءة المتصفح للملف
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.initOpportunities);
+    } else {
+        window.initOpportunities();
+    }
 
 })();
