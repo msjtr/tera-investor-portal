@@ -95,6 +95,7 @@
             });
         };
 
+        // دالة الفلترة وتحديث الرسوم البيانية الديناميكي
         window.applyFilters = function() {
             const typeFilter = document.getElementById('typeFilter');
             const statusFilter = document.getElementById('statusFilter');
@@ -104,6 +105,7 @@
             let statusVal = statusFilter ? statusFilter.value : 'all';
             let searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
+            // 1. تصفية البيانات
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
@@ -113,78 +115,148 @@
 
             window.renderOpportunities(filtered);
             
-            let active = 0, upcoming = 0, completed = 0;
+            // 2. حساب مؤشرات البطاقات العلوية والحالات للرسم الدائري
+            let statusCounts = { active:0, upcoming:0, completed:0, ended:0, closed:0, cancelled:0 };
+            
             filtered.forEach(d => {
-                if(d.status === 'النشطة' || d.status === 'قائم') active++;
-                if(d.status === 'القادمة') upcoming++;
-                if(d.status === 'المكتملة') completed++;
+                if(d.status === 'النشطة' || d.status === 'قائم') statusCounts.active++;
+                else if(d.status === 'القادمة') statusCounts.upcoming++;
+                else if(d.status === 'المكتملة') statusCounts.completed++;
+                else if(d.status === 'المنتهية') statusCounts.ended++;
+                else if(d.status === 'المغلقة') statusCounts.closed++;
+                else if(d.status === 'الملغاة') statusCounts.cancelled++;
             });
-            if(document.getElementById('sumActive')) document.getElementById('sumActive').innerText = active;
-            if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
-            if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
 
-            // تحديث الرسوم البيانية المؤتمتة
-            try {
-                if(typeof Chart !== 'undefined') {
-                    let counts = { active:active, upcoming:upcoming, finished:0, closed:0, cancelled:0, completed:completed };
-                    filtered.forEach(d => {
-                        if(d.status === 'المنتهية') counts.finished++;
-                        else if(d.status === 'المغلقة') counts.closed++;
-                        else if(d.status === 'الملغاة') counts.cancelled++;
-                    });
+            if(document.getElementById('sumActive')) document.getElementById('sumActive').innerText = statusCounts.active;
+            if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = statusCounts.upcoming;
+            if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = statusCounts.completed;
 
-                    const ctxStatus = document.getElementById('statusChart');
-                    if(ctxStatus) {
-                        let existingChart = Chart.getChart(ctxStatus);
-                        if(existingChart) {
-                            existingChart.data.datasets[0].data = [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed];
-                            existingChart.update();
-                        } else {
-                            if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
-                            new Chart(ctxStatus, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
-                                    datasets: [{ data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed], backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'], borderWidth: 0 }]
-                                },
-                                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true } } }
-                            });
-                        }
-                    }
+            // 3. حساب رؤوس الأموال للأشهر الستة (من يناير إلى يونيو) للرسم البياني العمودي
+            let extendedCapital = [0, 0, 0, 0, 0, 0];
+            let opportunityCapital = [0, 0, 0, 0, 0, 0];
 
-                    const ctxOpp = document.getElementById('opportunitiesChart');
-                    if(ctxOpp) {
-                        let existingOppChart = Chart.getChart(ctxOpp);
-                        let mVal = filtered.length > 0 ? filtered[0].capital : 10000;
-                        let cVal = Math.max(1, Math.floor(filtered.length / 6));
-                        if(existingOppChart) {
-                            existingOppChart.data.datasets[0].data = [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5];
-                            existingOppChart.data.datasets[1].data = [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length];
-                            existingOppChart.update();
-                        } else {
-                            new Chart(ctxOpp, {
-                                type: 'bar',
-                                data: {
-                                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                                    datasets: [
-                                        { type: 'line', label: 'إجمالي المبالغ', data: [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.4, yAxisID: 'y1' },
-                                        { type: 'bar', label: 'الفرص المطروحة', data: [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length], backgroundColor: '#028090', borderRadius: 4, yAxisID: 'y' }
-                                    ]
-                                },
-                                options: { responsive: true, maintainAspectRatio: false }
-                            });
+            filtered.forEach(d => {
+                if (d.reqDate) {
+                    // استخراج الشهر من صيغة التاريخ "YYYY/MM/DD"
+                    let parts = d.reqDate.split('/');
+                    if (parts.length === 3) {
+                        let monthIndex = parseInt(parts[1]) - 1; // 0 ليناير، 5 ليونيو
+                        if (monthIndex >= 0 && monthIndex <= 5) {
+                            if (d.type === 'شراكة ممتدة') extendedCapital[monthIndex] += d.capital;
+                            else opportunityCapital[monthIndex] += d.capital;
                         }
                     }
                 }
-            } catch(e) {}
+            });
+
+            // 4. تحديث الرسوم البيانية بالبيانات الحية
+            updateDashboardCharts(statusCounts, extendedCapital, opportunityCapital);
         };
 
-        // توليد التنبيهات في لوحة عرض السوق بشكل مسبق (يجلب جميع الفرص النشطة والقادمة)
+        function updateDashboardCharts(statusCounts, extCap, oppCap) {
+            if (typeof Chart === 'undefined' || typeof ChartDataLabels === 'undefined') return;
+            Chart.register(ChartDataLabels);
+
+            // -- المخطط الدائري (توزيع الحالات) --
+            const statusCanvas = document.getElementById('statusChart');
+            if (statusCanvas) {
+                let existingChart = Chart.getChart('statusChart');
+                if (existingChart) existingChart.destroy();
+                
+                new Chart(statusCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['نشطة', 'قادمة', 'مكتملة', 'منتهية', 'مغلقة', 'ملغاة'],
+                        datasets: [{
+                            data: [statusCounts.active, statusCounts.upcoming, statusCounts.completed, statusCounts.ended, statusCounts.closed, statusCounts.cancelled],
+                            backgroundColor: ['#028090', '#10b981', '#6366f1', '#cbd5e1', '#334155', '#ef4444'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                rtl: true,
+                                labels: { font: { family: 'Tajawal', size: 12, weight: '700' }, color: '#334155' }
+                            },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { family: 'Tajawal', weight: '800', size: 14 },
+                                formatter: (value) => value > 0 ? value : '' // إخفاء الصفر لعدم الازدحام
+                            }
+                        }
+                    }
+                });
+            }
+
+            // -- المخطط العمودي (الفرص خلال 6 أشهر) --
+            const oppCanvas = document.getElementById('opportunitiesChart');
+            if (oppCanvas) {
+                let existingOppChart = Chart.getChart('opportunitiesChart');
+                if (existingOppChart) existingOppChart.destroy();
+
+                new Chart(oppCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        datasets: [
+                            { 
+                                label: 'شراكة ممتدة (ر.س)', 
+                                data: extCap, 
+                                backgroundColor: '#0A1B3F', 
+                                borderRadius: 6 
+                            },
+                            { 
+                                label: 'فرصة شراكة (ر.س)', 
+                                data: oppCap, 
+                                backgroundColor: '#028090', 
+                                borderRadius: 6 
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grace: '20%', // مساحة فارغة في الأعلى لمنع قص الأرقام
+                                grid: { color: '#f1f5f9' },
+                                ticks: { font: { family: 'Tajawal', size: 12 }, callback: function(value) { return window.formatMoneySafe(value); } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { family: 'Tajawal', size: 13, weight: '700' } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                rtl: true,
+                                labels: { font: { family: 'Tajawal', size: 13, weight: '700' } }
+                            },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top', // رفع الأرقام فوق الأعمدة
+                                offset: 4,
+                                color: '#0A1B3F',
+                                font: { family: 'Tajawal', weight: '800', size: 11 },
+                                formatter: (value) => value > 0 ? window.formatMoneySafe(value) : '' // عرض المبالغ المالية وتجاهل الأصفار
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // توليد التنبيهات في لوحة عرض السوق
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
-            
-            // جلب (جميع) الفرص المتاحة والقادمة لكلا النوعين
             let alertOpps = window.mockData.filter(d => ['النشطة', 'قائم', 'القادمة'].includes(d.status));
             
             if(typeof window.buildAlertBanner === 'function') {
@@ -197,6 +269,7 @@
             marketAlertContainer.setAttribute('data-loaded', 'true');
         }
 
+        // تنفيذ الفلترة وتحديث كل شيء عند التحميل
         window.applyFilters();
     };
 
