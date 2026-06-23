@@ -98,6 +98,9 @@
         };
 
         window.applyFilters = function() {
+            // تفعيل مفتاح الأمان لمنع المراقب المركزي من التدخل
+            window.isFiltering = true;
+
             const typeFilter = document.getElementById('typeFilter');
             const statusFilter = document.getElementById('statusFilter');
             const searchInput = document.getElementById('searchInput');
@@ -147,8 +150,13 @@
                 }
             });
 
-            // 3. استدعاء الرسم البياني الفعلي والحي بالبيانات المحسوبة (الآن أصبح مدمجاً هنا ولا يعتمد على ملفات أخرى)
+            // 3. استدعاء الرسم البياني الفعلي والحي بالبيانات المحسوبة
             renderLiveCharts(statusCounts, extendedCapital, opportunityCapital);
+
+            // إغلاق مفتاح الأمان بعد الانتهاء من رسم العناصر بفترة قصيرة جداً
+            setTimeout(() => {
+                window.isFiltering = false;
+            }, 100);
         };
 
         // دالة الرسم البياني الديناميكية المدمجة
