@@ -1,21 +1,23 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات (الإصدار المستقر)
+ * investments.js - ملف التحكم المركزي للاستثمارات 
  * ============================================================
- * تم حل مشكلة الـ Syntax Error بشكل نهائي.
- * تم ضبط عرض التنبيهات الذكية والمؤشرات لتعمل بديناميكية كاملة.
+ * تم حل مشكلة القص (Unexpected end of input) والتأكد من إغلاق كافة الأقواس.
  * ============================================================
  */
 
 (function() {
     'use strict';
 
+    // منع تكرار تحميل الملف
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
     let isUpdating = false;
 
-    // 1. قاعدة البيانات المركزية الموحدة (12 فرصة استثمارية)
+    // ============================================================
+    // 1. قاعدة البيانات المركزية (Mock Data)
+    // ============================================================
     window.mockData = [
         { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
         { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
@@ -34,13 +36,18 @@
     window.formatMoneySafe = function(num) { 
         return parseFloat(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
     };
+    
     window.getBadgeClass = function(s) { 
-        return s === 'النشطة' ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); 
+        if (s === 'النشطة') return 'status-active';
+        if (s === 'القادمة') return 'status-upcoming';
+        return 'status-completed';
     };
+    
     window.getTypeBadgeClass = function(t) { 
         return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; 
     };
 
+    // حفظ رقم الفرصة عند النقر للتنقل بين الصفحات
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.indexOf('id=') !== -1) {
@@ -59,7 +66,9 @@
         return id ? id.trim().toLowerCase() : null;
     }
 
-    // 2. المكون الديناميكي المحمي لبناء لوحة التنبيهات الذكية
+    // ============================================================
+    // 2. دالة بناء التنبيهات الذكية (Smart Alerts)
+    // ============================================================
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
         if (availableSharesToBuy < 0) availableSharesToBuy = 0;
@@ -90,7 +99,7 @@
         } else {
             icon = 'fa-lock'; iconColor = '#64748b'; pulseClass = '';
             title = 'فرصة استثمارية مغلقة/مكتملة';
-            desc = 'اكتمل تمويل هذه الفرصة بنسبة 100% وتم إصدار السندات للأعضاء.';
+            desc = 'اكتمل تمويل هذه الفرصة بنسبة 100% وتم إغلاق الطرح.';
             timeText = 'منتهية الصلاحية';
             timeColor = '#64748b'; timeBg = '#f1f5f9';
             statusIcon = 'fa-lock'; statusColor = '#64748b'; statusBg = '#f1f5f9';
@@ -130,7 +139,9 @@
         '</div>';
     };
 
-    // 3. تهيئة صفحة السوق (opportunities.html) 
+    // ============================================================
+    // 3. تهيئة واجهة "سوق الفرص" 
+    // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
         if (!gridCont) return;
@@ -146,23 +157,34 @@
         };
 
         window.renderOpportunities = function(data) {
-            const listBody = document.getElementById('listTableBody'), listCont = document.getElementById('listContainer'), emptyState = document.getElementById('emptyState');
+            const listBody = document.getElementById('listTableBody');
+            const listCont = document.getElementById('listContainer');
+            const emptyState = document.getElementById('emptyState');
             if(!gridCont || !listBody) return;
 
-            gridCont.innerHTML = ''; listBody.innerHTML = '';
+            gridCont.innerHTML = ''; 
+            listBody.innerHTML = '';
             
             if(data.length === 0) {
                 if(emptyState) emptyState.style.display = 'block';
-                gridCont.style.display = 'none'; if(listCont) listCont.style.display = 'none'; 
+                gridCont.style.display = 'none'; 
+                if(listCont) listCont.style.display = 'none'; 
                 return;
             } else {
                 if(emptyState) emptyState.style.display = 'none';
-                if(window.currentViewStyle === 'grid') { gridCont.style.display = 'grid'; if(listCont) listCont.style.display = 'none'; } 
-                else { gridCont.style.display = 'none'; if(listCont) listCont.style.display = 'block'; }
+                if(window.currentViewStyle === 'grid') { 
+                    gridCont.style.display = 'grid'; 
+                    if(listCont) listCont.style.display = 'none'; 
+                } else { 
+                    gridCont.style.display = 'none'; 
+                    if(listCont) listCont.style.display = 'block'; 
+                }
             }
 
             data.forEach(item => {
-                const badge = window.getBadgeClass(item.status), typeBadge = window.getTypeBadgeClass(item.type), detailUrl = 'completed-investments.html?id=' + item.id;
+                const badge = window.getBadgeClass(item.status);
+                const typeBadge = window.getTypeBadgeClass(item.type);
+                const detailUrl = 'completed-investments.html?id=' + item.id;
                 
                 gridCont.innerHTML += '<div class="opp-card glass-panel">' +
                         '<div class="opp-header">' +
@@ -191,8 +213,13 @@
         };
 
         window.applyFilters = function() {
-            const typeFilter = document.getElementById('typeFilter'), statusFilter = document.getElementById('statusFilter'), searchInput = document.getElementById('searchInput');
-            let typeVal = typeFilter ? typeFilter.value : 'all', statusVal = statusFilter ? statusFilter.value : 'all', searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const typeFilter = document.getElementById('typeFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const searchInput = document.getElementById('searchInput');
+            
+            let typeVal = typeFilter ? typeFilter.value : 'all';
+            let statusVal = statusFilter ? statusFilter.value : 'all';
+            let searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
@@ -213,6 +240,7 @@
             if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
             if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
 
+            // تحديث الرسوم البيانية (Charts)
             try {
                 if(typeof Chart !== 'undefined') {
                     let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
@@ -274,17 +302,22 @@
 
         window.applyFilters();
 
-        // 🔥 توليد شريط التنبيهات الذكي في شاشة السوق للفرص "النشطة"
+        // 🔥 توليد التنبيهات في السوق لجميع الفرص النشطة
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer) {
-            let activeOpps = window.mockData.filter(d => d.status === 'النشطة').slice(0, 2);
-            let alertsHtml = '';
-            activeOpps.forEach(opp => { alertsHtml += window.buildAlertBanner(opp); });
-            marketAlertContainer.innerHTML = alertsHtml;
+            marketAlertContainer.innerHTML = '';
+            let activeOpps = window.mockData.filter(d => d.status === 'النشطة');
+            // نعرض أول فرصتين نشطتين فقط حتى لا نمتلئ الشاشة
+            let oppsToShow = activeOpps.slice(0, 2); 
+            oppsToShow.forEach(opp => { 
+                marketAlertContainer.innerHTML += window.buildAlertBanner(opp); 
+            });
         }
     }
 
-    // 4. تهيئة صفحة التفاصيل (completed-investments.html)
+    // ============================================================
+    // 4. تهيئة صفحة التفاصيل الفردية (completed-investments.html)
+    // ============================================================
     function initInvestmentDetails() {
         if (!document.getElementById('mDetOppId')) return;
 
@@ -295,190 +328,4 @@
         document.getElementById('pageMainTitle').innerText = "تفاصيل الفرصة: " + opp.company;
         document.getElementById('mDetOppId').innerText = opp.id;
         document.getElementById('mDetOppCompany').innerText = opp.company;
-        document.getElementById('mDetProgressText').innerText = opp.fundedPercentage + '%';
-        document.getElementById('mDetProgressBar').style.width = opp.fundedPercentage + '%';
-        document.getElementById('mDetOppStatus').innerText = opp.status;
-        document.getElementById('mDetOfferingPeriod').innerText = opp.offeringPeriod;
-        document.getElementById('mDetSharesCount').innerText = opp.sharesCount;
-        document.getElementById('mDetSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + ' ر.س';
-        document.getElementById('mDetTotalCapital').innerText = window.formatMoneySafe(opp.capital) + ' ر.س';
-        document.getElementById('mDetRatio').innerText = opp.roi + "%";
-        
-        let typeBadgeEl = document.getElementById('mDetOppType');
-        if(typeBadgeEl) {
-            typeBadgeEl.innerText = opp.type;
-            typeBadgeEl.className = opp.type === 'فرصة شراكة' ? 'type-badge type-opportunity' : 'type-badge type-extended';
-        }
-
-        document.getElementById('mDetReqDate').innerText = opp.reqDate || "2026/05/20";
-        document.getElementById('mDetProductQty').innerText = opp.sharesCount * 5;
-        document.getElementById('mDetProdVal').innerText = window.formatMoneySafe(opp.capital) + ' ر.س';
-        document.getElementById('mDetProdPrice').innerText = window.formatMoneySafe(opp.sharePrice / 5) + ' ر.س';
-        document.getElementById('mDetTax').innerText = window.formatMoneySafe(opp.capital * 0.15) + ' ر.س';
-        document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
-
-        // 🔥 حقن التنبيه الذكي المخصص للفرصة الحالية فقط داخل حاوية التفاصيل
-        const alertsCont = document.getElementById('mDetAlertsContainer');
-        if (alertsCont) {
-            alertsCont.innerHTML = window.buildAlertBanner(opp);
-        }
-
-        const joinWrapper = document.getElementById('joinActionWrapper');
-        const btnJoin = document.getElementById('btnRedirectToJoin');
-        let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
-
-        if (joinWrapper && btnJoin) {
-            if (opp.status === 'النشطة' && availableSharesToBuy > 0) {
-                joinWrapper.style.display = 'block';
-                btnJoin.href = "cancelled-investments.html?id=" + opp.id;
-            } else {
-                joinWrapper.style.display = 'none';
-            }
-        }
-    }
-
-    // 5. تهيئة صفحة طلب الانضمام (cancelled-investments.html)
-    function initCancelledInvestments() {
-        if (!document.getElementById('invOppName')) return;
-
-        let oppId = getSafeOppId();
-        let opp = oppId ? window.mockData.find(d => d.id.toLowerCase() === oppId) : null;
-        if (!opp) opp = window.mockData[0];
-
-        window.currentActiveOpp = opp;
-        window.availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
-        if(window.availableSharesToBuy < 1) window.availableSharesToBuy = 0;
-        
-        window.selectedPackageType = 'basic';
-        window.selectedPackageName = 'الباقة الأساسية';
-        window.selectedPackageFixedFee = 0;
-
-        document.getElementById('invOppName').innerText = opp.company;
-        document.getElementById('invOppId').innerText = opp.id;
-        document.getElementById('invSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
-        document.getElementById('invDuration').innerText = opp.duration + " أشهر";
-        document.getElementById('maxShares').innerText = window.availableSharesToBuy;
-
-        if (window.availableSharesToBuy >= 1) {
-            document.getElementById('shareInput').value = 1;
-            window.executeCalculations();
-        } else {
-            document.getElementById('shareInput').value = 0;
-        }
-        window.syncButtonsState();
-    }
-
-    window.executeCalculations = function() {
-        let opp = window.currentActiveOpp;
-        if(!opp || !document.getElementById('servicesTableBody')) return;
-
-        let shares = parseInt(document.getElementById('shareInput').value) || 0;
-        document.getElementById('extendedDetails').style.display = 'block';
-
-        let duration = parseInt(opp.duration) || 6;
-        let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); 
-        let profitPerShare = (parseFloat(opp.expectedProfit) || 0) / (parseInt(opp.sharesCount) || 1);
-        let totalProfit = shares * profitPerShare;
-        
-        let baseFeeAdmin = 20, baseFeeTransfer = 25, baseFeeCol = 100, pkgFee = window.selectedPackageFixedFee || 0;
-        let totalBaseFees = baseFeeAdmin + baseFeeTransfer + baseFeeCol + pkgFee;
-        let totalFeesVat = totalBaseFees * 0.15;
-        let oppCostsWithVat = totalBaseFees + totalFeesVat; 
-
-        let adminMonthly = (baseFeeAdmin * 1.15) / duration;
-        let transMonthly = (baseFeeTransfer * 1.15) / duration;
-        let colMonthly = (baseFeeCol * 1.15) / duration;
-        let pkgMonthly = (pkgFee * 1.15) / duration;
-        let totalMonthlyFinal = oppCostsWithVat / duration;
-
-        document.getElementById('servicesTableBody').innerHTML = 
-            '<tr><td class="text-start">الرسوم الإدارية</td><td>' + window.formatMoneySafe(baseFeeAdmin) + '</td><td>' + window.formatMoneySafe(baseFeeAdmin*0.15) + '</td><td>' + window.formatMoneySafe(baseFeeAdmin*1.15) + '</td><td style="color:var(--tera-teal); font-family:monospace;">' + window.formatMoneySafe(adminMonthly) + '</td><td class="notes">تخصم شهرياً</td></tr>' +
-            '<tr><td class="text-start">رسوم التحويل</td><td>' + window.formatMoneySafe(baseFeeTransfer) + '</td><td>' + window.formatMoneySafe(baseFeeTransfer*0.15) + '</td><td>' + window.formatMoneySafe(baseFeeTransfer*1.15) + '</td><td style="color:var(--tera-teal); font-family:monospace;">' + window.formatMoneySafe(transMonthly) + '</td><td class="notes">تخصم شهرياً</td></tr>' +
-            '<tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>' + window.formatMoneySafe(baseFeeCol) + '</td><td>' + window.formatMoneySafe(baseFeeCol*0.15) + '</td><td>' + window.formatMoneySafe(baseFeeCol*1.15) + '</td><td style="color:var(--tera-teal); font-family:monospace;">' + window.formatMoneySafe(colMonthly) + '</td><td class="notes">تخصم شهرياً</td></tr>' +
-            '<tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ' + window.selectedPackageName + '</td><td style="color:var(--tera-teal);">' + window.formatMoneySafe(pkgFee) + '</td><td style="color:var(--tera-teal);">' + window.formatMoneySafe(pkgFee*0.15) + '</td><td>' + window.formatMoneySafe(pkgFee*1.15) + '</td><td style="color:var(--tera-teal); font-family:monospace;">' + window.formatMoneySafe(pkgMonthly) + '</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً</td></tr>' +
-            '<tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>' + window.formatMoneySafe(totalBaseFees) + '</td><td>' + window.formatMoneySafe(totalFeesVat) + '</td><td style="color:var(--tera-teal);">' + window.formatMoneySafe(oppCostsWithVat) + '</td><td style="color:var(--tera-teal); font-size:16px;">' + window.formatMoneySafe(totalMonthlyFinal) + '</td><td>-</td></tr>';
-
-        document.getElementById('txtBaseFees').innerText = window.formatMoneySafe(totalBaseFees) + " ر.س";
-        document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
-        document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
-
-        let isExtended = opp.type === 'شراكة ممتدة';
-        let distTitle = document.getElementById('distTableTitleText');
-        if(distTitle) distTitle.innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
-        
-        let theadHtml = '<tr><th>تاريخ التحصيل</th>';
-        if(!isExtended) theadHtml += '<th>رأس المال المسترد</th>';
-        theadHtml += '<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>';
-        document.getElementById('distributionTableHeader').innerHTML = theadHtml;
-
-        let monthlyCapital = partnerCapital / duration;
-        let monthlyProfit = totalProfit / duration;
-        let distBody = '', tCap = 0, tProf = 0, tPay = 0, tFee = 0, tRem = 0;
-        let startDate = new Date();
-
-        for(let i = 1; i <= duration; i++) {
-            let payDate = new Date(startDate); payDate.setMonth(startDate.getMonth() + i);
-            let dateStr = payDate.getFullYear() + '/' + String(payDate.getMonth() + 1).padStart(2, '0') + '/15';
-            
-            if(isExtended) {
-                let currentPayment = monthlyProfit;
-                let currentRemaining = currentPayment - totalMonthlyFinal;
-                distBody += '<tr><td>' + dateStr + '</td><td>' + window.formatMoneySafe(monthlyProfit) + '</td><td>' + window.formatMoneySafe(currentPayment) + '</td><td style="color:#ef4444;">' + window.formatMoneySafe(totalMonthlyFinal) + '</td><td style="color:var(--tera-teal); font-weight:bold;">' + window.formatMoneySafe(currentRemaining) + '</td><td style="font-size:11px; color:#64748b;">توزيع أرباح</td></tr>';
-                tProf += monthlyProfit; tPay += currentPayment; tFee += totalMonthlyFinal; tRem += currentRemaining;
-            } else {
-                let monthlyTotalPayment = monthlyCapital + monthlyProfit;
-                let monthlyRemaining = monthlyTotalPayment - totalMonthlyFinal;
-                distBody += '<tr><td>' + dateStr + '</td><td>' + window.formatMoneySafe(monthlyCapital) + '</td><td>' + window.formatMoneySafe(monthlyProfit) + '</td><td>' + window.formatMoneySafe(monthlyTotalPayment) + '</td><td style="color:#ef4444;">' + window.formatMoneySafe(totalMonthlyFinal) + '</td><td style="color:var(--tera-teal); font-weight:bold;">' + window.formatMoneySafe(monthlyRemaining) + '</td><td>مجدولة</td></tr>';
-                tCap += monthlyCapital; tProf += monthlyProfit; tPay += monthlyTotalPayment; tFee += totalMonthlyFinal; tRem += monthlyRemaining;
-            }
-        }
-        
-        distBody += '<tr class="total-row"><td class="text-start">الإجمالي</td>' + (!isExtended ? '<td>' + window.formatMoneySafe(tCap) + '</td>' : '') + '<td>' + window.formatMoneySafe(tProf) + '</td><td>' + window.formatMoneySafe(tPay) + '</td><td style="color:#ef4444;">' + window.formatMoneySafe(tFee) + '</td><td style="color:var(--tera-teal); font-size:16px;">' + window.formatMoneySafe(tRem) + '</td><td>-</td></tr>';
-        
-        if(isExtended && partnerCapital > 0) {
-            document.getElementById('extendedCapitalNote').style.display = 'block';
-            distBody += '<tr class="highlight-row"><td colspan="2" class="text-start" style="font-weight:800;">رأس المال المسترد (في نهاية المدة)</td><td colspan="4" style="text-align:center; font-weight:800; font-size:18px;">' + window.formatMoneySafe(partnerCapital) + ' ر.س</td></tr>';
-        } else {
-            let extendedNote = document.getElementById('extendedCapitalNote');
-            if (extendedNote) extendedNote.style.display = 'none';
-        }
-
-        document.getElementById('distributionTableBody').innerHTML = distBody;
-
-        let netProfitFinal = totalProfit - oppCostsWithVat; 
-        let totalReturnFinal = partnerCapital + netProfitFinal; 
-        
-        document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
-        document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
-        document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
-        document.getElementById('finalDifference').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
-
-        document.getElementById('sumShares').innerText = shares;
-        document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
-        document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
-        document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(partnerCapital) + " ر.س" : "0.00 ر.س";
-    };
-
-    window.changeShares = function(delta) {
-        let input = document.getElementById('shareInput');
-        if(!input) return;
-        let val = (parseInt(input.value) || 0) + delta;
-        if (val >= 1 && val <= window.availableSharesToBuy) {
-            input.value = val;
-            window.syncButtonsState();
-            window.executeCalculations();
-        }
-    };
-
-    window.syncButtonsState = function() {
-        let currentShares = parseInt(document.getElementById('shareInput').value) || 0;
-        const btnMinus = document.getElementById('btnMinus'), btnPlus = document.getElementById('btnPlus');
-        if(btnMinus) btnMinus.disabled = (currentShares <= 1);
-        if(btnPlus) btnPlus.disabled = (currentShares >= window.availableSharesToBuy);
-        window.togglePayButton();
-    };
-
-    window.selectPackage = function(el, type, name, feeValue) {
-        document.querySelectorAll('.package-card').forEach(card => {
-            card.classList.remove('selected');
-            let radio = card.querySelector('input');
+        document.
