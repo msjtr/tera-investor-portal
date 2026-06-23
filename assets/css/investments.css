@@ -1,42 +1,127 @@
 /* ============================================================
-   4. investments.css - ملف أدوات الاستثمار والدليل والحسابات
+   ملف أدوات الاستثمار والدليل والحسابات | Tera Investor Portal
    ============================================================ */
 
-/* أ. لوحة بطاقات الإحصائيات العلوية */
-.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.summary-card {
-    background: #fff; padding: 25px 20px; border-radius: 12px; border: 1px solid var(--border-color);
-    border-right: 5px solid var(--tera-gray); box-shadow: var(--card-shadow); display: flex; flex-direction: column; justify-content: center; transition: transform 0.3s ease;
+/* -----------------------------------------
+   1. لوحة الإحصائيات العلوية (Summary Cards)
+   ----------------------------------------- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
 }
+
+.summary-card {
+    background: #fff;
+    padding: 25px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    border-right: 5px solid var(--tera-gray);
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
 .summary-card:hover { transform: translateY(-5px); }
 .summary-card.active-card { border-right-color: var(--tera-teal); }
 .summary-card.upcoming-card { border-right-color: #10b981; }
 .summary-card.completed-card { border-right-color: #6366f1; }
-.summary-card h3 { font-size: 32px; color: var(--tera-navy); font-weight: 800; font-family: monospace; margin-top: 5px; }
 
-/* ب. حاويات الرسوم البيانية والجداول المالية */
-.dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 30px; width: 100%; }
-.content-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: var(--card-shadow); }
+.summary-card h3 {
+    font-size: 32px;
+    color: var(--tera-navy);
+    font-weight: 800;
+    font-family: monospace;
+    margin-top: 5px;
+}
+
+/* -----------------------------------------
+   2. الرسوم البيانية والجداول (Dashboard & Tables)
+   ----------------------------------------- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.content-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+}
+
 .chart-container { min-height: 320px; display: flex; flex-direction: column; }
 
-.list-view-container { display: block; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; width: 100%; }
+.list-view-container {
+    display: block;
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    width: 100%;
+}
+
 .tera-table { width: 100%; border-collapse: collapse; text-align: right; }
-.tera-table th { background: #f8fafc; padding: 16px 15px; color: var(--tera-navy); font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-.tera-table td { padding: 16px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; font-weight: 500; white-space: nowrap; }
+.tera-table th {
+    background: #f8fafc; padding: 16px 15px; color: var(--tera-navy);
+    font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap;
+}
+.tera-table td {
+    padding: 16px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+    color: #334155; font-weight: 500; white-space: nowrap;
+}
 .tera-table tr:hover td { background: #f8fafc; }
 
-/* جـ. حاويات العرض الشبكي للفرص (Grid View) المتطابق */
-.grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; width: 100%; }
-.opp-card { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden; }
-.opp-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(2, 128, 144, 0.1); border-color: var(--tera-teal); }
-.opp-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
+/* -----------------------------------------
+   3. العرض الشبكي للفرص (Grid View)
+   ----------------------------------------- */
+.grid-view-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    width: 100%;
+}
+
+.opp-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    overflow: hidden;
+}
+
+.opp-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(2, 128, 144, 0.1);
+    border-color: var(--tera-teal);
+}
+
+.opp-header {
+    padding: 15px 20px; display: flex; justify-content: space-between;
+    align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa;
+}
+
 .opp-body { padding: 20px 20px 15px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
 .opp-metric { background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center; border: 1px dashed #cbd5e1; }
 .opp-metric span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 5px; font-weight: 700; }
 .opp-metric strong { display: block; font-size: 13px; color: var(--tera-navy); font-weight: 800; font-family: monospace; }
+
 .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #fff; display: flex; justify-content: space-between; align-items: center; }
 
-/* د. شريط التقدم ونسب الاكتمال وشارات الحالات */
+/* -----------------------------------------
+   4. المؤشرات وشريط التقدم (Progress & Badges)
+   ----------------------------------------- */
 .progress-wrapper { width: 100%; padding: 15px 20px 0; }
 .progress-text { font-size: 12px; font-weight: 700; color: var(--tera-navy); display: flex; justify-content: space-between; margin-bottom: 8px; }
 .progress-bar-bg { background-color: #e2e8f0; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; }
@@ -46,21 +131,43 @@
 .status-upcoming { background: #dcfce7; color: #10b981; } 
 .status-active { background: #e0f2fe; color: #028090; } 
 .status-completed { background: #e0e7ff; color: #6366f1; } 
+
 .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; display: inline-block; }
 .type-extended { background: #fef3c7; color: #d97706; } 
 .type-opportunity { background: #fce7f3; color: #db2777; } 
 
-/* هـ. صفحة التفاصيل، الحسابات، باقات الحماية ومستند الدليل */
-.detail-block { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 35px; margin-bottom: 30px; }
-.detail-block-title { font-size: 18px; color: var(--tera-navy); margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: var(--font-primary); }
+/* -----------------------------------------
+   5. صفحة التفاصيل (Blocks & Manual)
+   ----------------------------------------- */
+.detail-block {
+    background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+    padding: 35px; margin-bottom: 30px;
+}
 
-.risk-badge { background: #fffbeb; color: #d97706; padding: 8px 20px; border-radius: 10px; border: 2px solid #fde68a; font-size: 24px !important; font-weight: 900 !important; display: inline-block; text-align: center; }
-.guideline-manual { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 30px; max-height: 500px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #334155; }
+.detail-block-title {
+    font-size: 18px; color: var(--tera-navy); margin-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: var(--font-primary);
+}
+
+.risk-badge {
+    background: #fffbeb; color: #d97706; padding: 8px 20px; border-radius: 10px;
+    border: 2px solid #fde68a; font-size: 24px !important; font-weight: 900 !important; display: inline-block; text-align: center;
+}
+
+.guideline-manual {
+    background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px;
+    padding: 30px; max-height: 500px; overflow-y: auto; font-size: 14px; line-height: 1.8; color: #334155;
+}
 .guideline-manual h4 { color: var(--tera-navy); margin-top: 35px; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 16px; font-family: var(--font-primary); }
 
-/* و. باقات الاستثمار وأدوات الحسابات ومعالج الدفع */
+/* -----------------------------------------
+   6. حاسبة الانضمام والباقات (Calculator & Packages)
+   ----------------------------------------- */
 .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
-.package-card { border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+.package-card {
+    border: 2px solid #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer;
+    transition: 0.3s; background: #fff; display: flex; flex-direction: column; justify-content: space-between; position: relative;
+}
 .package-card.selected { border-color: var(--tera-teal); background: #f0fdfa; box-shadow: 0 5px 15px rgba(2, 128, 144, 0.05); }
 .package-card input[type="radio"] { position: absolute; top: 15px; right: 15px; transform: scale(1.3); accent-color: var(--tera-teal); }
 .package-card .fee { font-weight: 800; color: var(--tera-navy); font-size: 14px; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; margin-top: 10px; }
@@ -86,14 +193,23 @@
 .pay-method-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; background: #f8fafc; font-weight: bold; }
 .pay-method-card:hover { border-color: var(--tera-teal); background: #f0fdfa; }
 
-/* التحذيرات الصارمة وصناديق الاتفاقيات والإقرار */
+/* -----------------------------------------
+   7. التحذيرات والإقرارات (Warnings & Agreements)
+   ----------------------------------------- */
 .warning-text, .strict-warning { color: #ef4444; font-weight: 800; background: #fef2f2; padding: 15px; border-radius: 6px; border-right: 4px solid #ef4444; display: block; margin: 15px 0; }
 .strict-warning { color: #991b1b; font-size: 15px; }
+
 .agreement-box { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--tera-navy); margin-top: 30px; margin-bottom: 20px; background: #f0fdfa; padding: 20px; border-radius: 12px; border: 2px solid #028090; font-weight: 700; }
 .agreement-box input { margin-top: 4px; transform: scale(1.4); accent-color: var(--tera-teal); }
 
-/* طاقم أزرار الإجراءات الخاص بالمنصة */
-.btn-action { padding: 10px 24px; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); font-size: 14px; text-decoration: none; transition: 0.2s; }
+/* -----------------------------------------
+   8. أزرار التحكم (Buttons)
+   ----------------------------------------- */
+.btn-action {
+    padding: 10px 24px; border-radius: 8px; font-weight: 700; display: inline-flex;
+    align-items: center; justify-content: center; gap: 8px; border: 1px solid #cbd5e1;
+    background: #fff; color: var(--tera-navy); font-size: 14px; text-decoration: none; transition: 0.2s;
+}
 .btn-action:hover { background: #f1f5f9; }
 .btn-primary { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); width: 100%; padding: 15px; border-radius: 12px; font-size: 16px; }
 .disabled-link { pointer-events: none !important; opacity: 0.5 !important; filter: grayscale(100%); cursor: not-allowed !important; }
