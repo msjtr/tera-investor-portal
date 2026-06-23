@@ -19,7 +19,7 @@
 
     <style>
         /* =========================================
-           1. لوحة التنبيهات الذكية (Status Banner)
+           1. لوحة التنبيهات الذكية (Status Banner) - التنسيقات الأساسية
            ========================================= */
         .status-banner {
             background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
@@ -43,7 +43,7 @@
         .stat-badge {
             flex: 1; min-width: 200px; background: #fff; border: 1px solid #e2e8f0;
             padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.3s; cursor: default;
         }
         .stat-badge:hover { border-color: var(--tera-teal); transform: translateY(-3px); }
         .stat-badge .icon-box {
@@ -94,7 +94,6 @@
     <div class="app-wrapper">
         <div class="main-content">
             
-            <!-- الهيدر العلوي الموحد -->
             <header class="top-header no-print">
                 <div class="header-right">
                     <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
@@ -108,7 +107,6 @@
 
             <main class="container">
                 
-                <!-- شريط التبويبات والرجوع -->
                 <div class="breadcrumb-nav no-print">
                     <h2 class="page-title" id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h2>
                     <div class="nav-links">
@@ -120,44 +118,8 @@
 
                 <div class="main-details">
                     
-                    <!-- 🚨 لوحة التنبيهات الذكية (Status Banner) -->
-                    <div class="status-banner" id="mDetAlertsContainer">
-                        <div class="banner-header">
-                            <i class="fas fa-bolt main-icon"></i>
-                            <div>
-                                <h4>فرصة استثمارية نشطة</h4>
-                                <p>سارع بالانضمام، الطلب عالي على هذه الفرصة والأسهم تنفد بسرعة.</p>
-                            </div>
-                        </div>
-                        <div class="banner-stats">
-                            <!-- مؤشر الوقت المتبقي -->
-                            <div class="stat-badge">
-                                <div class="icon-box" style="color: #ea580c; background: #ffedd5;"><i class="fas fa-hourglass-half"></i></div>
-                                <div class="stat-info">
-                                    <span>الوقت المتبقي لانتهاء الطرح</span>
-                                    <strong style="color: #ea580c;">3 أيام و 14 ساعة</strong>
-                                </div>
-                            </div>
-                            <!-- مؤشر الأسهم المتبقية -->
-                            <div class="stat-badge">
-                                <div class="icon-box" style="color: #e11d48; background: #ffe4e6;"><i class="fas fa-ticket-alt"></i></div>
-                                <div class="stat-info">
-                                    <span>الأسهم المتبقية والمتاحة</span>
-                                    <strong style="color: #e11d48;">15 سهم فقط !</strong>
-                                </div>
-                            </div>
-                            <!-- مؤشر حالة الطرح -->
-                            <div class="stat-badge">
-                                <div class="icon-box" style="color: #10b981; background: #dcfce7;"><i class="fas fa-check-circle"></i></div>
-                                <div class="stat-info">
-                                    <span>حالة الطرح حالياً</span>
-                                    <strong style="color: #10b981;">متاح للانضمام</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="mDetAlertsContainer"></div>
 
-                    <!-- 💳 بطاقة القسم الأول: تفاصيل الفرصة -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-handshake text-teal"></i> القسم الأول: تفاصيل الفرصة
@@ -186,7 +148,6 @@
                         </div>
                     </div>
 
-                    <!-- 💳 بطاقة القسم الثاني: عن العميل طالب الفرصة -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-user-tie text-teal"></i> القسم الثاني : عن العميل طالب الفرصة
@@ -205,7 +166,6 @@
                         </div>
                     </div>
 
-                    <!-- 💳 بطاقة القسم الثالث: السجل السابق للعميل -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-history text-teal"></i> القسم الثالث : السجل السابق للعميل
@@ -220,7 +180,6 @@
                         </div>
                     </div>
 
-                    <!-- 💳 بطاقة القسم الرابع: تفاصيل المنتج -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-shopping-cart text-teal"></i> القسم الرابع : تفاصيل المنتج
@@ -238,7 +197,6 @@
                         </div>
                     </div>
 
-                    <!-- 💳 بطاقة القسم الخامس: الضمانات والمخاطر -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-shield-alt text-teal"></i> القسم الخامس : معلومات إضافية والمخاطر
@@ -258,7 +216,6 @@
                         </div>
                     </div>
 
-                    <!-- 💳 بطاقة القسم السادس: الدليل الاسترشادي (تم تصميمه بالكامل) -->
                     <div class="content-card mb-30">
                         <h3 class="detail-block-title" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
                             <i class="fas fa-book-reader text-teal"></i> القسم السادس : الدليل الاسترشادي والشروط والأحكام
@@ -266,7 +223,6 @@
                         
                         <div class="guideline-container">
                             
-                            <!-- القسم 1 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
                                 <h5>المشاركة في الفرص</h5>
@@ -304,7 +260,6 @@
                                 </ul>
                             </div>
 
-                            <!-- القسم 2 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-list-alt"></i> ثانياً: شرح المصطلحات والمؤشرات</h4>
                                 <ul>
@@ -332,7 +287,6 @@
                                 </ul>
                             </div>
 
-                            <!-- القسم 3 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-exclamation-triangle"></i> ثالثاً: شرح فئات المخاطر</h4>
                                 <ul>
@@ -345,7 +299,6 @@
                                 <div class="guide-alert"><i class="fas fa-info-circle"></i> تنبيه: تصنيف المخاطر مؤشر استرشادي فقط ولا يمثل ضماناً للأرباح أو لرأس المال.</div>
                             </div>
 
-                            <!-- القسم 4 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-file-signature"></i> رابعاً: شرح الضمانات</h4>
                                 <ul>
@@ -367,7 +320,6 @@
                                 <div class="guide-alert"><i class="fas fa-info-circle"></i> تنبيه: وجود الضمانات لا يعني ضمان استرداد رأس المال أو الأرباح بشكل كامل.</div>
                             </div>
 
-                            <!-- القسم 5 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-file-invoice-dollar"></i> خامساً: الرسوم والضرائب</h4>
                                 <ul>
@@ -389,7 +341,6 @@
                                 <p>تظهر الرسوم المستحقة للشريك قبل إتمام عملية المشاركة متى كانت قابلة للتحديد مسبقاً.</p>
                             </div>
 
-                            <!-- القسم 6 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-user-secret"></i> سادساً: سياسة الخصوصية وسرية البيانات</h4>
                                 <h5>حماية البيانات</h5>
@@ -425,7 +376,6 @@
                                 </ul>
                             </div>
 
-                            <!-- القسم 7 -->
                             <div class="guide-section">
                                 <h4><i class="fas fa-clipboard-list"></i> سابعاً: حقوق والتزامات الشريك</h4>
                                 <h5>حقوق الشريك</h5>
@@ -459,7 +409,7 @@
                                     <li>الأرباح المتوقعة غير مضمونة.</li>
                                     <li>رأس المال غير مضمون.</li>
                                     <li>تصنيف المخاطر استرشادي فقط.</li>
-                                    <li>الضمانات لا تمثل ضماناً مؤكداً لاسترداد الأموال.</li>
+                                    <li>الضمانات لا تمثل ضماناً مؤكدًا لاسترداد الأموال.</li>
                                     <li>المنصة تبذل العناية المهنية للمحافظة على الحقوق دون تقديم ضمانات مالية.</li>
                                 </ul>
                             </div>
@@ -467,7 +417,6 @@
                         </div>
                     </div>
 
-                    <!-- 🖲️ زر الانتقال لطلب الانضمام -->
                     <div id="joinActionWrapper" style="display: none; margin-top: 30px;">
                         <div class="agreement-box" id="detailsAgreementBox" style="background: #f0fdfa; border: 2px solid var(--tera-teal); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
                             <label style="display: flex; gap: 15px; align-items: flex-start; cursor: pointer;">
@@ -484,7 +433,6 @@
                 </div>
             </main>
 
-            <!-- التذييل الموحد -->
             <footer class="page-footer no-print">
                 © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
             </footer>
@@ -492,7 +440,6 @@
         </div>
     </div>
 
-    <!-- ربط السكريبتات المركزية -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
