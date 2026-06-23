@@ -1,32 +1,29 @@
 /**
  * ============================================================
- * investments.js - ملف التحكم المركزي للاستثمارات 
+ * investments.js - ملف التحكم المركزي للاستثمارات (الإصدار الاحترافي)
  * ============================================================
- * تم حل مشكلة القص (Unexpected end of input) والتأكد من إغلاق كافة الأقواس.
+ * تم تخصيص التنبيهات لتشمل نوع الفرصة، العائد المتوقع (نسبة الشراكة)، والأيام المتبقية.
  * ============================================================
  */
 
 (function() {
     'use strict';
 
-    // منع تكرار تحميل الملف
     if (window.InvestmentsManagerLoaded) return;
     window.InvestmentsManagerLoaded = true;
 
     let isUpdating = false;
 
-    // ============================================================
-    // 1. قاعدة البيانات المركزية (Mock Data)
-    // ============================================================
+    // 1. قاعدة البيانات المركزية
     window.mockData = [
-        { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20" },
-        { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25" },
+        { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20", daysLeftToJoin: 14 },
+        { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25", daysLeftToJoin: 2 },
         { id: "TR-2026-06-20-003", type: "شراكة ممتدة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 4, reqEntity: "افراد", company: "تمويل أفراد - ترميم منزل", sharesCount: 80, sharePrice: 200, capital: 16000, expectedProfit: 4800, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/05" },
         { id: "TR-2026-06-20-004", type: "شراكة ممتدة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - سيارة", sharesCount: 40, sharePrice: 1000, capital: 40000, expectedProfit: 8000, roi: 20, duration: 6, offeringPeriod: "15/04/2026 - 30/04/2026", reqDate: "2026/04/01" },
         { id: "TR-2026-06-20-005", type: "شراكة ممتدة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - شخصي", sharesCount: 100, sharePrice: 50, capital: 5000, expectedProfit: 2000, roi: 40, duration: 6, offeringPeriod: "10/03/2026 - 25/03/2026", reqDate: "2026/02/20" },
         { id: "TR-2026-06-20-006", type: "شراكة ممتدة", status: "المغلقة", fundedPercentage: 100, reqEntity: "افراد", company: "تمويل أفراد - طبي", sharesCount: 20, sharePrice: 500, capital: 10000, expectedProfit: 4000, roi: 40, duration: 6, offeringPeriod: "05/02/2026 - 20/02/2026", reqDate: "2026/01/15" },
-        { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22" },
-        { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28" },
+        { id: "FTR-2026-06-20-007", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 20, reqEntity: "افراد", company: "فرصة شراكة - تأثيث منزل", sharesCount: 50, sharePrice: 1000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "02/06/2026 - 17/06/2026", reqDate: "2026/05/22", daysLeftToJoin: 10 },
+        { id: "FTR-2026-06-20-008", type: "فرصة شراكة", status: "النشطة", fundedPercentage: 95, daysLeftToJoin: 1, reqEntity: "افراد", company: "فرصة شراكة - سفر وسياحة", sharesCount: 20, sharePrice: 2000, capital: 40000, expectedProfit: 16000, roi: 40, duration: 6, offeringPeriod: "08/06/2026 - 23/06/2026", reqDate: "2026/05/28", daysLeftToJoin: 1 },
         { id: "FTR-2026-06-20-009", type: "فرصة شراكة", status: "القادمة", fundedPercentage: 0, daysLeftToStart: 2, reqEntity: "افراد", company: "فرصة شراكة - استثمار مبدئي", sharesCount: 100, sharePrice: 200, capital: 20000, expectedProfit: 6000, roi: 30, duration: 6, offeringPeriod: "25/06/2026 - 10/07/2026", reqDate: "2026/06/15" },
         { id: "FTR-2026-06-20-010", type: "فرصة شراكة", status: "المكتملة", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - عقار سكني", sharesCount: 10, sharePrice: 5000, capital: 50000, expectedProfit: 25000, roi: 50, duration: 6, offeringPeriod: "10/04/2026 - 25/04/2026", reqDate: "2026/03/25" },
         { id: "FTR-2026-06-20-011", type: "فرصة شراكة", status: "المنتهية", fundedPercentage: 100, reqEntity: "افراد", company: "فرصة شراكة - تجارة إلكترونية", sharesCount: 20, sharePrice: 600, capital: 12000, expectedProfit: 4800, roi: 40, duration: 6, offeringPeriod: "05/03/2026 - 20/03/2026", reqDate: "2026/02/18" },
@@ -47,7 +44,6 @@
         return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; 
     };
 
-    // حفظ رقم الفرصة عند النقر للتنقل بين الصفحات
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.indexOf('id=') !== -1) {
@@ -67,7 +63,7 @@
     }
 
     // ============================================================
-    // 2. دالة بناء التنبيهات الذكية (Smart Alerts)
+    // 2. دالة بناء التنبيهات الذكية (تحديث: دعم العائد والنوع والأيام)
     // ============================================================
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
@@ -81,35 +77,46 @@
         let timeText = 'متاح الآن - ينتهي قريباً'; 
         let timeColor = '#ea580c'; 
         let timeBg = '#ffedd5'; 
-        let statusIcon = 'fa-check-circle'; 
-        let statusColor = '#10b981'; 
-        let statusBg = '#dcfce7';
+        let statusIcon = 'fa-chart-line'; 
+        let statusColor = '#028090'; 
+        let statusBg = '#e0f2fe';
+
+        // 🏷️ تخصيص العنوان والوصف بناءً على نوع الفرصة
+        let oppTypeName = opp.type === 'شراكة ممتدة' ? 'شراكة ممتدة' : 'فرصة شراكة';
+        let typeBadgeHtml = opp.type === 'شراكة ممتدة' 
+            ? '<span style="font-size:12px; background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid #fde68a;">' + oppTypeName + '</span>'
+            : '<span style="font-size:12px; background:#fce7f3; color:#db2777; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid #fbcfe8;">' + oppTypeName + '</span>';
 
         if (opp.status === 'النشطة') {
-            title = 'فرصة استثمارية نشطة ومتاحة';
-            desc = opp.fundedPercentage >= 80 ? 'الفرصة قاربت على الاكتمال بنسبة عالية! سارع بحجز أسهمك.' : 'متاحة الآن للاكتتاب المباشر، انضم الآن كشريك مساهم.';
-            if (opp.daysLeftToJoin) timeText = 'متبقي ' + opp.daysLeftToJoin + ' أيام';
+            title = 'استثمار متاح للاكتتاب!';
+            desc = opp.fundedPercentage >= 80 ? 'الفرصة قاربت على الاكتمال! سارع بحجز أسهمك قبل إغلاق الطرح.' : 'هذه الفرصة متاحة الآن للاكتتاب. بادر بالانضمام كشريك مساهم وحقق عوائد مجزية.';
+            if (opp.daysLeftToJoin) {
+                timeText = 'متبقي ' + opp.daysLeftToJoin + ' أيام وتُغلق';
+            }
         } else if (opp.status === 'القادمة') {
             icon = 'fa-clock'; iconColor = '#0ea5e9'; pulseClass = '';
-            title = 'فرصة استثمارية قادمة';
-            desc = 'يجري التحقق من الضمانات، ستطرح هذه الفرصة قريباً للاكتتاب عبر المنصة.';
+            title = 'ترقبوا هذا الطرح قريباً';
+            desc = 'يجري استكمال التحقق من الضمانات، ستطرح هذه الفرصة قريباً للاكتتاب عبر المنصة.';
             timeText = 'يبدأ بعد ' + (opp.daysLeftToStart || 3) + ' أيام';
             timeColor = '#0284c7'; timeBg = '#e0f2fe';
-            statusIcon = 'fa-calendar-alt'; statusColor = '#0284c7'; statusBg = '#e0f2fe';
+            statusIcon = 'fa-calendar-alt';
         } else {
             icon = 'fa-lock'; iconColor = '#64748b'; pulseClass = '';
-            title = 'فرصة استثمارية مغلقة/مكتملة';
-            desc = 'اكتمل تمويل هذه الفرصة بنسبة 100% وتم إغلاق الطرح.';
+            title = 'تم إغلاق الطرح لاكتمال التمويل';
+            desc = 'اكتمل تمويل هذه الفرصة بنسبة 100% وتم إغلاق الاكتتاب.';
             timeText = 'منتهية الصلاحية';
             timeColor = '#64748b'; timeBg = '#f1f5f9';
-            statusIcon = 'fa-lock'; statusColor = '#64748b'; statusBg = '#f1f5f9';
+            statusIcon = 'fa-check-circle'; statusColor = '#64748b'; statusBg = '#f1f5f9';
         }
 
         return '<div class="status-banner no-print glass-panel" style="margin-bottom: 25px;">' +
             '<div class="banner-header">' +
                 '<i class="fas ' + icon + ' ' + pulseClass + '" style="color: ' + iconColor + ';"></i>' +
                 '<div>' +
-                    '<h4>' + title + ' <span class="mono text-teal" style="font-size:13px; background:#e0f2fe; padding:4px 10px; border-radius:6px; margin-right:10px; border: 1px solid #bae6fd; display:inline-block;">رقم الفرصة: ' + opp.id + '</span></h4>' +
+                    '<h4>' + title + 
+                        '<span class="mono text-teal" style="font-size:13px; background:#e0f2fe; padding:4px 10px; border-radius:6px; margin-right:15px; border: 1px solid #bae6fd; display:inline-block;">رقم الفرصة: ' + opp.id + '</span>' +
+                        typeBadgeHtml +
+                    '</h4>' +
                     '<p>' + desc + '</p>' +
                 '</div>' +
             '</div>' +
@@ -117,22 +124,22 @@
                 '<div class="stat-badge">' +
                     '<div class="icon-box" style="color: ' + timeColor + '; background: ' + timeBg + ';"><i class="fas fa-hourglass-half"></i></div>' +
                     '<div class="stat-info">' +
-                        '<span>فترة وصلاحية الطرح</span>' +
+                        '<span>صلاحية الطرح</span>' +
                         '<strong style="color: ' + timeColor + ';">' + timeText + '</strong>' +
                     '</div>' +
                 '</div>' +
                 '<div class="stat-badge">' +
                     '<div class="icon-box" style="color: #e11d48; background: #ffe4e6;"><i class="fas fa-ticket-alt"></i></div>' +
                     '<div class="stat-info">' +
-                        '<span>الأسهم المتبقية للتمويل</span>' +
+                        '<span>الأسهم المتاحة</span>' +
                         '<strong style="color: #e11d48;">' + availableSharesToBuy + ' سهم</strong>' +
                     '</div>' +
                 '</div>' +
                 '<div class="stat-badge">' +
                     '<div class="icon-box" style="color: ' + statusColor + '; background: ' + statusBg + ';"><i class="fas ' + statusIcon + '"></i></div>' +
                     '<div class="stat-info">' +
-                        '<span>حالة الطرح الحالية</span>' +
-                        '<strong style="color: ' + statusColor + ';">' + opp.status + '</strong>' +
+                        '<span>العائد المتوقع (نسبة الشراكة)</span>' +
+                        '<strong style="color: ' + statusColor + '; font-size:18px;">' + opp.roi + '%</strong>' +
                     '</div>' +
                 '</div>' +
             '</div>' +
@@ -307,7 +314,7 @@
         if (marketAlertContainer) {
             marketAlertContainer.innerHTML = '';
             let activeOpps = window.mockData.filter(d => d.status === 'النشطة');
-            // نعرض أول فرصتين نشطتين فقط حتى لا نمتلئ الشاشة
+            // نعرض أول فرصتين نشطتين فقط
             let oppsToShow = activeOpps.slice(0, 2); 
             oppsToShow.forEach(opp => { 
                 marketAlertContainer.innerHTML += window.buildAlertBanner(opp); 
@@ -350,7 +357,7 @@
         document.getElementById('mDetTax').innerText = window.formatMoneySafe(opp.capital * 0.15) + ' ر.س';
         document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
 
-        // 🔥 التنبيه الخاص بالفرصة الحالية المحددة
+        // 🔥 حقن التنبيه الذكي المخصص للفرصة الحالية فقط داخل حاوية التفاصيل
         const alertsCont = document.getElementById('mDetAlertsContainer');
         if (alertsCont) {
             alertsCont.innerHTML = window.buildAlertBanner(opp);
