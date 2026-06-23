@@ -107,4 +107,97 @@
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
-                let mSearch = d.id.toLowerCase().indexOf(
+                let mSearch = d.id.toLowerCase().indexOf(searchVal) !== -1 || d.company.toLowerCase().indexOf(searchVal) !== -1;
+                return mType && mStatus && mSearch;
+            });
+
+            window.renderOpportunities(filtered);
+            
+            let active = 0, upcoming = 0, completed = 0;
+            filtered.forEach(d => {
+                if(d.status === 'النشطة' || d.status === 'قائم') active++;
+                if(d.status === 'القادمة') upcoming++;
+                if(d.status === 'المكتملة') completed++;
+            });
+            if(document.getElementById('sumActive')) document.getElementById('sumActive').innerText = active;
+            if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
+            if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
+
+            // تحديث الرسوم البيانية المؤتمتة
+            try {
+                if(typeof Chart !== 'undefined') {
+                    let counts = { active:active, upcoming:upcoming, finished:0, closed:0, cancelled:0, completed:completed };
+                    filtered.forEach(d => {
+                        if(d.status === 'المنتهية') counts.finished++;
+                        else if(d.status === 'المغلقة') counts.closed++;
+                        else if(d.status === 'الملغاة') counts.cancelled++;
+                    });
+
+                    const ctxStatus = document.getElementById('statusChart');
+                    if(ctxStatus) {
+                        let existingChart = Chart.getChart(ctxStatus);
+                        if(existingChart) {
+                            existingChart.data.datasets[0].data = [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed];
+                            existingChart.update();
+                        } else {
+                            if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+                            new Chart(ctxStatus, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['النشطة', 'القادمة', 'المنتهية', 'المغلقة', 'الملغاة', 'المكتملة'],
+                                    datasets: [{ data: [counts.active, counts.upcoming, counts.finished, counts.closed, counts.cancelled, counts.completed], backgroundColor: ['#028090', '#10b981', '#cbd5e1', '#334155', '#ef4444', '#6366f1'], borderWidth: 0 }]
+                                },
+                                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', rtl: true } } }
+                            });
+                        }
+                    }
+
+                    const ctxOpp = document.getElementById('opportunitiesChart');
+                    if(ctxOpp) {
+                        let existingOppChart = Chart.getChart(ctxOpp);
+                        let mVal = filtered.length > 0 ? filtered[0].capital : 10000;
+                        let cVal = Math.max(1, Math.floor(filtered.length / 6));
+                        if(existingOppChart) {
+                            existingOppChart.data.datasets[0].data = [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5];
+                            existingOppChart.data.datasets[1].data = [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length];
+                            existingOppChart.update();
+                        } else {
+                            new Chart(ctxOpp, {
+                                type: 'bar',
+                                data: {
+                                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                                    datasets: [
+                                        { type: 'line', label: 'إجمالي المبالغ', data: [mVal, mVal*1.5, mVal*2, mVal*3, mVal*4, mVal*5], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.4, yAxisID: 'y1' },
+                                        { type: 'bar', label: 'الفرص المطروحة', data: [cVal, cVal+1, cVal, cVal+2, cVal+1, filtered.length], backgroundColor: '#028090', borderRadius: 4, yAxisID: 'y' }
+                                    ]
+                                },
+                                options: { responsive: true, maintainAspectRatio: false }
+                            });
+                        }
+                    }
+                }
+            } catch(e) {}
+        };
+
+        // توليد التنبيهات في لوحة عرض السوق بشكل مسبق (يجلب جميع الفرص النشطة والقادمة)
+        const marketAlertContainer = document.getElementById('marketAlertsWrapper');
+        if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
+            let htmlAlerts = '';
+            
+            // جلب (جميع) الفرص المتاحة والقادمة لكلا النوعين باستخدام filter بدلاً من find
+            let alertOpps = window.mockData.filter(d => ['النشطة', 'قائم', 'القادمة'].includes(d.status));
+            
+            if(typeof window.buildAlertBanner === 'function') {
+                alertOpps.forEach(opp => {
+                    htmlAlerts += window.buildAlertBanner(opp); 
+                });
+            }
+
+            marketAlertContainer.innerHTML = htmlAlerts;
+            marketAlertContainer.setAttribute('data-loaded', 'true');
+        }
+
+        window.applyFilters();
+    };
+
+})();
