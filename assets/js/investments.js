@@ -26,10 +26,12 @@
         { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
     ];
 
+    // دالة تنسيق المبالغ المالية بأمان
     window.formatMoneySafe = function(num) { 
         return parseFloat(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
     };
 
+    // دالة جلب صنف التصميم لحالة الفرصة (Badges CSS Classes)
     window.getBadgeClass = function(s) { 
         switch(s) {
             case 'النشطة': case 'قائم': return 'status-active';
@@ -42,10 +44,12 @@
         }
     };
 
+    // دالة جلب صنف التصميم لنوع الشراكة
     window.getTypeBadgeClass = function(t) { 
         return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; 
     };
 
+    // نظام حفظ المعرفات للتنقل السلس في تطبيق الصفحة الواحدة (SPA)
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.indexOf('id=') !== -1) {
@@ -57,6 +61,7 @@
         }
     });
 
+    // جلب معرف الفرصة الحالي بأمان من الرابط أو التخزين المحلي
     window.getSafeOppId = function() {
         let urlParams = new URLSearchParams(window.location.search);
         let id = urlParams.get('id');
@@ -64,6 +69,7 @@
         return id ? id.trim().toLowerCase() : null;
     };
 
+    // المكون الذكي لبناء بنر التنبيهات المركزي للفرص المتميزة والنشطة
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
         if (availableSharesToBuy < 0) availableSharesToBuy = 0;
@@ -121,23 +127,24 @@
     // المراقب المركزي والتنفيذي للتطبيق (SPA Router Initializer)
     let isUpdating = false;
     let debounceTimeout = null;
+    
+    // مفتاح حماية لمنع تصفير الفلاتر الحية
+    window.isFiltering = window.isFiltering || false;
 
     window.initInvestments = function() {
-        if (isUpdating) return; 
+        if (isUpdating || window.isFiltering) return; 
         isUpdating = true;
 
         if(typeof window.initOpportunities === 'function') window.initOpportunities();
         if(typeof window.initInvestmentDetails === 'function') window.initInvestmentDetails();
         if(typeof window.initCancelledInvestments === 'function') window.initCancelledInvestments();
         
-        // تم إزالة دالة initCharts الثابتة من هنا لتسليم القيادة للملف الديناميكي
-
         setTimeout(function() { isUpdating = false; }, 150);
     };
 
     // مراقبة شجرة الـ DOM لإعادة البناء عند التنقل الديناميكي دون إعادة تحميل الصفحة
     const observer = new MutationObserver(function() {
-        if (!isUpdating) {
+        if (!isUpdating && !window.isFiltering) {
             clearTimeout(debounceTimeout);
             debounceTimeout = setTimeout(function() {
                 window.initInvestments();
