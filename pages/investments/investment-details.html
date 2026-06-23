@@ -24,74 +24,82 @@
         .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
         
         /* ===== 1. تصميم الهيدر العلوي ===== */
-        .top-header { background: #fff; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; width: 100%; }
+        .top-header { background: #fff; padding: 20px 45px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; width: 100%; }
         
         /* الشعار في اليمين */
         .header-logo { display: flex; align-items: center; }
-        .header-logo img { height: 60px; width: auto; max-width: 100%; object-fit: contain; transition: transform 0.3s ease; }
+        .header-logo img { height: 65px; width: auto; max-width: 100%; object-fit: contain; transition: transform 0.3s ease; }
         .header-logo img:hover { transform: scale(1.02); }
         
         /* بيانات العميل والأيقونة في اليسار */
-        .header-user { display: flex; align-items: center; gap: 15px; }
+        .header-user { display: flex; align-items: center; gap: 18px; }
         .user-greeting { text-align: left; }
-        .user-greeting h4 { margin: 0; font-size: 15px; color: var(--tera-navy); font-weight: 800; }
-        .user-greeting p { margin: 0; font-size: 12px; color: var(--tera-gray); font-weight: 500; margin-top: 3px; }
-        .user-avatar { width: 48px; height: 48px; background-color: var(--tera-navy); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 22px; font-weight: 800; border: 2px solid var(--tera-teal); box-shadow: 0 2px 8px rgba(2,128,144,0.2); }
+        .user-greeting h4 { margin: 0; font-size: 16px; color: var(--tera-navy); font-weight: 800; }
+        .user-greeting p { margin: 0; font-size: 13px; color: var(--tera-gray); font-weight: 500; margin-top: 4px; }
+        .user-avatar { width: 52px; height: 52px; background-color: var(--tera-navy); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 14px; font-size: 24px; font-weight: 800; border: 2px solid var(--tera-teal); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
         
         /* ===== 2. حاوية عنوان الصفحة وزر الرجوع ===== */
-        .page-action-bar { padding: 35px 40px 15px 40px; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1600px; margin: 0 auto; }
-        .page-title { font-size: 26px; font-weight: 800; color: var(--tera-navy); margin: 0; letter-spacing: -0.5px; }
-        .btn-back-main { background: var(--tera-teal); color: #fff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(2,128,144,0.15); border: none; }
-        .btn-back-main:hover { background: var(--tera-navy); transform: translateY(-2px); color: #fff; box-shadow: 0 6px 12px rgba(10,27,63,0.2); }
+        .page-action-bar { padding: 40px 45px 20px 45px; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1600px; margin: 0 auto; }
+        .page-title { font-size: 28px; font-weight: 800; color: var(--tera-navy); margin: 0; letter-spacing: -0.5px; }
+        .btn-back-main { background: var(--tera-teal); color: #fff; padding: 12px 26px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(2,128,144,0.2); border: none; }
+        .btn-back-main:hover { background: var(--tera-navy); transform: translateY(-3px); color: #fff; box-shadow: 0 6px 15px rgba(10,27,63,0.25); }
 
         /* الحاوية الرئيسية للمحتوى */
-        .container { max-width: 1600px; margin: 0 auto; padding: 15px 40px 40px 40px; flex: 1; width: 100%; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 10px 45px 50px 45px; flex: 1; width: 100%; }
 
-        /* ===== 3. تصميم التنبيه (4 أقسام) ===== */
-        .custom-alert-box { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15); }
-        .custom-alert-box .alert-item { flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 15px; }
-        .custom-alert-box .alert-item:last-child { border-left: none; }
-        .custom-alert-box .alert-item.text-right { text-align: right; }
-        .custom-alert-box .alert-item strong { display: block; font-size: 16px; font-weight: 800; margin-bottom: 5px; color: #fff; }
-        .custom-alert-box .alert-item span { display: block; font-size: 13px; color: #e2e8f0; }
+        /* ===== 3. تصحيح ألوان التنبيهات الذكية ===== */
+        #marketAlertsWrapper > div {
+            background: linear-gradient(135deg, var(--tera-navy) 0%, var(--tera-teal) 100%) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            box-shadow: 0 10px 30px rgba(2,128,144,0.25) !important;
+        }
+        /* إجبار العناوين على الظهور بلون أصفر فاقع */
+        #marketAlertsWrapper strong { color: #fde047 !important; font-size: 14px !important; opacity: 1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        /* إجبار النصوص والقيم على الظهور بلون أبيض ناصع */
+        #marketAlertsWrapper span { color: #ffffff !important; opacity: 1 !important; }
+        #marketAlertsWrapper .type-badge { background: rgba(255,255,255,0.2) !important; border: 1px solid rgba(255,255,255,0.4) !important; color: #fff !important; }
+        #marketAlertsWrapper a { background: #fff !important; color: var(--tera-navy) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; }
+        #marketAlertsWrapper a:hover { background: #fde047 !important; transform: translateY(-2px); }
+
         @media (max-width: 768px) {
-            .custom-alert-box { flex-direction: column; gap: 15px; }
-            .custom-alert-box .alert-item { border-left: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; width: 100%; text-align: center !important;}
-            .custom-alert-box .alert-item:last-child { border-bottom: none; padding-bottom: 0; }
             .top-header, .page-action-bar, .container { padding-left: 20px; padding-right: 20px; }
-            .page-action-bar { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .page-action-bar { flex-direction: column; align-items: flex-start; gap: 20px; }
+            #marketAlertsWrapper > div > div:last-child { flex-direction: column; gap: 15px; }
+            #marketAlertsWrapper > div > div:last-child > div { border-left: none !important; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; width: 100%; }
         }
         
         /* البطاقات الإحصائية */
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 35px; }
-        .summary-card { background: #fff; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; border-top: 4px solid var(--tera-gray); box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; transition: 0.3s; }
-        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-        .summary-card.active-card { border-top-color: #028090; }
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 40px; }
+        .summary-card { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; border-top: 5px solid var(--tera-gray); box-shadow: 0 6px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; transition: 0.3s; }
+        .summary-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+        .summary-card.active-card { border-top-color: var(--tera-teal); }
         .summary-card.upcoming-card { border-top-color: #10b981; }
         .summary-card.completed-card { border-top-color: #6366f1; }
-        .summary-card .icon-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-        .summary-card i { font-size: 26px; opacity: 0.9; }
-        .active-card i { color: #028090; } .upcoming-card i { color: #10b981; } .completed-card i { color: #6366f1; }
-        .summary-card p { margin: 0; font-size: 15px; color: var(--tera-gray); font-weight: 700; }
-        .summary-card h3 { margin: 0; font-size: 34px; color: var(--tera-navy); font-weight: 800; transition: all 0.3s; }
+        .summary-card .icon-wrapper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .summary-card i { font-size: 28px; opacity: 0.9; }
+        .active-card i { color: var(--tera-teal); } .upcoming-card i { color: #10b981; } .completed-card i { color: #6366f1; }
+        .summary-card p { margin: 0; font-size: 16px; color: var(--tera-gray); font-weight: 700; }
+        .summary-card h3 { margin: 0; font-size: 38px; color: var(--tera-navy); font-weight: 800; }
         
-        /* الرسوم البيانية */
-        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 35px; width: 100%; }
-        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 2.5fr; } }
-        .content-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow: hidden; }
+        /* ===== 4. تصحيح توزيع الرسوم البيانية (المؤشرات) ===== */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 40px; width: 100%; }
+        /* تعديل التوزيع ليكون متوازناً 40% للدائري و 60% للخطي */
+        @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 1.6fr; } }
+        .content-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+        .chart-wrapper { position: relative; width: 100%; flex: 1; min-height: 320px; }
         
         /* الفلاتر وشريط البحث */
-        .filters-container { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 30px; background: #fff; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .search-input { padding: 12px 18px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; background: #f8fafc; color: var(--tera-navy); min-width: 160px; transition: 0.3s; }
+        .filters-container { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-bottom: 35px; background: #fff; padding: 20px 30px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .search-input { padding: 14px 20px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 15px; outline: none; background: #f8fafc; color: var(--tera-navy); min-width: 180px; transition: 0.3s; }
         .search-input:focus { border-color: var(--tera-teal); background: #fff; box-shadow: 0 0 0 3px rgba(2,128,144,0.1); }
-        select.search-input { cursor: pointer; font-weight: 600; }
-        .view-toggles { display: flex; gap: 5px; background: #f1f5f9; padding: 6px; border-radius: 10px; margin-right: auto; }
-        .view-btn { border: none; background: transparent; padding: 10px 14px; border-radius: 8px; cursor: pointer; color: var(--tera-gray); font-size: 16px; transition: 0.2s; }
+        select.search-input { cursor: pointer; font-weight: 700; }
+        .view-toggles { display: flex; gap: 6px; background: #f1f5f9; padding: 6px; border-radius: 10px; margin-right: auto; }
+        .view-btn { border: none; background: transparent; padding: 10px 16px; border-radius: 8px; cursor: pointer; color: var(--tera-gray); font-size: 18px; transition: 0.2s; }
         .view-btn.active { background: #fff; color: var(--tera-teal); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         
         /* المؤشرات والشارات */
         .progress-wrapper { width: 100%; }
-        .progress-text { font-size: 12px; font-weight: 700; color: var(--tera-navy); display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .progress-text { font-size: 12px; font-weight: 700; color: var(--tera-navy); display: flex; justify-content: space-between; margin-bottom: 8px; }
         .progress-bar-bg { background-color: #e2e8f0; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; }
         .progress-bar-fill { background-color: var(--tera-teal); height: 100%; border-radius: 8px; transition: width 0.3s; }
         
@@ -103,34 +111,34 @@
         .status-closed { background: #e2e8f0; color: #334155; border-color: #94a3b8; } 
         .status-cancelled { background: #fee2e2; color: #ef4444; border-color: #fecaca; } 
         
-        .type-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; font-family: monospace; display: inline-block; }
+        .type-badge { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; font-family: monospace; display: inline-block; }
         .type-extended { background: #fef3c7; color: #d97706; } 
         .type-opportunity { background: #fce7f3; color: #db2777; } 
         
         /* الكروت والجدول */
-        .grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; width: 100%; margin-bottom: 30px; }
-        .opp-card { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02); overflow: hidden; }
-        .opp-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(2, 128, 144, 0.1); border-color: var(--tera-teal); }
-        .opp-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
-        .opp-header h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 800; color: var(--tera-navy); line-height: 1.4; }
-        .opp-body { padding: 20px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .opp-metric { background: var(--tera-bg); padding: 12px 15px; border-radius: 10px; text-align: center; border: 1px dashed #cbd5e1; }
-        .opp-metric span { display: block; font-size: 11px; color: var(--tera-gray); margin-bottom: 5px; font-weight:700;}
-        .opp-metric strong { display: block; font-size: 14px; color: var(--tera-navy); font-weight: 800; font-family: monospace; }
-        .opp-footer { padding: 15px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+        .grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; width: 100%; margin-bottom: 40px; }
+        .opp-card { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; }
+        .opp-card:hover { transform: translateY(-6px); box-shadow: 0 15px 35px rgba(2, 128, 144, 0.12); border-color: var(--tera-teal); }
+        .opp-header { padding: 25px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
+        .opp-header h3 { margin: 0 0 10px 0; font-size: 17px; font-weight: 800; color: var(--tera-navy); line-height: 1.5; }
+        .opp-body { padding: 25px; flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .opp-metric { background: var(--tera-bg); padding: 15px; border-radius: 12px; text-align: center; border: 1px dashed #cbd5e1; }
+        .opp-metric span { display: block; font-size: 12px; color: var(--tera-gray); margin-bottom: 6px; font-weight:700;}
+        .opp-metric strong { display: block; font-size: 15px; color: var(--tera-navy); font-weight: 800; font-family: monospace; }
+        .opp-footer { padding: 20px 25px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
         
-        .list-view-container { display: block; overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .list-view-container { display: block; overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; width: 100%; margin-bottom: 40px; box-shadow: 0 6px 20px rgba(0,0,0,0.03); }
         .tera-table { width: 100%; border-collapse: collapse; text-align: right; }
-        .tera-table th { background: #f8fafc; padding: 18px 20px; color: var(--tera-navy); font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        .tera-table td { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 600; white-space: nowrap; }
+        .tera-table th { background: #f8fafc; padding: 20px 25px; color: var(--tera-navy); font-size: 14px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .tera-table td { padding: 20px 25px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 600; white-space: nowrap; }
         .tera-table tr:hover td { background: #f0fdfa; }
         
-        .btn-action-table { padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 13px; text-decoration: none; }
-        .btn-action-table:hover { background: #f1f5f9; }
+        .btn-action-table, .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; color: var(--tera-navy); transition: 0.2s; font-size: 14px; text-decoration: none; }
+        .btn-action-table:hover, .btn-action:hover { background: #f1f5f9; }
         .btn-view { background: rgba(2, 128, 144, 0.1); color: var(--tera-teal); border: none; }
         .btn-view:hover { background: var(--tera-teal); color: #fff; }
         
-        .page-footer { background: #fff; padding: 25px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; font-weight: 500; margin-top: auto; }
+        .page-footer { background: #fff; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; font-weight: 600; margin-top: auto; }
     </style>
 </head>
 <body>
@@ -138,19 +146,23 @@
     <div class="app-wrapper">
         <main class="main-content">
             
+            <!-- ===== 1. الهيدر العلوي المحدث (الشعار يمين، العميل يسار) ===== -->
             <header class="top-header no-print">
                 <div class="header-logo">
-                    <img src="../../images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x40/028090/fff?text=Tera+Logo'" />
+                    <!-- تم تكبير الشعار وجعله عالي الدقة -->
+                    <img src="../../images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x50/028090/fff?text=Tera+Logo'" />
                 </div>
                 <div class="header-user">
                     <div class="user-greeting">
                         <h4>محمد صالح جميعان الشمري</h4>
                         <p>بوابة الاستثمار، حائل</p>
                     </div>
+                    <!-- أيقونة الحرف الأول -->
                     <div class="user-avatar">م</div>
                 </div>
             </header>
 
+            <!-- ===== 2. حاوية العنوان وزر الرجوع ===== -->
             <div class="page-action-bar no-print">
                 <h2 class="page-title">سوق الفرص والشركات المطروحة</h2>
                 <a href="../dashboard/index.html" class="btn-back-main">
@@ -158,8 +170,10 @@
                 </a>
             </div>
 
+            <!-- الحاوية الرئيسية للمحتوى -->
             <div class="container">
                 
+                <!-- 🔥 حاوية التنبيهات الذكية -->
                 <div id="marketAlertsWrapper" class="no-print"></div>
 
                 <div class="summary-grid no-print">
@@ -177,14 +191,15 @@
                     </div>
                 </div>
 
+                <!-- تم تعديل التوزيع ليكون منطقياً (1fr 1.6fr) بدلاً من أن يكون الدائري مضغوطاً جداً -->
                 <div class="dashboard-grid no-print">
                     <div class="content-card chart-container">
-                        <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px; font-weight: 800;"><i class="fas fa-chart-pie text-teal"></i> توزيع ومؤشر الحالات</h3>
-                        <div style="height: 280px; position: relative;"><canvas id="statusChart"></canvas></div>
+                        <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 18px; font-weight: 800;"><i class="fas fa-chart-pie text-teal"></i> توزيع ومؤشر الحالات</h3>
+                        <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
                     </div>
                     <div class="content-card chart-container">
-                        <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 16px; font-weight: 800;"><i class="fas fa-chart-line text-teal"></i> معلومات عن الفرص خلال 6 أشهر</h3>
-                        <div style="height: 280px; position: relative;"><canvas id="opportunitiesChart"></canvas></div>
+                        <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 18px; font-weight: 800;"><i class="fas fa-chart-line text-teal"></i> معلومات عن الفرص خلال 6 أشهر</h3>
+                        <div class="chart-wrapper"><canvas id="opportunitiesChart"></canvas></div>
                     </div>
                 </div>
                 
@@ -237,9 +252,9 @@
                 </div>
                 
                 <div id="emptyState" style="display: none; text-align: center; padding: 60px 20px; color: var(--tera-gray);">
-                    <i class="fas fa-search" style="font-size: 54px; margin-bottom: 20px; opacity: 0.3; color: var(--tera-teal);"></i>
-                    <h3 style="margin: 0 0 10px 0; color: var(--tera-navy); font-weight: 800;">لا توجد نتائج مطابقة</h3>
-                    <p style="margin: 0; font-size: 15px;">يرجى تعديل خيارات الفلترة أو البحث بكلمة أخرى.</p>
+                    <i class="fas fa-search" style="font-size: 64px; margin-bottom: 25px; opacity: 0.3; color: var(--tera-teal);"></i>
+                    <h3 style="margin: 0 0 15px 0; color: var(--tera-navy); font-size: 24px; font-weight: 800;">لا توجد نتائج مطابقة</h3>
+                    <p style="margin: 0; font-size: 16px;">يرجى تعديل خيارات الفلترة أو البحث بكلمة أخرى.</p>
                 </div>
             </div>
             
@@ -249,9 +264,11 @@
         </main>
     </div>
 
+    <!-- استدعاء المكتبات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
+    <!-- الملفات الخارجية لدعم الهيكلة الجديدة -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/investment-details.js"></script>
     <script src="../../assets/js/app.js"></script>
