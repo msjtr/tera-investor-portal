@@ -10,6 +10,7 @@
     if (window.InvestmentsCoreLoaded) return;
     window.InvestmentsCoreLoaded = true;
 
+    // قاعدة البيانات المركزية للمنصة (Mock Data)
     window.mockData = [
         { id: "TR-2026-06-20-001", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 10, reqEntity: "افراد", company: "تمويل أفراد - شراء احتياجات", sharesCount: 100, sharePrice: 100, capital: 10000, expectedProfit: 5000, roi: 50, duration: 6, offeringPeriod: "01/06/2026 - 15/06/2026", reqDate: "2026/05/20", daysLeftToJoin: 14 },
         { id: "TR-2026-06-20-002", type: "شراكة ممتدة", status: "النشطة", fundedPercentage: 85, reqEntity: "افراد", company: "تمويل أفراد - زواج", sharesCount: 50, sharePrice: 500, capital: 25000, expectedProfit: 10000, roi: 40, duration: 6, offeringPeriod: "05/06/2026 - 20/06/2026", reqDate: "2026/05/25", daysLeftToJoin: 2 },
@@ -25,11 +26,30 @@
         { id: "FTR-2026-06-20-012", type: "فرصة شراكة", status: "الملغاة", fundedPercentage: 0, reqEntity: "افراد", company: "فرصة شراكة - تطبيق ذكي", sharesCount: 40, sharePrice: 1500, capital: 60000, expectedProfit: 30000, roi: 50, duration: 6, offeringPeriod: "14/06/2026 - 29/06/2026", reqDate: "2026/06/01" }
     ];
 
-    window.formatMoneySafe = function(num) { return parseFloat(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
-    window.getBadgeClass = function(s) { return ['قائم', 'النشطة'].includes(s) ? 'status-active' : (s === 'القادمة' ? 'status-upcoming' : 'status-completed'); };
-    window.getTypeBadgeClass = function(t) { return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; };
+    // دالة تنسيق المبالغ المالية بأمان
+    window.formatMoneySafe = function(num) { 
+        return parseFloat(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+    };
 
-    // نظام حفظ المعرفات للتنقل في الـ SPA
+    // دالة جلب صنف التصميم لحالة الفرصة (Badges CSS Classes)
+    window.getBadgeClass = function(s) { 
+        switch(s) {
+            case 'النشطة': case 'قائم': return 'status-active';
+            case 'القادمة': return 'status-upcoming';
+            case 'المكتملة': return 'status-completed';
+            case 'المنتهية': return 'status-ended';
+            case 'المغلقة': return 'status-closed';
+            case 'الملغاة': return 'status-cancelled';
+            default: return 'status-default';
+        }
+    };
+
+    // دالة جلب صنف التصميم لنوع الشراكة
+    window.getTypeBadgeClass = function(t) { 
+        return t === 'شراكة ممتدة' ? 'type-extended' : 'type-opportunity'; 
+    };
+
+    // نظام حفظ المعرفات للتنقل السلس في تطبيق الصفحة الواحدة (SPA)
     document.addEventListener('click', function(e) {
         let link = e.target.closest('a');
         if (link && link.href && link.href.indexOf('id=') !== -1) {
@@ -41,6 +61,7 @@
         }
     });
 
+    // جلب معرف الفرصة الحالي بأمان من الرابط أو التخزين المحلي
     window.getSafeOppId = function() {
         let urlParams = new URLSearchParams(window.location.search);
         let id = urlParams.get('id');
@@ -48,7 +69,7 @@
         return id ? id.trim().toLowerCase() : null;
     };
 
-    // المكون الذكي للتنبيهات
+    // المكون الذكي لبناء بنر التنبيهات المركزي للفرص المتميزة والنشطة
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
         if (availableSharesToBuy < 0) availableSharesToBuy = 0;
@@ -63,48 +84,50 @@
         }
 
         let typeBadgeHtml = opp.type === 'شراكة ممتدة' 
-            ? '<span style="font-size:11px; background:#fef3c7; color:#d97706; padding:2px 7px; border-radius:4px; margin-right:8px; border:1px solid #fde68a; font-weight:700;">شراكة ممتدة</span>'
-            : '<span style="font-size:11px; background:#fce7f3; color:#db2777; padding:2px 7px; border-radius:4px; margin-right:8px; border:1px solid #fbcfe8; font-weight:700;">فرصة شراكة</span>';
+            ? '<span style="font-size:11px; background:rgba(254,243,199,0.2); color:#f59e0b; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid rgba(254,243,199,0.3); font-weight:700;">شراكة ممتدة</span>'
+            : '<span style="font-size:11px; background:rgba(252,231,243,0.2); color:#ec4899; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid rgba(252,231,243,0.3); font-weight:700;">فرصة شراكة</span>';
 
         return `
-            <div style="display: flex; flex-direction: column; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15); font-family: 'Tajawal', sans-serif; gap: 15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:15px; flex-wrap:wrap; gap:10px;">
+            <div class="glass-panel" style="display: flex; flex-direction: column; background: linear-gradient(135deg, rgba(2,48,71,0.95) 0%, rgba(2,128,144,0.95) 100%); backdrop-filter: blur(10px); color: #fff; padding: 22px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(2, 128, 144, 0.15); border: 1px solid rgba(255,255,255,0.1); font-family: 'Tajawal', sans-serif; gap: 18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:15px; flex-wrap:wrap; gap:12px;">
                     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                        <strong style="color: #fde047; font-size: 15px; font-weight: 800;"><i class="fas ${icon}"></i> ${title}</strong>
+                        <strong style="color: #fde047; font-size: 16px; font-weight: 800;"><i class="fas ${icon}"></i> ${title}</strong>
                         ${typeBadgeHtml}
-                        <span style="font-weight:800; font-family:monospace; font-size:14px; background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:6px; letter-spacing:0.5px;">رقم الفرصة: ${opp.id}</span>
+                        <span style="font-weight:700; font-family:monospace; font-size:13px; background:rgba(255,255,255,0.12); padding:4px 12px; border-radius:6px; letter-spacing:0.5px;">ID: ${opp.id}</span>
                     </div>
-                    <a href="completed-investments.html?id=${opp.id}" style="background:#fde047; color:#854d0e; padding:8px 20px; border-radius:8px; text-decoration:none; font-weight:800; font-size:13px; transition:0.2s; display:inline-flex; align-items:center; gap:8px;">
-                        <i class="fas fa-external-link-alt"></i> الدخول لتفاصيل الفرصة
+                    <a href="completed-investments.html?id=${opp.id}" style="background:#028090; color:#fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius:8px; text-decoration:none; font-weight:700; font-size:13px; transition:0.2s; display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fas fa-external-link-alt"></i> تفاصيل الفرصة
                     </a>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
-                    <div style="flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
-                        <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">حالة الفرصة</strong>
-                        <span style="font-weight:bold; background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:4px; display:inline-block; font-size:12px;">${opp.status}</span>
+                    <div style="flex: 1; min-width:100px; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                        <strong style="display:block; font-size:12px; margin-bottom:6px; color:rgba(255,255,255,0.7); font-weight:500;">حالة الفرصة</strong>
+                        <span style="font-weight:700; background:rgba(255,255,255,0.15); padding:3px 10px; border-radius:6px; display:inline-block; font-size:12px;">${opp.status}</span>
                     </div>
-                    <div style="flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
-                        <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الوقت المتبقي</strong>
+                    <div style="flex: 1; min-width:100px; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                        <strong style="display:block; font-size:12px; margin-bottom:6px; color:rgba(255,255,255,0.7); font-weight:500;">الوقت المتبقي</strong>
                         <span style="font-size:14px; font-weight:800; color:#fff;">${timeText}</span>
                     </div>
-                    <div style="flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
-                        <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">نسبة الاكتمال</strong>
+                    <div style="flex: 1; min-width:100px; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                        <strong style="display:block; font-size:12px; margin-bottom:6px; color:rgba(255,255,255,0.7); font-weight:500;">نسبة الاكتمال</strong>
                         <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">${opp.fundedPercentage}%</span>
                     </div>
-                    <div style="flex: 1; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
-                        <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الأسهم المتاحة</strong>
+                    <div style="flex: 1; min-width:100px; text-align: center; border-left: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                        <strong style="display:block; font-size:12px; margin-bottom:6px; color:rgba(255,255,255,0.7); font-weight:500;">الأسهم المتاحة</strong>
                         <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">${availableSharesToBuy} سهم</span>
                     </div>
-                    <div style="flex: 1; text-align: center; padding: 0 10px;">
-                        <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">العائد من الشراكة</strong>
+                    <div style="flex: 1; min-width:100px; text-align: center; padding: 0 10px;">
+                        <strong style="display:block; font-size:12px; margin-bottom:6px; color:rgba(255,255,255,0.7); font-weight:500;">العائد المستهدف</strong>
                         <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fde047;">${opp.roi || 0}%</span>
                     </div>
                 </div>
             </div>`;
     };
 
-    // المراقب المركزي للـ SPA
+    // المراقب المركزي والتنفيذي للتطبيق (SPA Router Initializer)
     let isUpdating = false;
+    let debounceTimeout = null;
+
     window.initInvestments = function() {
         if (isUpdating) return; 
         isUpdating = true;
@@ -116,8 +139,16 @@
         setTimeout(function() { isUpdating = false; }, 150);
     };
 
-    new MutationObserver(function() {
-        if (!isUpdating) window.initInvestments();
-    }).observe(document.body, { childList: true, subtree: true });
+    // مراقبة شجرة الـ DOM لإعادة البناء عند التنقل الديناميكي دون إعادة تحميل الصفحة
+    const observer = new MutationObserver(function() {
+        if (!isUpdating) {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(function() {
+                window.initInvestments();
+            }, 60);
+        }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
 
 })();
