@@ -35,7 +35,7 @@
     };
     
     window.getBadgeClass = function(s) { 
-        if (s === 'النشطة') return 'status-active';
+        if (s === 'النشطة' || s === 'قائم') return 'status-active';
         if (s === 'القادمة') return 'status-upcoming';
         return 'status-completed';
     };
@@ -63,7 +63,7 @@
     }
 
     // ============================================================
-    // 2. دالة بناء التنبيهات الذكية (تحديث: دعم العائد والنوع والأيام)
+    // 2. دالة بناء التنبيهات الذكية (دعم العائد والنوع والأيام)
     // ============================================================
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
@@ -87,7 +87,7 @@
             ? '<span style="font-size:12px; background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid #fde68a;">' + oppTypeName + '</span>'
             : '<span style="font-size:12px; background:#fce7f3; color:#db2777; padding:4px 10px; border-radius:6px; margin-right:8px; border:1px solid #fbcfe8;">' + oppTypeName + '</span>';
 
-        if (opp.status === 'النشطة') {
+        if (opp.status === 'النشطة' || opp.status === 'قائم') {
             title = 'استثمار متاح للاكتتاب!';
             desc = opp.fundedPercentage >= 80 ? 'الفرصة قاربت على الاكتمال! سارع بحجز أسهمك قبل إغلاق الطرح.' : 'هذه الفرصة متاحة الآن للاكتتاب. بادر بالانضمام كشريك مساهم وحقق عوائد مجزية.';
             if (opp.daysLeftToJoin) {
@@ -109,45 +109,29 @@
             statusIcon = 'fa-check-circle'; statusColor = '#64748b'; statusBg = '#f1f5f9';
         }
 
-        return '<div class="status-banner no-print glass-panel" style="margin-bottom: 25px;">' +
-            '<div class="banner-header">' +
-                '<i class="fas ' + icon + ' ' + pulseClass + '" style="color: ' + iconColor + ';"></i>' +
-                '<div>' +
-                    '<h4>' + title + 
-                        '<span class="mono text-teal" style="font-size:13px; background:#e0f2fe; padding:4px 10px; border-radius:6px; margin-right:15px; border: 1px solid #bae6fd; display:inline-block;">رقم الفرصة: ' + opp.id + '</span>' +
-                        typeBadgeHtml +
-                    '</h4>' +
-                    '<p>' + desc + '</p>' +
-                '</div>' +
-            '</div>' +
-            '<div class="banner-stats">' +
-                '<div class="stat-badge">' +
-                    '<div class="icon-box" style="color: ' + timeColor + '; background: ' + timeBg + ';"><i class="fas fa-hourglass-half"></i></div>' +
-                    '<div class="stat-info">' +
-                        '<span>صلاحية الطرح</span>' +
-                        '<strong style="color: ' + timeColor + ';">' + timeText + '</strong>' +
+        // تصميم الـ Banner كصف واحد مرتب
+        return '<div class="custom-alert-box" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15);">' +
+                    '<div class="alert-item text-right" style="flex: 1.5; text-align: right;">' +
+                        '<strong style="color: #fde047; font-size: 16px; font-weight: 800; display:block; margin-bottom:5px;"><i class="fas ' + icon + '"></i> ' + title + ' ' + typeBadgeHtml + '</strong>' +
+                        '<span style="font-size: 13px; color: #e2e8f0; display:block;">' + desc + '</span>' +
                     '</div>' +
-                '</div>' +
-                '<div class="stat-badge">' +
-                    '<div class="icon-box" style="color: #e11d48; background: #ffe4e6;"><i class="fas fa-ticket-alt"></i></div>' +
-                    '<div class="stat-info">' +
-                        '<span>الأسهم المتاحة</span>' +
-                        '<strong style="color: #e11d48;">' + availableSharesToBuy + ' سهم</strong>' +
+                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 15px;">' +
+                        '<strong style="display:block; font-size:14px; margin-bottom:5px; color:#fff;">حالة الفرصة</strong>' +
+                        '<span style="font-weight:bold; background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:6px; display:inline-block;">' + opp.status + '</span>' +
                     '</div>' +
-                '</div>' +
-                '<div class="stat-badge">' +
-                    '<div class="icon-box" style="color: ' + statusColor + '; background: ' + statusBg + ';"><i class="fas ' + statusIcon + '"></i></div>' +
-                    '<div class="stat-info">' +
-                        '<span>العائد المتوقع (نسبة الشراكة)</span>' +
-                        '<strong style="color: ' + statusColor + '; font-size:18px;">' + opp.roi + '%</strong>' +
+                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 15px;">' +
+                        '<strong style="display:block; font-size:14px; margin-bottom:5px; color:#fff;">نسبة الاكتمال</strong>' +
+                        '<span style="font-family: monospace; font-size: 16px; font-weight:bold; color:#fff;">' + opp.fundedPercentage + '%</span>' +
                     '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>';
+                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 15px;">' +
+                        '<strong style="display:block; font-size:14px; margin-bottom:5px; color:#fff;">الأسهم المتاحة</strong>' +
+                        '<span style="font-family: monospace; font-size: 16px; font-weight:bold; color:#fff;">' + availableSharesToBuy + ' سهم</span>' +
+                    '</div>' +
+                '</div>';
     };
 
     // ============================================================
-    // 3. تهيئة واجهة "سوق الفرص" 
+    // 3. تهيئة واجهة "سوق الفرص" (معدلة لتشمل التنبيهات الذكية)
     // ============================================================
     function initOpportunities() {
         let gridCont = document.getElementById('gridContainer');
@@ -230,7 +214,7 @@
 
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
-                let mStatus = (statusVal === 'all') ? true : (d.status === statusVal);
+                let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
                 let mSearch = d.id.toLowerCase().indexOf(searchVal) !== -1 || d.company.toLowerCase().indexOf(searchVal) !== -1;
                 return mType && mStatus && mSearch;
             });
@@ -239,7 +223,7 @@
             
             let active = 0, upcoming = 0, completed = 0;
             filtered.forEach(d => {
-                if(d.status === 'النشطة') active++;
+                if(d.status === 'النشطة' || d.status === 'قائم') active++;
                 if(d.status === 'القادمة') upcoming++;
                 if(d.status === 'المكتملة') completed++;
             });
@@ -252,7 +236,7 @@
                 if(typeof Chart !== 'undefined') {
                     let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
                     filtered.forEach(d => {
-                        if(d.status === 'النشطة') counts.active++;
+                        if(d.status === 'النشطة' || d.status === 'قائم') counts.active++;
                         else if(d.status === 'القادمة') counts.upcoming++;
                         else if(d.status === 'المنتهية') counts.finished++;
                         else if(d.status === 'المغلقة') counts.closed++;
@@ -309,16 +293,17 @@
 
         window.applyFilters();
 
-        // 🔥 توليد التنبيهات في السوق لجميع الفرص النشطة
+        // 🔥 توليد التنبيهات في السوق لجميع الفرص (النشطة والممتدة)
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer) {
             marketAlertContainer.innerHTML = '';
-            let activeOpps = window.mockData.filter(d => d.status === 'النشطة');
-            // نعرض أول فرصتين نشطتين فقط
-            let oppsToShow = activeOpps.slice(0, 2); 
-            oppsToShow.forEach(opp => { 
-                marketAlertContainer.innerHTML += window.buildAlertBanner(opp); 
-            });
+            
+            // نجلب فرصة واحدة نشطة من نوع "شراكة ممتدة" وفرصة نشطة من نوع "فرصة شراكة"
+            let extendedOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'شراكة ممتدة');
+            let normalOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'فرصة شراكة');
+            
+            if(extendedOpp) marketAlertContainer.innerHTML += window.buildAlertBanner(extendedOpp); 
+            if(normalOpp) marketAlertContainer.innerHTML += window.buildAlertBanner(normalOpp); 
         }
     }
 
@@ -357,7 +342,6 @@
         document.getElementById('mDetTax').innerText = window.formatMoneySafe(opp.capital * 0.15) + ' ر.س';
         document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
 
-        // 🔥 حقن التنبيه الذكي المخصص للفرصة الحالية فقط داخل حاوية التفاصيل
         const alertsCont = document.getElementById('mDetAlertsContainer');
         if (alertsCont) {
             alertsCont.innerHTML = window.buildAlertBanner(opp);
@@ -367,12 +351,17 @@
         const btnJoin = document.getElementById('btnRedirectToJoin');
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
 
-        if (joinWrapper && btnJoin) {
-            if (opp.status === 'النشطة' && availableSharesToBuy > 0) {
-                joinWrapper.style.display = 'block';
+        if (btnJoin) {
+            if ((opp.status === 'النشطة' || opp.status === 'قائم') && availableSharesToBuy > 0) {
+                btnJoin.style.display = 'inline-flex';
                 btnJoin.href = "cancelled-investments.html?id=" + opp.id;
+                
+                const miniShares = document.getElementById('miniSharesBox');
+                if(miniShares) miniShares.style.display = 'inline-flex';
+                const availSharesText = document.getElementById('mDetAvailableShares');
+                if(availSharesText) availSharesText.innerText = availableSharesToBuy;
             } else {
-                joinWrapper.style.display = 'none';
+                btnJoin.style.display = 'none';
             }
         }
     }
