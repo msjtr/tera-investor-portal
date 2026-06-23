@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 2. investment-details.js - سوق الفرص والشركات المطروحة (نسخة التشغيل الفوري)
+ * 2. investment-details.js - سوق الفرص (النسخة الديناميكية الشاملة)
  * ============================================================
  */
 
@@ -10,7 +10,8 @@
     window.initOpportunities = function() {
         let gridCont = document.getElementById('gridContainer');
         let listBody = document.getElementById('listTableBody');
-        // إذا لم تكن هذه العناصر في الصفحة الحالية، أوقف التنفيذ فوراً لحماية النظام
+        
+        // إذا لم تكن هذه العناصر موجودة، أوقف التنفيذ لمنع الأخطاء
         if (!gridCont && !listBody) return;
 
         window.currentViewStyle = window.currentViewStyle || 'list';
@@ -53,7 +54,7 @@
                 const detailUrl = 'completed-investments.html?id=' + item.id;
                 
                 gridCont.innerHTML += `
-                    <div class="opp-card">
+                    <div class="opp-card glass-panel">
                         <div class="opp-header">
                             <div><span class="type-badge ${typeBadge}">${item.type}</span></div>
                             <span class="badge ${badge}">${item.status}</span>
@@ -114,6 +115,7 @@
 
             window.renderOpportunities(filtered);
             
+            // 1. حساب الحالات الحقيقية للدائرة البيانية
             let statusCounts = { active:0, upcoming:0, completed:0, ended:0, closed:0, cancelled:0 };
             filtered.forEach(d => {
                 if(d.status === 'النشطة' || d.status === 'قائم') statusCounts.active++;
@@ -128,6 +130,7 @@
             if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = statusCounts.upcoming;
             if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = statusCounts.completed;
 
+            // 2. حساب المبالغ الفعلية موزعة على الأشهر الستة للأعمدة البيانية
             let extendedCapital = [0, 0, 0, 0, 0, 0];
             let opportunityCapital = [0, 0, 0, 0, 0, 0];
 
@@ -135,7 +138,7 @@
                 if (d.reqDate) {
                     let parts = d.reqDate.split('/');
                     if (parts.length === 3) {
-                        let monthIndex = parseInt(parts[1]) - 1;
+                        let monthIndex = parseInt(parts[1]) - 1; // 0 ليناير، 5 ليونيو
                         if (monthIndex >= 0 && monthIndex <= 5) {
                             if (d.type === 'شراكة ممتدة') extendedCapital[monthIndex] += d.capital;
                             else opportunityCapital[monthIndex] += d.capital;
@@ -144,14 +147,89 @@
                 }
             });
 
-            if(typeof window.updateDashboardCharts === 'function') {
-                window.updateDashboardCharts(statusCounts, extendedCapital, opportunityCapital);
-            } else if (typeof window.initCharts === 'function') {
-                window.initCharts();
-            }
+            // 3. استدعاء الرسم البياني الفعلي والحي بالبيانات المحسوبة (الآن أصبح مدمجاً هنا ولا يعتمد على ملفات أخرى)
+            renderLiveCharts(statusCounts, extendedCapital, opportunityCapital);
         };
 
-        // حقن التنبيهات المنظمة بلون متناسق
+        // دالة الرسم البياني الديناميكية المدمجة
+        function renderLiveCharts(counts, extCap, oppCap) {
+            if (typeof Chart === 'undefined') return;
+
+            // المخطط الدائري
+            const statusCanvas = document.getElementById('statusChart');
+            if (statusCanvas) {
+                let existingChart = Chart.getChart('statusChart');
+                if (existingChart) existingChart.destroy(); 
+                
+                new Chart(statusCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['نشطة', 'قادمة', 'مكتملة', 'منتهية', 'مغلقة', 'ملغاة'],
+                        datasets: [{
+                            data: [counts.active, counts.upcoming, counts.completed, counts.ended, counts.closed, counts.cancelled],
+                            backgroundColor: ['#028090', '#10b981', '#6366f1', '#cbd5e1', '#334155', '#ef4444'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', rtl: true, labels: { font: { family: 'Tajawal', size: 11, weight: '700' }, color: '#334155' } },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { family: 'Tajawal', weight: '800', size: 13 },
+                                formatter: (value) => value > 0 ? value : ''
+                            }
+                        }
+                    }
+                });
+            }
+
+            // المخطط العمودي
+            const oppCanvas = document.getElementById('opportunitiesChart');
+            if (oppCanvas) {
+                let existingOppChart = Chart.getChart('opportunitiesChart');
+                if (existingOppChart) existingOppChart.destroy();
+
+                new Chart(oppCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        datasets: [
+                            { label: 'شراكة ممتدة', data: extCap, backgroundColor: '#0A1B3F', borderRadius: 6 },
+                            { label: 'فرصة شراكة', data: oppCap, backgroundColor: '#028090', borderRadius: 6 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grace: '20%',
+                                grid: { color: '#f1f5f9' },
+                                ticks: { font: { family: 'Tajawal', size: 11 }, callback: function(value) { return value.toLocaleString(); } }
+                            },
+                            x: { grid: { display: false }, ticks: { font: { family: 'Tajawal', size: 12, weight: '700' } } }
+                        },
+                        plugins: {
+                            legend: { position: 'top', rtl: true, labels: { font: { family: 'Tajawal', size: 12, weight: '700' } } },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 5,
+                                color: '#0A1B3F',
+                                font: { family: 'Tajawal', weight: '800', size: 10 },
+                                formatter: (value) => value > 0 ? value.toLocaleString() + ' ر.س' : ''
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
@@ -162,6 +240,7 @@
                     htmlAlerts += window.buildAlertBanner(opp); 
                 });
             }
+
             marketAlertContainer.innerHTML = htmlAlerts;
             marketAlertContainer.setAttribute('data-loaded', 'true');
         }
@@ -169,7 +248,6 @@
         window.applyFilters();
     };
 
-    // 🌟 القوة الضاربة للتحديث الجذري: التشغيل التلقائي فور قراءة المتصفح للملف
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', window.initOpportunities);
     } else {
