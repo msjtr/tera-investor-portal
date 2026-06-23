@@ -109,10 +109,13 @@
             let statusVal = statusFilter ? statusFilter.value : 'all';
             let searchVal = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
+            // تحقق من وجود البيانات قبل الفلترة لمنع أخطاء الكونسول
+            if (!window.mockData) return;
+
             let filtered = window.mockData.filter(d => {
                 let mType = typeVal === 'all' || d.type === typeVal;
                 let mStatus = (statusVal === 'all') ? true : (statusVal === 'النشطة_قائم' ? ['النشطة', 'قائم'].includes(d.status) : d.status === statusVal);
-                let mSearch = d.id.toLowerCase().indexOf(searchVal) !== -1 || d.company.toLowerCase().indexOf(searchVal) !== -1;
+                let mSearch = d.id.toLowerCase().indexOf(searchVal) !== -1 || (d.company && d.company.toLowerCase().indexOf(searchVal) !== -1) || (d.reqEntity && d.reqEntity.toLowerCase().indexOf(searchVal) !== -1);
                 return mType && mStatus && mSearch;
             });
 
@@ -241,18 +244,30 @@
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
-            let alertOpps = window.mockData.filter(d => ['النشطة', 'قائم', 'القادمة'].includes(d.status));
-            
-            if(typeof window.buildAlertBanner === 'function') {
-                alertOpps.forEach(opp => {
-                    htmlAlerts += window.buildAlertBanner(opp); 
-                });
+            if (window.mockData) {
+                let alertOpps = window.mockData.filter(d => ['النشطة', 'قائم', 'القادمة'].includes(d.status));
+                if(typeof window.buildAlertBanner === 'function') {
+                    alertOpps.forEach(opp => {
+                        htmlAlerts += window.buildAlertBanner(opp); 
+                    });
+                }
             }
-
             marketAlertContainer.innerHTML = htmlAlerts;
             marketAlertContainer.setAttribute('data-loaded', 'true');
         }
 
+        // ==========================================
+        // الإضافة الجديدة هنا: ربط الواجهة بالدالة
+        // ==========================================
+        const typeFilterEl = document.getElementById('typeFilter');
+        const statusFilterEl = document.getElementById('statusFilter');
+        const searchInputEl = document.getElementById('searchInput');
+
+        if (typeFilterEl) typeFilterEl.addEventListener('change', window.applyFilters);
+        if (statusFilterEl) statusFilterEl.addEventListener('change', window.applyFilters);
+        if (searchInputEl) searchInputEl.addEventListener('input', window.applyFilters);
+
+        // استدعاء أولي لتشغيل البيانات فور تحميل الصفحة
         window.applyFilters();
     };
 
