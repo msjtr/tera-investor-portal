@@ -26,18 +26,19 @@
         /* ===== 1. تصميم الهيدر العلوي ===== */
         .top-header { background: #fff; padding: 20px 45px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; width: 100%; }
         
-        /* === حل دقة الشعار: تحرير الـ SVG من قيود الـ Rasterize === */
+        /* === الشعار: تكبير الحجم لأقصى درجة والحفاظ على الدقة === */
         .header-logo { 
             display: flex; 
             align-items: center; 
             flex-shrink: 0; 
         }
         .header-logo img { 
-            height: 70px; /* حجم متناسق */
-            width: auto; /* يحافظ على أبعاد الـ SVG الأصلية */
+            height: 100px; /* شعار كبير جداً */
+            width: auto; 
+            max-width: 100%;
             display: block;
+            object-fit: contain; /* يمنع انضغاط الشعار */
             transition: transform 0.3s ease; 
-            /* تم إزالة أوامر GPU المسببة للبهتان */
         }
         .header-logo img:hover { transform: scale(1.02); }
         
@@ -145,8 +146,13 @@
             /* الهيدر وضبط الشعار للجوال */
             .top-header { flex-direction: column; gap: 15px; text-align: center; padding-top: 25px; }
             .header-logo { justify-content: center; width: 100%; display: flex; }
-            /* هنا كلمة السر: منع ضغط الصورة أو فرض العرض الأقصى عليها */
-            .header-logo img { height: 60px; width: auto; max-width: none; }
+            /* إجبار الشعار على البقاء كبيراً وواضحاً في الجوال */
+            .header-logo img { 
+                height: 85px !important; 
+                width: auto !important; 
+                max-width: 100% !important; 
+                object-fit: contain !important;
+            }
             
             .header-user { width: 100%; justify-content: center; flex-direction: row-reverse; }
             .user-greeting { text-align: right; }
@@ -303,11 +309,9 @@
         </main>
     </div>
 
-    <!-- استدعاء المكتبات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- الملفات الخارجية لدعم الهيكلة الجديدة -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/investment-details.js"></script>
     <script src="../../assets/js/app.js"></script>
