@@ -20,20 +20,26 @@
 <body>
 
     <div class="app-wrapper">
-        <main class="main-content">
-            <header class="top-header no-print">
-                <div class="header-right">
-                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
-                </div>
-                <div class="header-left">
-                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
-                </div>
-            </header>
+        
+        <header class="top-header no-print">
+            <div class="header-right">
+                <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+            </div>
+            <div class="header-left">
+                <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;">
+                    <i class="fas fa-home"></i> العودة للوحة التحكم
+                </a>
+            </div>
+        </header>
 
+        <main class="main-content">
             <div class="container">
+                
                 <div class="sub-header-nav no-print">
                     <div class="nav-links">
-                        <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
+                        <a href="investment-details.html" class="btn-back">
+                            <i class="fas fa-store"></i> العودة لسوق الفرص
+                        </a>
                     </div>
                     <h2 class="page-title" id="pageMainTitle">تفاصيل الفرصة الاستثمارية</h2>
                 </div>
@@ -44,8 +50,13 @@
                     <div class="detail-block">
                         <h3 class="detail-block-title"><i class="fas fa-handshake"></i> القسم الأول: تفاصيل الفرصة</h3>
                         <div class="progress-wrapper">
-                            <div class="progress-text"><span>مؤشر نسبة الاكتمال</span><span id="mDetProgressText">0%</span></div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div></div>
+                            <div class="progress-text">
+                                <span>مؤشر نسبة الاكتمال</span>
+                                <span id="mDetProgressText">0%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div>
+                            </div>
                         </div>
                         <div class="info-grid">
                             <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal">-</strong></div>
@@ -118,7 +129,9 @@
                     <div class="detail-block">
                         <h3 class="detail-block-title"><i class="fas fa-book-reader"></i> القسم السادس : الدليل الاسترشادي والشروط والأحكام</h3>
                         <div class="guideline-manual">
+                            
                             <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
+                            
                             <h5>المشاركة في الفرص</h5>
                             <ul>
                                 <li>تعتبر المشاركة في الفرص المعروضة عبر المنصة اختيارية وتتم بعد اطلاع الشريك على كافة بيانات الفرصة.</li>
@@ -197,8 +210,10 @@
                                 <li><strong>تحويل الراتب:</strong> تحويل راتب العميل للحساب المحدد كوسيلة تعزيز للسداد.</li>
                                 <li><strong>الكفيل الغارم:</strong> شخص يلتزم بسداد الالتزامات في حال إخلال العميل بها وفق الأنظمة.</li>
                             </ul>
+                            
                             <h5>نوع الضمان</h5>
                             <p>قد تحتوي الفرصة على ضمان واحد أو أكثر حسب تقييم المخاطر.</p>
+                            
                             <h5>قوة الضمانات</h5>
                             <ul>
                                 <li><strong>مرتفعة:</strong> وجود عدة ضمانات قوية ومفعلة.</li>
@@ -229,6 +244,7 @@
                             <p>تظهر الرسوم المستحقة للشريك قبل إتمام عملية المشاركة متى كانت قابلة للتحديد مسبقاً.</p>
 
                             <h4><i class="fas fa-user-secret"></i> سادساً: سياسة الخصوصية وسرية البيانات</h4>
+                            
                             <h5>حماية البيانات</h5>
                             <p>تلتزم المنصة بحماية البيانات والمعلومات وفق الأنظمة والتعليمات المعمول بها.</p>
 
@@ -266,6 +282,7 @@
                             </ul>
 
                             <h4><i class="fas fa-clipboard-list"></i> سابعاً: حقوق والتزامات الشريك</h4>
+                            
                             <h5>حقوق الشريك</h5>
                             <p>يحق للشريك:</p>
                             <ul>
@@ -316,13 +333,14 @@
                         </a>
                     </div>
 
-                </main>
+                </div>
             </div>
-
-            <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
-            </footer>
         </main>
+
+        <footer class="page-footer no-print">
+            © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
+        </footer>
+        
     </div>
 
     <script src="../../assets/js/investments.js"></script>
