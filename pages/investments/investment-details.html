@@ -25,13 +25,10 @@
         
         /* ===== 1. تصميم الهيدر العلوي ===== */
         .top-header { background: #fff; padding: 20px 45px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; width: 100%; }
-        
-        /* الشعار في اليمين */
         .header-logo { display: flex; align-items: center; }
         .header-logo img { height: 65px; width: auto; max-width: 100%; object-fit: contain; transition: transform 0.3s ease; }
         .header-logo img:hover { transform: scale(1.02); }
         
-        /* بيانات العميل والأيقونة في اليسار */
         .header-user { display: flex; align-items: center; gap: 18px; }
         .user-greeting { text-align: left; }
         .user-greeting h4 { margin: 0; font-size: 16px; color: var(--tera-navy); font-weight: 800; }
@@ -47,27 +44,14 @@
         /* الحاوية الرئيسية للمحتوى */
         .container { max-width: 1600px; margin: 0 auto; padding: 10px 45px 50px 45px; flex: 1; width: 100%; }
 
-        /* ===== 3. تصحيح ألوان التنبيهات الذكية ===== */
-        #marketAlertsWrapper > div {
-            background: linear-gradient(135deg, var(--tera-navy) 0%, var(--tera-teal) 100%) !important;
-            border: 1px solid rgba(255,255,255,0.2) !important;
-            box-shadow: 0 10px 30px rgba(2,128,144,0.25) !important;
-        }
-        /* إجبار العناوين على الظهور بلون أصفر فاقع */
+        /* التنبيهات الذكية */
+        #marketAlertsWrapper > div { background: linear-gradient(135deg, var(--tera-navy) 0%, var(--tera-teal) 100%) !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 10px 30px rgba(2,128,144,0.25) !important; }
         #marketAlertsWrapper strong { color: #fde047 !important; font-size: 14px !important; opacity: 1 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-        /* إجبار النصوص والقيم على الظهور بلون أبيض ناصع */
         #marketAlertsWrapper span { color: #ffffff !important; opacity: 1 !important; }
         #marketAlertsWrapper .type-badge { background: rgba(255,255,255,0.2) !important; border: 1px solid rgba(255,255,255,0.4) !important; color: #fff !important; }
         #marketAlertsWrapper a { background: #fff !important; color: var(--tera-navy) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; }
         #marketAlertsWrapper a:hover { background: #fde047 !important; transform: translateY(-2px); }
 
-        @media (max-width: 768px) {
-            .top-header, .page-action-bar, .container { padding-left: 20px; padding-right: 20px; }
-            .page-action-bar { flex-direction: column; align-items: flex-start; gap: 20px; }
-            #marketAlertsWrapper > div > div:last-child { flex-direction: column; gap: 15px; }
-            #marketAlertsWrapper > div > div:last-child > div { border-left: none !important; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 15px; width: 100%; }
-        }
-        
         /* البطاقات الإحصائية */
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 40px; }
         .summary-card { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; border-top: 5px solid var(--tera-gray); box-shadow: 0 6px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: center; transition: 0.3s; }
@@ -81,9 +65,8 @@
         .summary-card p { margin: 0; font-size: 16px; color: var(--tera-gray); font-weight: 700; }
         .summary-card h3 { margin: 0; font-size: 38px; color: var(--tera-navy); font-weight: 800; }
         
-        /* ===== 4. تصحيح توزيع الرسوم البيانية (المؤشرات) ===== */
+        /* الرسوم البيانية */
         .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 40px; width: 100%; }
-        /* تعديل التوزيع ليكون متوازناً 40% للدائري و 60% للخطي */
         @media (min-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr 1.6fr; } }
         .content-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 6px 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
         .chart-wrapper { position: relative; width: 100%; flex: 1; min-height: 320px; }
@@ -116,7 +99,7 @@
         .type-opportunity { background: #fce7f3; color: #db2777; } 
         
         /* الكروت والجدول */
-        .grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; width: 100%; margin-bottom: 40px; }
+        .grid-view-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; width: 100%; margin-bottom: 40px; }
         .opp-card { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; }
         .opp-card:hover { transform: translateY(-6px); box-shadow: 0 15px 35px rgba(2, 128, 144, 0.12); border-color: var(--tera-teal); }
         .opp-header { padding: 25px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
@@ -139,6 +122,53 @@
         .btn-view:hover { background: var(--tera-teal); color: #fff; }
         
         .page-footer { background: #fff; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; font-weight: 600; margin-top: auto; }
+
+        /* ========================================================= */
+        /* الحل الجذري والنهائي لشاشات الجوال والتجاوب الفعال */
+        /* ========================================================= */
+        @media (max-width: 768px) {
+            .top-header, .page-action-bar, .container { padding-left: 15px; padding-right: 15px; }
+            
+            /* الهيدر */
+            .top-header { flex-direction: column; gap: 15px; text-align: center; padding-top: 25px; }
+            .header-logo img { height: 50px; }
+            .header-user { width: 100%; justify-content: center; flex-direction: row-reverse; }
+            .user-greeting { text-align: right; }
+            
+            /* شريط العنوان وزر الرجوع */
+            .page-action-bar { flex-direction: column; align-items: stretch; gap: 15px; padding-top: 25px; }
+            .page-title { font-size: 22px; text-align: center; }
+            .btn-back-main { justify-content: center; width: 100%; }
+            
+            /* الإحصائيات (تعديل من 3 أعمدة إلى عمود واحد لمنع التكدس) */
+            .summary-grid { grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
+            .summary-card { padding: 20px; }
+            .summary-card h3 { font-size: 32px; }
+            
+            /* الفلاتر وشريط البحث */
+            .filters-container > div { flex-direction: column; width: 100%; align-items: stretch; gap: 12px !important; }
+            .search-input { width: 100%; min-width: 100%; margin-bottom: 0; }
+            .search-box { width: 100%; min-width: 100%; }
+            .view-toggles { display: flex; width: 100%; justify-content: space-between; }
+            .view-btn { flex: 1; text-align: center; justify-content: center; }
+            
+            /* كروت الفرص */
+            .grid-view-container { grid-template-columns: 1fr; gap: 15px; margin-bottom: 25px; }
+            .opp-body { grid-template-columns: 1fr; }
+            .opp-metric[style*="grid-column"] { grid-column: span 1 !important; }
+            
+            /* الرسوم البيانية */
+            .dashboard-grid { gap: 20px; margin-bottom: 25px; }
+            .content-card { padding: 15px; }
+            
+            /* التنبيهات الذكية (تحويل المربعات الأفقية إلى عمودية مرتبة) */
+            #marketAlertsWrapper > div > div:first-child { flex-direction: column; gap: 15px; align-items: stretch !important; text-align: center; }
+            #marketAlertsWrapper > div > div:first-child > div { justify-content: center; }
+            #marketAlertsWrapper > div > div:first-child a { justify-content: center; width: 100%; }
+            #marketAlertsWrapper > div > div:last-child { flex-direction: column; gap: 0; }
+            #marketAlertsWrapper > div > div:last-child > div { border-left: none !important; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 12px 0 !important; width: 100%; }
+            #marketAlertsWrapper > div > div:last-child > div:last-child { border-bottom: none; }
+        }
     </style>
 </head>
 <body>
@@ -146,10 +176,8 @@
     <div class="app-wrapper">
         <main class="main-content">
             
-            <!-- ===== 1. الهيدر العلوي المحدث (الشعار يمين، العميل يسار) ===== -->
             <header class="top-header no-print">
                 <div class="header-logo">
-                    <!-- تم تكبير الشعار وجعله عالي الدقة -->
                     <img src="../../images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x50/028090/fff?text=Tera+Logo'" />
                 </div>
                 <div class="header-user">
@@ -157,12 +185,10 @@
                         <h4>محمد صالح جميعان الشمري</h4>
                         <p>بوابة الاستثمار، حائل</p>
                     </div>
-                    <!-- أيقونة الحرف الأول -->
                     <div class="user-avatar">م</div>
                 </div>
             </header>
 
-            <!-- ===== 2. حاوية العنوان وزر الرجوع ===== -->
             <div class="page-action-bar no-print">
                 <h2 class="page-title">سوق الفرص والشركات المطروحة</h2>
                 <a href="../dashboard/index.html" class="btn-back-main">
@@ -170,10 +196,8 @@
                 </a>
             </div>
 
-            <!-- الحاوية الرئيسية للمحتوى -->
             <div class="container">
                 
-                <!-- 🔥 حاوية التنبيهات الذكية -->
                 <div id="marketAlertsWrapper" class="no-print"></div>
 
                 <div class="summary-grid no-print">
@@ -191,7 +215,6 @@
                     </div>
                 </div>
 
-                <!-- تم تعديل التوزيع ليكون منطقياً (1fr 1.6fr) بدلاً من أن يكون الدائري مضغوطاً جداً -->
                 <div class="dashboard-grid no-print">
                     <div class="content-card chart-container">
                         <h3 style="margin: 0 0 20px 0; color: var(--tera-navy); font-size: 18px; font-weight: 800;"><i class="fas fa-chart-pie text-teal"></i> توزيع ومؤشر الحالات</h3>
@@ -264,11 +287,9 @@
         </main>
     </div>
 
-    <!-- استدعاء المكتبات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
-    <!-- الملفات الخارجية لدعم الهيكلة الجديدة -->
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/investment-details.js"></script>
     <script src="../../assets/js/app.js"></script>
