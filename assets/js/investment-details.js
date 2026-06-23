@@ -184,7 +184,7 @@
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
             
-            // جلب (جميع) الفرص المتاحة والقادمة لكلا النوعين باستخدام filter بدلاً من find
+            // جلب (جميع) الفرص المتاحة والقادمة لكلا النوعين
             let alertOpps = window.mockData.filter(d => ['النشطة', 'قائم', 'القادمة'].includes(d.status));
             
             if(typeof window.buildAlertBanner === 'function') {
