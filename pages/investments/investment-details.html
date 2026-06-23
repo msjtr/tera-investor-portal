@@ -16,6 +16,42 @@
     <link rel="stylesheet" href="../../assets/css/investments.css">
     <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* تنسيقات لوحة التنبيهات الذكية (لصفحة السوق) */
+        .status-banner {
+            background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);
+            border: 1px solid #14b8a6;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(20, 184, 166, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .status-banner::before { content: ''; position: absolute; top: 0; right: 0; width: 6px; height: 100%; background: #0d9488; }
+        .banner-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .banner-header i.main-icon { font-size: 32px; color: #f59e0b; animation: pulse 2s infinite; }
+        .banner-header h4 { margin: 0 0 5px 0; font-size: 18px; color: var(--tera-navy); font-weight: 800; font-family: 'Cairo', sans-serif; }
+        .banner-header p { margin: 0; font-size: 14px; color: var(--tera-gray); font-weight: 600; }
+        
+        .banner-stats { display: flex; flex-wrap: wrap; gap: 15px; }
+        .stat-badge {
+            flex: 1; min-width: 200px; background: #fff; border: 1px solid #e2e8f0;
+            padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: 0.3s; cursor: default;
+        }
+        .stat-badge:hover { border-color: var(--tera-teal); transform: translateY(-3px); }
+        .stat-badge .icon-box {
+            width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; font-size: 20px;
+        }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-info span { font-size: 12px; color: var(--tera-gray); margin-bottom: 4px; font-weight: 700; }
+        .stat-info strong { font-size: 16px; font-family: monospace; font-weight: 800; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); color: #d97706; } 100% { transform: scale(1); } }
+    </style>
 </head>
 <body>
 
@@ -34,6 +70,39 @@
             <div class="container">
                 <div class="sub-header-nav no-print" style="justify-content: center;">
                     <h2 class="page-title">سوق الفرص والشركات المطروحة</h2>
+                </div>
+
+                <div class="status-banner no-print" id="marketFeaturedAlert">
+                    <div class="banner-header">
+                        <i class="fas fa-bolt main-icon"></i>
+                        <div>
+                            <h4>فرصة استثمارية مميزة متاحة الآن!</h4>
+                            <p>سارع باغتنام الفرصة الحالية، الطلب عالي جداً والأسهم تنفد بسرعة.</p>
+                        </div>
+                    </div>
+                    <div class="banner-stats">
+                        <div class="stat-badge">
+                            <div class="icon-box" style="color: #ea580c; background: #ffedd5;"><i class="fas fa-hourglass-half"></i></div>
+                            <div class="stat-info">
+                                <span>الوقت المتبقي لانتهاء الطرح</span>
+                                <strong style="color: #ea580c;">3 أيام و 14 ساعة</strong>
+                            </div>
+                        </div>
+                        <div class="stat-badge">
+                            <div class="icon-box" style="color: #e11d48; background: #ffe4e6;"><i class="fas fa-ticket-alt"></i></div>
+                            <div class="stat-info">
+                                <span>الأسهم المتبقية والمتاحة</span>
+                                <strong style="color: #e11d48;">15 سهم فقط !</strong>
+                            </div>
+                        </div>
+                        <div class="stat-badge">
+                            <div class="icon-box" style="color: #10b981; background: #dcfce7;"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <span>حالة الطرح حالياً</span>
+                                <strong style="color: #10b981;">متاح للانضمام</strong>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="summary-grid no-print">
@@ -110,7 +179,7 @@
                     </table>
                 </div>
                 
-                <div id="emptyState" class="empty-state">
+                <div id="emptyState" class="empty-state" style="display: none;">
                     <i class="fas fa-search"></i>
                     <h3 style="margin: 0 0 10px 0; color: var(--tera-navy);">لا توجد نتائج مطابقة</h3>
                 </div>
