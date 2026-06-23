@@ -124,6 +124,97 @@
             </div>`;
     };
 
+    // --- الإضافة الجديدة: تهيئة الرسوم البيانية بدعم نظام الصفحة الواحدة (SPA) ---
+    window.initCharts = function() {
+        if (typeof Chart === 'undefined' || typeof ChartDataLabels === 'undefined') return;
+        Chart.register(ChartDataLabels);
+
+        // 1. رسم توزيع الحالات
+        const statusCanvas = document.getElementById('statusChart');
+        if (statusCanvas) {
+            // تدمير المخطط القديم إذا كان موجوداً لمنع تكدس الذاكرة
+            if (window.statusChartInstance) window.statusChartInstance.destroy();
+            
+            const ctxStatus = statusCanvas.getContext('2d');
+            window.statusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['نشطة', 'قادمة', 'مكتملة'],
+                    datasets: [{
+                        data: [12, 19, 8],
+                        backgroundColor: ['#028090', '#10b981', '#6366f1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Tajawal', size: 13, weight: '600' }, color: '#334155' }
+                        },
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { family: 'Tajawal', weight: '800', size: 14 },
+                            formatter: (value) => value
+                        }
+                    }
+                }
+            });
+        }
+
+        // 2. رسم فرص الـ 6 أشهر
+        const oppCanvas = document.getElementById('opportunitiesChart');
+        if (oppCanvas) {
+            if (window.oppChartInstance) window.oppChartInstance.destroy();
+
+            const ctxOpportunities = oppCanvas.getContext('2d');
+            window.oppChartInstance = new Chart(ctxOpportunities, {
+                type: 'bar',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                    datasets: [
+                        { label: 'شراكة ممتدة', data: [35, 45, 28, 60, 55, 70], backgroundColor: '#0A1B3F', borderRadius: 6 },
+                        { label: 'فرصة شراكة', data: [20, 30, 40, 35, 50, 48], backgroundColor: '#028090', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grace: '20%', // منع انقطاع الأرقام
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Tajawal', size: 12 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Tajawal', size: 12, weight: '600' } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            rtl: true,
+                            labels: { font: { family: 'Tajawal', size: 13, weight: '600' } }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top', // وضع الأرقام فوق الأعمدة لتفادي التداخل
+                            offset: 4,
+                            color: '#0A1B3F',
+                            font: { family: 'Tajawal', weight: '800', size: 11 },
+                            formatter: (value) => value
+                        }
+                    }
+                }
+            });
+        }
+    };
+
     // المراقب المركزي والتنفيذي للتطبيق (SPA Router Initializer)
     let isUpdating = false;
     let debounceTimeout = null;
@@ -135,6 +226,9 @@
         if(typeof window.initOpportunities === 'function') window.initOpportunities();
         if(typeof window.initInvestmentDetails === 'function') window.initInvestmentDetails();
         if(typeof window.initCancelledInvestments === 'function') window.initCancelledInvestments();
+        
+        // استدعاء تهيئة الرسوم البيانية ضمن دورة التحديث الأساسية
+        if(typeof window.initCharts === 'function') window.initCharts();
 
         setTimeout(function() { isUpdating = false; }, 150);
     };
