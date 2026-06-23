@@ -110,7 +110,7 @@
         }
 
         // تصميم الـ Banner كصف واحد مرتب
-        return '<div class="custom-alert-box" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15);">' +
+        return '<div class="custom-alert-box" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15);">' +
                     '<div class="alert-item text-right" style="flex: 1.5; text-align: right;">' +
                         '<strong style="color: #fde047; font-size: 16px; font-weight: 800; display:block; margin-bottom:5px;"><i class="fas ' + icon + '"></i> ' + title + ' ' + typeBadgeHtml + '</strong>' +
                         '<span style="font-size: 13px; color: #e2e8f0; display:block;">' + desc + '</span>' +
@@ -293,17 +293,20 @@
 
         window.applyFilters();
 
-        // 🔥 توليد التنبيهات في السوق لجميع الفرص (النشطة والممتدة)
+        // 🔥 توليد التنبيهات في السوق لجميع الفرص (النشطة والممتدة) مع حماية ضد التكرار (Smart Render)
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
-        if (marketAlertContainer) {
-            marketAlertContainer.innerHTML = '';
+        if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
+            let htmlAlerts = '';
             
             // نجلب فرصة واحدة نشطة من نوع "شراكة ممتدة" وفرصة نشطة من نوع "فرصة شراكة"
             let extendedOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'شراكة ممتدة');
             let normalOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'فرصة شراكة');
             
-            if(extendedOpp) marketAlertContainer.innerHTML += window.buildAlertBanner(extendedOpp); 
-            if(normalOpp) marketAlertContainer.innerHTML += window.buildAlertBanner(normalOpp); 
+            if(extendedOpp) htmlAlerts += window.buildAlertBanner(extendedOpp); 
+            if(normalOpp) htmlAlerts += window.buildAlertBanner(normalOpp); 
+
+            marketAlertContainer.innerHTML = htmlAlerts;
+            marketAlertContainer.setAttribute('data-loaded', 'true'); // يمنع إعادة الرسم
         }
     }
 
@@ -343,8 +346,9 @@
         document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
 
         const alertsCont = document.getElementById('mDetAlertsContainer');
-        if (alertsCont) {
+        if (alertsCont && !alertsCont.hasAttribute('data-loaded')) {
             alertsCont.innerHTML = window.buildAlertBanner(opp);
+            alertsCont.setAttribute('data-loaded', 'true');
         }
 
         const joinWrapper = document.getElementById('joinActionWrapper');
@@ -391,10 +395,18 @@
         document.getElementById('maxShares').innerText = window.availableSharesToBuy;
 
         if (window.availableSharesToBuy >= 1) {
-            document.getElementById('shareInput').value = 1;
-            window.executeCalculations();
+            let inputField = document.getElementById('shareInput');
+            if (inputField && inputField.value === "1") {
+                window.executeCalculations(); // يمنع التكرار إذا كان معبأ
+            } else if(inputField) {
+                inputField.value = 1;
+                window.executeCalculations();
+            }
         } else {
-            document.getElementById('shareInput').value = 0;
+            let inputField = document.getElementById('shareInput');
+            if(inputField) inputField.value = 0;
+            if(document.getElementById('btnPlus')) document.getElementById('btnPlus').disabled = true;
+            if(document.getElementById('btnMinus')) document.getElementById('btnMinus').disabled = true;
         }
         window.syncButtonsState();
     }
@@ -552,7 +564,6 @@
         setTimeout(function() { isUpdating = false; }, 150);
     };
 
-    // مراقب التغيرات لضمان عمل الجافاسكريبت حتى لو تم تبديل الصفحات بدون إعادة تحميل كاملة (SPA)
     new MutationObserver(function() {
         if (!isUpdating) window.initInvestments();
     }).observe(document.body, { childList: true, subtree: true });
