@@ -1,178 +1,73 @@
- /* ============================================================
-   الملف الأساسي (Core CSS) | Tera Investor Portal
-   ============================================================ */
+/* ============================================================
+   1. core.css - ملف الأساس والمتغيرات والمساعدات العامة
+   ============================================================ */
 
-/* =========================================
-   1. استدعاء الخطوط (Typography)
-   ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap');
 
-/* =========================================
-   2. المتغيرات الجذرية (CSS Variables)
-   ========================================= */
 :root {
-    /* الألوان الرئيسية للهوية (Brand Colors) */
-    --tera-teal: #028090;      /* الأخضر المزرق الأساسي */
-    --tera-teal-light: rgba(2, 128, 144, 0.1); 
-    --tera-navy: #0A1B3F;      /* الكحلي الداكن للعناوين */
-    
-    /* الألوان المحايدة والخلفيات (Neutrals) */
-    --tera-gray: #64748b;      /* الرمادي للنصوص الثانوية */
-    --tera-gray-light: #94a3b8;
-    --tera-bg: #f8fafc;        /* لون خلفية النظام */
-    --tera-white: #ffffff;
-    
-    /* ألوان الحالات (Status Colors) */
-    --status-success: #10b981;
-    --status-success-bg: #dcfce7;
-    --status-warning: #f59e0b;
-    --status-warning-bg: #fef3c7;
-    --status-danger: #ef4444;
-    --status-danger-bg: #fee2e2;
-    --status-info: #0ea5e9;
-    --status-info-bg: #e0f2fe;
+    /* ألوان الهوية الهندسية */
+    --tera-teal: #028090;      
+    --tera-teal-light: rgba(2, 128, 144, 0.1); 
+    --tera-navy: #0A1B3F;      
+    --tera-gray: #64748b;      
+    --tera-gray-light: #94a3b8;
+    --tera-bg: #f8fafc;        
+    --tera-white: #ffffff;
+    
+    /* ألوان الحالات والتقارير */
+    --status-success: #10b981;
+    --status-success-bg: #dcfce7;
+    --status-warning: #f59e0b;
+    --status-warning-bg: #fef3c7;
+    --status-danger: #ef4444;
+    --status-danger-bg: #fee2e2;
+    --status-info: #0ea5e9;
+    --status-info-bg: #e0f2fe;
 
-    /* الخطوط والأحجام */
-    --font-primary: 'Tajawal', sans-serif;
-    
-    /* الظلال والحدود (Shadows & Borders) */
-    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-    --border-color: #e2e8f0;
-    --border-radius-sm: 6px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    
-    /* الحركات (Transitions) */
-    --transition-fast: 0.2s ease-in-out;
-    --transition-normal: 0.3s ease-in-out;
+    /* الخطوط القياسية */
+    --font-primary: 'Cairo', sans-serif;    
+    --font-secondary: 'Tajawal', sans-serif; 
+    
+    /* الأبعاد والظلال */
+    --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    --border-color: #e2e8f0;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --transition-fast: 0.2s ease-in-out;
 }
 
-/* =========================================
-   3. إعادة الضبط الأساسية (CSS Reset & Normalize)
-   ========================================= */
+/* إعادة الضبط القياسية */
 *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: smooth;
 }
 
 body {
-    background-color: var(--tera-bg);
-    color: #334155;
-    font-family: var(--font-primary);
-    font-size: 14px;
-    line-height: 1.6;
-    direction: rtl; /* اتجاه النظام عربي */
-    text-align: right;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden; /* منع التمرير الأفقي العشوائي للصفحة */
+    background-color: var(--tera-bg);
+    color: #334155;
+    font-family: var(--font-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    direction: rtl;
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
-/* إزالة تنسيقات الروابط الافتراضية */
-a {
-    text-decoration: none;
-    color: var(--tera-teal);
-    transition: color var(--transition-fast);
-}
-
-a:hover {
-    color: var(--tera-navy);
-}
-
-/* إعادة ضبط القوائم */
-ul, ol {
-    list-style: none;
-}
-
-/* إعادة ضبط الأزرار وحقول الإدخال */
-button, input, select, textarea {
-    font-family: var(--font-primary);
-    outline: none;
-}
-
-button {
-    cursor: pointer;
-    background: transparent;
-    border: none;
-}
-
-/* العناوين الأساسية */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--tera-navy);
-    font-weight: 700;
-    margin-bottom: 0.5em;
-    line-height: 1.3;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* =========================================
-   4. فئات المساعدة (Utility Classes)
-   ========================================= */
-
-/* نصوص وألوان (Text Utilities) */
+/* فئات المساعدة النصية واللونية الموحدة */
 .text-teal { color: var(--tera-teal) !important; }
 .text-navy { color: var(--tera-navy) !important; }
 .text-gray { color: var(--tera-gray) !important; }
 .text-success { color: var(--status-success) !important; }
 .text-danger { color: var(--status-danger) !important; }
 .text-warning { color: var(--status-warning) !important; }
-.text-white { color: var(--tera-white) !important; }
-
 .font-bold { font-weight: 700 !important; }
-.font-medium { font-weight: 500 !important; }
-.text-center { text-align: center !important; }
-.text-left { text-align: left !important; }
-.text-right { text-align: right !important; }
-
-/* المسافات (Spacing Utilities - Margin & Padding) */
-.m-0 { margin: 0 !important; }
-.mt-10 { margin-top: 10px !important; }
-.mt-20 { margin-top: 20px !important; }
-.mt-30 { margin-top: 30px !important; }
-.mb-10 { margin-bottom: 10px !important; }
-.mb-20 { margin-bottom: 20px !important; }
-.mb-30 { margin-bottom: 30px !important; }
-
-.p-0 { padding: 0 !important; }
-.p-10 { padding: 10px !important; }
-.p-20 { padding: 20px !important; }
-.p-30 { padding: 30px !important; }
-
-/* المرونة والتخطيط (Flexbox Utilities) */
-.d-flex { display: flex !important; }
-.flex-column { flex-direction: column !important; }
-.flex-wrap { flex-wrap: wrap !important; }
-.align-items-center { align-items: center !important; }
-.align-items-start { align-items: flex-start !important; }
-.justify-content-center { justify-content: center !important; }
-.justify-content-between { justify-content: space-between !important; }
-.justify-content-start { justify-content: flex-start !important; }
-.justify-content-end { justify-content: flex-end !important; }
-.gap-10 { gap: 10px !important; }
-.gap-15 { gap: 15px !important; }
-.gap-20 { gap: 20px !important; }
-
-/* العرض والارتفاع (Sizing Utilities) */
+.mono { font-family: monospace !important; }
 .w-100 { width: 100% !important; }
-.h-100 { height: 100% !important; }
-
-/* خلفيات (Backgrounds) */
-.bg-white { background-color: var(--tera-white) !important; }
-.bg-teal { background-color: var(--tera-teal) !important; }
-.bg-navy { background-color: var(--tera-navy) !important; }
-.bg-light { background-color: var(--tera-bg) !important; }
-
-/* الإخفاء والظهور (Visibility) */
 .d-none { display: none !important; }
-.d-block { display: block !important; }
-.invisible { visibility: hidden !important; }
