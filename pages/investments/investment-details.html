@@ -12,36 +12,38 @@
         :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-gray: #64748b; --tera-bg: #f8fafc; }
         body { background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; margin: 0; color: #334155; }
         
-        /* الهيدر المحدث */
-        .top-header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
-        .logo-area img { height: 50px; width: auto; transition: 0.3s; }
+        /* 1. الهيدر المحدث */
+        .top-header { background: #fff; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .logo-area img { height: 50px; width: auto; max-width: 100%; transition: 0.3s; }
         .user-area { display: flex; align-items: center; gap: 15px; }
-        .user-avatar { width: 45px; height: 45px; background: var(--tera-teal); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 18px; }
-        .user-info h4 { margin: 0; color: var(--tera-navy); }
+        .user-avatar { width: 50px; height: 50px; background: var(--tera-navy); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 20px; border: 2px solid var(--tera-teal); }
+        .user-info h4 { margin: 0; color: var(--tera-navy); font-weight: 800; font-size: 15px; }
         .user-info p { margin: 0; font-size: 12px; color: var(--tera-gray); }
 
-        /* حاوية العنوان والزر */
-        .page-action-bar { padding: 30px 40px 10px 40px; display: flex; justify-content: space-between; align-items: center; }
+        /* 2. حاوية العنوان وزر الرجوع */
+        .page-action-bar { padding: 30px 40px 20px 40px; display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #e2e8f0; }
         .page-title { font-size: 24px; font-weight: 800; color: var(--tera-navy); margin: 0; }
-        .btn-back { background: var(--tera-navy); color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; transition: 0.3s; }
-        .btn-back:hover { background: var(--tera-teal); }
+        .btn-back { background: var(--tera-teal); color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-back:hover { background: var(--tera-navy); transform: translateY(-2px); }
 
-        .container { padding: 20px 40px; }
+        .container { padding: 30px 40px; }
 
-        /* تنسيقات البطاقات والجدول (نفس الأنماط السابقة مع تحسين المسافات) */
-        .glass-panel { background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; }
+        /* العناصر الأخرى */
+        .glass-panel { background: #fff; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
-        .summary-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        .summary-card h3 { font-size: 28px; color: var(--tera-teal); margin-top: 10px; }
-
-        /* العناصر الأخرى تبقى كما هي مع تحديث الحواف */
-        .btn-action { padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; background: #fff; transition: 0.2s; }
+        .summary-card { background: #fff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid var(--tera-teal); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .summary-card h3 { font-size: 32px; color: var(--tera-navy); margin-top: 10px; }
+        .filters-container { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .search-input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .tera-table { width: 100%; border-collapse: collapse; }
+        .tera-table th { background: #f8fafc; padding: 15px; text-align: right; }
+        .tera-table td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        .btn-action { padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer; background: #fff; color: var(--tera-navy); }
     </style>
 </head>
 <body>
 
     <div class="app-wrapper">
-        <!-- الهيدر المحدث -->
         <header class="top-header">
             <div class="logo-area">
                 <img src="../../images/logo.svg" alt="Tera Logo">
@@ -55,47 +57,49 @@
             </div>
         </header>
 
-        <!-- حاوية العنوان وزر الرجوع -->
         <div class="page-action-bar">
-            <h2 class="page-title">سوق الفرص والشركات</h2>
-            <a href="../dashboard/index.html" class="btn-back"><i class="fas fa-home"></i> العودة للقائمة الرئيسية</a>
+            <h2 class="page-title">سوق الفرص والشركات المطروحة</h2>
+            <a href="../dashboard/index.html" class="btn-back"><i class="fas fa-arrow-left"></i> العودة للوحة التحكم</a>
         </div>
 
         <div class="container">
             <div id="marketAlertsWrapper"></div>
 
             <div class="summary-grid">
-                <div class="summary-card">
-                    <p>الفرص الحالية</p>
-                    <h3 id="sumActive">0</h3>
-                </div>
-                <div class="summary-card">
-                    <p>الفرص القادمة</p>
-                    <h3 id="sumUpcoming">0</h3>
-                </div>
-                <div class="summary-card">
-                    <p>الفرص المكتملة</p>
-                    <h3 id="sumCompleted">0</h3>
-                </div>
+                <div class="summary-card"><p>الفرص الحالية</p><h3 id="sumActive">0</h3></div>
+                <div class="summary-card"><p>الفرص القادمة</p><h3 id="sumUpcoming">0</h3></div>
+                <div class="summary-card"><p>الفرص المكتملة</p><h3 id="sumCompleted">0</h3></div>
             </div>
 
-            <!-- بقية المحتوى (الفلاتر، الجدول، الكروت) -->
             <div class="glass-panel">
                 <div class="filters-container">
-                    <!-- الفلاتر هنا كما في الكود السابق -->
+                    <select id="typeFilter" class="search-input" onchange="window.applyFilters()">
+                        <option value="all">جميع الأنواع</option>
+                        <option value="شراكة ممتدة">شراكة ممتدة</option>
+                        <option value="فرصة شراكة">فرصة شراكة</option>
+                    </select>
+                    <input type="text" id="searchInput" class="search-input" placeholder="بحث..." oninput="window.applyFilters()">
                 </div>
-                <div id="gridContainer" class="grid-view-container" style="display: none;"></div>
-                <div id="listContainer" class="list-view-container">
+                
+                <div id="listContainer">
                     <table class="tera-table">
-                        <!-- الجدول هنا كما في الكود السابق -->
+                        <thead>
+                            <tr>
+                                <th>رقم الفرصة</th>
+                                <th>النوع</th>
+                                <th>الجهة الطالبة</th>
+                                <th>عدد الأسهم</th>
+                                <th>الحالة</th>
+                                <th>التفاصيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listTableBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- السكريبتات -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/investments.js"></script>
     <script src="../../assets/js/investment-details.js"></script>
 </body>
