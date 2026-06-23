@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طلب الانضمام | Tera Investor Portal</title>
+    <title>طلب الانضمام والآلة الحاسبة | Tera Investor Portal</title>
     
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,201 +13,303 @@
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/app.css">
-    <link rel="stylesheet" href="../../assets/css/investments.css">
     <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* =========================================
+           متغيرات الهوية البصرية لمنصة Tera
+           ========================================= */
+        :root {
+            --tera-teal: #028090; 
+            --tera-teal-light: #14b8a6;
+            --tera-navy: #0A1B3F; 
+            --tera-gray: #64748b;
+            --tera-bg: #f8fafc;
+            
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 12px 40px rgba(2, 128, 144, 0.08);
+            --glass-blur: blur(16px);
+        }
+
+        body {
+            background: radial-gradient(circle at top right, #e0f2fe 0%, #f8fafc 50%, #ccfbf1 100%);
+            background-attachment: fixed;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden; width: 100vw; max-width: 100%; box-sizing: border-box; color: #334155;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; width: 100%; }
+        .main-content { width: 100% !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; max-width: 100%; }
+
+        .container { max-width: 1600px; margin: 0 auto; padding: 10px 45px 50px 45px; flex: 1; width: 100%; }
+
+        /* =========================================
+           1. الهيدر الموحد وحماية الشعار
+           ========================================= */
+        .top-header { background: #fff; padding: 20px 45px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 100; width: 100%; margin-bottom: 30px; border-radius: 0 0 20px 20px;}
+        .header-logo { display: flex; align-items: center; flex-shrink: 0; }
+        .header-logo img { height: 85px; width: auto; max-width: none; display: block; flex-shrink: 0; transition: transform 0.3s ease; transform: translateZ(0); backface-visibility: hidden; -webkit-font-smoothing: antialiased; }
+        .header-logo img:hover { transform: scale(1.02); }
+        .header-user { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+        .user-greeting { text-align: left; }
+        .user-greeting h4 { margin: 0; font-size: 16px; color: var(--tera-navy); font-weight: 800; }
+        .user-greeting p { margin: 0; font-size: 13px; color: var(--tera-gray); font-weight: 500; margin-top: 4px; }
+        .user-avatar { width: 52px; height: 52px; background-color: var(--tera-navy); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 14px; font-size: 24px; font-weight: 800; border: 2px solid var(--tera-teal); box-shadow: 0 4px 10px rgba(2,128,144,0.2); }
+
+        /* =========================================
+           2. التصميم الزجاجي والعناصر المشتركة
+           ========================================= */
+        .glass-panel { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: var(--glass-shadow); }
+        .content-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 16px; padding: 30px; box-shadow: var(--glass-shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; margin-bottom: 30px;}
+        .detail-block-title { color: var(--tera-navy); font-family: 'Cairo', sans-serif; font-weight: 800; border-bottom: 2px solid rgba(2, 128, 144, 0.1); padding-bottom: 15px; margin-bottom: 25px; font-size: 1.25rem; }
+        .detail-block-title i { color: var(--tera-teal); margin-left: 8px; }
+
+        .breadcrumb-nav { display: flex; justify-content: space-between; align-items: center; background: var(--glass-bg); backdrop-filter: var(--glass-blur); padding: 20px 30px; border-radius: 16px; border: 1px solid var(--glass-border); margin-bottom: 30px; box-shadow: var(--glass-shadow); flex-wrap: wrap; gap: 15px; }
+        .breadcrumb-nav .page-title { margin: 0; font-size: 22px; color: var(--tera-navy); font-weight: 900; }
+        .btn-back-pill { display: inline-flex; align-items: center; gap: 10px; background: rgba(241, 245, 249, 0.8); color: var(--tera-navy); padding: 10px 22px; border-radius: 30px; font-size: 14px; font-weight: 800; transition: all 0.3s ease; text-decoration: none; border: 1px solid rgba(203, 213, 225, 0.5); }
+        .btn-back-pill:hover { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); box-shadow: 0 4px 15px rgba(2, 128, 144, 0.3); }
+
+        .info-grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .info-card-item { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.9); display: flex; flex-direction: column; gap: 8px; text-align: center;}
+        .info-card-item span { font-size: 13px; color: var(--tera-gray); font-weight: 700; }
+        .info-card-item strong { font-size: 18px; color: var(--tera-navy); font-weight: 800; font-family: monospace; }
+        
+        .type-badge { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; font-family: monospace; display: inline-block; }
+        .type-extended { background: #fef3c7; color: #d97706; } 
+        .type-opportunity { background: #fce7f3; color: #db2777; } 
+
+        /* =========================================
+           3. أزرار الأسهم والباقات (الآلة الحاسبة)
+           ========================================= */
+        .share-control-box { background: #fff; border: 2px solid var(--tera-teal); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; box-shadow: 0 10px 30px rgba(2,128,144,0.1); }
+        .share-control { display: flex; align-items: center; justify-content: center; gap: 20px; background: #f8fafc; padding: 10px; border-radius: 16px; border: 1px solid #cbd5e1; }
+        .share-control button { background: #fff; border: 1px solid #cbd5e1; width: 50px; height: 50px; border-radius: 12px; font-size: 20px; cursor: pointer; color: var(--tera-navy); transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .share-control button:hover:not(:disabled) { background: var(--tera-teal); color: #fff; border-color: var(--tera-teal); }
+        .share-control button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .share-control input { width: 100px; text-align: center; font-size: 28px; font-weight: 900; border: none; background: transparent; color: var(--tera-teal); outline: none; font-family: monospace; }
+
+        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+        .package-card { background: rgba(255,255,255,0.7); border: 2px solid #e2e8f0; border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; position: relative; text-align: center;}
+        .package-card:hover { border-color: var(--tera-teal-light); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(20,184,166,0.1);}
+        .package-card.selected { border-color: var(--tera-teal); background: #f0fdfa; box-shadow: 0 10px 30px rgba(2,128,144,0.15); }
+        .package-card.selected::after { content: '\f058'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 15px; left: 15px; color: var(--tera-teal); font-size: 24px; }
+        .package-card h4 { margin: 0 0 10px 0; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
+        .package-card p { margin: 0; color: var(--tera-gray); font-size: 14px; font-weight: 600; line-height: 1.6; }
+        .package-card .fee { margin-top: 15px; display: inline-block; background: #e0f2fe; color: #0369a1; padding: 5px 15px; border-radius: 8px; font-weight: 800; font-family: monospace;}
+
+        /* =========================================
+           4. الجداول الخاصة بالحاسبة
+           ========================================= */
+        .table-responsive { width: 100%; overflow-x: auto; background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 30px;}
+        .tera-table { width: 100%; border-collapse: collapse; text-align: center; }
+        .tera-table th { background: rgba(248, 250, 252, 0.8); padding: 18px; color: var(--tera-navy); font-size: 14px; font-weight: 800; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        .tera-table td { padding: 18px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; font-weight: 700; white-space: nowrap; font-family: monospace; }
+        .tera-table td.text-start { text-align: right; font-family: 'Tajawal', sans-serif; }
+        .tera-table tr.total-row td { background: #f0fdfa; font-weight: 900; color: var(--tera-navy); border-top: 2px solid var(--tera-teal); }
+        .tera-table tr.highlight-row td { background: #fffbeb; color: #b45309; border-top: 2px solid #fde68a; }
+
+        /* =========================================
+           5. منطقة الإقرار والدفع
+           ========================================= */
+        .agreement-box { background: rgba(240, 253, 250, 0.7); backdrop-filter: blur(12px); border: 2px solid rgba(20, 184, 166, 0.4); box-shadow: 0 8px 25px rgba(20, 184, 166, 0.1); padding: 25px; border-radius: 16px; margin-bottom: 25px; transition: 0.3s ease; }
+        .agreement-box:hover { border-color: var(--tera-teal); }
+        .btn-primary { background: linear-gradient(135deg, var(--tera-teal) 0%, #015f6b 100%); box-shadow: 0 8px 25px rgba(2, 128, 144, 0.3); border: none; color: #fff; padding: 22px; font-size: 20px; border-radius: 16px; font-weight: 900; cursor: pointer; width: 100%; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px;}
+        .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(2, 128, 144, 0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; background: var(--tera-gray); box-shadow: none; }
+
+        .text-teal { color: var(--tera-teal) !important; }
+        .page-footer { background: #fff; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; color: var(--tera-gray); font-size: 14px; font-weight: 600; margin-top: auto; }
+
+        /* ========================================================= */
+        /* التجاوب الفعال مع شاشات الجوال - مطابق للصفحة الرئيسية */
+        /* ========================================================= */
+        @media (max-width: 768px) {
+            .top-header, .breadcrumb-nav, .container { padding-left: 15px; padding-right: 15px; }
+            .top-header { flex-direction: column; gap: 15px; text-align: center; padding-top: 25px; border-radius: 0; }
+            .header-logo { display: block; width: 100%; text-align: center; }
+            .header-logo img { display: inline-block !important; height: 75px !important; width: auto !important; max-width: max-content !important; flex-shrink: 0 !important; margin: 0 auto; }
+            .header-user { width: 100%; justify-content: center; flex-direction: row-reverse; display: flex; }
+            .user-greeting { text-align: right; }
+            
+            .breadcrumb-nav { flex-direction: column; align-items: stretch; text-align: center;}
+            .btn-back-pill { justify-content: center; width: 100%; }
+            
+            .info-grid-cards { grid-template-columns: 1fr; gap: 15px; }
+            .content-card { padding: 15px; margin-bottom: 20px;}
+            .packages-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
     <div class="app-wrapper">
-        <main class="main-content">
-            <header class="top-header no-print">
-                <div class="header-right">
-                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+        <div class="main-content">
+            
+            <header class="top-header no-print glass-panel">
+                <div class="header-logo">
+                    <img src="../../images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x50/028090/fff?text=Tera+Logo'" />
                 </div>
-                <div class="header-left">
-                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;"><i class="fas fa-home"></i> العودة للوحة التحكم</a>
+                <div class="header-user">
+                    <div class="user-greeting">
+                        <h4>محمد صالح جميعان الشمري</h4>
+                        <p>بوابة الاستثمار، حائل</p>
+                    </div>
+                    <div class="user-avatar">م</div>
                 </div>
             </header>
 
-            <div class="container" style="max-width: 950px;">
-                <div class="sub-header-nav no-print">
-                    <div class="nav-links">
-                        <a href="completed-investments.html" id="btnBackToDetails" class="btn-back"><i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة</a>
-                        <a href="investment-details.html" class="btn-back"><i class="fas fa-store"></i> العودة لسوق الفرص</a>
-                    </div>
-                    <h2 class="page-title">طلب الانضمام لفرصة استثمارية</h2>
-                </div>
+            <main class="container">
                 
-                <div class="detail-block" style="padding: 35px;">
-                    <div class="summary-card" style="background: var(--tera-navy); border-color: var(--tera-navy); margin-bottom: 30px; border-right: none; position: relative; overflow: hidden; padding: 20px;">
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--tera-teal);"></div>
-                        <h3 id="invOppName" style="color: #fff; font-size: 18px; text-align: center; margin-bottom: 10px;">جاري تحميل البيانات...</h3>
-                        <p style="color: #cbd5e1; text-align: center;">رقم الفرصة: <span id="invOppId" class="mono text-white"></span> <span id="invOppTypeBadge" class="type-badge" style="margin-right:10px;"></span></p>
-                        <p style="color: #cbd5e1; text-align: center; margin-top: 8px;">قيمة السهم الواحد: <span id="invSharePrice" class="mono" style="color: #38bdf8; font-size: 18px;"></span></p>
-                        <p style="color: #cbd5e1; text-align: center; margin-top: 5px;">مدة الفرصة: <span id="invDuration" class="mono text-white font-bold"></span></p>
+                <div class="breadcrumb-nav no-print">
+                    <h2 class="page-title">طلب الانضمام وتأكيد الاستثمار</h2>
+                    <div class="nav-links">
+                        <a href="#" id="btnBackToDetails" class="btn-back-pill">
+                            <i class="fas fa-arrow-right"></i> العودة لتفاصيل الفرصة
+                        </a>
                     </div>
+                </div>
 
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <label style="display: block; font-size: 16px; font-weight: 800; color: var(--tera-navy); margin-bottom: 15px; font-family: var(--font-primary);">حدد عدد الأسهم التي ترغب بالانضمام بها:</label>
-                        <div class="share-selector">
-                            <button type="button" id="btnPlus" onclick="window.changeShares(1)"><i class="fas fa-plus"></i></button>
-                            <input type="number" id="shareInput" class="calc-input-custom" value="1" readonly>
-                            <button type="button" id="btnMinus" onclick="window.changeShares(-1)"><i class="fas fa-minus"></i></button>
+                <div class="content-card">
+                    <h3 class="detail-block-title"><i class="fas fa-info-circle"></i> ملخص الفرصة الاستثمارية</h3>
+                    <div class="info-grid-cards">
+                        <div class="info-card-item"><span>الجهة / المشروع</span><strong id="invOppName" class="text-teal">جاري تحميل البيانات...</strong></div>
+                        <div class="info-card-item"><span>رقم الفرصة</span><strong id="invOppId">-</strong></div>
+                        <div class="info-card-item"><span>نوع الفرصة</span><strong id="invOppTypeBadge" class="type-badge">-</strong></div>
+                        <div class="info-card-item"><span>قيمة السهم</span><strong id="invSharePrice">-</strong></div>
+                        <div class="info-card-item"><span>مدة الاستثمار</span><strong id="invDuration">-</strong></div>
+                        <div class="info-card-item"><span>الأسهم المتاحة</span><strong id="maxShares" class="text-teal">-</strong></div>
+                    </div>
+                </div>
+
+                <div class="content-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(240,253,250,0.8) 100%); border-color: var(--tera-teal-light);">
+                    <h3 class="detail-block-title text-center" style="border:none; text-align: center;"><i class="fas fa-chart-pie"></i> حدد عدد الأسهم المطلوبة</h3>
+                    <div class="share-control-box">
+                        <div class="share-control">
+                            <button id="btnPlus" onclick="window.changeShares(1)"><i class="fas fa-plus"></i></button>
+                            <input type="number" id="shareInput" value="0" readonly>
+                            <button id="btnMinus" onclick="window.changeShares(-1)"><i class="fas fa-minus"></i></button>
                         </div>
-                        <span style="font-size: 14px; color: var(--tera-teal); font-weight: bold; display: block;">الأسهم المتاحة لك: <span id="maxShares" class="mono" style="font-size:16px;">0</span></span>
-                        <span class="text-danger font-bold" style="font-size: 13px; margin-top: 8px; display: block;">عزيزي الشريك، أقل عدد للأسهم هو 1 سهم</span>
+                        <p style="margin:0; color: var(--tera-gray); font-weight: 700;">يرجى تحديد عدد الأسهم لإظهار الباقات وجداول الحسابات</p>
                     </div>
+                </div>
 
-                    <div id="extendedDetails" style="display: none; border-top: 2px dashed #e2e8f0; padding-top: 30px; animation: fadeIn 0.5s ease;">
-                        <h4 class="detail-block-title" style="margin-top: 0;"><i class="fas fa-shield-alt text-teal"></i> الخدمات الإضافية الاختيارية للمستثمرين</h4>
+                <div id="extendedDetails" style="display: none;">
+                    
+                    <div class="content-card">
+                        <h3 class="detail-block-title"><i class="fas fa-layer-group"></i> اختيار باقة الخدمات الإضافية</h3>
                         <div class="packages-grid">
-                            <label class="package-card basic selected" onclick="window.selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
-                                <input type="radio" name="protection_pkg" value="basic" checked>
-                                <i class="fas fa-star"></i>
-                                <div><h4>الباقة الأساسية</h4><p>بدون مزايا إضافية للحماية.</p></div>
-                                <span class="fee">مجاناً</span>
-                            </label>
-                            <label class="package-card silver" onclick="window.selectPackage(this, 'silver', 'الباقة الفضية', 99)">
-                                <input type="radio" name="protection_pkg" value="silver">
-                                <i class="fas fa-medal"></i>
-                                <div><h4>الباقة الفضية</h4><p>صرف الأرباح عند تأخر العميل 60 يوماً.</p></div>
-                                <span class="fee">99 ر.س</span>
-                            </label>
-                            <label class="package-card gold" onclick="window.selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
-                                <input type="radio" name="protection_pkg" value="gold">
-                                <i class="fas fa-trophy"></i>
-                                <div><h4>الباقة الذهبية</h4><p>صرف الأرباح عند تأخر العميل 30 يوماً.</p></div>
-                                <span class="fee">149 ر.س</span>
-                            </label>
-                            <label class="package-card platinum" onclick="window.selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
-                                <input type="radio" name="protection_pkg" value="platinum">
-                                <i class="fas fa-gem"></i>
-                                <div><h4>الباقة البلاتينية</h4><p>ضمان الصرف في موعد الاستحقاق دون انتظار.</p></div>
-                                <span class="fee">199 ر.س</span>
-                            </label>
+                            <div class="package-card selected" onclick="window.selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
+                                <input type="radio" name="pkg" checked style="display:none;">
+                                <h4>الباقة الأساسية</h4>
+                                <p>تشمل الإدارة، التحصيل، ومتابعة الدفعات القياسية.</p>
+                                <span class="fee">مجاناً (مشمولة)</span>
+                            </div>
+                            <div class="package-card" onclick="window.selectPackage(this, 'advanced', 'الباقة المتقدمة', 150)">
+                                <input type="radio" name="pkg" style="display:none;">
+                                <h4>الباقة المتقدمة</h4>
+                                <p>تشمل الأساسية + أولوية في التحصيل الميداني والتقارير.</p>
+                                <span class="fee">150 ر.س / شهرياً</span>
+                            </div>
+                            <div class="package-card" onclick="window.selectPackage(this, 'premium', 'الباقة الشاملة', 300)">
+                                <input type="radio" name="pkg" style="display:none;">
+                                <h4>الباقة الشاملة</h4>
+                                <p>تشمل المتقدمة + تغطية قانونية شاملة وحماية استثنائية.</p>
+                                <span class="fee">300 ر.س / شهرياً</span>
+                            </div>
                         </div>
+                    </div>
 
-                        <h4 class="detail-block-title" style="margin-top: 40px;"><i class="fas fa-file-invoice text-teal"></i> رسوم الخدمات والاشتراك بالفرصة</h4>
-                        <div style="background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-info-circle"></i>
-                            <span>توضيح: رسوم الخدمات والاشتراكات تُقسم وتُخصم بشكل شهري ودوري من الأرباح المحصلة.</span>
-                        </div>
-                        
-                        <div class="list-view-container" style="border: none;">
-                            <table class="tera-table text-center" style="text-align: center;">
+                    <div class="content-card">
+                        <h3 class="detail-block-title"><i class="fas fa-file-invoice-dollar"></i> رسوم الاشتراك والخدمات المطبقة</h3>
+                        <div class="table-responsive">
+                            <table class="tera-table">
                                 <thead>
                                     <tr>
-                                        <th>بند الخدمات</th>
-                                        <th>قيمة الخدمة</th>
+                                        <th class="text-start">نوع الخدمة</th>
+                                        <th>الرسوم الأساسية</th>
                                         <th>الضريبة 15%</th>
-                                        <th>الإجمالي شامل الضريبة</th>
-                                        <th style="color:var(--tera-teal);">قيمة الدفعة الشهرية</th>
+                                        <th>الإجمالي</th>
+                                        <th>القسط الشهري للرسوم</th>
                                         <th>ملاحظات</th>
                                     </tr>
                                 </thead>
-                                <tbody id="servicesTableBody"></tbody>
+                                <tbody id="servicesTableBody">
+                                    </tbody>
                             </table>
                         </div>
-
-                        <div class="fees-summary-box">
-                            <p style="color: var(--tera-teal); margin-top: 0;">عزيزي العميل، أنتم مطالبون بدفع الرسوم والاشتراكات حسب خطة الدفع المعلن عنها أعلاه:</p>
-                            <div class="fees-summary-row"><span>إجمالي رسوم الخدمة والاشتراكات:</span><span id="txtBaseFees" class="mono text-navy">0</span></div>
-                            <div class="fees-summary-row text-danger"><span>إجمالي قيمة الضريبة المضافة 15%:</span><span id="txtFeesVat" class="mono">0</span></div>
-                            <div class="fees-summary-row" style="font-size:16px; border-top:1px solid #e2e8f0; margin-top:5px; padding-top:5px; color:var(--tera-teal);">
-                                <span>إجمالي المبلغ شامل الضريبة هو:</span>
-                                <div>
-                                    <span id="txtTotalFeesWithVat" class="mono" style="font-size:18px;">0</span>
-                                    <span style="font-size:12px; color:var(--tera-gray); margin-right:5px;">(يُقسم ويُخصم حسب الجدول)</span>
-                                </div>
-                            </div>
+                        <div class="info-grid-cards" style="margin-top: 20px;">
+                            <div class="info-card-item"><span>إجمالي الرسوم الأساسية</span><strong id="txtBaseFees">0.00 ر.س</strong></div>
+                            <div class="info-card-item"><span>إجمالي ضريبة القيمة المضافة</span><strong id="txtFeesVat">0.00 ر.س</strong></div>
+                            <div class="info-card-item" style="background:#f0fdfa; border-color:#5eead4;"><span>إجمالي تكاليف الخدمات (شامل الضريبة)</span><strong id="txtTotalFeesWithVat" class="text-teal">0.00 ر.س</strong></div>
                         </div>
+                    </div>
 
-                        <h4 class="detail-block-title" style="margin-top: 40px;"><i class="fas fa-calendar-alt text-teal"></i> <span id="distTableTitleText">جدول توزيع الدفعات المتوقعة</span></h4>
-                        <div id="extendedCapitalNote" style="display:none; background: #fffbeb; border: 2px solid #f59e0b; color: #b45309; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 20px;">
-                            عزيزي الشريك، استرداد رأس المال يكون متاحاً بحد أقصى 60 يوماً من آخر استلام أرباح.
+                    <div class="content-card" style="background: rgba(254, 243, 199, 0.3); border-color: #fde68a;">
+                        <h3 class="detail-block-title" style="border-bottom-color: #fde68a;"><i class="fas fa-coins text-teal"></i> ملخص الاستثمار والأرباح</h3>
+                        <div class="info-grid-cards">
+                            <div class="info-card-item"><span>رأس المال المستثمر</span><strong id="finalPartnerCapital">0.00 ر.س</strong></div>
+                            <div class="info-card-item"><span>إجمالي خصم رسوم الخدمات</span><strong id="finalOppCosts" style="color:#ef4444;">0.00 ر.س</strong></div>
+                            <div class="info-card-item"><span>صافي الربح المتوقع</span><strong id="finalNetProfit" class="text-teal">0.00 ر.س</strong></div>
+                            <div class="info-card-item" style="background:#fff; border-color:var(--tera-teal); transform:scale(1.02); box-shadow: 0 4px 15px rgba(2,128,144,0.1);"><span>إجمالي العائد المتوقع (رأس المال + الربح)</span><strong id="finalDifference" class="text-teal" style="font-size:22px;">0.00 ر.س</strong></div>
                         </div>
+                    </div>
+
+                    <div class="content-card">
+                        <h3 class="detail-block-title"><i class="fas fa-calendar-alt"></i> <span id="distTableTitleText">جدول توزيع الدفعات</span></h3>
+                        <div class="table-responsive">
+                            <table class="tera-table">
+                                <thead id="distributionTableHeader">
+                                    </thead>
+                                <tbody id="distributionTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                        <p id="extendedCapitalNote" style="display:none; color: #b45309; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fde68a; font-weight: 700; margin-top: 15px; font-size: 14px;">
+                            <i class="fas fa-info-circle"></i> ملاحظة هامة: لأن الفرصة (شراكة ممتدة)، سيتم استرداد رأس المال بالكامل دفعة واحدة في نهاية مدة الاستثمار المحددة.
+                        </p>
+                    </div>
+
+                    <div class="content-card" style="border: 2px solid var(--tera-teal); box-shadow: 0 10px 30px rgba(2,128,144,0.1);">
+                        <h3 class="detail-block-title" style="text-align: center;"><i class="fas fa-credit-card"></i> ملخص الدفع لتأكيد الانضمام</h3>
                         
-                        <div class="list-view-container" style="border: none;">
-                            <table class="tera-table text-center" style="text-align: center;">
-                                <thead id="distributionTableHeader"></thead>
-                                <tbody id="distributionTableBody"></tbody>
-                            </table>
+                        <div class="info-grid-cards" style="margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 16px;">
+                            <div class="info-card-item" style="background:transparent; border:none; box-shadow:none;"><span>عدد الأسهم</span><strong id="sumShares" style="font-size: 24px;">0</strong></div>
+                            <div class="info-card-item" style="background:transparent; border:none; box-shadow:none;"><span>قيمة السهم الواحد</span><strong id="sumSharePrice">0.00 ر.س</strong></div>
+                            <div class="info-card-item" style="background:transparent; border:none; box-shadow:none;"><span>إجمالي رأس المال المطلوب</span><strong id="sumCapital" class="text-teal" style="font-size: 24px;">0.00 ر.س</strong></div>
                         </div>
 
-                        <h4 class="detail-block-title" style="margin-top: 40px;"><i class="fas fa-chart-pie text-teal"></i> ملخص الفرصة</h4>
-                        <div class="returns-summary-grid">
-                            <div class="returns-card card-capital">
-                                <span>رأس مال الشريك</span>
-                                <strong id="finalPartnerCapital">0</strong>
-                            </div>
-                            <div class="returns-card card-costs">
-                                <span>إجمالي تكاليف الفرصة</span>
-                                <strong id="finalOppCosts">0</strong>
-                            </div>
-                            <div class="returns-card card-profit">
-                                <span>الأرباح الصافية</span>
-                                <strong id="finalNetProfit">0</strong>
-                            </div>
-                            <div class="returns-card card-diff">
-                                <span>الفرق</span>
-                                <strong id="finalDifference">0</strong>
-                            </div>
-                        </div>
-
-                        <h4 class="detail-block-title" style="margin-top: 40px;"><i class="fas fa-calculator text-teal"></i> ملخص الدفع لطلب الانضمام</h4>
-                        <div class="calc-result-box">
-                            <div class="calc-result-row"><span>عدد الأسهم:</span><span id="sumShares" class="mono text-navy">0</span></div>
-                            <div class="calc-result-row"><span>قيمة السهم الواحد:</span><span id="sumSharePrice" class="mono text-navy">0</span></div>
-                            <div class="calc-result-row highlight"><span>إجمالي قيمة الأسهم:</span><span id="sumCapital" class="mono">0.00 ر.س</span></div>
-                            <div class="calc-result-row total"><span>المبلغ المطلوب دفعه الآن:</span><span id="resToPayNow" class="mono text-teal" style="font-size:28px;">0.00 ر.س</span></div>
-                        </div>
-
-                        <h4 class="detail-block-title" style="margin-top: 40px;"><i class="fas fa-wallet text-teal"></i> اختر طريقة الدفع</h4>
-                        <div class="payment-methods">
-                            <label class="pay-method-card">
-                                <input type="radio" name="pay_method" checked>
-                                <div>
-                                    <strong class="text-navy">الخصم من المحفظة</strong>
-                                    <span class="mono" style="font-size: 13px; color: var(--tera-gray); display: block; margin-top: 4px;">يظهر رصيد المحفظة الحالي: 15,400.00 ر.س</span>
-                                </div>
-                            </label>
-                            <label class="pay-method-card">
-                                <input type="radio" name="pay_method">
-                                <div>
-                                    <strong class="text-navy">دفع مباشر من خلال بوابة الدفع</strong>
-                                    <span style="font-size: 13px; color: var(--tera-gray); display: block; margin-top: 4px;">مدى، فيزا، ماستركارد، آبل باي</span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div class="disclaimer-text">
-                            <i class="fas fa-info-circle"></i> <strong>عزيزي العميل:</strong> في حال إلغاء الفرصة من قبل المنصة أو عدم الاكتمال، يتم إعادة المبلغ حسب الطريقة المستخدمة خلال مدة من يوم إلى أقصى 13 يوم عمل.
-                        </div>
-
-                        <div class="strict-warning">
-                            <i class="fas fa-exclamation-triangle"></i> عزيزي الشريك: لا يمكنك إلغاء الانضمام بعد الدفع. مجرد الدفع يعتبر إقراراً بالانضمام، ولا يحق لك التراجع بعد الانضمام بأي شكل من الأشكال.
+                        <div style="background: var(--tera-navy); color: #fff; padding: 25px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                            <span style="font-size: 16px; font-weight: 700; display: block; margin-bottom: 10px; color: #cbd5e1;">المبلغ الإجمالي المطالب بدفعه الآن</span>
+                            <strong id="resToPayNow" style="font-size: 36px; font-weight: 900; font-family: monospace; color: #fde047;">0.00 ر.س</strong>
                         </div>
 
                         <div class="agreement-box">
-                            <input type="checkbox" id="agreeCheckbox" onchange="window.togglePayButton()">
-                            <label for="agreeCheckbox">أقر وأوافق على كافة الشروط والأحكام الخاصة بهذه الفرصة، وجدول التوزيع، والرسوم الموضحة في الدليل الإرشادي الشامل.</label>
+                            <label style="display: flex; gap: 20px; align-items: flex-start; cursor: pointer;">
+                                <input type="checkbox" id="agreeCheckbox" onchange="window.togglePayButton()" style="transform: scale(1.8); margin-top: 5px; accent-color: var(--tera-teal); cursor: pointer;">
+                                <span style="font-size: 16px; color: var(--tera-navy); font-weight: 800; line-height: 1.8;">أقر بأنني قمت بتحديد عدد الأسهم، واطلعت على الباقة وتكاليف الخدمات المخصومة شهرياً، وجدول توزيع الدفعات، والمبلغ الإجمالي المطالب بدفعه الآن، وأوافق على الدفع والانضمام كشريك.</span>
+                            </label>
                         </div>
-
-                        <button id="btnPayNow" class="btn-action btn-primary" disabled onclick="window.processPayment()" style="width: 100%; padding: 15px; font-size: 16px;">
-                            <i class="fas fa-lock"></i> إتمام الدفع والانضمام
+                        
+                        <button id="btnPayNow" onclick="window.processPayment()" class="btn-primary" disabled>
+                            <i class="fas fa-lock"></i> دفع وتأكيد الانضمام
                         </button>
                     </div>
-                </div>
-            </div>
 
-            <footer class="page-footer no-print">
-                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
+                </div>
+
+            </main>
+
+            <footer class="page-footer no-print glass-panel" style="margin-top: 40px; border-radius: 20px 20px 0 0; padding: 20px; text-align: center; color: var(--tera-navy); font-weight: 700;">
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. تخضع العمليات المالية للرقابة.
             </footer>
-        </main>
+            
+        </div>
     </div>
 
     <script src="../../assets/js/investments.js"></script>
+    <script src="../../assets/js/cancelled-investments.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/main.js"></script>
