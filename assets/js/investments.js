@@ -2,8 +2,7 @@
  * ============================================================
  * investments.js - ملف التحكم المركزي للاستثمارات (الإصدار الاحترافي المطور)
  * ============================================================
- * تم التحديث الشامل لهيكلة حاوية التنبيهات لتظهر على سطر واحد منظم 
- * يحتوي على 5 أقسام رئيسية تدعم كافة أنواع وحالات الفرص الاستثمارية.
+ * تم التحديث: إضافة التنبيهات للفرص القادمة والنشطة مع 5 أقسام للمعلومات
  * ============================================================
  */
 
@@ -66,7 +65,7 @@
     }
 
     // ============================================================
-    // 2. بناء التنبيهات الاحترافية (شريط ممتد منظم - 5 أعمدة)
+    // 2. بناء التنبيهات الاحترافية (شريط ممتد منظم - 5 أعمدة + عنوان)
     // ============================================================
     window.buildAlertBanner = function(opp) {
         let availableSharesToBuy = Math.floor(opp.sharesCount * (1 - (opp.fundedPercentage / 100)));
@@ -76,12 +75,11 @@
         let title = 'الشراكة متاحة'; 
         let timeText = 'متاح الآن للاكتتاب'; 
 
-        // تكييف النصوص الديناميكية للوقت المتبقي بناءً على حالة الطرح
         if (opp.status === 'النشطة' || opp.status === 'قائم') {
             if (opp.daysLeftToJoin) {
                 timeText = 'متبقي ' + opp.daysLeftToJoin + ' أيام';
             } else {
-                timeText = 'ينتهي قريباً جداً';
+                timeText = 'ينتهي قريباً';
             }
         } else if (opp.status === 'القادمة') {
             icon = 'fa-clock';
@@ -90,40 +88,40 @@
         } else {
             icon = 'fa-lock';
             title = 'مكتمل ومغلق';
-            timeText = 'اكتمل التمويل بالكامل';
+            timeText = 'اكتمل التمويل';
         }
 
         let typeBadgeHtml = opp.type === 'شراكة ممتدة' 
             ? '<span style="font-size:11px; background:#fef3c7; color:#d97706; padding:2px 7px; border-radius:4px; margin-right:8px; border:1px solid #fde68a; font-weight:700;">شراكة ممتدة</span>'
             : '<span style="font-size:11px; background:#fce7f3; color:#db2777; padding:2px 7px; border-radius:4px; margin-right:8px; border:1px solid #fbcfe8; font-weight:700;">فرصة شراكة</span>';
 
-        // إرجاع البانر كحاوية متكاملة مقسمة إلى 5 أقسام على سطر واحد متناسق
-        return '<div class="custom-alert-box" style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15); font-family: \'Tajawal\', sans-serif;">' +
-                    '<div class="alert-item text-right" style="flex: 1.6; text-align: right; padding-left: 10px;">' +
-                        '<strong style="color: #fde047; font-size: 15px; font-weight: 800; display:block; margin-bottom:4px;"><i class="fas ' + icon + '"></i> ' + title + ' ' + typeBadgeHtml + '</strong>' +
-                        '<span style="font-size: 12px; color: #e2e8f0; display:block; font-weight:500;">اغتنم الفرصة وكن شريكاً معنا</span>' +
-                    '</div>' +
-                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">' +
-                        '<strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">حالة الفرصة</strong>' +
-                        '<span style="font-weight:bold; background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:4px; display:inline-block; font-size:12px;">' + opp.status + '</span>' +
-                    '</div>' +
-                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">' +
-                        '<strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الوقت المتبقي</strong>' +
-                        '<span style="font-size:14px; font-weight:800; color:#fff;">' + timeText + '</span>' +
-                    '</div>' +
-                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">' +
-                        '<strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">نسبة الاكتمال</strong>' +
-                        '<span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">' + opp.fundedPercentage + '%</span>' +
-                    '</div>' +
-                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">' +
-                        '<strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الأسهم المتاحة</strong>' +
-                        '<span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">' + availableSharesToBuy + ' سهم</span>' +
-                    '</div>' +
-                    '<div class="alert-item" style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">' +
-                        '<strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">العائد من الشراكة</strong>' +
-                        '<span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fde047;">' + (opp.roi || 0) + '%</span>' +
-                    '</div>' +
-                '</div>';
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, var(--tera-navy) 0%, var(--tera-teal) 100%); color: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.15); font-family: 'Tajawal', sans-serif; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1.6; text-align: right; padding-left: 10px;">
+                    <strong style="color: #fde047; font-size: 15px; font-weight: 800; display:block; margin-bottom:4px;"><i class="fas ${icon}"></i> ${title} ${typeBadgeHtml}</strong>
+                    <span style="font-size: 12px; color: #e2e8f0; display:block; font-weight:500;">اغتنم الفرصة وكن شريكاً معنا</span>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                    <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">حالة الفرصة</strong>
+                    <span style="font-weight:bold; background:rgba(255,255,255,0.2); padding:3px 8px; border-radius:4px; display:inline-block; font-size:12px;">${opp.status}</span>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                    <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الوقت المتبقي</strong>
+                    <span style="font-size:14px; font-weight:800; color:#fff;">${timeText}</span>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                    <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">نسبة الاكتمال</strong>
+                    <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">${opp.fundedPercentage}%</span>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                    <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">الأسهم المتاحة</strong>
+                    <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fff;">${availableSharesToBuy} سهم</span>
+                </div>
+                <div style="flex: 1; text-align: center; border-right: 1px solid rgba(255,255,255,0.15); padding: 0 10px;">
+                    <strong style="display:block; font-size:13px; margin-bottom:4px; color:#fff; font-weight:700;">العائد من الشراكة</strong>
+                    <span style="font-family: monospace; font-size: 15px; font-weight:800; color:#fde047;">${opp.roi || 0}%</span>
+                </div>
+            </div>`;
     };
 
     // ============================================================
@@ -227,7 +225,7 @@
             if(document.getElementById('sumUpcoming')) document.getElementById('sumUpcoming').innerText = upcoming;
             if(document.getElementById('sumCompleted')) document.getElementById('sumCompleted').innerText = completed;
 
-            // تحديث الرسوم البيانية المؤتمتة
+            // تحديث الرسوم البيانية المؤتمتة إن وجدت
             try {
                 if(typeof Chart !== 'undefined') {
                     let counts = { active:0, upcoming:0, finished:0, closed:0, cancelled:0, completed:0 };
@@ -289,15 +287,15 @@
 
         window.applyFilters();
 
-        // توليد التنبيهات في لوحة عرض السوق بشكل مسبق ومباشر
+        // 🌟 توليد التنبيهات في لوحة عرض السوق بشكل مسبق (للقادمة والنشطة معاً)
         const marketAlertContainer = document.getElementById('marketAlertsWrapper');
         if (marketAlertContainer && !marketAlertContainer.hasAttribute('data-loaded')) {
             let htmlAlerts = '';
-            let extendedOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'شراكة ممتدة');
-            let normalOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم') && d.type === 'فرصة شراكة');
+            let activeOpp = window.mockData.find(d => (d.status === 'النشطة' || d.status === 'قائم'));
+            let upcomingOpp = window.mockData.find(d => d.status === 'القادمة');
             
-            if(extendedOpp) htmlAlerts += window.buildAlertBanner(extendedOpp); 
-            if(normalOpp) htmlAlerts += window.buildAlertBanner(normalOpp); 
+            if(activeOpp) htmlAlerts += window.buildAlertBanner(activeOpp); 
+            if(upcomingOpp) htmlAlerts += window.buildAlertBanner(upcomingOpp); 
 
             marketAlertContainer.innerHTML = htmlAlerts;
             marketAlertContainer.setAttribute('data-loaded', 'true');
@@ -339,6 +337,7 @@
         document.getElementById('mDetTax').innerText = window.formatMoneySafe(opp.capital * 0.15) + ' ر.س';
         document.getElementById('mDetTotalProd').innerText = window.formatMoneySafe(opp.capital * 1.15) + ' ر.س';
 
+        // 🌟 حقن التنبيه المنظم في صفحة التفاصيل (يظهر لجميع الحالات)
         const alertsCont = document.getElementById('mDetAlertsContainer');
         if (alertsCont && !alertsCont.hasAttribute('data-loaded')) {
             alertsCont.innerHTML = window.buildAlertBanner(opp);
