@@ -21,19 +21,23 @@
 
     <div class="app-wrapper">
         
-        <header class="top-header no-print">
-            <div class="header-right">
-                <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
-            </div>
-            <div class="header-left">
-                <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;">
-                    <i class="fas fa-home"></i> العودة للوحة التحكم
-                </a>
-            </div>
-        </header>
+        <!-- الحاوية الرئيسية (يجب أن تغلف الهيدر، المحتوى، والفوتر لترتيبهم عمودياً) -->
+        <div class="main-content">
+            
+            <!-- الهيدر العلوي -->
+            <header class="top-header no-print">
+                <div class="header-right">
+                    <img src="../../images/logo.svg" alt="Tera Logo" style="height: 40px;" onerror="this.src='https://via.placeholder.com/40x40/028090/fff?text=T'" />
+                </div>
+                <div class="header-left">
+                    <a href="../dashboard/index.html" class="btn-action" style="width: auto; padding: 8px 15px; font-size: 13px; background:#f1f5f9; border: 1px solid #cbd5e1; color: var(--tera-navy); box-shadow: none;">
+                        <i class="fas fa-home"></i> العودة للوحة التحكم
+                    </a>
+                </div>
+            </header>
 
-        <main class="main-content">
-            <div class="container">
+            <!-- جسم الصفحة (المحتوى) -->
+            <main class="container">
                 
                 <div class="sub-header-nav no-print">
                     <div class="nav-links">
@@ -58,7 +62,7 @@
                                 <div class="progress-bar-fill" id="mDetProgressBar" style="width:0%;"></div>
                             </div>
                         </div>
-                        <div class="info-grid">
+                        <div class="info-grid" style="margin-top: 20px;">
                             <div class="info-item"><span>رقم الفرصة</span><strong id="mDetOppId" class="mono text-teal">-</strong></div>
                             <div class="info-item"><span>نوع الفرصة</span><strong id="mDetOppType" class="type-badge">-</strong></div>
                             <div class="info-item"><span>اسم المشروع / الفرصة</span><strong id="mDetOppCompany">-</strong></div>
@@ -131,7 +135,6 @@
                         <div class="guideline-manual">
                             
                             <h4><i class="fas fa-balance-scale"></i> أولاً: الشروط والأحكام العامة</h4>
-                            
                             <h5>المشاركة في الفرص</h5>
                             <ul>
                                 <li>تعتبر المشاركة في الفرص المعروضة عبر المنصة اختيارية وتتم بعد اطلاع الشريك على كافة بيانات الفرصة.</li>
@@ -334,13 +337,14 @@
                     </div>
 
                 </div>
-            </div>
-        </main>
+            </main>
 
-        <footer class="page-footer no-print">
-            © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
-        </footer>
-        
+            <!-- التذييل (تم نقله ليكون داخل main-content) -->
+            <footer class="page-footer no-print">
+                © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة. يتم طرح الفرص وفق اللوائح.
+            </footer>
+            
+        </div>
     </div>
 
     <script src="../../assets/js/investments.js"></script>
