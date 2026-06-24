@@ -11,26 +11,17 @@ const Dashboard = {
         
         // بيانات الرسم البياني لتطور ونمو المحفظة الاستثمارية
         chartLabels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-        chartValues: [100000, 105000, 112000, 115000, 120000, 124500],
-
-        // بيانات لوحة المؤشرات الذكية وحالة الطرح (لصفحات تفاصيل الفرص)
-        offeringAlert: {
-            title: "فرصة استثمارية نشطة",
-            description: "سارع بالانضمام، الطلب عالي على هذه الفرصة والأسهم تنفد بسرعة.",
-            timeRemaining: "3 أيام و 14 ساعة",
-            sharesLeft: "15 سهم فقط !",
-            statusText: "متاح للانضمام"
-        }
+        chartValues: [100000, 105000, 112000, 115000, 120000, 124500]
     },
 
     init: function() {
-        console.log("✅ Tera Dashboard & Investment Logic Initialized");
+        console.log("✅ Tera Dashboard Logic Initialized");
         this.updateStats();
-        this.updateAlertsBanner();
         this.renderChart();
+        this.attachEventListeners();
     },
 
-    // 1. تحديث بطاقات المؤشرات المالية الرئيسية بالتوافق مع الـ HTML المحدث
+    // تحديث بطاقات الإحصائيات بأمان
     updateStats: function() {
         const stats = document.querySelectorAll('.stats-grid .stat-value');
         if (stats && stats.length >= 3) {
@@ -40,51 +31,19 @@ const Dashboard = {
         }
     },
 
-    // 2. تحديث مؤشرات الطرح والتنبيهات الذكية بأمان كامل لمنع الأخطاء البرمجية
-    updateAlertsBanner: function() {
-        const bannerContainer = document.getElementById('mDetAlertsContainer');
-        if (!bannerContainer) return; // الخروج الآمن في حال عدم التواجد بصفحة تفاصيل الفرصة
-
-        const bannerTitle = bannerContainer.querySelector('.banner-header h4');
-        const bannerDesc = bannerContainer.querySelector('.banner-header p');
-        
-        if (bannerTitle) bannerTitle.innerText = this.mockData.offeringAlert.title;
-        if (bannerDesc) bannerDesc.innerText = this.mockData.offeringAlert.description;
-
-        const statBadges = bannerContainer.querySelectorAll('.stat-badge');
-        if (statBadges && statBadges.length >= 3) {
-            const timeText = statBadges[0].querySelector('.stat-info strong');
-            if (timeText) timeText.innerText = this.mockData.offeringAlert.timeRemaining;
-
-            const sharesText = statBadges[1].querySelector('.stat-info strong');
-            if (sharesText) sharesText.innerText = this.mockData.offeringAlert.sharesLeft;
-
-            const statusText = statBadges[2].querySelector('.stat-info strong');
-            if (statusText) statusText.innerText = this.mockData.offeringAlert.statusText;
-        }
-    },
-
-    // 3. بناء وتخصيص الرسم البياني الفاخر باستخدام التدرج اللوني (Gradient) ومتوافق مع الهوية
+    // رسم المدرج البياني للمحفظة
     renderChart: function() {
         const ctx = document.getElementById('mainChart');
-        if (!ctx) return;
+        if (!ctx || typeof Chart === 'undefined') return;
 
-        // التحقق من تحميل مكتبة Chart.js بنجاح لتجنب أي تعطل في الكود
-        if (typeof Chart === 'undefined') {
-            console.warn("⚠️ مكتبة Chart.js غير مدمجة في هذه الصفحة.");
-            return;
-        }
-
-        // تدمير الرسم القديم إن وجد لمنع تداخل الرسوم عند إعادة التحميل
         if (window.myDashboardChart) {
             window.myDashboardChart.destroy();
         }
 
-        // إنشاء تدرج لوني احترافي مخصص (Linear Gradient) تحت منحنى الرسم البياني
         const chartContext = ctx.getContext('2d');
         const gradient = chartContext.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(2, 128, 144, 0.25)'); // لون تيرا الفيروزي الشفاف بالأعلى
-        gradient.addColorStop(1, 'rgba(2, 128, 144, 0.00)'); // يتلاشى بالكامل في الأسفل
+        gradient.addColorStop(1, 'rgba(2, 128, 144, 0.00)');
 
         window.myDashboardChart = new Chart(ctx, {
             type: 'line',
@@ -93,64 +52,121 @@ const Dashboard = {
                 datasets: [{
                     label: 'تقييم المحفظة (ر.س)',
                     data: this.mockData.chartValues,
-                    borderColor: '#028090', // لون تيرا الفيروزي الأساسي (Teal)
+                    borderColor: '#028090',
                     backgroundColor: gradient,
                     borderWidth: 3,
-                    pointBackgroundColor: '#0A1B3F', // لون كحلي داكن لنقاط الارتكاز (Navy)
+                    pointBackgroundColor: '#0A1B3F',
                     pointBorderColor: '#028090',
                     pointBorderWidth: 2,
                     pointRadius: 5,
                     pointHoverRadius: 8,
-                    pointHoverBackgroundColor: '#028090',
-                    pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 2,
                     fill: true,
-                    tension: 0.4 // انحناء مرن وانسيابي للحصول على مظهر عصري
+                    tension: 0.4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }, // إخفاء المربع التوضيحي الافتراضي لزيادة مساحة العرض
-                    tooltip: {
-                        backgroundColor: '#0A1B3F', // خلفية التلميحات باللون الكحلي الفاخر لـ Tera
-                        titleFont: { family: 'Tajawal', size: 13, weight: 'bold' },
-                        bodyFont: { family: 'Tajawal', size: 12 },
-                        padding: 12,
-                        cornerRadius: 8,
-                        rtl: true,
-                        textDirection: 'rtl',
-                        displayColors: false
-                    }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: { color: '#f1f5f9' },
-                        position: 'right', // نقل المحور لليمين ليناسب القراءة والتصفح باللغة العربية
-                        ticks: {
-                            color: '#64748b',
-                            font: { family: 'Tajawal', size: 11, weight: '600' },
-                            callback: function(value) {
-                                return value.toLocaleString('ar-EG') + ' ر.س'; // تنسيق مالي للأرقام مع العملة
-                            }
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            color: '#64748b',
-                            font: { family: 'Tajawal', size: 12, weight: '700' }
-                        }
-                    }
+                    y: { position: 'right', grid: { color: '#f1f5f9' }, ticks: { font: { family: 'monospace' } } },
+                    x: { grid: { display: false } }
                 }
             }
         });
+    },
+
+    // ربط كافة العمليات والأزرار في الصفحة (القائمة الجانبية، الفلترة، الإخفاء)
+    attachEventListeners: function() {
+        // 1. فلتر العمليات المالية
+        const filterEl = document.getElementById('transactionFilter');
+        if (filterEl) {
+            filterEl.addEventListener('change', (e) => this.filterTransactions(e.target.value));
+        }
+
+        // 2. إخفاء/إظهار الفرص
+        const toggleOppBtn = document.getElementById('toggleOppBtn');
+        if (toggleOppBtn) {
+            toggleOppBtn.addEventListener('click', () => this.toggleOpportunities());
+        }
+
+        // 3. فتح وإغلاق القوائم الجانبية
+        document.addEventListener('click', function(e) {
+            // زر الموبايل
+            let toggleBtn = e.target.closest('#sidebarToggle');
+            if (toggleBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                let sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    if (window.innerWidth > 991) {
+                        sidebar.classList.toggle('collapsed');
+                    } else {
+                        sidebar.classList.toggle('sidebar-open');
+                    }
+                }
+                return;
+            }
+
+            // القوائم الفرعية المنسدلة
+            let submenuLink = e.target.closest('.has-submenu > a');
+            if (submenuLink) {
+                e.preventDefault();
+                e.stopPropagation();
+                let parentLi = submenuLink.parentElement;
+                
+                if(parentLi.classList.contains('submenu-open')) {
+                    parentLi.classList.remove('submenu-open');
+                } else {
+                    document.querySelectorAll('.has-submenu').forEach(function(li) {
+                        li.classList.remove('submenu-open');
+                    });
+                    parentLi.classList.add('submenu-open');
+                }
+            }
+        }, true);
+    },
+
+    // دالة الفلترة (الكل، الإيداعات، الخصومات)
+    filterTransactions: function(filterValue) {
+        const rows = document.querySelectorAll('#transactionsTableBody tr');
+        rows.forEach(row => {
+            const amountText = row.querySelector('.amount-cell').innerText;
+            const isDeposit = amountText.includes('+');
+
+            if (filterValue === 'all') {
+                row.style.display = '';
+            } else if (filterValue === 'deposits' && isDeposit) {
+                row.style.display = '';
+            } else if (filterValue === 'deductions' && !isDeposit) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    },
+
+    // دالة إخفاء وإظهار جدول الفرص بشكل أنيق
+    toggleOpportunities: function() {
+        const panel = document.getElementById('opportunitiesPanelWrapper');
+        const icon = document.getElementById('toggleOppIcon');
+        const text = document.getElementById('toggleOppText');
+
+        if (!panel || !icon || !text) return;
+
+        if (panel.style.maxHeight === '0px' || !panel.style.maxHeight) {
+            panel.style.maxHeight = '1000px';
+            icon.className = 'fas fa-eye-slash';
+            text.innerText = 'إخفاء';
+        } else {
+            panel.style.maxHeight = '0px';
+            icon.className = 'fas fa-eye';
+            text.innerText = 'إظهار';
+        }
     }
 };
 
-// تشغيل اللوحة البرمجية فور اكتمال تحميل هيكل الصفحة الأساسي
+// بدء تشغيل لوحة التحكم فور تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     Dashboard.init();
 });
