@@ -3,14 +3,17 @@
    ============================================================ */
 
 const Dashboard = {
-    // البيانات الوهمية (جاهزة للاستبدال بـ fetch من الـ API أو الـ Webhook لاحقاً)
+    // البيانات الوهمية (تجارب واقعية جاهزة للربط بالـ API لاحقاً)
     mockData: {
-        totalInvestments: "124,500.00",
-        profit: "18,200.00",
-        active: "12",
-        pending: "3",
+        portfolioValue: "124,500.00",
+        activeContracts: "6 عقود نشطة",
+        walletBalance: "15,500.00",
         
-        // بيانات لوحة التنبيهات الذكية وحالة الطرح الحالية
+        // بيانات الرسم البياني لتطور المحفظة
+        chartLabels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+        chartValues: [100000, 105000, 112000, 115000, 120000, 124500],
+
+        // بيانات لوحة التنبيهات الذكية (لصفحات تفاصيل الفرص إن وجدت)
         offeringAlert: {
             title: "فرصة استثمارية نشطة",
             description: "سارع بالانضمام، الطلب عالي على هذه الفرصة والأسهم تنفد بسرعة.",
@@ -27,21 +30,21 @@ const Dashboard = {
         this.renderChart();
     },
 
-    // 1. تحديث بطاقات الإحصائيات الرئيسية
+    // 1. تحديث بطاقات الإحصائيات الرئيسية في لوحة التحكم
     updateStats: function() {
-        const stats = document.querySelectorAll('.stat-value');
-        if (stats.length >= 4) {
-            stats[0].innerText = `ر.س ${this.mockData.totalInvestments}`;
-            stats[1].innerText = `ر.س ${this.mockData.profit}`;
-            stats[2].innerText = this.mockData.active;
-            stats[3].innerText = this.mockData.pending;
+        // نستهدف البطاقات الموجودة في لوحة التحكم
+        const stats = document.querySelectorAll('.stats-grid .stat-value');
+        if (stats.length >= 3) {
+            stats[0].innerText = `${this.mockData.portfolioValue} ر.س`;
+            stats[1].innerText = this.mockData.activeContracts;
+            stats[2].innerText = `${this.mockData.walletBalance} ر.س`;
         }
     },
 
-    // 2. تحديث لوحة التنبيهات الذكية والمؤشرات الحيوية للطرح
+    // 2. تحديث لوحة التنبيهات الذكية والمؤشرات الحيوية للطرح (آمنة ولا تسبب تعارض)
     updateAlertsBanner: function() {
         const bannerContainer = document.getElementById('mDetAlertsContainer');
-        if (!bannerContainer) return;
+        if (!bannerContainer) return; // الخروج بأمان إذا لم نكن في صفحة تفاصيل الفرصة
 
         // تحديث النصوص الرئيسية للتنبيه
         const bannerTitle = bannerContainer.querySelector('.banner-header h4');
@@ -70,20 +73,28 @@ const Dashboard = {
 
     // 3. تفعيل وتحديث الرسم البياني (Chart.js)
     renderChart: function() {
-        const ctx = document.getElementById('performanceChart');
+        const ctx = document.getElementById('mainChart');
         if (!ctx) return;
 
-        new Chart(ctx, {
+        // تدمير الرسم البياني القديم إن وجد لمنع التداخل عند التحديث
+        if (window.myDashboardChart) {
+            window.myDashboardChart.destroy();
+        }
+
+        window.myDashboardChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                labels: this.mockData.chartLabels,
                 datasets: [{
-                    label: 'الأرباح (ر.س)',
-                    data: [1200, 1900, 3000, 5000, 2000, 3000],
+                    label: 'قيمة تقييم المحفظة الاستثمارية (ر.س)',
+                    data: this.mockData.chartValues,
                     borderColor: '#028090',
-                    backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                    backgroundColor: 'rgba(2, 128, 144, 0.05)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#028090',
+                    pointHoverRadius: 7,
                     fill: true,
-                    tension: 0.4
+                    tension: 0.35
                 }]
             },
             options: {
@@ -94,8 +105,9 @@ const Dashboard = {
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        grid: { color: '#e2e8f0' }
+                        beginAtZero: false,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { family: 'monospace' } }
                     },
                     x: {
                         grid: { display: false }
