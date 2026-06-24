@@ -22,7 +22,7 @@
 
     <style>
         /* =========================================
-               التنسيقات الأساسية للصفحة – تم ضبط التباعد
+               التنسيقات الأساسية – تحسين التباعد
                ========================================= */
         * {
             box-sizing: border-box;
@@ -83,11 +83,12 @@
         }
 
         /* =========================================
-               عنوان الصفحة + العودة – تباعد محسّن
+               عنوان الصفحة – زيادة المسافة عن الهيدر
                ========================================= */
         .page-subheader {
             background: #0A1B3F;
             padding: 20px 40px;
+            margin-top: 16px; /* مسافة إضافية بين الهيدر وشريط العنوان */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -127,7 +128,7 @@
         }
 
         /* =========================================
-               الحاوية الرئيسية – تم إزالة الـ margin السالب واستخدام padding
+               الحاوية الرئيسية
                ========================================= */
         .content-container {
             max-width: 1060px;
@@ -160,7 +161,7 @@
         }
 
         /* =========================================
-               البطاقات – تباعد موحد
+               البطاقات
                ========================================= */
         .panel-card {
             background: #ffffff;
@@ -204,7 +205,7 @@
         }
 
         /* =========================================
-               شبكة النموذج – تباعد متسق
+               شبكة النموذج
                ========================================= */
         .form-grid {
             display: grid;
@@ -259,7 +260,7 @@
         }
 
         /* =========================================
-               صناديق التلميحات – تباعد داخلي مناسب
+               صناديق التلميحات
                ========================================= */
         .input-hint-box {
             background: #f8fafc;
@@ -293,13 +294,13 @@
         }
 
         /* =========================================
-               مجموعة الراديو – تباعد مريح
+               مجموعة الراديو (الجنس) – تنسيق محسّن
                ========================================= */
         .radio-group {
             display: flex;
-            gap: 28px;
+            gap: 32px;
             align-items: center;
-            padding: 10px 16px;
+            padding: 12px 20px;
             border: 1px solid #d1d9e6;
             border-radius: 10px;
             background: #fafcff;
@@ -308,22 +309,23 @@
         .radio-label {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            gap: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             margin: 0;
             color: #1e293b;
         }
         .radio-label input[type="radio"] {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             accent-color: #028090;
             cursor: pointer;
+            margin: 0;
         }
 
         /* =========================================
-               منطقة رفع الملفات – تحسين التباعد
+               منطقة رفع الملفات
                ========================================= */
         .upload-zone {
             border: 2px dashed #d1d9e6;
@@ -358,7 +360,7 @@
         }
 
         /* =========================================
-               صندوق الإقرار – تباعد متوازن
+               صندوق الإقرار
                ========================================= */
         .declaration-box {
             background: #f0fdf4;
@@ -474,7 +476,7 @@
         }
 
         /* =========================================
-               استجابة للشاشات الصغيرة – تحسين التباعد
+               استجابة للشاشات الصغيرة
                ========================================= */
         @media (max-width: 820px) {
             .form-grid {
@@ -490,6 +492,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 18px 24px;
+                margin-top: 12px;
             }
             .page-subheader h1 {
                 font-size: 19px;
@@ -501,7 +504,11 @@
                 padding: 20px 18px 24px 18px;
             }
             .radio-group {
-                gap: 16px;
+                gap: 20px;
+                padding: 10px 16px;
+            }
+            .radio-label {
+                font-size: 14px;
             }
             .declaration-box {
                 flex-direction: column;
@@ -536,6 +543,18 @@
             .upload-zone i {
                 font-size: 22px;
             }
+            .radio-group {
+                gap: 14px;
+                padding: 8px 12px;
+            }
+            .radio-label {
+                font-size: 13px;
+                gap: 6px;
+            }
+            .radio-label input[type="radio"] {
+                width: 18px;
+                height: 18px;
+            }
         }
     </style>
 </head>
@@ -555,7 +574,7 @@
     </header>
 
     <!-- =========================================
-    عنوان الصفحة + العودة
+    عنوان الصفحة – مع مسافة أعلى إضافية
     ========================================= -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-user-shield"></i> المعلومات الشخصية</h1>
@@ -565,7 +584,7 @@
     </div>
 
     <!-- =========================================
-    الحاوية الرئيسية – تم تعديل padding و margin
+    الحاوية الرئيسية
     ========================================= -->
     <main class="content-container">
 
@@ -616,12 +635,17 @@
                         </div>
                     </div>
 
-                    <!-- الجنسية -->
+                    <!-- الجنسية – قائمة محدثة -->
                     <div class="form-group">
                         <label class="form-label">الجنسية <span class="req">*</span></label>
                         <select class="form-control" required>
                             <option value="">اختر الجنسية...</option>
-                            <option value="gulf">الخليج</option>
+                            <option value="saudi">السعودية</option>
+                            <option value="kuwait">الكويت</option>
+                            <option value="qatar">قطر</option>
+                            <option value="uae">الإمارات</option>
+                            <option value="bahrain">البحرين</option>
+                            <option value="oman">عُمان</option>
                             <option value="egypt">مصر</option>
                             <option value="other">أخرى</option>
                         </select>
@@ -653,7 +677,7 @@
                         <input type="date" class="form-control" required>
                     </div>
 
-                    <!-- الجنس (راديو) -->
+                    <!-- الجنس (راديو) – تنسيق محسّن -->
                     <div class="form-group full-width">
                         <label class="form-label">الجنس <span class="req">*</span></label>
                         <div class="radio-group">
@@ -805,7 +829,6 @@
     <script>
         /**
          * معالج تغيير نوع الهوية
-         * يقوم بتحديث حقل رقم الهوية، عرض التلميحات، وإظهار مرفقات الوثائق المطلوبة.
          */
         function handleIdTypeChange() {
             const typeSelect = document.getElementById('idType');
@@ -815,7 +838,6 @@
             const docsCard = document.getElementById('documentsCard');
             const uploadArea = document.getElementById('dynamicUploadArea');
 
-            // إعادة تعيين الحقل
             idInput.value = '';
             idInput.removeAttribute('pattern');
             idInput.oninput = null;
@@ -901,7 +923,6 @@
             hint.textContent = hintText;
             uploadArea.innerHTML = filesHtml;
 
-            // إعادة ربط أحداث الرفع لكل منطقة تحميل
             document.querySelectorAll('.upload-zone').forEach(function(zone) {
                 const fileInput = zone.querySelector('input[type="file"]');
                 if (fileInput) {
@@ -924,9 +945,6 @@
             });
         }
 
-        /**
-         * إنشاء حقول رفع الملفات (وجه أمامي + وجه خلفي)
-         */
         function createUploadFields(labelFront, labelBack) {
             return `
                     <div class="form-group">
@@ -967,7 +985,7 @@
         });
 
         // =========================================
-        // تهيئة الصفحة: إخفاء بطاقة الوثائق عند التحميل
+        // تهيئة الصفحة
         // =========================================
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('documentsCard').style.display = 'none';
