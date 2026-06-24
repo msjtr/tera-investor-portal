@@ -3,25 +3,25 @@
    ============================================================ */
 
 const Dashboard = {
-    // البيانات الموحدة للهوية الرقمية (جاهزة للربط المباشر بـ API لاحقاً)
+    // البيانات الوهمية (محاكاة لبيانات حقيقية)
     mockData: {
         portfolioValue: "124,500.00",
         activeContracts: "6 عقود نشطة",
         walletBalance: "15,500.00",
         
-        // بيانات الرسم البياني لتطور ونمو المحفظة الاستثمارية
+        // بيانات الرسم البياني
         chartLabels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
         chartValues: [100000, 105000, 112000, 115000, 120000, 124500]
     },
 
     init: function() {
-        console.log("✅ Tera Dashboard Logic Initialized");
+        console.log("✅ Tera Dashboard & Investment Logic Initialized");
         this.updateStats();
         this.renderChart();
         this.attachEventListeners();
     },
 
-    // تحديث بطاقات الإحصائيات بأمان
+    // 1. تحديث بطاقات الإحصائيات الرئيسية
     updateStats: function() {
         const stats = document.querySelectorAll('.stats-grid .stat-value');
         if (stats && stats.length >= 3) {
@@ -31,18 +31,16 @@ const Dashboard = {
         }
     },
 
-    // رسم المدرج البياني للمحفظة
+    // 2. تفعيل الرسم البياني
     renderChart: function() {
         const ctx = document.getElementById('mainChart');
         if (!ctx || typeof Chart === 'undefined') return;
 
-        if (window.myDashboardChart) {
-            window.myDashboardChart.destroy();
-        }
+        if (window.myDashboardChart) window.myDashboardChart.destroy();
 
         const chartContext = ctx.getContext('2d');
         const gradient = chartContext.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(2, 128, 144, 0.25)'); // لون تيرا الفيروزي الشفاف بالأعلى
+        gradient.addColorStop(0, 'rgba(2, 128, 144, 0.25)');
         gradient.addColorStop(1, 'rgba(2, 128, 144, 0.00)');
 
         window.myDashboardChart = new Chart(ctx, {
@@ -59,7 +57,6 @@ const Dashboard = {
                     pointBorderColor: '#028090',
                     pointBorderWidth: 2,
                     pointRadius: 5,
-                    pointHoverRadius: 8,
                     fill: true,
                     tension: 0.4
                 }]
@@ -69,60 +66,47 @@ const Dashboard = {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { position: 'right', grid: { color: '#f1f5f9' }, ticks: { font: { family: 'monospace' } } },
-                    x: { grid: { display: false } }
+                    y: { position: 'right', grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Tajawal' } } },
+                    x: { grid: { display: false }, ticks: { font: { family: 'Tajawal' } } }
                 }
             }
         });
     },
 
-    // ربط كافة العمليات والأزرار في الصفحة (القائمة الجانبية، الفلترة، الإخفاء)
+    // 3. ربط كافة العمليات التفاعلية
     attachEventListeners: function() {
-        // 1. فلتر العمليات المالية
+        // فلترة العمليات
         const filterEl = document.getElementById('transactionFilter');
         if (filterEl) {
             filterEl.addEventListener('change', (e) => this.filterTransactions(e.target.value));
         }
 
-        // 2. إخفاء/إظهار الفرص
+        // إخفاء/إظهار الفرص
         const toggleOppBtn = document.getElementById('toggleOppBtn');
         if (toggleOppBtn) {
             toggleOppBtn.addEventListener('click', () => this.toggleOpportunities());
         }
 
-        // 3. فتح وإغلاق القوائم الجانبية
+        // التحكم بالقائمة الجانبية والقوائم الفرعية
         document.addEventListener('click', function(e) {
-            // زر الموبايل
+            // فتح/إغلاق القائمة الجانبية
             let toggleBtn = e.target.closest('#sidebarToggle');
             if (toggleBtn) {
                 e.preventDefault();
-                e.stopPropagation();
                 let sidebar = document.getElementById('sidebar');
-                if (sidebar) {
-                    if (window.innerWidth > 991) {
-                        sidebar.classList.toggle('collapsed');
-                    } else {
-                        sidebar.classList.toggle('sidebar-open');
-                    }
-                }
+                if (sidebar) sidebar.classList.toggle(window.innerWidth > 991 ? 'collapsed' : 'sidebar-open');
                 return;
             }
 
-            // القوائم الفرعية المنسدلة
+            // فتح/إغلاق القوائم الفرعية
             let submenuLink = e.target.closest('.has-submenu > a');
             if (submenuLink) {
                 e.preventDefault();
-                e.stopPropagation();
                 let parentLi = submenuLink.parentElement;
-                
-                if(parentLi.classList.contains('submenu-open')) {
-                    parentLi.classList.remove('submenu-open');
-                } else {
-                    document.querySelectorAll('.has-submenu').forEach(function(li) {
-                        li.classList.remove('submenu-open');
-                    });
-                    parentLi.classList.add('submenu-open');
-                }
+                document.querySelectorAll('.has-submenu').forEach(li => {
+                    if (li !== parentLi) li.classList.remove('submenu-open');
+                });
+                parentLi.classList.toggle('submenu-open');
             }
         }, true);
     },
@@ -131,7 +115,9 @@ const Dashboard = {
     filterTransactions: function(filterValue) {
         const rows = document.querySelectorAll('#transactionsTableBody tr');
         rows.forEach(row => {
-            const amountText = row.querySelector('.amount-cell').innerText;
+            const amountCell = row.querySelector('.amount-cell');
+            if (!amountCell) return;
+            const amountText = amountCell.innerText;
             const isDeposit = amountText.includes('+');
 
             if (filterValue === 'all') {
@@ -146,7 +132,7 @@ const Dashboard = {
         });
     },
 
-    // دالة إخفاء وإظهار جدول الفرص بشكل أنيق
+    // دالة إخفاء وإظهار جدول الفرص
     toggleOpportunities: function() {
         const panel = document.getElementById('opportunitiesPanelWrapper');
         const icon = document.getElementById('toggleOppIcon');
@@ -154,19 +140,13 @@ const Dashboard = {
 
         if (!panel || !icon || !text) return;
 
-        if (panel.style.maxHeight === '0px' || !panel.style.maxHeight) {
-            panel.style.maxHeight = '1000px';
-            icon.className = 'fas fa-eye-slash';
-            text.innerText = 'إخفاء';
-        } else {
-            panel.style.maxHeight = '0px';
-            icon.className = 'fas fa-eye';
-            text.innerText = 'إظهار';
-        }
+        const isHidden = panel.style.maxHeight === '0px' || !panel.style.maxHeight;
+        panel.style.maxHeight = isHidden ? '1000px' : '0px';
+        icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+        text.innerText = isHidden ? 'إخفاء' : 'إظهار';
     }
 };
 
-// بدء تشغيل لوحة التحكم فور تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     Dashboard.init();
 });
