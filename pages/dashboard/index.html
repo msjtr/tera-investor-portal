@@ -18,7 +18,7 @@
     
     <style>
         /* ============================================
-           متغيرات وتنسيقات أساسية – تحسين التجاوب
+           متغيرات وتنسيقات أساسية – متوافقة مع الهيدر الجديد
            ============================================ */
         :root {
             --tera-teal: #028090;
@@ -28,6 +28,7 @@
             --tera-bg: #f8fafc;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 80px;
+            --header-height: 75px;
         }
 
         * {
@@ -51,6 +52,130 @@
         }
 
         /* ============================================
+           الهيدر العلوي (Top Header) – مُحسَّن ومُدمج
+           ============================================ */
+        .top-header {
+            height: var(--header-height);
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 998;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .header-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo img {
+            height: 40px;
+            width: auto;
+            display: block;
+            transition: opacity 0.3s ease;
+        }
+
+        .header-logo img:hover {
+            opacity: 0.85;
+        }
+
+        /* زر فتح القائمة (للجوال) */
+        .menu-toggle-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 20px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .menu-toggle-btn:hover {
+            background: var(--tera-teal);
+            border-color: var(--tera-teal);
+            color: #ffffff;
+            transform: scale(1.04);
+        }
+
+        .menu-toggle-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* بيانات المستخدم */
+        .header-left-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-profile-block {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 4px 0;
+        }
+
+        .user-meta {
+            text-align: left;
+        }
+
+        .user-meta h5 {
+            margin: 0;
+            font-size: 14px;
+            color: var(--tera-navy);
+            font-weight: 800;
+            font-family: 'Cairo', sans-serif;
+            line-height: 1.3;
+            letter-spacing: -0.2px;
+        }
+
+        .user-meta p {
+            margin: 0;
+            font-size: 11px;
+            color: var(--tera-gray);
+            font-weight: 600;
+            line-height: 1.4;
+            margin-top: 2px;
+        }
+
+        .user-avatar-circle {
+            width: 44px;
+            height: 44px;
+            background-color: var(--tera-navy);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            border: 2px solid var(--tera-teal);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            cursor: default;
+            user-select: none;
+        }
+
+        .user-avatar-circle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(2, 128, 144, 0.25);
+        }
+
+        /* ============================================
            القائمة الجانبية (Sidebar)
            ============================================ */
         .sidebar-container {
@@ -61,14 +186,16 @@
             flex-direction: column;
             flex-shrink: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
+            z-index: 999;
             box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
-            height: 100vh;
-            position: sticky;
-            top: 0;
+            height: calc(100vh - var(--header-height));
+            position: fixed;
+            top: var(--header-height);
+            right: 0;
             overflow-y: auto;
         }
 
+        /* وضع التصغير (ديسكتوب) */
         .sidebar-container.collapsed {
             width: var(--sidebar-collapsed-width);
         }
@@ -89,17 +216,35 @@
             margin: 0;
         }
 
-        .sidebar-brand {
-            padding: 20px 25px;
+        /* رأس القائمة (للموبايل) */
+        .sidebar-mobile-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
             flex-shrink: 0;
         }
 
-        .sidebar-brand img {
-            height: 50px;
-            width: auto;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .sidebar-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+            transition: 0.2s;
+        }
+
+        .sidebar-close-btn:hover {
+            color: #fff;
+            transform: rotate(90deg);
         }
 
         .sidebar-menu {
@@ -211,6 +356,25 @@
         }
 
         /* ============================================
+           طبقة الخلفية (للجوال)
+           ============================================ */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 998;
+            cursor: pointer;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* ============================================
            المحتوى الرئيسي
            ============================================ */
         .main-content {
@@ -219,95 +383,21 @@
             flex-direction: column;
             min-width: 0;
             transition: all 0.3s ease;
+            margin-right: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 20px 30px 30px 30px;
+        }
+
+        .sidebar-container.collapsed ~ .main-content {
+            margin-right: var(--sidebar-collapsed-width);
         }
 
         /* ============================================
-           الشريط العلوي (Top Navbar)
-           ============================================ */
-        .top-navbar {
-            background: #fff;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-            position: sticky;
-            top: 0;
-            z-index: 99;
-            flex-shrink: 0;
-        }
-
-        .sidebar-toggle {
-            background: var(--tera-bg);
-            border: 1px solid #e2e8f0;
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            color: var(--tera-navy);
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-
-        .sidebar-toggle:hover {
-            background: var(--tera-teal);
-            color: #fff;
-            border-color: var(--tera-teal);
-        }
-
-        .user-profile-block {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-meta {
-            text-align: left;
-        }
-
-        .user-meta h5 {
-            margin: 0;
-            font-size: 14px;
-            color: var(--tera-navy);
-            font-weight: 800;
-            line-height: 1.3;
-        }
-
-        .user-meta p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--tera-gray);
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        .user-avatar-circle {
-            width: 42px;
-            height: 42px;
-            background-color: var(--tera-navy);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 800;
-            border: 2px solid var(--tera-teal);
-            flex-shrink: 0;
-        }
-
-        /* ============================================
-           الحاوية والمحتوى
+           الحاوية والمحتوى الداخلي
            ============================================ */
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 24px 30px 40px 30px;
             width: 100%;
             flex: 1;
         }
@@ -586,6 +676,7 @@
             border-top: 1px solid #e2e8f0;
             background: #ffffff;
             flex-shrink: 0;
+            margin-top: auto;
         }
 
         /* ============================================
@@ -600,44 +691,71 @@
             }
         }
 
-        @media (max-width: 992px) {
+        @media (max-width: 991px) {
+            :root {
+                --header-height: 60px;
+            }
+
+            .top-header {
+                height: var(--header-height);
+                padding: 0 16px;
+                box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+            }
+
+            .header-logo img {
+                height: 32px;
+            }
+
+            .header-right-actions {
+                gap: 12px;
+            }
+
+            .menu-toggle-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 18px;
+                border-radius: 8px;
+            }
+
+            .user-meta {
+                display: none;
+            }
+
+            .user-avatar-circle {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+                border-width: 2px;
+            }
+
             .sidebar-container {
-                position: fixed;
+                right: calc(-1 * var(--sidebar-width));
                 top: 0;
-                right: -100%;
                 height: 100vh;
-                width: 280px;
+                box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
                 transition: right 0.3s ease;
-                box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
             }
 
             .sidebar-container.sidebar-open {
                 right: 0;
             }
 
-            /* طبقة خلفية لإغلاق القائمة */
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.4);
-                z-index: 999;
-                cursor: pointer;
+            .sidebar-mobile-header {
+                display: flex;
+            }
+
+            .main-content {
+                margin-right: 0 !important;
+                padding: 16px;
+                margin-top: var(--header-height);
+            }
+
+            .sidebar-container.collapsed ~ .main-content {
+                margin-right: 0 !important;
             }
 
             .sidebar-overlay.active {
                 display: block;
-            }
-
-            .container {
-                padding: 16px 16px 30px 16px;
-            }
-
-            .top-navbar {
-                padding: 10px 16px;
             }
 
             .stats-grid {
@@ -657,13 +775,6 @@
                 padding: 18px 18px 20px 18px;
             }
 
-            .user-meta h5 {
-                font-size: 13px;
-            }
-            .user-meta p {
-                font-size: 11px;
-            }
-
             .dashboard-section-title {
                 font-size: 20px;
             }
@@ -674,63 +785,84 @@
         }
 
         @media (max-width: 480px) {
-            .user-meta {
-                display: none;
+            .top-header {
+                padding: 0 12px;
             }
+
+            .header-logo img {
+                height: 28px;
+            }
+
+            .menu-toggle-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 16px;
+            }
+
             .user-avatar-circle {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
             }
-            .top-navbar {
-                padding: 8px 12px;
+
+            .main-content {
+                padding: 12px;
             }
-            .sidebar-toggle {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-            }
-            .container {
-                padding: 12px 12px 20px 12px;
-            }
+
             .stat-card {
                 padding: 14px 16px;
                 gap: 14px;
             }
+
             .stat-icon {
                 width: 42px;
                 height: 42px;
                 font-size: 18px;
             }
+
             .stat-value {
                 font-size: 16px;
             }
+
             .panel-header h3 {
                 font-size: 14px;
             }
+
             .data-table-list {
                 font-size: 12px;
             }
+
             .data-table-list th,
             .data-table-list td {
                 padding: 8px 4px;
             }
+
             .btn-table-link {
                 padding: 4px 10px;
                 font-size: 11px;
             }
+
             .alert-item-box {
                 font-size: 12px;
                 padding: 12px 14px;
             }
         }
 
-        /* فئة مساعدة لإخفاء العناصر */
+        /* فئات مساعدة */
         .hidden {
             display: none !important;
         }
 
-        /* تنسيق الرسوم البيانية والجداول في حالة عدم وجود بيانات */
+        .d-lg-none {
+            display: none !important;
+        }
+
+        @media (max-width: 991px) {
+            .d-lg-none {
+                display: flex !important;
+            }
+        }
+
         .empty-state {
             padding: 30px 20px;
             text-align: center;
@@ -742,16 +874,57 @@
 </head>
 <body>
     <div class="app-wrapper">
-        <!-- طبقة خلفية (للجوال) -->
+
+        <!-- ============================================
+        الهيدر العلوي (Top Header) – الجديد
+        ============================================ -->
+        <header class="top-header no-print">
+            
+            <div class="header-right-actions">
+                <!-- زر فتح القائمة الجانبية (يظهر في الجوال فقط) -->
+                <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <!-- الشعار -->
+                <div class="header-logo">
+                    <a href="/pages/dashboard/index.html">
+                        <img src="/images/logo.svg" 
+                             alt="Tera Logo" 
+                             onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
+                    </a>
+                </div>
+            </div>
+
+            <div class="header-left-actions">
+                <div class="user-profile-block">
+                    <div class="user-meta">
+                        <h5>محمد صالح جميعان الشمري</h5>
+                        <p>بوابة المستثمر، حائل</p>
+                    </div>
+                    <div class="user-avatar-circle">م</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================
+        طبقة الخلفية (للجوال)
+        ============================================ -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- القائمة الجانبية -->
+        <!-- ============================================
+        القائمة الجانبية (Sidebar)
+        ============================================ -->
         <aside class="sidebar-container" id="sidebar">
-            <div class="sidebar-brand">
-                <a href="/pages/dashboard/index.html">
-                    <img src="/images/logo.svg" alt="Tera Logo" />
-                </a>
+            
+            <!-- رأس القائمة (للموبايل) -->
+            <div class="sidebar-mobile-header d-lg-none">
+                <span class="sidebar-title">القائمة الرئيسية</span>
+                <button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+
             <nav class="sidebar-menu">
                 <ul class="nav-list">
                     <li class="nav-item active">
@@ -848,6 +1021,7 @@
                     </li>
                 </ul>
             </nav>
+
             <div class="sidebar-footer">
                 <button class="logout-btn" id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
@@ -856,27 +1030,11 @@
             </div>
         </aside>
 
-        <!-- المحتوى الرئيسي -->
+        <!-- ============================================
+        المحتوى الرئيسي
+        ============================================ -->
         <main class="main-content">
-            <!-- الشريط العلوي -->
-            <header class="top-navbar no-print">
-                <div class="navbar-left">
-                    <button class="sidebar-toggle" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
-                <div class="navbar-right">
-                    <div class="user-profile-block">
-                        <div class="user-meta">
-                            <h5>محمد صالح جميعان الشمري</h5>
-                            <p>بوابة المستثمر، حائل</p>
-                        </div>
-                        <div class="user-avatar-circle">م</div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- المحتوى -->
+            
             <div class="container">
                 <h2 class="dashboard-section-title">
                     <i class="fas fa-tachometer-alt text-teal"></i> لوحة التحكم الرئيسية
@@ -972,7 +1130,6 @@
                                         <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
                                         <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
                                     </tr>
-                                    <!-- يمكن إضافة المزيد من الصفوف -->
                                 </tbody>
                             </table>
                         </div>
@@ -1015,15 +1172,229 @@
                 © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
             </footer>
         </main>
+
     </div>
 
     <!-- ============================================
-    السكربتات (ملفات خارجية فقط)
+    السكربتات (ملفات خارجية + السكربت الداخلي المُحسَّن)
     ============================================ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
 
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================
+            // العناصر
+            // ============================================
+            const sidebar = document.getElementById('sidebar');
+            const openBtn = document.getElementById('openSidebarBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = () => window.innerWidth <= 991;
+
+            // ============================================
+            // 1. فتح القائمة (الجوال)
+            // ============================================
+            if (openBtn && sidebar) {
+                openBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.add('sidebar-open');
+                    if (overlay) overlay.classList.add('active');
+                });
+            }
+
+            // ============================================
+            // 2. إغلاق القائمة (زر الإغلاق)
+            // ============================================
+            if (closeBtn && sidebar) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                });
+            }
+
+            // ============================================
+            // 3. إغلاق القائمة عند النقر على الطبقة الخلفية
+            // ============================================
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('sidebar-open');
+                    overlay.classList.remove('active');
+                });
+            }
+
+            // ============================================
+            // 4. إغلاق القائمة بالضغط على Escape
+            // ============================================
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-open')) {
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                }
+            });
+
+            // ============================================
+            // 5. القوائم الفرعية
+            // ============================================
+            document.querySelectorAll('.has-submenu > a').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const parent = this.closest('.has-submenu');
+                    if (!parent) return;
+                    // في وضع التصغير نمنع فتح القوائم الفرعية
+                    if (sidebar && sidebar.classList.contains('collapsed')) {
+                        return;
+                    }
+                    parent.classList.toggle('submenu-open');
+                });
+            });
+
+            // ============================================
+            // 6. تبديل عرض الفرص الاستثمارية
+            // ============================================
+            const toggleOppBtn = document.getElementById('toggleOppBtn');
+            const oppWrapper = document.getElementById('opportunitiesPanelWrapper');
+            const toggleOppIcon = document.getElementById('toggleOppIcon');
+            const toggleOppText = document.getElementById('toggleOppText');
+
+            if (toggleOppBtn && oppWrapper) {
+                let hidden = false;
+                toggleOppBtn.addEventListener('click', function() {
+                    hidden = !hidden;
+                    if (hidden) {
+                        oppWrapper.style.maxHeight = '0';
+                        oppWrapper.style.padding = '0';
+                        oppWrapper.style.opacity = '0';
+                        toggleOppIcon.className = 'fas fa-eye';
+                        toggleOppText.textContent = 'عرض';
+                    } else {
+                        oppWrapper.style.maxHeight = '600px';
+                        oppWrapper.style.padding = '';
+                        oppWrapper.style.opacity = '1';
+                        toggleOppIcon.className = 'fas fa-eye-slash';
+                        toggleOppText.textContent = 'إخفاء';
+                    }
+                });
+                oppWrapper.style.transition = 'all 0.3s ease';
+                oppWrapper.style.maxHeight = '600px';
+            }
+
+            // ============================================
+            // 7. فلتر العمليات المالية
+            // ============================================
+            const filterSelect = document.getElementById('transactionFilter');
+            const tbody = document.getElementById('transactionsTableBody');
+
+            if (filterSelect && tbody) {
+                filterSelect.addEventListener('change', function() {
+                    const value = this.value;
+                    const rows = tbody.querySelectorAll('tr');
+                    rows.forEach(function(row) {
+                        const text = row.textContent.toLowerCase();
+                        if (value === 'all') {
+                            row.style.display = '';
+                        } else if (value === 'deposits' && text.includes('إيداع')) {
+                            row.style.display = '';
+                        } else if (value === 'deductions' && text.includes('سحب')) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // ============================================
+            // 8. الرسم البياني
+            // ============================================
+            const ctx = document.getElementById('mainChart');
+            if (ctx && typeof Chart !== 'undefined') {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        datasets: [{
+                            label: 'قيمة المحفظة (ر.س)',
+                            data: [85000, 92000, 98000, 105000, 115000, 124500],
+                            borderColor: '#028090',
+                            backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#028090',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    font: { family: 'Tajawal', size: 12 },
+                                    color: '#334155'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0,0,0,0.05)' },
+                                ticks: {
+                                    font: { family: 'Tajawal', size: 11 },
+                                    color: '#64748b',
+                                    callback: function(value) {
+                                        return value.toLocaleString() + ' ر.س';
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    font: { family: 'Tajawal', size: 11 },
+                                    color: '#64748b'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ============================================
+            // 9. تسجيل الخروج
+            // ============================================
+            document.getElementById('logoutBtn')?.addEventListener('click', function() {
+                if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
+                    alert('سيتم توجيهك إلى صفحة تسجيل الدخول.');
+                    // window.location.href = '/auth/login/login.html';
+                }
+            });
+
+            // ============================================
+            // 10. تفعيل الحالة النشطة للقائمة
+            // ============================================
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-item > a[href]').forEach(function(link) {
+                const href = link.getAttribute('href');
+                if (href === currentPath || (href !== '#' && currentPath.includes(href))) {
+                    const parent = link.closest('.nav-item');
+                    if (parent) {
+                        parent.classList.add('active');
+                        if (parent.classList.contains('has-submenu')) {
+                            parent.classList.add('submenu-open');
+                        }
+                    }
+                }
+            });
+
+            console.log('✅ Dashboard with new header initialized successfully.');
+        })();
+    </script>
 </body>
 </html>
