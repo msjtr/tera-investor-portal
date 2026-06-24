@@ -22,7 +22,7 @@
 
     <style>
         /* =========================================
-               التنسيقات الأساسية للصفحة
+               التنسيقات الأساسية للصفحة – تم ضبط التباعد
                ========================================= */
         * {
             box-sizing: border-box;
@@ -83,11 +83,11 @@
         }
 
         /* =========================================
-               عنوان الصفحة + العودة
+               عنوان الصفحة + العودة – تباعد محسّن
                ========================================= */
         .page-subheader {
             background: #0A1B3F;
-            padding: 24px 40px;
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -127,14 +127,12 @@
         }
 
         /* =========================================
-               الحاوية الرئيسية
+               الحاوية الرئيسية – تم إزالة الـ margin السالب واستخدام padding
                ========================================= */
         .content-container {
             max-width: 1060px;
-            margin: -18px auto 40px auto;
-            padding: 0 24px;
-            position: relative;
-            z-index: 10;
+            margin: 0 auto 40px auto;
+            padding: 28px 24px 0 24px;
             flex: 1;
         }
 
@@ -146,7 +144,7 @@
             padding: 16px 22px;
             border-radius: 12px;
             border-right: 5px solid #028090;
-            margin-bottom: 28px;
+            margin-bottom: 32px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             display: flex;
             align-items: center;
@@ -162,13 +160,13 @@
         }
 
         /* =========================================
-               البطاقات
+               البطاقات – تباعد موحد
                ========================================= */
         .panel-card {
             background: #ffffff;
             border-radius: 18px;
             border: 1px solid #e9edf2;
-            padding: 30px 32px 34px 32px;
+            padding: 28px 32px 32px 32px;
             margin-bottom: 28px;
             box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
             transition: box-shadow 0.2s;
@@ -181,7 +179,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 22px;
+            margin-bottom: 24px;
             padding-bottom: 14px;
             border-bottom: 2px solid #f1f5f9;
         }
@@ -206,12 +204,12 @@
         }
 
         /* =========================================
-               شبكة النموذج
+               شبكة النموذج – تباعد متسق
                ========================================= */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 22px 28px;
+            gap: 24px 30px;
         }
         .form-group {
             display: flex;
@@ -261,7 +259,7 @@
         }
 
         /* =========================================
-               صناديق التلميحات
+               صناديق التلميحات – تباعد داخلي مناسب
                ========================================= */
         .input-hint-box {
             background: #f8fafc;
@@ -295,7 +293,7 @@
         }
 
         /* =========================================
-               مجموعة الراديو
+               مجموعة الراديو – تباعد مريح
                ========================================= */
         .radio-group {
             display: flex;
@@ -325,12 +323,12 @@
         }
 
         /* =========================================
-               منطقة رفع الملفات
+               منطقة رفع الملفات – تحسين التباعد
                ========================================= */
         .upload-zone {
             border: 2px dashed #d1d9e6;
             border-radius: 12px;
-            padding: 22px 16px;
+            padding: 20px 16px;
             text-align: center;
             background: #fafcff;
             cursor: pointer;
@@ -360,17 +358,17 @@
         }
 
         /* =========================================
-               صندوق الإقرار
+               صندوق الإقرار – تباعد متوازن
                ========================================= */
         .declaration-box {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
-            padding: 22px 24px;
+            padding: 20px 24px;
             border-radius: 14px;
             display: flex;
             align-items: flex-start;
             gap: 18px;
-            margin-bottom: 22px;
+            margin-bottom: 24px;
         }
         .declaration-box input[type="checkbox"] {
             width: 22px;
@@ -432,7 +430,7 @@
                تنبيهات إضافية
                ========================================= */
         .alert-warning-box {
-            margin-top: 16px;
+            margin-top: 18px;
             font-size: 13px;
             color: #b91c1c;
             font-weight: 700;
@@ -450,7 +448,7 @@
 
         .otp-notice {
             text-align: center;
-            margin-bottom: 22px;
+            margin-bottom: 24px;
             font-size: 13px;
             color: #475569;
             background: #f8fafc;
@@ -476,12 +474,12 @@
         }
 
         /* =========================================
-               استجابة للشاشات الصغيرة
+               استجابة للشاشات الصغيرة – تحسين التباعد
                ========================================= */
         @media (max-width: 820px) {
             .form-grid {
                 grid-template-columns: 1fr;
-                gap: 18px;
+                gap: 20px;
             }
             .focused-header {
                 padding: 10px 20px;
@@ -491,14 +489,13 @@
             .page-subheader {
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 20px 24px;
+                padding: 18px 24px;
             }
             .page-subheader h1 {
                 font-size: 19px;
             }
             .content-container {
-                padding: 0 14px;
-                margin-top: 10px;
+                padding: 20px 14px 0 14px;
             }
             .panel-card {
                 padding: 20px 18px 24px 18px;
@@ -568,7 +565,7 @@
     </div>
 
     <!-- =========================================
-    الحاوية الرئيسية
+    الحاوية الرئيسية – تم تعديل padding و margin
     ========================================= -->
     <main class="content-container">
 
@@ -619,7 +616,7 @@
                         </div>
                     </div>
 
-                    <!-- الجنسية (مطلوبة حسب الطلب: الخليج، مصر، أخرى) -->
+                    <!-- الجنسية -->
                     <div class="form-group">
                         <label class="form-label">الجنسية <span class="req">*</span></label>
                         <select class="form-control" required>
@@ -681,7 +678,7 @@
                     <h3>الوثائق المطلوبة</h3>
                 </div>
 
-                <div style="font-size:13px; color:#64748b; margin-bottom:16px; background:#f8fafc; padding:10px 16px; border-radius:8px;">
+                <div style="font-size:13px; color:#64748b; margin-bottom:18px; background:#f8fafc; padding:10px 16px; border-radius:8px;">
                     <i class="fas fa-sync-alt" style="margin-left:6px;"></i>
                     يتم عرض المرفقات المطلوبة تلقائياً حسب نوع الهوية المختار.
                 </div>
@@ -731,7 +728,7 @@
                         <input type="text" class="form-control" placeholder="اسم الجهة">
                     </div>
 
-                    <!-- الحالة الوظيفية (مطلوبة حسب الطلب) -->
+                    <!-- الحالة الوظيفية -->
                     <div class="form-group">
                         <label class="form-label">الحالة الوظيفية</label>
                         <select class="form-control" id="employmentStatus">
@@ -909,7 +906,6 @@
                 const fileInput = zone.querySelector('input[type="file"]');
                 if (fileInput) {
                     zone.addEventListener('click', function(e) {
-                        // منع التنفيذ إذا كان النقر على الزر أو داخله
                         e.stopPropagation();
                         fileInput.click();
                     });
@@ -960,7 +956,6 @@
         document.getElementById('personalInfoForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // التحقق من الإقرار
             const declarationCheck = document.getElementById('declarationCheck');
             if (!declarationCheck.checked) {
                 alert('يرجى الموافقة على الإقرار والتعهد قبل المتابعة.');
@@ -968,7 +963,6 @@
                 return;
             }
 
-            // محاكاة حفظ البيانات
             alert('✅ تم حفظ البيانات بنجاح.\nجاري تحويلك إلى صفحة إدخال رمز التحقق (OTP)...');
         });
 
