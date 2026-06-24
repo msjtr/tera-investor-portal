@@ -1,19 +1,459 @@
-<section class="contact-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تحديث البيانات الشخصية | Tera Investor Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    
+    <style>
+        /* =========================================
+           الهوية البصرية الأساسية
+           ========================================= */
+        :root {
+            --tera-teal: #028090; 
+            --tera-teal-light: #14b8a6;
+            --tera-navy: #0A1B3F; 
+            --tera-gray: #64748b;
+            --tera-bg: #f8fafc;
+            --danger: #ef4444;
+        }
 
-    <h1>معلومات التواصل</h1>
+        body {
+            background-color: var(--tera-bg);
+            font-family: 'Tajawal', sans-serif;
+            margin: 0; padding: 20px 0;
+            color: #334155;
+            overflow-x: hidden;
+        }
 
-    <form>
+        *, *::before, *::after { box-sizing: border-box; }
 
-        <label>رقم الجوال</label>
-        <input type="tel">
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-        <label>البريد الإلكتروني</label>
-        <input type="email">
+        /* =========================================
+           تنسيقات البطاقات (Cards) المطابقة لسوق الفرص
+           ========================================= */
+        .page-header {
+            margin-bottom: 30px;
+        }
+        .page-title {
+            font-size: 24px;
+            color: var(--tera-navy);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 900;
+            margin: 0 0 10px 0;
+        }
+        .page-desc {
+            font-size: 14px;
+            color: var(--tera-gray);
+            line-height: 1.6;
+        }
 
-        <button type="submit">
-            حفظ البيانات
-        </button>
+        .panel-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            margin-bottom: 25px;
+        }
 
-    </form>
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
 
-</section>
+        .panel-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--tera-navy);
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+        }
+        .panel-header i { color: var(--tera-teal); font-size: 20px; }
+
+        /* =========================================
+           النماذج والحقول (Forms & Inputs)
+           ========================================= */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--tera-navy);
+        }
+
+        .form-label span.req { color: var(--danger); }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 14px;
+            color: #1e293b;
+            background-color: #fff;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--tera-teal);
+            box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1);
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: var(--tera-gray);
+            margin-top: 4px;
+        }
+
+        /* الراديو (Radio Buttons) */
+        .radio-group { display: flex; gap: 20px; align-items: center; padding: 10px 0; }
+        .radio-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+        /* =========================================
+           تنسيق المرفقات (Upload Dropzone)
+           ========================================= */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .upload-zone:hover {
+            border-color: var(--tera-teal);
+            background: #f0fdfa;
+        }
+        .upload-zone i { font-size: 30px; color: var(--tera-teal); margin-bottom: 10px; display: block; }
+        .upload-zone span { font-size: 14px; font-weight: 700; color: var(--tera-navy); display: block; }
+        .upload-zone p { font-size: 12px; color: var(--tera-gray); margin-top: 5px; }
+        .upload-input { display: none; }
+
+        /* =========================================
+           الإقرار والأزرار
+           ========================================= */
+        .declaration-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .declaration-box input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; }
+        .declaration-box p { margin: 0; font-size: 13px; font-weight: 600; color: #166534; line-height: 1.6; }
+
+        .btn-submit {
+            background: var(--tera-teal);
+            color: #fff;
+            border: none;
+            padding: 16px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: 'Tajawal', sans-serif;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-submit:hover { background: var(--tera-navy); }
+
+        /* =========================================
+           الجوال (Mobile Responsiveness)
+           ========================================= */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; gap: 15px; }
+            .panel-card { padding: 20px; }
+            .page-title { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">المعلومات الشخصية</h1>
+            <p class="page-desc">يرجى إدخال بياناتك الشخصية كما هي مدونة في الهوية أو الإقامة أو جواز السفر، حيث سيتم استخدام هذه المعلومات لأغراض التحقق والامتثال.</p>
+        </div>
+
+        <form id="personalInfoForm" onsubmit="handleFormSubmit(event)">
+            
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-id-card"></i>
+                    <h3>البيانات الأساسية</h3>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">الاسم الكامل بالعربية <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="nameAr" required placeholder="مثال: محمد عبدالله الشمري" pattern="^[\u0600-\u06FF\s]+$" oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
+                        <span class="input-hint">يطابق الوثيقة الرسمية، أحرف عربية ومسافات فقط.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Full Name in English <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="nameEn" required placeholder="Example: Mohammed Abdullah Alshammari" pattern="^[A-Za-z\s]+$" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                        <span class="input-hint">Matches official ID, English letters and spaces only.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">الجنسية <span class="req">*</span></label>
+                        <select class="form-control" required>
+                            <option value="">اختر الجنسية...</option>
+                            <option value="SA">سعودي</option>
+                            <option value="KW">كويتي</option>
+                            <option value="AE">إماراتي</option>
+                            <option value="OTHER">أخرى</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">نوع الهوية <span class="req">*</span></label>
+                        <select class="form-control" id="idType" required onchange="handleIdTypeChange()">
+                            <option value="">اختر نوع الهوية...</option>
+                            <option value="national">هوية وطنية</option>
+                            <option value="residency">هوية مقيم</option>
+                            <option value="gcc">هوية خليجية</option>
+                            <option value="arab">هوية عربية</option>
+                            <option value="passport">جواز سفر</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">رقم الهوية / الإقامة / الجواز <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="idNumber" required placeholder="أدخل الرقم بناءً على نوع الوثيقة المختارة">
+                        <span class="input-hint" id="idFormatHint">يرجى اختيار نوع الهوية أولاً.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">تاريخ الميلاد <span class="req">*</span></label>
+                        <input type="date" class="form-control" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">الجنس <span class="req">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-label"><input type="radio" name="gender" value="M" required> ذكر</label>
+                            <label class="radio-label"><input type="radio" name="gender" value="F" required> أنثى</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-briefcase"></i>
+                    <h3>بيانات إضافية</h3>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">الحالة الاجتماعية</label>
+                        <select class="form-control">
+                            <option value="">اختر...</option>
+                            <option>أعزب</option>
+                            <option>متزوج</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">المهنة</label>
+                        <input type="text" class="form-control" placeholder="مثال: مهندس، محامي، معلم...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">جهة العمل</label>
+                        <input type="text" class="form-control" placeholder="اسم الجهة أو الشركة">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">الحالة الوظيفية</label>
+                        <select class="form-control">
+                            <option value="">اختر...</option>
+                            <option>موظف قطاع حكومي</option>
+                            <option>موظف قطاع خاص</option>
+                            <option>عمل حر / تاجر</option>
+                            <option>متقاعد</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">الدخل الشهري (ر.س)</label>
+                        <input type="number" class="form-control" placeholder="أدخل متوسط الدخل الشهري">
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-card" id="documentsCard" style="display: none;">
+                <div class="panel-header">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>الوثائق المطلوبة</h3>
+                </div>
+                
+                <div id="dynamicUploadArea" class="form-grid">
+                    </div>
+                
+                <div style="margin-top: 15px; font-size: 12px; color: var(--danger); font-weight: 700;">
+                    <i class="fas fa-exclamation-triangle"></i> تنبيه: يجب أن تكون الصور ملونة وواضحة وسارية المفعول وتظهر جميع البيانات بشكل كامل.
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="declaration-box">
+                    <input type="checkbox" id="declarationCheck" required>
+                    <div>
+                        <p><strong>أقر وأتعهد بأن:</strong></p>
+                        <ul style="margin: 5px 0 0 20px; font-size: 13px; color: #166534; padding: 0;">
+                            <li>الاسم العربي والإنجليزي مطابقان للوثائق الرسمية.</li>
+                            <li>جميع البيانات المدخلة صحيحة ومحدثة والوثائق المرفوعة أصلية وسارية.</li>
+                            <li>أتحمل كامل المسؤولية القانونية عن صحة المعلومات المقدمة.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-shield-check"></i> حفظ ومتابعة عملية التحقق (OTP)
+                </button>
+                <p style="text-align: center; font-size: 12px; color: var(--tera-gray); margin-top: 15px;">
+                    لإتمام اعتماد البيانات الشخصية سيتم إرسال رمز تحقق (OTP) إلى البريد الإلكتروني المسجل.
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 1. التحكم بخصائص المرفقات والتحقق اللحظي حسب نوع الهوية
+        function handleIdTypeChange() {
+            const idType = document.getElementById('idType').value;
+            const idInput = document.getElementById('idNumber');
+            const hint = document.getElementById('idFormatHint');
+            
+            const docsCard = document.getElementById('documentsCard');
+            const uploadArea = document.getElementById('dynamicUploadArea');
+
+            // تصفير الخصائص
+            idInput.value = '';
+            idInput.removeAttribute('pattern');
+            idInput.oninput = null;
+
+            if (!idType) {
+                docsCard.style.display = 'none';
+                hint.innerText = 'يرجى اختيار نوع الهوية أولاً.';
+                return;
+            }
+
+            // إظهار بطاقة المرفقات
+            docsCard.style.display = 'block';
+
+            let filesHtml = '';
+
+            switch (idType) {
+                case 'national':
+                case 'residency':
+                case 'gcc':
+                    // الهويات الخليجية والمحلية: أرقام فقط - وجهين
+                    idInput.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
+                    idInput.setAttribute('pattern', '^[0-9]+$');
+                    hint.innerText = 'يقبل الأرقام فقط.';
+                    
+                    const labelPrefix = idType === 'residency' ? 'الإقامة' : 'الهوية';
+                    filesHtml = `
+                        <div class="form-group">
+                            <label class="form-label">صورة ${labelPrefix} (الوجه الأمامي) <span class="req">*</span></label>
+                            <label class="upload-zone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>اضغط لرفع المرفق الأول</span>
+                                <p>JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="upload-input" required accept=".jpg,.jpeg,.png,.pdf">
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">صورة ${labelPrefix} (الوجه الخلفي) <span class="req">*</span></label>
+                            <label class="upload-zone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>اضغط لرفع المرفق الثاني</span>
+                                <p>JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="upload-input" required accept=".jpg,.jpeg,.png,.pdf">
+                            </label>
+                        </div>
+                    `;
+                    break;
+                case 'arab':
+                    // الهوية العربية: حروف وأرقام حسب البلد - وجهين
+                    hint.innerText = 'حسب متطلبات دولة الإصدار (أرقام وحروف مسموحة).';
+                    filesHtml = `
+                        <div class="form-group">
+                            <label class="form-label">الهوية لبلد الإصدار (الأمام) <span class="req">*</span></label>
+                            <label class="upload-zone"><i class="fas fa-id-card"></i><span>المرفق الأول</span><input type="file" class="upload-input" required></label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الهوية لبلد الإصدار (الخلف) <span class="req">*</span></label>
+                            <label class="upload-zone"><i class="fas fa-id-card"></i><span>المرفق الثاني</span><input type="file" class="upload-input" required></label>
+                        </div>
+                    `;
+                    break;
+                case 'passport':
+                    // الجواز: أرقام وحروف إنجليزية - صفحة واحدة
+                    idInput.oninput = function() { this.value = this.value.replace(/[^A-Za-z0-9]/g, ''); };
+                    hint.innerText = 'أحرف وأرقام إنجليزية فقط.';
+                    filesHtml = `
+                        <div class="form-group full-width">
+                            <label class="form-label">الصفحة الأولى من الجواز (بيانات شخصية) <span class="req">*</span></label>
+                            <label class="upload-zone">
+                                <i class="fas fa-passport"></i>
+                                <span>اضغط لرفع صفحة البيانات</span>
+                                <p>JPG, PNG, PDF (Max 5MB)</p>
+                                <input type="file" class="upload-input" required accept=".jpg,.jpeg,.png,.pdf">
+                            </label>
+                        </div>
+                    `;
+                    break;
+            }
+
+            uploadArea.innerHTML = filesHtml;
+        }
+
+        // 2. محاكاة الإرسال وإظهار نافذة التحقق (OTP)
+        function handleFormSubmit(event) {
+            event.preventDefault(); // منع إعادة تحميل الصفحة
+            
+            // هنا يتم في الواقع إرسال البيانات للـ Backend
+            // لمحاكاة تجربة المستخدم، نظهر رسالة نجاح وتوجيه افتراضي للـ OTP
+            
+            alert('تم حفظ البيانات بنجاح!\n\nجاري تحويلك لصفحة التحقق (OTP) المرسل لبريدك الإلكتروني...');
+            // window.location.href = '/pages/security/otp-verification.html';
+        }
+    </script>
+</body>
+</html>
