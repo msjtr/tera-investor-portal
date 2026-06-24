@@ -1,3 +1,4 @@
+<!-- الهيدر العلوي (يحتوي الشعار فقط) -->
 <header class="main-header">
     <div class="header-logo">
         <a href="/pages/dashboard/index.html">
@@ -12,6 +13,7 @@
     </button>
 </header>
 
+<!-- القائمة الجانبية (Sidebar - بدون شعار) -->
 <aside class="sidebar-container no-print" id="sidebar">
     <div class="sidebar-mobile-header d-lg-none">
         <span class="sidebar-title">القائمة الرئيسية</span>
@@ -133,182 +135,82 @@
 </aside>
 
 <style>
-    /* التنسيقات العامة لضمان ثبات وحماية القوالب في الشاشات الصغيرة */
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
-    
-    body {
-        overflow-x: hidden; /* يمنع التكرك أو الاهتزاز الأفقي للمحتوى */
-        background-color: #f8fafc;
-        font-family: inherit;
-    }
+    /* التنسيقات العامة */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { overflow-x: hidden; background-color: #f8fafc; font-family: inherit; }
 
-    /* هيدر ثابت ومحمي من الفراغات العمودية */
+    /* الهيدر العلوي */
     .main-header {
-        height: 65px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 24px;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        width: 100%;
+        height: 65px; background: #ffffff; border-bottom: 1px solid #e2e8f0;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 24px; position: sticky; top: 0; z-index: 1000; width: 100%;
     }
+    .header-logo img { height: 40px; width: auto; object-fit: contain; }
+    .menu-toggle-btn { background: none; border: none; color: #64748b; font-size: 22px; cursor: pointer; padding: 5px; }
 
-    .header-logo {
-        display: flex;
-        align-items: center;
-    }
-
-    .header-logo img {
-        height: 40px;
-        width: auto;
-        object-fit: contain;
-    }
-
-    .menu-toggle-btn {
-        background: none;
-        border: none;
-        color: #64748b;
-        font-size: 22px;
-        cursor: pointer;
-        padding: 5px;
-        transition: 0.2s;
-    }
-
-    /* تنسيق القائمة الفاتحة والأنيقة (تجنب الأزرق الداكن بالكامل) */
-    .sidebar-container {
-        width: 260px;
-        background: #ffffff; 
-        border-left: 1px solid #e2e8f0;
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 65px);
-        position: sticky;
-        top: 65px;
-        z-index: 999;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* القائمة الجانبية */
+    .sidebar-container { 
+        width: 260px; background: #ffffff; border-left: 1px solid #e2e8f0;
+        display: flex; flex-direction: column; height: calc(100vh - 65px);
+        position: fixed; top: 65px; z-index: 999;
+        transition: transform 0.3s ease;
     }
     
     .sidebar-menu { flex: 1; overflow-y: auto; padding: 10px 0; }
     .nav-list { list-style: none; padding: 0; margin: 0; }
+    .nav-item > a { display: flex; align-items: center; padding: 12px 20px; color: #64748b; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .nav-item > a i { width: 25px; font-size: 16px; margin-left: 10px; color: #94a3b8; }
+    .submenu-toggle { margin-right: auto; font-size: 11px; transition: transform 0.3s ease; }
     
-    .nav-item > a {
-        display: flex; align-items: center; padding: 12px 20px; color: #64748b;
-        text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s; position: relative;
-    }
-    .nav-item > a i { width: 25px; font-size: 16px; text-align: center; margin-left: 10px; color: #94a3b8; }
-    .submenu-toggle { margin-right: auto; font-size: 11px !important; transition: transform 0.3s ease; }
+    .nav-item.active > a { color: #028090; background: #f0fdfa; border-right: 4px solid #028090; }
     
-    .nav-item.active > a, .nav-item > a:hover {
-        color: #028090;
-        background: rgba(2, 128, 144, 0.04);
-        border-right: 4px solid #028090;
-    }
-    .nav-item.active > a i, .nav-item > a:hover i { color: #028090; }
-    
-    /* القوائم الفرعية بلون خلفية فاتح ومريح */
-    .submenu {
-        list-style: none; padding: 0; margin: 0; background: #f8fafc;
-        max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;
-    }
-    .submenu li a {
-        display: flex; align-items: center; padding: 10px 24px 10px 45px; color: #64748b;
-        text-decoration: none; font-size: 13px; font-weight: 500; transition: 0.2s;
-    }
-    .submenu li a i { font-size: 11px; margin-left: 8px; color: #cbd5e1; }
-    .submenu li a:hover { color: #028090; padding-right: 28px; }
-    .submenu li a:hover i { color: #028090; }
-    
+    .submenu { list-style: none; padding: 0; margin: 0; background: #f8fafc; max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+    .submenu li a { display: flex; align-items: center; padding: 10px 24px 10px 45px; color: #64748b; font-size: 13px; text-decoration: none; }
     .nav-item.submenu-open .submenu { max-height: 500px; }
     .nav-item.submenu-open .submenu-toggle { transform: rotate(180deg); }
     
-    /* تذييل القائمة وزر الخروج */
     .sidebar-footer { padding: 15px; border-top: 1px solid #e2e8f0; }
-    .logout-btn {
-        width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px 15px; 
-        background: none; border: none; border-radius: 6px; color: #ef4444; font-weight: 700; 
-        cursor: pointer; transition: 0.2s; font-family: inherit; font-size: 14px;
-    }
-    .logout-btn:hover { background: #fee2e2; }
+    .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px; background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer; }
 
-    /* الهيدر الخاص بالقائمة في وضع الجوال */
-    .sidebar-mobile-header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 20px; border-bottom: 1px solid #e2e8f0;
-    }
-    .sidebar-title { font-weight: 700; color: #1e293b; font-size: 15px; }
-    .sidebar-close-btn { background: none; border: none; color: #64748b; font-size: 18px; cursor: pointer; }
+    /* الهيدر داخل القائمة (للموبايل فقط) */
+    .sidebar-mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid #e2e8f0; }
+    .sidebar-close-btn { background: none; border: none; font-size: 18px; cursor: pointer; }
 
-    /* التحكم بالتجاوب والشاشات الذكية */
+    /* التحكم بالتجاوب */
     @media (max-width: 991px) {
-        .sidebar-container {
-            position: fixed;
-            top: 0;
-            right: -260px; /* مخفية تماماً خارج محيط العرض لمنع التداخل */
-            height: 100vh;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.08);
-            transform: translateX(0);
-        }
-        .sidebar-container.sidebar-open {
-            transform: translateX(-260px); /* سحب القائمة لداخل الشاشة بشكل سلس */
-        }
+        .sidebar-container { right: -260px; box-shadow: -10px 0 30px rgba(0,0,0,0.08); }
+        .sidebar-container.sidebar-open { right: 0; }
         .d-lg-none { display: block !important; }
     }
     @media (min-width: 992px) {
         .d-lg-none { display: none !important; }
-        .menu-toggle-btn { display: none; }
     }
 </style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. التحكم في فتح وإغلاق القوائم الفرعية السفلية
-        const submenus = document.querySelectorAll('.sidebar-menu .has-submenu > a');
-        submenus.forEach(menu => {
-            menu.addEventListener('click', function(e) {
-                e.preventDefault();
-                const parentLi = this.parentElement;
-                
-                document.querySelectorAll('.sidebar-menu .has-submenu').forEach(li => {
-                    if (li !== parentLi) li.classList.remove('submenu-open');
-                });
-                
-                parentLi.classList.toggle('submenu-open');
-            });
-        });
-
-        // 2. ربط زر الفتح (الهيدر) وزر الإغلاق (داخل القائمة) في الجوال
+        const sidebar = document.getElementById('sidebar');
         const openBtn = document.getElementById('openSidebarBtn');
         const closeBtn = document.getElementById('closeSidebarBtn');
-        const sidebar = document.getElementById('sidebar');
         
-        if (openBtn && sidebar) {
-            openBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.add('sidebar-open');
-            });
-        }
-        
-        if (closeBtn && sidebar) {
-            closeBtn.addEventListener('click', function() {
-                sidebar.classList.remove('sidebar-open');
-            });
-        }
+        if (openBtn && sidebar) openBtn.addEventListener('click', () => sidebar.classList.add('sidebar-open'));
+        if (closeBtn && sidebar) closeBtn.addEventListener('click', () => sidebar.classList.remove('sidebar-open'));
 
-        // إغلاق القائمة عند الضغط خارجها في الجوال لضمان تجربة مستخدم مستقرة
-        document.addEventListener('click', function(e) {
-            if (sidebar && sidebar.classList.contains('sidebar-open')) {
-                if (!sidebar.contains(e.target) && e.target !== openBtn) {
-                    sidebar.classList.remove('sidebar-open');
-                }
+        // إغلاق عند النقر خارج القائمة
+        document.addEventListener('click', (e) => {
+            if (sidebar && sidebar.classList.contains('sidebar-open') && !sidebar.contains(e.target) && e.target !== openBtn) {
+                sidebar.classList.remove('sidebar-open');
             }
+        });
+
+        // القوائم الفرعية
+        document.querySelectorAll('.has-submenu > a').forEach(menu => {
+            menu.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parent = this.parentElement;
+                document.querySelectorAll('.has-submenu').forEach(li => li !== parent && li.classList.remove('submenu-open'));
+                parent.classList.toggle('submenu-open');
+            });
         });
     });
 </script>
