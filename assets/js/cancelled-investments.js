@@ -1,11 +1,17 @@
 /**
  * ============================================================
- * 4. cancelled-investments.js - منطق طلب الانضمام والآلة الحاسبة (المحدث)
+ * 4. cancelled-investments.js - منطق طلب الانضمام والآلة الحاسبة (النسخة الآمنة)
  * ============================================================
  */
 
 (function() {
     'use strict';
+
+    // دالة أمان لتحديث النصوص لتفادي خطأ (Cannot set properties of null)
+    const setSafeText = (id, val) => {
+        let el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
 
     window.initCancelledInvestments = function() {
         let nameEl = document.getElementById('invOppName');
@@ -23,11 +29,11 @@
         window.selectedPackageName = 'الباقة الأساسية';
         window.selectedPackageFixedFee = 0;
 
-        nameEl.innerText = opp.company;
-        document.getElementById('invOppId').innerText = opp.id;
-        document.getElementById('invSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
-        document.getElementById('invDuration').innerText = opp.duration + " أشهر";
-        document.getElementById('maxShares').innerText = window.availableSharesToBuy;
+        setSafeText('invOppName', opp.company);
+        setSafeText('invOppId', opp.id);
+        setSafeText('invSharePrice', window.formatMoneySafe(opp.sharePrice) + " ر.س");
+        setSafeText('invDuration', opp.duration + " أشهر");
+        setSafeText('maxShares', window.availableSharesToBuy);
         
         let badgeEl = document.getElementById('invOppTypeBadge');
         if (badgeEl) {
@@ -84,13 +90,8 @@
             `<tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${window.selectedPackageName}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*0.15)}</td><td>${window.formatMoneySafe(pkgFee*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(pkgMonthly)}</td></tr>` +
             `<tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(oppCostsWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td></tr>`;
 
-        document.getElementById('txtBaseFees').innerText = window.formatMoneySafe(totalBaseFees) + " ر.س";
-        document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
-        document.getElementById('txtTotalFeesWithVat').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
-
         let isExtended = opp.type === 'شراكة ممتدة';
-        let distTitle = document.getElementById('distTableTitleText');
-        if(distTitle) distTitle.innerText = isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)";
+        setSafeText('distTableTitleText', isExtended ? "جدول توزيع الدفعات (شراكة ممتدة)" : "جدول توزيع الدفعات (فرصة شراكة)");
         
         let theadHtml = `<tr><th>تاريخ التحصيل</th>${!isExtended ? '<th>رأس المال المسترد</th>' : ''}<th>الربح</th><th>إجمالي الدفعة</th><th>قيمة خصم الرسوم</th><th>المتبقي الصافي</th><th>ملاحظات</th></tr>`;
         document.getElementById('distributionTableHeader').innerHTML = theadHtml;
@@ -127,21 +128,21 @@
 
         // ملخص الاستثمار والأرباح (6 حقول مفصلة)
         let netProfitFinal = totalProfit - oppCostsWithVat;
-        let netMonthlyProfitFinal = netProfitFinal / duration;
+        let netMonthlyProfitFinal = duration > 0 ? netProfitFinal / duration : 0;
         let totalReturnFinal = partnerCapital + netProfitFinal; 
         
-        document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
-        document.getElementById('finalSharesCount').innerText = shares;
-        document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
-        document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
-        document.getElementById('finalMonthlyNetProfit').innerText = window.formatMoneySafe(netMonthlyProfitFinal) + " ر.س";
-        document.getElementById('finalTotalReturn').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
+        setSafeText('finalPartnerCapital', window.formatMoneySafe(partnerCapital) + " ر.س");
+        setSafeText('finalSharesCount', shares);
+        setSafeText('finalOppCosts', window.formatMoneySafe(oppCostsWithVat) + " ر.س");
+        setSafeText('finalNetProfit', window.formatMoneySafe(netProfitFinal) + " ر.س");
+        setSafeText('finalMonthlyNetProfit', window.formatMoneySafe(netMonthlyProfitFinal) + " ر.س");
+        setSafeText('finalTotalReturn', window.formatMoneySafe(totalReturnFinal) + " ر.س");
 
         // ملخص الدفع النهائي
-        document.getElementById('sumShares').innerText = shares;
-        document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
-        document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
-        document.getElementById('resToPayNow').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        setSafeText('sumShares', shares);
+        setSafeText('sumSharePrice', window.formatMoneySafe(opp.sharePrice) + " ر.س");
+        setSafeText('sumCapital', window.formatMoneySafe(partnerCapital) + " ر.س");
+        setSafeText('resToPayNow', window.formatMoneySafe(partnerCapital) + " ر.س");
     };
 
     window.changeShares = function(delta) {
@@ -196,10 +197,11 @@
     };
 
     window.processPayment = function() { 
-        let methodOption = document.querySelector('input[name="payment_method"]:checked').value;
+        let methodOption = document.querySelector('input[name="payment_method"]:checked');
+        let methodVal = methodOption ? methodOption.value : 'wallet';
         
-        if (methodOption === 'wallet') {
-            alert('تم الدفع وتأكيد الاستثمار من خلال المحفظة بنجاح!\nمرحباً بك كشريك في المنصة.'); 
+        if (methodVal === 'wallet') {
+            alert('تم الدفع وتأكيد الاستثمار من خلال المحفظة بنجاح!\nمرحباً بك كشريك في منصة تيرا.'); 
             window.location.href = "../dashboard/index.html"; 
         } else {
             // إظهار واجهة التحميل لبوابة الدفع
