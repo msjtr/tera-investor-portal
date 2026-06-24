@@ -4,54 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>المعلومات الشخصية | Tera Investor Portal</title>
-    <!-- استيراد الخطوط والتنسيقات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    
     <style>
         :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-bg: #f8fafc; --tera-gray: #64748b; }
-        body { font-family: 'Tajawal', sans-serif; background-color: var(--tera-bg); color: #334155; padding: 20px; }
-        .form-card { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .section-title { font-family: 'Cairo'; color: var(--tera-navy); margin-bottom: 25px; border-bottom: 2px solid var(--tera-bg); padding-bottom: 10px; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--tera-bg); padding: 40px 20px; color: #334155; }
+        .form-card { background: #fff; padding: 40px; border-radius: 16px; border: 1px solid #e2e8f0; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .section-title { font-family: 'Cairo'; color: var(--tera-navy); margin-bottom: 20px; font-weight: 800; }
+        .instruction-box { background: #f0f9ff; border: 1px solid #bae6fd; padding: 15px; border-radius: 12px; margin-bottom: 30px; font-size: 13px; color: #0369a1; }
         
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--tera-navy); font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--tera-teal); ring: 2px solid rgba(2, 128, 144, 0.2); }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         
-        .upload-box { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 12px; margin-top: 10px; cursor: pointer; transition: 0.2s; }
-        .upload-box:hover { border-color: var(--tera-teal); background: #f0fdfa; }
+        .attachments-container { background: var(--tera-bg); padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e2e8f0; display: none; }
+        .file-upload-item { margin-bottom: 15px; }
+        .upload-input { border: 2px dashed #cbd5e1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; display: block; margin-top: 5px; }
         
-        .btn-submit { background: var(--tera-teal); color: #fff; padding: 14px 30px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; }
+        .btn-submit { background: var(--tera-teal); color: #fff; padding: 14px 40px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 16px; width: 100%; }
         
-        .attachments-section { display: none; margin-top: 20px; padding: 20px; background: var(--tera-bg); border-radius: 12px; }
-        .otp-section { display: none; margin-top: 20px; padding: 20px; border: 1px solid var(--tera-teal); border-radius: 12px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="form-card">
-    <h2 class="section-title"><i class="fas fa-user-edit"></i> المعلومات الشخصية</h2>
-    
+    <h2 class="section-title">المعلومات الشخصية</h2>
+    <div class="instruction-box">
+        <i class="fas fa-info-circle"></i> يرجى إدخال بياناتك الشخصية كما هي مدونة في الهوية أو الإقامة أو جواز السفر لأغراض التحقق والامتثال.
+    </div>
+
     <form id="personalInfoForm">
-        <div class="form-group">
-            <label>الاسم الكامل بالعربية *</label>
-            <input type="text" id="nameAr" pattern="^[\u0600-\u06FF\s]+$" placeholder="مثال: محمد بن عبدالله الشمري" required oninput="validateArabic(this)">
+        <div class="grid-2">
+            <div class="form-group">
+                <label>الاسم الكامل بالعربية *</label>
+                <input type="text" pattern="^[\u0600-\u06FF\s]+$" placeholder="محمد عبدالله الشمري" required oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
+            </div>
+            <div class="form-group">
+                <label>Full Name in English *</label>
+                <input type="text" pattern="^[A-Za-z\s]+$" placeholder="Mohammed Abdullah Alshammari" required oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Full Name in English *</label>
-            <input type="text" id="nameEn" pattern="^[A-Za-z\s]+$" placeholder="Example: Mohammed Abdullah Alshammari" required oninput="validateEnglish(this)">
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="grid-2">
             <div class="form-group">
                 <label>الجنسية *</label>
                 <select required><option>سعودي</option><option>أخرى</option></select>
             </div>
             <div class="form-group">
                 <label>نوع الهوية *</label>
-                <select id="idType" required onchange="handleIdTypeChange()">
+                <select id="idType" required onchange="updateAttachments()">
                     <option value="">اختر نوع الهوية...</option>
                     <option value="national">هوية وطنية</option>
                     <option value="residency">هوية مقيم</option>
@@ -67,63 +70,63 @@
             <input type="text" id="idNumber" required placeholder="أدخل الرقم هنا...">
         </div>
 
-        <!-- المرفقات الديناميكية -->
-        <div id="attachmentsSection" class="attachments-section">
-            <label id="fileLabel">المرفقات المطلوبة</label>
-            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p>اضغط لرفع الملفات (الأمام والخلف)</p>
-                <input type="file" id="fileInput" multiple style="display: none;">
+        <div class="grid-2">
+            <div class="form-group"><label>تاريخ الميلاد *</label><input type="date" required></div>
+            <div class="form-group">
+                <label>الجنس *</label>
+                <div style="display: flex; gap: 20px; padding: 10px;">
+                    <label><input type="radio" name="gender" value="male" required> ذكر</label>
+                    <label><input type="radio" name="gender" value="female"> أنثى</label>
+                </div>
             </div>
         </div>
 
-        <div class="form-group" style="margin-top: 20px;">
-            <input type="checkbox" id="declaration" required> 
-            <label style="display: inline;" for="declaration">أقر بأن الاسم مطابق للهوية، وأن جميع البيانات والمرفقات صحيحة.</label>
+        <div class="grid-2">
+            <div class="form-group"><label>الحالة الاجتماعية</label><select><option>أعزب</option><option>متزوج</option></select></div>
+            <div class="form-group"><label>المهنة</label><input type="text" placeholder="مهندس، محاسب..."></div>
+            <div class="form-group"><label>جهة العمل</label><input type="text"></div>
+            <div class="form-group"><label>الدخل الشهري</label><input type="number" placeholder="ر.س"></div>
         </div>
 
-        <button type="button" class="btn-submit" onclick="showOtp()">حفظ ومتابعة للتحقق</button>
-    </form>
+        <div id="attachments" class="attachments-container">
+            <h4 style="margin-bottom:15px; color:var(--tera-navy);">الوثائق المطلوبة</h4>
+            <div id="uploadFields"></div>
+            <p style="font-size:12px; color:var(--tera-gray); margin-top:10px;">تنبيه: يجب أن تكون الصور ملونة وواضحة وسارية المفعول.</p>
+        </div>
 
-    <!-- قسم التحقق OTP -->
-    <div id="otpSection" class="otp-section">
-        <label>أدخل رمز التحقق المرسل لهاتفك</label>
-        <input type="text" placeholder="0000" maxlength="4" style="text-align: center; font-size: 20px; letter-spacing: 10px;">
-        <button class="btn-submit" style="margin-top: 10px;" onclick="alert('تم التحقق بنجاح!')">اعتماد البيانات</button>
-    </div>
+        <div class="form-group" style="background:#f1f5f9; padding:15px; border-radius:8px;">
+            <label><input type="checkbox" required> أقر وأتعهد بأن الاسم مطابق للوثائق، وأن جميع البيانات والمرفقات صحيحة وأتحمل المسؤولية القانونية.</label>
+        </div>
+
+        <button type="button" class="btn-submit" onclick="verifyEmail()">حفظ وتفعيل التحقق عبر البريد</button>
+    </form>
 </div>
 
 <script>
-    // 1. التحقق من النصوص العربية
-    function validateArabic(input) {
-        input.value = input.value.replace(/[^ \u0600-\u06FF]/g, '');
-    }
-
-    // 2. التحقق من النصوص الإنجليزية
-    function validateEnglish(input) {
-        input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
-    }
-
-    // 3. إدارة المرفقات بناءً على نوع الهوية
-    function handleIdTypeChange() {
+    function updateAttachments() {
         const type = document.getElementById('idType').value;
-        const section = document.getElementById('attachmentsSection');
-        const label = document.getElementById('fileLabel');
-        
-        if (type) {
-            section.style.display = 'block';
-            label.innerText = type === 'passport' ? 'يرجى رفع صفحة الجواز الأولى' : 'يرجى رفع صورة الهوية (الأمام والخلف)';
+        const container = document.getElementById('attachments');
+        const fields = document.getElementById('uploadFields');
+        fields.innerHTML = '';
+
+        if (!type) { container.style.display = 'none'; return; }
+        container.style.display = 'block';
+
+        if (type === 'passport') {
+            fields.innerHTML = `<label>الصفحة الأولى من الجواز</label><input type="file" class="upload-input">`;
         } else {
-            section.style.display = 'none';
+            fields.innerHTML = `
+                <label>مرفق أول (الأمام)</label><input type="file" class="upload-input">
+                <label>مرفق ثاني (الخلف)</label><input type="file" class="upload-input">
+            `;
         }
     }
 
-    // 4. إظهار قسم الـ OTP
-    function showOtp() {
+    function verifyEmail() {
         if(document.getElementById('personalInfoForm').checkValidity()){
-            document.getElementById('otpSection').style.display = 'block';
+            alert('تم إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني المسجل.');
         } else {
-            alert('يرجى تعبئة كافة الحقول المطلوبة بشكل صحيح.');
+            alert('يرجى تعبئة كافة الحقول المطلوبة.');
         }
     }
 </script>
