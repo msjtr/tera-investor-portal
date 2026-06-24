@@ -143,6 +143,7 @@
 
     <div class="app-wrapper">
 
+        <!-- القائمة الجانبية (Sidebar) المحدثة بالكامل -->
         <aside class="sidebar-container" id="sidebar">
             <div class="sidebar-brand">
                 <a href="/pages/dashboard/index.html"><img src="/images/logo.svg" alt="Tera Logo" /></a>
@@ -154,9 +155,10 @@
                         <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
                     </li>
                     
-                    <li class="nav-item has-submenu submenu-open">
+                    <!-- الاستثمار -->
+                    <li class="nav-item has-submenu">
                         <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu" style="display: flex;">
+                        <ul class="submenu">
                             <li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt" style="font-size: 11px; margin-left: 5px;"></i> سوق الفرص والشركات المطروحة</a></li>
                             <li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history" style="font-size: 11px; margin-left: 5px;"></i> سجل الشراكة الممتدة</a></li>
                             <li><a href="/pages/investments/opportunities.html"><i class="fas fa-handshake" style="font-size: 11px; margin-left: 5px;"></i> سجل فرص الشراكة</a></li>
@@ -164,40 +166,102 @@
                         </ul>
                     </li>
 
+                    <!-- المحفظة -->
                     <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                        <a href="#">
+                            <i class="fas fa-wallet"></i>
+                            <span class="nav-label">المحفظة</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
                         <ul class="submenu">
-                            <li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                            <li><a href="/pages/portfolio/transactions.html">المعاملات</a></li>
-                            <li><a href="/pages/portfolio/profits.html">الأرباح</a></li>
+                            <li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye" style="font-size: 11px; margin-left: 5px;"></i> نظرة عامة</a></li>
+                            <li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt" style="font-size: 11px; margin-left: 5px;"></i> المعاملات المالية</a></li>
+                            <li><a href="/pages/portfolio/profits.html"><i class="fas fa-arrow-trend-up" style="font-size: 11px; margin-left: 5px;"></i> الأرباح الدورية</a></li>
+                            <li><a href="/pages/portfolio/withdraw-request.html"><i class="fas fa-money-bill-wave" style="font-size: 11px; margin-left: 5px;"></i> طلب سحب</a></li>
+                            <li><a href="/pages/portfolio/withdrawal-history.html"><i class="fas fa-history" style="font-size: 11px; margin-left: 5px;"></i> سجل السحوبات</a></li>
+                            <li><a href="/pages/portfolio/account-statement.html"><i class="fas fa-file-invoice-dollar" style="font-size: 11px; margin-left: 5px;"></i> كشف الحساب الموثق</a></li>
                         </ul>
                     </li>
 
+                    <!-- التقارير -->
                     <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                        <a href="#">
+                            <i class="fas fa-file-alt"></i>
+                            <span class="nav-label">التقارير</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
                         <ul class="submenu">
-                            <li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li>
-                            <li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li>
+                            <li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar" style="font-size: 11px; margin-left: 5px;"></i> لوحة التقارير</a></li>
+                            <li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open" style="font-size: 11px; margin-left: 5px;"></i> تقرير المحفظة</a></li>
+                            <li><a href="/pages/reports/investments-report.html"><i class="fas fa-chart-pie" style="font-size: 11px; margin-left: 5px;"></i> تقرير الاستثمارات</a></li>
+                            <li><a href="/pages/reports/profits-report.html"><i class="fas fa-coins" style="font-size: 11px; margin-left: 5px;"></i> تقرير الأرباح الصافية</a></li>
+                            <li><a href="/pages/reports/withdrawals-report.html"><i class="fas fa-receipt" style="font-size: 11px; margin-left: 5px;"></i> تقرير السحوبات</a></li>
                         </ul>
                     </li>
 
+                    <!-- الملف الشخصي -->
                     <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
+                        <a href="#">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="nav-label">الملف الشخصي</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
                         <ul class="submenu">
-                            <li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li>
-                            <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                            <li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card" style="font-size: 11px; margin-left: 5px;"></i> المعلومات الشخصية</a></li>
+                            <li><a href="/pages/profile/contact-information.html"><i class="fas fa-envelope" style="font-size: 11px; margin-left: 5px;"></i> معلومات الاتصال</a></li>
+                            <li><a href="/pages/profile/national-address.html"><i class="fas fa-map-marker-alt" style="font-size: 11px; margin-left: 5px;"></i> العنوان الوطني الموثق</a></li>
+                            <li><a href="/pages/profile/bank-information.html"><i class="fas fa-university" style="font-size: 11px; margin-left: 5px;"></i> المعلومات البنكية (IBAN)</a></li>
+                            <li><a href="/pages/profile/attachments.html"><i class="fas fa-paperclip" style="font-size: 11px; margin-left: 5px;"></i> المرفقات والوثائق</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- الأمان -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-shield-alt"></i>
+                            <span class="nav-label">الأمان</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/security/change-password.html"><i class="fas fa-key" style="font-size: 11px; margin-left: 5px;"></i> تغيير كلمة المرور</a></li>
+                            <li><a href="/pages/security/change-email.html"><i class="fas fa-at" style="font-size: 11px; margin-left: 5px;"></i> تغيير البريد الإلكتروني</a></li>
+                            <li><a href="/pages/security/change-mobile.html"><i class="fas fa-mobile-alt" style="font-size: 11px; margin-left: 5px;"></i> تغيير رقم الجوال</a></li>
+                            <li><a href="/pages/security/two-factor-authentication.html"><i class="fas fa-user-shield" style="font-size: 11px; margin-left: 5px;"></i> المصادقة الثنائية (2FA)</a></li>
+                            <li><a href="/pages/security/registered-devices.html"><i class="fas fa-laptop-house" style="font-size: 11px; margin-left: 5px;"></i> الأجهزة المصرحة</a></li>
+                            <li><a href="/pages/security/login-history.html"><i class="fas fa-user-clock" style="font-size: 11px; margin-left: 5px;"></i> سجل عمليات الدخول</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- الدعم الفني -->
+                    <li class="nav-item has-submenu">
+                        <a href="#">
+                            <i class="fas fa-headset"></i>
+                            <span class="nav-label">الدعم الفني</span>
+                            <i class="fas fa-chevron-down submenu-toggle"></i>
+                        </a>
+                        <ul class="submenu">
+                            <li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle" style="font-size: 11px; margin-left: 5px;"></i> مركز المساعدة الرقمي</a></li>
+                            <li><a href="/pages/support/faq.html"><i class="fas fa-question-circle" style="font-size: 11px; margin-left: 5px;"></i> الأسئلة الشائعة</a></li>
+                            <li><a href="/pages/support/tickets.html"><i class="fas fa-ticket-alt" style="font-size: 11px; margin-left: 5px;"></i> تذاكر الدعم الفني</a></li>
+                            <li><a href="/pages/support/notifications.html"><i class="fas fa-bell" style="font-size: 11px; margin-left: 5px;"></i> مركز الإشعارات</a></li>
+                            <li><a href="/pages/support/privacy-policy.html"><i class="fas fa-user-lock" style="font-size: 11px; margin-left: 5px;"></i> سياسة الخصوصية</a></li>
+                            <li><a href="/pages/support/terms-and-conditions.html"><i class="fas fa-gavel" style="font-size: 11px; margin-left: 5px;"></i> الشروط والأحكام القانونية</a></li>
                         </ul>
                     </li>
                 </ul>
             </nav>
 
             <div class="sidebar-footer">
-                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span class="nav-label">تسجيل الخروج</span></button>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-label">تسجيل الخروج</span>
+                </button>
             </div>
         </aside>
 
         <main class="main-content">
             
+            <!-- الهيدر الموحد النظيف -->
             <header class="top-navbar no-print">
                 <div class="navbar-left">
                     <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
@@ -215,33 +279,37 @@
 
             <main class="container">
                 
+                <!-- مسمى لوحة التحكم يظهر هنا تحت الهيدر مباشرة وبشكل مستقل -->
                 <h2 class="dashboard-section-title"><i class="fas fa-tachometer-alt text-teal"></i> لوحة التحكم الرئيسية</h2>
                 
+                <!-- الملخص العام للمحفظة - توزيع متساوٍ لثلاث حاويات -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon"><i class="fas fa-wallet"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">آخر تقييم للمحفظة</span>
-                            <span class="stat-value">124,500.00 ر.س</span>
+                            <span class="stat-value stat-val-update">124,500.00 ر.س</span>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: rgba(20, 184, 166, 0.08); color: var(--tera-teal-light);"><i class="fas fa-file-contract"></i></div>
                         <div class="stat-info">
                             <span class="stat-label">عدد العقود الإجمالي</span>
-                            <span class="stat-value">6 عقود نشطة</span>
+                            <span class="stat-value stat-val-update">6 عقود نشطة</span>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="background: rgba(14, 165, 233, 0.08); color: #0ea5e9;"><i class="fas fa-piggy-bank"></i></div>
                         <div class="stat-info">
-                            <span class="stat-label">الرصيد النزيل بالمحفظة</span>
-                            <span class="stat-value">15,500.00 ر.س</span>
+                            <span class="stat-label">الرصيد المتاح بالمحفظة</span>
+                            <span class="stat-value stat-val-update">15,500.00 ر.س</span>
                         </div>
                     </div>
                 </div>
 
+                <!-- شبكة التوزيع الأولى: الأداء والمحفظة + التنبيهات -->
                 <div class="dashboard-layout-grid">
+                    <!-- كرت الرسم البياني لأداء المحفظة -->
                     <div class="panel-card">
                         <div class="panel-header">
                             <h3><i class="fas fa-chart-area"></i> نمو المحفظة والأرباح الصافية</h3>
@@ -249,6 +317,7 @@
                         <div style="height: 320px; position: relative;"><canvas id="mainChart"></canvas></div>
                     </div>
 
+                    <!-- كرت التنبيهات الذكية المطابقة لحالة الشراكات -->
                     <div class="panel-card">
                         <div class="panel-header">
                             <h3><i class="fas fa-bell"></i> التنبيهات الذكية النظامية</h3>
@@ -266,7 +335,9 @@
                     </div>
                 </div>
 
+                <!-- شبكة التوزيع الثانية: أحدث الفرص + آخر العمليات والأنشطة -->
                 <div class="dashboard-layout-grid">
+                    <!-- كرت أحدث الفرص المطروحة مع رابط مباشر وتوزيع متساوٍ -->
                     <div class="panel-card">
                         <div class="panel-header">
                             <h3><i class="fas fa-rocket"></i> أحدث الفرص الاستثمارية المطروحة</h3>
@@ -301,6 +372,7 @@
                         </table>
                     </div>
 
+                    <!-- كرت آخر العمليات والأنشطة المالية المدمجة -->
                     <div class="panel-card">
                         <div class="panel-header">
                             <h3><i class="fas fa-history"></i> آخر العمليات المالية والأنشطة</h3>
@@ -339,6 +411,7 @@
         </div>
     </main>
 
+    <!-- الجافاسكريبت لفتح وإغلاق القائمة والتحكم الذكي بالقوائم الفرعية والتجاوب -->
     <script>
         document.addEventListener('click', function(e) {
             
@@ -384,40 +457,6 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('mainChart');
-            if (ctx) {
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                        datasets: [{
-                            label: 'قيمة تقييم المحفظة الاستثمارية (ر.س)',
-                            data: [100000, 105000, 112000, 115000, 120000, 124500],
-                            borderColor: '#028090',
-                            backgroundColor: 'rgba(2, 128, 144, 0.05)',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#028090',
-                            pointHoverRadius: 7,
-                            fill: true,
-                            tension: 0.35
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { grid: { color: '#f1f5f9' }, ticks: { font: { family: 'monospace' } } },
-                            x: { grid: { display: false } }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
