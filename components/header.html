@@ -1,11 +1,9 @@
-<!-- ==========================================
-     كود الهيدر العلوي (يُوضع أعلى الـ main-content)
-     ========================================== -->
+<!-- الهيدر العلوي - مُحدث ومُنسق -->
 <header class="top-header no-print">
     
     <div class="header-right-actions">
         <!-- زر فتح القائمة الجانبية (يظهر في الجوال فقط) -->
-        <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn">
+        <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="Toggle Sidebar">
             <i class="fas fa-bars"></i>
         </button>
         
@@ -29,26 +27,25 @@
             <div class="user-avatar-circle">م</div>
         </div>
     </div>
-
 </header>
 
 <style>
     /* =========================================
-       تنسيقات الهيدر العلوي (Top Header)
+       تنسيقات الهيدر العلوي (Top Header) - مُحدث
        ========================================= */
     .top-header {
-        height: 80px;
+        height: 75px;
         background: #ffffff;
         border-bottom: 1px solid #e2e8f0;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 40px;
+        padding: 0 30px;
         position: sticky;
         top: 0;
-        z-index: 1000;
+        z-index: 998; /* أقل من القائمة الجانبية لتجنب التداخل */
         width: 100%;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
 
     .header-right-actions {
@@ -57,26 +54,31 @@
         gap: 20px;
     }
 
-    .header-logo a {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-    }
-
     .header-logo img {
-        height: 45px;
+        height: 40px;
         width: auto;
-        object-fit: contain;
-        transition: transform 0.3s ease;
+        display: block;
+        transition: opacity 0.3s ease;
     }
 
-    .header-logo img:hover {
-        transform: scale(1.02);
-    }
-
-    .header-left-actions {
+    .menu-toggle-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #64748b;
+        font-size: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        cursor: pointer;
         display: flex;
         align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .menu-toggle-btn:hover {
+        background: var(--tera-teal);
+        color: #ffffff;
     }
 
     /* تنسيقات بيانات المستخدم */
@@ -87,92 +89,51 @@
     }
 
     .user-meta {
-        text-align: left;
+        text-align: right; /* تم التعديل لتناسب العربية */
     }
 
     .user-meta h5 {
         margin: 0;
-        font-size: 15px;
-        color: #0A1B3F; /* Tera Navy */
+        font-size: 14px;
+        color: var(--tera-navy);
         font-weight: 800;
         font-family: 'Cairo', sans-serif;
     }
 
     .user-meta p {
-        margin: 4px 0 0 0;
-        font-size: 12px;
-        color: #64748b; /* Tera Gray */
+        margin: 0;
+        font-size: 11px;
+        color: var(--tera-gray);
         font-weight: 600;
     }
 
     .user-avatar-circle {
-        width: 48px;
-        height: 48px;
-        background-color: #0A1B3F;
+        width: 42px;
+        height: 42px;
+        background-color: var(--tera-navy);
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 14px;
-        font-size: 22px;
+        border-radius: 12px;
+        font-size: 18px;
         font-weight: 800;
-        border: 2px solid #028090; /* Tera Teal */
-        box-shadow: 0 4px 10px rgba(2,128,144,0.15);
+        border: 2px solid var(--tera-teal);
     }
 
-    /* زر القائمة الجانبية (مخفي في الشاشات الكبيرة) */
-    .menu-toggle-btn {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        color: #64748b;
-        font-size: 20px;
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.2s ease;
-    }
-
-    .menu-toggle-btn:hover {
-        background: #028090;
-        color: #ffffff;
-        border-color: #028090;
-    }
-
-    @media (min-width: 992px) {
-        .d-lg-none { display: none !important; }
-    }
-
-    /* =========================================
-       التجاوب مع شاشات الجوال (Mobile)
-       ========================================= */
+    /* التجاوب مع الجوال */
     @media (max-width: 991px) {
         .top-header {
-            height: 65px; /* تقليل الارتفاع في الجوال لمنع الفراغ */
+            height: 60px;
             padding: 0 15px;
         }
 
         .header-logo img {
-            height: 35px; /* تصغير الشعار قليلاً ليناسب الشاشة */
+            height: 30px;
         }
 
-        .header-right-actions {
-            gap: 15px;
-        }
-
-        .user-avatar-circle {
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            border-radius: 10px;
-        }
-
-        /* إخفاء نصوص الاسم والمنطقة في الجوال لمنع التداخل والاهتزاز */
         .user-meta {
-            display: none;
+            display: none; /* إخفاء النص في الشاشات الصغيرة لتوفير المساحة */
         }
     }
 </style>
