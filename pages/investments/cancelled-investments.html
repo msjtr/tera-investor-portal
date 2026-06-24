@@ -94,14 +94,16 @@
         .share-control button:disabled { opacity: 0.5; cursor: not-allowed; }
         .share-control input { width: 100px; text-align: center; font-size: 28px; font-weight: 900; border: none; background: transparent; color: var(--tera-teal); outline: none; font-family: monospace; }
 
-        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
-        .package-card { background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 25px; cursor: pointer; transition: 0.3s; position: relative; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
+        .packages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; margin-top: 20px; }
+        .package-card { background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.9); border-radius: 16px; padding: 25px 20px; cursor: pointer; transition: 0.3s; position: relative; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03);}
         .package-card:hover { border-color: var(--tera-teal-light); transform: translateY(-3px); box-shadow: 0 10px 25px rgba(20,184,166,0.1); background: rgba(255,255,255,0.9);}
         .package-card.selected { border-color: var(--tera-teal); background: rgba(240, 253, 250, 0.8); box-shadow: 0 10px 30px rgba(2,128,144,0.15); }
         .package-card.selected::after { content: '\f058'; font-family: 'Font Awesome 5 Free'; font-weight: 900; position: absolute; top: 15px; left: 15px; color: var(--tera-teal); font-size: 24px; }
-        .package-card h4 { margin: 0 0 10px 0; color: var(--tera-navy); font-size: 20px; font-weight: 800; }
-        .package-card p { margin: 0; color: var(--tera-gray); font-size: 14px; font-weight: 600; line-height: 1.6; }
+        .package-card h4 { margin: 0 0 10px 0; color: var(--tera-navy); font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .package-card p { margin: 0; color: var(--tera-gray); font-size: 13px; font-weight: 600; line-height: 1.6; }
         .package-card .fee { margin-top: 15px; display: inline-block; background: rgba(224, 242, 254, 0.8); color: #0369a1; padding: 6px 15px; border-radius: 8px; font-weight: 800; font-family: monospace; border: 1px solid rgba(186, 230, 253, 0.5);}
+
+        .guide-alert { background: rgba(255, 247, 237, 0.8); backdrop-filter: blur(4px); border: 1px solid rgba(255, 237, 213, 0.9); color: #b45309; padding: 15px 20px; border-radius: 10px; font-size: 14px; font-weight: 800; display: flex; align-items: flex-start; gap: 10px; }
 
         /* =========================================
            4. الجداول الخاصة بالحاسبة
@@ -213,26 +215,41 @@
                     
                     <!-- 3. اختيار الباقة -->
                     <div class="content-card">
-                        <h3 class="detail-block-title"><i class="fas fa-layer-group"></i> اختيار باقة الخدمات الإضافية</h3>
+                        <h3 class="detail-block-title"><i class="fas fa-layer-group"></i> اختيار باقة الحماية والمتابعة</h3>
+                        
                         <div class="packages-grid">
                             <div class="package-card selected" onclick="window.selectPackage(this, 'basic', 'الباقة الأساسية', 0)">
                                 <input type="radio" name="pkg" checked style="display:none;">
-                                <h4>الباقة الأساسية</h4>
-                                <p>تشمل الإدارة، التحصيل، ومتابعة الدفعات القياسية.</p>
-                                <span class="fee">مجاناً (مشمولة)</span>
+                                <h4><i class="far fa-star" style="color:var(--tera-teal);"></i> الباقة الأساسية</h4>
+                                <p>الاستفادة من فرص الشراكة والاستثمار المتاحة عبر المنصة دون أي مزايا إضافية للحماية أو التسوية المبكرة.</p>
+                                <span class="fee">مجاناً (متاحة للجميع)</span>
                             </div>
-                            <div class="package-card" onclick="window.selectPackage(this, 'advanced', 'الباقة المتقدمة', 150)">
+                            <div class="package-card" onclick="window.selectPackage(this, 'silver', 'الباقة الفضية', 99)">
                                 <input type="radio" name="pkg" style="display:none;">
-                                <h4>الباقة المتقدمة</h4>
-                                <p>تشمل الأساسية + أولوية في التحصيل الميداني والتقارير.</p>
-                                <span class="fee">150 ر.س / شهرياً</span>
+                                <h4><i class="fas fa-medal" style="color:#94a3b8;"></i> الباقة الفضية</h4>
+                                <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 60 يوماً دون الحاجة لانتظار التحصيل.</p>
+                                <span class="fee">99 ر.س</span>
                             </div>
-                            <div class="package-card" onclick="window.selectPackage(this, 'premium', 'الباقة الشاملة', 300)">
+                            <div class="package-card" onclick="window.selectPackage(this, 'gold', 'الباقة الذهبية', 149)">
                                 <input type="radio" name="pkg" style="display:none;">
-                                <h4>الباقة الشاملة</h4>
-                                <p>تشمل المتقدمة + تغطية قانونية شاملة وحماية استثنائية.</p>
-                                <span class="fee">300 ر.س / شهرياً</span>
+                                <h4><i class="fas fa-award" style="color:#fbbf24;"></i> الباقة الذهبية</h4>
+                                <p>صرف رأس المال والأرباح عند تأخر العميل عن السداد لأكثر من 30 يوماً دون الحاجة لانتظار التحصيل.</p>
+                                <span class="fee">149 ر.س</span>
                             </div>
+                            <div class="package-card" onclick="window.selectPackage(this, 'platinum', 'الباقة البلاتينية', 199)">
+                                <input type="radio" name="pkg" style="display:none;">
+                                <h4><i class="fas fa-trophy" style="color:#64748b;"></i> الباقة البلاتينية</h4>
+                                <p>ضمان الصرف في موعد الاستحقاق المحدد شهرياً دون الحاجة لانتظار السداد أو التحصيل من العميل.</p>
+                                <span class="fee">199 ر.س</span>
+                            </div>
+                        </div>
+
+                        <div class="guide-alert" style="margin-top: 20px;">
+                            <i class="fas fa-info-circle" style="font-size: 20px;"></i>
+                            <span style="font-weight: 600; line-height: 1.6;">
+                                <strong style="display: block; margin-bottom: 5px;">ملاحظات هامة:</strong> 
+                                جميع الباقات المذكورة خدمات إضافية اختيارية وليست إلزامية. يمكن للمستثمر اختيار الباقة المناسبة أو الاستمرار على الباقة الأساسية المجانية. تخضع جميع الخدمات لشروط وأحكام المنصة المعتمدة.
+                            </span>
                         </div>
                     </div>
 
