@@ -1,9 +1,12 @@
-<!-- الهيدر العلوي - مُحدث ومُنسق -->
+<!-- ======================================================
+     الهيدر العلوي (Top Header) - مُحسّن ومُتكامل مع الـ Sidebar
+     ====================================================== -->
 <header class="top-header no-print">
     
+    <!-- الجزء الأيمن (في الاتجاه العربي) -->
     <div class="header-right-actions">
-        <!-- زر فتح القائمة الجانبية (يظهر في الجوال فقط) -->
-        <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="Toggle Sidebar">
+        <!-- زر فتح/إغلاق القائمة الجانبية (يظهر في الجوال فقط) -->
+        <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
             <i class="fas fa-bars"></i>
         </button>
         
@@ -17,8 +20,8 @@
         </div>
     </div>
 
+    <!-- الجزء الأيسر (بيانات المستخدم) -->
     <div class="header-left-actions">
-        <!-- ملف المستخدم -->
         <div class="user-profile-block">
             <div class="user-meta">
                 <h5>محمد صالح جميعان الشمري</h5>
@@ -29,12 +32,27 @@
     </div>
 </header>
 
+<!-- ======================================================
+     التنسيقات (Styles) - مُحسّنة ومُضافة إلى المتغيرات العامة
+     ====================================================== -->
 <style>
     /* =========================================
-       تنسيقات الهيدر العلوي (Top Header) - مُحدث
+       تعريف المتغيرات العامة (إن لم تكن موجودة)
+       ========================================= */
+    :root {
+        --tera-teal: #028090;
+        --tera-teal-light: #14b8a6;
+        --tera-navy: #0A1B3F;
+        --tera-gray: #64748b;
+        --tera-bg: #f8fafc;
+        --header-height: 75px;
+    }
+
+    /* =========================================
+       تنسيقات الهيدر العلوي
        ========================================= */
     .top-header {
-        height: 75px;
+        height: var(--header-height);
         background: #ffffff;
         border-bottom: 1px solid #e2e8f0;
         display: flex;
@@ -43,17 +61,20 @@
         padding: 0 30px;
         position: sticky;
         top: 0;
-        z-index: 998; /* أقل من القائمة الجانبية لتجنب التداخل */
+        z-index: 998; /* أقل من القائمة الجانبية (999) وطبقة الخلفية (999) */
         width: 100%;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
     }
 
+    /* الجزء الأيمن من الهيدر */
     .header-right-actions {
         display: flex;
         align-items: center;
         gap: 20px;
     }
 
+    /* الشعار */
     .header-logo img {
         height: 40px;
         width: auto;
@@ -61,35 +82,55 @@
         transition: opacity 0.3s ease;
     }
 
+    .header-logo img:hover {
+        opacity: 0.85;
+    }
+
+    /* زر تبديل القائمة (للجوال) */
     .menu-toggle-btn {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         color: #64748b;
         font-size: 20px;
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
+        transition: all 0.25s ease;
+        flex-shrink: 0;
     }
 
     .menu-toggle-btn:hover {
         background: var(--tera-teal);
+        border-color: var(--tera-teal);
         color: #ffffff;
+        transform: scale(1.04);
     }
 
-    /* تنسيقات بيانات المستخدم */
+    .menu-toggle-btn:active {
+        transform: scale(0.94);
+    }
+
+    /* =========================================
+       تنسيقات بيانات المستخدم
+       ========================================= */
+    .header-left-actions {
+        display: flex;
+        align-items: center;
+    }
+
     .user-profile-block {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 14px;
+        padding: 4px 0;
     }
 
     .user-meta {
-        text-align: right; /* تم التعديل لتناسب العربية */
+        text-align: left; /* لأن النص إنجليزي اتجاهه من اليسار */
     }
 
     .user-meta h5 {
@@ -98,6 +139,8 @@
         color: var(--tera-navy);
         font-weight: 800;
         font-family: 'Cairo', sans-serif;
+        line-height: 1.3;
+        letter-spacing: -0.2px;
     }
 
     .user-meta p {
@@ -105,13 +148,15 @@
         font-size: 11px;
         color: var(--tera-gray);
         font-weight: 600;
+        line-height: 1.4;
+        margin-top: 2px;
     }
 
     .user-avatar-circle {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         background-color: var(--tera-navy);
-        color: #fff;
+        color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -119,21 +164,169 @@
         font-size: 18px;
         font-weight: 800;
         border: 2px solid var(--tera-teal);
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+        cursor: default;
+        user-select: none;
     }
 
-    /* التجاوب مع الجوال */
+    .user-avatar-circle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(2, 128, 144, 0.25);
+    }
+
+    /* =========================================
+       إظهار/إخفاء زر القائمة حسب حجم الشاشة
+       ========================================= */
+    .d-lg-none {
+        display: none !important;
+    }
+
+    /* =========================================
+       التجاوب (Responsive)
+       ========================================= */
     @media (max-width: 991px) {
+        :root {
+            --header-height: 60px;
+        }
+
         .top-header {
-            height: 60px;
-            padding: 0 15px;
+            height: var(--header-height);
+            padding: 0 16px;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
         }
 
         .header-logo img {
-            height: 30px;
+            height: 32px;
+        }
+
+        .header-right-actions {
+            gap: 12px;
+        }
+
+        .menu-toggle-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            border-radius: 8px;
         }
 
         .user-meta {
-            display: none; /* إخفاء النص في الشاشات الصغيرة لتوفير المساحة */
+            display: none; /* إخفاء النص في الجوال لتوفير المساحة */
+        }
+
+        .user-avatar-circle {
+            width: 38px;
+            height: 38px;
+            font-size: 16px;
+            border-width: 2px;
+        }
+
+        /* إظهار زر القائمة في الجوال */
+        .d-lg-none {
+            display: flex !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .top-header {
+            padding: 0 12px;
+        }
+
+        .header-logo img {
+            height: 28px;
+        }
+
+        .menu-toggle-btn {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+        }
+
+        .user-avatar-circle {
+            width: 34px;
+            height: 34px;
+            font-size: 14px;
+        }
+    }
+
+    /* =========================================
+       دعم الوضع المظلم (اختياري)
+       ========================================= */
+    @media (prefers-color-scheme: dark) {
+        .top-header {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        .top-header .user-meta h5 {
+            color: #f1f5f9;
+        }
+
+        .top-header .user-meta p {
+            color: #94a3b8;
+        }
+
+        .menu-toggle-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+
+        .menu-toggle-btn:hover {
+            background: var(--tera-teal);
+            color: #ffffff;
         }
     }
 </style>
+
+<!-- ======================================================
+     السكربت الخاص بالهيدر (لربط الأزرار مع القائمة الجانبية)
+     ====================================================== -->
+<script>
+    (function() {
+        'use strict';
+
+        // الحصول على العناصر
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn'); // إن وجد في القائمة
+        const overlay = document.getElementById('sidebarOverlay');
+
+        // فتح القائمة
+        if (openBtn && sidebar) {
+            openBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sidebar.classList.add('sidebar-open');
+                if (overlay) overlay.classList.add('active');
+            });
+        }
+
+        // إغلاق القائمة عبر الزر الموجود في القائمة (إن وجد)
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+            });
+        }
+
+        // إغلاق القائمة بالنقر على الطبقة الخلفية
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
+        }
+
+        // إغلاق القائمة بالضغط على Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-open')) {
+                sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+
+        console.log('✅ Header initialized with sidebar controls.');
+    })();
+</script>
