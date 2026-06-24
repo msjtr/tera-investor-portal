@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 4. cancelled-investments.js - منطق طلب الانضمام والآلة الحاسبة
+ * 4. cancelled-investments.js - منطق طلب الانضمام والآلة الحاسبة (المحدث)
  * ============================================================
  */
 
@@ -38,19 +38,12 @@
         let backBtn = document.getElementById('btnBackToDetails');
         if(backBtn) backBtn.href = 'completed-investments.html?id=' + opp.id;
 
-        if (window.availableSharesToBuy >= 1) {
-            let inputField = document.getElementById('shareInput');
-            if (inputField) {
-                inputField.value = 1;
-                window.executeCalculations();
-            }
-        } else {
-            let inputField = document.getElementById('shareInput');
-            if(inputField) inputField.value = 0;
-            if(document.getElementById('btnPlus')) document.getElementById('btnPlus').disabled = true;
-            if(document.getElementById('btnMinus')) document.getElementById('btnMinus').disabled = true;
-        }
+        // تصفير عدد الأسهم عند الدخول لإجبار المستخدم على التحديد وفتح الصفحة
+        let inputField = document.getElementById('shareInput');
+        if(inputField) inputField.value = 0;
+        
         window.syncButtonsState();
+        window.executeCalculations(); // تحديث الحسابات وإخفاء الأقسام لأن القيمة 0
     };
 
     window.executeCalculations = function() {
@@ -58,7 +51,15 @@
         if(!opp || !document.getElementById('servicesTableBody')) return;
 
         let shares = parseInt(document.getElementById('shareInput').value) || 0;
-        document.getElementById('extendedDetails').style.display = 'block';
+        let extendedBlock = document.getElementById('extendedDetails');
+        
+        // إخفاء الصفحة إذا كان عدد الأسهم 0
+        if (shares === 0) {
+            if(extendedBlock) extendedBlock.style.display = 'none';
+            return;
+        } else {
+            if(extendedBlock) extendedBlock.style.display = 'block';
+        }
 
         let duration = parseInt(opp.duration) || 6;
         let partnerCapital = shares * (parseFloat(opp.sharePrice) || 0); 
@@ -77,11 +78,11 @@
         let totalMonthlyFinal = oppCostsWithVat / duration;
 
         document.getElementById('servicesTableBody').innerHTML = 
-            `<tr><td class="text-start">الرسوم الإدارية</td><td>${window.formatMoneySafe(baseFeeAdmin)}</td><td>${window.formatMoneySafe(baseFeeAdmin*0.15)}</td><td>${window.formatMoneySafe(baseFeeAdmin*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(adminMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>` +
-            `<tr><td class="text-start">رسوم التحويل</td><td>${window.formatMoneySafe(baseFeeTransfer)}</td><td>${window.formatMoneySafe(baseFeeTransfer*0.15)}</td><td>${window.formatMoneySafe(baseFeeTransfer*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(transMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>` +
-            `<tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${window.formatMoneySafe(baseFeeCol)}</td><td>${window.formatMoneySafe(baseFeeCol*0.15)}</td><td>${window.formatMoneySafe(baseFeeCol*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(colMonthly)}</td><td class="notes">تخصم شهرياً</td></tr>` +
-            `<tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${window.selectedPackageName}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*0.15)}</td><td>${window.formatMoneySafe(pkgFee*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(pkgMonthly)}</td><td class="notes" style="color:var(--tera-teal);">تخصم شهرياً</td></tr>` +
-            `<tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(oppCostsWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td><td>-</td></tr>`;
+            `<tr><td class="text-start">الرسوم الإدارية</td><td>${window.formatMoneySafe(baseFeeAdmin)}</td><td>${window.formatMoneySafe(baseFeeAdmin*0.15)}</td><td>${window.formatMoneySafe(baseFeeAdmin*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(adminMonthly)}</td></tr>` +
+            `<tr><td class="text-start">رسوم التحويل</td><td>${window.formatMoneySafe(baseFeeTransfer)}</td><td>${window.formatMoneySafe(baseFeeTransfer*0.15)}</td><td>${window.formatMoneySafe(baseFeeTransfer*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(transMonthly)}</td></tr>` +
+            `<tr><td class="text-start">رسوم التحصيل والمعالجة</td><td>${window.formatMoneySafe(baseFeeCol)}</td><td>${window.formatMoneySafe(baseFeeCol*0.15)}</td><td>${window.formatMoneySafe(baseFeeCol*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(colMonthly)}</td></tr>` +
+            `<tr><td class="text-start" style="color:var(--tera-teal);"><i class="fas fa-shield-alt"></i> ${window.selectedPackageName}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(pkgFee*0.15)}</td><td>${window.formatMoneySafe(pkgFee*1.15)}</td><td style="color:var(--tera-teal); font-family:monospace;">${window.formatMoneySafe(pkgMonthly)}</td></tr>` +
+            `<tr class="total-row"><td class="text-start">الإجمالي للخدمات</td><td>${window.formatMoneySafe(totalBaseFees)}</td><td>${window.formatMoneySafe(totalFeesVat)}</td><td style="color:var(--tera-teal);">${window.formatMoneySafe(oppCostsWithVat)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(totalMonthlyFinal)}</td></tr>`;
 
         document.getElementById('txtBaseFees').innerText = window.formatMoneySafe(totalBaseFees) + " ر.س";
         document.getElementById('txtFeesVat').innerText = window.formatMoneySafe(totalFeesVat) + " ر.س";
@@ -114,34 +115,40 @@
         
         distBody += `<tr class="total-row"><td class="text-start">الإجمالي</td>${!isExtended ? `<td>${window.formatMoneySafe(tCap)}</td>` : ''}<td>${window.formatMoneySafe(tProf)}</td><td>${window.formatMoneySafe(tPay)}</td><td style="color:#ef4444;">${window.formatMoneySafe(tFee)}</td><td style="color:var(--tera-teal); font-size:16px;">${window.formatMoneySafe(tRem)}</td><td>-</td></tr>`;
         
+        // النص الخاص بالشراكة الممتدة فقط
         let capNote = document.getElementById('extendedCapitalNote');
         if(isExtended && partnerCapital > 0) {
             if (capNote) capNote.style.display = 'block';
-            distBody += `<tr class="highlight-row"><td colspan="2" class="text-start" style="font-weight:800;">رأس المال المسترد (في نهاية المدة)</td><td colspan="4" style="text-align:center; font-weight:800; font-size:18px;">${window.formatMoneySafe(partnerCapital)} ر.س</td></tr>`;
         } else {
             if (capNote) capNote.style.display = 'none';
         }
 
         document.getElementById('distributionTableBody').innerHTML = distBody;
 
-        let netProfitFinal = totalProfit - oppCostsWithVat, totalReturnFinal = partnerCapital + netProfitFinal; 
+        // ملخص الاستثمار والأرباح (6 حقول مفصلة)
+        let netProfitFinal = totalProfit - oppCostsWithVat;
+        let netMonthlyProfitFinal = netProfitFinal / duration;
+        let totalReturnFinal = partnerCapital + netProfitFinal; 
         
         document.getElementById('finalPartnerCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
+        document.getElementById('finalSharesCount').innerText = shares;
         document.getElementById('finalOppCosts').innerText = window.formatMoneySafe(oppCostsWithVat) + " ر.س";
         document.getElementById('finalNetProfit').innerText = window.formatMoneySafe(netProfitFinal) + " ر.س";
-        document.getElementById('finalDifference').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
+        document.getElementById('finalMonthlyNetProfit').innerText = window.formatMoneySafe(netMonthlyProfitFinal) + " ر.س";
+        document.getElementById('finalTotalReturn').innerText = window.formatMoneySafe(totalReturnFinal) + " ر.س";
 
+        // ملخص الدفع النهائي
         document.getElementById('sumShares').innerText = shares;
         document.getElementById('sumSharePrice').innerText = window.formatMoneySafe(opp.sharePrice) + " ر.س";
         document.getElementById('sumCapital').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
-        document.getElementById('resToPayNow').innerText = shares > 0 ? window.formatMoneySafe(partnerCapital) + " ر.س" : "0.00 ر.س";
+        document.getElementById('resToPayNow').innerText = window.formatMoneySafe(partnerCapital) + " ر.س";
     };
 
     window.changeShares = function(delta) {
         let input = document.getElementById('shareInput');
         if(!input) return;
         let val = (parseInt(input.value) || 0) + delta;
-        if (val >= 1 && val <= window.availableSharesToBuy) {
+        if (val >= 0 && val <= window.availableSharesToBuy) {
             input.value = val;
             window.syncButtonsState();
             window.executeCalculations();
@@ -151,7 +158,7 @@
     window.syncButtonsState = function() {
         let currentShares = parseInt(document.getElementById('shareInput').value) || 0;
         const btnMinus = document.getElementById('btnMinus'), btnPlus = document.getElementById('btnPlus');
-        if(btnMinus) btnMinus.disabled = (currentShares <= 1);
+        if(btnMinus) btnMinus.disabled = (currentShares <= 0); // 0 مسموح للرجوع لنقطة البداية
         if(btnPlus) btnPlus.disabled = (currentShares >= window.availableSharesToBuy);
         window.togglePayButton();
     };
@@ -172,6 +179,14 @@
         window.executeCalculations();
     };
 
+    window.toggleWalletInfo = function() {
+        let methodOption = document.querySelector('input[name="payment_method"]:checked');
+        let walletInfo = document.getElementById('walletBalanceInfo');
+        if (methodOption && walletInfo) {
+            walletInfo.style.display = methodOption.value === 'wallet' ? 'block' : 'none';
+        }
+    };
+
     window.togglePayButton = function() { 
         let shares = parseInt(document.getElementById('shareInput').value) || 0;
         let checkEl = document.getElementById('agreeCheckbox');
@@ -181,8 +196,21 @@
     };
 
     window.processPayment = function() { 
-        alert('تمت عملية الدفع بنجاح!\nمرحباً بك كشريك في منصة تيرا.'); 
-        window.location.href = "../dashboard/index.html"; 
+        let methodOption = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        if (methodOption === 'wallet') {
+            alert('تم الدفع وتأكيد الاستثمار من خلال المحفظة بنجاح!\nمرحباً بك كشريك في المنصة.'); 
+            window.location.href = "../dashboard/index.html"; 
+        } else {
+            // إظهار واجهة التحميل لبوابة الدفع
+            let overlay = document.getElementById('paymentRedirectOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            
+            // التحويل الوهمي بعد 5 ثواني
+            setTimeout(() => {
+                window.location.href = "../dashboard/index.html"; 
+            }, 5000);
+        }
     };
 
 })();
