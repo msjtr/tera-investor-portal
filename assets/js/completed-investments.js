@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 3. completed-investments.js - تفاصيل الفرصة والتنبيهات (النسخة الآمنة)
+ * 3. completed-investments.js - تفاصيل الفرصة والتنبيهات المحدثة
  * ============================================================
  */
 
@@ -63,10 +63,34 @@
         setTxt('mDetTax', window.formatMoneySafe(opp.capital * 0.15) + ' ر.س');
         setTxt('mDetTotalProd', window.formatMoneySafe(opp.capital * 1.15) + ' ر.س');
 
-        // 3. حقن بانر التنبيهات الذكي أعلى الصفحة
+        // 3. حقن التنبيهات المخصصة والمطابقة لحالة الفرصة (بدون رابط التفاصيل)
         const alertsCont = document.getElementById('mDetAlertsContainer');
-        if (alertsCont && typeof window.buildAlertBanner === 'function') {
-            alertsCont.innerHTML = window.buildAlertBanner(opp);
+        if (alertsCont) {
+            let alertHtml = '';
+            let s = opp.status;
+            
+            if (s === 'النشطة' || s === 'قائم') {
+                alertHtml = `<div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-right: 4px solid var(--tera-teal);">
+                                <h4 style="margin:0 0 10px; color:var(--tera-navy); font-size:18px;"><i class="fas fa-bolt text-teal"></i> الفرصة نشطة الآن ومتاحة للمشاركة</h4>
+                                <p style="margin:0; color:var(--tera-gray); font-size:14px; font-weight:700;">بادر بحجز أسهمك قبل اكتمال التغطية، الأسهم المتبقية محدودة.</p>
+                             </div>`;
+            } else if (s === 'القادمة') {
+                alertHtml = `<div style="background: #f0fdf4; border: 1px solid #bae6fd; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-right: 4px solid #0284c7;">
+                                <h4 style="margin:0 0 10px; color:#0369a1; font-size:18px;"><i class="fas fa-clock"></i> فرصة قادمة قريباً</h4>
+                                <p style="margin:0; color:var(--tera-gray); font-size:14px; font-weight:700;">هذه الفرصة ستكون متاحة قريباً. كن على استعداد للمشاركة فور بدء الطرح.</p>
+                             </div>`;
+            } else if (s === 'المكتملة' || s === 'المنتهية' || s === 'المغلقة') {
+                alertHtml = `<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-right: 4px solid #64748b;">
+                                <h4 style="margin:0 0 10px; color:#334155; font-size:18px;"><i class="fas fa-check-circle"></i> الفرصة ${s}</h4>
+                                <p style="margin:0; color:var(--tera-gray); font-size:14px; font-weight:700;">تم إغلاق المشاركة في هذه الفرصة نظراً لاكتمال التغطية أو انتهاء فترة الطرح.</p>
+                             </div>`;
+            } else if (s === 'الملغاة') {
+                alertHtml = `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 25px; border-right: 4px solid #ef4444;">
+                                <h4 style="margin:0 0 10px; color:#b91c1c; font-size:18px;"><i class="fas fa-ban"></i> هذه الفرصة ملغاة</h4>
+                                <p style="margin:0; color:var(--tera-gray); font-size:14px; font-weight:700;">تم إلغاء هذه الفرصة من قبل الإدارة ولم تعد متاحة للمشاركة.</p>
+                             </div>`;
+            }
+            alertsCont.innerHTML = alertHtml;
         }
 
         // 4. التحكم الذكي بظهور صندوق الشروط والأحكام وزر الانضمام
