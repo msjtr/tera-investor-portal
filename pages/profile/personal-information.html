@@ -1,439 +1,132 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المعلومات الشخصية | تيرا للمستثمرين</title>
-
-    <!-- أيقونة الموقع (مسار نسبي) -->
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="../../images/favicon.svg">
-
-    <!-- خطوط Google -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-    <!-- مكتبة الأيقونات -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- الملفات الأساسية CSS (مسارات نسبية) -->
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/profile.css">
-    <link rel="stylesheet" href="../../assets/css/responsive.css">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>المعلومات الشخصية | Tera Investor Portal</title>
+    <!-- استيراد الخطوط والتنسيقات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    
     <style>
-        /* أنماط إضافية خاصة بصفحة المعلومات الشخصية */
-        .profile-card {
-            max-width: 800px;
-            margin: 2rem auto;
-            border: none;
-            box-shadow: var(--box-shadow, 0 4px 20px rgba(0,0,0,0.05));
-            border-radius: var(--border-radius, 12px);
-            overflow: hidden;
-        }
-        .profile-card .card-header {
-            background: var(--white-color, #fff);
-            border-bottom: 1px solid var(--gray-200, #e9ecef);
-            padding: 20px 25px;
-        }
-        .profile-card .card-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--gray-900, #212529);
-            display: flex;
-            align-items: center;
-        }
-        .profile-card .card-header h3 i {
-            margin-left: 10px;
-            color: var(--primary-color, #0D6EFD);
-        }
-        .profile-card .card-body {
-            padding: 25px;
-        }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .form-label {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--gray-700, #495057);
-        }
-        .form-label .required {
-            color: var(--danger-color, #DC3545);
-            margin-right: 2px;
-        }
-        .form-control {
-            padding: 10px 14px;
-            border: 2px solid var(--gray-200, #e9ecef);
-            border-radius: var(--border-radius, 8px);
-            font-size: 16px;
-            font-family: 'Tajawal', sans-serif;
-            background: #fff;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            width: 100%;
-            direction: ltr;
-            text-align: right;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color, #0D6EFD);
-            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-        }
-        .form-control:disabled {
-            background: var(--gray-100, #f8f9fa);
-            cursor: not-allowed;
-        }
-        .verification-status {
-            margin-top: 25px;
-            padding: 15px 0;
-            border-top: 1px solid var(--gray-200, #e9ecef);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .verification-status .badge {
-            font-size: 14px;
-            padding: 8px 16px;
-            border-radius: 30px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .verification-status .badge i {
-            font-size: 14px;
-        }
-        .verification-status .status-text {
-            color: var(--gray-600, #6c757d);
-            font-size: 14px;
-        }
-        .form-actions {
-            margin-top: 25px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .form-actions .btn {
-            padding: 10px 28px;
-            font-weight: 600;
-            border-radius: var(--border-radius, 8px);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            font-family: 'Tajawal', sans-serif;
-        }
-        .form-actions .btn-primary {
-            background: var(--primary-color, #0D6EFD);
-            color: #fff;
-        }
-        .form-actions .btn-primary:hover {
-            background: var(--primary-dark, #0B5ED7);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
-        }
-        .form-actions .btn-secondary {
-            background: var(--gray-200, #e9ecef);
-            color: var(--gray-700, #495057);
-        }
-        .form-actions .btn-secondary:hover {
-            background: var(--gray-300, #dee2e6);
-        }
-
-        @media (max-width: 576px) {
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            .profile-card .card-body {
-                padding: 20px;
-            }
-            .form-actions {
-                flex-direction: column;
-            }
-            .form-actions .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .profile-card .card-header {
-                background: var(--gray-900, #212529);
-                border-bottom-color: var(--gray-700, #495057);
-            }
-            .profile-card .card-header h3 {
-                color: var(--gray-100, #f8f9fa);
-            }
-            .profile-card .card-body {
-                background: var(--gray-800, #343a40);
-            }
-            .form-control {
-                background: var(--gray-700, #495057);
-                border-color: var(--gray-600, #6c757d);
-                color: var(--gray-100, #f8f9fa);
-            }
-            .form-control:focus {
-                border-color: var(--primary-color, #0D6EFD);
-                box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
-            }
-            .form-label {
-                color: var(--gray-300, #dee2e6);
-            }
-            .verification-status {
-                border-top-color: var(--gray-700, #495057);
-            }
-            .verification-status .status-text {
-                color: var(--gray-400, #ced4da);
-            }
-            .form-actions .btn-secondary {
-                background: var(--gray-700, #495057);
-                color: var(--gray-200, #e9ecef);
-            }
-            .form-actions .btn-secondary:hover {
-                background: var(--gray-600, #6c757d);
-            }
-        }
+        :root { --tera-teal: #028090; --tera-navy: #0A1B3F; --tera-bg: #f8fafc; --tera-gray: #64748b; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--tera-bg); color: #334155; padding: 20px; }
+        .form-card { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .section-title { font-family: 'Cairo'; color: var(--tera-navy); margin-bottom: 25px; border-bottom: 2px solid var(--tera-bg); padding-bottom: 10px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--tera-navy); font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--tera-teal); ring: 2px solid rgba(2, 128, 144, 0.2); }
+        
+        .upload-box { border: 2px dashed #cbd5e1; padding: 20px; text-align: center; border-radius: 12px; margin-top: 10px; cursor: pointer; transition: 0.2s; }
+        .upload-box:hover { border-color: var(--tera-teal); background: #f0fdfa; }
+        
+        .btn-submit { background: var(--tera-teal); color: #fff; padding: 14px 30px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; font-size: 16px; }
+        
+        .attachments-section { display: none; margin-top: 20px; padding: 20px; background: var(--tera-bg); border-radius: 12px; }
+        .otp-section { display: none; margin-top: 20px; padding: 20px; border: 1px solid var(--tera-teal); border-radius: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="app-wrapper">
-        <!-- ====== القائمة الجانبية (Sidebar) ====== -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <a href="../../index.html">
-                    <img src="../../images/logo.svg" alt="Tera Logo" class="logo-img">
-                    <span class="logo-text">تيرا للمستثمرين</span>
-                </a>
+<div class="form-card">
+    <h2 class="section-title"><i class="fas fa-user-edit"></i> المعلومات الشخصية</h2>
+    
+    <form id="personalInfoForm">
+        <div class="form-group">
+            <label>الاسم الكامل بالعربية *</label>
+            <input type="text" id="nameAr" pattern="^[\u0600-\u06FF\s]+$" placeholder="مثال: محمد بن عبدالله الشمري" required oninput="validateArabic(this)">
+        </div>
+
+        <div class="form-group">
+            <label>Full Name in English *</label>
+            <input type="text" id="nameEn" pattern="^[A-Za-z\s]+$" placeholder="Example: Mohammed Abdullah Alshammari" required oninput="validateEnglish(this)">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>الجنسية *</label>
+                <select required><option>سعودي</option><option>أخرى</option></select>
             </div>
-            <nav class="sidebar-nav">
-                <div class="nav-item"><a href="../dashboard/index.html"><i class="fas fa-th-large"></i><span>لوحة التحكم</span></a></div>
-                
-                <div class="nav-item has-submenu">
-                    <a href="#"><i class="fas fa-chart-line"></i><span>الاستثمارات</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li><a href="../investments/opportunities.html">الفرص</a></li>
-                        <li><a href="../investments/active-investments.html">النشطة</a></li>
-                        <li><a href="../investments/completed-investments.html">المكتملة</a></li>
-                        <li><a href="../investments/cancelled-investments.html">الملغاة</a></li>
-                        <li><a href="../investments/extended-investments.html">الممددة</a></li>
-                    </ul>
-                </div>
-
-                <div class="nav-item has-submenu">
-                    <a href="#"><i class="fas fa-wallet"></i><span>المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li><a href="../portfolio/portfolio-overview.html">نظرة عامة</a></li>
-                        <li><a href="../portfolio/transactions.html">المعاملات</a></li>
-                        <li><a href="../portfolio/profits.html">الأرباح</a></li>
-                        <li><a href="../portfolio/withdraw-request.html">طلب سحب</a></li>
-                        <li><a href="../portfolio/withdrawal-history.html">سجل السحوبات</a></li>
-                        <li><a href="../portfolio/account-statement.html">كشف الحساب</a></li>
-                    </ul>
-                </div>
-
-                <div class="nav-item has-submenu">
-                    <a href="#"><i class="fas fa-file-alt"></i><span>التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li><a href="../reports/reports-dashboard.html">مركز التقارير</a></li>
-                        <li><a href="../reports/portfolio-report.html">تقرير المحفظة</a></li>
-                        <li><a href="../reports/investments-report.html">تقرير الاستثمارات</a></li>
-                        <li><a href="../reports/profits-report.html">تقرير الأرباح</a></li>
-                        <li><a href="../reports/withdrawals-report.html">تقرير السحوبات</a></li>
-                    </ul>
-                </div>
-
-                <div class="nav-item has-submenu submenu-open">
-                    <a href="#"><i class="fas fa-user-circle"></i><span>الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li class="active"><a href="personal-information.html">المعلومات الشخصية</a></li>
-                        <li><a href="contact-information.html">معلومات الاتصال</a></li>
-                        <li><a href="national-address.html">العنوان الوطني</a></li>
-                        <li><a href="bank-information.html">المعلومات البنكية</a></li>
-                        <li><a href="attachments.html">المرفقات</a></li>
-                    </ul>
-                </div>
-
-                <div class="nav-item has-submenu">
-                    <a href="#"><i class="fas fa-shield-alt"></i><span>الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li><a href="../security/change-password.html">تغيير كلمة المرور</a></li>
-                        <li><a href="../security/change-email.html">تغيير البريد</a></li>
-                        <li><a href="../security/change-mobile.html">تغيير الجوال</a></li>
-                        <li><a href="../security/two-factor-authentication.html">المصادقة الثنائية</a></li>
-                        <li><a href="../security/registered-devices.html">الأجهزة المسجلة</a></li>
-                        <li><a href="../security/login-history.html">سجل الدخول</a></li>
-                    </ul>
-                </div>
-
-                <div class="nav-item has-submenu">
-                    <a href="#"><i class="fas fa-headset"></i><span>الدعم</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                    <ul class="submenu">
-                        <li><a href="../support/help-center.html">مركز المساعدة</a></li>
-                        <li><a href="../support/faq.html">الأسئلة الشائعة</a></li>
-                        <li><a href="../support/tickets.html">التذاكر</a></li>
-                        <li><a href="../support/notifications.html">الإشعارات</a></li>
-                        <li><a href="../support/privacy-policy.html">سياسة الخصوصية</a></li>
-                        <li><a href="../support/terms-and-conditions.html">الشروط والأحكام</a></li>
-                    </ul>
-                </div>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="../../auth/auth/login/login.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a>
+            <div class="form-group">
+                <label>نوع الهوية *</label>
+                <select id="idType" required onchange="handleIdTypeChange()">
+                    <option value="">اختر نوع الهوية...</option>
+                    <option value="national">هوية وطنية</option>
+                    <option value="residency">هوية مقيم</option>
+                    <option value="gcc">هوية خليجية</option>
+                    <option value="arab">هوية عربية</option>
+                    <option value="passport">جواز سفر</option>
+                </select>
             </div>
-        </aside>
+        </div>
 
-        <!-- ====== المحتوى الرئيسي ====== -->
-        <main class="main-content">
+        <div class="form-group">
+            <label>رقم الهوية / الإقامة / الجواز *</label>
+            <input type="text" id="idNumber" required placeholder="أدخل الرقم هنا...">
+        </div>
 
-            <!-- ====== الهيدر ====== -->
-            <header class="header">
-                <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                    <h1 class="page-title">المعلومات الشخصية</h1>
-                </div>
-                <div class="header-right">
-                    <div class="notifications"><i class="fas fa-bell"></i><span class="badge">3</span></div>
-                    <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=أحمد+محمد&background=0D6EFD&color=fff&size=40" alt="User">
-                        <span class="user-name">أحمد محمد</span>
-                    </div>
-                </div>
-            </header>
+        <!-- المرفقات الديناميكية -->
+        <div id="attachmentsSection" class="attachments-section">
+            <label id="fileLabel">المرفقات المطلوبة</label>
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>اضغط لرفع الملفات (الأمام والخلف)</p>
+                <input type="file" id="fileInput" multiple style="display: none;">
+            </div>
+        </div>
 
-            <!-- ====== محتوى الصفحة ====== -->
-            <section class="dashboard-content">
+        <div class="form-group" style="margin-top: 20px;">
+            <input type="checkbox" id="declaration" required> 
+            <label style="display: inline;" for="declaration">أقر بأن الاسم مطابق للهوية، وأن جميع البيانات والمرفقات صحيحة.</label>
+        </div>
 
-                <!-- بطاقة المعلومات الشخصية -->
-                <div class="card profile-card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-user-circle"></i> المعلومات الشخصية</h3>
-                    </div>
-                    <div class="card-body">
-                        <form id="profileForm" novalidate>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fullName" class="form-label">الاسم الكامل <span class="required">*</span></label>
-                                    <input type="text" id="fullName" name="fullName" class="form-control" value="أحمد محمد" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="idNumber" class="form-label">رقم الهوية <span class="required">*</span></label>
-                                    <input type="text" id="idNumber" name="idNumber" class="form-control" value="1234567890" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="nationality" class="form-label">الجنسية</label>
-                                    <input type="text" id="nationality" name="nationality" class="form-control" value="سعودي">
-                                </div>
-                                <div class="form-group">
-                                    <label for="birthDate" class="form-label">تاريخ الميلاد</label>
-                                    <input type="date" id="birthDate" name="birthDate" class="form-control" value="1985-05-15">
-                                </div>
-                            </div>
+        <button type="button" class="btn-submit" onclick="showOtp()">حفظ ومتابعة للتحقق</button>
+    </form>
 
-                            <div class="verification-status">
-                                <span class="badge status-active"><i class="fas fa-check-circle"></i> موثق</span>
-                                <span class="status-text">تم التحقق من الهوية</span>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> حفظ التغييرات
-                                </button>
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-undo"></i> إلغاء
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- ====== الفوتر ====== -->
-            <footer class="footer">
-                <div class="footer-content">
-                    <span>© 2026 تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
-                    <div class="footer-links">
-                        <a href="../support/privacy-policy.html">سياسة الخصوصية</a>
-                        <a href="../support/terms-and-conditions.html">الشروط والأحكام</a>
-                        <a href="../support/help-center.html">الدعم</a>
-                    </div>
-                </div>
-            </footer>
-
-        </main>
+    <!-- قسم التحقق OTP -->
+    <div id="otpSection" class="otp-section">
+        <label>أدخل رمز التحقق المرسل لهاتفك</label>
+        <input type="text" placeholder="0000" maxlength="4" style="text-align: center; font-size: 20px; letter-spacing: 10px;">
+        <button class="btn-submit" style="margin-top: 10px;" onclick="alert('تم التحقق بنجاح!')">اعتماد البيانات</button>
     </div>
+</div>
 
-    <!-- ====== تحميل ملفات JavaScript ====== -->
-    <script src="../../assets/js/core.js"></script>
-    <script src="../../assets/js/auth.js"></script>
-    <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/profile.js"></script>
+<script>
+    // 1. التحقق من النصوص العربية
+    function validateArabic(input) {
+        input.value = input.value.replace(/[^ \u0600-\u06FF]/g, '');
+    }
 
-    <script>
-        (function() {
-            'use strict';
+    // 2. التحقق من النصوص الإنجليزية
+    function validateEnglish(input) {
+        input.value = input.value.replace(/[^a-zA-Z\s]/g, '');
+    }
 
-            console.log('📄 [personal-information.html] تم تحميل الصفحة');
+    // 3. إدارة المرفقات بناءً على نوع الهوية
+    function handleIdTypeChange() {
+        const type = document.getElementById('idType').value;
+        const section = document.getElementById('attachmentsSection');
+        const label = document.getElementById('fileLabel');
+        
+        if (type) {
+            section.style.display = 'block';
+            label.innerText = type === 'passport' ? 'يرجى رفع صفحة الجواز الأولى' : 'يرجى رفع صورة الهوية (الأمام والخلف)';
+        } else {
+            section.style.display = 'none';
+        }
+    }
 
-            // معالجة تقديم النموذج
-            const form = document.getElementById('profileForm');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    alert('✅ تم حفظ التغييرات بنجاح!');
-                });
-            }
-
-            // تفعيل زر إلغاء
-            const resetBtn = document.querySelector('.btn-secondary');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (confirm('هل أنت متأكد من رغبتك في إلغاء التغييرات؟')) {
-                        form.reset();
-                        // إعادة تعيين القيم الافتراضية
-                        document.getElementById('fullName').value = 'أحمد محمد';
-                        document.getElementById('idNumber').value = '1234567890';
-                        document.getElementById('nationality').value = 'سعودي';
-                        document.getElementById('birthDate').value = '1985-05-15';
-                    }
-                });
-            }
-
-            // تفعيل زر تبديل القائمة الجانبية
-            const toggleBtn = document.getElementById('sidebarToggle');
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function() {
-                    document.getElementById('sidebar').classList.toggle('sidebar-open');
-                });
-            }
-
-            // تفعيل القوائم الفرعية
-            document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    this.parentElement.classList.toggle('submenu-open');
-                });
-            });
-
-        })();
-    </script>
+    // 4. إظهار قسم الـ OTP
+    function showOtp() {
+        if(document.getElementById('personalInfoForm').checkValidity()){
+            document.getElementById('otpSection').style.display = 'block';
+        } else {
+            alert('يرجى تعبئة كافة الحقول المطلوبة بشكل صحيح.');
+        }
+    }
+</script>
 
 </body>
 </html>
