@@ -543,7 +543,7 @@
         }
 
         /* =========================================
-           قسم بيانات خارج المملكة (مخفي افتراضياً)
+           قسم الخيارات الإضافية (يظهر عند اختيار دولة غير السعودية)
            ========================================= */
         #internationalFields {
             display: none;
@@ -941,12 +941,11 @@
                         </select>
                     </div>
 
-                    <!-- اسم البنك -->
+                    <!-- اسم البنك (حقل نصي) -->
                     <div class="form-group full-width">
                         <label class="form-label">اسم البنك <span class="req">*</span></label>
-                        <select class="form-control" id="bankName" required>
-                            <option value="">اختر البنك...</option>
-                        </select>
+                        <input type="text" class="form-control" id="bankName" placeholder="مثال: مصرف الراجحي" required>
+                        <span class="format-hint">يرجى إدخال اسم البنك كما هو مسجل في الحساب.</span>
                     </div>
 
                     <!-- اسم صاحب الحساب بالعربية -->
@@ -1039,7 +1038,7 @@
                         <input type="text" class="form-control" id="bankCity" placeholder="مثال: الرياض" required>
                     </div>
 
-                    <!-- تم حذف حقل "دولة البنك" لأنه موجود بالفعل في القسم الأساسي -->
+                    <!-- تم حذف حقل "دولة البنك" لأنه محدد بالفعل من الحقل الأساسي -->
 
                 </div>
             </div>
