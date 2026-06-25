@@ -335,7 +335,7 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 6. تسجيل الخروج – التوجيه إلى الرابط المطلوب
+     * 6. تسجيل الخروج – مسح الجلسة والتوجيه (الإصلاح النهائي)
      * ============================================================
      */
     initLogout: function() {
@@ -347,9 +347,38 @@ const Dashboard = {
 
         logoutBtn.addEventListener('click', function() {
             if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                console.log('🔴 User logged out. Redirecting...');
-                // التوجيه إلى الرابط المطلوب
-                window.location.href = 'https://tera-investor-portal.onrender.com';
+                console.log('🔴 User logged out. Clearing session...');
+
+                // 1. مسح التخزين المحلي (localStorage)
+                try {
+                    localStorage.clear();
+                    console.log('✅ localStorage cleared.');
+                } catch (e) {
+                    console.warn('⚠️ Could not clear localStorage:', e);
+                }
+
+                // 2. مسح التخزين المؤقت للجلسة (sessionStorage)
+                try {
+                    sessionStorage.clear();
+                    console.log('✅ sessionStorage cleared.');
+                } catch (e) {
+                    console.warn('⚠️ Could not clear sessionStorage:', e);
+                }
+
+                // 3. مسح الكوكيز
+                try {
+                    document.cookie.split(';').forEach(function(c) {
+                        document.cookie = c
+                            .replace(/^ +/, '')
+                            .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+                    });
+                    console.log('✅ Cookies cleared.');
+                } catch (e) {
+                    console.warn('⚠️ Could not clear cookies:', e);
+                }
+
+                // 4. التوجيه إلى الرابط المطلوب (مع منع العودة للخلف)
+                window.location.replace('https://tera-investor-portal.onrender.com');
             }
         });
     },
