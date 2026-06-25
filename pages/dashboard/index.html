@@ -5,26 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
-    <!-- الأيقونة -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <!-- الخطوط -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
-    <!-- المكتبات الخارجية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
         /* ============================================================
-           جميع الأنماط مدمجة في ملف واحد – حلول جذرية لمشاكل الجوال
+           جميع الأنماط مدمجة – حلول جذرية لمشاكل الجوال
            ============================================================ */
 
-        /* --------------------------------------------
-           1. المتغيرات الأساسية
-           -------------------------------------------- */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -36,17 +30,13 @@
             --header-height: 75px;
         }
 
-        /* --------------------------------------------
-           2. إعادة ضبط عام
-           -------------------------------------------- */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        html,
-        body {
+        html, body {
             width: 100%;
             max-width: 100%;
             overflow-x: hidden;
@@ -55,9 +45,6 @@
             color: #1e293b;
         }
 
-        /* --------------------------------------------
-           3. الهيكل الرئيسي
-           -------------------------------------------- */
         .app-wrapper {
             display: flex;
             min-height: 100vh;
@@ -68,7 +55,7 @@
         }
 
         /* --------------------------------------------
-           4. الهيدر العلوي
+           الهيدر العلوي
            -------------------------------------------- */
         .top-header {
             height: var(--header-height);
@@ -92,7 +79,6 @@
             gap: 20px;
         }
 
-        /* الشعار – حجم كبير وواضح */
         .header-logo {
             flex-shrink: 0;
             display: flex;
@@ -110,7 +96,6 @@
             image-rendering: auto;
         }
 
-        /* زر القائمة */
         .menu-toggle-btn {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -133,7 +118,6 @@
             color: #ffffff;
         }
 
-        /* بيانات المستخدم */
         .header-left-actions {
             display: flex;
             align-items: center;
@@ -180,7 +164,7 @@
         }
 
         /* --------------------------------------------
-           5. القائمة الجانبية
+           القائمة الجانبية
            -------------------------------------------- */
         .sidebar-container {
             width: var(--sidebar-width);
@@ -341,7 +325,7 @@
         }
 
         /* --------------------------------------------
-           6. طبقة الخلفية (للجوال)
+           طبقة الخلفية (للجوال)
            -------------------------------------------- */
         .sidebar-overlay {
             display: none;
@@ -360,7 +344,7 @@
         }
 
         /* --------------------------------------------
-           7. المحتوى الرئيسي
+           المحتوى الرئيسي
            -------------------------------------------- */
         .main-content {
             flex: 1;
@@ -379,7 +363,7 @@
         }
 
         /* --------------------------------------------
-           8. الترحيب (Welcome Banner)
+           الترحيب (Welcome Banner)
            -------------------------------------------- */
         .welcome-banner {
             background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%);
@@ -455,7 +439,7 @@
         }
 
         /* --------------------------------------------
-           9. بطاقات الإحصائيات
+           بطاقات الإحصائيات
            -------------------------------------------- */
         .stats-grid {
             display: grid;
@@ -546,7 +530,7 @@
         }
 
         /* --------------------------------------------
-           10. شبكة اللوحات
+           شبكة اللوحات
            -------------------------------------------- */
         .dashboard-layout-grid {
             display: grid;
@@ -637,7 +621,7 @@
         }
 
         /* --------------------------------------------
-           11. التنبيهات
+           التنبيهات
            -------------------------------------------- */
         .alert-item-box {
             padding: 14px 18px;
@@ -678,7 +662,7 @@
         }
 
         /* --------------------------------------------
-           12. الجداول (مع التمرير في الجوال)
+           الجداول (مع التمرير في الجوال)
            -------------------------------------------- */
         .data-table-wrapper {
             overflow-x: auto;
@@ -763,7 +747,7 @@
         }
 
         /* --------------------------------------------
-           13. الرسم البياني
+           الرسم البياني
            -------------------------------------------- */
         #mainChart {
             width: 100% !important;
@@ -772,7 +756,7 @@
         }
 
         /* --------------------------------------------
-           14. التذييل
+           التذييل
            -------------------------------------------- */
         .page-footer {
             text-align: center;
@@ -785,7 +769,7 @@
         }
 
         /* --------------------------------------------
-           15. طبقة التحميل
+           طبقة التحميل
            -------------------------------------------- */
         .loading-overlay {
             display: none;
@@ -829,14 +813,13 @@
         }
 
         /* --------------------------------------------
-           16. تحسينات الجوال الشاملة (الجزء الأهم)
+           تحسينات الجوال الشاملة
            -------------------------------------------- */
         @media (max-width: 991px) {
             :root {
                 --header-height: 64px;
             }
 
-            /* الهيدر */
             .top-header {
                 height: var(--header-height) !important;
                 padding: 0 16px !important;
@@ -866,7 +849,6 @@
                 gap: 12px !important;
             }
 
-            /* القائمة الجانبية */
             .sidebar-container {
                 right: calc(-1 * var(--sidebar-width));
                 top: 0;
@@ -893,7 +875,6 @@
                 display: block;
             }
 
-            /* الترحيب */
             .welcome-banner {
                 padding: 18px 20px !important;
                 flex-direction: column !important;
@@ -928,7 +909,6 @@
                 padding: 10px 12px !important;
             }
 
-            /* الإحصائيات */
             .stats-grid {
                 grid-template-columns: 1fr !important;
                 gap: 14px !important;
@@ -961,7 +941,6 @@
                 padding: 2px 10px !important;
             }
 
-            /* اللوحات */
             .dashboard-layout-grid {
                 grid-template-columns: 1fr !important;
                 gap: 16px !important;
@@ -991,7 +970,6 @@
                 padding: 4px 10px !important;
             }
 
-            /* الجداول */
             .data-table-wrapper {
                 margin: 0 -8px !important;
                 padding: 0 8px !important;
@@ -1017,20 +995,17 @@
                 padding: 4px 12px !important;
             }
 
-            /* التنبيهات */
             .alert-item-box {
                 font-size: 13px !important;
                 padding: 12px 16px !important;
             }
 
-            /* الرسم البياني */
             #mainChart {
                 max-height: 220px !important;
             }
         }
 
         @media (max-width: 480px) {
-            /* الهيدر */
             .header-logo img {
                 height: 34px !important;
             }
@@ -1047,7 +1022,6 @@
                 font-size: 16px !important;
             }
 
-            /* الترحيب */
             .welcome-banner {
                 padding: 14px 14px !important;
             }
@@ -1065,7 +1039,6 @@
                 padding: 8px 10px !important;
             }
 
-            /* الإحصائيات */
             .stat-card {
                 padding: 14px 16px !important;
                 gap: 14px !important;
@@ -1081,7 +1054,6 @@
                 font-size: 18px !important;
             }
 
-            /* اللوحات */
             .panel-card {
                 padding: 12px 14px !important;
             }
@@ -1090,7 +1062,6 @@
                 font-size: 15px !important;
             }
 
-            /* الجداول */
             .data-table-list {
                 min-width: 340px !important;
                 font-size: 12px !important;
@@ -1111,13 +1082,11 @@
                 padding: 3px 8px !important;
             }
 
-            /* التنبيهات */
             .alert-item-box {
                 font-size: 12px !important;
                 padding: 10px 14px !important;
             }
 
-            /* الرسم البياني */
             #mainChart {
                 max-height: 180px !important;
             }
@@ -1129,7 +1098,7 @@
         }
 
         /* --------------------------------------------
-           17. وضع مظلم
+           وضع مظلم
            -------------------------------------------- */
         @media (prefers-color-scheme: dark) {
             .top-header {
@@ -1224,7 +1193,7 @@
         }
 
         /* --------------------------------------------
-           18. تقليل الحركة
+           تقليل الحركة
            -------------------------------------------- */
         @media (prefers-reduced-motion: reduce) {
             * {
@@ -1235,7 +1204,7 @@
         }
 
         /* --------------------------------------------
-           19. فئات مساعدة
+           فئات مساعدة
            -------------------------------------------- */
         .d-lg-none {
             display: none !important;
@@ -1250,36 +1219,26 @@
 </head>
 <body>
 
-    <!-- ============================================
-    طبقة التحميل
-    ============================================ -->
+    <!-- طبقة التحميل -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <p>جاري تحميل لوحة التحكم...</p>
     </div>
 
-    <!-- ============================================
-    الهيكل الرئيسي
-    ============================================ -->
+    <!-- الهيكل الرئيسي -->
     <div class="app-wrapper">
 
-        <!-- ============================================
-        الهيدر العلوي
-        ============================================ -->
+        <!-- الهيدر العلوي -->
         <header class="top-header no-print">
 
             <div class="header-right-actions">
-                <!-- زر تبديل القائمة -->
                 <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <!-- الشعار – حجم كبير وواضح -->
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html">
-                        <img src="/images/logo.svg"
-                        alt="Tera Logo"
-                        onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
+                        <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
                     </a>
                 </div>
             </div>
@@ -1295,17 +1254,12 @@
             </div>
         </header>
 
-        <!-- ============================================
-        طبقة الخلفية (للجوال)
-        ============================================ -->
+        <!-- طبقة الخلفية (للجوال) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ============================================
-        القائمة الجانبية
-        ============================================ -->
+        <!-- القائمة الجانبية -->
         <aside class="sidebar-container" id="sidebar">
 
-            <!-- رأس القائمة (للموبايل) -->
             <div class="sidebar-mobile-header d-lg-none">
                 <span class="sidebar-title">القائمة الرئيسية</span>
                 <button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة">
@@ -1316,17 +1270,10 @@
             <nav class="sidebar-menu">
                 <ul class="nav-list">
                     <li class="nav-item active">
-                        <a href="/pages/dashboard/index.html">
-                            <i class="fas fa-th-large"></i>
-                            <span class="nav-label">لوحة التحكم</span>
-                        </a>
+                        <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-chart-line"></i>
-                            <span class="nav-label">الاستثمار</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة</a></li>
                             <li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history"></i> سجل الشراكة الممتدة</a></li>
@@ -1335,11 +1282,7 @@
                         </ul>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-wallet"></i>
-                            <span class="nav-label">المحفظة</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye"></i> نظرة عامة</a></li>
                             <li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt"></i> المعاملات المالية</a></li>
@@ -1350,11 +1293,7 @@
                         </ul>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-file-alt"></i>
-                            <span class="nav-label">التقارير</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar"></i> لوحة التقارير</a></li>
                             <li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open"></i> تقرير المحفظة</a></li>
@@ -1364,11 +1303,7 @@
                         </ul>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-user-circle"></i>
-                            <span class="nav-label">الملف الشخصي</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card"></i> المعلومات الشخصية</a></li>
                             <li><a href="/pages/profile/contact-information.html"><i class="fas fa-envelope"></i> معلومات الاتصال</a></li>
@@ -1378,11 +1313,7 @@
                         </ul>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-shield-alt"></i>
-                            <span class="nav-label">الأمان</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/security/change-password.html"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
                             <li><a href="/pages/security/change-email.html"><i class="fas fa-at"></i> تغيير البريد الإلكتروني</a></li>
@@ -1393,11 +1324,7 @@
                         </ul>
                     </li>
                     <li class="nav-item has-submenu">
-                        <a href="#">
-                            <i class="fas fa-headset"></i>
-                            <span class="nav-label">الدعم الفني</span>
-                            <i class="fas fa-chevron-down submenu-toggle"></i>
-                        </a>
+                        <a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
                         <ul class="submenu">
                             <li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle"></i> مركز المساعدة الرقمي</a></li>
                             <li><a href="/pages/support/faq.html"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li>
@@ -1418,14 +1345,10 @@
             </div>
         </aside>
 
-        <!-- ============================================
-        المحتوى الرئيسي
-        ============================================ -->
+        <!-- المحتوى الرئيسي -->
         <main class="main-content">
 
-            <!-- ============================================
-            الترحيب
-            ============================================ -->
+            <!-- الترحيب -->
             <div class="welcome-banner">
                 <div>
                     <h2><i class="fas fa-hand-peace"></i> مرحباً بك، محمد!</h2>
@@ -1437,19 +1360,13 @@
                         <span id="currentDate">2026/06/25</span>
                     </div>
                     <div class="quick-actions">
-                        <a href="/pages/portfolio/withdraw-request.html" class="btn-quick">
-                            <i class="fas fa-hand-holding-usd"></i> سحب
-                        </a>
-                        <a href="/pages/investments/opportunities.html" class="btn-quick">
-                            <i class="fas fa-plus-circle"></i> استثمار
-                        </a>
+                        <a href="/pages/portfolio/withdraw-request.html" class="btn-quick"><i class="fas fa-hand-holding-usd"></i> سحب</a>
+                        <a href="/pages/investments/opportunities.html" class="btn-quick"><i class="fas fa-plus-circle"></i> استثمار</a>
                     </div>
                 </div>
             </div>
 
-            <!-- ============================================
-            بطاقات الإحصائيات
-            ============================================ -->
+            <!-- بطاقات الإحصائيات -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-wallet"></i></div>
@@ -1481,9 +1398,7 @@
                 </div>
             </div>
 
-            <!-- ============================================
-            الصف الأول: الرسم البياني + التنبيهات
-            ============================================ -->
+            <!-- الرسم البياني + التنبيهات -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
                     <div class="panel-header">
@@ -1505,29 +1420,21 @@
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
                         <div class="alert-item-box alert-success">
                             <i class="fas fa-check-circle"></i>
-                            <span>
-                                <strong>إشعار تسوية مالية:</strong> الشراكة الممتدة رقم <span class="mono">#Tera-8893</span> دخلت مرحلة الإقفال بنجاح.
-                            </span>
+                            <span><strong>إشعار تسوية مالية:</strong> الشراكة الممتدة رقم <span class="mono">#Tera-8893</span> دخلت مرحلة الإقفال بنجاح.</span>
                         </div>
                         <div class="alert-item-box alert-warning">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <span>
-                                <strong>تحديث الضمانات:</strong> تم توثيق السند لأمر الإلكتروني بنجاح لفرصة الشراكة رقم <span class="mono">#Tera-2044</span>.
-                            </span>
+                            <span><strong>تحديث الضمانات:</strong> تم توثيق السند لأمر الإلكتروني بنجاح لفرصة الشراكة رقم <span class="mono">#Tera-2044</span>.</span>
                         </div>
                         <div class="alert-item-box alert-info">
                             <i class="fas fa-info-circle"></i>
-                            <span>
-                                <strong>تذكير:</strong> هناك 3 فرص استثمارية جديدة متاحة في سوق الشركات المطروحة.
-                            </span>
+                            <span><strong>تذكير:</strong> هناك 3 فرص استثمارية جديدة متاحة في سوق الشركات المطروحة.</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ============================================
-            الصف الثاني: الفرص الاستثمارية + العمليات المالية
-            ============================================ -->
+            <!-- الفرص الاستثمارية + العمليات المالية -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
                     <div class="panel-header">
@@ -1541,36 +1448,12 @@
                         <div class="data-table-wrapper">
                             <table class="data-table-list">
                                 <thead>
-                                    <tr>
-                                        <th class="text-start">الفرصة</th>
-                                        <th>قيمة السهم</th>
-                                        <th>العائد</th>
-                                        <th>الحالة</th>
-                                        <th></th>
-                                    </tr>
+                                    <tr><th class="text-start">الفرصة</th><th>قيمة السهم</th><th>العائد</th><th>الحالة</th><th></th></tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td class="text-title text-start">مشروع تمويل بطاقات الاتصالات</td>
-                                        <td>5,000 ر.س</td>
-                                        <td>15.00%</td>
-                                        <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
-                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-title text-start">صندوق التطوير العقاري 2026</td>
-                                        <td>10,000 ر.س</td>
-                                        <td>12.50%</td>
-                                        <td><span style="color:#f59e0b;font-weight:bold;">قيد الطرح</span></td>
-                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-title text-start">منصة التجارة الإلكترونية</td>
-                                        <td>7,500 ر.س</td>
-                                        <td>18.00%</td>
-                                        <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
-                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                    </tr>
+                                    <tr><td class="text-title text-start">مشروع تمويل بطاقات الاتصالات</td><td>5,000 ر.س</td><td>15.00%</td><td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
+                                    <tr><td class="text-title text-start">صندوق التطوير العقاري 2026</td><td>10,000 ر.س</td><td>12.50%</td><td><span style="color:#f59e0b;font-weight:bold;">قيد الطرح</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
+                                    <tr><td class="text-title text-start">منصة التجارة الإلكترونية</td><td>7,500 ر.س</td><td>18.00%</td><td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1588,48 +1471,20 @@
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table-list">
-                            <thead>
-                                <tr>
-                                    <th class="text-start">البيان</th>
-                                    <th>التاريخ</th>
-                                    <th>المبلغ</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th class="text-start">البيان</th><th>التاريخ</th><th>المبلغ</th></tr></thead>
                             <tbody id="transactionsTableBody">
-                                <tr>
-                                    <td class="text-title text-start">إيداع أرباح دورية</td>
-                                    <td>2026/06/23</td>
-                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+1,250.00 ر.س</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">سحب أرباح</td>
-                                    <td>2026/06/20</td>
-                                    <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-500.00 ر.س</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">إيداع استثماري</td>
-                                    <td>2026/06/18</td>
-                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+10,000.00 ر.س</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">إيداع أرباح</td>
-                                    <td>2026/06/15</td>
-                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+780.00 ر.س</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">رسوم إدارية</td>
-                                    <td>2026/06/12</td>
-                                    <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-50.00 ر.س</td>
-                                </tr>
+                                <tr><td class="text-title text-start">إيداع أرباح دورية</td><td>2026/06/23</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+1,250.00 ر.س</td></tr>
+                                <tr><td class="text-title text-start">سحب أرباح</td><td>2026/06/20</td><td class="amount-cell" style="color:#ef4444;font-weight:bold;">-500.00 ر.س</td></tr>
+                                <tr><td class="text-title text-start">إيداع استثماري</td><td>2026/06/18</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+10,000.00 ر.س</td></tr>
+                                <tr><td class="text-title text-start">إيداع أرباح</td><td>2026/06/15</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+780.00 ر.س</td></tr>
+                                <tr><td class="text-title text-start">رسوم إدارية</td><td>2026/06/12</td><td class="amount-cell" style="color:#ef4444;font-weight:bold;">-50.00 ر.س</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- ============================================
-            التذييل
-            ============================================ -->
+            <!-- التذييل -->
             <footer class="page-footer no-print">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 1200px; margin: 0 auto;">
                     <span>© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
@@ -1646,267 +1501,12 @@
     </div>
 
     <!-- ============================================
-    السكربتات
+    السكربتات (ملفات خارجية فقط)
     ============================================ -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
-    </script>
-    <script src="/assets/js/core.js">
-    </script>
-    <script src="/assets/js/main.js">
-    </script>
-    <script src="/assets/js/dashboard.js">
-    </script>
-
-    <!-- ============================================
-    سكربتات إضافية
-    ============================================ -->
-    <script>
-        (function() {
-            'use strict';
-
-            // عرض التاريخ الحالي
-            const dateEl = document.getElementById('currentDate');
-            if (dateEl) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                dateEl.textContent = year + '/' + month + '/' + day;
-            }
-
-            // إخفاء طبقة التحميل
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            if (loadingOverlay) {
-                setTimeout(function() {
-                    loadingOverlay.classList.remove('active');
-                }, 800);
-            }
-
-            // ============================================
-            // تهيئة القائمة الجانبية (في حال عدم تحميل dashboard.js)
-            // ============================================
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.getElementById('sidebarToggle');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            const overlay = document.getElementById('sidebarOverlay');
-            const isMobile = function() {
-                return window.innerWidth <= 991;
-            };
-
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (!isMobile()) {
-                        sidebar.classList.toggle('collapsed');
-                        sidebar.classList.remove('sidebar-open');
-                        if (overlay) overlay.classList.remove('active');
-                    } else {
-                        const isOpen = sidebar.classList.contains('sidebar-open');
-                        if (isOpen) {
-                            sidebar.classList.remove('sidebar-open');
-                            if (overlay) overlay.classList.remove('active');
-                        } else {
-                            sidebar.classList.add('sidebar-open');
-                            if (overlay) overlay.classList.add('active');
-                        }
-                    }
-                });
-            }
-
-            if (closeBtn && sidebar) {
-                closeBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                });
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', function() {
-                    sidebar.classList.remove('sidebar-open');
-                    overlay.classList.remove('active');
-                });
-            }
-
-            // إغلاق عند Escape
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-open')) {
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                }
-            });
-
-            // إعادة ضبط عند تغيير حجم النافذة
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 991 && sidebar) {
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                }
-            });
-
-            // ============================================
-            // القوائم الفرعية
-            // ============================================
-            document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                        return;
-                    }
-                    e.preventDefault();
-                    const parent = this.closest('.has-submenu');
-                    if (!parent) return;
-
-                    if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
-                        sidebar.classList.remove('collapsed');
-                    }
-
-                    document.querySelectorAll('.has-submenu').forEach(function(el) {
-                        if (el !== parent) el.classList.remove('submenu-open');
-                    });
-                    parent.classList.toggle('submenu-open');
-                });
-            });
-
-            // ============================================
-            // إظهار/إخفاء الفرص الاستثمارية
-            // ============================================
-            const toggleOppBtn = document.getElementById('toggleOppBtn');
-            const oppWrapper = document.getElementById('opportunitiesPanelWrapper');
-            const oppIcon = document.getElementById('toggleOppIcon');
-            const oppText = document.getElementById('toggleOppText');
-
-            if (toggleOppBtn && oppWrapper) {
-                let hidden = false;
-                oppWrapper.style.transition = 'all 0.3s ease';
-                oppWrapper.style.maxHeight = '600px';
-
-                toggleOppBtn.addEventListener('click', function() {
-                    hidden = !hidden;
-                    if (hidden) {
-                        oppWrapper.style.maxHeight = '0';
-                        oppWrapper.style.padding = '0';
-                        oppWrapper.style.opacity = '0';
-                        if (oppIcon) oppIcon.className = 'fas fa-eye';
-                        if (oppText) oppText.textContent = 'عرض';
-                    } else {
-                        oppWrapper.style.maxHeight = '600px';
-                        oppWrapper.style.padding = '';
-                        oppWrapper.style.opacity = '1';
-                        if (oppIcon) oppIcon.className = 'fas fa-eye-slash';
-                        if (oppText) oppText.textContent = 'إخفاء';
-                    }
-                });
-            }
-
-            // ============================================
-            // فلتر العمليات المالية
-            // ============================================
-            const filterSelect = document.getElementById('transactionFilter');
-            const tbody = document.getElementById('transactionsTableBody');
-
-            if (filterSelect && tbody) {
-                filterSelect.addEventListener('change', function() {
-                    const value = this.value;
-                    const rows = tbody.querySelectorAll('tr');
-                    rows.forEach(function(row) {
-                        const text = row.textContent.toLowerCase();
-                        if (value === 'all') {
-                            row.style.display = '';
-                        } else if (value === 'deposits' && (text.includes('إيداع') || text.includes('+'))) {
-                            row.style.display = '';
-                        } else if (value === 'deductions' && (text.includes('سحب') || text.includes('-') || text
-                                .includes('خصم'))) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                });
-            }
-
-            // ============================================
-            // الرسم البياني
-            // ============================================
-            const ctx = document.getElementById('mainChart');
-            if (ctx && typeof Chart !== 'undefined') {
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                        datasets: [{
-                            label: 'قيمة المحفظة (ر.س)',
-                            data: [85000, 92000, 98000, 105000, 115000, 124500],
-                            borderColor: '#028090',
-                            backgroundColor: 'rgba(2, 128, 144, 0.1)',
-                            tension: 0.3,
-                            fill: true,
-                            pointBackgroundColor: '#028090',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                labels: {
-                                    font: { family: 'Tajawal', size: 12 },
-                                    color: '#334155',
-                                    padding: 20,
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.parsed.y.toLocaleString() + ' ر.س';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: { color: 'rgba(0,0,0,0.05)' },
-                                ticks: {
-                                    font: { family: 'Tajawal', size: 11 },
-                                    color: '#64748b',
-                                    callback: function(value) {
-                                        return value.toLocaleString() + ' ر.س';
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: {
-                                    font: { family: 'Tajawal', size: 11 },
-                                    color: '#64748b'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // ============================================
-            // تسجيل الخروج
-            // ============================================
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                        alert('سيتم توجيهك إلى صفحة تسجيل الدخول.');
-                    }
-                });
-            }
-
-            console.log('✅ Tera Dashboard loaded successfully with all fixes.');
-        })();
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/dashboard.js"></script>
 
 </body>
 </html>
