@@ -16,7 +16,7 @@
 
     <style>
         /* ============================================================
-           جميع الأنماط مدمجة – حلول جذرية لمشاكل الجوال
+           جميع الأنماط – مع شريط تمرير فخم
            ============================================================ */
 
         :root {
@@ -164,7 +164,7 @@
         }
 
         /* --------------------------------------------
-           القائمة الجانبية
+           القائمة الجانبية – مع شريط تمرير فخم
            -------------------------------------------- */
         .sidebar-container {
             width: var(--sidebar-width);
@@ -180,8 +180,46 @@
             top: var(--header-height);
             right: 0;
             overflow-y: auto;
+            scroll-behavior: smooth;
+
+            /* دعم Firefox */
+            scrollbar-width: thin;
+            scrollbar-color: var(--tera-teal) rgba(255, 255, 255, 0.06);
         }
 
+        /* ============================================================
+           تخصيص شريط التمرير – فخامة وجمال
+           ============================================================ */
+        .sidebar-container::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        .sidebar-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            margin: 8px 0;
+        }
+
+        .sidebar-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--tera-teal), var(--tera-teal-light));
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s ease;
+            box-shadow: 0 0 12px rgba(2, 128, 144, 0.25);
+        }
+
+        .sidebar-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--tera-teal-light), #0d9488);
+            box-shadow: 0 0 24px rgba(2, 128, 144, 0.45);
+            transform: scale(1.02);
+        }
+
+        .sidebar-container::-webkit-scrollbar-thumb:active {
+            background: var(--tera-teal);
+            box-shadow: 0 0 30px rgba(2, 128, 144, 0.6);
+        }
+
+        /* تنسيقات القائمة الجانبية الأخرى */
         .sidebar-container.collapsed {
             width: var(--sidebar-collapsed-width);
         }
@@ -258,7 +296,7 @@
         }
 
         .nav-item a:hover,
-        .nav-item.active>a {
+        .nav-item.active > a {
             background: rgba(2, 128, 144, 0.15);
             color: var(--tera-teal-light);
         }
@@ -295,7 +333,7 @@
             display: flex;
         }
 
-        .submenu-open>a .submenu-toggle {
+        .submenu-open > a .submenu-toggle {
             transform: rotate(180deg);
         }
 
@@ -358,7 +396,7 @@
             overflow-x: hidden;
         }
 
-        .sidebar-container.collapsed~.main-content {
+        .sidebar-container.collapsed ~ .main-content {
             margin-right: var(--sidebar-collapsed-width);
         }
 
@@ -1190,6 +1228,20 @@
                 border-color: #334155 !important;
                 border-top-color: var(--tera-teal-light) !important;
             }
+
+            /* تخصيص شريط التمرير في الوضع المظلم */
+            .sidebar-container::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.04) !important;
+            }
+
+            .sidebar-container::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, var(--tera-teal-light), #0d9488) !important;
+                box-shadow: 0 0 15px rgba(20, 184, 166, 0.3) !important;
+            }
+
+            .sidebar-container::-webkit-scrollbar-thumb:hover {
+                box-shadow: 0 0 28px rgba(20, 184, 166, 0.5) !important;
+            }
         }
 
         /* --------------------------------------------
@@ -1500,9 +1552,7 @@
 
     </div>
 
-    <!-- ============================================
-    السكربتات (ملفات خارجية فقط)
-    ============================================ -->
+    <!-- السكربتات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
