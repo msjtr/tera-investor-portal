@@ -6,25 +6,10 @@
  * الموقع: /assets/js/profile.js
  * تاريخ التحديث: 2026-06-25
  * ============================================================
- * الصفحات المدعومة:
- *   1. personal-information.html   - المعلومات الشخصية
- *   2. contact-information.html    - معلومات الاتصال
- *   3. national-address.html       - العنوان الوطني
- *   4. bank-information.html       - المعلومات البنكية
- *   5. attachments.html            - المرفقات والوثائق
- * ============================================================
- * الهيكل:
- *   - هذا الملف هو النواة الرئيسية (Core)
- *   - يقوم بتحميل وتهيئة الملفات الفرعية لكل صفحة
- *   - يحتوي على الدوال المشتركة (القائمة الجانبية، تسجيل الخروج، إلخ)
- *   - كل صفحة لها ملف أوامر مستقل:
- *     profile-personal-information.js
- *     profile-contact-information.js
- *     profile-national-address.js
- *     profile-bank-information.js
- *     profile-attachments.js
- * ============================================================
  */
+
+// تعريف الكائن العام الذي ستستخدمه الملفات الفرعية
+window.ProfilePages = window.ProfilePages || {};
 
 const Profile = {
     /**
@@ -33,7 +18,7 @@ const Profile = {
     init: function() {
         console.log('🚀 Initializing Profile Pages...');
 
-        // تهيئة المكونات المشتركة بين جميع الصفحات (مع تحقق من وجود العناصر)
+        // تهيئة المكونات المشتركة بين جميع الصفحات
         this.initSidebar();
         this.initSubmenus();
         this.initLogout();
@@ -52,19 +37,22 @@ const Profile = {
         const currentPage = this.getCurrentPage();
         console.log(`📄 Current page: ${currentPage}`);
 
-        // محاولة استدعاء دالة التهيئة من الملف الفرعي (إن وجدت)
-        if (typeof ProfilePages !== 'undefined' && ProfilePages[currentPage]) {
-            try {
-                ProfilePages[currentPage].init();
-                console.log(`✅ ${currentPage} initialized from external file.`);
-                return;
-            } catch (e) {
-                console.warn(`⚠️ Error initializing ${currentPage}:`, e);
+        // التحقق من وجود الكائن العام والتهيئة الخاصة بالصفحة
+        if (window.ProfilePages && typeof window.ProfilePages === 'object') {
+            const pageModule = window.ProfilePages[currentPage];
+            if (pageModule && typeof pageModule.init === 'function') {
+                try {
+                    pageModule.init();
+                    console.log(`✅ ${currentPage} initialized from external file.`);
+                    return;
+                } catch (e) {
+                    console.warn(`⚠️ Error initializing ${currentPage}:`, e);
+                }
             }
         }
 
         // إذا لم يتم تحميل الملف الفرعي، نقدم تهيئة أساسية
-        console.warn(`⚠️ External script for ${currentPage} not loaded. Using fallback.`);
+        console.warn(`⚠️ External script for ${currentPage} not loaded or no init method. Using fallback.`);
         this.initFallback(currentPage);
     },
 
@@ -86,7 +74,6 @@ const Profile = {
      */
     initFallback: function(page) {
         console.log(`🔄 Using fallback initialization for ${page}`);
-        // تفعيل مناطق رفع الملفات كحد أدنى
         this.initUploadZones();
     },
 
@@ -117,16 +104,15 @@ const Profile = {
     },
 
     // ============================================================
-    // 1. تهيئة القائمة الجانبية (مع تحقق من وجود العنصر)
+    // 1. تهيئة القائمة الجانبية
     // ============================================================
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const isMobile = () => window.innerWidth <= 991;
 
-        // إذا لم توجد القائمة الجانبية، نخرج بدون أخطاء
         if (!sidebar) {
-            console.warn('⚠️ Sidebar element not found on this page. Skipping sidebar initialization.');
+            console.warn('⚠️ Sidebar element not found. Skipping sidebar initialization.');
             return;
         }
 
@@ -192,19 +178,14 @@ const Profile = {
                 if (overlay) overlay.classList.remove('active');
             }
         });
-
-        console.log('✅ Sidebar initialized (if present).');
     },
 
     // ============================================================
-    // 2. إدارة القوائم الفرعية (مع تحقق من وجودها)
+    // 2. إدارة القوائم الفرعية
     // ============================================================
     initSubmenus: function() {
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
-        if (!submenuToggles.length) {
-            console.warn('⚠️ No submenus found on this page.');
-            return;
-        }
+        if (!submenuToggles.length) return;
 
         const handleSubmenuClick = function(e) {
             const href = this.getAttribute('href');
@@ -238,7 +219,7 @@ const Profile = {
     },
 
     // ============================================================
-    // 3. تفعيل الحالة النشطة للقائمة (مع تحقق من وجود عناصر)
+    // 3. تفعيل الحالة النشطة للقائمة
     // ============================================================
     initActiveNav: function() {
         const currentPath = window.location.pathname;
@@ -260,14 +241,11 @@ const Profile = {
     },
 
     // ============================================================
-    // 4. تسجيل الخروج (مع تحقق من وجود الزر)
+    // 4. تسجيل الخروج
     // ============================================================
     initLogout: function() {
         const logoutBtn = document.getElementById('logoutBtn');
-        if (!logoutBtn) {
-            console.warn('⚠️ Logout button not found on this page.');
-            return;
-        }
+        if (!logoutBtn) return;
 
         logoutBtn.addEventListener('click', function() {
             if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
