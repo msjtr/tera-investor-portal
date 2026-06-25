@@ -1,5 +1,5 @@
 <!-- ============================================================
-     الهيدر العلوي (Header) – مكون منفصل
+     الهيدر العلوي (Header) – مكون منفصل – تم إصلاح ازدواجية الأزرار
      ============================================================
      الاستخدام: 
        - يمكن تضمينه مباشرة في الصفحات باستخدام:
@@ -18,20 +18,15 @@
 
 <header class="top-header no-print">
     
-    <!-- الجزء الأيمن (الشعار + أزرار التحكم) -->
+    <!-- الجزء الأيمن (الشعار + زر التحكم الوحيد) -->
     <div class="header-right-actions">
         
-        <!-- زر تبديل القائمة (دائم – يظهر في جميع الشاشات) -->
+        <!-- زر تبديل القائمة الوحيد (يعمل في جميع الشاشات) -->
         <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
             <i class="fas fa-bars"></i>
         </button>
-
-        <!-- زر فتح القائمة للجوال فقط (يظهر في الشاشات الصغيرة) -->
-        <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
-            <i class="fas fa-bars"></i>
-        </button>
         
-        <!-- الشعار -->
+        <!-- الشعار – تم تحسين حجمه ووضوحه -->
         <div class="header-logo">
             <a href="/pages/dashboard/index.html">
                 <img src="/images/logo.svg" 
@@ -104,18 +99,27 @@
         gap: 20px;
     }
 
+    .header-logo {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+    }
+
     .header-logo img {
         height: 40px;
         width: auto;
         display: block;
         transition: opacity 0.3s ease;
+        flex-shrink: 0;
+        filter: none !important;
+        opacity: 1 !important;
     }
 
     .header-logo img:hover {
         opacity: 0.85;
     }
 
-    /* زر تبديل القائمة */
+    /* زر تبديل القائمة (الوحيد) */
     .menu-toggle-btn {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -205,10 +209,6 @@
     /* ============================================
        فئات مساعدة
        ============================================ */
-    .d-lg-none {
-        display: none !important;
-    }
-
     .no-print {
         /* يمكن إضافة تنسيقات للطباعة هنا */
     }
@@ -228,7 +228,7 @@
         }
 
         .header-logo img {
-            height: 32px;
+            height: 36px; /* أكبر قليلاً للوضوح */
         }
 
         .header-right-actions {
@@ -252,11 +252,6 @@
             font-size: 16px;
             border-width: 2px;
         }
-
-        /* إظهار زر الجوال في الشاشات الصغيرة */
-        .d-lg-none {
-            display: flex !important;
-        }
     }
 
     @media (max-width: 480px) {
@@ -265,7 +260,7 @@
         }
 
         .header-logo img {
-            height: 28px;
+            height: 30px;
         }
 
         .menu-toggle-btn {
