@@ -25,7 +25,26 @@
 
     <!-- أنماط إضافية مخصصة للصفحة -->
     <style>
-        /* تحسينات إضافية للصفحة */
+        /* ============================================
+           تحسينات إضافية للصفحة – تم إصلاح مشاكل الجوال
+           ============================================ */
+        
+        /* تحسين استقرار الشاشة – منع الاهتزازات */
+        .app-wrapper {
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* تحسين الشعار في الجوال – أكبر وأوضح */
+        .header-logo img {
+            height: 40px;
+            width: auto;
+            display: block;
+            transition: opacity 0.3s ease;
+            filter: none; /* إزالة أي تأثيرات باهتة */
+            opacity: 1 !important;
+        }
+
         .welcome-banner {
             background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%);
             border-radius: 16px;
@@ -186,6 +205,105 @@
             font-size: 16px;
         }
 
+        /* ============================================
+           تحسينات الجوال – تم إصلاح الشعار والاستقرار
+           ============================================ */
+        @media (max-width: 991px) {
+            /* شعار أكبر وأوضح في الجوال */
+            .header-logo img {
+                height: 36px !important; /* أكبر من 32px السابقة */
+                filter: none !important;
+                opacity: 1 !important;
+            }
+
+            /* منع الاهتزاز عند فتح القائمة */
+            .app-wrapper {
+                position: relative;
+                overflow-x: hidden;
+            }
+
+            .main-content {
+                padding: 12px 12px 20px 12px;
+                transition: none; /* منع التأثيرات غير المرغوب فيها */
+            }
+
+            /* تحسين استقرار البانر في الجوال */
+            .welcome-banner {
+                padding: 16px 18px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .welcome-banner h2 {
+                font-size: 18px;
+            }
+
+            .welcome-banner .date-badge {
+                font-size: 13px;
+                padding: 8px 16px;
+                justify-content: center;
+            }
+
+            .quick-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .quick-actions .btn-quick {
+                flex: 1;
+                justify-content: center;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+
+            /* تحسين استقرار المحتوى */
+            .stats-grid {
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 14px 16px;
+            }
+
+            .stat-value {
+                font-size: 17px;
+            }
+
+            .panel-card {
+                padding: 14px 14px 16px 14px;
+            }
+
+            .dashboard-layout-grid {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* شعار أكبر في الشاشات الصغيرة جداً */
+            .header-logo img {
+                height: 32px !important;
+            }
+
+            .welcome-banner {
+                padding: 14px 14px;
+            }
+
+            .welcome-banner h2 {
+                font-size: 16px;
+            }
+
+            .stat-value {
+                font-size: 15px;
+            }
+
+            .stat-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+        }
+
         /* وضع مظلم للتحميل */
         @media (prefers-color-scheme: dark) {
             .loading-overlay {
@@ -197,33 +315,6 @@
             .spinner {
                 border-color: #334155;
                 border-top-color: var(--tera-teal-light);
-            }
-        }
-
-        /* تحسين الجداول للشاشات الصغيرة جداً */
-        @media (max-width: 480px) {
-            .welcome-banner {
-                padding: 20px;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .welcome-banner h2 {
-                font-size: 18px;
-            }
-            .welcome-banner .date-badge {
-                font-size: 12px;
-                padding: 6px 14px;
-                width: 100%;
-                justify-content: center;
-            }
-            .quick-actions {
-                width: 100%;
-            }
-            .quick-actions .btn-quick {
-                flex: 1;
-                justify-content: center;
-                font-size: 12px;
-                padding: 6px 12px;
             }
         }
     </style>
@@ -239,20 +330,21 @@
     <!-- الهيكل الرئيسي -->
     <div class="app-wrapper">
 
-        <!-- الهيدر العلوي – يحتوي على زر واحد فقط -->
+        <!-- الهيدر العلوي -->
         <header class="top-header no-print">
             
             <div class="header-right-actions">
-                <!-- زر تبديل القائمة الوحيد (يعمل في جميع الشاشات) -->
+                <!-- زر تبديل القائمة الوحيد -->
                 <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <!-- الشعار -->
+                <!-- الشعار – تم تحسين حجمه ووضوحه -->
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html">
                         <img src="/images/logo.svg" 
                              alt="Tera Logo" 
+                             style="height:40px; width:auto; display:block; filter:none; opacity:1;"
                              onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
                     </a>
                 </div>
@@ -272,7 +364,7 @@
         <!-- طبقة الخلفية (للجوال) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- القائمة الجانبية (Sidebar) -->
+        <!-- القائمة الجانبية -->
         <aside class="sidebar-container" id="sidebar">
             
             <!-- رأس القائمة (للموبايل) -->
