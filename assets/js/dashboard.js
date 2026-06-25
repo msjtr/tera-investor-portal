@@ -1,24 +1,37 @@
 /**
  * ============================================================
- * TERA INVESTOR PORTAL - DASHBOARD SIDEBAR LOGIC (FIXED)
- * متوافق مع زر التبديل الدائم (#sidebarToggle) والهيدر الجديد
+ * TERA INVESTOR PORTAL - DASHBOARD LOGIC
+ * ============================================================
+ * الموقع: /assets/js/dashboard.js
+ * تاريخ التحديث: 2026-06-25
  * ============================================================
  */
 
 const Dashboard = {
+    /**
+     * تهيئة لوحة التحكم بالكامل
+     */
     init: function() {
         console.log('🚀 Initializing Tera Dashboard...');
         this.initSidebar();
         this.initSubmenus();
+        this.initOpportunitiesToggle();
+        this.initTransactionFilter();
+        this.initChart();
+        this.initLogout();
+        this.initActiveNav();
         this.handleWindowResize();
+        console.log('✅ Dashboard initialized successfully.');
     },
 
     /**
-     * تهيئة القائمة الجانبية مع دعم الزر الدائم
+     * ============================================================
+     * 1. تهيئة القائمة الجانبية (Sidebar)
+     * يدعم الأزرار: #sidebarToggle (دائم) و #openSidebarBtn (جوال)
+     * ============================================================
      */
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle'); // الزر الدائم
         const overlay = document.getElementById('sidebarOverlay');
         const isMobile = () => window.innerWidth <= 991;
 
@@ -27,33 +40,23 @@ const Dashboard = {
             return;
         }
 
-        if (!toggleBtn) {
-            console.warn('⚠️ Warning: No toggle button found (#sidebarToggle).');
-            // محاولة البحث عن الزر البديل (إن وجد)
-            const altBtn = document.getElementById('openSidebarBtn');
-            if (altBtn) {
-                console.log('ℹ️ Using alternative button: #openSidebarBtn (for mobile only)');
-                // لكننا سنربط كلا الزرين إذا أمكن
-            }
-        }
-
         // ============================================
-        // 1. زر التبديل الدائم (#sidebarToggle)
+        // زر التبديل الدائم (#sidebarToggle)
         // ============================================
+        const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🟢 Sidebar Toggle Clicked');
+                console.log('🟢 Sidebar Toggle Clicked (#sidebarToggle)');
 
                 if (!isMobile()) {
-                    // وضع الديسكتوب: تصغير/تكبير القائمة (collapsed)
+                    // الديسكتوب: تصغير/تكبير
                     sidebar.classList.toggle('collapsed');
-                    // إزالة أي حالة مفتوحة للجوال
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                 } else {
-                    // وضع الجوال: فتح/غلق القائمة (sidebar-open)
+                    // الجوال: فتح/غلق منسدل
                     const isOpen = sidebar.classList.contains('sidebar-open');
                     if (isOpen) {
                         sidebar.classList.remove('sidebar-open');
@@ -64,23 +67,25 @@ const Dashboard = {
                     }
                 }
             });
+        } else {
+            console.warn('⚠️ Warning: #sidebarToggle not found.');
         }
 
         // ============================================
-        // 2. زر فتح الجوال (#openSidebarBtn) – إن وجد
+        // زر فتح الجوال (#openSidebarBtn)
         // ============================================
         const mobileOpenBtn = document.getElementById('openSidebarBtn');
         if (mobileOpenBtn) {
             mobileOpenBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('🟢 Mobile Sidebar Opened (#openSidebarBtn)');
+
                 if (isMobile()) {
-                    // في الجوال فقط: فتح القائمة
                     sidebar.classList.add('sidebar-open');
                     if (overlay) overlay.classList.add('active');
-                    console.log('🟢 Mobile sidebar opened via #openSidebarBtn.');
                 } else {
-                    // في الديسكتوب: نفس سلوك الزر الرئيسي (تصغير/تكبير)
+                    // في الديسكتوب، نفس سلوك الزر الرئيسي
                     sidebar.classList.toggle('collapsed');
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
@@ -89,7 +94,7 @@ const Dashboard = {
         }
 
         // ============================================
-        // 3. زر إغلاق الجوال (#closeSidebarBtn) – إن وجد
+        // زر إغلاق الجوال (#closeSidebarBtn)
         // ============================================
         const closeBtn = document.getElementById('closeSidebarBtn');
         if (closeBtn) {
@@ -103,7 +108,7 @@ const Dashboard = {
         }
 
         // ============================================
-        // 4. النقر على الـ overlay
+        // إغلاق القائمة عند النقر على الـ overlay
         // ============================================
         if (overlay) {
             overlay.addEventListener('click', function() {
@@ -114,17 +119,7 @@ const Dashboard = {
         }
 
         // ============================================
-        // 5. إغلاق الجوال عند تغيير حجم النافذة
-        // ============================================
-        window.addEventListener('resize', function() {
-            if (!isMobile()) {
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
-
-        // ============================================
-        // 6. إغلاق القائمة بالضغط على Escape
+        // إغلاق القائمة بالضغط على Escape
         // ============================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
@@ -135,7 +130,7 @@ const Dashboard = {
         });
 
         // ============================================
-        // 7. النقر المزدوج على الشعار لتبديل التصغير (اختياري)
+        // النقر المزدوج على الشعار لتبديل التصغير (ديسكتوب)
         // ============================================
         const logo = document.querySelector('.header-logo a');
         if (logo) {
@@ -151,7 +146,9 @@ const Dashboard = {
     },
 
     /**
-     * إدارة القوائم الفرعية (submenus)
+     * ============================================================
+     * 2. إدارة القوائم الفرعية (Submenus)
+     * ============================================================
      */
     initSubmenus: function() {
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
@@ -167,8 +164,8 @@ const Dashboard = {
                 if (!parentLi) return;
 
                 const sidebar = document.getElementById('sidebar');
+                // في وضع التصغير (collapsed) نمنع فتح القوائم الفرعية
                 if (sidebar && sidebar.classList.contains('collapsed')) {
-                    // إذا كانت القائمة مصغرة، نمنع فتح القوائم الفرعية
                     // يمكنك إلغاء تعليق السطر التالي لتوسيع القائمة تلقائياً
                     // sidebar.classList.remove('collapsed');
                     return;
@@ -180,24 +177,236 @@ const Dashboard = {
                 });
 
                 parentLi.classList.toggle('submenu-open');
+                console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
             });
         });
     },
 
     /**
-     * معالجة تغيير حجم النافذة
+     * ============================================================
+     * 3. تبديل عرض الفرص الاستثمارية (إظهار/إخفاء)
+     * ============================================================
+     */
+    initOpportunitiesToggle: function() {
+        const toggleBtn = document.getElementById('toggleOppBtn');
+        const wrapper = document.getElementById('opportunitiesPanelWrapper');
+        const icon = document.getElementById('toggleOppIcon');
+        const text = document.getElementById('toggleOppText');
+
+        if (!toggleBtn || !wrapper) {
+            console.warn('⚠️ Opportunities toggle elements not found.');
+            return;
+        }
+
+        let hidden = false;
+        wrapper.style.transition = 'all 0.3s ease';
+        wrapper.style.maxHeight = '600px';
+        wrapper.style.overflow = 'hidden';
+
+        toggleBtn.addEventListener('click', function() {
+            hidden = !hidden;
+            if (hidden) {
+                wrapper.style.maxHeight = '0';
+                wrapper.style.padding = '0';
+                wrapper.style.opacity = '0';
+                if (icon) icon.className = 'fas fa-eye';
+                if (text) text.textContent = 'عرض';
+            } else {
+                wrapper.style.maxHeight = '600px';
+                wrapper.style.padding = '';
+                wrapper.style.opacity = '1';
+                if (icon) icon.className = 'fas fa-eye-slash';
+                if (text) text.textContent = 'إخفاء';
+            }
+            console.log(`🔄 Opportunities ${hidden ? 'hidden' : 'shown'}.`);
+        });
+    },
+
+    /**
+     * ============================================================
+     * 4. فلتر العمليات المالية
+     * ============================================================
+     */
+    initTransactionFilter: function() {
+        const filterSelect = document.getElementById('transactionFilter');
+        const tbody = document.getElementById('transactionsTableBody');
+
+        if (!filterSelect || !tbody) {
+            console.warn('⚠️ Transaction filter elements not found.');
+            return;
+        }
+
+        filterSelect.addEventListener('change', function() {
+            const value = this.value;
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(function(row) {
+                const text = row.textContent.toLowerCase();
+                if (value === 'all') {
+                    row.style.display = '';
+                } else if (value === 'deposits' && (text.includes('إيداع') || text.includes('+') || text.includes('دخول'))) {
+                    row.style.display = '';
+                } else if (value === 'deductions' && (text.includes('سحب') || text.includes('-') || text.includes('خصم'))) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            console.log(`🔄 Transaction filter changed to: ${value}`);
+        });
+    },
+
+    /**
+     * ============================================================
+     * 5. الرسم البياني باستخدام Chart.js
+     * ============================================================
+     */
+    initChart: function() {
+        const ctx = document.getElementById('mainChart');
+        if (!ctx) {
+            console.warn('⚠️ Chart canvas #mainChart not found.');
+            return;
+        }
+
+        if (typeof Chart === 'undefined') {
+            console.warn('⚠️ Chart.js library not loaded.');
+            return;
+        }
+
+        try {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                    datasets: [{
+                        label: 'قيمة المحفظة (ر.س)',
+                        data: [85000, 92000, 98000, 105000, 115000, 124500],
+                        borderColor: '#028090',
+                        backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#028090',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { family: 'Tajawal', size: 12 },
+                                color: '#334155',
+                                padding: 20,
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y.toLocaleString() + ' ر.س';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                font: { family: 'Tajawal', size: 11 },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return value.toLocaleString() + ' ر.س';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Tajawal', size: 11 },
+                                color: '#64748b'
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('✅ Chart.js initialized successfully.');
+        } catch (error) {
+            console.error('❌ Error initializing chart:', error);
+        }
+    },
+
+    /**
+     * ============================================================
+     * 6. تسجيل الخروج
+     * ============================================================
+     */
+    initLogout: function() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (!logoutBtn) {
+            console.warn('⚠️ Logout button not found.');
+            return;
+        }
+
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
+                console.log('🔴 User logged out.');
+                alert('سيتم توجيهك إلى صفحة تسجيل الدخول.');
+                // window.location.href = '/auth/login/login.html';
+            }
+        });
+    },
+
+    /**
+     * ============================================================
+     * 7. تفعيل الحالة النشطة للقائمة بناءً على المسار الحالي
+     * ============================================================
+     */
+    initActiveNav: function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-item > a[href]');
+
+        navLinks.forEach(function(link) {
+            const href = link.getAttribute('href');
+            if (href === currentPath || (href !== '#' && href !== 'javascript:void(0)' && currentPath.includes(href))) {
+                const parent = link.closest('.nav-item');
+                if (parent) {
+                    parent.classList.add('active');
+                    if (parent.classList.contains('has-submenu')) {
+                        parent.classList.add('submenu-open');
+                    }
+                }
+            }
+        });
+    },
+
+    /**
+     * ============================================================
+     * 8. معالجة تغيير حجم النافذة (إعادة ضبط الحالة)
+     * ============================================================
      */
     handleWindowResize: function() {
         let resizeTimer;
+        const isMobile = () => window.innerWidth <= 991;
+
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 const sidebar = document.getElementById('sidebar');
                 const overlay = document.getElementById('sidebarOverlay');
-                if (window.innerWidth > 991 && sidebar) {
+
+                if (!isMobile() && sidebar) {
+                    // عند الانتقال إلى الديسكتوب، نغلق وضع الجوال
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                 }
+
+                // التأكد من أن حالة التصغير (collapsed) تبقى كما هي في الديسكتوب
+                // لا نقوم بتغييرها تلقائياً
             }, 200);
         });
     }
@@ -210,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Dashboard.init();
 });
 
-// تصدير للاستخدام (اختياري)
+// تصدير للاستخدام في بيئات أخرى (CommonJS / Node.js)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Dashboard;
 }
