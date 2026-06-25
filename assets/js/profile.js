@@ -33,7 +33,7 @@ const Profile = {
     init: function() {
         console.log('🚀 Initializing Profile Pages...');
 
-        // تهيئة المكونات المشتركة بين جميع الصفحات
+        // تهيئة المكونات المشتركة بين جميع الصفحات (مع تحقق من وجود العناصر)
         this.initSidebar();
         this.initSubmenus();
         this.initLogout();
@@ -53,7 +53,6 @@ const Profile = {
         console.log(`📄 Current page: ${currentPage}`);
 
         // محاولة استدعاء دالة التهيئة من الملف الفرعي (إن وجدت)
-        // الملفات الفرعية تقوم بتسجيل دوالها في النطاق العالمي أو في كائن ProfilePages
         if (typeof ProfilePages !== 'undefined' && ProfilePages[currentPage]) {
             try {
                 ProfilePages[currentPage].init();
@@ -87,11 +86,8 @@ const Profile = {
      */
     initFallback: function(page) {
         console.log(`🔄 Using fallback initialization for ${page}`);
-        // تنبيه المستخدم بأن بعض الوظائف قد لا تعمل
-        if (document.querySelector('.panel-card')) {
-            // محاولة تفعيل الوظائف الأساسية
-            this.initUploadZones();
-        }
+        // تفعيل مناطق رفع الملفات كحد أدنى
+        this.initUploadZones();
     },
 
     /**
@@ -121,15 +117,16 @@ const Profile = {
     },
 
     // ============================================================
-    // 1. تهيئة القائمة الجانبية (مشتركة)
+    // 1. تهيئة القائمة الجانبية (مع تحقق من وجود العنصر)
     // ============================================================
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const isMobile = () => window.innerWidth <= 991;
 
+        // إذا لم توجد القائمة الجانبية، نخرج بدون أخطاء
         if (!sidebar) {
-            console.error('❌ Error: Element with ID "sidebar" NOT FOUND.');
+            console.warn('⚠️ Sidebar element not found on this page. Skipping sidebar initialization.');
             return;
         }
 
@@ -195,14 +192,19 @@ const Profile = {
                 if (overlay) overlay.classList.remove('active');
             }
         });
+
+        console.log('✅ Sidebar initialized (if present).');
     },
 
     // ============================================================
-    // 2. إدارة القوائم الفرعية (مشتركة)
+    // 2. إدارة القوائم الفرعية (مع تحقق من وجودها)
     // ============================================================
     initSubmenus: function() {
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
-        if (!submenuToggles.length) return;
+        if (!submenuToggles.length) {
+            console.warn('⚠️ No submenus found on this page.');
+            return;
+        }
 
         const handleSubmenuClick = function(e) {
             const href = this.getAttribute('href');
@@ -236,11 +238,12 @@ const Profile = {
     },
 
     // ============================================================
-    // 3. تفعيل الحالة النشطة للقائمة (مشتركة)
+    // 3. تفعيل الحالة النشطة للقائمة (مع تحقق من وجود عناصر)
     // ============================================================
     initActiveNav: function() {
         const currentPath = window.location.pathname;
         const navLinks = document.querySelectorAll('.nav-item > a[href]');
+        if (!navLinks.length) return;
 
         navLinks.forEach(function(link) {
             const href = link.getAttribute('href');
@@ -257,11 +260,14 @@ const Profile = {
     },
 
     // ============================================================
-    // 4. تسجيل الخروج (مشترك)
+    // 4. تسجيل الخروج (مع تحقق من وجود الزر)
     // ============================================================
     initLogout: function() {
         const logoutBtn = document.getElementById('logoutBtn');
-        if (!logoutBtn) return;
+        if (!logoutBtn) {
+            console.warn('⚠️ Logout button not found on this page.');
+            return;
+        }
 
         logoutBtn.addEventListener('click', function() {
             if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
