@@ -387,6 +387,30 @@
         }
 
         /* =========================================
+               تنبيه الإقرار (مساحة كافية)
+               ========================================= */
+        .alert-warning-box {
+            margin-top: 24px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #b91c1c;
+            font-weight: 700;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            line-height: 1.7;
+        }
+        .alert-warning-box i {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* =========================================
                زر الإرسال
                ========================================= */
         .btn-submit {
@@ -414,26 +438,6 @@
             box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
         }
         .btn-submit i {
-            font-size: 18px;
-        }
-
-        /* =========================================
-               التنبيهات
-               ========================================= */
-        .alert-warning-box {
-            margin-top: 18px;
-            font-size: 13px;
-            color: #b91c1c;
-            font-weight: 700;
-            background: #fef2f2;
-            padding: 12px 18px;
-            border-radius: 10px;
-            border: 1px solid #fca5a5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .alert-warning-box i {
             font-size: 18px;
         }
 
@@ -576,6 +580,12 @@
             .progress-steps .step-line {
                 width: 20px;
             }
+            .alert-warning-box {
+                padding: 14px 16px;
+                font-size: 13px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -636,6 +646,16 @@
             }
             .progress-steps .step-line {
                 width: 12px;
+            }
+            .alert-warning-box {
+                padding: 12px 14px;
+                font-size: 12px;
+                margin-top: 16px;
+                margin-bottom: 16px;
+                gap: 10px;
+            }
+            .alert-warning-box i {
+                font-size: 18px;
             }
         }
 
@@ -1010,7 +1030,7 @@
             </div>
 
             <!-- =========================================
-            القسم 3: الإقرار والتعهد (تم حذف قسم التحقق)
+            القسم 3: الإقرار والتعهد مع تنبيه منفصل بمساحة كافية
             ========================================= -->
             <div class="panel-card">
                 <div class="panel-header">
@@ -1018,6 +1038,7 @@
                     <h3>الإقرار والتعهد</h3>
                 </div>
 
+                <!-- صندوق الإقرار -->
                 <div class="declaration-box">
                     <input type="checkbox" required id="declarationCheck">
                     <div>
@@ -1031,9 +1052,12 @@
                     </div>
                 </div>
 
+                <!-- التنبيه بمساحة كافية (منفصل بوضوح) -->
                 <div class="alert-warning-box">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span><strong>تنبيه:</strong> تستخدم بيانات جهة اتصال الطوارئ عند الضرورة القصوى أو عند تعذر التواصل مع صاحب الحساب، ولن يتم الإفصاح عن أي معلومات مالية أو سرية إلا وفق الأنظمة واللوائح المعمول بها.</span>
+                    <div>
+                        <strong>تنبيه:</strong> تستخدم بيانات جهة اتصال الطوارئ عند الضرورة القصوى أو عند تعذر التواصل مع صاحب الحساب، ولن يتم الإفصاح عن أي معلومات مالية أو سرية إلا وفق الأنظمة واللوائح المعمول بها.
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-submit">
