@@ -946,28 +946,6 @@
                         <label class="form-label">اسم البنك <span class="req">*</span></label>
                         <select class="form-control" id="bankName" required>
                             <option value="">اختر البنك...</option>
-                            <optgroup label="المملكة العربية السعودية">
-                                <option value="alrajhi">مصرف الراجحي</option>
-                                <option value="albilad">بنك البلاد</option>
-                                <option value="alinma">بنك الإنماء</option>
-                                <option value="riyad">بنك الرياض</option>
-                                <option value="sabb">البنك السعودي البريطاني (SABB)</option>
-                                <option value="samba">بنك سامبا</option>
-                                <option value="nc">البنك الأهلي التجاري (SNB)</option>
-                                <option value="fransi">بنك الفرنسي</option>
-                                <option value="saib">البنك السعودي للاستثمار</option>
-                                <option value="jazira">بنك الجزيرة</option>
-                            </optgroup>
-                            <optgroup label="الإمارات العربية المتحدة">
-                                <option value="enbd">بنك الإمارات دبي الوطني</option>
-                                <option value="adcb">بنك أبوظبي التجاري</option>
-                                <option value="fgb">بنك الخليج الأول</option>
-                            </optgroup>
-                            <optgroup label="دول أخرى">
-                                <option value="hsbc">HSBC</option>
-                                <option value="citi">Citibank</option>
-                                <option value="standard">Standard Chartered</option>
-                            </optgroup>
                         </select>
                     </div>
 
@@ -1061,20 +1039,7 @@
                         <input type="text" class="form-control" id="bankCity" placeholder="مثال: الرياض" required>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">دولة البنك <span class="req">*</span></label>
-                        <select class="form-control" id="bankCountryCode" required>
-                            <option value="">اختر الدولة...</option>
-                            <option value="sa">المملكة العربية السعودية</option>
-                            <option value="ae">الإمارات العربية المتحدة</option>
-                            <option value="kw">الكويت</option>
-                            <option value="qa">قطر</option>
-                            <option value="bh">البحرين</option>
-                            <option value="om">عُمان</option>
-                            <option value="eg">مصر</option>
-                            <option value="other">أخرى</option>
-                        </select>
-                    </div>
+                    <!-- تم حذف حقل "دولة البنك" لأنه موجود بالفعل في القسم الأساسي -->
 
                 </div>
             </div>
@@ -1215,143 +1180,6 @@
     الملف المخصص للصفحة (الجافا مفصولة هنا)
     ========================================= -->
     <script src="/assets/js/profile-bank-information.js"></script>
-
-    <!-- =========================================
-    سكربتات إضافية للصفحة (في حال عدم تحميل الملف الخارجي)
-    ========================================= -->
-    <script>
-        (function() {
-            'use strict';
-
-            // ============================================
-            // 1. إظهار/إخفاء الحقول الدولية حسب الدولة المختارة
-            // ============================================
-            const countrySelect = document.getElementById('bankCountry');
-            const internationalSection = document.getElementById('internationalFields');
-
-            if (countrySelect && internationalSection) {
-                countrySelect.addEventListener('change', function() {
-                    if (this.value && this.value !== 'sa') {
-                        internationalSection.classList.add('show');
-                    } else {
-                        internationalSection.classList.remove('show');
-                    }
-                });
-                // تحقق أولي
-                if (countrySelect.value && countrySelect.value !== 'sa') {
-                    internationalSection.classList.add('show');
-                }
-            }
-
-            // ============================================
-            // 2. التحقق من تطابق الآيبان
-            // ============================================
-            const ibanInput = document.getElementById('iban');
-            const confirmIbanInput = document.getElementById('confirmIban');
-            const ibanHint = document.getElementById('ibanMatchHint');
-
-            if (ibanInput && confirmIbanInput && ibanHint) {
-                function checkIbanMatch() {
-                    if (confirmIbanInput.value.length > 0) {
-                        if (ibanInput.value === confirmIbanInput.value) {
-                            ibanHint.textContent = '✅ رقم الآيبان متطابق.';
-                            ibanHint.style.color = '#10b981';
-                            confirmIbanInput.style.borderColor = '#10b981';
-                        } else {
-                            ibanHint.textContent = '❌ رقم الآيبان غير متطابق.';
-                            ibanHint.style.color = '#dc2626';
-                            confirmIbanInput.style.borderColor = '#dc2626';
-                        }
-                    } else {
-                        ibanHint.textContent = 'يجب أن يتطابق مع رقم الآيبان المدخل.';
-                        ibanHint.style.color = '#64748b';
-                        confirmIbanInput.style.borderColor = '#d1d9e6';
-                    }
-                }
-
-                ibanInput.addEventListener('input', checkIbanMatch);
-                confirmIbanInput.addEventListener('input', checkIbanMatch);
-            }
-
-            // ============================================
-            // 3. رفع الملفات
-            // ============================================
-            document.querySelectorAll('.upload-zone').forEach(function(zone) {
-                const fileInput = zone.querySelector('input[type="file"]');
-                if (fileInput) {
-                    zone.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        fileInput.click();
-                    });
-                    fileInput.addEventListener('change', function(e) {
-                        e.stopPropagation();
-                        if (this.files && this.files.length > 0) {
-                            const fileName = this.files[0].name;
-                            const span = zone.querySelector('span:first-of-type');
-                            if (span) {
-                                span.textContent = fileName.length > 25 ? fileName.slice(0, 22) + '…' : fileName;
-                                span.style.color = '#028090';
-                            }
-                            // إزالة أي خطأ سابق
-                            const parentGroup = zone.closest('.form-group') || zone.parentElement;
-                            const existingError = parentGroup?.querySelector('.field-error');
-                            if (existingError) existingError.remove();
-                        }
-                    });
-                }
-            });
-
-            // ============================================
-            // 4. معالج إرسال النموذج
-            // ============================================
-            const form = document.getElementById('bankInfoForm');
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const declaration = document.getElementById('declarationCheck');
-                if (!declaration.checked) {
-                    alert('يرجى الموافقة على الإقرار والتعهد قبل المتابعة.');
-                    declaration.focus();
-                    return;
-                }
-
-                // التحقق من تطابق الآيبان
-                if (ibanInput.value !== confirmIbanInput.value) {
-                    alert('رقم الآيبان وتأكيده غير متطابقين. يرجى المراجعة.');
-                    confirmIbanInput.focus();
-                    return;
-                }
-
-                // التحقق من رفع المستند
-                const fileInput = document.querySelector('#bankProofUpload input[type="file"]');
-                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                    alert('يرجى رفع مستند إثبات الحساب البنكي.');
-                    document.querySelector('#bankProofUpload').focus();
-                    return;
-                }
-
-                // إذا كانت الدولة خارج السعودية، التحقق من الحقول الإضافية
-                const country = countrySelect.value;
-                if (country && country !== 'sa') {
-                    const swift = document.getElementById('swiftCode').value;
-                    const bankNameEn = document.getElementById('bankNameEn').value;
-                    const bankAddress = document.getElementById('bankAddress').value;
-                    const bankCity = document.getElementById('bankCity').value;
-                    const bankCountryCode = document.getElementById('bankCountryCode').value;
-                    if (!swift || !bankNameEn || !bankAddress || !bankCity || !bankCountryCode) {
-                        alert('يرجى إكمال جميع الحقول الإضافية للحسابات خارج المملكة.');
-                        return;
-                    }
-                }
-
-                alert('✅ تم حفظ البيانات البنكية بنجاح.\nجاري التحقق من المستندات...');
-            });
-
-            console.log('✅ Bank Information page loaded successfully.');
-
-        })();
-    </script>
 
 </body>
 </html>
