@@ -94,7 +94,7 @@ const Dashboard = {
         }
 
         // ============================================
-        // زر إغلاق الجوال (#closeSidebarBtn) - تم إصلاحه
+        // زر إغلاق الجوال (#closeSidebarBtn)
         // ============================================
         const closeBtn = document.getElementById('closeSidebarBtn');
         if (closeBtn) {
@@ -147,48 +147,61 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 2. إدارة القوائم الفرعية (Submenus) - تم إصلاحها
+     * 2. إدارة القوائم الفرعية (Submenus) - تم إصلاحها بالكامل
      * ============================================================
      */
     initSubmenus: function() {
+        // نبحث عن جميع روابط القوائم الفرعية (التي تحتوي على أيقونة السهم)
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
+        
         if (!submenuToggles.length) {
             console.warn('⚠️ No submenus found.');
             return;
         }
 
+        console.log(`🔄 Found ${submenuToggles.length} submenu toggles.`);
+
         submenuToggles.forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                // السماح بالروابط العادية (غير #) بالانتقال
-                const href = this.getAttribute('href');
-                if (href && href !== '#' && href !== 'javascript:void(0)') {
-                    // إذا كان الرابط حقيقياً (مثل /pages/...)، نسمح بالانتقال
-                    return;
-                }
-
-                // منع الانتقال لروابط # فقط
-                e.preventDefault();
-
-                const parentLi = this.closest('.has-submenu');
-                if (!parentLi) return;
-
-                const sidebar = document.getElementById('sidebar');
-
-                // إذا كانت القائمة في وضع التصغير (collapsed) في الديسكتوب، نقوم بتوسيعها تلقائياً
-                if (sidebar && sidebar.classList.contains('collapsed') && !(window.innerWidth <= 991)) {
-                    sidebar.classList.remove('collapsed');
-                    console.log('🔄 Sidebar expanded automatically to show submenu.');
-                }
-
-                // إغلاق القوائم الفرعية الأخرى (Accordion)
-                document.querySelectorAll('.has-submenu').forEach(function(el) {
-                    if (el !== parentLi) el.classList.remove('submenu-open');
-                });
-
-                parentLi.classList.toggle('submenu-open');
-                console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
-            });
+            // إزالة أي مستمع قديم لتجنب التكرار (في حالة إعادة التهيئة)
+            link.removeEventListener('click', handleSubmenuClick);
+            link.addEventListener('click', handleSubmenuClick);
         });
+
+        // دالة معالج النقر على القائمة الفرعية
+        function handleSubmenuClick(e) {
+            const href = this.getAttribute('href');
+            const parentLi = this.closest('.has-submenu');
+            
+            // إذا كان الرابط يشير إلى صفحة حقيقية (وليس # أو void)، نسمح بالانتقال
+            if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
+                // نسمح بالانتقال للصفحة، ولا نمنع الحدث
+                console.log(`🔗 Navigating to: ${href}`);
+                return; // نخرج من الدالة، فلا نمنع الانتقال ولا نبدل القائمة
+            }
+
+            // منع الانتقال الافتراضي فقط للروابط التي هي # أو void
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!parentLi) return;
+
+            const sidebar = document.getElementById('sidebar');
+
+            // إذا كانت القائمة في وضع التصغير (collapsed) في الديسكتوب، نقوم بتوسيعها تلقائياً
+            if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
+                sidebar.classList.remove('collapsed');
+                console.log('🔄 Sidebar expanded automatically to show submenu.');
+            }
+
+            // إغلاق القوائم الفرعية الأخرى (Accordion)
+            document.querySelectorAll('.has-submenu').forEach(function(el) {
+                if (el !== parentLi) el.classList.remove('submenu-open');
+            });
+
+            // تبديل حالة القائمة الفرعية الحالية
+            parentLi.classList.toggle('submenu-open');
+            console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
+        }
     },
 
     /**
