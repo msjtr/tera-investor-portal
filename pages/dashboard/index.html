@@ -88,7 +88,7 @@
             opacity: 0.85;
         }
 
-        /* زر فتح القائمة (للجوال) */
+        /* زر تبديل القائمة (دائم – يظهر في جميع الشاشات) */
         .menu-toggle-btn {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -114,6 +114,11 @@
 
         .menu-toggle-btn:active {
             transform: scale(0.94);
+        }
+
+        /* زر الفتح الإضافي للجوال (يمكن إخفاؤه في الديسكتوب) */
+        .menu-toggle-btn.mobile-only {
+            display: none;
         }
 
         /* بيانات المستخدم */
@@ -876,12 +881,17 @@
     <div class="app-wrapper">
 
         <!-- ============================================
-        الهيدر العلوي (Top Header) – الجديد
+        الهيدر العلوي (Top Header) – مع زر تحكم دائم
         ============================================ -->
         <header class="top-header no-print">
             
             <div class="header-right-actions">
-                <!-- زر فتح القائمة الجانبية (يظهر في الجوال فقط) -->
+                <!-- زر تبديل القائمة (دائم – يظهر في جميع الشاشات) -->
+                <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <!-- زر فتح القائمة للجوال فقط (يظهر في الشاشات الصغيرة) -->
                 <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
                     <i class="fas fa-bars"></i>
                 </button>
