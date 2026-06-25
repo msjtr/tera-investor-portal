@@ -1,7 +1,7 @@
 /**
  * ============================================================
  * TERA INVESTOR PORTAL - DASHBOARD SIDEBAR LOGIC (FIXED)
- * متوافق مع الهيدر الجديد (#openSidebarBtn) والهيكل القديم (#sidebarToggle)
+ * متوافق مع زر التبديل الدائم (#sidebarToggle) والهيدر الجديد
  * ============================================================
  */
 
@@ -14,38 +14,31 @@ const Dashboard = {
     },
 
     /**
-     * تهيئة القائمة الجانبية مع دعم الأزرار المختلفة
+     * تهيئة القائمة الجانبية مع دعم الزر الدائم
      */
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle'); // الزر الدائم
         const overlay = document.getElementById('sidebarOverlay');
-        const isMobile = () => window.innerWidth <= 991; // نفس النقطة المستخدمة في CSS
+        const isMobile = () => window.innerWidth <= 991;
 
-        // التحقق من وجود القائمة الجانبية
         if (!sidebar) {
             console.error('❌ Error: Element with ID "sidebar" NOT FOUND.');
             return;
         }
 
-        // ============================================
-        // 1. تحديد زر التبديل المناسب
-        //    - الأولوية لـ #openSidebarBtn (الهيدر الجديد)
-        //    - في حال عدم وجوده، نبحث عن #sidebarToggle (الهيدر القديم)
-        // ============================================
-        let toggleBtn = document.getElementById('openSidebarBtn');
         if (!toggleBtn) {
-            toggleBtn = document.getElementById('sidebarToggle');
-            if (toggleBtn) {
-                console.log('ℹ️ Using legacy toggle button: #sidebarToggle');
-            } else {
-                console.warn('⚠️ No toggle button found (#openSidebarBtn or #sidebarToggle).');
+            console.warn('⚠️ Warning: No toggle button found (#sidebarToggle).');
+            // محاولة البحث عن الزر البديل (إن وجد)
+            const altBtn = document.getElementById('openSidebarBtn');
+            if (altBtn) {
+                console.log('ℹ️ Using alternative button: #openSidebarBtn (for mobile only)');
+                // لكننا سنربط كلا الزرين إذا أمكن
             }
-        } else {
-            console.log('✅ Using new toggle button: #openSidebarBtn');
         }
 
         // ============================================
-        // 2. ربط حدث النقر على زر التبديل
+        // 1. زر التبديل الدائم (#sidebarToggle)
         // ============================================
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
@@ -54,13 +47,13 @@ const Dashboard = {
                 console.log('🟢 Sidebar Toggle Clicked');
 
                 if (!isMobile()) {
-                    // وضع الديسكتوب: تصغير/تكبير القائمة
+                    // وضع الديسكتوب: تصغير/تكبير القائمة (collapsed)
                     sidebar.classList.toggle('collapsed');
                     // إزالة أي حالة مفتوحة للجوال
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                 } else {
-                    // وضع الجوال: فتح/غلق القائمة مع الـ overlay
+                    // وضع الجوال: فتح/غلق القائمة (sidebar-open)
                     const isOpen = sidebar.classList.contains('sidebar-open');
                     if (isOpen) {
                         sidebar.classList.remove('sidebar-open');
@@ -74,7 +67,43 @@ const Dashboard = {
         }
 
         // ============================================
-        // 3. إغلاق القائمة عند النقر على الـ overlay
+        // 2. زر فتح الجوال (#openSidebarBtn) – إن وجد
+        // ============================================
+        const mobileOpenBtn = document.getElementById('openSidebarBtn');
+        if (mobileOpenBtn) {
+            mobileOpenBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (isMobile()) {
+                    // في الجوال فقط: فتح القائمة
+                    sidebar.classList.add('sidebar-open');
+                    if (overlay) overlay.classList.add('active');
+                    console.log('🟢 Mobile sidebar opened via #openSidebarBtn.');
+                } else {
+                    // في الديسكتوب: نفس سلوك الزر الرئيسي (تصغير/تكبير)
+                    sidebar.classList.toggle('collapsed');
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                }
+            });
+        }
+
+        // ============================================
+        // 3. زر إغلاق الجوال (#closeSidebarBtn) – إن وجد
+        // ============================================
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+                console.log('🔴 Sidebar closed via #closeSidebarBtn.');
+            });
+        }
+
+        // ============================================
+        // 4. النقر على الـ overlay
         // ============================================
         if (overlay) {
             overlay.addEventListener('click', function() {
@@ -85,18 +114,17 @@ const Dashboard = {
         }
 
         // ============================================
-        // 4. إغلاق القائمة عند تغيير حجم النافذة من جوال إلى ديسكتوب
+        // 5. إغلاق الجوال عند تغيير حجم النافذة
         // ============================================
-        const resizeHandler = () => {
+        window.addEventListener('resize', function() {
             if (!isMobile()) {
                 sidebar.classList.remove('sidebar-open');
                 if (overlay) overlay.classList.remove('active');
             }
-        };
-        window.addEventListener('resize', resizeHandler);
+        });
 
         // ============================================
-        // 5. إغلاق القائمة عند الضغط على Escape
+        // 6. إغلاق القائمة بالضغط على Escape
         // ============================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
@@ -107,14 +135,14 @@ const Dashboard = {
         });
 
         // ============================================
-        // 6. (اختياري) النقر المزدوج على الشعار لتبديل التصغير في الديسكتوب
+        // 7. النقر المزدوج على الشعار لتبديل التصغير (اختياري)
         // ============================================
         const logo = document.querySelector('.header-logo a');
         if (logo) {
             logo.addEventListener('dblclick', function(e) {
                 if (!isMobile()) {
                     sidebar.classList.toggle('collapsed');
-                    console.log('🔄 Sidebar collapsed toggled via double-click on logo.');
+                    console.log('🔄 Sidebar toggled via double-click on logo.');
                 }
             });
         }
@@ -138,27 +166,26 @@ const Dashboard = {
                 const parentLi = this.closest('.has-submenu');
                 if (!parentLi) return;
 
-                // منع فتح القوائم الفرعية في وضع التصغير (عندما تكون القائمة مصغرة)
                 const sidebar = document.getElementById('sidebar');
                 if (sidebar && sidebar.classList.contains('collapsed')) {
-                    // يمكنك اختيار توسيع القائمة تلقائياً بدلاً من منع الفتح
-                    // sidebar.classList.remove('collapsed'); // (اختياري)
+                    // إذا كانت القائمة مصغرة، نمنع فتح القوائم الفرعية
+                    // يمكنك إلغاء تعليق السطر التالي لتوسيع القائمة تلقائياً
+                    // sidebar.classList.remove('collapsed');
                     return;
                 }
 
-                // إغلاق القوائم الفرعية الأخرى (لجعلها تعمل كـ Accordion)
+                // إغلاق القوائم الفرعية الأخرى (Accordion)
                 document.querySelectorAll('.has-submenu').forEach(function(el) {
                     if (el !== parentLi) el.classList.remove('submenu-open');
                 });
 
                 parentLi.classList.toggle('submenu-open');
-                console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
             });
         });
     },
 
     /**
-     * معالجة تغيير حجم النافذة (إعادة ضبط الحالة)
+     * معالجة تغيير حجم النافذة
      */
     handleWindowResize: function() {
         let resizeTimer;
@@ -168,13 +195,8 @@ const Dashboard = {
                 const sidebar = document.getElementById('sidebar');
                 const overlay = document.getElementById('sidebarOverlay');
                 if (window.innerWidth > 991 && sidebar) {
-                    // إزالة حالة الجوال عند الانتقال إلى الديسكتوب
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
-                }
-                // في حالة الديسكتوب، نضمن عدم وجود أثر للجوال
-                if (window.innerWidth <= 991 && sidebar) {
-                    // إذا كانت القائمة مفتوحة في الجوال نتركها، لا نقوم بأي تغيير
                 }
             }, 200);
         });
@@ -188,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Dashboard.init();
 });
 
-// تصدير للاستخدام في بيئات أخرى (اختياري)
+// تصدير للاستخدام (اختياري)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Dashboard;
 }
