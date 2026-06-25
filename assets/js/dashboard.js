@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * TERA INVESTOR PORTAL - DASHBOARD LOGIC
+ * TERA INVESTOR PORTAL - DASHBOARD LOGIC (FIXED)
  * ============================================================
  * الموقع: /assets/js/dashboard.js
  * تاريخ التحديث: 2026-06-25
@@ -94,7 +94,7 @@ const Dashboard = {
         }
 
         // ============================================
-        // زر إغلاق الجوال (#closeSidebarBtn)
+        // زر إغلاق الجوال (#closeSidebarBtn) - تم إصلاحه
         // ============================================
         const closeBtn = document.getElementById('closeSidebarBtn');
         if (closeBtn) {
@@ -147,7 +147,7 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 2. إدارة القوائم الفرعية (Submenus)
+     * 2. إدارة القوائم الفرعية (Submenus) - تم إصلاحها
      * ============================================================
      */
     initSubmenus: function() {
@@ -159,16 +159,25 @@ const Dashboard = {
 
         submenuToggles.forEach(function(link) {
             link.addEventListener('click', function(e) {
+                // السماح بالروابط العادية (غير #) بالانتقال
+                const href = this.getAttribute('href');
+                if (href && href !== '#' && href !== 'javascript:void(0)') {
+                    // إذا كان الرابط حقيقياً (مثل /pages/...)، نسمح بالانتقال
+                    return;
+                }
+
+                // منع الانتقال لروابط # فقط
                 e.preventDefault();
+
                 const parentLi = this.closest('.has-submenu');
                 if (!parentLi) return;
 
                 const sidebar = document.getElementById('sidebar');
-                // في وضع التصغير (collapsed) نمنع فتح القوائم الفرعية
-                if (sidebar && sidebar.classList.contains('collapsed')) {
-                    // يمكنك إلغاء تعليق السطر التالي لتوسيع القائمة تلقائياً
-                    // sidebar.classList.remove('collapsed');
-                    return;
+
+                // إذا كانت القائمة في وضع التصغير (collapsed) في الديسكتوب، نقوم بتوسيعها تلقائياً
+                if (sidebar && sidebar.classList.contains('collapsed') && !(window.innerWidth <= 991)) {
+                    sidebar.classList.remove('collapsed');
+                    console.log('🔄 Sidebar expanded automatically to show submenu.');
                 }
 
                 // إغلاق القوائم الفرعية الأخرى (Accordion)
