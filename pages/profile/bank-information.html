@@ -1,22 +1,1357 @@
-<section class="bank-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>المعلومات البنكية | Tera Investor Portal</title>
 
-    <h1>المعلومات البنكية</h1>
+    <!-- الشعار والأيقونات -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <form>
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-        <label>اسم البنك</label>
-        <input type="text">
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/profile.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-        <label>رقم الآيبان</label>
-        <input type="text">
+    <style>
+        /* =========================================
+           التنسيقات الأساسية – نفس الهوية البصرية
+           ========================================= */
+        * {
+            box-sizing: border-box;
+        }
 
-        <label>اسم المستفيد</label>
-        <input type="text">
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-        <button type="submit">
-            حفظ الحساب البنكي
-        </button>
+        /* =========================================
+           الهيدر العلوي
+           ========================================= */
+        .focused-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+        }
+        .focused-header .logo img {
+            height: 38px;
+        }
+        .focused-header .client-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .focused-header .client-info h5 {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            color: #0A1B3F;
+            font-weight: 800;
+        }
+        .focused-header .client-info .avatar {
+            width: 38px;
+            height: 38px;
+            background: #0A1B3F;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 16px;
+            border: 2px solid #028090;
+        }
 
-    </form>
+        /* =========================================
+           عنوان الصفحة
+           ========================================= */
+        .page-subheader {
+            background: #0A1B3F;
+            padding: 20px 40px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-subheader h1 {
+            margin: 0;
+            color: #ffffff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-subheader h1 i {
+            color: #5eead4;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .btn-back:hover {
+            background: #028090;
+            border-color: #028090;
+        }
 
-</section>
+        /* =========================================
+           الحاوية الرئيسية
+           ========================================= */
+        .content-container {
+            max-width: 1060px;
+            margin: 0 auto 40px auto;
+            padding: 28px 24px 0 24px;
+            flex: 1;
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: #0c4a6e;
+            line-height: 1.7;
+            background: #e0f2fe;
+            padding: 16px 22px;
+            border-radius: 12px;
+            border-right: 5px solid #028090;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .page-desc i {
+            color: #028090;
+            font-size: 20px;
+        }
+        .page-desc strong {
+            color: #0A1B3F;
+        }
+
+        /* =========================================
+           البطاقات
+           ========================================= */
+        .panel-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #e9edf2;
+            padding: 28px 32px 32px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.2s;
+        }
+        .panel-card:hover {
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .panel-header i {
+            color: #028090;
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
+            background: #f0fdfa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .panel-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #0A1B3F;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .panel-header .panel-badge {
+            margin-right: auto;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* =========================================
+           شبكة النموذج
+           ========================================= */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px 30px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0A1B3F;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .form-label .req {
+            color: #dc2626;
+            font-size: 16px;
+        }
+        .form-label .optional {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fafcff;
+            outline: none;
+            transition: 0.2s;
+            color: #1e293b;
+            height: 48px;
+            line-height: 1.5;
+        }
+        .form-control:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+            background: #ffffff;
+        }
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+        select.form-control {
+            appearance: auto;
+            cursor: pointer;
+            height: 48px;
+        }
+        textarea.form-control {
+            height: auto;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* =========================================
+           صناديق التلميحات
+           ========================================= */
+        .input-hint-box {
+            background: #f8fafc;
+            border: 1px dashed #d1d9e6;
+            padding: 10px 16px;
+            border-radius: 10px;
+            margin-top: 4px;
+        }
+        .input-hint-box p {
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0A1B3F;
+        }
+        .input-hint-box ul {
+            margin: 0;
+            padding-right: 20px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        .input-hint-box ul li {
+            list-style-type: disc;
+        }
+
+        .format-hint {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+            padding: 4px 0;
+        }
+
+        /* =========================================
+           منطقة رفع الملفات
+           ========================================= */
+        .upload-zone {
+            border: 2px dashed #d1d9e6;
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            background: #fafcff;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-height: 110px;
+            justify-content: center;
+        }
+        .upload-zone:hover {
+            border-color: #028090;
+            background: #f0fdfa;
+        }
+        .upload-zone i {
+            font-size: 28px;
+            color: #028090;
+        }
+        .upload-zone span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0A1B3F;
+        }
+        .upload-zone .sub-text {
+            font-size: 11px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+
+        /* =========================================
+           صندوق الإقرار
+           ========================================= */
+        .declaration-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 22px 24px;
+            border-radius: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+        .declaration-box input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            margin-top: 4px;
+            cursor: pointer;
+            accent-color: #028090;
+        }
+        .declaration-box p {
+            margin: 0 0 4px 0;
+            font-weight: 800;
+            color: #065f46;
+            font-size: 15px;
+        }
+        .declaration-box ul {
+            margin: 6px 0 0 0;
+            padding-right: 22px;
+            font-size: 13px;
+            color: #166534;
+            font-weight: 600;
+            line-height: 1.8;
+        }
+        .declaration-box ul li {
+            list-style-type: circle;
+        }
+
+        /* =========================================
+           تنبيه الإقرار
+           ========================================= */
+        .alert-warning-box {
+            margin-top: 24px;
+            margin-bottom: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #b91c1c;
+            font-weight: 700;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            line-height: 1.7;
+        }
+        .alert-warning-box i {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* =========================================
+           زر الإرسال
+           ========================================= */
+        .btn-submit {
+            background: #028090;
+            color: #fff;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 800;
+            font-family: 'Tajawal', sans-serif;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: 0.3px;
+            height: 56px;
+        }
+        .btn-submit:hover {
+            background: #0A1B3F;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
+        }
+        .btn-submit i {
+            font-size: 18px;
+        }
+
+        /* =========================================
+           شريط التقدم
+           ========================================= */
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 28px;
+            padding: 0;
+            list-style: none;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .progress-steps li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            padding: 8px 16px;
+        }
+        .progress-steps li .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            transition: 0.3s;
+        }
+        .progress-steps li.active .step-num {
+            background: #028090;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(2, 128, 144, 0.3);
+        }
+        .progress-steps li.completed .step-num {
+            background: #10b981;
+            color: #fff;
+        }
+        .progress-steps .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .progress-steps .step-line.completed {
+            background: #10b981;
+        }
+
+        /* =========================================
+           تذييل الصفحة
+           ========================================= */
+        .page-footer {
+            text-align: center;
+            padding: 22px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+
+        /* =========================================
+           شروط المستند
+           ========================================= */
+        .document-conditions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        .document-conditions li {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .document-conditions li i {
+            color: #028090;
+            font-size: 16px;
+        }
+
+        /* =========================================
+           قسم بيانات خارج المملكة (مخفي افتراضياً)
+           ========================================= */
+        #internationalFields {
+            display: none;
+        }
+        #internationalFields.show {
+            display: block;
+        }
+
+        /* =========================================
+           استجابة للشاشات الصغيرة (الجوال)
+           ========================================= */
+        @media (max-width: 820px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .focused-header {
+                padding: 10px 20px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .page-subheader {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px 24px;
+                margin-top: 12px;
+            }
+            .page-subheader h1 {
+                font-size: 19px;
+            }
+            .content-container {
+                padding: 20px 14px 0 14px;
+            }
+            .panel-card {
+                padding: 20px 18px 24px 18px;
+            }
+            .declaration-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .declaration-box input[type="checkbox"] {
+                margin-top: 0;
+            }
+            .focused-header .client-info h5 {
+                font-size: 13px;
+            }
+            .form-control,
+            select.form-control {
+                height: 44px;
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .btn-submit {
+                height: 50px;
+                font-size: 15px;
+                padding: 14px 20px;
+            }
+            .progress-steps li {
+                font-size: 11px;
+                padding: 4px 8px;
+                gap: 4px;
+            }
+            .progress-steps li .step-num {
+                width: 26px;
+                height: 26px;
+                font-size: 11px;
+            }
+            .progress-steps .step-line {
+                width: 20px;
+            }
+            .alert-warning-box {
+                padding: 14px 16px;
+                font-size: 13px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+            .document-conditions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-subheader h1 {
+                font-size: 17px;
+            }
+            .btn-back {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+            .panel-header h3 {
+                font-size: 16px;
+            }
+            .form-control,
+            select.form-control {
+                height: 42px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .btn-submit {
+                height: 46px;
+                font-size: 14px;
+                padding: 12px 16px;
+            }
+            .declaration-box {
+                padding: 16px 16px;
+            }
+            .declaration-box ul {
+                font-size: 12px;
+            }
+            .page-desc {
+                font-size: 13px;
+                padding: 12px 16px;
+            }
+            .panel-header i {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+            .panel-header .panel-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+            .progress-steps li .step-label {
+                display: none;
+            }
+            .progress-steps .step-line {
+                width: 12px;
+            }
+            .alert-warning-box {
+                padding: 12px 14px;
+                font-size: 12px;
+                margin-top: 16px;
+                margin-bottom: 16px;
+                gap: 10px;
+            }
+            .alert-warning-box i {
+                font-size: 18px;
+            }
+            .upload-zone {
+                min-height: 80px;
+                padding: 12px 10px;
+            }
+            .upload-zone i {
+                font-size: 22px;
+            }
+            .document-conditions {
+                padding: 12px 14px;
+            }
+            .document-conditions li {
+                font-size: 12px;
+            }
+        }
+
+        /* =========================================
+           وضع مظلم (نفس الهوية)
+           ========================================= */
+        @media (prefers-color-scheme: dark) {
+            .focused-header {
+                background: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            .focused-header .client-info h5 {
+                color: #f8fafc !important;
+            }
+            .focused-header .client-info .avatar {
+                background: #0f172a !important;
+                border-color: #14b8a6 !important;
+            }
+            .page-subheader {
+                background: #0f172a !important;
+            }
+            .panel-card {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            .panel-header {
+                border-bottom-color: #334155 !important;
+            }
+            .panel-header h3 {
+                color: #f8fafc !important;
+            }
+            .panel-header .panel-badge {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .page-desc {
+                background: #1e293b !important;
+                border-right-color: #14b8a6 !important;
+                color: #e2e8f0 !important;
+            }
+            .page-desc strong {
+                color: #f8fafc !important;
+            }
+            .form-label {
+                color: #f1f5f9 !important;
+            }
+            .form-control {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+                color: #e2e8f0 !important;
+            }
+            .form-control:focus {
+                border-color: #14b8a6 !important;
+                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
+            }
+            .form-control::placeholder {
+                color: #64748b !important;
+            }
+            .input-hint-box {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .input-hint-box p {
+                color: #f1f5f9 !important;
+            }
+            .input-hint-box ul {
+                color: #94a3b8 !important;
+            }
+            .declaration-box {
+                background: rgba(22, 101, 52, 0.15) !important;
+                border-color: #166534 !important;
+            }
+            .declaration-box p {
+                color: #bbf7d0 !important;
+            }
+            .declaration-box ul {
+                color: #86efac !important;
+            }
+            .alert-warning-box {
+                background: rgba(220, 38, 38, 0.15) !important;
+                border-color: #991b1b !important;
+                color: #fca5a5 !important;
+            }
+            .page-footer {
+                background: #1e293b !important;
+                border-top-color: #334155 !important;
+                color: #64748b !important;
+            }
+            .panel-header i {
+                background: rgba(20, 184, 166, 0.15) !important;
+            }
+            .progress-steps li {
+                color: #94a3b8 !important;
+            }
+            .progress-steps li .step-num {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .progress-steps li.active .step-num {
+                background: #14b8a6 !important;
+                color: #0f172a !important;
+                box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3) !important;
+            }
+            .progress-steps li.completed .step-num {
+                background: #10b981 !important;
+                color: #0f172a !important;
+            }
+            .progress-steps .step-line {
+                background: #334155 !important;
+            }
+            .progress-steps .step-line.completed {
+                background: #10b981 !important;
+            }
+            .upload-zone {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .upload-zone:hover {
+                border-color: #14b8a6 !important;
+                background: rgba(20, 184, 166, 0.08) !important;
+            }
+            .document-conditions {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .document-conditions li {
+                color: #e2e8f0 !important;
+            }
+        }
+
+        /* =========================================
+           تقليل الحركة
+           ========================================= */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-university"></i> المعلومات البنكية</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
+    </div>
+
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
+
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>يرجى إدخال بيانات الحساب البنكي الخاص بك بدقة</strong> حيث سيتم استخدامه لتحويل الأرباح ورأس المال والمستحقات المالية. يجب أن تكون جميع البيانات مطابقة للحساب البنكي المسجل باسم صاحب الحساب.</span>
+        </div>
+
+        <!-- شريط التقدم -->
+        <ul class="progress-steps">
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
+                <span class="step-label">شخصي</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
+                <span class="step-label">تواصل</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
+                <span class="step-label">عنوان</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="active">
+                <span class="step-num">4</span>
+                <span class="step-label">بنكي</span>
+            </li>
+        </ul>
+
+        <form id="bankInfoForm" novalidate>
+
+            <!-- =========================================
+            القسم 1: بيانات الحساب الأساسية
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-piggy-bank"></i>
+                    <h3>بيانات الحساب الأساسية</h3>
+                    <span class="panel-badge">مطلوب</span>
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- الدولة -->
+                    <div class="form-group">
+                        <label class="form-label">الدولة <span class="req">*</span></label>
+                        <select class="form-control" id="bankCountry" required>
+                            <option value="">اختر الدولة...</option>
+                            <option value="sa">🇸🇦 المملكة العربية السعودية</option>
+                            <option value="ae">🇦🇪 الإمارات العربية المتحدة</option>
+                            <option value="kw">🇰🇼 دولة الكويت</option>
+                            <option value="qa">🇶🇦 دولة قطر</option>
+                            <option value="bh">🇧🇭 مملكة البحرين</option>
+                            <option value="om">🇴🇲 سلطنة عُمان</option>
+                            <option value="eg">🇪🇬 جمهورية مصر العربية</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+
+                    <!-- عملة الحساب -->
+                    <div class="form-group">
+                        <label class="form-label">عملة الحساب <span class="req">*</span></label>
+                        <select class="form-control" id="accountCurrency" required>
+                            <option value="">اختر العملة...</option>
+                            <option value="SAR">الريال السعودي (SAR)</option>
+                            <option value="AED">الدرهم الإماراتي (AED)</option>
+                            <option value="KWD">الدينار الكويتي (KWD)</option>
+                            <option value="QAR">الريال القطري (QAR)</option>
+                            <option value="BHD">الدينار البحريني (BHD)</option>
+                            <option value="OMR">الريال العماني (OMR)</option>
+                            <option value="EGP">الجنيه المصري (EGP)</option>
+                            <option value="USD">الدولار الأمريكي (USD)</option>
+                            <option value="EUR">اليورو (EUR)</option>
+                        </select>
+                    </div>
+
+                    <!-- اسم البنك -->
+                    <div class="form-group full-width">
+                        <label class="form-label">اسم البنك <span class="req">*</span></label>
+                        <select class="form-control" id="bankName" required>
+                            <option value="">اختر البنك...</option>
+                            <optgroup label="المملكة العربية السعودية">
+                                <option value="alrajhi">مصرف الراجحي</option>
+                                <option value="albilad">بنك البلاد</option>
+                                <option value="alinma">بنك الإنماء</option>
+                                <option value="riyad">بنك الرياض</option>
+                                <option value="sabb">البنك السعودي البريطاني (SABB)</option>
+                                <option value="samba">بنك سامبا</option>
+                                <option value="nc">البنك الأهلي التجاري (SNB)</option>
+                                <option value="fransi">بنك الفرنسي</option>
+                                <option value="saib">البنك السعودي للاستثمار</option>
+                                <option value="jazira">بنك الجزيرة</option>
+                            </optgroup>
+                            <optgroup label="الإمارات العربية المتحدة">
+                                <option value="enbd">بنك الإمارات دبي الوطني</option>
+                                <option value="adcb">بنك أبوظبي التجاري</option>
+                                <option value="fgb">بنك الخليج الأول</option>
+                            </optgroup>
+                            <optgroup label="دول أخرى">
+                                <option value="hsbc">HSBC</option>
+                                <option value="citi">Citibank</option>
+                                <option value="standard">Standard Chartered</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- اسم صاحب الحساب بالعربية -->
+                    <div class="form-group">
+                        <label class="form-label">اسم صاحب الحساب بالعربية <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="holderNameAr" placeholder="مثال: محمد بن عبدالله الشمري" required oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
+                        <div class="input-hint-box">
+                            <p>ملاحظات:</p>
+                            <ul>
+                                <li>يجب أن يطابق الاسم المسجل لدى البنك.</li>
+                                <li>يقبل الأحرف العربية فقط.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- اسم صاحب الحساب بالإنجليزية -->
+                    <div class="form-group">
+                        <label class="form-label">Account Holder Name <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="holderNameEn" placeholder="Example: Mohammed Abdullah Alshammari" required oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                        <div class="input-hint-box">
+                            <p>ملاحظات:</p>
+                            <ul>
+                                <li>يجب أن يطابق الاسم المسجل لدى البنك.</li>
+                                <li>يقبل الأحرف الإنجليزية فقط.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- رقم الآيبان -->
+                    <div class="form-group">
+                        <label class="form-label">رقم الآيبان (IBAN) <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="iban" placeholder="مثال: SA4420000001234567891234" required>
+                        <span class="format-hint">يتم التحقق من صحة صيغة الآيبان تلقائياً. يجب أن يكون الحساب باسم صاحب الحساب.</span>
+                    </div>
+
+                    <!-- تأكيد رقم الآيبان -->
+                    <div class="form-group">
+                        <label class="form-label">تأكيد رقم الآيبان <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="confirmIban" placeholder="أعد إدخال رقم الآيبان" required>
+                        <span class="format-hint" id="ibanMatchHint" style="color:#64748b;">يجب أن يتطابق مع رقم الآيبان المدخل.</span>
+                    </div>
+
+                    <!-- حساب رئيسي -->
+                    <div class="form-group full-width">
+                        <div style="display:flex; align-items:center; gap:12px; padding:10px 0;">
+                            <input type="checkbox" id="primaryAccount" style="width:20px; height:20px; accent-color:#028090; cursor:pointer;">
+                            <label for="primaryAccount" style="font-weight:700; font-size:15px; color:#0A1B3F; cursor:pointer;">
+                                <i class="fas fa-star" style="color:#f59e0b;"></i> تعيين هذا الحساب كحساب رئيسي لاستقبال الأرباح ورأس المال.
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- =========================================
+            القسم 2: بيانات إضافية للحسابات خارج المملكة
+            ========================================= -->
+            <div class="panel-card" id="internationalFields">
+                <div class="panel-header">
+                    <i class="fas fa-globe"></i>
+                    <h3>بيانات إضافية للحسابات خارج المملكة</h3>
+                    <span class="panel-badge">خارج السعودية</span>
+                </div>
+
+                <p style="font-size:13px; color:#64748b; margin-bottom:18px;">
+                    <i class="fas fa-info-circle" style="color:#028090;"></i>
+                    تظهر هذه الحقول تلقائياً عند اختيار دولة غير المملكة العربية السعودية.
+                </p>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label class="form-label">SWIFT CODE / BIC <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="swiftCode" placeholder="مثال: SAKKSAKAXXX" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">اسم البنك باللغة الإنجليزية <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="bankNameEn" placeholder="Example: Al Rajhi Bank" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">عنوان البنك <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="bankAddress" placeholder="مثال: طريق الملك فهد، الرياض" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">مدينة البنك <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="bankCity" placeholder="مثال: الرياض" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">دولة البنك <span class="req">*</span></label>
+                        <select class="form-control" id="bankCountryCode" required>
+                            <option value="">اختر الدولة...</option>
+                            <option value="sa">المملكة العربية السعودية</option>
+                            <option value="ae">الإمارات العربية المتحدة</option>
+                            <option value="kw">الكويت</option>
+                            <option value="qa">قطر</option>
+                            <option value="bh">البحرين</option>
+                            <option value="om">عُمان</option>
+                            <option value="eg">مصر</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- =========================================
+            القسم 3: المستندات المطلوبة
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-file-invoice"></i>
+                    <h3>المستندات المطلوبة</h3>
+                    <span class="panel-badge">مطلوب</span>
+                </div>
+
+                <p style="font-size:13px; color:#64748b; margin-bottom:16px;">
+                    <i class="fas fa-info-circle" style="color:#028090;"></i>
+                    شهادة آيبان أو إثبات ملكية الحساب البنكي. يمكن رفع أحد المستندات التالية:
+                </p>
+
+                <div class="document-conditions">
+                    <li><i class="fas fa-check-circle"></i> شهادة آيبان رسمية من البنك</li>
+                    <li><i class="fas fa-check-circle"></i> كشف حساب بنكي</li>
+                    <li><i class="fas fa-check-circle"></i> خطاب تعريف بالحساب</li>
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <label class="form-label">رفع مستند إثبات الحساب البنكي <span class="req">*</span></label>
+                    <div class="upload-zone" id="bankProofUpload">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>اضغط لرفع المستند</span>
+                        <span class="sub-text">JPG, PNG, PDF حتى 5 ميجابايت</span>
+                        <input type="file" style="display:none;" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="input-hint-box" style="margin-top:12px;">
+                        <p>شروط المستند:</p>
+                        <ul>
+                            <li>أن يكون باسم صاحب الحساب.</li>
+                            <li>أن يظهر اسم البنك ورقم الآيبان بوضوح.</li>
+                            <li>أن يكون المستند حديثاً وواضحاً.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =========================================
+            القسم 4: التحقق
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>التحقق من الحساب البنكي</h3>
+                    <span class="panel-badge">أمان</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; padding:8px 0;">
+                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+                        <i class="fas fa-file-upload" style="color:#028090; font-size:20px;"></i>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">مراجعة المستندات</div>
+                            <div style="font-size:12px; color:#64748b;">تدقيق يدوي</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+                        <i class="fas fa-id-card" style="color:#028090; font-size:20px;"></i>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">مطابقة اسم صاحب الحساب</div>
+                            <div style="font-size:12px; color:#64748b;">مع بيانات الهوية</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+                        <i class="fas fa-plus-circle" style="color:#028090; font-size:20px;"></i>
+                        <div>
+                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">طلب مستندات إضافية</div>
+                            <div style="font-size:12px; color:#64748b;">عند الحاجة</div>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size:13px; color:#64748b; margin-top:12px;">
+                    <i class="fas fa-info-circle" style="color:#028090;"></i>
+                    قد يتم التحقق من الحساب البنكي من خلال إحدى الطرق المذكورة أعلاه.
+                </p>
+            </div>
+
+            <!-- =========================================
+            القسم 5: الإقرار والتعهد
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-file-signature"></i>
+                    <h3>الإقرار والتعهد</h3>
+                </div>
+
+                <div class="declaration-box">
+                    <input type="checkbox" required id="declarationCheck">
+                    <div>
+                        <p>☑ أقر وأتعهد بأن:</p>
+                        <ul>
+                            <li>الحساب البنكي المسجل يخصني شخصياً.</li>
+                            <li>جميع البيانات البنكية المدخلة صحيحة ومطابقة لسجلات البنك.</li>
+                            <li>أتحمل مسؤولية أي تأخير أو تعثر ناتج عن إدخال بيانات بنكية غير صحيحة.</li>
+                            <li>ألتزم بتحديث البيانات البنكية عند حدوث أي تغيير مستقبلي.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert-warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>تنبيه:</strong> لا يمكن تحويل الأرباح أو رأس المال إلى حسابات بنكية لا تتطابق مع بيانات صاحب الحساب المسجل في المنصة، ويحق للإدارة طلب مستندات إضافية للتحقق من الملكية قبل تنفيذ أي عملية تحويل.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> حفظ البيانات البنكية
+                </button>
+            </div>
+
+        </form>
+
+    </main>
+
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/profile.js"></script>
+
+    <!-- =========================================
+    الملف المخصص للصفحة (الجافا مفصولة هنا)
+    ========================================= -->
+    <script src="/assets/js/profile-bank-information.js"></script>
+
+    <!-- =========================================
+    سكربتات إضافية للصفحة (في حال عدم تحميل الملف الخارجي)
+    ========================================= -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================
+            // 1. إظهار/إخفاء الحقول الدولية حسب الدولة المختارة
+            // ============================================
+            const countrySelect = document.getElementById('bankCountry');
+            const internationalSection = document.getElementById('internationalFields');
+
+            if (countrySelect && internationalSection) {
+                countrySelect.addEventListener('change', function() {
+                    if (this.value && this.value !== 'sa') {
+                        internationalSection.classList.add('show');
+                    } else {
+                        internationalSection.classList.remove('show');
+                    }
+                });
+                // تحقق أولي
+                if (countrySelect.value && countrySelect.value !== 'sa') {
+                    internationalSection.classList.add('show');
+                }
+            }
+
+            // ============================================
+            // 2. التحقق من تطابق الآيبان
+            // ============================================
+            const ibanInput = document.getElementById('iban');
+            const confirmIbanInput = document.getElementById('confirmIban');
+            const ibanHint = document.getElementById('ibanMatchHint');
+
+            if (ibanInput && confirmIbanInput && ibanHint) {
+                function checkIbanMatch() {
+                    if (confirmIbanInput.value.length > 0) {
+                        if (ibanInput.value === confirmIbanInput.value) {
+                            ibanHint.textContent = '✅ رقم الآيبان متطابق.';
+                            ibanHint.style.color = '#10b981';
+                            confirmIbanInput.style.borderColor = '#10b981';
+                        } else {
+                            ibanHint.textContent = '❌ رقم الآيبان غير متطابق.';
+                            ibanHint.style.color = '#dc2626';
+                            confirmIbanInput.style.borderColor = '#dc2626';
+                        }
+                    } else {
+                        ibanHint.textContent = 'يجب أن يتطابق مع رقم الآيبان المدخل.';
+                        ibanHint.style.color = '#64748b';
+                        confirmIbanInput.style.borderColor = '#d1d9e6';
+                    }
+                }
+
+                ibanInput.addEventListener('input', checkIbanMatch);
+                confirmIbanInput.addEventListener('input', checkIbanMatch);
+            }
+
+            // ============================================
+            // 3. رفع الملفات
+            // ============================================
+            document.querySelectorAll('.upload-zone').forEach(function(zone) {
+                const fileInput = zone.querySelector('input[type="file"]');
+                if (fileInput) {
+                    zone.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        fileInput.click();
+                    });
+                    fileInput.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        if (this.files && this.files.length > 0) {
+                            const fileName = this.files[0].name;
+                            const span = zone.querySelector('span:first-of-type');
+                            if (span) {
+                                span.textContent = fileName.length > 25 ? fileName.slice(0, 22) + '…' : fileName;
+                                span.style.color = '#028090';
+                            }
+                            // إزالة أي خطأ سابق
+                            const parentGroup = zone.closest('.form-group') || zone.parentElement;
+                            const existingError = parentGroup?.querySelector('.field-error');
+                            if (existingError) existingError.remove();
+                        }
+                    });
+                }
+            });
+
+            // ============================================
+            // 4. معالج إرسال النموذج
+            // ============================================
+            const form = document.getElementById('bankInfoForm');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const declaration = document.getElementById('declarationCheck');
+                if (!declaration.checked) {
+                    alert('يرجى الموافقة على الإقرار والتعهد قبل المتابعة.');
+                    declaration.focus();
+                    return;
+                }
+
+                // التحقق من تطابق الآيبان
+                if (ibanInput.value !== confirmIbanInput.value) {
+                    alert('رقم الآيبان وتأكيده غير متطابقين. يرجى المراجعة.');
+                    confirmIbanInput.focus();
+                    return;
+                }
+
+                // التحقق من رفع المستند
+                const fileInput = document.querySelector('#bankProofUpload input[type="file"]');
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    alert('يرجى رفع مستند إثبات الحساب البنكي.');
+                    document.querySelector('#bankProofUpload').focus();
+                    return;
+                }
+
+                // إذا كانت الدولة خارج السعودية، التحقق من الحقول الإضافية
+                const country = countrySelect.value;
+                if (country && country !== 'sa') {
+                    const swift = document.getElementById('swiftCode').value;
+                    const bankNameEn = document.getElementById('bankNameEn').value;
+                    const bankAddress = document.getElementById('bankAddress').value;
+                    const bankCity = document.getElementById('bankCity').value;
+                    const bankCountryCode = document.getElementById('bankCountryCode').value;
+                    if (!swift || !bankNameEn || !bankAddress || !bankCity || !bankCountryCode) {
+                        alert('يرجى إكمال جميع الحقول الإضافية للحسابات خارج المملكة.');
+                        return;
+                    }
+                }
+
+                alert('✅ تم حفظ البيانات البنكية بنجاح.\nجاري التحقق من المستندات...');
+            });
+
+            console.log('✅ Bank Information page loaded successfully.');
+
+        })();
+    </script>
+
+</body>
+</html>
