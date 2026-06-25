@@ -1,22 +1,12 @@
 <!-- ============================================================
-     القائمة الجانبية (Sidebar) – مكون منفصل
+     القائمة الجانبية (Sidebar) – مكون منفصل – تم الإصلاح
      ============================================================
      الاستخدام: 
-       - يمكن تضمينه مباشرة في الصفحات باستخدام:
-         <div id="sidebar-container"></div>
-         <script>
-           fetch('/components/sidebar.html')
-             .then(res => res.text())
-             .then(html => document.getElementById('sidebar-container').innerHTML = html);
-         </script>
-       
-       - أو باستخدام Server Side Includes (SSI):
-         <!--#include virtual="/components/sidebar.html" -->
-       
-       - أو باستخدام أي تقنية تضمين أخرى.
+       - تضمينه في الصفحات باستخدام fetch أو SSI أو PHP Include.
+       - يعمل مع dashboard.js الذي يدير فتح/غلق القوائم الفرعية.
      ============================================================ -->
 
-<aside class="sidebar-container" id="sidebar">
+<aside class="sidebar-container" id="sidebar" role="navigation" aria-label="القائمة الرئيسية">
     
     <!-- رأس القائمة (للموبايل) -->
     <div class="sidebar-mobile-header d-lg-none">
@@ -28,12 +18,13 @@
 
     <nav class="sidebar-menu">
         <ul class="nav-list">
+            
             <!-- ==========================================
             العنصر النشط: لوحة التحكم
             ========================================== -->
             <li class="nav-item active">
                 <a href="/pages/dashboard/index.html">
-                    <i class="fas fa-th-large"></i>
+                    <i class="fas fa-th-large" aria-hidden="true"></i>
                     <span class="nav-label">لوحة التحكم</span>
                 </a>
             </li>
@@ -41,31 +32,35 @@
             <!-- ==========================================
             الاستثمارات
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-chart-line"></i>
+            <li class="nav-item has-submenu" id="submenu-investments">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-investments-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-chart-line" aria-hidden="true"></i>
                     <span class="nav-label">الاستثمار</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-investments-list" role="list">
                     <li>
                         <a href="/pages/investments/investment-details.html">
-                            <i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة
+                            <i class="fas fa-store-alt" aria-hidden="true"></i> سوق الفرص والشركات المطروحة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/investments/extended-investments.html">
-                            <i class="fas fa-history"></i> سجل الشراكة الممتدة
+                            <i class="fas fa-history" aria-hidden="true"></i> سجل الشراكة الممتدة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/investments/opportunities.html">
-                            <i class="fas fa-list-ul"></i> سجل فرص الشراكة
+                            <i class="fas fa-list-ul" aria-hidden="true"></i> سجل فرص الشراكة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/investments/active-investments.html">
-                            <i class="fas fa-file-signature"></i> سجل العقود
+                            <i class="fas fa-file-signature" aria-hidden="true"></i> سجل العقود
                         </a>
                     </li>
                 </ul>
@@ -74,41 +69,45 @@
             <!-- ==========================================
             المحفظة
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-wallet"></i>
+            <li class="nav-item has-submenu" id="submenu-portfolio">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-portfolio-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-wallet" aria-hidden="true"></i>
                     <span class="nav-label">المحفظة</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-portfolio-list" role="list">
                     <li>
                         <a href="/pages/portfolio/portfolio-overview.html">
-                            <i class="fas fa-eye"></i> نظرة عامة
+                            <i class="fas fa-eye" aria-hidden="true"></i> نظرة عامة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/portfolio/transactions.html">
-                            <i class="fas fa-exchange-alt"></i> المعاملات المالية
+                            <i class="fas fa-exchange-alt" aria-hidden="true"></i> المعاملات المالية
                         </a>
                     </li>
                     <li>
                         <a href="/pages/portfolio/profits.html">
-                            <i class="fas fa-arrow-trend-up"></i> الأرباح الدورية
+                            <i class="fas fa-arrow-trend-up" aria-hidden="true"></i> الأرباح الدورية
                         </a>
                     </li>
                     <li>
                         <a href="/pages/portfolio/withdraw-request.html">
-                            <i class="fas fa-money-bill-wave"></i> طلب سحب
+                            <i class="fas fa-money-bill-wave" aria-hidden="true"></i> طلب سحب
                         </a>
                     </li>
                     <li>
                         <a href="/pages/portfolio/withdrawal-history.html">
-                            <i class="fas fa-clock"></i> سجل السحوبات
+                            <i class="fas fa-clock" aria-hidden="true"></i> سجل السحوبات
                         </a>
                     </li>
                     <li>
                         <a href="/pages/portfolio/account-statement.html">
-                            <i class="fas fa-file-invoice-dollar"></i> كشف الحساب الموثق
+                            <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i> كشف الحساب الموثق
                         </a>
                     </li>
                 </ul>
@@ -117,36 +116,40 @@
             <!-- ==========================================
             التقارير
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-file-alt"></i>
+            <li class="nav-item has-submenu" id="submenu-reports">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-reports-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span class="nav-label">التقارير</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-reports-list" role="list">
                     <li>
                         <a href="/pages/reports/reports-dashboard.html">
-                            <i class="fas fa-chart-bar"></i> لوحة التقارير
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i> لوحة التقارير
                         </a>
                     </li>
                     <li>
                         <a href="/pages/reports/portfolio-report.html">
-                            <i class="fas fa-folder-open"></i> تقرير المحفظة
+                            <i class="fas fa-folder-open" aria-hidden="true"></i> تقرير المحفظة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/reports/investments-report.html">
-                            <i class="fas fa-chart-pie"></i> تقرير الاستثمارات
+                            <i class="fas fa-chart-pie" aria-hidden="true"></i> تقرير الاستثمارات
                         </a>
                     </li>
                     <li>
                         <a href="/pages/reports/profits-report.html">
-                            <i class="fas fa-coins"></i> تقرير الأرباح الصافية
+                            <i class="fas fa-coins" aria-hidden="true"></i> تقرير الأرباح الصافية
                         </a>
                     </li>
                     <li>
                         <a href="/pages/reports/withdrawals-report.html">
-                            <i class="fas fa-receipt"></i> تقرير السحوبات
+                            <i class="fas fa-receipt" aria-hidden="true"></i> تقرير السحوبات
                         </a>
                     </li>
                 </ul>
@@ -155,36 +158,40 @@
             <!-- ==========================================
             الملف الشخصي
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-user-circle"></i>
+            <li class="nav-item has-submenu" id="submenu-profile">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-profile-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span class="nav-label">الملف الشخصي</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-profile-list" role="list">
                     <li>
                         <a href="/pages/profile/personal-information.html">
-                            <i class="fas fa-id-card"></i> المعلومات الشخصية
+                            <i class="fas fa-id-card" aria-hidden="true"></i> المعلومات الشخصية
                         </a>
                     </li>
                     <li>
                         <a href="/pages/profile/contact-information.html">
-                            <i class="fas fa-envelope"></i> معلومات الاتصال
+                            <i class="fas fa-envelope" aria-hidden="true"></i> معلومات الاتصال
                         </a>
                     </li>
                     <li>
                         <a href="/pages/profile/national-address.html">
-                            <i class="fas fa-map-marker-alt"></i> العنوان الوطني الموثق
+                            <i class="fas fa-map-marker-alt" aria-hidden="true"></i> العنوان الوطني الموثق
                         </a>
                     </li>
                     <li>
                         <a href="/pages/profile/bank-information.html">
-                            <i class="fas fa-university"></i> المعلومات البنكية (IBAN)
+                            <i class="fas fa-university" aria-hidden="true"></i> المعلومات البنكية (IBAN)
                         </a>
                     </li>
                     <li>
                         <a href="/pages/profile/attachments.html">
-                            <i class="fas fa-paperclip"></i> المرفقات والوثائق
+                            <i class="fas fa-paperclip" aria-hidden="true"></i> المرفقات والوثائق
                         </a>
                     </li>
                 </ul>
@@ -193,41 +200,45 @@
             <!-- ==========================================
             الأمان
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-shield-alt"></i>
+            <li class="nav-item has-submenu" id="submenu-security">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-security-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                     <span class="nav-label">الأمان</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-security-list" role="list">
                     <li>
                         <a href="/pages/security/change-password.html">
-                            <i class="fas fa-key"></i> تغيير كلمة المرور
+                            <i class="fas fa-key" aria-hidden="true"></i> تغيير كلمة المرور
                         </a>
                     </li>
                     <li>
                         <a href="/pages/security/change-email.html">
-                            <i class="fas fa-at"></i> تغيير البريد الإلكتروني
+                            <i class="fas fa-at" aria-hidden="true"></i> تغيير البريد الإلكتروني
                         </a>
                     </li>
                     <li>
                         <a href="/pages/security/change-mobile.html">
-                            <i class="fas fa-mobile-alt"></i> تغيير رقم الجوال
+                            <i class="fas fa-mobile-alt" aria-hidden="true"></i> تغيير رقم الجوال
                         </a>
                     </li>
                     <li>
                         <a href="/pages/security/two-factor-authentication.html">
-                            <i class="fas fa-user-shield"></i> المصادقة الثنائية (2FA)
+                            <i class="fas fa-user-shield" aria-hidden="true"></i> المصادقة الثنائية (2FA)
                         </a>
                     </li>
                     <li>
                         <a href="/pages/security/registered-devices.html">
-                            <i class="fas fa-laptop-house"></i> الأجهزة المصرحة
+                            <i class="fas fa-laptop-house" aria-hidden="true"></i> الأجهزة المصرحة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/security/login-history.html">
-                            <i class="fas fa-user-clock"></i> سجل عمليات الدخول
+                            <i class="fas fa-user-clock" aria-hidden="true"></i> سجل عمليات الدخول
                         </a>
                     </li>
                 </ul>
@@ -236,53 +247,80 @@
             <!-- ==========================================
             الدعم الفني
             ========================================== -->
-            <li class="nav-item has-submenu">
-                <a href="#">
-                    <i class="fas fa-headset"></i>
+            <li class="nav-item has-submenu" id="submenu-support">
+                <a href="#" 
+                   role="button" 
+                   aria-expanded="false" 
+                   aria-controls="submenu-support-list"
+                   class="submenu-trigger">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
                     <span class="nav-label">الدعم الفني</span>
-                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                    <i class="fas fa-chevron-down submenu-toggle" aria-hidden="true"></i>
                 </a>
-                <ul class="submenu">
+                <ul class="submenu" id="submenu-support-list" role="list">
                     <li>
                         <a href="/pages/support/help-center.html">
-                            <i class="fas fa-info-circle"></i> مركز المساعدة الرقمي
+                            <i class="fas fa-info-circle" aria-hidden="true"></i> مركز المساعدة الرقمي
                         </a>
                     </li>
                     <li>
                         <a href="/pages/support/faq.html">
-                            <i class="fas fa-question-circle"></i> الأسئلة الشائعة
+                            <i class="fas fa-question-circle" aria-hidden="true"></i> الأسئلة الشائعة
                         </a>
                     </li>
                     <li>
                         <a href="/pages/support/tickets.html">
-                            <i class="fas fa-ticket-alt"></i> تذاكر الدعم الفني
+                            <i class="fas fa-ticket-alt" aria-hidden="true"></i> تذاكر الدعم الفني
                         </a>
                     </li>
                     <li>
                         <a href="/pages/support/notifications.html">
-                            <i class="fas fa-bell"></i> مركز الإشعارات
+                            <i class="fas fa-bell" aria-hidden="true"></i> مركز الإشعارات
                         </a>
                     </li>
                     <li>
                         <a href="/pages/support/privacy-policy.html">
-                            <i class="fas fa-user-lock"></i> سياسة الخصوصية
+                            <i class="fas fa-user-lock" aria-hidden="true"></i> سياسة الخصوصية
                         </a>
                     </li>
                     <li>
                         <a href="/pages/support/terms-and-conditions.html">
-                            <i class="fas fa-gavel"></i> الشروط والأحكام القانونية
+                            <i class="fas fa-gavel" aria-hidden="true"></i> الشروط والأحكام القانونية
                         </a>
                     </li>
                 </ul>
             </li>
+
         </ul>
     </nav>
 
     <!-- تذييل القائمة (تسجيل الخروج) -->
     <div class="sidebar-footer">
         <button class="logout-btn" id="logoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
             <span class="nav-label">تسجيل الخروج</span>
         </button>
     </div>
 </aside>
+
+<!-- ============================================================
+     سكربت إعادة تهيئة القوائم الفرعية بعد التحميل الديناميكي
+     ============================================================ -->
+<script>
+    (function() {
+        // إذا تم تحميل هذا الملف ديناميكياً (باستخدام fetch)،
+        // قد تحتاج إلى إعادة تهيئة القوائم الفرعية.
+        // لكن dashboard.js سيتولى ذلك عند DOMContentLoaded.
+        // نضيف مستمعاً للتأكد من أن القوائم تعمل حتى لو تم تحميلها بعد الـ DOM.
+        document.addEventListener('DOMContentLoaded', function() {
+            // إذا كان كائن Dashboard موجوداً، نعيد تهيئة القوائم الفرعية
+            if (typeof Dashboard !== 'undefined' && Dashboard.initSubmenus) {
+                // نضمن أن القوائم تعمل حتى لو تم تحميلها متأخراً
+                setTimeout(function() {
+                    Dashboard.initSubmenus();
+                    console.log('🔄 Submenus reinitialized from sidebar.html');
+                }, 100);
+            }
+        });
+    })();
+</script>
