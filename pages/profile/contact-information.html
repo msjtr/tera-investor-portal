@@ -5,420 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>معلومات الاتصال | Tera Investor Portal</title>
 
-    <!-- الأيقونة -->
+    <!-- الشعار والأيقونات -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
     <!-- الخطوط -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-    <!-- المكتبات الخارجية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/profile.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
+
     <style>
-        /* ============================================================
-           جميع الأنماط – متوافقة مع Tera Portal
-           ============================================================ */
-
-        :root {
-            --tera-teal: #028090;
-            --tera-teal-light: #14b8a6;
-            --tera-navy: #0A1B3F;
-            --tera-gray: #64748b;
-            --tera-bg: #f8fafc;
-            --sidebar-width: 280px;
-            --sidebar-collapsed-width: 80px;
-            --header-height: 75px;
-        }
-
+        /* =========================================
+               التنسيقات الأساسية – نفس الهوية البصرية
+               ========================================= */
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
 
-        html,
         body {
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-            background-color: var(--tera-bg);
+            background-color: #f1f5f9;
             font-family: 'Tajawal', sans-serif;
+            margin: 0;
             color: #1e293b;
-        }
-
-        .app-wrapper {
             display: flex;
+            flex-direction: column;
             min-height: 100vh;
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-            position: relative;
         }
 
-        /* ============================================================
-           الهيدر العلوي
-           ============================================================ */
-        .top-header {
-            height: var(--header-height);
+        /* =========================================
+               الهيدر العلوي
+               ========================================= */
+        .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
+            padding: 12px 40px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0 30px;
-            position: fixed;
+            align-items: center;
+            position: sticky;
             top: 0;
-            left: 0;
-            right: 0;
-            z-index: 998;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            z-index: 1000;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
         }
-
-        .header-right-actions {
+        .focused-header .logo img {
+            height: 38px;
+        }
+        .focused-header .client-info {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
-
-        .header-logo {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .header-logo img {
-            height: 44px !important;
-            width: auto !important;
-            display: block;
-            flex-shrink: 0;
-            filter: none !important;
-            opacity: 1 !important;
-            max-width: none !important;
-            image-rendering: auto;
-        }
-
-        .menu-toggle-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            font-size: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.25s;
-            flex-shrink: 0;
-        }
-
-        .menu-toggle-btn:hover {
-            background: var(--tera-teal);
-            border-color: var(--tera-teal);
-            color: #ffffff;
-        }
-
-        .header-left-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-profile-block {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .user-meta {
-            text-align: left;
-        }
-
-        .user-meta h5 {
+        .focused-header .client-info h5 {
             margin: 0;
-            font-size: 15px;
-            color: var(--tera-navy);
-            font-weight: 800;
             font-family: 'Cairo', sans-serif;
-        }
-
-        .user-meta p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--tera-gray);
-            font-weight: 600;
-        }
-
-        .user-avatar-circle {
-            width: 46px;
-            height: 46px;
-            background-color: var(--tera-navy);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 20px;
+            font-size: 15px;
+            color: #0A1B3F;
             font-weight: 800;
-            border: 2px solid var(--tera-teal);
-            flex-shrink: 0;
         }
-
-        /* ============================================================
-           القائمة الجانبية – مع شريط تمرير فخم
-           ============================================================ */
-        .sidebar-container {
-            width: var(--sidebar-width);
-            background: var(--tera-navy);
+        .focused-header .client-info .avatar {
+            width: 38px;
+            height: 38px;
+            background: #0A1B3F;
             color: #fff;
             display: flex;
-            flex-direction: column;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 999;
-            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
-            height: calc(100vh - var(--header-height));
-            position: fixed;
-            top: var(--header-height);
-            right: 0;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-            scrollbar-width: thin;
-            scrollbar-color: var(--tera-teal) rgba(255, 255, 255, 0.06);
-        }
-
-        .sidebar-container::-webkit-scrollbar {
-            width: 7px;
-        }
-
-        .sidebar-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            margin: 8px 0;
-        }
-
-        .sidebar-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--tera-teal), var(--tera-teal-light));
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.4s ease;
-            box-shadow: 0 0 12px rgba(2, 128, 144, 0.25);
-        }
-
-        .sidebar-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--tera-teal-light), #0d9488);
-            box-shadow: 0 0 24px rgba(2, 128, 144, 0.45);
-        }
-
-        .sidebar-container.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar-container.collapsed .nav-label,
-        .sidebar-container.collapsed .submenu-toggle,
-        .sidebar-container.collapsed .submenu,
-        .sidebar-container.collapsed .sidebar-footer span {
-            display: none !important;
-        }
-
-        .sidebar-container.collapsed .nav-item a {
-            justify-content: center;
-            padding: 14px;
-        }
-
-        .sidebar-mobile-header {
-            display: none;
             align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .sidebar-title {
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 800;
             font-size: 16px;
-            font-weight: 800;
-            color: #fff;
+            border: 2px solid #028090;
         }
 
-        .sidebar-close-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px;
+        /* =========================================
+               عنوان الصفحة
+               ========================================= */
+        .page-subheader {
+            background: #0A1B3F;
+            padding: 20px 40px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 16px 12px;
-            overflow-y: auto;
-        }
-
-        .nav-list {
-            list-style: none;
-            padding: 0;
+        .page-subheader h1 {
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #cbd5e1;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            transition: 0.2s;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .nav-item a i:first-child {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .nav-item a:hover,
-        .nav-item.active>a {
-            background: rgba(2, 128, 144, 0.15);
-            color: var(--tera-teal-light);
-        }
-
-        .submenu-toggle {
-            margin-right: auto;
-            transition: transform 0.3s;
-            font-size: 12px;
-        }
-
-        .submenu {
-            list-style: none;
-            padding: 4px 0 4px 0;
-            margin: 0 0 0 10px;
-            display: none;
-            flex-direction: column;
-            gap: 2px;
-            border-right: 2px solid rgba(20, 184, 166, 0.2);
-        }
-
-        .submenu a {
-            padding: 10px 16px 10px 10px;
-            font-size: 13px;
-            color: #94a3b8;
-            font-weight: 600;
-            white-space: normal;
-        }
-
-        .submenu a:hover {
-            color: #fff;
-        }
-
-        .submenu-open .submenu {
-            display: flex;
-        }
-
-        .submenu-open>a .submenu-toggle {
-            transform: rotate(180deg);
-        }
-
-        .sidebar-footer {
-            padding: 16px 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .logout-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: transparent;
-            border: none;
-            color: #f87171;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 14px;
-            border-radius: 10px;
-            text-align: right;
-        }
-
-        .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        /* ============================================================
-           طبقة الخلفية (للجوال)
-           ============================================================ */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 998;
-            cursor: pointer;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-        }
-
-        /* ============================================================
-           المحتوى الرئيسي
-           ============================================================ */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            margin-right: var(--sidebar-width);
-            margin-top: var(--header-height);
-            padding: 24px 30px 30px 30px;
-            transition: margin 0.3s ease;
-            overflow-x: hidden;
-        }
-
-        .sidebar-container.collapsed~.main-content {
-            margin-right: var(--sidebar-collapsed-width);
-        }
-
-        /* ============================================================
-           عنوان الصفحة
-           ============================================================ */
-        .page-header {
-            margin-bottom: 28px;
-        }
-
-        .page-header h1 {
+            color: #ffffff;
             font-family: 'Cairo', sans-serif;
-            font-weight: 900;
-            font-size: 28px;
-            color: var(--tera-navy);
+            font-size: 22px;
+            font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 0 0 8px 0;
+            gap: 10px;
+        }
+        .page-subheader h1 i {
+            color: #5eead4;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .btn-back:hover {
+            background: #028090;
+            border-color: #028090;
         }
 
-        .page-header h1 i {
-            color: var(--tera-teal);
-        }
-
-        .page-header p {
-            font-size: 15px;
-            color: var(--tera-gray);
-            line-height: 1.7;
-            max-width: 700px;
+        /* =========================================
+               الحاوية الرئيسية
+               ========================================= */
+        .content-container {
+            max-width: 1060px;
+            margin: 0 auto 40px auto;
+            padding: 28px 24px 0 24px;
+            flex: 1;
         }
 
         .page-desc {
@@ -428,37 +144,34 @@
             background: #e0f2fe;
             padding: 16px 22px;
             border-radius: 12px;
-            border-right: 5px solid var(--tera-teal);
-            margin-bottom: 28px;
+            border-right: 5px solid #028090;
+            margin-bottom: 32px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
         }
-
         .page-desc i {
-            color: var(--tera-teal);
+            color: #028090;
             font-size: 20px;
         }
-
         .page-desc strong {
-            color: var(--tera-navy);
+            color: #0A1B3F;
         }
 
-        /* ============================================================
-           البطاقات والنماذج
-           ============================================================ */
+        /* =========================================
+               البطاقات
+               ========================================= */
         .panel-card {
             background: #ffffff;
             border-radius: 18px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e9edf2;
             padding: 28px 32px 32px 32px;
             margin-bottom: 28px;
             box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
             transition: box-shadow 0.2s;
         }
-
         .panel-card:hover {
             box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
         }
@@ -467,13 +180,12 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 22px;
+            margin-bottom: 24px;
             padding-bottom: 14px;
             border-bottom: 2px solid #f1f5f9;
         }
-
         .panel-header i {
-            color: var(--tera-teal);
+            color: #028090;
             font-size: 22px;
             width: 36px;
             height: 36px;
@@ -483,72 +195,63 @@
             align-items: center;
             justify-content: center;
         }
-
         .panel-header h3 {
             margin: 0;
             font-size: 18px;
-            color: var(--tera-navy);
+            color: #0A1B3F;
             font-family: 'Cairo', sans-serif;
             font-weight: 800;
             letter-spacing: -0.3px;
         }
-
         .panel-header .panel-badge {
             margin-right: auto;
             font-size: 12px;
             font-weight: 700;
-            color: var(--tera-gray);
+            color: #64748b;
             background: #f1f5f9;
             padding: 4px 12px;
             border-radius: 20px;
         }
 
-        /* ============================================================
-           شبكة النموذج
-           ============================================================ */
+        /* =========================================
+               شبكة النموذج – ضبط حجم المربعات
+               ========================================= */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 22px 30px;
+            gap: 24px 30px;
         }
-
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-
         .form-group.full-width {
             grid-column: 1 / -1;
-        }
-
-        .form-group.half-width {
-            grid-column: span 1;
         }
 
         .form-label {
             font-size: 14px;
             font-weight: 700;
-            color: var(--tera-navy);
+            color: #0A1B3F;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
         }
-
         .form-label .req {
             color: #dc2626;
             font-size: 16px;
         }
-
         .form-label .optional {
             font-size: 12px;
             font-weight: 600;
-            color: var(--tera-gray);
+            color: #64748b;
             background: #f1f5f9;
             padding: 2px 10px;
             border-radius: 12px;
         }
 
+        /* ضبط حجم المربعات بشكل موحد */
         .form-control {
             width: 100%;
             padding: 12px 16px;
@@ -563,39 +266,23 @@
             height: 48px;
             line-height: 1.5;
         }
-
         .form-control:focus {
-            border-color: var(--tera-teal);
+            border-color: #028090;
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
             background: #ffffff;
         }
-
         .form-control::placeholder {
             color: #94a3b8;
         }
-
-        .form-control.error {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
-        }
-
-        .form-control.success {
-            border-color: #10b981;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
-        }
-
         select.form-control {
             appearance: auto;
             cursor: pointer;
             height: 48px;
         }
 
-        textarea.form-control {
-            height: auto;
-            min-height: 80px;
-            resize: vertical;
-        }
-
+        /* =========================================
+               صناديق التلميحات
+               ========================================= */
         .input-hint-box {
             background: #f8fafc;
             border: 1px dashed #d1d9e6;
@@ -603,14 +290,12 @@
             border-radius: 10px;
             margin-top: 4px;
         }
-
         .input-hint-box p {
             margin: 0 0 4px 0;
             font-size: 12px;
             font-weight: 700;
-            color: var(--tera-navy);
+            color: #0A1B3F;
         }
-
         .input-hint-box ul {
             margin: 0;
             padding-right: 20px;
@@ -618,16 +303,8 @@
             color: #64748b;
             line-height: 1.7;
         }
-
         .input-hint-box ul li {
             list-style-type: disc;
-        }
-
-        .field-error {
-            color: #dc2626;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 4px;
         }
 
         .format-hint {
@@ -637,26 +314,20 @@
             padding: 4px 0;
         }
 
-        /* ============================================================
-           مجموعة الراديو
-           ============================================================ */
+        /* =========================================
+               مجموعة الراديو
+               ========================================= */
         .radio-group {
             display: flex;
             gap: 32px;
             align-items: center;
-            padding: 10px 16px;
+            padding: 8px 20px;
             border: 1px solid #d1d9e6;
             border-radius: 10px;
             background: #fafcff;
-            flex-wrap: wrap;
             min-height: 48px;
+            flex-wrap: wrap;
         }
-
-        .radio-group.error {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
-        }
-
         .radio-label {
             display: flex;
             align-items: center;
@@ -667,47 +338,18 @@
             margin: 0;
             color: #1e293b;
         }
-
         .radio-label input[type="radio"] {
             width: 20px;
             height: 20px;
-            accent-color: var(--tera-teal);
+            accent-color: #028090;
             cursor: pointer;
             margin: 0;
             flex-shrink: 0;
         }
 
-        /* ============================================================
-           مجموعة التشيك بوكس
-           ============================================================ */
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px 24px;
-            padding: 8px 0;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #1e293b;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--tera-teal);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        /* ============================================================
-           صندوق الإقرار
-           ============================================================ */
+        /* =========================================
+               صندوق الإقرار
+               ========================================= */
         .declaration-box {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
@@ -718,23 +360,20 @@
             gap: 18px;
             margin-bottom: 22px;
         }
-
         .declaration-box input[type="checkbox"] {
             width: 22px;
             height: 22px;
             min-width: 22px;
             margin-top: 4px;
             cursor: pointer;
-            accent-color: var(--tera-teal);
+            accent-color: #028090;
         }
-
         .declaration-box p {
             margin: 0 0 4px 0;
             font-weight: 800;
             color: #065f46;
             font-size: 15px;
         }
-
         .declaration-box ul {
             margin: 6px 0 0 0;
             padding-right: 22px;
@@ -743,52 +382,15 @@
             font-weight: 600;
             line-height: 1.8;
         }
-
         .declaration-box ul li {
             list-style-type: circle;
         }
 
-        /* ============================================================
-           التنبيهات
-           ============================================================ */
-        .alert-warning-box {
-            margin-top: 18px;
-            font-size: 13px;
-            color: #b91c1c;
-            font-weight: 700;
-            background: #fef2f2;
-            padding: 12px 18px;
-            border-radius: 10px;
-            border: 1px solid #fca5a5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-warning-box i {
-            font-size: 18px;
-        }
-
-        .otp-notice {
-            text-align: center;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: #475569;
-            background: #f8fafc;
-            padding: 14px 20px;
-            border-radius: 10px;
-            border: 1px solid #e9edf2;
-        }
-
-        .otp-notice strong {
-            color: var(--tera-navy);
-        }
-
-        /* ============================================================
-           زر الإرسال
-           ============================================================ */
+        /* =========================================
+               زر الإرسال
+               ========================================= */
         .btn-submit {
-            background: var(--tera-teal);
+            background: #028090;
             color: #fff;
             border: none;
             padding: 18px 32px;
@@ -806,453 +408,70 @@
             letter-spacing: 0.3px;
             height: 56px;
         }
-
         .btn-submit:hover {
-            background: var(--tera-navy);
+            background: #0A1B3F;
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
         }
-
         .btn-submit i {
             font-size: 18px;
         }
 
-        /* ============================================================
-           التذييل
-           ============================================================ */
-        .page-footer {
-            text-align: center;
-            padding: 18px 20px;
-            color: #94a3b8;
+        .btn-text-action {
+            background: transparent;
+            border: none;
+            color: #028090;
+            font-weight: 700;
             font-size: 13px;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
-            margin-top: auto;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+        .btn-text-action:hover {
+            background: rgba(2, 128, 144, 0.08);
         }
 
-        /* ============================================================
-           تحسينات الجوال
-           ============================================================ */
-        @media (max-width: 991px) {
-            :root {
-                --header-height: 64px;
-            }
-
-            .top-header {
-                height: var(--header-height) !important;
-                padding: 0 16px !important;
-            }
-
-            .header-logo img {
-                height: 40px !important;
-            }
-
-            .menu-toggle-btn {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 18px !important;
-            }
-
-            .user-meta {
-                display: none !important;
-            }
-
-            .user-avatar-circle {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 18px !important;
-            }
-
-            .header-right-actions {
-                gap: 12px !important;
-            }
-
-            .sidebar-container {
-                right: calc(-1 * var(--sidebar-width));
-                top: 0;
-                height: 100vh;
-                box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
-                transition: right 0.3s ease;
-            }
-
-            .sidebar-container.sidebar-open {
-                right: 0;
-            }
-
-            .sidebar-mobile-header {
-                display: flex !important;
-            }
-
-            .main-content {
-                margin-right: 0 !important;
-                padding: 16px 14px 20px 14px !important;
-                margin-top: var(--header-height) !important;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 18px;
-            }
-
-            .form-group.half-width {
-                grid-column: 1 / -1;
-            }
-
-            .panel-card {
-                padding: 20px 18px 24px 18px;
-            }
-
-            .page-header h1 {
-                font-size: 22px;
-            }
-
-            .page-header p {
-                font-size: 14px;
-            }
-
-            .radio-group {
-                gap: 20px;
-                padding: 10px 14px;
-            }
-
-            .radio-label {
-                font-size: 14px;
-            }
-
-            .declaration-box {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .declaration-box input[type="checkbox"] {
-                margin-top: 0;
-            }
-
-            .btn-submit {
-                height: 50px;
-                font-size: 15px;
-                padding: 14px 20px;
-            }
-
-            .form-control {
-                height: 44px;
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-
-            select.form-control {
-                height: 44px;
-            }
-
-            .panel-header h3 {
-                font-size: 16px;
-            }
+        /* =========================================
+               التنبيهات
+               ========================================= */
+        .alert-warning-box {
+            margin-top: 18px;
+            font-size: 13px;
+            color: #b91c1c;
+            font-weight: 700;
+            background: #fef2f2;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1px solid #fca5a5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-warning-box i {
+            font-size: 18px;
         }
 
-        @media (max-width: 480px) {
-            .top-header {
-                padding: 0 12px !important;
-            }
-
-            .header-logo img {
-                height: 34px !important;
-            }
-
-            .menu-toggle-btn {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 16px !important;
-            }
-
-            .user-avatar-circle {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 16px !important;
-            }
-
-            .main-content {
-                padding: 12px 10px 16px 10px !important;
-            }
-
-            .panel-card {
-                padding: 16px 14px 18px 14px;
-            }
-
-            .page-header h1 {
-                font-size: 19px;
-            }
-
-            .page-header p {
-                font-size: 13px;
-            }
-
-            .page-desc {
-                font-size: 13px;
-                padding: 12px 16px;
-            }
-
-            .form-control {
-                height: 42px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-
-            select.form-control {
-                height: 42px;
-            }
-
-            .radio-group {
-                gap: 14px;
-                padding: 8px 12px;
-            }
-
-            .radio-label {
-                font-size: 13px;
-                gap: 6px;
-            }
-
-            .radio-label input[type="radio"] {
-                width: 18px;
-                height: 18px;
-            }
-
-            .btn-submit {
-                height: 46px;
-                font-size: 14px;
-                padding: 12px 16px;
-            }
-
-            .declaration-box {
-                padding: 16px 16px;
-            }
-
-            .declaration-box ul {
-                font-size: 12px;
-            }
-
-            .panel-header h3 {
-                font-size: 15px;
-            }
-
-            .panel-header i {
-                width: 32px;
-                height: 32px;
-                font-size: 18px;
-            }
+        .otp-notice {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #475569;
+            background: #f8fafc;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid #e9edf2;
+        }
+        .otp-notice strong {
+            color: #0A1B3F;
         }
 
-        /* ============================================================
-           وضع مظلم
-           ============================================================ */
-        @media (prefers-color-scheme: dark) {
-            .top-header {
-                background: #1e293b !important;
-                border-bottom-color: #334155 !important;
-            }
-
-            .top-header .user-meta h5 {
-                color: #f8fafc !important;
-            }
-
-            .top-header .user-meta p {
-                color: #94a3b8 !important;
-            }
-
-            .menu-toggle-btn {
-                background: #334155 !important;
-                border-color: #475569 !important;
-                color: #cbd5e1 !important;
-            }
-
-            .menu-toggle-btn:hover {
-                background: var(--tera-teal) !important;
-                color: #fff !important;
-            }
-
-            .panel-card {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-
-            .panel-header {
-                border-bottom-color: #334155 !important;
-            }
-
-            .panel-header h3 {
-                color: #f8fafc !important;
-            }
-
-            .panel-header .panel-badge {
-                background: #334155 !important;
-                color: #94a3b8 !important;
-            }
-
-            .page-header h1 {
-                color: #f8fafc !important;
-            }
-
-            .page-header p {
-                color: #94a3b8 !important;
-            }
-
-            .page-desc {
-                background: #1e293b !important;
-                border-right-color: var(--tera-teal-light) !important;
-                color: #e2e8f0 !important;
-            }
-
-            .page-desc strong {
-                color: #f8fafc !important;
-            }
-
-            .form-label {
-                color: #f1f5f9 !important;
-            }
-
-            .form-control {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-                color: #e2e8f0 !important;
-            }
-
-            .form-control:focus {
-                border-color: var(--tera-teal-light) !important;
-                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
-            }
-
-            .form-control::placeholder {
-                color: #64748b !important;
-            }
-
-            .radio-group {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-
-            .radio-label {
-                color: #e2e8f0 !important;
-            }
-
-            .input-hint-box {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-
-            .input-hint-box p {
-                color: #f1f5f9 !important;
-            }
-
-            .input-hint-box ul {
-                color: #94a3b8 !important;
-            }
-
-            .declaration-box {
-                background: rgba(22, 101, 52, 0.15) !important;
-                border-color: #166534 !important;
-            }
-
-            .declaration-box p {
-                color: #bbf7d0 !important;
-            }
-
-            .declaration-box ul {
-                color: #86efac !important;
-            }
-
-            .otp-notice {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-                color: #94a3b8 !important;
-            }
-
-            .otp-notice strong {
-                color: #f8fafc !important;
-            }
-
-            .alert-warning-box {
-                background: rgba(220, 38, 38, 0.15) !important;
-                border-color: #991b1b !important;
-                color: #fca5a5 !important;
-            }
-
-            .page-footer {
-                background: #1e293b !important;
-                border-top-color: #334155 !important;
-                color: #64748b !important;
-            }
-
-            .sidebar-container::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.04) !important;
-            }
-
-            .sidebar-container::-webkit-scrollbar-thumb {
-                background: linear-gradient(180deg, var(--tera-teal-light), #0d9488) !important;
-                box-shadow: 0 0 15px rgba(20, 184, 166, 0.3) !important;
-            }
-
-            .sidebar-container::-webkit-scrollbar-thumb:hover {
-                box-shadow: 0 0 28px rgba(20, 184, 166, 0.5) !important;
-            }
-
-            .panel-header i {
-                background: rgba(20, 184, 166, 0.15) !important;
-            }
-        }
-
-        /* ============================================================
-           تقليل الحركة
-           ============================================================ */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* ============================================================
-           فئات مساعدة
-           ============================================================ */
-        .d-lg-none {
-            display: none !important;
-        }
-
-        @media (max-width: 991px) {
-            .d-lg-none {
-                display: flex !important;
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .mt-8 {
-            margin-top: 8px;
-        }
-        .mt-12 {
-            margin-top: 12px;
-        }
-        .mt-16 {
-            margin-top: 16px;
-        }
-        .mb-8 {
-            margin-bottom: 8px;
-        }
-        .mb-12 {
-            margin-bottom: 12px;
-        }
-        .mb-16 {
-            margin-bottom: 16px;
-        }
-
-        /* ============================================================
-           شريط التقدم
-           ============================================================ */
+        /* =========================================
+               شريط التقدم
+               ========================================= */
         .progress-steps {
             display: flex;
             align-items: center;
@@ -1260,28 +479,24 @@
             margin-bottom: 28px;
             padding: 0;
             list-style: none;
-            position: relative;
             justify-content: center;
             flex-wrap: wrap;
         }
-
         .progress-steps li {
             display: flex;
             align-items: center;
             gap: 8px;
             font-size: 13px;
             font-weight: 700;
-            color: var(--tera-gray);
+            color: #64748b;
             padding: 8px 16px;
-            position: relative;
         }
-
         .progress-steps li .step-num {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             background: #e2e8f0;
-            color: var(--tera-gray);
+            color: #64748b;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1289,738 +504,647 @@
             font-weight: 800;
             transition: 0.3s;
         }
-
         .progress-steps li.active .step-num {
-            background: var(--tera-teal);
+            background: #028090;
             color: #fff;
             box-shadow: 0 4px 12px rgba(2, 128, 144, 0.3);
         }
-
-        .progress-steps li.active {
-            color: var(--tera-navy);
-        }
-
         .progress-steps li.completed .step-num {
             background: #10b981;
             color: #fff;
         }
-
         .progress-steps .step-line {
             width: 40px;
             height: 2px;
             background: #e2e8f0;
             flex-shrink: 0;
         }
-
-        .progress-steps .step-line.active {
-            background: var(--tera-teal);
+        .progress-steps .step-line.completed {
+            background: #10b981;
         }
 
-        @media (max-width: 768px) {
+        /* =========================================
+               تذييل الصفحة
+               ========================================= */
+        .page-footer {
+            text-align: center;
+            padding: 22px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+
+        /* =========================================
+               استجابة للشاشات الصغيرة (الجوال)
+               ========================================= */
+        @media (max-width: 820px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .focused-header {
+                padding: 10px 20px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .page-subheader {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px 24px;
+                margin-top: 12px;
+            }
+            .page-subheader h1 {
+                font-size: 19px;
+            }
+            .content-container {
+                padding: 20px 14px 0 14px;
+            }
+            .panel-card {
+                padding: 20px 18px 24px 18px;
+            }
+            .radio-group {
+                gap: 20px;
+                padding: 8px 16px;
+                min-height: auto;
+                flex-wrap: wrap;
+            }
+            .radio-label {
+                font-size: 14px;
+                gap: 8px;
+            }
+            .declaration-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .declaration-box input[type="checkbox"] {
+                margin-top: 0;
+            }
+            .focused-header .client-info h5 {
+                font-size: 13px;
+            }
+            .form-control,
+            select.form-control {
+                height: 44px;
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+            .btn-submit {
+                height: 50px;
+                font-size: 15px;
+                padding: 14px 20px;
+            }
             .progress-steps li {
                 font-size: 11px;
                 padding: 4px 8px;
                 gap: 4px;
             }
-
             .progress-steps li .step-num {
                 width: 26px;
                 height: 26px;
                 font-size: 11px;
             }
-
             .progress-steps .step-line {
                 width: 20px;
             }
         }
 
         @media (max-width: 480px) {
-            .progress-steps {
-                gap: 4px;
+            .page-subheader h1 {
+                font-size: 17px;
             }
-
+            .btn-back {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+            .panel-header h3 {
+                font-size: 16px;
+            }
+            .radio-group {
+                gap: 14px;
+                padding: 6px 12px;
+            }
+            .radio-label {
+                font-size: 13px;
+                gap: 6px;
+            }
+            .radio-label input[type="radio"] {
+                width: 18px;
+                height: 18px;
+            }
+            .form-control,
+            select.form-control {
+                height: 42px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .btn-submit {
+                height: 46px;
+                font-size: 14px;
+                padding: 12px 16px;
+            }
+            .declaration-box {
+                padding: 16px 16px;
+            }
+            .declaration-box ul {
+                font-size: 12px;
+            }
+            .page-desc {
+                font-size: 13px;
+                padding: 12px 16px;
+            }
+            .panel-header i {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+            .panel-header .panel-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
             .progress-steps li .step-label {
                 display: none;
             }
-
             .progress-steps .step-line {
                 width: 12px;
+            }
+            .otp-notice {
+                font-size: 12px;
+                padding: 12px 14px;
+            }
+        }
+
+        /* =========================================
+               وضع مظلم (نفس الهوية)
+               ========================================= */
+        @media (prefers-color-scheme: dark) {
+            .focused-header {
+                background: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            .focused-header .client-info h5 {
+                color: #f8fafc !important;
+            }
+            .focused-header .client-info .avatar {
+                background: #0f172a !important;
+                border-color: #14b8a6 !important;
+            }
+            .page-subheader {
+                background: #0f172a !important;
+            }
+            .panel-card {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            .panel-header {
+                border-bottom-color: #334155 !important;
+            }
+            .panel-header h3 {
+                color: #f8fafc !important;
+            }
+            .panel-header .panel-badge {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .page-desc {
+                background: #1e293b !important;
+                border-right-color: #14b8a6 !important;
+                color: #e2e8f0 !important;
+            }
+            .page-desc strong {
+                color: #f8fafc !important;
+            }
+            .form-label {
+                color: #f1f5f9 !important;
+            }
+            .form-control {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+                color: #e2e8f0 !important;
+            }
+            .form-control:focus {
+                border-color: #14b8a6 !important;
+                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
+            }
+            .form-control::placeholder {
+                color: #64748b !important;
+            }
+            .radio-group {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .radio-label {
+                color: #e2e8f0 !important;
+            }
+            .input-hint-box {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .input-hint-box p {
+                color: #f1f5f9 !important;
+            }
+            .input-hint-box ul {
+                color: #94a3b8 !important;
+            }
+            .declaration-box {
+                background: rgba(22, 101, 52, 0.15) !important;
+                border-color: #166534 !important;
+            }
+            .declaration-box p {
+                color: #bbf7d0 !important;
+            }
+            .declaration-box ul {
+                color: #86efac !important;
+            }
+            .otp-notice {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .otp-notice strong {
+                color: #f8fafc !important;
+            }
+            .alert-warning-box {
+                background: rgba(220, 38, 38, 0.15) !important;
+                border-color: #991b1b !important;
+                color: #fca5a5 !important;
+            }
+            .page-footer {
+                background: #1e293b !important;
+                border-top-color: #334155 !important;
+                color: #64748b !important;
+            }
+            .panel-header i {
+                background: rgba(20, 184, 166, 0.15) !important;
+            }
+            .btn-text-action {
+                color: #14b8a6 !important;
+            }
+            .btn-text-action:hover {
+                background: rgba(20, 184, 166, 0.15) !important;
+            }
+            .progress-steps li {
+                color: #94a3b8 !important;
+            }
+            .progress-steps li .step-num {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .progress-steps li.active .step-num {
+                background: #14b8a6 !important;
+                color: #0f172a !important;
+                box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3) !important;
+            }
+            .progress-steps li.completed .step-num {
+                background: #10b981 !important;
+                color: #0f172a !important;
+            }
+            .progress-steps .step-line {
+                background: #334155 !important;
+            }
+            .progress-steps .step-line.completed {
+                background: #10b981 !important;
+            }
+        }
+
+        /* =========================================
+               تقليل الحركة
+               ========================================= */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- ============================================
-    طبقة التحميل
-    ============================================ -->
-    <div class="loading-overlay" id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); backdrop-filter:blur(4px); z-index:9999; justify-content:center; align-items:center; flex-direction:column; gap:16px;">
-        <div class="spinner" style="width:48px; height:48px; border:4px solid #e2e8f0; border-top-color:var(--tera-teal); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-        <p style="color:var(--tera-navy); font-weight:700; font-size:16px;">جاري التحميل...</p>
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-address-book"></i> معلومات الاتصال</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
     </div>
 
-    <style>
-        .loading-overlay.active {
-            display: flex !important;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        @media (prefers-color-scheme: dark) {
-            .loading-overlay {
-                background: rgba(15, 23, 42, 0.8) !important;
-            }
-            .loading-overlay p {
-                color: #f8fafc !important;
-            }
-            .spinner {
-                border-color: #334155 !important;
-                border-top-color: var(--tera-teal-light) !important;
-            }
-        }
-    </style>
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
 
-    <!-- ============================================
-    الهيكل الرئيسي
-    ============================================ -->
-    <div class="app-wrapper">
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>يرجى إدخال وسائل التواصل الخاصة بك بشكل صحيح</strong> حيث سيتم استخدامها للتحقق من الهوية واستقبال الإشعارات والتحديثات المهمة المتعلقة بحسابك.</span>
+        </div>
 
-        <!-- ============================================
-        الهيدر العلوي
-        ============================================ -->
-        <header class="top-header no-print">
+        <!-- شريط التقدم -->
+        <ul class="progress-steps">
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
+                <span class="step-label">شخصي</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="active">
+                <span class="step-num">2</span>
+                <span class="step-label">تواصل</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">3</span>
+                <span class="step-label">وثائق</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">4</span>
+                <span class="step-label">بنكي</span>
+            </li>
+        </ul>
 
-            <div class="header-right-actions">
-                <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
-                    <i class="fas fa-bars"></i>
-                </button>
+        <form id="contactForm" novalidate>
 
-                <div class="header-logo">
-                    <a href="/pages/dashboard/index.html">
-                        <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
-                    </a>
-                </div>
-            </div>
-
-            <div class="header-left-actions">
-                <div class="user-profile-block">
-                    <div class="user-meta">
-                        <h5>محمد صالح جميعان الشمري</h5>
-                        <p>بوابة المستثمر، حائل</p>
-                    </div>
-                    <div class="user-avatar-circle">م</div>
-                </div>
-            </div>
-        </header>
-
-        <!-- ============================================
-        طبقة الخلفية (للجوال)
-        ============================================ -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-        <!-- ============================================
-        القائمة الجانبية
-        ============================================ -->
-        <aside class="sidebar-container" id="sidebar">
-
-            <div class="sidebar-mobile-header d-lg-none">
-                <span class="sidebar-title"><i class="fas fa-bars"></i> القائمة الرئيسية</span>
-                <button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <nav class="sidebar-menu">
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة</a></li>
-                            <li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history"></i> سجل الشراكة الممتدة</a></li>
-                            <li><a href="/pages/investments/opportunities.html"><i class="fas fa-list-ul"></i> سجل فرص الشراكة</a></li>
-                            <li><a href="/pages/investments/active-investments.html"><i class="fas fa-file-signature"></i> سجل العقود</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye"></i> نظرة عامة</a></li>
-                            <li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt"></i> المعاملات المالية</a></li>
-                            <li><a href="/pages/portfolio/profits.html"><i class="fas fa-arrow-trend-up"></i> الأرباح الدورية</a></li>
-                            <li><a href="/pages/portfolio/withdraw-request.html"><i class="fas fa-money-bill-wave"></i> طلب سحب</a></li>
-                            <li><a href="/pages/portfolio/withdrawal-history.html"><i class="fas fa-clock"></i> سجل السحوبات</a></li>
-                            <li><a href="/pages/portfolio/account-statement.html"><i class="fas fa-file-invoice-dollar"></i> كشف الحساب الموثق</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar"></i> لوحة التقارير</a></li>
-                            <li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open"></i> تقرير المحفظة</a></li>
-                            <li><a href="/pages/reports/investments-report.html"><i class="fas fa-chart-pie"></i> تقرير الاستثمارات</a></li>
-                            <li><a href="/pages/reports/profits-report.html"><i class="fas fa-coins"></i> تقرير الأرباح الصافية</a></li>
-                            <li><a href="/pages/reports/withdrawals-report.html"><i class="fas fa-receipt"></i> تقرير السحوبات</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu active">
-                        <a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu" style="display:flex;">
-                            <li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card"></i> المعلومات الشخصية</a></li>
-                            <li><a href="/pages/profile/contact-information.html" class="active"><i class="fas fa-envelope"></i> معلومات الاتصال</a></li>
-                            <li><a href="/pages/profile/national-address.html"><i class="fas fa-map-marker-alt"></i> العنوان الوطني الموثق</a></li>
-                            <li><a href="/pages/profile/bank-information.html"><i class="fas fa-university"></i> المعلومات البنكية (IBAN)</a></li>
-                            <li><a href="/pages/profile/attachments.html"><i class="fas fa-paperclip"></i> المرفقات والوثائق</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/security/change-password.html"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
-                            <li><a href="/pages/security/change-email.html"><i class="fas fa-at"></i> تغيير البريد الإلكتروني</a></li>
-                            <li><a href="/pages/security/change-mobile.html"><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</a></li>
-                            <li><a href="/pages/security/two-factor-authentication.html"><i class="fas fa-user-shield"></i> المصادقة الثنائية (2FA)</a></li>
-                            <li><a href="/pages/security/registered-devices.html"><i class="fas fa-laptop-house"></i> الأجهزة المصرحة</a></li>
-                            <li><a href="/pages/security/login-history.html"><i class="fas fa-user-clock"></i> سجل عمليات الدخول</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle"></i> مركز المساعدة الرقمي</a></li>
-                            <li><a href="/pages/support/faq.html"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li>
-                            <li><a href="/pages/support/tickets.html"><i class="fas fa-ticket-alt"></i> تذاكر الدعم الفني</a></li>
-                            <li><a href="/pages/support/notifications.html"><i class="fas fa-bell"></i> مركز الإشعارات</a></li>
-                            <li><a href="/pages/support/privacy-policy.html"><i class="fas fa-user-lock"></i> سياسة الخصوصية</a></li>
-                            <li><a href="/pages/support/terms-and-conditions.html"><i class="fas fa-gavel"></i> الشروط والأحكام القانونية</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <button class="logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-label">تسجيل الخروج</span>
-                </button>
-            </div>
-        </aside>
-
-        <!-- ============================================
-        المحتوى الرئيسي
-        ============================================ -->
-        <main class="main-content">
-
-            <!-- ============================================
-            عنوان الصفحة
-            ============================================ -->
-            <div class="page-header">
-                <h1><i class="fas fa-envelope"></i> معلومات الاتصال</h1>
-                <p>يرجى إدخال وسائل التواصل الخاصة بك بشكل صحيح، حيث سيتم استخدامها للتحقق من الهوية واستقبال الإشعارات والتحديثات المهمة المتعلقة بحسابك.</p>
-            </div>
-
-            <!-- ============================================
-            شريط التقدم
-            ============================================ -->
-            <ul class="progress-steps">
-                <li class="completed">
-                    <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
-                    <span class="step-label">شخصي</span>
-                </li>
-                <li class="step-line completed"></li>
-                <li class="active">
-                    <span class="step-num">2</span>
-                    <span class="step-label">تواصل</span>
-                </li>
-                <li class="step-line"></li>
-                <li>
-                    <span class="step-num">3</span>
-                    <span class="step-label">وثائق</span>
-                </li>
-                <li class="step-line"></li>
-                <li>
-                    <span class="step-num">4</span>
-                    <span class="step-label">بنكي</span>
-                </li>
-            </ul>
-
-            <!-- ============================================
-            الوصف الإرشادي
-            ============================================ -->
-            <div class="page-desc">
-                <i class="fas fa-info-circle"></i>
-                <span><strong>يرجى التأكد من صحة بيانات التواصل:</strong> سيتم استخدام رقم الجوال والبريد الإلكتروني للتحقق من هويتك وإرسال التنبيهات الأمنية والتحديثات المهمة. تأكد من إدخال بيانات صحيحة يمكن الوصول إليها.</span>
-            </div>
-
-            <!-- ============================================
-            النموذج
-            ============================================ -->
-            <form id="contactForm" novalidate>
-
-                <!-- ============================================
-                القسم 1: معلومات الاتصال الأساسية
-                ============================================ -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <i class="fas fa-phone-alt"></i>
-                        <h3>معلومات الاتصال الأساسية</h3>
-                        <span class="panel-badge">مطلوب</span>
-                    </div>
-
-                    <div class="form-grid">
-
-                        <!-- رقم الجوال -->
-                        <div class="form-group full-width">
-                            <label class="form-label">رقم الجوال <span class="req">*</span></label>
-                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
-                                <div>
-                                    <label class="form-label" style="font-size:12px; font-weight:600; color:var(--tera-gray);">الدولة / مفتاح الاتصال</label>
-                                    <select class="form-control" id="countryCode" required>
-                                        <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
-                                        <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
-                                        <option value="965">🇰🇼 دولة الكويت (+965)</option>
-                                        <option value="974">🇶🇦 دولة قطر (+974)</option>
-                                        <option value="973">🇧🇭 مملكة البحرين (+973)</option>
-                                        <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
-                                        <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="form-label" style="font-size:12px; font-weight:600; color:var(--tera-gray);">رقم الجوال</label>
-                                    <input type="tel" class="form-control" id="mobileNumber" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                    <span class="format-hint">يتم إدخال الرقم بدون مفتاح الدولة. مثال: 551234567</span>
-                                </div>
-                            </div>
-                            <div class="input-hint-box">
-                                <p>ملاحظات:</p>
-                                <ul>
-                                    <li>يقبل الأرقام فقط.</li>
-                                    <li>يتم التحقق من عدد الأرقام حسب الدولة المختارة.</li>
-                                    <li>يمنع إدخال الرموز أو الأحرف.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- البريد الإلكتروني الأساسي -->
-                        <div class="form-group full-width">
-                            <label class="form-label">البريد الإلكتروني <span class="req">*</span></label>
-                            <input type="email" class="form-control" id="primaryEmail" placeholder="name@example.com" required>
-                            <div class="input-hint-box">
-                                <p>ملاحظات:</p>
-                                <ul>
-                                    <li>يجب أن يكون البريد الإلكتروني فعالاً ويمكن الوصول إليه.</li>
-                                    <li>يمنع استخدام بريد إلكتروني مسجل لحساب آخر.</li>
-                                    <li>يتم التحقق من صحة صيغة البريد الإلكتروني تلقائياً.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- البريد الإلكتروني الاحتياطي -->
-                        <div class="form-group full-width">
-                            <label class="form-label">البريد الإلكتروني الاحتياطي <span class="optional">اختياري</span></label>
-                            <input type="email" class="form-control" id="backupEmail" placeholder="backup@example.com">
-                            <span class="format-hint">يستخدم لاستعادة الحساب والتواصل عند تعذر الوصول للبريد الإلكتروني الأساسي.</span>
-                        </div>
-
-                        <!-- لغة التواصل المفضلة -->
-                        <div class="form-group">
-                            <label class="form-label">لغة التواصل المفضلة <span class="req">*</span></label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="preferredLanguage" value="arabic" checked required> العربية
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="preferredLanguage" value="english"> English
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- طريقة التواصل المفضلة -->
-                        <div class="form-group">
-                            <label class="form-label">طريقة التواصل المفضلة <span class="req">*</span></label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="preferredMethod" value="sms" required> الرسائل النصية (SMS)
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="preferredMethod" value="email" checked> البريد الإلكتروني
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="preferredMethod" value="both"> كلاهما
-                                </label>
-                            </div>
-                        </div>
-
-                    </div>
+            <!-- =========================================
+            القسم 1: معلومات الاتصال الأساسية
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-phone-alt"></i>
+                    <h3>معلومات الاتصال الأساسية</h3>
+                    <span class="panel-badge">مطلوب</span>
                 </div>
 
-                <!-- ============================================
-                القسم 2: جهة اتصال للطوارئ
-                ============================================ -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <i class="fas fa-user-shield"></i>
-                        <h3>جهة اتصال للطوارئ</h3>
-                        <span class="panel-badge">مطلوب</span>
-                    </div>
+                <div class="form-grid">
 
-                    <p style="font-size:13px; color:var(--tera-gray); margin-bottom:18px;">
-                        <i class="fas fa-info-circle" style="color:var(--tera-teal);"></i>
-                        في حال تعذر التواصل مع صاحب الحساب أو الحاجة إلى التواصل بشكل عاجل بشأن الحساب.
-                    </p>
-
-                    <div class="form-grid">
-
-                        <!-- الاسم الكامل -->
-                        <div class="form-group full-width">
-                            <label class="form-label">الاسم الكامل <span class="req">*</span></label>
-                            <input type="text" class="form-control" id="emergencyName" placeholder="مثال: أحمد بن محمد الفلاحي" required oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
-                            <div class="input-hint-box">
-                                <p>ملاحظات:</p>
-                                <ul>
-                                    <li>يقبل الأحرف العربية فقط.</li>
-                                    <li>يجب إدخال الاسم الحقيقي الكامل.</li>
-                                </ul>
+                    <!-- رقم الجوال -->
+                    <div class="form-group full-width">
+                        <label class="form-label">رقم الجوال <span class="req">*</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                            <div>
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">الدولة / مفتاح الاتصال</label>
+                                <select class="form-control" id="countryCode" required>
+                                    <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
+                                    <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
+                                    <option value="965">🇰🇼 دولة الكويت (+965)</option>
+                                    <option value="974">🇶🇦 دولة قطر (+974)</option>
+                                    <option value="973">🇧🇭 مملكة البحرين (+973)</option>
+                                    <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
+                                    <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
+                                <input type="tel" class="form-control" id="mobileNumber" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <span class="format-hint">يتم إدخال الرقم بدون مفتاح الدولة. مثال: 551234567</span>
                             </div>
                         </div>
-
-                        <!-- صلة القرابة -->
-                        <div class="form-group">
-                            <label class="form-label">صلة القرابة أو العلاقة <span class="req">*</span></label>
-                            <select class="form-control" id="emergencyRelation" required>
-                                <option value="">اختر...</option>
-                                <option value="father">والد</option>
-                                <option value="mother">والدة</option>
-                                <option value="husband">زوج</option>
-                                <option value="wife">زوجة</option>
-                                <option value="brother">أخ</option>
-                                <option value="sister">أخت</option>
-                                <option value="son">ابن</option>
-                                <option value="daughter">ابنة</option>
-                                <option value="relative">قريب</option>
-                                <option value="friend">صديق</option>
-                                <option value="other">أخرى</option>
-                            </select>
-                        </div>
-
-                        <!-- رقم جوال الطوارئ -->
-                        <div class="form-group full-width">
-                            <label class="form-label">رقم الجوال <span class="req">*</span></label>
-                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
-                                <div>
-                                    <label class="form-label" style="font-size:12px; font-weight:600; color:var(--tera-gray);">الدولة / مفتاح الاتصال</label>
-                                    <select class="form-control" id="emergencyCountryCode" required>
-                                        <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
-                                        <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
-                                        <option value="965">🇰🇼 دولة الكويت (+965)</option>
-                                        <option value="974">🇶🇦 دولة قطر (+974)</option>
-                                        <option value="973">🇧🇭 مملكة البحرين (+973)</option>
-                                        <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
-                                        <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="form-label" style="font-size:12px; font-weight:600; color:var(--tera-gray);">رقم الجوال</label>
-                                    <input type="tel" class="form-control" id="emergencyMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                    <span class="format-hint">يتم إدخال الرقم بدون مفتاح الدولة.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- البريد الإلكتروني للطوارئ -->
-                        <div class="form-group full-width">
-                            <label class="form-label">البريد الإلكتروني <span class="optional">اختياري</span></label>
-                            <input type="email" class="form-control" id="emergencyEmail" placeholder="emergency@example.com">
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- ============================================
-                القسم 3: التحقق من معلومات الاتصال
-                ============================================ -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <i class="fas fa-shield-alt"></i>
-                        <h3>التحقق من معلومات الاتصال</h3>
-                        <span class="panel-badge">أمان</span>
-                    </div>
-
-                    <div class="otp-notice">
-                        <i class="fas fa-shield-alt" style="color:var(--tera-teal); margin-left:8px;"></i>
-                        <strong>رمز التحقق (OTP):</strong> سيتم إرسال رمز تحقق إلى البريد الإلكتروني الأساسي، ويجب إدخاله لإثبات ملكية البريد الإلكتروني.
-                        <br>
-                        <span style="font-size:12px; color:var(--tera-gray);">لن يتم اعتماد بيانات التواصل حتى يتم إكمال عمليتي التحقق بنجاح.</span>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label class="form-label">رمز التحقق (OTP) <span class="req">*</span></label>
-                            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                                <input type="text" class="form-control" id="otpCode" placeholder="أدخل الرمز المكون من 6 أرقام" required style="flex:1; min-width:200px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                <button type="button" class="btn-text-action" id="sendOtpBtn" style="background:var(--tera-teal); color:#fff; padding:10px 24px; border-radius:10px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">
-                                    <i class="fas fa-paper-plane"></i> إرسال الرمز
-                                </button>
-                            </div>
-                            <span class="format-hint">سيتم إرسال رمز التحقق إلى بريدك الإلكتروني المسجل. الرمز صالح لمدة 5 دقائق.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ============================================
-                القسم 4: الإقرار والتعهد
-                ============================================ -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <i class="fas fa-file-signature"></i>
-                        <h3>الإقرار والتعهد</h3>
-                    </div>
-
-                    <div class="declaration-box">
-                        <input type="checkbox" required id="declarationCheck">
-                        <div>
-                            <p>☑ أقر وأتعهد بأن:</p>
+                        <div class="input-hint-box">
+                            <p>ملاحظات:</p>
                             <ul>
-                                <li>رقم الجوال والبريد الإلكتروني المسجلين يخصانني شخصياً.</li>
-                                <li>بيانات جهة اتصال الطوارئ تم تسجيلها بموافقة صاحبها.</li>
-                                <li>جميع معلومات التواصل المدخلة صحيحة ومحدثة.</li>
-                                <li>أتحمل مسؤولية صحة البيانات المدخلة.</li>
+                                <li>يقبل الأرقام فقط.</li>
+                                <li>يتم التحقق من عدد الأرقام حسب الدولة المختارة.</li>
+                                <li>يمنع إدخال الرموز أو الأحرف.</li>
                             </ul>
                         </div>
                     </div>
 
-                    <div class="alert-warning-box">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span><strong>تنبيه:</strong> تستخدم بيانات جهة اتصال الطوارئ عند الضرورة القصوى أو عند تعذر التواصل مع صاحب الحساب، ولن يتم الإفصاح عن أي معلومات مالية أو سرية إلا وفق الأنظمة واللوائح المعمول بها.</span>
+                    <!-- البريد الإلكتروني الأساسي -->
+                    <div class="form-group full-width">
+                        <label class="form-label">البريد الإلكتروني <span class="req">*</span></label>
+                        <input type="email" class="form-control" id="primaryEmail" placeholder="name@example.com" required>
+                        <div class="input-hint-box">
+                            <p>ملاحظات:</p>
+                            <ul>
+                                <li>يجب أن يكون البريد الإلكتروني فعالاً ويمكن الوصول إليه.</li>
+                                <li>يمنع استخدام بريد إلكتروني مسجل لحساب آخر.</li>
+                                <li>يتم التحقق من صحة صيغة البريد الإلكتروني تلقائياً.</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-save"></i> حفظ ومتابعة التحقق
-                    </button>
+                    <!-- البريد الإلكتروني الاحتياطي -->
+                    <div class="form-group full-width">
+                        <label class="form-label">البريد الإلكتروني الاحتياطي <span class="optional">اختياري</span></label>
+                        <input type="email" class="form-control" id="backupEmail" placeholder="backup@example.com">
+                        <span class="format-hint">يستخدم لاستعادة الحساب والتواصل عند تعذر الوصول للبريد الإلكتروني الأساسي.</span>
+                    </div>
+
+                    <!-- لغة التواصل المفضلة -->
+                    <div class="form-group">
+                        <label class="form-label">لغة التواصل المفضلة <span class="req">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="preferredLanguage" value="arabic" checked required> العربية
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="preferredLanguage" value="english"> English
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- طريقة التواصل المفضلة -->
+                    <div class="form-group">
+                        <label class="form-label">طريقة التواصل المفضلة <span class="req">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="preferredMethod" value="sms" required> الرسائل النصية (SMS)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="preferredMethod" value="email" checked> البريد الإلكتروني
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="preferredMethod" value="both"> كلاهما
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- =========================================
+            القسم 2: جهة اتصال للطوارئ
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-user-shield"></i>
+                    <h3>جهة اتصال للطوارئ</h3>
+                    <span class="panel-badge">مطلوب</span>
                 </div>
 
-            </form>
+                <p style="font-size:13px; color:#64748b; margin-bottom:18px;">
+                    <i class="fas fa-info-circle" style="color:#028090;"></i>
+                    في حال تعذر التواصل مع صاحب الحساب أو الحاجة إلى التواصل بشكل عاجل بشأن الحساب.
+                </p>
 
-            <!-- ============================================
-            التذييل
-            ============================================ -->
-            <footer class="page-footer no-print">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; max-width:1200px; margin:0 auto;">
-                    <span>© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
-                    <div style="display:flex; gap:16px;">
-                        <a href="/pages/support/privacy-policy.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">سياسة الخصوصية</a>
-                        <a href="/pages/support/terms-and-conditions.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">الشروط والأحكام</a>
-                        <a href="/pages/support/help-center.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">الدعم الفني</a>
+                <div class="form-grid">
+
+                    <!-- الاسم الكامل -->
+                    <div class="form-group full-width">
+                        <label class="form-label">الاسم الكامل <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="emergencyName" placeholder="مثال: أحمد بن محمد الفلاحي" required oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
+                        <div class="input-hint-box">
+                            <p>ملاحظات:</p>
+                            <ul>
+                                <li>يقبل الأحرف العربية فقط.</li>
+                                <li>يجب إدخال الاسم الحقيقي الكامل.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- صلة القرابة -->
+                    <div class="form-group">
+                        <label class="form-label">صلة القرابة أو العلاقة <span class="req">*</span></label>
+                        <select class="form-control" id="emergencyRelation" required>
+                            <option value="">اختر...</option>
+                            <option value="father">والد</option>
+                            <option value="mother">والدة</option>
+                            <option value="husband">زوج</option>
+                            <option value="wife">زوجة</option>
+                            <option value="brother">أخ</option>
+                            <option value="sister">أخت</option>
+                            <option value="son">ابن</option>
+                            <option value="daughter">ابنة</option>
+                            <option value="relative">قريب</option>
+                            <option value="friend">صديق</option>
+                            <option value="other">أخرى</option>
+                        </select>
+                    </div>
+
+                    <!-- رقم جوال الطوارئ -->
+                    <div class="form-group full-width">
+                        <label class="form-label">رقم الجوال <span class="req">*</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                            <div>
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">الدولة / مفتاح الاتصال</label>
+                                <select class="form-control" id="emergencyCountryCode" required>
+                                    <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
+                                    <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
+                                    <option value="965">🇰🇼 دولة الكويت (+965)</option>
+                                    <option value="974">🇶🇦 دولة قطر (+974)</option>
+                                    <option value="973">🇧🇭 مملكة البحرين (+973)</option>
+                                    <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
+                                    <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
+                                <input type="tel" class="form-control" id="emergencyMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <span class="format-hint">يتم إدخال الرقم بدون مفتاح الدولة.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- البريد الإلكتروني للطوارئ -->
+                    <div class="form-group full-width">
+                        <label class="form-label">البريد الإلكتروني <span class="optional">اختياري</span></label>
+                        <input type="email" class="form-control" id="emergencyEmail" placeholder="emergency@example.com">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- =========================================
+            القسم 3: التحقق من معلومات الاتصال
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>التحقق من معلومات الاتصال</h3>
+                    <span class="panel-badge">أمان</span>
+                </div>
+
+                <div class="otp-notice">
+                    <i class="fas fa-shield-alt" style="color:#028090; margin-left:8px;"></i>
+                    <strong>رمز التحقق (OTP):</strong> سيتم إرسال رمز تحقق إلى البريد الإلكتروني الأساسي، ويجب إدخاله لإثبات ملكية البريد الإلكتروني.
+                    <br>
+                    <span style="font-size:12px; color:#64748b;">لن يتم اعتماد بيانات التواصل حتى يتم إكمال عملية التحقق بنجاح.</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label">رمز التحقق (OTP) <span class="req">*</span></label>
+                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                            <input type="text" class="form-control" id="otpCode" placeholder="أدخل الرمز المكون من 6 أرقام" required style="flex:1; min-width:200px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <button type="button" class="btn-text-action" id="sendOtpBtn" style="background:#028090; color:#fff; padding:10px 24px; border-radius:10px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">
+                                <i class="fas fa-paper-plane"></i> إرسال الرمز
+                            </button>
+                        </div>
+                        <span class="format-hint">سيتم إرسال رمز التحقق إلى بريدك الإلكتروني المسجل. الرمز صالح لمدة 5 دقائق.</span>
                     </div>
                 </div>
-            </footer>
+            </div>
 
-        </main>
+            <!-- =========================================
+            القسم 4: الإقرار والتعهد
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-file-signature"></i>
+                    <h3>الإقرار والتعهد</h3>
+                </div>
 
-    </div>
+                <div class="declaration-box">
+                    <input type="checkbox" required id="declarationCheck">
+                    <div>
+                        <p>☑ أقر وأتعهد بأن:</p>
+                        <ul>
+                            <li>رقم الجوال والبريد الإلكتروني المسجلين يخصانني شخصياً.</li>
+                            <li>بيانات جهة اتصال الطوارئ تم تسجيلها بموافقة صاحبها.</li>
+                            <li>جميع معلومات التواصل المدخلة صحيحة ومحدثة.</li>
+                            <li>أتحمل مسؤولية صحة البيانات المدخلة.</li>
+                        </ul>
+                    </div>
+                </div>
 
-    <!-- ============================================
-    السكربتات
-    ============================================ -->
+                <div class="alert-warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span><strong>تنبيه:</strong> تستخدم بيانات جهة اتصال الطوارئ عند الضرورة القصوى أو عند تعذر التواصل مع صاحب الحساب، ولن يتم الإفصاح عن أي معلومات مالية أو سرية إلا وفق الأنظمة واللوائح المعمول بها.</span>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> حفظ ومتابعة التحقق
+                </button>
+            </div>
+
+        </form>
+
+    </main>
+
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
     <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/profile.js"></script>
 
-    <!-- ============================================
-    سكربتات الصفحة
-    ============================================ -->
-    <script>
-        (function() {
-            'use strict';
-
-            // ============================================
-            // القائمة الجانبية
-            // ============================================
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.getElementById('sidebarToggle');
-            const closeBtn = document.getElementById('closeSidebarBtn');
-            const overlay = document.getElementById('sidebarOverlay');
-            const isMobile = () => window.innerWidth <= 991;
-
-            if (toggleBtn && sidebar) {
-                toggleBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (!isMobile()) {
-                        sidebar.classList.toggle('collapsed');
-                        sidebar.classList.remove('sidebar-open');
-                        if (overlay) overlay.classList.remove('active');
-                    } else {
-                        const isOpen = sidebar.classList.contains('sidebar-open');
-                        if (isOpen) {
-                            sidebar.classList.remove('sidebar-open');
-                            if (overlay) overlay.classList.remove('active');
-                        } else {
-                            sidebar.classList.add('sidebar-open');
-                            if (overlay) overlay.classList.add('active');
-                        }
-                    }
-                });
-            }
-
-            if (closeBtn && sidebar) {
-                closeBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                });
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', function() {
-                    sidebar.classList.remove('sidebar-open');
-                    overlay.classList.remove('active');
-                });
-            }
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-open')) {
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                }
-            });
-
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 991 && sidebar) {
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                }
-            });
-
-            // ============================================
-            // القوائم الفرعية
-            // ============================================
-            document.querySelectorAll('.has-submenu > a').forEach(function(link) {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                        return;
-                    }
-                    e.preventDefault();
-                    const parent = this.closest('.has-submenu');
-                    if (!parent) return;
-
-                    if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
-                        sidebar.classList.remove('collapsed');
-                    }
-
-                    document.querySelectorAll('.has-submenu').forEach(function(el) {
-                        if (el !== parent) el.classList.remove('submenu-open');
-                    });
-                    parent.classList.toggle('submenu-open');
-                });
-            });
-
-            // ============================================
-            // إرسال رمز التحقق
-            // ============================================
-            const sendOtpBtn = document.getElementById('sendOtpBtn');
-            if (sendOtpBtn) {
-                sendOtpBtn.addEventListener('click', function() {
-                    const email = document.getElementById('primaryEmail').value;
-                    if (!email || !email.includes('@')) {
-                        alert('يرجى إدخال بريد إلكتروني صحيح أولاً.');
-                        document.getElementById('primaryEmail').focus();
-                        return;
-                    }
-                    alert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني: ' + email);
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-                    this.disabled = true;
-                    setTimeout(() => {
-                        this.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الرمز';
-                        this.disabled = false;
-                    }, 2000);
-                });
-            }
-
-            // ============================================
-            // التحقق من صحة النموذج
-            // ============================================
-            const form = document.getElementById('contactForm');
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                // التحقق من الإقرار
-                const declaration = document.getElementById('declarationCheck');
-                if (!declaration.checked) {
-                    alert('يرجى الموافقة على الإقرار والتعهد قبل المتابعة.');
-                    declaration.focus();
-                    return;
-                }
-
-                // التحقق من رقم الجوال
-                const mobile = document.getElementById('mobileNumber').value;
-                if (mobile.length < 9 || mobile.length > 12) {
-                    alert('يرجى إدخال رقم جوال صحيح (9-12 رقم).');
-                    document.getElementById('mobileNumber').focus();
-                    return;
-                }
-
-                // التحقق من البريد الإلكتروني
-                const email = document.getElementById('primaryEmail').value;
-                if (!email || !email.includes('@') || !email.includes('.')) {
-                    alert('يرجى إدخال بريد إلكتروني صحيح.');
-                    document.getElementById('primaryEmail').focus();
-                    return;
-                }
-
-                // التحقق من OTP
-                const otp = document.getElementById('otpCode').value;
-                if (otp.length !== 6) {
-                    alert('يرجى إدخال رمز التحقق المكون من 6 أرقام.');
-                    document.getElementById('otpCode').focus();
-                    return;
-                }
-
-                // التحقق من جهة اتصال الطوارئ
-                const emergencyName = document.getElementById('emergencyName').value;
-                if (!emergencyName || emergencyName.length < 3) {
-                    alert('يرجى إدخال الاسم الكامل لجهة اتصال الطوارئ.');
-                    document.getElementById('emergencyName').focus();
-                    return;
-                }
-
-                const emergencyMobile = document.getElementById('emergencyMobile').value;
-                if (emergencyMobile.length < 9 || emergencyMobile.length > 12) {
-                    alert('يرجى إدخال رقم جوال صحيح لجهة اتصال الطوارئ.');
-                    document.getElementById('emergencyMobile').focus();
-                    return;
-                }
-
-                alert('✅ تم حفظ بيانات الاتصال بنجاح.\nجاري التحقق من الرمز...');
-            });
-
-            // ============================================
-            // تسجيل الخروج
-            // ============================================
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        document.cookie.split(';').forEach(function(c) {
-                            document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date()
-                                .toUTCString() + ';path=/');
-                        });
-                        window.location.replace('https://tera-investor-portal.onrender.com');
-                    }
-                });
-            }
-
-            console.log('✅ Contact Information page loaded successfully.');
-
-        })();
-    </script>
+    <!-- =========================================
+    الملف المخصص للصفحة (الجافا مفصولة هنا)
+    ========================================= -->
+    <script src="/assets/js/profile-contact-information.js"></script>
 
 </body>
 </html>
