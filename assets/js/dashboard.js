@@ -5,19 +5,23 @@
  * الموقع: /assets/js/dashboard.js
  * تاريخ التحديث: 2026-06-25
  * ============================================================
- * تم إصلاح:
- * - إزالة زر الفتح المكرر (#openSidebarBtn)، الاعتماد على #sidebarToggle فقط.
- * - إصلاح القوائم الفرعية (submenus) لتعمل عند الضغط.
- * - توسيع القائمة تلقائياً في وضع التصغير (collapsed).
- * - تحسين استقرار الصفحة على الجوال.
- * ============================================================
  */
 
 const Dashboard = {
+    // تخزين مرجع الرسم البياني لتدميره عند إعادة التهيئة
+    chartInstance: null,
+    _initialized: false,
+
     /**
      * تهيئة لوحة التحكم بالكامل
      */
     init: function() {
+        if (this._initialized) {
+            console.warn('⚠️ Dashboard already initialized.');
+            return;
+        }
+        this._initialized = true;
+
         console.log('🚀 Initializing Tera Dashboard...');
         this.initSidebar();
         this.initSubmenus();
@@ -33,7 +37,6 @@ const Dashboard = {
     /**
      * ============================================================
      * 1. تهيئة القائمة الجانبية (Sidebar)
-     * يدعم الزر الوحيد #sidebarToggle
      * ============================================================
      */
     initSidebar: function() {
@@ -46,9 +49,6 @@ const Dashboard = {
             return;
         }
 
-        // ============================================
-        // الزر الوحيد للتحكم (#sidebarToggle)
-        // ============================================
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
@@ -57,12 +57,10 @@ const Dashboard = {
                 console.log('🟢 Sidebar Toggle Clicked');
 
                 if (!isMobile()) {
-                    // الديسكتوب: تصغير/تكبير
                     sidebar.classList.toggle('collapsed');
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                 } else {
-                    // الجوال: فتح/غلق منسدل
                     const isOpen = sidebar.classList.contains('sidebar-open');
                     if (isOpen) {
                         sidebar.classList.remove('sidebar-open');
@@ -77,9 +75,6 @@ const Dashboard = {
             console.warn('⚠️ Warning: #sidebarToggle not found.');
         }
 
-        // ============================================
-        // زر إغلاق الجوال (#closeSidebarBtn)
-        // ============================================
         const closeBtn = document.getElementById('closeSidebarBtn');
         if (closeBtn) {
             closeBtn.addEventListener('click', function(e) {
@@ -91,9 +86,6 @@ const Dashboard = {
             });
         }
 
-        // ============================================
-        // إغلاق القائمة عند النقر على الـ overlay
-        // ============================================
         if (overlay) {
             overlay.addEventListener('click', function() {
                 sidebar.classList.remove('sidebar-open');
@@ -102,9 +94,6 @@ const Dashboard = {
             });
         }
 
-        // ============================================
-        // إغلاق القائمة بالضغط على Escape
-        // ============================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
                 sidebar.classList.remove('sidebar-open');
@@ -113,9 +102,6 @@ const Dashboard = {
             }
         });
 
-        // ============================================
-        // النقر المزدوج على الشعار لتبديل التصغير (ديسكتوب)
-        // ============================================
         const logo = document.querySelector('.header-logo a');
         if (logo) {
             logo.addEventListener('dblclick', function(e) {
@@ -131,13 +117,12 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 2. إدارة القوائم الفرعية (Submenus) - إصلاح نهائي
+     * 2. إدارة القوائم الفرعية (Submenus)
      * ============================================================
      */
     initSubmenus: function() {
-        // نبحث عن جميع روابط القوائم الفرعية التي تحتوي على أيقونة السهم
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
-        
+
         if (!submenuToggles.length) {
             console.warn('⚠️ No submenus found.');
             return;
@@ -145,19 +130,15 @@ const Dashboard = {
 
         console.log(`🔄 Found ${submenuToggles.length} submenu toggles.`);
 
-        // تعريف دالة المعالج بشكل منفصل لتجنب إعادة الإنشاء
         const handleSubmenuClick = function(e) {
             const href = this.getAttribute('href');
             const parentLi = this.closest('.has-submenu');
-            
-            // إذا كان الرابط يشير إلى صفحة حقيقية (وليس # أو void)، نسمح بالانتقال
+
             if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                // نسمح بالانتقال للصفحة، ولا نمنع الحدث
                 console.log(`🔗 Navigating to: ${href}`);
-                return; // نخرج من الدالة، فلا نمنع الانتقال ولا نبدل القائمة
+                return;
             }
 
-            // منع الانتقال الافتراضي فقط للروابط التي هي # أو void
             e.preventDefault();
             e.stopPropagation();
 
@@ -165,34 +146,28 @@ const Dashboard = {
 
             const sidebar = document.getElementById('sidebar');
 
-            // إذا كانت القائمة في وضع التصغير (collapsed) في الديسكتوب، نقوم بتوسيعها تلقائياً
             if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
                 sidebar.classList.remove('collapsed');
                 console.log('🔄 Sidebar expanded automatically to show submenu.');
             }
 
-            // إغلاق القوائم الفرعية الأخرى (Accordion)
             document.querySelectorAll('.has-submenu').forEach(function(el) {
                 if (el !== parentLi) el.classList.remove('submenu-open');
             });
 
-            // تبديل حالة القائمة الفرعية الحالية
             parentLi.classList.toggle('submenu-open');
             console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
         };
 
-        // إضافة المستمعات باستخدام دالة واحدة مع إزالة المستمعات القديمة
         submenuToggles.forEach(function(link) {
-            // إزالة أي مستمع قديم (باستخدام نفس الدالة المرجعية)
             link.removeEventListener('click', handleSubmenuClick);
-            // إضافة المستمع الجديد
             link.addEventListener('click', handleSubmenuClick);
         });
     },
 
     /**
      * ============================================================
-     * 3. تبديل عرض الفرص الاستثمارية (إظهار/إخفاء)
+     * 3. تبديل عرض الفرص الاستثمارية
      * ============================================================
      */
     initOpportunitiesToggle: function() {
@@ -252,7 +227,7 @@ const Dashboard = {
                 const text = row.textContent.toLowerCase();
                 if (value === 'all') {
                     row.style.display = '';
-                } else if (value === 'deposits' && (text.includes('إيداع') || text.includes('+') || text.includes('دخول'))) {
+                } else if (value === 'deposits' && (text.includes('إيداع') || text.includes('+'))) {
                     row.style.display = '';
                 } else if (value === 'deductions' && (text.includes('سحب') || text.includes('-') || text.includes('خصم'))) {
                     row.style.display = '';
@@ -266,7 +241,7 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 5. الرسم البياني باستخدام Chart.js
+     * 5. الرسم البياني – مع تدمير الرسم السابق
      * ============================================================
      */
     initChart: function() {
@@ -281,8 +256,18 @@ const Dashboard = {
             return;
         }
 
+        if (this.chartInstance) {
+            try {
+                this.chartInstance.destroy();
+                console.log('🔄 Previous chart destroyed.');
+            } catch (e) {
+                console.warn('⚠️ Error destroying previous chart:', e);
+            }
+            this.chartInstance = null;
+        }
+
         try {
-            new Chart(ctx, {
+            this.chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
@@ -350,7 +335,7 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 6. تسجيل الخروج
+     * 6. تسجيل الخروج – التوجيه إلى الرابط المطلوب
      * ============================================================
      */
     initLogout: function() {
@@ -362,16 +347,16 @@ const Dashboard = {
 
         logoutBtn.addEventListener('click', function() {
             if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                console.log('🔴 User logged out.');
-                alert('سيتم توجيهك إلى صفحة تسجيل الدخول.');
-                // window.location.href = '/auth/login/login.html';
+                console.log('🔴 User logged out. Redirecting...');
+                // التوجيه إلى الرابط المطلوب
+                window.location.href = 'https://tera-investor-portal.onrender.com';
             }
         });
     },
 
     /**
      * ============================================================
-     * 7. تفعيل الحالة النشطة للقائمة بناءً على المسار الحالي
+     * 7. تفعيل الحالة النشطة للقائمة
      * ============================================================
      */
     initActiveNav: function() {
@@ -394,7 +379,7 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 8. معالجة تغيير حجم النافذة (إعادة ضبط الحالة)
+     * 8. معالجة تغيير حجم النافذة
      * ============================================================
      */
     handleWindowResize: function() {
@@ -408,13 +393,9 @@ const Dashboard = {
                 const overlay = document.getElementById('sidebarOverlay');
 
                 if (!isMobile() && sidebar) {
-                    // عند الانتقال إلى الديسكتوب، نغلق وضع الجوال
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                 }
-
-                // التأكد من أن حالة التصغير (collapsed) تبقى كما هي في الديسكتوب
-                // لا نقوم بتغييرها تلقائياً
             }, 200);
         });
     }
@@ -427,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Dashboard.init();
 });
 
-// تصدير للاستخدام في بيئات أخرى (CommonJS / Node.js)
+// تصدير للاستخدام في بيئات أخرى
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Dashboard;
 }
