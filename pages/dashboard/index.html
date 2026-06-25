@@ -23,28 +23,72 @@
     <link rel="stylesheet" href="/assets/css/dashboard.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-    <!-- أنماط إضافية مخصصة للصفحة -->
+    <!-- أنماط إضافية مخصصة للصفحة – تم إصلاح مشاكل الجوال -->
     <style>
         /* ============================================
-           تحسينات إضافية للصفحة – تم إصلاح مشاكل الجوال
+           تحسينات إضافية للصفحة
            ============================================ */
         
-        /* تحسين استقرار الشاشة – منع الاهتزازات */
+        /* منع الاهتزازات الزائدة */
         .app-wrapper {
             overflow-x: hidden;
             width: 100%;
         }
 
-        /* تحسين الشعار في الجوال – أكبر وأوضح */
+        /* ============================================
+           تحسين الشعار – أكبر وأوضح في الجوال
+           ============================================ */
+        .header-logo {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+
         .header-logo img {
             height: 40px;
             width: auto;
             display: block;
             transition: opacity 0.3s ease;
-            filter: none; /* إزالة أي تأثيرات باهتة */
+            filter: none !important;
             opacity: 1 !important;
+            image-rendering: auto;
+            flex-shrink: 0;
         }
 
+        /* ============================================
+           حاوية التمرير الأفقي للجداول (لحل مشكلة الجوال)
+           ============================================ */
+        .data-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -4px;
+            padding: 0 4px;
+            scroll-behavior: smooth;
+        }
+
+        .data-table-wrapper::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .data-table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .data-table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--tera-teal);
+            border-radius: 4px;
+        }
+
+        .data-table-wrapper table {
+            min-width: 500px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* ============================================
+           تحسين البانر الترحيبي
+           ============================================ */
         .welcome-banner {
             background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%);
             border-radius: 16px;
@@ -206,30 +250,26 @@
         }
 
         /* ============================================
-           تحسينات الجوال – تم إصلاح الشعار والاستقرار
+           تحسينات الجوال الشاملة
            ============================================ */
         @media (max-width: 991px) {
-            /* شعار أكبر وأوضح في الجوال */
+            /* شعار أكبر وأوضح */
             .header-logo img {
-                height: 36px !important; /* أكبر من 32px السابقة */
-                filter: none !important;
-                opacity: 1 !important;
+                height: 36px !important;
             }
 
-            /* منع الاهتزاز عند فتح القائمة */
+            /* استقرار المحتوى */
             .app-wrapper {
-                position: relative;
                 overflow-x: hidden;
             }
 
             .main-content {
                 padding: 12px 12px 20px 12px;
-                transition: none; /* منع التأثيرات غير المرغوب فيها */
             }
 
-            /* تحسين استقرار البانر في الجوال */
+            /* تحسين البانر */
             .welcome-banner {
-                padding: 16px 18px;
+                padding: 18px 20px;
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
@@ -247,7 +287,6 @@
 
             .quick-actions {
                 width: 100%;
-                justify-content: stretch;
             }
 
             .quick-actions .btn-quick {
@@ -257,7 +296,7 @@
                 padding: 8px 12px;
             }
 
-            /* تحسين استقرار المحتوى */
+            /* تحسين البطاقات */
             .stats-grid {
                 gap: 12px;
             }
@@ -270,6 +309,12 @@
                 font-size: 17px;
             }
 
+            .stat-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+
             .panel-card {
                 padding: 14px 14px 16px 14px;
             }
@@ -277,12 +322,38 @@
             .dashboard-layout-grid {
                 gap: 12px;
             }
+
+            /* تحسين الجداول للجوال */
+            .data-table-wrapper {
+                margin: 0 -8px;
+                padding: 0 8px;
+            }
+
+            .data-table-wrapper table {
+                min-width: 420px;
+                font-size: 12px;
+            }
+
+            .data-table-wrapper table th,
+            .data-table-wrapper table td {
+                padding: 8px 10px;
+                white-space: nowrap;
+            }
+
+            .data-table-wrapper table th {
+                font-size: 11px;
+            }
+
+            .btn-table-link {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
         }
 
         @media (max-width: 480px) {
-            /* شعار أكبر في الشاشات الصغيرة جداً */
+            /* شعار مناسب للشاشات الصغيرة جداً */
             .header-logo img {
-                height: 32px !important;
+                height: 30px !important;
             }
 
             .welcome-banner {
@@ -293,6 +364,10 @@
                 font-size: 16px;
             }
 
+            .welcome-banner p {
+                font-size: 12px;
+            }
+
             .stat-value {
                 font-size: 15px;
             }
@@ -301,6 +376,34 @@
                 width: 38px;
                 height: 38px;
                 font-size: 16px;
+            }
+
+            .data-table-wrapper table {
+                min-width: 360px;
+                font-size: 11px;
+            }
+
+            .data-table-wrapper table th,
+            .data-table-wrapper table td {
+                padding: 6px 8px;
+            }
+
+            .data-table-wrapper table th {
+                font-size: 10px;
+            }
+
+            .btn-table-link {
+                padding: 3px 8px;
+                font-size: 10px;
+            }
+
+            .filter-select {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+
+            .btn-text-action {
+                font-size: 12px;
             }
         }
 
@@ -315,6 +418,19 @@
             .spinner {
                 border-color: #334155;
                 border-top-color: var(--tera-teal-light);
+            }
+
+            .data-table-wrapper::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+        }
+
+        /* تقليل الحركة */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
@@ -339,12 +455,11 @@
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <!-- الشعار – تم تحسين حجمه ووضوحه -->
+                <!-- الشعار – محسّن للجوال -->
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html">
                         <img src="/images/logo.svg" 
                              alt="Tera Logo" 
-                             style="height:40px; width:auto; display:block; filter:none; opacity:1;"
                              onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
                     </a>
                 </div>
@@ -590,40 +705,43 @@
                         </button>
                     </div>
                     <div id="opportunitiesPanelWrapper" style="overflow: hidden; transition: all 0.3s ease; max-height: 600px;">
-                        <table class="data-table-list">
-                            <thead>
-                                <tr>
-                                    <th class="text-start">الفرصة</th>
-                                    <th>قيمة السهم</th>
-                                    <th>العائد</th>
-                                    <th>الحالة</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="text-title text-start">مشروع تمويل بطاقات الاتصالات</td>
-                                    <td>5,000 ر.س</td>
-                                    <td>15.00%</td>
-                                    <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
-                                    <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">صندوق التطوير العقاري 2026</td>
-                                    <td>10,000 ر.س</td>
-                                    <td>12.50%</td>
-                                    <td><span style="color:#f59e0b;font-weight:bold;">قيد الطرح</span></td>
-                                    <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-title text-start">منصة التجارة الإلكترونية</td>
-                                    <td>7,500 ر.س</td>
-                                    <td>18.00%</td>
-                                    <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
-                                    <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <!-- حاوية التمرير الأفقي للجوال -->
+                        <div class="data-table-wrapper">
+                            <table class="data-table-list">
+                                <thead>
+                                    <tr>
+                                        <th class="text-start">الفرصة</th>
+                                        <th>قيمة السهم</th>
+                                        <th>العائد</th>
+                                        <th>الحالة</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-title text-start">مشروع تمويل بطاقات الاتصالات</td>
+                                        <td>5,000 ر.س</td>
+                                        <td>15.00%</td>
+                                        <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
+                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-title text-start">صندوق التطوير العقاري 2026</td>
+                                        <td>10,000 ر.س</td>
+                                        <td>12.50%</td>
+                                        <td><span style="color:#f59e0b;font-weight:bold;">قيد الطرح</span></td>
+                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-title text-start">منصة التجارة الإلكترونية</td>
+                                        <td>7,500 ر.س</td>
+                                        <td>18.00%</td>
+                                        <td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td>
+                                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -636,42 +754,45 @@
                             <option value="deductions">خصومات</option>
                         </select>
                     </div>
-                    <table class="data-table-list">
-                        <thead>
-                            <tr>
-                                <th class="text-start">البيان</th>
-                                <th>التاريخ</th>
-                                <th>المبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTableBody">
-                            <tr>
-                                <td class="text-title text-start">إيداع أرباح دورية</td>
-                                <td>2026/06/23</td>
-                                <td class="amount-cell" style="color:#10b981;font-weight:bold;">+1,250.00 ر.س</td>
-                            </tr>
-                            <tr>
-                                <td class="text-title text-start">سحب أرباح</td>
-                                <td>2026/06/20</td>
-                                <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-500.00 ر.س</td>
-                            </tr>
-                            <tr>
-                                <td class="text-title text-start">إيداع استثماري</td>
-                                <td>2026/06/18</td>
-                                <td class="amount-cell" style="color:#10b981;font-weight:bold;">+10,000.00 ر.س</td>
-                            </tr>
-                            <tr>
-                                <td class="text-title text-start">إيداع أرباح</td>
-                                <td>2026/06/15</td>
-                                <td class="amount-cell" style="color:#10b981;font-weight:bold;">+780.00 ر.س</td>
-                            </tr>
-                            <tr>
-                                <td class="text-title text-start">رسوم إدارية</td>
-                                <td>2026/06/12</td>
-                                <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-50.00 ر.س</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- حاوية التمرير الأفقي للجوال -->
+                    <div class="data-table-wrapper">
+                        <table class="data-table-list">
+                            <thead>
+                                <tr>
+                                    <th class="text-start">البيان</th>
+                                    <th>التاريخ</th>
+                                    <th>المبلغ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody">
+                                <tr>
+                                    <td class="text-title text-start">إيداع أرباح دورية</td>
+                                    <td>2026/06/23</td>
+                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+1,250.00 ر.س</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-title text-start">سحب أرباح</td>
+                                    <td>2026/06/20</td>
+                                    <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-500.00 ر.س</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-title text-start">إيداع استثماري</td>
+                                    <td>2026/06/18</td>
+                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+10,000.00 ر.س</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-title text-start">إيداع أرباح</td>
+                                    <td>2026/06/15</td>
+                                    <td class="amount-cell" style="color:#10b981;font-weight:bold;">+780.00 ر.س</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-title text-start">رسوم إدارية</td>
+                                    <td>2026/06/12</td>
+                                    <td class="amount-cell" style="color:#ef4444;font-weight:bold;">-50.00 ر.س</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
