@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
     <!-- الأيقونة -->
@@ -23,20 +23,29 @@
     <link rel="stylesheet" href="/assets/css/dashboard.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-    <!-- أنماط إضافية مخصصة للصفحة – تم إصلاح مشاكل الجوال -->
+    <!-- أنماط إضافية – إصلاح نهائي للجوال -->
     <style>
         /* ============================================
-           تحسينات إضافية للصفحة
+           إعادة ضبط أساسية لتحسين الجوال
            ============================================ */
-        
-        /* منع الاهتزازات الزائدة */
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
         .app-wrapper {
             overflow-x: hidden;
             width: 100%;
+            max-width: 100%;
         }
 
         /* ============================================
-           تحسين الشعار – أكبر وأوضح في الجوال
+           تحسين الشعار – حجم ثابت ومناسب
            ============================================ */
         .header-logo {
             flex-shrink: 0;
@@ -45,18 +54,314 @@
         }
 
         .header-logo img {
-            height: 40px;
-            width: auto;
+            height: 40px !important;
+            width: auto !important;
             display: block;
-            transition: opacity 0.3s ease;
+            flex-shrink: 0;
             filter: none !important;
             opacity: 1 !important;
-            image-rendering: auto;
-            flex-shrink: 0;
+            max-width: none !important;
         }
 
         /* ============================================
-           حاوية التمرير الأفقي للجداول (لحل مشكلة الجوال)
+           تحسين الهيدر في الجوال
+           ============================================ */
+        @media (max-width: 991px) {
+            .header-logo img {
+                height: 36px !important;
+            }
+
+            .top-header {
+                padding: 0 12px !important;
+                height: 60px !important;
+            }
+
+            .menu-toggle-btn {
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 18px !important;
+            }
+
+            .user-avatar-circle {
+                width: 38px !important;
+                height: 38px !important;
+                font-size: 16px !important;
+            }
+
+            .user-meta {
+                display: none !important;
+            }
+
+            .header-right-actions {
+                gap: 10px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-logo img {
+                height: 30px !important;
+            }
+
+            .top-header {
+                padding: 0 8px !important;
+                height: 56px !important;
+            }
+
+            .menu-toggle-btn {
+                width: 34px !important;
+                height: 34px !important;
+                font-size: 16px !important;
+            }
+
+            .user-avatar-circle {
+                width: 34px !important;
+                height: 34px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        /* ============================================
+           تحسين البانر الترحيبي
+           ============================================ */
+        .welcome-banner {
+            padding: 24px 28px;
+            margin-bottom: 24px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .welcome-banner h2 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .welcome-banner p {
+            font-size: 13px;
+            margin: 4px 0 0 0;
+            opacity: 0.8;
+        }
+
+        .welcome-banner .date-badge {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .quick-actions .btn-quick {
+            padding: 7px 14px;
+            font-size: 13px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 991px) {
+            .welcome-banner {
+                padding: 16px 18px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .welcome-banner h2 {
+                font-size: 18px;
+            }
+
+            .welcome-banner p {
+                font-size: 12px;
+            }
+
+            .welcome-banner .date-badge {
+                font-size: 12px;
+                padding: 6px 14px;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .quick-actions {
+                width: 100%;
+                gap: 8px;
+            }
+
+            .quick-actions .btn-quick {
+                flex: 1;
+                justify-content: center;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-banner {
+                padding: 14px 14px;
+            }
+
+            .welcome-banner h2 {
+                font-size: 16px;
+            }
+
+            .welcome-banner p {
+                font-size: 11px;
+            }
+
+            .quick-actions .btn-quick {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+        }
+
+        /* ============================================
+           تحسين البطاقات الإحصائية
+           ============================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            padding: 20px 22px;
+            border-radius: 14px;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 22px;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+        }
+
+        .stat-trend-up, .stat-trend-down, .stat-trend-neutral {
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+
+        @media (max-width: 991px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px 18px;
+                gap: 14px;
+            }
+
+            .stat-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: 14px 14px;
+                gap: 12px;
+            }
+
+            .stat-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+        }
+
+        /* ============================================
+           تحسين اللوحات (panels)
+           ============================================ */
+        .dashboard-layout-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .panel-card {
+            padding: 20px 22px;
+            border-radius: 14px;
+        }
+
+        .panel-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+        }
+
+        .panel-header h3 {
+            font-size: 15px;
+        }
+
+        .btn-text-action {
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+
+        .filter-select {
+            font-size: 12px;
+            padding: 4px 10px;
+        }
+
+        @media (max-width: 991px) {
+            .dashboard-layout-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .panel-card {
+                padding: 14px 16px;
+            }
+
+            .panel-header h3 {
+                font-size: 14px;
+            }
+
+            .btn-text-action {
+                font-size: 12px;
+            }
+
+            .filter-select {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .panel-card {
+                padding: 12px 12px;
+            }
+
+            .panel-header h3 {
+                font-size: 13px;
+            }
+        }
+
+        /* ============================================
+           تحسين الجداول – إصلاح نهائي
            ============================================ */
         .data-table-wrapper {
             overflow-x: auto;
@@ -76,361 +381,243 @@
         }
 
         .data-table-wrapper::-webkit-scrollbar-thumb {
-            background: var(--tera-teal);
+            background: var(--tera-teal, #028090);
             border-radius: 4px;
         }
 
-        .data-table-wrapper table {
-            min-width: 500px;
+        .data-table-list {
             width: 100%;
+            min-width: 480px;
             border-collapse: collapse;
-        }
-
-        /* ============================================
-           تحسين البانر الترحيبي
-           ============================================ */
-        .welcome-banner {
-            background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%);
-            border-radius: 16px;
-            padding: 30px 35px;
-            margin-bottom: 28px;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: 0 4px 20px rgba(10, 27, 63, 0.2);
-        }
-
-        .welcome-banner h2 {
-            font-family: 'Cairo', sans-serif;
-            font-weight: 800;
-            font-size: 22px;
-            margin: 0;
-            color: #fff;
-        }
-
-        .welcome-banner h2 i {
-            color: var(--tera-teal-light);
-            margin-left: 10px;
-        }
-
-        .welcome-banner p {
-            margin: 4px 0 0 0;
-            opacity: 0.8;
-            font-size: 14px;
-        }
-
-        .welcome-banner .date-badge {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .welcome-banner .date-badge i {
-            color: var(--tera-teal-light);
-        }
-
-        /* تنسيق الإحصائيات الإضافية */
-        .stat-trend-up {
-            color: #10b981;
-            font-size: 12px;
-            font-weight: 700;
-            background: rgba(16, 185, 129, 0.1);
-            padding: 2px 10px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-trend-down {
-            color: #ef4444;
-            font-size: 12px;
-            font-weight: 700;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 2px 10px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-trend-neutral {
-            color: #6b7280;
-            font-size: 12px;
-            font-weight: 700;
-            background: rgba(107, 114, 128, 0.1);
-            padding: 2px 10px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* تنسيق القائمة السريعة */
-        .quick-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .quick-actions .btn-quick {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 700;
+            text-align: right;
             font-size: 13px;
-            cursor: pointer;
-            transition: 0.25s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
         }
 
-        .quick-actions .btn-quick:hover {
-            background: var(--tera-teal);
-            border-color: var(--tera-teal);
-            transform: translateY(-2px);
+        .data-table-list th {
+            padding: 10px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--tera-gray, #64748b);
+            border-bottom: 2px solid #f1f5f9;
+            white-space: nowrap;
         }
 
-        .quick-actions .btn-quick i {
-            font-size: 14px;
-        }
-
-        /* تحسين حالة التحميل */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #e2e8f0;
-            border-top-color: var(--tera-teal);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-overlay p {
-            color: var(--tera-navy);
+        .data-table-list td {
+            padding: 12px 12px;
+            font-size: 13px;
             font-weight: 700;
-            font-size: 16px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
         }
 
-        /* ============================================
-           تحسينات الجوال الشاملة
-           ============================================ */
+        .data-table-list td.text-title {
+            font-family: 'Tajawal', sans-serif;
+            color: var(--tera-navy, #0A1B3F);
+            font-weight: 800;
+        }
+
+        .data-table-list .amount-cell {
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .btn-table-link {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-weight: 800;
+            text-decoration: none;
+            background: var(--tera-teal, #028090);
+            color: #fff;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-table-link:hover {
+            background: var(--tera-navy, #0A1B3F);
+            color: #fff;
+        }
+
         @media (max-width: 991px) {
-            /* شعار أكبر وأوضح */
-            .header-logo img {
-                height: 36px !important;
-            }
-
-            /* استقرار المحتوى */
-            .app-wrapper {
-                overflow-x: hidden;
-            }
-
-            .main-content {
-                padding: 12px 12px 20px 12px;
-            }
-
-            /* تحسين البانر */
-            .welcome-banner {
-                padding: 18px 20px;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .welcome-banner h2 {
-                font-size: 18px;
-            }
-
-            .welcome-banner .date-badge {
-                font-size: 13px;
-                padding: 8px 16px;
-                justify-content: center;
-            }
-
-            .quick-actions {
-                width: 100%;
-            }
-
-            .quick-actions .btn-quick {
-                flex: 1;
-                justify-content: center;
-                font-size: 13px;
-                padding: 8px 12px;
-            }
-
-            /* تحسين البطاقات */
-            .stats-grid {
-                gap: 12px;
-            }
-
-            .stat-card {
-                padding: 14px 16px;
-            }
-
-            .stat-value {
-                font-size: 17px;
-            }
-
-            .stat-icon {
-                width: 44px;
-                height: 44px;
-                font-size: 20px;
-            }
-
-            .panel-card {
-                padding: 14px 14px 16px 14px;
-            }
-
-            .dashboard-layout-grid {
-                gap: 12px;
-            }
-
-            /* تحسين الجداول للجوال */
-            .data-table-wrapper {
-                margin: 0 -8px;
-                padding: 0 8px;
-            }
-
-            .data-table-wrapper table {
-                min-width: 420px;
+            .data-table-list {
+                min-width: 380px;
                 font-size: 12px;
             }
 
-            .data-table-wrapper table th,
-            .data-table-wrapper table td {
+            .data-table-list th {
+                font-size: 11px;
                 padding: 8px 10px;
-                white-space: nowrap;
             }
 
-            .data-table-wrapper table th {
-                font-size: 11px;
+            .data-table-list td {
+                font-size: 12px;
+                padding: 8px 10px;
             }
 
             .btn-table-link {
-                padding: 4px 10px;
                 font-size: 11px;
+                padding: 4px 10px;
             }
         }
 
         @media (max-width: 480px) {
-            /* شعار مناسب للشاشات الصغيرة جداً */
-            .header-logo img {
-                height: 30px !important;
-            }
-
-            .welcome-banner {
-                padding: 14px 14px;
-            }
-
-            .welcome-banner h2 {
-                font-size: 16px;
-            }
-
-            .welcome-banner p {
-                font-size: 12px;
-            }
-
-            .stat-value {
-                font-size: 15px;
-            }
-
-            .stat-icon {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-            }
-
-            .data-table-wrapper table {
-                min-width: 360px;
+            .data-table-list {
+                min-width: 320px;
                 font-size: 11px;
             }
 
-            .data-table-wrapper table th,
-            .data-table-wrapper table td {
+            .data-table-list th {
+                font-size: 10px;
                 padding: 6px 8px;
             }
 
-            .data-table-wrapper table th {
-                font-size: 10px;
+            .data-table-list td {
+                font-size: 11px;
+                padding: 6px 8px;
             }
 
             .btn-table-link {
-                padding: 3px 8px;
                 font-size: 10px;
-            }
-
-            .filter-select {
-                font-size: 12px;
-                padding: 4px 8px;
-            }
-
-            .btn-text-action {
-                font-size: 12px;
+                padding: 3px 8px;
             }
         }
 
-        /* وضع مظلم للتحميل */
-        @media (prefers-color-scheme: dark) {
-            .loading-overlay {
-                background: rgba(15, 23, 42, 0.8);
-            }
-            .loading-overlay p {
-                color: #f8fafc;
-            }
-            .spinner {
-                border-color: #334155;
-                border-top-color: var(--tera-teal-light);
-            }
+        /* ============================================
+           تحسين التنبيهات
+           ============================================ */
+        .alert-item-box {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            gap: 10px;
+            line-height: 1.5;
+        }
 
+        .alert-item-box i {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 991px) {
+            .alert-item-box {
+                font-size: 12px;
+                padding: 10px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .alert-item-box {
+                font-size: 11px;
+                padding: 8px 12px;
+            }
+        }
+
+        /* ============================================
+           تحسين المحتوى العام
+           ============================================ */
+        .main-content {
+            padding: 16px 24px 30px 24px;
+        }
+
+        @media (max-width: 991px) {
+            .main-content {
+                padding: 12px 12px 20px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 8px 8px 16px 8px;
+            }
+        }
+
+        /* ============================================
+           زر التبديل – تحسين التفاعل
+           ============================================ */
+        .menu-toggle-btn {
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .menu-toggle-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* ============================================
+           تحسين شريط التمرير في الوضع المظلم
+           ============================================ */
+        @media (prefers-color-scheme: dark) {
             .data-table-wrapper::-webkit-scrollbar-track {
                 background: #1e293b;
             }
+
+            .data-table-wrapper::-webkit-scrollbar-thumb {
+                background: var(--tera-teal-light, #14b8a6);
+            }
+
+            .data-table-list td {
+                color: #e2e8f0;
+                border-bottom-color: #334155;
+            }
+
+            .data-table-list th {
+                color: #94a3b8;
+                border-bottom-color: #334155;
+            }
+
+            .data-table-list td.text-title {
+                color: #f8fafc;
+            }
+
+            .data-table-list tbody tr:hover td {
+                background: #334155;
+            }
         }
 
-        /* تقليل الحركة */
+        /* ============================================
+           تقليل الحركة
+           ============================================ */
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ============================================
+           إصلاح مشكلة عرض الجداول في الجوال
+           ============================================ */
+        @media (max-width: 600px) {
+            .data-table-wrapper {
+                margin: 0 -12px;
+                padding: 0 12px;
+            }
+        }
+
+        /* ============================================
+           تحسين عرض الرسم البياني في الجوال
+           ============================================ */
+        #mainChart {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 240px;
+        }
+
+        @media (max-width: 991px) {
+            #mainChart {
+                max-height: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #mainChart {
+                max-height: 180px;
             }
         }
     </style>
@@ -631,7 +818,7 @@
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(20, 184, 166, 0.08); color: var(--tera-teal-light);">
+                    <div class="stat-icon" style="background: rgba(20, 184, 166, 0.08); color: var(--tera-teal-light, #14b8a6);">
                         <i class="fas fa-file-contract"></i>
                     </div>
                     <div class="stat-info">
@@ -657,11 +844,11 @@
                 <div class="panel-card">
                     <div class="panel-header">
                         <h3><i class="fas fa-chart-area"></i> نمو المحفظة والأرباح الصافية</h3>
-                        <span style="font-size: 12px; color: var(--tera-gray); font-weight: 600;">
+                        <span style="font-size: 12px; color: var(--tera-gray, #64748b); font-weight: 600;">
                             <i class="fas fa-calendar-alt"></i> آخر 6 أشهر
                         </span>
                     </div>
-                    <div style="height: 280px; position: relative; width: 100%;">
+                    <div style="height: 260px; position: relative; width: 100%;">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
@@ -705,7 +892,6 @@
                         </button>
                     </div>
                     <div id="opportunitiesPanelWrapper" style="overflow: hidden; transition: all 0.3s ease; max-height: 600px;">
-                        <!-- حاوية التمرير الأفقي للجوال -->
                         <div class="data-table-wrapper">
                             <table class="data-table-list">
                                 <thead>
@@ -754,7 +940,6 @@
                             <option value="deductions">خصومات</option>
                         </select>
                     </div>
-                    <!-- حاوية التمرير الأفقي للجوال -->
                     <div class="data-table-wrapper">
                         <table class="data-table-list">
                             <thead>
