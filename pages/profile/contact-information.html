@@ -417,24 +417,6 @@
             font-size: 18px;
         }
 
-        .btn-text-action {
-            background: transparent;
-            border: none;
-            color: #028090;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-        .btn-text-action:hover {
-            background: rgba(2, 128, 144, 0.08);
-        }
-
         /* =========================================
                التنبيهات
                ========================================= */
@@ -453,20 +435,6 @@
         }
         .alert-warning-box i {
             font-size: 18px;
-        }
-
-        .otp-notice {
-            text-align: center;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: #475569;
-            background: #f8fafc;
-            padding: 14px 20px;
-            border-radius: 10px;
-            border: 1px solid #e9edf2;
-        }
-        .otp-notice strong {
-            color: #0A1B3F;
         }
 
         /* =========================================
@@ -669,10 +637,6 @@
             .progress-steps .step-line {
                 width: 12px;
             }
-            .otp-notice {
-                font-size: 12px;
-                padding: 12px 14px;
-            }
         }
 
         /* =========================================
@@ -757,14 +721,6 @@
             .declaration-box ul {
                 color: #86efac !important;
             }
-            .otp-notice {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-                color: #94a3b8 !important;
-            }
-            .otp-notice strong {
-                color: #f8fafc !important;
-            }
             .alert-warning-box {
                 background: rgba(220, 38, 38, 0.15) !important;
                 border-color: #991b1b !important;
@@ -776,12 +732,6 @@
                 color: #64748b !important;
             }
             .panel-header i {
-                background: rgba(20, 184, 166, 0.15) !important;
-            }
-            .btn-text-action {
-                color: #14b8a6 !important;
-            }
-            .btn-text-action:hover {
                 background: rgba(20, 184, 166, 0.15) !important;
             }
             .progress-steps li {
@@ -1060,38 +1010,7 @@
             </div>
 
             <!-- =========================================
-            القسم 3: التحقق من معلومات الاتصال
-            ========================================= -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>التحقق من معلومات الاتصال</h3>
-                    <span class="panel-badge">أمان</span>
-                </div>
-
-                <div class="otp-notice">
-                    <i class="fas fa-shield-alt" style="color:#028090; margin-left:8px;"></i>
-                    <strong>رمز التحقق (OTP):</strong> سيتم إرسال رمز تحقق إلى البريد الإلكتروني الأساسي، ويجب إدخاله لإثبات ملكية البريد الإلكتروني.
-                    <br>
-                    <span style="font-size:12px; color:#64748b;">لن يتم اعتماد بيانات التواصل حتى يتم إكمال عملية التحقق بنجاح.</span>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label class="form-label">رمز التحقق (OTP) <span class="req">*</span></label>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                            <input type="text" class="form-control" id="otpCode" placeholder="أدخل الرمز المكون من 6 أرقام" required style="flex:1; min-width:200px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            <button type="button" class="btn-text-action" id="sendOtpBtn" style="background:#028090; color:#fff; padding:10px 24px; border-radius:10px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">
-                                <i class="fas fa-paper-plane"></i> إرسال الرمز
-                            </button>
-                        </div>
-                        <span class="format-hint">سيتم إرسال رمز التحقق إلى بريدك الإلكتروني المسجل. الرمز صالح لمدة 5 دقائق.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- =========================================
-            القسم 4: الإقرار والتعهد
+            القسم 3: الإقرار والتعهد (تم حذف قسم التحقق)
             ========================================= -->
             <div class="panel-card">
                 <div class="panel-header">
@@ -1118,7 +1037,7 @@
                 </div>
 
                 <button type="submit" class="btn-submit">
-                    <i class="fas fa-save"></i> حفظ ومتابعة التحقق
+                    <i class="fas fa-save"></i> حفظ بيانات الاتصال
                 </button>
             </div>
 
