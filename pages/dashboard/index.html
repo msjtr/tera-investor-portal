@@ -23,9 +23,7 @@
     <link rel="stylesheet" href="/assets/css/dashboard.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-    <!-- ============================================
-    أنماط إضافية مخصصة للصفحة (تُستكمل dashboard.css)
-    ============================================ -->
+    <!-- أنماط إضافية مخصصة للصفحة -->
     <style>
         /* تحسينات إضافية للصفحة */
         .welcome-banner {
@@ -232,35 +230,24 @@
 </head>
 <body>
 
-    <!-- ============================================
-    طبقة التحميل (Loading Overlay)
-    ============================================ -->
+    <!-- طبقة التحميل -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <p>جاري تحميل لوحة التحكم...</p>
     </div>
 
-    <!-- ============================================
-    الهيكل الرئيسي
-    ============================================ -->
+    <!-- الهيكل الرئيسي -->
     <div class="app-wrapper">
 
-        <!-- ============================================
-        الهيدر العلوي (Top Header)
-        ============================================ -->
+        <!-- الهيدر العلوي – يحتوي على زر واحد فقط -->
         <header class="top-header no-print">
             
             <div class="header-right-actions">
-                <!-- زر تبديل القائمة (دائم – يظهر في جميع الشاشات) -->
+                <!-- زر تبديل القائمة الوحيد (يعمل في جميع الشاشات) -->
                 <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
                     <i class="fas fa-bars"></i>
                 </button>
 
-                <!-- زر فتح القائمة للجوال فقط -->
-                <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
                 <!-- الشعار -->
                 <div class="header-logo">
                     <a href="/pages/dashboard/index.html">
@@ -282,14 +269,10 @@
             </div>
         </header>
 
-        <!-- ============================================
-        طبقة الخلفية (للجوال)
-        ============================================ -->
+        <!-- طبقة الخلفية (للجوال) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- ============================================
-        القائمة الجانبية (Sidebar)
-        ============================================ -->
+        <!-- القائمة الجانبية (Sidebar) -->
         <aside class="sidebar-container" id="sidebar">
             
             <!-- رأس القائمة (للموبايل) -->
@@ -405,14 +388,10 @@
             </div>
         </aside>
 
-        <!-- ============================================
-        المحتوى الرئيسي (Main Content)
-        ============================================ -->
+        <!-- المحتوى الرئيسي -->
         <main class="main-content">
 
-            <!-- ============================================
-            الترحيب (Welcome Banner)
-            ============================================ -->
+            <!-- الترحيب -->
             <div class="welcome-banner">
                 <div>
                     <h2><i class="fas fa-hand-peace"></i> مرحباً بك، محمد!</h2>
@@ -434,9 +413,7 @@
                 </div>
             </div>
 
-            <!-- ============================================
-            بطاقات الإحصائيات (Stats Grid)
-            ============================================ -->
+            <!-- بطاقات الإحصائيات -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-wallet"></i></div>
@@ -468,9 +445,7 @@
                 </div>
             </div>
 
-            <!-- ============================================
-            الصف الأول: الرسم البياني + التنبيهات
-            ============================================ -->
+            <!-- الصف الأول: الرسم البياني + التنبيهات -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
                     <div class="panel-header">
@@ -512,9 +487,7 @@
                 </div>
             </div>
 
-            <!-- ============================================
-            الصف الثاني: الفرص الاستثمارية + العمليات المالية
-            ============================================ -->
+            <!-- الصف الثاني: الفرص الاستثمارية + العمليات المالية -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
                     <div class="panel-header">
@@ -610,9 +583,7 @@
                 </div>
             </div>
 
-            <!-- ============================================
-            التذييل (Footer)
-            ============================================ -->
+            <!-- التذييل -->
             <footer class="page-footer no-print">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 1200px; margin: 0 auto;">
                     <span>© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
@@ -628,24 +599,18 @@
 
     </div>
 
-    <!-- ============================================
-    السكربتات (Scripts)
-    ============================================ -->
+    <!-- السكربتات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
 
-    <!-- ============================================
-    سكربتات إضافية للصفحة
-    ============================================ -->
+    <!-- سكربتات إضافية للصفحة -->
     <script>
         (function() {
             'use strict';
 
-            // ============================================
             // عرض التاريخ الحالي
-            // ============================================
             const dateEl = document.getElementById('currentDate');
             if (dateEl) {
                 const now = new Date();
@@ -655,9 +620,7 @@
                 dateEl.textContent = `${year}/${month}/${day}`;
             }
 
-            // ============================================
             // إخفاء طبقة التحميل بعد 800 مللي
-            // ============================================
             const loadingOverlay = document.getElementById('loadingOverlay');
             if (loadingOverlay) {
                 setTimeout(function() {
@@ -665,12 +628,7 @@
                 }, 800);
             }
 
-            // ============================================
-            // تلميحات إضافية
-            // ============================================
             console.log('✅ Tera Investor Portal - Dashboard loaded successfully.');
-            console.log('📊 Dashboard version: 2.0 (2026-06-25)');
-
         })();
     </script>
 
