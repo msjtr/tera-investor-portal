@@ -27,7 +27,7 @@ const Dashboard = {
     /**
      * ============================================================
      * 1. تهيئة القائمة الجانبية (Sidebar)
-     * يدعم الأزرار: #sidebarToggle (دائم) و #openSidebarBtn (جوال)
+     * يدعم الزر الوحيد #sidebarToggle
      * ============================================================
      */
     initSidebar: function() {
@@ -41,14 +41,14 @@ const Dashboard = {
         }
 
         // ============================================
-        // زر التبديل الدائم (#sidebarToggle)
+        // الزر الوحيد للتحكم (#sidebarToggle)
         // ============================================
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🟢 Sidebar Toggle Clicked (#sidebarToggle)');
+                console.log('🟢 Sidebar Toggle Clicked');
 
                 if (!isMobile()) {
                     // الديسكتوب: تصغير/تكبير
@@ -69,28 +69,6 @@ const Dashboard = {
             });
         } else {
             console.warn('⚠️ Warning: #sidebarToggle not found.');
-        }
-
-        // ============================================
-        // زر فتح الجوال (#openSidebarBtn)
-        // ============================================
-        const mobileOpenBtn = document.getElementById('openSidebarBtn');
-        if (mobileOpenBtn) {
-            mobileOpenBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🟢 Mobile Sidebar Opened (#openSidebarBtn)');
-
-                if (isMobile()) {
-                    sidebar.classList.add('sidebar-open');
-                    if (overlay) overlay.classList.add('active');
-                } else {
-                    // في الديسكتوب، نفس سلوك الزر الرئيسي
-                    sidebar.classList.toggle('collapsed');
-                    sidebar.classList.remove('sidebar-open');
-                    if (overlay) overlay.classList.remove('active');
-                }
-            });
         }
 
         // ============================================
@@ -147,11 +125,11 @@ const Dashboard = {
 
     /**
      * ============================================================
-     * 2. إدارة القوائم الفرعية (Submenus) - تم إصلاحها بالكامل
+     * 2. إدارة القوائم الفرعية (Submenus) - إصلاح نهائي
      * ============================================================
      */
     initSubmenus: function() {
-        // نبحث عن جميع روابط القوائم الفرعية (التي تحتوي على أيقونة السهم)
+        // نبحث عن جميع روابط القوائم الفرعية التي تحتوي على أيقونة السهم
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
         
         if (!submenuToggles.length) {
@@ -161,14 +139,8 @@ const Dashboard = {
 
         console.log(`🔄 Found ${submenuToggles.length} submenu toggles.`);
 
-        submenuToggles.forEach(function(link) {
-            // إزالة أي مستمع قديم لتجنب التكرار (في حالة إعادة التهيئة)
-            link.removeEventListener('click', handleSubmenuClick);
-            link.addEventListener('click', handleSubmenuClick);
-        });
-
-        // دالة معالج النقر على القائمة الفرعية
-        function handleSubmenuClick(e) {
+        // تعريف دالة المعالج بشكل منفصل لتجنب إعادة الإنشاء
+        const handleSubmenuClick = function(e) {
             const href = this.getAttribute('href');
             const parentLi = this.closest('.has-submenu');
             
@@ -201,7 +173,15 @@ const Dashboard = {
             // تبديل حالة القائمة الفرعية الحالية
             parentLi.classList.toggle('submenu-open');
             console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
-        }
+        };
+
+        // إضافة المستمعات باستخدام دالة واحدة مع إزالة المستمعات القديمة
+        submenuToggles.forEach(function(link) {
+            // إزالة أي مستمع قديم (باستخدام نفس الدالة المرجعية)
+            link.removeEventListener('click', handleSubmenuClick);
+            // إضافة المستمع الجديد
+            link.addEventListener('click', handleSubmenuClick);
+        });
     },
 
     /**
