@@ -1,11 +1,32 @@
-<!-- ======================================================
-     الهيدر العلوي (Top Header) - مُحسّن ومُتكامل مع الـ Sidebar
-     ====================================================== -->
+<!-- ============================================================
+     الهيدر العلوي (Header) – مكون منفصل
+     ============================================================
+     الاستخدام: 
+       - يمكن تضمينه مباشرة في الصفحات باستخدام:
+         <div id="header-container"></div>
+         <script>
+           fetch('/components/header.html')
+             .then(res => res.text())
+             .then(html => document.getElementById('header-container').innerHTML = html);
+         </script>
+       
+       - أو باستخدام Server Side Includes (SSI):
+         <!--#include virtual="/components/header.html" -->
+       
+       - أو باستخدام أي تقنية تضمين أخرى.
+     ============================================================ -->
+
 <header class="top-header no-print">
     
-    <!-- الجزء الأيمن (في الاتجاه العربي) -->
+    <!-- الجزء الأيمن (الشعار + أزرار التحكم) -->
     <div class="header-right-actions">
-        <!-- زر فتح/إغلاق القائمة الجانبية (يظهر في الجوال فقط) -->
+        
+        <!-- زر تبديل القائمة (دائم – يظهر في جميع الشاشات) -->
+        <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- زر فتح القائمة للجوال فقط (يظهر في الشاشات الصغيرة) -->
         <button class="menu-toggle-btn d-lg-none" id="openSidebarBtn" aria-label="فتح القائمة">
             <i class="fas fa-bars"></i>
         </button>
@@ -32,25 +53,34 @@
     </div>
 </header>
 
-<!-- ======================================================
-     التنسيقات (Styles) - مُحسّنة ومُضافة إلى المتغيرات العامة
-     ====================================================== -->
+<!-- ============================================================
+     الأنماط الأساسية للهيدر (تُستكمل بـ dashboard.css)
+     ============================================================ -->
 <style>
-    /* =========================================
-       تعريف المتغيرات العامة (إن لم تكن موجودة)
-       ========================================= */
+    /* ============================================
+       هذه الأنماط مدمجة هنا لضمان عمل الهيدر بشكل مستقل
+       في حال عدم وجود ملف dashboard.css
+       ============================================ */
+    
+    /* متغيرات أساسية */
     :root {
         --tera-teal: #028090;
         --tera-teal-light: #14b8a6;
         --tera-navy: #0A1B3F;
         --tera-gray: #64748b;
-        --tera-bg: #f8fafc;
         --header-height: 75px;
     }
 
-    /* =========================================
+    /* إعادة تعيين أساسي */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* ============================================
        تنسيقات الهيدر العلوي
-       ========================================= */
+       ============================================ */
     .top-header {
         height: var(--header-height);
         background: #ffffff;
@@ -59,22 +89,21 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 30px;
-        position: sticky;
+        position: fixed;
         top: 0;
-        z-index: 998; /* أقل من القائمة الجانبية (999) وطبقة الخلفية (999) */
-        width: 100%;
+        left: 0;
+        right: 0;
+        z-index: 998;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
     }
 
-    /* الجزء الأيمن من الهيدر */
     .header-right-actions {
         display: flex;
         align-items: center;
         gap: 20px;
     }
 
-    /* الشعار */
     .header-logo img {
         height: 40px;
         width: auto;
@@ -86,7 +115,7 @@
         opacity: 0.85;
     }
 
-    /* زر تبديل القائمة (للجوال) */
+    /* زر تبديل القائمة */
     .menu-toggle-btn {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -114,9 +143,7 @@
         transform: scale(0.94);
     }
 
-    /* =========================================
-       تنسيقات بيانات المستخدم
-       ========================================= */
+    /* بيانات المستخدم */
     .header-left-actions {
         display: flex;
         align-items: center;
@@ -130,7 +157,7 @@
     }
 
     .user-meta {
-        text-align: left; /* لأن النص إنجليزي اتجاهه من اليسار */
+        text-align: left;
     }
 
     .user-meta h5 {
@@ -175,16 +202,20 @@
         box-shadow: 0 4px 12px rgba(2, 128, 144, 0.25);
     }
 
-    /* =========================================
-       إظهار/إخفاء زر القائمة حسب حجم الشاشة
-       ========================================= */
+    /* ============================================
+       فئات مساعدة
+       ============================================ */
     .d-lg-none {
         display: none !important;
     }
 
-    /* =========================================
+    .no-print {
+        /* يمكن إضافة تنسيقات للطباعة هنا */
+    }
+
+    /* ============================================
        التجاوب (Responsive)
-       ========================================= */
+       ============================================ */
     @media (max-width: 991px) {
         :root {
             --header-height: 60px;
@@ -212,7 +243,7 @@
         }
 
         .user-meta {
-            display: none; /* إخفاء النص في الجوال لتوفير المساحة */
+            display: none;
         }
 
         .user-avatar-circle {
@@ -222,7 +253,7 @@
             border-width: 2px;
         }
 
-        /* إظهار زر القائمة في الجوال */
+        /* إظهار زر الجوال في الشاشات الصغيرة */
         .d-lg-none {
             display: flex !important;
         }
@@ -250,9 +281,7 @@
         }
     }
 
-    /* =========================================
-       دعم الوضع المظلم (اختياري)
-       ========================================= */
+    /* دعم الوضع المظلم */
     @media (prefers-color-scheme: dark) {
         .top-header {
             background: #1e293b;
@@ -260,7 +289,7 @@
         }
 
         .top-header .user-meta h5 {
-            color: #f1f5f9;
+            color: #f8fafc;
         }
 
         .top-header .user-meta p {
@@ -278,55 +307,16 @@
             color: #ffffff;
         }
     }
+
+    /* تقليل الحركة */
+    @media (prefers-reduced-motion: reduce) {
+        .top-header,
+        .menu-toggle-btn,
+        .user-avatar-circle,
+        .header-logo img {
+            transition: none !important;
+            animation: none !important;
+            transform: none !important;
+        }
+    }
 </style>
-
-<!-- ======================================================
-     السكربت الخاص بالهيدر (لربط الأزرار مع القائمة الجانبية)
-     ====================================================== -->
-<script>
-    (function() {
-        'use strict';
-
-        // الحصول على العناصر
-        const sidebar = document.getElementById('sidebar');
-        const openBtn = document.getElementById('openSidebarBtn');
-        const closeBtn = document.getElementById('closeSidebarBtn'); // إن وجد في القائمة
-        const overlay = document.getElementById('sidebarOverlay');
-
-        // فتح القائمة
-        if (openBtn && sidebar) {
-            openBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.add('sidebar-open');
-                if (overlay) overlay.classList.add('active');
-            });
-        }
-
-        // إغلاق القائمة عبر الزر الموجود في القائمة (إن وجد)
-        if (closeBtn && sidebar) {
-            closeBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            });
-        }
-
-        // إغلاق القائمة بالنقر على الطبقة الخلفية
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('sidebar-open');
-                overlay.classList.remove('active');
-            });
-        }
-
-        // إغلاق القائمة بالضغط على Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('sidebar-open')) {
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
-
-        console.log('✅ Header initialized with sidebar controls.');
-    })();
-</script>
