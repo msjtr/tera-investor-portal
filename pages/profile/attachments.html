@@ -1,20 +1,1732 @@
-<section class="attachments-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>المرفقات والوثائق | Tera Investor Portal</title>
 
-    <h1>المرفقات</h1>
+    <!-- الشعار والأيقونات -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <div class="upload-card">
-        <label>الهوية الوطنية</label>
-        <input type="file">
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/profile.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
+
+    <style>
+        /* =========================================
+               التنسيقات الأساسية – نفس الهوية البصرية
+               ========================================= */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+               الهيدر العلوي
+               ========================================= */
+        .focused-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+        }
+        .focused-header .logo img {
+            height: 38px;
+        }
+        .focused-header .client-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .focused-header .client-info h5 {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            color: #0A1B3F;
+            font-weight: 800;
+        }
+        .focused-header .client-info .avatar {
+            width: 38px;
+            height: 38px;
+            background: #0A1B3F;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 16px;
+            border: 2px solid #028090;
+        }
+
+        /* =========================================
+               عنوان الصفحة
+               ========================================= */
+        .page-subheader {
+            background: #0A1B3F;
+            padding: 20px 40px;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-subheader h1 {
+            margin: 0;
+            color: #ffffff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-subheader h1 i {
+            color: #5eead4;
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .btn-back:hover {
+            background: #028090;
+            border-color: #028090;
+        }
+
+        /* =========================================
+               الحاوية الرئيسية
+               ========================================= */
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+            padding: 28px 24px 0 24px;
+            flex: 1;
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: #0c4a6e;
+            line-height: 1.7;
+            background: #e0f2fe;
+            padding: 16px 22px;
+            border-radius: 12px;
+            border-right: 5px solid #028090;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .page-desc i {
+            color: #028090;
+            font-size: 20px;
+        }
+        .page-desc strong {
+            color: #0A1B3F;
+        }
+
+        /* =========================================
+               البطاقات
+               ========================================= */
+        .panel-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #e9edf2;
+            padding: 28px 32px 32px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+            transition: box-shadow 0.2s;
+        }
+        .panel-card:hover {
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .panel-header i {
+            color: #028090;
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
+            background: #f0fdfa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .panel-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #0A1B3F;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .panel-header .panel-badge {
+            margin-right: auto;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* =========================================
+               بطاقات الإحصاء
+               ========================================= */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 18px 20px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: #028090;
+            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.08);
+        }
+
+        .stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: rgba(2, 128, 144, 0.08);
+            color: #028090;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .stat-info .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0A1B3F;
+            font-family: monospace;
+        }
+        .stat-info .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        /* =========================================
+               نموذج الإضافة
+               ========================================= */
+        .add-document-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 24px;
+            padding-top: 8px;
+        }
+        .add-document-form .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0A1B3F;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .form-label .req {
+            color: #dc2626;
+            font-size: 16px;
+        }
+        .form-label .optional {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fafcff;
+            outline: none;
+            transition: 0.2s;
+            color: #1e293b;
+            height: 48px;
+            line-height: 1.5;
+        }
+        .form-control:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+            background: #ffffff;
+        }
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+        select.form-control {
+            appearance: auto;
+            cursor: pointer;
+            height: 48px;
+        }
+        textarea.form-control {
+            height: auto;
+            min-height: 70px;
+            resize: vertical;
+        }
+
+        .upload-zone {
+            border: 2px dashed #d1d9e6;
+            border-radius: 12px;
+            padding: 18px 16px;
+            text-align: center;
+            background: #fafcff;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-height: 90px;
+            justify-content: center;
+        }
+        .upload-zone:hover {
+            border-color: #028090;
+            background: #f0fdfa;
+        }
+        .upload-zone i {
+            font-size: 26px;
+            color: #028090;
+        }
+        .upload-zone span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0A1B3F;
+        }
+        .upload-zone .sub-text {
+            font-size: 11px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+
+        /* =========================================
+               الجداول
+               ========================================= */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -4px;
+            padding: 0 4px;
+        }
+        .table-wrapper::-webkit-scrollbar {
+            height: 5px;
+        }
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #028090;
+            border-radius: 4px;
+        }
+
+        .data-table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: right;
+        }
+        .data-table th {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 800;
+            border-bottom: 2px solid #f1f5f9;
+            white-space: nowrap;
+            background: #fafcff;
+        }
+        .data-table td {
+            padding: 14px 14px;
+            font-size: 14px;
+            color: #334155;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .data-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+        .data-table .text-title {
+            font-weight: 800;
+            color: #0A1B3F;
+        }
+
+        /* =========================================
+               حالة المرفق
+               ========================================= */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .status-badge i {
+            font-size: 10px;
+        }
+        .status-approved {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .status-pending {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        .status-rejected {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .status-update {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        /* =========================================
+               أيقونات الإجراءات
+               ========================================= */
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            font-size: 15px;
+        }
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: #0A1B3F;
+        }
+        .action-btn.view:hover {
+            background: #e0f2fe;
+            color: #028090;
+        }
+        .action-btn.edit:hover {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .action-btn.delete:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .action-btn.upload:hover {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        /* =========================================
+               مصدر المرفق
+               ========================================= */
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .source-tag i {
+            font-size: 11px;
+        }
+        .source-tag.auto {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .source-tag.manual {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* =========================================
+               زر الإضافة
+               ========================================= */
+        .btn-add {
+            background: #028090;
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.25s;
+        }
+        .btn-add:hover {
+            background: #0A1B3F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(2, 128, 144, 0.25);
+        }
+
+        .btn-submit {
+            background: #028090;
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-submit:hover {
+            background: #0A1B3F;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(2, 128, 144, 0.25);
+        }
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+        .btn-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-actions-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        /* =========================================
+               الإقرار
+               ========================================= */
+        .declaration-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 22px 24px;
+            border-radius: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+        .declaration-box input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            margin-top: 4px;
+            cursor: pointer;
+            accent-color: #028090;
+        }
+        .declaration-box p {
+            margin: 0 0 4px 0;
+            font-weight: 800;
+            color: #065f46;
+            font-size: 15px;
+        }
+        .declaration-box ul {
+            margin: 6px 0 0 0;
+            padding-right: 22px;
+            font-size: 13px;
+            color: #166534;
+            font-weight: 600;
+            line-height: 1.8;
+        }
+        .declaration-box ul li {
+            list-style-type: circle;
+        }
+
+        .alert-warning-box {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #b91c1c;
+            font-weight: 700;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            line-height: 1.7;
+        }
+        .alert-warning-box i {
+            font-size: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* =========================================
+               التذييل
+               ========================================= */
+        .page-footer {
+            text-align: center;
+            padding: 22px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
+        }
+
+        /* =========================================
+               المودال
+               ========================================= */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 18px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 32px 36px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 800;
+            color: #0A1B3F;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h2 i {
+            color: #028090;
+        }
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0A1B3F;
+        }
+
+        /* =========================================
+               استجابة للجوال
+               ========================================= */
+        @media (max-width: 991px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .focused-header {
+                padding: 10px 20px;
+            }
+            .page-subheader {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px 24px;
+                margin-top: 12px;
+            }
+            .page-subheader h1 {
+                font-size: 19px;
+            }
+            .content-container {
+                padding: 20px 14px 0 14px;
+            }
+            .panel-card {
+                padding: 20px 18px 24px 18px;
+            }
+            .add-document-form {
+                grid-template-columns: 1fr;
+            }
+            .modal-box {
+                padding: 24px 20px;
+                margin: 10px;
+            }
+            .data-table {
+                min-width: 700px;
+                font-size: 13px;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .focused-header .client-info h5 {
+                font-size: 13px;
+            }
+            .focused-header .client-info .avatar {
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
+            }
+            .stat-card {
+                padding: 14px 16px;
+            }
+            .stat-info .stat-value {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .page-subheader h1 {
+                font-size: 17px;
+            }
+            .btn-back {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+            .panel-header h3 {
+                font-size: 16px;
+            }
+            .panel-header i {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+            .panel-header .panel-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+            .data-table {
+                min-width: 580px;
+                font-size: 12px;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            .action-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 13px;
+            }
+            .status-badge {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .modal-box {
+                padding: 18px 16px;
+            }
+            .btn-submit,
+            .btn-cancel {
+                padding: 10px 18px;
+                font-size: 14px;
+                width: 100%;
+                justify-content: center;
+            }
+            .btn-actions-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .form-control {
+                height: 40px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            select.form-control {
+                height: 40px;
+            }
+            .declaration-box {
+                padding: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .declaration-box input[type="checkbox"] {
+                margin-top: 0;
+            }
+            .declaration-box ul {
+                font-size: 12px;
+            }
+            .alert-warning-box {
+                padding: 12px 14px;
+                font-size: 12px;
+            }
+            .page-desc {
+                font-size: 13px;
+                padding: 12px 16px;
+            }
+            .upload-zone {
+                min-height: 70px;
+                padding: 12px 10px;
+            }
+            .upload-zone i {
+                font-size: 22px;
+            }
+            .stat-info .stat-value {
+                font-size: 16px;
+            }
+            .stat-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+            .btn-add {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+        }
+
+        /* =========================================
+               الوضع المظلم
+               ========================================= */
+        @media (prefers-color-scheme: dark) {
+            .focused-header {
+                background: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            .focused-header .client-info h5 {
+                color: #f8fafc !important;
+            }
+            .focused-header .client-info .avatar {
+                background: #0f172a !important;
+                border-color: #14b8a6 !important;
+            }
+            .page-subheader {
+                background: #0f172a !important;
+            }
+            .panel-card {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            .panel-header {
+                border-bottom-color: #334155 !important;
+            }
+            .panel-header h3 {
+                color: #f8fafc !important;
+            }
+            .panel-header .panel-badge {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .page-desc {
+                background: #1e293b !important;
+                border-right-color: #14b8a6 !important;
+                color: #e2e8f0 !important;
+            }
+            .page-desc strong {
+                color: #f8fafc !important;
+            }
+            .form-label {
+                color: #f1f5f9 !important;
+            }
+            .form-control {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+                color: #e2e8f0 !important;
+            }
+            .form-control:focus {
+                border-color: #14b8a6 !important;
+                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
+            }
+            .form-control::placeholder {
+                color: #64748b !important;
+            }
+            .stat-card {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            .stat-info .stat-value {
+                color: #f8fafc !important;
+            }
+            .stat-info .stat-label {
+                color: #94a3b8 !important;
+            }
+            .stat-icon {
+                background: rgba(20, 184, 166, 0.15) !important;
+                color: #14b8a6 !important;
+            }
+            .data-table th {
+                color: #94a3b8 !important;
+                border-bottom-color: #334155 !important;
+                background: #0f172a !important;
+            }
+            .data-table td {
+                color: #e2e8f0 !important;
+                border-bottom-color: #1e293b !important;
+            }
+            .data-table tbody tr:hover td {
+                background: #334155 !important;
+            }
+            .data-table .text-title {
+                color: #f8fafc !important;
+            }
+            .declaration-box {
+                background: rgba(22, 101, 52, 0.15) !important;
+                border-color: #166534 !important;
+            }
+            .declaration-box p {
+                color: #bbf7d0 !important;
+            }
+            .declaration-box ul {
+                color: #86efac !important;
+            }
+            .alert-warning-box {
+                background: rgba(220, 38, 38, 0.15) !important;
+                border-color: #991b1b !important;
+                color: #fca5a5 !important;
+            }
+            .page-footer {
+                background: #1e293b !important;
+                border-top-color: #334155 !important;
+                color: #64748b !important;
+            }
+            .modal-box {
+                background: #1e293b !important;
+            }
+            .modal-header {
+                border-bottom-color: #334155 !important;
+            }
+            .modal-header h2 {
+                color: #f8fafc !important;
+            }
+            .modal-close {
+                color: #94a3b8 !important;
+            }
+            .modal-close:hover {
+                background: #334155 !important;
+                color: #f8fafc !important;
+            }
+            .btn-cancel {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .btn-cancel:hover {
+                background: #475569 !important;
+            }
+            .upload-zone {
+                background: #0f172a !important;
+                border-color: #334155 !important;
+            }
+            .upload-zone:hover {
+                border-color: #14b8a6 !important;
+                background: rgba(20, 184, 166, 0.08) !important;
+            }
+            .source-tag {
+                background: #334155 !important;
+                color: #94a3b8 !important;
+            }
+            .source-tag.auto {
+                background: rgba(22, 101, 52, 0.2) !important;
+                color: #bbf7d0 !important;
+            }
+            .source-tag.manual {
+                background: rgba(154, 52, 18, 0.2) !important;
+                color: #fed7aa !important;
+            }
+            .status-approved {
+                background: rgba(22, 101, 52, 0.2) !important;
+                color: #bbf7d0 !important;
+                border-color: #166534 !important;
+            }
+            .status-pending {
+                background: rgba(154, 52, 18, 0.2) !important;
+                color: #fed7aa !important;
+                border-color: #9a3412 !important;
+            }
+            .status-rejected {
+                background: rgba(220, 38, 38, 0.15) !important;
+                color: #fca5a5 !important;
+                border-color: #991b1b !important;
+            }
+            .status-update {
+                background: rgba(30, 58, 138, 0.2) !important;
+                color: #93c5fd !important;
+                border-color: #1e40af !important;
+            }
+            .table-wrapper::-webkit-scrollbar-track {
+                background: #1e293b !important;
+            }
+            .panel-header i {
+                background: rgba(20, 184, 166, 0.15) !important;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+            .stat-card:hover {
+                transform: none !important;
+            }
+            .btn-add:hover,
+            .btn-submit:hover {
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-paperclip"></i> المرفقات والوثائق</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
     </div>
 
-    <div class="upload-card">
-        <label>العنوان الوطني</label>
-        <input type="file">
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
+
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>مركز إدارة الوثائق:</strong> يتيح هذا القسم استعراض وإدارة جميع المستندات والوثائق المرفوعة في المنصة، سواءً تم رفعها تلقائياً من الأقسام الأخرى أو إضافتها يدوياً.</span>
+        </div>
+
+        <!-- =========================================
+        بطاقات الإحصاء
+        ========================================= -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-file"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalDocs">7</span>
+                    <span class="stat-label">إجمالي المرفقات</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(16,185,129,0.08); color:#10b981;"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="approvedDocs">3</span>
+                    <span class="stat-label">معتمد</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(251,191,36,0.08); color:#f59e0b;"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="pendingDocs">2</span>
+                    <span class="stat-label">قيد المراجعة</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:rgba(239,68,68,0.08); color:#ef4444;"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-info">
+                    <span class="stat-value" id="rejectedDocs">1</span>
+                    <span class="stat-label">مرفوض / يحتاج تحديث</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================
+        الوثائق المرفوعة
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-file-alt"></i>
+                <h3>الوثائق المرفوعة</h3>
+                <button class="btn-add" id="openAddModal">
+                    <i class="fas fa-plus-circle"></i> إضافة مرفق جديد
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table" id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>اسم المرفق</th>
+                            <th>النوع</th>
+                            <th>القسم المرتبط</th>
+                            <th>تاريخ الرفع</th>
+                            <th>الحالة</th>
+                            <th style="min-width:120px;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsTableBody">
+                        <!-- البيانات تُحقن بواسطة JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- =========================================
+        الإقرار والتعهد
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-file-signature"></i>
+                <h3>الإقرار والتعهد</h3>
+            </div>
+
+            <div class="declaration-box">
+                <input type="checkbox" id="declarationCheck">
+                <div>
+                    <p>☑ أقر بأن جميع المستندات المرفوعة أصلية وصحيحة وتخصني شخصياً، وأتحمل كامل المسؤولية عن صحة الوثائق والمعلومات المقدمة.</p>
+                </div>
+            </div>
+
+            <div class="alert-warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>تنبيه:</strong> يحق للمنصة رفض أو طلب إعادة رفع أي مستند غير واضح أو منتهي الصلاحية أو غير مطابق للبيانات المسجلة في الحساب.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- =========================================
+    المودال: إضافة مرفق جديد
+    ========================================= -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> إضافة مرفق جديد</h2>
+                <button class="modal-close" id="closeModal"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="addDocumentForm" novalidate>
+                <div class="add-document-form">
+
+                    <div class="form-group">
+                        <label class="form-label">نوع المرفق <span class="req">*</span></label>
+                        <select class="form-control" id="docType" required>
+                            <option value="">اختر النوع...</option>
+                            <option value="هوية وطنية">هوية وطنية</option>
+                            <option value="هوية مقيم">هوية مقيم</option>
+                            <option value="هوية خليجية">هوية خليجية</option>
+                            <option value="هوية عربية">هوية عربية</option>
+                            <option value="جواز سفر">جواز سفر</option>
+                            <option value="إثبات عنوان">إثبات عنوان</option>
+                            <option value="شهادة آيبان">شهادة آيبان</option>
+                            <option value="كشف حساب بنكي">كشف حساب بنكي</option>
+                            <option value="تعريف بالراتب">تعريف بالراتب</option>
+                            <option value="سجل تجاري">سجل تجاري</option>
+                            <option value="عقد تأسيس">عقد تأسيس</option>
+                            <option value="وكالة شرعية">وكالة شرعية</option>
+                            <option value="تفويض رسمي">تفويض رسمي</option>
+                            <option value="عقد إيجار">عقد إيجار</option>
+                            <option value="فاتورة خدمات">فاتورة خدمات</option>
+                            <option value="مستند داعم">مستند داعم</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">اسم المرفق <span class="req">*</span></label>
+                        <input type="text" class="form-control" id="docName" placeholder="مثال: هوية وطنية سارية" required>
+                        <span class="format-hint">اسم واضح يعكس محتوى المرفق.</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">وصف المرفق <span class="optional">اختياري</span></label>
+                        <textarea class="form-control" id="docDescription" placeholder="وصف مختصر لتوضيح محتوى الملف..." rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">رفع الملف <span class="req">*</span></label>
+                        <div class="upload-zone" id="docUploadZone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="uploadLabel">اضغط لرفع الملف</span>
+                            <span class="sub-text">PDF, JPG, JPEG, PNG حتى 10 ميجابايت</span>
+                            <input type="file" style="display:none;" id="docFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="format-hint" id="fileNameDisplay"></span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">القسم المرتبط <span class="req">*</span></label>
+                        <select class="form-control" id="docSection" required>
+                            <option value="المعلومات الشخصية">المعلومات الشخصية</option>
+                            <option value="معلومات الاتصال">معلومات الاتصال</option>
+                            <option value="العنوان الوطني">العنوان الوطني</option>
+                            <option value="المعلومات البنكية">المعلومات البنكية</option>
+                            <option value="مرفق يدوي" selected>مرفق يدوي</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="btn-actions-row">
+                    <button type="button" class="btn-cancel" id="cancelAdd">إلغاء</button>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> رفع المرفق</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div class="upload-card">
-        <label>كشف الحساب البنكي</label>
-        <input type="file">
-    </div>
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
 
-</section>
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/profile.js"></script>
+
+    <!-- =========================================
+    الجافا سكريبت الخاص بالصفحة
+    ========================================= -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================
+            // البيانات التجريبية
+            // ============================================
+            let documents = [{
+                id: 1,
+                name: 'الهوية الوطنية سارية',
+                type: 'هوية وطنية',
+                section: 'المعلومات الشخصية',
+                date: '2026-06-20',
+                status: 'approved',
+                source: 'auto',
+                file: 'id_card.pdf'
+            }, {
+                id: 2,
+                name: 'شهادة آيبان بنك الراجحي',
+                type: 'شهادة آيبان',
+                section: 'المعلومات البنكية',
+                date: '2026-06-22',
+                status: 'pending',
+                source: 'auto',
+                file: 'iban_rajhi.pdf'
+            }, {
+                id: 3,
+                name: 'كشف حساب شهر يونيو',
+                type: 'كشف حساب بنكي',
+                section: 'المعلومات البنكية',
+                date: '2026-06-24',
+                status: 'rejected',
+                source: 'manual',
+                file: 'statement_june.pdf'
+            }, {
+                id: 4,
+                name: 'عقد إيجار السكن',
+                type: 'عقد إيجار',
+                section: 'العنوان الوطني',
+                date: '2026-06-18',
+                status: 'update_needed',
+                source: 'manual',
+                file: 'rent_contract.pdf'
+            }, {
+                id: 5,
+                name: 'جواز السفر ساري',
+                type: 'جواز سفر',
+                section: 'المعلومات الشخصية',
+                date: '2026-06-10',
+                status: 'approved',
+                source: 'auto',
+                file: 'passport.pdf'
+            }, {
+                id: 6,
+                name: 'فاتورة كهرباء أبريل',
+                type: 'إثبات عنوان',
+                section: 'العنوان الوطني',
+                date: '2026-06-15',
+                status: 'pending',
+                source: 'manual',
+                file: 'electricity_bill.pdf'
+            }, {
+                id: 7,
+                name: 'صورة الهوية الخلفية',
+                type: 'هوية وطنية',
+                section: 'المعلومات الشخصية',
+                date: '2026-06-25',
+                status: 'approved',
+                source: 'auto',
+                file: 'id_card_back.pdf'
+            }];
+
+            let nextId = 8;
+
+            // ============================================
+            // دوال العرض
+            // ============================================
+            function getStatusBadge(status) {
+                const map = {
+                    'approved': '<span class="status-badge status-approved"><i class="fas fa-circle"></i> معتمد</span>',
+                    'pending': '<span class="status-badge status-pending"><i class="fas fa-circle"></i> قيد المراجعة</span>',
+                    'rejected': '<span class="status-badge status-rejected"><i class="fas fa-circle"></i> مرفوض</span>',
+                    'update_needed': '<span class="status-badge status-update"><i class="fas fa-circle"></i> يحتاج تحديث</span>'
+                };
+                return map[status] || map.pending;
+            }
+
+            function getSourceTag(source) {
+                if (source === 'auto') {
+                    return '<span class="source-tag auto"><i class="fas fa-sync-alt"></i> تلقائي</span>';
+                }
+                return '<span class="source-tag manual"><i class="fas fa-user-edit"></i> يدوي</span>';
+            }
+
+            function getStatusText(status) {
+                const map = {
+                    'approved': 'معتمد',
+                    'pending': 'قيد المراجعة',
+                    'rejected': 'مرفوض',
+                    'update_needed': 'يحتاج تحديث'
+                };
+                return map[status] || status;
+            }
+
+            function renderTable() {
+                const tbody = document.getElementById('documentsTableBody');
+                if (!tbody) return;
+
+                if (documents.length === 0) {
+                    tbody.innerHTML =
+                        `
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:40px 20px; color:#94a3b8; font-weight:700;">
+                                <i class="fas fa-folder-open" style="font-size:24px; display:block; margin-bottom:10px;"></i>
+                                لا توجد مستندات مرفوعة حالياً
+                            </td>
+                        </tr>
+                    `;
+                    updateStats();
+                    return;
+                }
+
+                let html = '';
+                documents.forEach((doc, index) => {
+                    const statusBadge = getStatusBadge(doc.status);
+                    const sourceTag = getSourceTag(doc.source);
+                    const statusText = getStatusText(doc.status);
+
+                    html += `
+                        <tr data-id="${doc.id}">
+                            <td>${index + 1}</td>
+                            <td class="text-title">${doc.name}</td>
+                            <td>${doc.type}</td>
+                            <td>${doc.section} ${sourceTag}</td>
+                            <td>${doc.date}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn view" title="عرض" data-id="${doc.id}"><i class="fas fa-eye"></i></button>
+                                    ${doc.status === 'rejected' || doc.status === 'update_needed' ? 
+                                        `<button class="action-btn upload" title="إعادة رفع" data-id="${doc.id}"><i class="fas fa-upload"></i></button>` : 
+                                        `<button class="action-btn edit" title="تعديل" data-id="${doc.id}"><i class="fas fa-edit"></i></button>`
+                                    }
+                                    <button class="action-btn delete" title="حذف" data-id="${doc.id}"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                updateStats();
+            }
+
+            function updateStats() {
+                const total = documents.length;
+                const approved = documents.filter(d => d.status === 'approved').length;
+                const pending = documents.filter(d => d.status === 'pending').length;
+                const rejected = documents.filter(d => d.status === 'rejected' || d.status === 'update_needed').length;
+
+                document.getElementById('totalDocs').textContent = total;
+                document.getElementById('approvedDocs').textContent = approved;
+                document.getElementById('pendingDocs').textContent = pending;
+                document.getElementById('rejectedDocs').textContent = rejected;
+            }
+
+            // ============================================
+            // المودال
+            // ============================================
+            const modal = document.getElementById('addModal');
+            const openBtn = document.getElementById('openAddModal');
+            const closeBtn = document.getElementById('closeModal');
+            const cancelBtn = document.getElementById('cancelAdd');
+
+            function openModal() {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                document.getElementById('addDocumentForm').reset();
+                document.getElementById('fileNameDisplay').textContent = '';
+                document.getElementById('uploadLabel').textContent = 'اضغط لرفع الملف';
+                // إعادة تعيين حقل الملف
+                const fileInput = document.getElementById('docFile');
+                fileInput.value = '';
+                // إزالة أي رسائل خطأ
+                document.querySelectorAll('.form-control.error').forEach(el => el.classList.remove('error'));
+            }
+
+            function closeModalFn() {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (openBtn) openBtn.addEventListener('click', openModal);
+            if (closeBtn) closeBtn.addEventListener('click', closeModalFn);
+            if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
+
+            // إغلاق المودال بالنقر خارج المحتوى
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeModalFn();
+            });
+
+            // إغلاق المودال بالضغط على Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) closeModalFn();
+            });
+
+            // ============================================
+            // رفع الملف
+            // ============================================
+            const uploadZone = document.getElementById('docUploadZone');
+            const fileInput = document.getElementById('docFile');
+            const uploadLabel = document.getElementById('uploadLabel');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+            if (uploadZone && fileInput) {
+                uploadZone.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    if (this.files && this.files.length > 0) {
+                        const file = this.files[0];
+                        const maxSize = 10 * 1024 * 1024; // 10MB
+                        if (file.size > maxSize) {
+                            alert('حجم الملف يتجاوز الحد المسموح (10 ميجابايت).');
+                            this.value = '';
+                            return;
+                        }
+                        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+                        if (!allowedTypes.includes(file.type)) {
+                            alert('صيغة الملف غير مسموحة. الصيغ المسموحة: PDF, JPG, JPEG, PNG');
+                            this.value = '';
+                            return;
+                        }
+                        uploadLabel.textContent = file.name.length > 30 ? file.name.slice(0, 27) + '…' : file.name;
+                        uploadLabel.style.color = '#028090';
+                        fileNameDisplay.textContent = '✅ ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' ك.ب)';
+                        fileNameDisplay.style.color = '#10b981';
+                    } else {
+                        uploadLabel.textContent = 'اضغط لرفع الملف';
+                        uploadLabel.style.color = '#0A1B3F';
+                        fileNameDisplay.textContent = '';
+                    }
+                });
+            }
+
+            // ============================================
+            // إضافة مستند جديد
+            // ============================================
+            const addForm = document.getElementById('addDocumentForm');
+
+            addForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('docName').value.trim();
+                const type = document.getElementById('docType').value;
+                const section = document.getElementById('docSection').value;
+                const description = document.getElementById('docDescription').value.trim();
+                const file = document.getElementById('docFile').files[0];
+
+                // تحقق أساسي
+                let valid = true;
+                if (!name) { valid = false;
+                    document.getElementById('docName').classList.add('error'); } else { document.getElementById(
+                        'docName').classList.remove('error'); }
+                if (!type) { valid = false;
+                    document.getElementById('docType').classList.add('error'); } else { document.getElementById(
+                        'docType').classList.remove('error'); }
+                if (!file) { valid = false;
+                    alert('يرجى اختيار ملف للرفع.'); }
+
+                if (!valid) {
+                    alert('يرجى ملء جميع الحقول المطلوبة.');
+                    return;
+                }
+
+                // إضافة المستند
+                const now = new Date();
+                const dateStr = now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0');
+
+                const newDoc = {
+                    id: nextId++,
+                    name: name,
+                    type: type,
+                    section: section,
+                    date: dateStr,
+                    status: 'pending',
+                    source: section === 'مرفق يدوي' ? 'manual' : 'auto',
+                    file: file ? file.name : 'document.pdf',
+                    description: description
+                };
+
+                documents.push(newDoc);
+                renderTable();
+                closeModalFn();
+                alert('✅ تم رفع المرفق بنجاح. جاري مراجعة المستند...');
+            });
+
+            // ============================================
+            // معالج الأحداث على الجدول (عرض، تعديل، حذف، إعادة رفع)
+            // ============================================
+            document.getElementById('documentsTableBody').addEventListener('click', function(e) {
+                const btn = e.target.closest('.action-btn');
+                if (!btn) return;
+
+                const id = parseInt(btn.dataset.id);
+                const doc = documents.find(d => d.id === id);
+                if (!doc) return;
+
+                const action = btn.classList.contains('view') ? 'view' :
+                    btn.classList.contains('edit') ? 'edit' :
+                    btn.classList.contains('delete') ? 'delete' :
+                    btn.classList.contains('upload') ? 'upload' : '';
+
+                if (action === 'view') {
+                    // محاكاة عرض الملف
+                    alert('📄 عرض المرفق:\n' + doc.name + '\nالنوع: ' + doc.type + '\nالقسم: ' + doc.section +
+                        '\nالحالة: ' + getStatusText(doc.status) + '\nالملف: ' + doc.file);
+                } else if (action === 'edit') {
+                    // محاكاة تعديل المرفق
+                    const newName = prompt('تعديل اسم المرفق:', doc.name);
+                    if (newName && newName.trim()) {
+                        doc.name = newName.trim();
+                        renderTable();
+                        alert('✅ تم تحديث اسم المرفق.');
+                    }
+                } else if (action === 'delete') {
+                    if (confirm('هل أنت متأكد من حذف المرفق "' + doc.name + '"؟')) {
+                        documents = documents.filter(d => d.id !== id);
+                        renderTable();
+                        alert('🗑️ تم حذف المرفق.');
+                    }
+                } else if (action === 'upload') {
+                    // إعادة رفع المرفق (للمرفوض أو يحتاج تحديث)
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+                    fileInput.onchange = function(e) {
+                        if (this.files && this.files.length > 0) {
+                            const file = this.files[0];
+                            const maxSize = 10 * 1024 * 1024;
+                            if (file.size > maxSize) {
+                                alert('حجم الملف يتجاوز الحد المسموح (10 ميجابايت).');
+                                return;
+                            }
+                            doc.status = 'pending';
+                            doc.file = file.name;
+                            renderTable();
+                            alert('✅ تم إعادة رفع المرفق "' + doc.name + '" بنجاح. جاري مراجعة المستند...');
+                        }
+                    };
+                    fileInput.click();
+                }
+            });
+
+            // ============================================
+            // التحقق من صحة الإقرار
+            // ============================================
+            const declarationCheck = document.getElementById('declarationCheck');
+
+            // ============================================
+            // تسجيل الخروج
+            // ============================================
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        document.cookie.split(';').forEach(function(c) {
+                            document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date()
+                                .toUTCString() + ';path=/');
+                        });
+                        window.location.replace('https://tera-investor-portal.onrender.com');
+                    }
+                });
+            }
+
+            // ============================================
+            // التهيئة
+            // ============================================
+            renderTable();
+
+            // عرض التاريخ الحالي في البانر (إذا وجد)
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                const now = new Date();
+                dateEl.textContent = now.getFullYear() + '/' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '/' +
+                    String(now.getDate()).padStart(2, '0');
+            }
+
+            console.log('✅ Attachments page loaded successfully.');
+
+        })();
+    </script>
+
+</body>
+</html>
