@@ -5,6 +5,12 @@
  * الموقع: /assets/css/dashboard.css
  * تم التحديث: 2026-06-25
  * ============================================================
+ * الإصلاحات:
+ * - إضافة دعم لحاوية التمرير (.data-table-wrapper) للجداول.
+ * - تحسين قراءة الجداول على الجوال (حجم خط، تباعد).
+ * - توحيد المتغيرات مع ملفات CSS الأخرى.
+ * - تحسين تجربة المستخدم على الشاشات الصغيرة جداً.
+ * ============================================================
  */
 
 /* ============================================================
@@ -62,6 +68,7 @@
     width: auto;
     display: block;
     transition: opacity 0.3s ease;
+    flex-shrink: 0;
 }
 
 .header-logo img:hover {
@@ -608,8 +615,32 @@
 /* ============================================================
    11. الجداول المتناسقة (Data Tables)
    ============================================================ */
+/* حاوية الجدول – للتمرير الأفقي على الجوال */
+.data-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px;
+    padding: 0 4px;
+    scroll-behavior: smooth;
+}
+
+.data-table-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--tera-teal);
+    border-radius: 4px;
+}
+
 .data-table-list {
     width: 100%;
+    min-width: 500px; /* منع التصاق الأعمدة */
     border-collapse: collapse;
     text-align: right;
 }
@@ -749,6 +780,10 @@
         background: #334155;
     }
 
+    .data-table-wrapper::-webkit-scrollbar-track {
+        background: #1e293b;
+    }
+
     .alert-success { background: rgba(22, 101, 52, 0.2); border-color: #166534; color: #bbf7d0; }
     .alert-warning { background: rgba(154, 52, 18, 0.2); border-color: #9a3412; color: #fed7aa; }
 
@@ -778,7 +813,7 @@
     }
 
     .header-logo img {
-        height: 32px;
+        height: 36px; /* أكبر قليلاً للوضوح */
     }
 
     .header-right-actions {
@@ -860,20 +895,30 @@
         font-size: 15px;
     }
 
-    .data-table-list th, .data-table-list td {
-        padding: 10px;
+    /* تحسين الجداول للجوال */
+    .data-table-wrapper {
+        margin: 0 -8px;
+        padding: 0 8px;
+    }
+
+    .data-table-list {
+        min-width: 420px;
         font-size: 12px;
     }
 
-    .data-table-list th {
+    .data-table-list th,
+    .data-table-list td {
+        padding: 8px 10px;
         white-space: nowrap;
     }
 
-    /* جعل الجدول قابل للتمرير أفقياً */
-    .data-table-list {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
+    .data-table-list th {
+        font-size: 11px;
+    }
+
+    .btn-table-link {
+        padding: 4px 10px;
+        font-size: 11px;
     }
 }
 
@@ -883,7 +928,7 @@
     }
 
     .header-logo img {
-        height: 28px;
+        height: 30px;
     }
 
     .menu-toggle-btn {
@@ -922,17 +967,31 @@
     }
 
     .data-table-list {
-        font-size: 12px;
+        min-width: 360px;
+        font-size: 11px;
     }
 
     .data-table-list th,
     .data-table-list td {
-        padding: 8px 4px;
+        padding: 6px 8px;
+    }
+
+    .data-table-list th {
+        font-size: 10px;
     }
 
     .btn-table-link {
-        padding: 4px 10px;
-        font-size: 11px;
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+
+    .filter-select {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .btn-text-action {
+        font-size: 12px;
     }
 
     .alert-item-box {
