@@ -6,9 +6,10 @@
  * ============================================================
  */
 
-const ProfilePages = ProfilePages || {};
+// التأكد من وجود الكائن العام قبل إضافة الخصائص إليه
+window.ProfilePages = window.ProfilePages || {};
 
-ProfilePages['personal-information'] = {
+window.ProfilePages['personal-information'] = {
     init: function() {
         console.log('📝 Initializing Personal Information page...');
 
@@ -19,6 +20,7 @@ ProfilePages['personal-information'] = {
         }
 
         // تعريف دالة handleIdTypeChange في النطاق العالمي للاستخدام في onchange
+        const self = this;
         window.handleIdTypeChange = function() {
             const typeSelect = document.getElementById('idType');
             const type = typeSelect.value;
@@ -46,21 +48,21 @@ ProfilePages['personal-information'] = {
                 case 'national':
                     idInput.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
                     hintText = 'الهوية الوطنية: أرقام فقط (10 أرقام).';
-                    filesHtml = this.createUploadFields('صورة الهوية الوطنية (الوجه الأمامي)', 'صورة الهوية الوطنية (الوجه الخلفي)');
+                    filesHtml = self.createUploadFields('صورة الهوية الوطنية (الوجه الأمامي)', 'صورة الهوية الوطنية (الوجه الخلفي)');
                     break;
                 case 'residency':
                     idInput.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
                     hintText = 'الإقامة: أرقام فقط (10 أرقام).';
-                    filesHtml = this.createUploadFields('صورة الإقامة (الوجه الأمامي)', 'صورة الإقامة (الوجه الخلفي)');
+                    filesHtml = self.createUploadFields('صورة الإقامة (الوجه الأمامي)', 'صورة الإقامة (الوجه الخلفي)');
                     break;
                 case 'gcc':
                     idInput.oninput = function() { this.value = this.value.replace(/[^0-9]/g, ''); };
                     hintText = 'الهوية الخليجية: أرقام فقط.';
-                    filesHtml = this.createUploadFields('صورة الهوية الخليجية (الوجه الأمامي)', 'صورة الهوية الخليجية (الوجه الخلفي)');
+                    filesHtml = self.createUploadFields('صورة الهوية الخليجية (الوجه الأمامي)', 'صورة الهوية الخليجية (الوجه الخلفي)');
                     break;
                 case 'arab':
                     hintText = 'الهوية العربية: حسب متطلبات دولة الإصدار.';
-                    filesHtml = this.createUploadFields('صورة الهوية الوطنية لبلد الإصدار (الوجه الأمامي)', 'صورة الهوية الوطنية لبلد الإصدار (الوجه الخلفي)');
+                    filesHtml = self.createUploadFields('صورة الهوية الوطنية لبلد الإصدار (الوجه الأمامي)', 'صورة الهوية الوطنية لبلد الإصدار (الوجه الخلفي)');
                     break;
                 case 'passport':
                     idInput.oninput = function() { this.value = this.value.replace(/[^A-Za-z0-9]/g, ''); };
