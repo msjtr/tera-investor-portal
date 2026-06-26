@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -44,29 +45,56 @@
         }
 
         /* ============================================================
-           الهيدر العلوي (بدون شعار)
+           الهيدر العلوي – موحد لجميع الصفحات
            ============================================================ */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 10px 40px;
+            padding: 10px 30px;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
             box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
             min-height: 60px;
+            width: 100%;
         }
 
-        .focused-header .client-info {
+        /* زر العودة في الجهة اليمنى (لأن الموقع RTL) */
+        .header-back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0A1B3F;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: 0.25s;
+            background: rgba(10, 27, 63, 0.04);
+            border: 1px solid transparent;
+        }
+
+        .header-back-btn:hover {
+            background: rgba(10, 27, 63, 0.08);
+            border-color: #e2e8f0;
+        }
+
+        .header-back-btn i {
+            font-size: 16px;
+        }
+
+        /* بيانات المستخدم في الجهة اليسرى */
+        .header-client-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .focused-header .client-info h5 {
+        .header-client-info h5 {
             margin: 0;
             font-family: 'Cairo', sans-serif;
             font-size: 15px;
@@ -74,7 +102,7 @@
             font-weight: 800;
         }
 
-        .focused-header .client-info .avatar {
+        .header-client-info .avatar {
             width: 38px;
             height: 38px;
             background: #0A1B3F;
@@ -90,44 +118,15 @@
         }
 
         /* ============================================================
-           الشعار أسفل الهيدر (Full Width)
+           عنوان الصفحة (بدون زر العودة)
            ============================================================ */
-        .brand-banner {
-            width: 100%;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 10px 0;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .brand-banner img {
-            height: 48px;
-            width: auto;
-            display: block;
-            filter: none;
-            opacity: 1;
-            image-rendering: auto;
-            max-width: 100%;
-            flex-shrink: 0;
-        }
-
-        /* ============================================================
-           عنوان الصفحة
-           ============================================================ */
-        .page-subheader {
+        .page-title-section {
             background: #0A1B3F;
-            padding: 18px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            padding: 16px 30px;
+            width: 100%;
         }
 
-        .page-subheader h1 {
+        .page-title-section h1 {
             margin: 0;
             color: #ffffff;
             font-family: 'Cairo', sans-serif;
@@ -138,28 +137,48 @@
             gap: 10px;
         }
 
-        .page-subheader h1 i {
+        .page-title-section h1 i {
             color: #5eead4;
         }
 
-        .btn-back {
-            background: rgba(255, 255, 255, 0.10);
-            color: #ffffff;
-            padding: 8px 18px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 700;
-            transition: 0.25s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        /* ============================================================
+           الشعار – بدون Container، Full Width، جودة عالية
+           ============================================================ */
+        .brand-logo-wrapper {
+            width: 100%;
+            padding: 18px 0 10px 0;
+            text-align: center;
+            background: transparent;
         }
 
-        .btn-back:hover {
-            background: #028090;
-            border-color: #028090;
+        .brand-logo-wrapper img {
+            height: 52px;
+            width: auto;
+            display: inline-block;
+            filter: none !important;
+            opacity: 1 !important;
+            image-rendering: auto;
+            max-width: 100%;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        /* دعم شاشات Retina و iOS */
+        @media (-webkit-min-device-pixel-ratio: 2),
+        (min-resolution: 192dpi) {
+            .brand-logo-wrapper img {
+                height: 52px;
+                width: auto;
+            }
+        }
+
+        @media (-webkit-min-device-pixel-ratio: 3),
+        (min-resolution: 288dpi) {
+            .brand-logo-wrapper img {
+                height: 52px;
+                width: auto;
+            }
         }
 
         /* ============================================================
@@ -168,7 +187,7 @@
         .content-container {
             max-width: 1060px;
             margin: 0 auto 40px auto;
-            padding: 24px 24px 0 24px;
+            padding: 20px 24px 0 24px;
             flex: 1;
             width: 100%;
         }
@@ -178,7 +197,7 @@
             color: #0c4a6e;
             line-height: 1.7;
             background: #e0f2fe;
-            padding: 16px 22px;
+            padding: 14px 20px;
             border-radius: 12px;
             border-right: 5px solid #028090;
             margin-bottom: 28px;
@@ -610,36 +629,37 @@
             .focused-header {
                 padding: 8px 20px;
                 min-height: 54px;
-                justify-content: flex-end;
             }
 
-            .focused-header .client-info h5 {
+            .header-back-btn {
+                font-size: 13px;
+                padding: 5px 12px;
+            }
+
+            .header-back-btn i {
+                font-size: 14px;
+            }
+
+            .header-client-info h5 {
                 font-size: 13px;
             }
 
-            .focused-header .client-info .avatar {
+            .header-client-info .avatar {
                 width: 34px;
                 height: 34px;
                 font-size: 14px;
             }
 
-            .brand-banner img {
-                height: 40px;
-            }
-
-            .page-subheader {
+            .page-title-section {
                 padding: 14px 20px;
-                flex-direction: column;
-                align-items: flex-start;
             }
 
-            .page-subheader h1 {
+            .page-title-section h1 {
                 font-size: 19px;
             }
 
-            .btn-back {
-                font-size: 12px;
-                padding: 6px 14px;
+            .brand-logo-wrapper img {
+                height: 44px;
             }
 
             .content-container {
@@ -717,32 +737,40 @@
                 min-height: 48px;
             }
 
-            .focused-header .client-info h5 {
+            .header-back-btn {
+                font-size: 12px;
+                padding: 4px 10px;
+                gap: 4px;
+            }
+
+            .header-back-btn i {
+                font-size: 13px;
+            }
+
+            .header-client-info h5 {
                 font-size: 12px;
             }
 
-            .focused-header .client-info .avatar {
+            .header-client-info .avatar {
                 width: 30px;
                 height: 30px;
                 font-size: 12px;
             }
 
-            .brand-banner img {
-                height: 32px;
-            }
-
-            .page-subheader {
+            .page-title-section {
                 padding: 12px 14px;
-                gap: 10px;
             }
 
-            .page-subheader h1 {
+            .page-title-section h1 {
                 font-size: 17px;
             }
 
-            .btn-back {
-                font-size: 11px;
-                padding: 5px 12px;
+            .brand-logo-wrapper {
+                padding: 14px 0 8px 0;
+            }
+
+            .brand-logo-wrapper img {
+                height: 36px;
             }
 
             .content-container {
@@ -909,27 +937,36 @@
 
         /* شاشات صغيرة جداً */
         @media (max-width: 400px) {
-            .focused-header .client-info h5 {
+            .focused-header {
+                padding: 4px 10px;
+                min-height: 44px;
+            }
+
+            .header-back-btn {
+                font-size: 11px;
+                padding: 3px 8px;
+            }
+
+            .header-back-btn i {
+                font-size: 12px;
+            }
+
+            .header-client-info h5 {
                 font-size: 11px;
             }
 
-            .focused-header .client-info .avatar {
+            .header-client-info .avatar {
                 width: 26px;
                 height: 26px;
                 font-size: 11px;
             }
 
-            .brand-banner img {
-                height: 28px;
-            }
-
-            .page-subheader h1 {
+            .page-title-section h1 {
                 font-size: 15px;
             }
 
-            .btn-back {
-                font-size: 10px;
-                padding: 4px 10px;
+            .brand-logo-wrapper img {
+                height: 30px;
             }
 
             .panel-card {
@@ -979,21 +1016,26 @@
                 border-bottom-color: #334155;
             }
 
-            .focused-header .client-info h5 {
+            .header-back-btn {
+                color: #f8fafc;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .header-back-btn:hover {
+                background: rgba(255, 255, 255, 0.10);
+                border-color: #334155;
+            }
+
+            .header-client-info h5 {
                 color: #f8fafc;
             }
 
-            .focused-header .client-info .avatar {
+            .header-client-info .avatar {
                 background: #0f172a;
                 border-color: #14b8a6;
             }
 
-            .brand-banner {
-                background: #1e293b;
-                border-bottom-color: #334155;
-            }
-
-            .page-subheader {
+            .page-title-section {
                 background: #0f172a;
             }
 
@@ -1128,35 +1170,64 @@
                 background: #1e293b;
             }
         }
+
+        /* ============================================================
+           تقليل الحركة
+           ============================================================ */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .btn-submit:hover {
+                transform: none !important;
+            }
+
+            .header-back-btn:hover {
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 <body>
 
     <!-- ============================================================
-    الهيدر العلوي (بدون شعار)
+    الهيدر العلوي – موحد لجميع الصفحات
     ============================================================ -->
     <header class="focused-header no-print">
-        <div class="client-info">
+        <!-- زر العودة في الجهة اليمنى -->
+        <a href="/pages/dashboard/index.html" class="header-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>العودة</span>
+        </a>
+
+        <!-- بيانات المستخدم في الجهة اليسرى -->
+        <div class="header-client-info">
             <h5>محمد عبدالله الشمري</h5>
             <div class="avatar">م</div>
         </div>
     </header>
 
     <!-- ============================================================
-    الشعار أسفل الهيدر (Full Width)
+    عنوان الصفحة (بدون زر العودة)
     ============================================================ -->
-    <div class="brand-banner">
-        <img src="/images/logo.svg" alt="Tera Investor Portal" onerror="this.src='https://via.placeholder.com/200x60/028090/fff?text=Tera+Portal'" />
+    <div class="page-title-section no-print">
+        <h1><i class="fas fa-user-shield"></i> المعلومات الشخصية</h1>
     </div>
 
     <!-- ============================================================
-    عنوان الصفحة
+    الشعار – بدون Container، Full Width، جودة عالية
     ============================================================ -->
-    <div class="page-subheader no-print">
-        <h1><i class="fas fa-user-shield"></i> المعلومات الشخصية</h1>
-        <a href="/pages/dashboard/index.html" class="btn-back">
-            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
-        </a>
+    <div class="brand-logo-wrapper">
+        <img src="/images/logo.svg"
+        alt="Tera Investor Portal"
+        width="auto"
+        height="52"
+        loading="eager"
+        decoding="async"
+        onerror="this.src='https://via.placeholder.com/200x60/028090/fff?text=Tera+Portal'" />
     </div>
 
     <!-- ============================================================
@@ -1413,3 +1484,4 @@
 
 </body>
 </html>
+```
