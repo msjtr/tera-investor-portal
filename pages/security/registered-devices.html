@@ -1,25 +1,426 @@
-<section class="security-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>الأجهزة المصرحة | Tera Investor Portal</title>
 
-    <h1>الأجهزة المسجلة</h1>
+    <!-- الشعار والأيقونات -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <table>
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-        <tr>
-            <th>الجهاز</th>
-            <th>الموقع</th>
-            <th>آخر نشاط</th>
-            <th>الإجراء</th>
-        </tr>
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-        <tr>
-            <td>Chrome - Windows</td>
-            <td>تبوك</td>
-            <td>منذ 5 دقائق</td>
-            <td>
-                <button>تسجيل خروج</button>
-            </td>
-        </tr>
+    <!-- ملف التنسيق الخاص بصفحات الأمان -->
+    <link rel="stylesheet" href="/assets/css/security.css" />
 
-    </table>
+    <style>
+        /* =========================================
+           تنسيقات إضافية للصفحة
+           ========================================= */
+        .device-card-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid #e9edf2;
+            transition: all 0.25s ease;
+            margin-bottom: 14px;
+            position: relative;
+        }
+        .device-card-item:hover {
+            border-color: #028090;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+        .device-card-item:last-child {
+            margin-bottom: 0;
+        }
 
-</section>
+        .device-card-item .device-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .device-card-item .device-icon.desktop {
+            background: rgba(13, 110, 253, 0.10);
+            color: #0D6EFD;
+        }
+        .device-card-item .device-icon.mobile {
+            background: rgba(2, 128, 144, 0.10);
+            color: #028090;
+        }
+        .device-card-item .device-icon.tablet {
+            background: rgba(245, 158, 11, 0.10);
+            color: #f59e0b;
+        }
+        .device-card-item .device-icon.unknown {
+            background: rgba(107, 114, 128, 0.10);
+            color: #6b7280;
+        }
+
+        .device-card-item .device-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .device-card-item .device-info .device-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: #0A1B3F;
+        }
+        .device-card-item .device-info .device-details {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+        }
+        .device-card-item .device-info .device-details .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .device-card-item .device-info .device-details .detail-item i {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .device-card-item .device-info .device-last-active {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .device-card-item .device-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .device-card-item .device-status-badge.current {
+            background: #D1E7DD;
+            color: #0F5132;
+        }
+        .device-card-item .device-status-badge.current i {
+            color: #16a34a;
+        }
+        .device-card-item .device-status-badge.trusted {
+            background: #CCE5FF;
+            color: #084298;
+        }
+        .device-card-item .device-status-badge.trusted i {
+            color: #0D6EFD;
+        }
+        .device-card-item .device-status-badge.unknown {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        .device-card-item .device-status-badge.unknown i {
+            color: #f59e0b;
+        }
+
+        .device-card-item .device-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .device-card-item .device-actions .btn-sm {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Tajawal', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .device-card-item .device-actions .btn-sm-outline {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+        .device-card-item .device-actions .btn-sm-outline:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .device-card-item .device-actions .btn-sm-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .device-card-item .device-actions .btn-sm-danger:hover {
+            background: #fecaca;
+        }
+        .device-card-item .device-actions .btn-sm-primary {
+            background: #e0f2fe;
+            color: #028090;
+        }
+        .device-card-item .device-actions .btn-sm-primary:hover {
+            background: #bae6fd;
+        }
+
+        .device-card-item .device-actions .btn-sm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 56px;
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 16px;
+        }
+        .empty-state h3 {
+            font-size: 18px;
+            color: #475569;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .empty-state p {
+            font-size: 14px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* تحسين التجاوب */
+        @media (max-width: 768px) {
+            .device-card-item {
+                flex-wrap: wrap;
+                gap: 12px;
+                padding: 14px 16px;
+            }
+            .device-card-item .device-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .device-card-item .device-info .device-name {
+                font-size: 14px;
+            }
+            .device-card-item .device-info .device-details {
+                font-size: 12px;
+                gap: 4px 8px;
+            }
+            .device-card-item .device-status-badge {
+                font-size: 11px;
+                padding: 3px 12px;
+            }
+            .device-card-item .device-actions {
+                width: 100%;
+                justify-content: flex-start;
+                gap: 6px;
+            }
+            .device-card-item .device-actions .btn-sm {
+                font-size: 11px;
+                padding: 5px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .device-card-item {
+                padding: 12px 14px;
+            }
+            .device-card-item .device-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .device-card-item .device-info .device-name {
+                font-size: 13px;
+            }
+            .device-card-item .device-info .device-details {
+                font-size: 11px;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .device-card-item .device-status-badge {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
+            .device-card-item .device-actions .btn-sm {
+                font-size: 10px;
+                padding: 4px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-laptop-house"></i> الأجهزة المصرحة</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
+    </div>
+
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
+
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>إدارة الأجهزة المصرحة:</strong> يمكنك عرض وإدارة جميع الأجهزة التي تم تسجيل الدخول منها إلى حسابك. قم بإلغاء صلاحية أي جهاز لم يعد مصرحاً به للحفاظ على أمان حسابك.</span>
+        </div>
+
+        <!-- =========================================
+        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
+        ========================================= -->
+        <ul class="progress-steps">
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">الأمان</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير كلمة المرور</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير البريد الإلكتروني</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير رقم الجوال</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">المصادقة الثنائية</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="active">
+                <span class="step-num">6</span>
+                <span class="step-label">الأجهزة المصرحة</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">7</span>
+                <span class="step-label">سجل الدخول</span>
+            </li>
+        </ul>
+
+        <!-- منطقة التنبيه -->
+        <div class="alert-box" id="formAlert" role="alert">
+            <i class="fas" id="alertIcon"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <!-- =========================================
+        قائمة الأجهزة المصرحة
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-laptop-house"></i>
+                <h3>الأجهزة المصرحة</h3>
+                <span class="panel-badge" id="deviceCount">0 أجهزة</span>
+            </div>
+
+            <div id="devicesList">
+                <!-- يتم إدراج الأجهزة عبر JavaScript -->
+            </div>
+
+            <!-- حالة عدم وجود أجهزة -->
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <i class="fas fa-laptop"></i>
+                <h3>لا توجد أجهزة مصرحة</h3>
+                <p>لم يتم تسجيل أي جهاز في حسابك حتى الآن. قم بتسجيل الدخول من جهاز جديد لإضافته.</p>
+            </div>
+        </div>
+
+        <!-- =========================================
+        نصائح أمنية
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-lightbulb"></i>
+                <h3>نصائح أمنية</h3>
+                <span class="panel-badge">توصيات</span>
+            </div>
+
+            <div class="security-tips" style="margin-top:0;">
+                <ul>
+                    <li><i class="fas fa-check"></i> قم بمراجعة الأجهزة المصرحة بشكل دوري للتأكد من عدم وجود أجهزة غير معروفة.</li>
+                    <li><i class="fas fa-check"></i> إذا لاحظت جهازاً غير معروف، قم بإلغاء صلاحيته فوراً وقم بتغيير كلمة المرور.</li>
+                    <li><i class="fas fa-check"></i> يظهر الجهاز الحالي بعلامة <strong>"الجهاز الحالي"</strong> ولا يمكن إلغاء صلاحيته من هذه الصفحة.</li>
+                    <li><i class="fas fa-check"></i> يمكنك إعادة تسجيل الدخول من أي جهاز بعد إلغاء صلاحيته.</li>
+                    <li><i class="fas fa-check"></i> للحصول على أفضل حماية، قم بتفعيل المصادقة الثنائية (2FA).</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+    <!-- =========================================
+    الملف الرئيسي لصفحات الأمان
+    ========================================= -->
+    <script src="/assets/js/security.js"></script>
+
+    <!-- =========================================
+    الملف المخصص للصفحة
+    ========================================= -->
+    <script src="/assets/js/security-registered-devices.js"></script>
+
+</body>
+</html>
