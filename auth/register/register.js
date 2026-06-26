@@ -1,7 +1,7 @@
 /**
  * بوابة الشركاء - منصة تيرا
  * محرك التحقق اللحظي الصارم وحظر الملاحة وتصفية اللغات (مرحلتين فقط)
- * + تم الدمج مع نظام Supabase Auth و OTP
+ * + تم دمج محرك قاعدة بيانات Supabase ونظام OTP
  */
 
 // محاكاة البيانات المستخدمة مسبقاً في نظام تيرا لمنع التكرار حياً
@@ -196,7 +196,7 @@ function bindRealtimeStage1() {
     if (mobileInput) {
         mobileInput.addEventListener("input", function() {
             let val = this.value.replace(/\D/g, '');
-            while (val.startsWith('0')) { val = val.substring(1); }
+            while (val.startsWith('0')) { val = val.substring(1); } 
             this.value = val;
             
             const isMobValid = val.length >= 8 && val.length <= 11;
@@ -259,7 +259,7 @@ function validateUsernameField() {
     updateRuleMarker('u-rule-len', rLen);
     updateRuleMarker('u-rule-start', rStart);
     updateRuleMarker('u-rule-char', rChar);
-    updateRuleMarker('u-rule-num', rNum || !isEmpty);
+    updateRuleMarker('u-rule-num', rNum || !isEmpty); 
     updateRuleMarker('u-rule-upper', rUpper || !isEmpty);
     updateRuleMarker('u-rule-lower', rLower || !isEmpty);
     updateRuleMarker('u-rule-space', rSpace);
@@ -473,17 +473,17 @@ function triggerStageVisualErrors(stage) {
     }
 }
 
-// التحديث الجديد: دالة الإرسال لترتبط بـ Supabase 
+// الدالة المحدثة للاتصال بقاعدة بيانات Supabase وتوجيه المستخدم بمسار مطلق
 async function submitForm() {
     if (validateStage1Logic() && validateStage2Logic()) {
         const submitBtn = document.getElementById("action-submit-btn");
         const originalText = submitBtn.innerHTML;
         
-        // 1. تغيير حالة الزر لمنع التكرار وإظهار حالة التحميل
+        // تعطيل الزر لتجنب النقر المتكرر وإظهار حالة التحميل
         submitBtn.innerHTML = "جاري إنشاء الحساب... ⏳";
         submitBtn.setAttribute("disabled", "true");
 
-        // 2. سحب البيانات النظيفة من الحقول
+        // سحب البيانات من الحقول
         const fullName = document.getElementById("fullname_ar").value.trim();
         const username = document.getElementById("username").value.trim();
         const email = document.getElementById("email").value.trim();
@@ -491,13 +491,14 @@ async function submitForm() {
         const password = document.getElementById("password").value;
 
         try {
-            // 3. إرسال طلب التسجيل إلى Supabase Auth
+            // إرسال طلب إنشاء الحساب إلى Supabase
+            // نفترض أنك قمت بتهيئة المتغير supabase مسبقاً في مشروعك
             const { data, error } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
-                        full_name: fullName,       // سيتم نقله لجدول المستثمرين/الشركاء تلقائياً
+                        full_name: fullName,       
                         username: username,
                         mobile_number: mobileNumber
                     }
@@ -505,26 +506,23 @@ async function submitForm() {
             });
 
             if (error) {
-                // معالجة أخطاء التسجيل (مثل: الإيميل مسجل مسبقاً في الخادم)
                 console.error("Supabase Error:", error.message);
                 alert("❌ حدث خطأ أثناء التسجيل: " + error.message);
                 
-                // إعادة الزر لحالته الطبيعية
                 submitBtn.innerHTML = originalText;
                 submitBtn.removeAttribute("disabled");
             } else {
-                // 4. نجاح العملية وحفظ البريد للتفعيل
                 alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني.");
                 
-                // حفظ الإيميل في ذاكرة المتصفح المؤقتة لاستخدامه في صفحة التحقق
+                // حفظ البريد الإلكتروني مؤقتاً لاستخدامه في صفحة التحقق
                 localStorage.setItem('pendingVerificationEmail', email);
                 
-                // توجيه الشريك لصفحة إدخال الرمز (تأكد أن المسار صحيح لملفك)
-                window.location.href = "../verify-otp.html"; 
+                // التوجيه بمسار مطلق إلى صفحة التحقق
+                window.location.assign("/auth/verify-otp.html"); 
             }
         } catch (err) {
             console.error("Connection Error:", err);
-            alert("❌ تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
+            alert("❌ تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت وتوافر مكتبة Supabase.");
             submitBtn.innerHTML = originalText;
             submitBtn.removeAttribute("disabled");
         }
