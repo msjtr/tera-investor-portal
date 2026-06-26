@@ -1,62 +1,548 @@
-```html
-<section class="security-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>سجل عمليات الدخول | Tera Investor Portal</title>
 
-    <div class="section-header">
+    <!-- الشعار والأيقونات -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-        <h1>سجل تسجيل الدخول</h1>
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-        <p>
-            استعراض جميع عمليات الدخول إلى حسابك.
-        </p>
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
 
+    <!-- ملف التنسيق الخاص بصفحات الأمان -->
+    <link rel="stylesheet" href="/assets/css/security.css" />
+
+    <style>
+        /* =========================================
+           تنسيقات إضافية للصفحة
+           ========================================= */
+        .login-history-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .login-history-filters .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .login-history-filters .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0A1B3F;
+            white-space: nowrap;
+        }
+        .login-history-filters .filter-group select,
+        .login-history-filters .filter-group input {
+            padding: 8px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            background: #fafcff;
+            color: #1e293b;
+            outline: none;
+            transition: 0.2s;
+            height: 40px;
+        }
+        .login-history-filters .filter-group select:focus,
+        .login-history-filters .filter-group input:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+        }
+        .login-history-filters .filter-group input[type="date"] {
+            width: 160px;
+            padding: 8px 12px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: #fafcff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat left 10px center;
+            background-size: 16px;
+        }
+        .login-history-filters .filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.6;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .btn-filter-reset {
+            padding: 8px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #64748b;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Tajawal', sans-serif;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-filter-reset:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        /* جدول سجل الدخول */
+        .login-history-table-wrapper {
+            overflow-x: auto;
+            margin: 0 -4px;
+            padding: 0 4px;
+        }
+        .login-history-table-wrapper::-webkit-scrollbar {
+            height: 5px;
+        }
+        .login-history-table-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .login-history-table-wrapper::-webkit-scrollbar-thumb {
+            background: #028090;
+            border-radius: 4px;
+        }
+
+        .login-history-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: right;
+        }
+        .login-history-table thead {
+            background: #f8fafc;
+        }
+        .login-history-table th {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+            font-size: 13px;
+        }
+        .login-history-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+            vertical-align: middle;
+            font-size: 13px;
+        }
+        .login-history-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        .login-history-table tbody tr:hover td {
+            background: #f8fafc;
+        }
+        .login-history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .login-history-table .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .login-history-table .status-badge.success {
+            background: #D1E7DD;
+            color: #0F5132;
+        }
+        .login-history-table .status-badge.success i {
+            color: #16a34a;
+        }
+        .login-history-table .status-badge.failed {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+        .login-history-table .status-badge.failed i {
+            color: #dc2626;
+        }
+        .login-history-table .status-badge.pending {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        .login-history-table .status-badge.pending i {
+            color: #f59e0b;
+        }
+
+        .login-history-table .device-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+        .login-history-table .device-tag i {
+            font-size: 12px;
+        }
+
+        .login-history-table .ip-address {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .login-history-table .location-text {
+            font-size: 13px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .login-history-table .location-text i {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* Pagination */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .pagination-wrapper .pagination-info {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .pagination-wrapper .pagination-info strong {
+            color: #0A1B3F;
+        }
+        .pagination-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .pagination-buttons .page-btn {
+            width: 38px;
+            height: 38px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #64748b;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Tajawal', sans-serif;
+        }
+        .pagination-buttons .page-btn:hover {
+            border-color: #028090;
+            color: #028090;
+        }
+        .pagination-buttons .page-btn.active {
+            background: #028090;
+            border-color: #028090;
+            color: #ffffff;
+        }
+        .pagination-buttons .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-buttons .page-btn:disabled:hover {
+            border-color: #e2e8f0;
+            color: #64748b;
+        }
+
+        /* تحسين التجاوب */
+        @media (max-width: 768px) {
+            .login-history-filters {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .login-history-filters .filter-group {
+                flex-wrap: wrap;
+            }
+            .login-history-filters .filter-group label {
+                min-width: 80px;
+            }
+            .login-history-filters .filter-group select,
+            .login-history-filters .filter-group input {
+                flex: 1;
+                min-width: 120px;
+            }
+            .login-history-filters .filter-group input[type="date"] {
+                width: auto;
+            }
+            .btn-filter-reset {
+                width: 100%;
+                justify-content: center;
+            }
+            .login-history-table {
+                min-width: 600px;
+                font-size: 13px;
+            }
+            .login-history-table th,
+            .login-history-table td {
+                padding: 10px 12px;
+            }
+            .pagination-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-history-table {
+                min-width: 500px;
+                font-size: 12px;
+            }
+            .login-history-table th,
+            .login-history-table td {
+                padding: 8px 10px;
+            }
+            .login-history-table .status-badge {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .login-history-table .ip-address {
+                font-size: 12px;
+            }
+            .login-history-filters .filter-group select,
+            .login-history-filters .filter-group input {
+                font-size: 12px;
+                height: 36px;
+                padding: 6px 10px;
+            }
+            .btn-filter-reset {
+                height: 36px;
+                font-size: 12px;
+            }
+            .pagination-buttons .page-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-history"></i> سجل عمليات الدخول</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
     </div>
 
-    <table class="login-history-table">
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
 
-        <thead>
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>سجل عمليات الدخول:</strong> يمكنك مراجعة جميع محاولات تسجيل الدخول إلى حسابك مع تفاصيل الجهاز والموقع والنتيجة. راقب أي نشاط مشبوه وأبلغ فريق الدعم فوراً.</span>
+        </div>
 
-            <tr>
-                <th>التاريخ والوقت</th>
-                <th>الجهاز</th>
-                <th>المتصفح</th>
-                <th>عنوان IP</th>
-                <th>الموقع</th>
-                <th>الحالة</th>
-            </tr>
+        <!-- =========================================
+        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
+        ========================================= -->
+        <ul class="progress-steps">
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">الأمان</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير كلمة المرور</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير البريد الإلكتروني</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير رقم الجوال</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">المصادقة الثنائية</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">الأجهزة المصرحة</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="active">
+                <span class="step-num">7</span>
+                <span class="step-label">سجل الدخول</span>
+            </li>
+        </ul>
 
-        </thead>
+        <!-- منطقة التنبيه -->
+        <div class="alert-box" id="formAlert" role="alert">
+            <i class="fas" id="alertIcon"></i>
+            <span id="alertMessage"></span>
+        </div>
 
-        <tbody>
+        <!-- =========================================
+        الفلاتر
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-filter"></i>
+                <h3>فلترة السجل</h3>
+                <span class="panel-badge" id="logCount">0 سجل</span>
+            </div>
 
-            <tr>
-                <td>09-06-2026 10:30 AM</td>
-                <td>Windows PC</td>
-                <td>Chrome</td>
-                <td>192.168.1.1</td>
-                <td>تبوك - السعودية</td>
-                <td>
-                    <span class="status success">
-                        ناجحة
-                    </span>
-                </td>
-            </tr>
+            <div class="login-history-filters">
+                <div class="filter-group">
+                    <label for="filterStatus">الحالة</label>
+                    <select id="filterStatus">
+                        <option value="all">الكل</option>
+                        <option value="success">ناجحة</option>
+                        <option value="failed">فاشلة</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterDateFrom">من تاريخ</label>
+                    <input type="date" id="filterDateFrom" />
+                </div>
+                <div class="filter-group">
+                    <label for="filterDateTo">إلى تاريخ</label>
+                    <input type="date" id="filterDateTo" />
+                </div>
+                <button class="btn-filter-reset" id="resetFiltersBtn">
+                    <i class="fas fa-undo"></i> إعادة ضبط
+                </button>
+            </div>
+        </div>
 
-            <tr>
-                <td>08-06-2026 08:15 PM</td>
-                <td>iPhone</td>
-                <td>Safari</td>
-                <td>192.168.1.2</td>
-                <td>تبوك - السعودية</td>
-                <td>
-                    <span class="status success">
-                        ناجحة
-                    </span>
-                </td>
-            </tr>
+        <!-- =========================================
+        جدول سجل الدخول
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-list"></i>
+                <h3>سجل الدخول</h3>
+                <span class="panel-badge" id="entriesCount">0</span>
+            </div>
 
-        </tbody>
+            <div class="login-history-table-wrapper">
+                <table class="login-history-table" id="loginHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>التاريخ والوقت</th>
+                            <th>عنوان IP</th>
+                            <th>الجهاز والمتصفح</th>
+                            <th>الموقع</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loginHistoryBody">
+                        <!-- يتم إدراج البيانات عبر JavaScript -->
+                    </tbody>
+                </table>
+            </div>
 
-    </table>
+            <!-- الترقيم -->
+            <div class="pagination-wrapper">
+                <div class="pagination-info">
+                    عرض <strong id="showingStart">1</strong> – <strong id="showingEnd">10</strong> من <strong id="totalEntries">0</strong> سجل
+                </div>
+                <div class="pagination-buttons" id="paginationButtons">
+                    <button class="page-btn" id="prevPage" disabled><i class="fas fa-chevron-right"></i></button>
+                    <button class="page-btn active" data-page="1">1</button>
+                    <button class="page-btn" id="nextPage"><i class="fas fa-chevron-left"></i></button>
+                </div>
+            </div>
+        </div>
 
-</section>
-```
+        <!-- =========================================
+        نصائح أمنية
+        ========================================= -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <i class="fas fa-lightbulb"></i>
+                <h3>نصائح أمنية</h3>
+                <span class="panel-badge">توصيات</span>
+            </div>
+
+            <div class="security-tips" style="margin-top:0;">
+                <ul>
+                    <li><i class="fas fa-check"></i> راجع سجل الدخول بشكل دوري للتأكد من عدم وجود محاولات دخول غير معروفة.</li>
+                    <li><i class="fas fa-check"></i> إذا لاحظت محاولة دخول فاشلة أو من موقع غير معروف، قم بتغيير كلمة المرور فوراً.</li>
+                    <li><i class="fas fa-check"></i> استخدم المصادقة الثنائية (2FA) لحماية حسابك بشكل إضافي.</li>
+                    <li><i class="fas fa-check"></i> تأكد من أن جميع الأجهزة المصرحة هي أجهزتك الخاصة.</li>
+                    <li><i class="fas fa-check"></i> في حال الاشتباه باختراق، تواصل مع فريق الدعم الفني فوراً.</li>
+                </ul>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+    <!-- =========================================
+    الملف الرئيسي لصفحات الأمان
+    ========================================= -->
+    <script src="/assets/js/security.js"></script>
+
+    <!-- =========================================
+    الملف المخصص للصفحة
+    ========================================= -->
+    <script src="/assets/js/security-login-history.js"></script>
+
+</body>
+</html>
