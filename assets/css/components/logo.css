@@ -1,1 +1,76 @@
+/* ============================================================
+   TERA INVESTOR PORTAL - LOGO COMPONENT STYLES
+   ============================================================ */
 
+/* 1. حاوية الشعار (Logo Container)
+   تعرض أسفل الهيدر مباشرة بدون أي قيود أو تأثيرات 
+*/
+.page-logo-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 30px 40px 10px 40px;
+    background-color: transparent;
+    
+    /* منع تام لأي حدود أو ظلال حسب وثيقة المعايير */
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* 2. صورة الشعار (Logo Image) 
+   محسنة للشاشات عالية الدقة (Retina) مع المحافظة على الأبعاد
+*/
+.page-logo, 
+.logo-img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    
+    /* المحافظة على الأبعاد الأصلية وعدم تشويه الصورة */
+    object-fit: contain;
+    
+    /* تحسينات العرض لأجهزة iPhone / iPad وشاشات Retina */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    
+    /* منع أي تأثيرات بصرية أو فلاتر خارجية */
+    filter: none !important;
+    border: none !important;
+    outline: none !important;
+}
+
+/* تحديد الحجم الافتراضي للشعار في الصفحات (يمكن تعديله حسب أبعاد ملف الـ SVG الفعلي) */
+.page-logo-container .page-logo,
+.page-logo-container .logo-img {
+    width: 160px; 
+}
+
+/* الشعار داخل الهيدر (إذا تم استخدامه كأيقونة صغيرة في أماكن أخرى) */
+.header-logo .logo-img {
+    height: 40px;
+    width: auto;
+}
+
+/* ============================================================
+   التجاوب مع شاشات الجوال (Mobile Responsiveness)
+   ============================================================ */
+@media (max-width: 768px) {
+    .page-logo-container {
+        /* تقليل المسافات الجانبية والعلوية لتناسب شاشات الجوال */
+        padding: 20px 20px 5px 20px;
+    }
+
+    .page-logo-container .page-logo,
+    .page-logo-container .logo-img {
+        /* تصغير الشعار نسبياً في الجوال */
+        width: 130px;
+    }
+    
+    .header-logo .logo-img {
+        height: 32px;
+    }
+}
