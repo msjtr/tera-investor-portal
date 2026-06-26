@@ -1,8 +1,19 @@
 /**
  * بوابة الشركاء - منصة تيرا
  * محرك التحقق اللحظي الصارم وحظر الملاحة وتصفية اللغات (مرحلتين فقط)
- * + تم دمج محرك قاعدة بيانات Supabase ونظام OTP
+ * + تم دمج محرك قاعدة بيانات Supabase ونظام OTP وإصلاح الاتصال
  */
+
+// =====================================================================
+// ⚠️ إعداد قاعدة البيانات (استبدل هذه القيم بمفاتيح مشروعك الفعلي)
+// =====================================================================
+const SUPABASE_URL = 'رابط_المشروع_هنا';
+const SUPABASE_ANON_KEY = 'مفتاح_anon_هنا';
+
+let teraSupabase = null;
+if (window.supabase) {
+    teraSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
 
 // محاكاة البيانات المستخدمة مسبقاً في نظام تيرا لمنع التكرار حياً
 const mockedUsedData = {
@@ -147,7 +158,8 @@ function bindRealtimeStage1() {
 
     if (nameArInput) {
         nameArInput.addEventListener("input", function() {
-            this.value = this.value.replace(/[a-zA-Z0-9~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/g, '');
+            // [إصلاح الفلتر] مسح أي حرف ليس عربياً أو مسافة فوراً
+            this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
             validateArabicName();
             executeGlobalStageValidator();
         });
@@ -473,17 +485,21 @@ function triggerStageVisualErrors(stage) {
     }
 }
 
-// الدالة المحدثة للاتصال بقاعدة بيانات Supabase وتوجيه المستخدم بمسار مطلق
+// الدالة المحدثة للاتصال بقاعدة بيانات Supabase وتوجيه المستخدم
 async function submitForm() {
     if (validateStage1Logic() && validateStage2Logic()) {
         const submitBtn = document.getElementById("action-submit-btn");
         const originalText = submitBtn.innerHTML;
         
-        // تعطيل الزر لتجنب النقر المتكرر وإظهار حالة التحميل
+        // التحقق من تحميل مكتبة Supabase
+        if (!teraSupabase) {
+            alert("❌ مكتبة قاعدة البيانات غير متصلة. تأكد من إدراج رابط الـ CDN ومفاتيح المشروع.");
+            return;
+        }
+
         submitBtn.innerHTML = "جاري إنشاء الحساب... ⏳";
         submitBtn.setAttribute("disabled", "true");
 
-        // سحب البيانات من الحقول
         const fullName = document.getElementById("fullname_ar").value.trim();
         const username = document.getElementById("username").value.trim();
         const email = document.getElementById("email").value.trim();
@@ -491,9 +507,7 @@ async function submitForm() {
         const password = document.getElementById("password").value;
 
         try {
-            // إرسال طلب إنشاء الحساب إلى Supabase
-            // نفترض أنك قمت بتهيئة المتغير supabase مسبقاً في مشروعك
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await teraSupabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
@@ -508,21 +522,16 @@ async function submitForm() {
             if (error) {
                 console.error("Supabase Error:", error.message);
                 alert("❌ حدث خطأ أثناء التسجيل: " + error.message);
-                
                 submitBtn.innerHTML = originalText;
                 submitBtn.removeAttribute("disabled");
             } else {
                 alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني.");
-                
-                // حفظ البريد الإلكتروني مؤقتاً لاستخدامه في صفحة التحقق
                 localStorage.setItem('pendingVerificationEmail', email);
-                
-                // التوجيه بمسار مطلق إلى صفحة التحقق
                 window.location.assign("/auth/verify-otp.html"); 
             }
         } catch (err) {
             console.error("Connection Error:", err);
-            alert("❌ تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت وتوافر مكتبة Supabase.");
+            alert("❌ تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
             submitBtn.innerHTML = originalText;
             submitBtn.removeAttribute("disabled");
         }
