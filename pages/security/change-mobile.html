@@ -1,19 +1,281 @@
-<section class="security-section">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>تغيير رقم الجوال | Tera Investor Portal</title>
 
-    <h1>تغيير رقم الجوال</h1>
+    <!-- الشعار والأيقونات -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <form>
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-        <label>رقم الجوال الحالي</label>
-        <input type="text" disabled>
+    <!-- الملفات المشتركة -->
+    <link rel="stylesheet" href="/assets/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/app.css" />
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-        <label>رقم الجوال الجديد</label>
-        <input type="text">
+    <!-- ملف التنسيق الخاص بصفحات الأمان -->
+    <link rel="stylesheet" href="/assets/css/security.css" />
 
-        <button type="submit">
-            تحديث رقم الجوال
-        </button>
+    <style>
+        /* =========================================
+           تنسيقات إضافية للصفحة
+           ========================================= */
+        .mobile-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mobile-hint i {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .mobile-hint.success {
+            color: #16a34a;
+        }
+        .mobile-hint.success i {
+            color: #16a34a;
+        }
+        .mobile-hint.error {
+            color: #dc2626;
+        }
+        .mobile-hint.error i {
+            color: #dc2626;
+        }
 
-    </form>
+        /* تنسيق حقل مفتاح الدولة ورقم الجوال في صف واحد */
+        .mobile-input-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 12px;
+        }
+        .mobile-input-group .form-group {
+            margin-bottom: 0;
+        }
 
-</section>
+        @media (max-width: 576px) {
+            .mobile-input-group {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+    الهيدر العلوي
+    ========================================= -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+        </div>
+        <div class="client-info">
+            <h5>محمد عبدالله الشمري</h5>
+            <div class="avatar">م</div>
+        </div>
+    </header>
+
+    <!-- =========================================
+    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
+    ========================================= -->
+    <div class="page-subheader no-print">
+        <h1><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</h1>
+        <a href="/pages/dashboard/index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+        </a>
+    </div>
+
+    <!-- =========================================
+    المحتوى الرئيسي
+    ========================================= -->
+    <main class="content-container">
+
+        <div class="page-desc">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>تغيير رقم الجوال بشكل آمن:</strong> يرجى إدخال رقم الجوال الجديد ثم تأكيده. سيتم إرسال رمز تحقق إلى رقم الجوال الجديد لإثبات الملكية.</span>
+        </div>
+
+        <!-- =========================================
+        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
+        ========================================= -->
+        <ul class="progress-steps">
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">الأمان</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير كلمة المرور</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="completed">
+                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
+                <span class="step-label">تغيير البريد الإلكتروني</span>
+            </li>
+            <li class="step-line completed"></li>
+            <li class="active">
+                <span class="step-num">4</span>
+                <span class="step-label">تغيير رقم الجوال</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">5</span>
+                <span class="step-label">المصادقة الثنائية</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">6</span>
+                <span class="step-label">الأجهزة المصرحة</span>
+            </li>
+            <li class="step-line"></li>
+            <li>
+                <span class="step-num">7</span>
+                <span class="step-label">سجل الدخول</span>
+            </li>
+        </ul>
+
+        <!-- منطقة التنبيه -->
+        <div class="alert-box" id="formAlert" role="alert">
+            <i class="fas" id="alertIcon"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <form id="changeMobileForm" novalidate>
+
+            <!-- =========================================
+            القسم الرئيسي: تغيير رقم الجوال
+            ========================================= -->
+            <div class="panel-card">
+                <div class="panel-header">
+                    <i class="fas fa-phone"></i>
+                    <h3>تغيير رقم الجوال</h3>
+                    <span class="panel-badge">أمان</span>
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- رقم الجوال الحالي -->
+                    <div class="form-group full-width">
+                        <label class="form-label">رقم الجوال الحالي <span class="req">*</span></label>
+                        <div class="mobile-input-group">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">مفتاح الدولة</label>
+                                <select class="form-control" id="currentCountryCode" disabled>
+                                    <option value="966">🇸🇦 +966</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
+                                <input type="tel" class="form-control" id="currentMobile" value="551234567" readonly disabled>
+                            </div>
+                        </div>
+                        <span class="format-hint">رقم الجوال الحالي المسجل في حسابك.</span>
+                    </div>
+
+                    <!-- مفتاح الدولة للجوال الجديد -->
+                    <div class="form-group">
+                        <label class="form-label">الدولة / مفتاح الاتصال <span class="req">*</span></label>
+                        <select class="form-control" id="newCountryCode" required>
+                            <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
+                            <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
+                            <option value="965">🇰🇼 دولة الكويت (+965)</option>
+                            <option value="974">🇶🇦 دولة قطر (+974)</option>
+                            <option value="973">🇧🇭 مملكة البحرين (+973)</option>
+                            <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
+                            <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
+                            <option value="other">🇸🇦 أخرى</option>
+                        </select>
+                    </div>
+
+                    <!-- رقم الجوال الجديد -->
+                    <div class="form-group">
+                        <label class="form-label">رقم الجوال الجديد <span class="req">*</span></label>
+                        <input type="tel" class="form-control" id="newMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <span class="mobile-hint" id="newMobileHint">
+                            <i class="fas fa-info-circle"></i>
+                            أدخل رقم الجوال بدون مفتاح الدولة.
+                        </span>
+                    </div>
+
+                    <!-- تأكيد رقم الجوال الجديد -->
+                    <div class="form-group full-width">
+                        <label class="form-label">تأكيد رقم الجوال الجديد <span class="req">*</span></label>
+                        <input type="tel" class="form-control" id="confirmMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <span class="mobile-hint" id="confirmMobileHint">
+                            <i class="fas fa-info-circle"></i>
+                            يجب أن يتطابق مع رقم الجوال الجديد.
+                        </span>
+                    </div>
+
+                </div><!-- /form-grid -->
+
+                <!-- نصائح أمنية -->
+                <div class="security-tips">
+                    <div class="tip-title">
+                        <i class="fas fa-lightbulb"></i>
+                        نصائح أمنية
+                    </div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> استخدم رقم جوال يمكنك الوصول إليه دائماً.</li>
+                        <li><i class="fas fa-check"></i> تأكد من صحة الرقم الجديد قبل التحديث.</li>
+                        <li><i class="fas fa-check"></i> سيتم إرسال رمز تحقق إلى الرقم الجديد لتأكيد الملكية.</li>
+                        <li><i class="fas fa-check"></i> احتفظ بالرقم القديم لحين تأكيد التغيير.</li>
+                    </ul>
+                </div>
+
+                <!-- =========================================
+                رسالة التحقق (OTP Notice)
+                ========================================= -->
+                <div class="otp-notice">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>
+                        <strong>عزيزي الشريك،</strong> سوف يصل لكم رمز تحقق لتغيير رقم الجوال على الرقم الجديد المسجل.
+                    </span>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-save"></i> تغيير رقم الجوال
+                </button>
+
+            </div><!-- /panel-card -->
+
+        </form>
+
+    </main>
+
+    <!-- =========================================
+    التذييل
+    ========================================= -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
+    <!-- =========================================
+    ربط الملفات المشتركة
+    ========================================= -->
+    <script src="/assets/js/core.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+    <!-- =========================================
+    الملف الرئيسي لصفحات الأمان
+    ========================================= -->
+    <script src="/assets/js/security.js"></script>
+
+    <!-- =========================================
+    الملف المخصص للصفحة
+    ========================================= -->
+    <script src="/assets/js/security-change-mobile.js"></script>
+
+</body>
+</html>
