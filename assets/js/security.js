@@ -1,103 +1,113 @@
-/* ================================================= */
-/* TERA SECURITY MODULE (security.js) */
-/* ================================================= */
-'use strict';
+/* ============================================================
+   TERA INVESTOR PORTAL - SECURITY LOGIC
+   ============================================================ */
 
-const SecurityManager = {
-    init() {
-        console.log('Security Module Initialized');
-        this.cacheDOM();
-        this.bindEvents();
-    },
+document.addEventListener('DOMContentLoaded', () => {
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const submitBtn = document.getElementById('submitBtn');
+    const matchError = document.getElementById('passwordMatchError');
 
-    cacheDOM() {
-        // نماذج تغيير البيانات الحساسة
-        this.passwordForm = document.getElementById('changePasswordForm');
-        this.emailForm = document.getElementById('changeEmailForm');
-        this.mobileForm = document.getElementById('changeMobileForm');
-    },
+    // 1. منطق إظهار/إخفاء كلمة المرور
+    document.querySelectorAll('.btn-toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const inputElement = document.getElementById(targetId);
+            const iconElement = this.querySelector('i');
 
-    bindEvents() {
-        // 1. معالجة نماذج الأمان (تغيير كلمة المرور، البريد، الجوال)
-        const forms = [
-            { el: this.passwordForm, msg: 'تم تغيير كلمة المرور بنجاح. يرجى استخدام كلمة المرور الجديدة في المرة القادمة.' },
-            { el: this.emailForm, msg: 'تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد.' },
-            { el: this.mobileForm, msg: 'تم تحديث رقم الجوال بنجاح.' }
-        ];
-
-        forms.forEach(formObj => {
-            if (formObj.el) {
-                formObj.el.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleSecurityForm(formObj.el, formObj.msg);
-                });
+            if (inputElement.type === 'password') {
+                inputElement.type = 'text';
+                iconElement.setAttribute('data-lucide', 'eye-off');
+            } else {
+                inputElement.type = 'password';
+                iconElement.setAttribute('data-lucide', 'eye');
             }
+            lucide.createIcons();
         });
+    });
 
-        // 2. معالجة مفاتيح التبديل (التحقق الثنائي 2FA) عبر Event Delegation
-        document.addEventListener('change', (e) => {
-            if (e.target.matches('.switch-control input[type="checkbox"]')) {
-                this.handleTwoFactorToggle(e.target);
-            }
-        });
-
-        // 3. معالجة إزالة الأجهزة المتصلة (تسجيل الخروج من جهاز)
-        document.addEventListener('click', (e) => {
-            const revokeBtn = e.target.closest('.btn-revoke-device');
-            if (revokeBtn) {
-                e.preventDefault();
-                this.handleRevokeDevice(revokeBtn);
-            }
-        });
-    },
-
-    // دالة موحدة لمعالجة حفظ النماذج مع حالة التحميل
-    handleSecurityForm(form, successMessage) {
-        // تحقق إضافي خاص بكلمة المرور (تطابق كلمتي المرور)
-        const newPass = form.querySelector('input[name="newPassword"]');
-        const confirmPass = form.querySelector('input[name="confirmPassword"]');
+    // 2. التحقق المباشر من الشروط
+    const validatePassword = () => {
+        if (!newPasswordInput) return false;
         
-        if (newPass && confirmPass && newPass.value !== confirmPass.value) {
-            alert('كلمات المرور الجديدة غير متطابقة. يرجى التأكد والمحاولة مجدداً.');
-            return;
+        const val = newPasswordInput.value;
+        const rules = {
+            length: val.length >= 8,
+            upper: /[A-Z]/.test(val),
+            number: /[0-9]/.test(val),
+            special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(val)
+        };
+
+        updateRequirementItem('req-length', rules.length);
+        updateRequirementItem('req-upper', rules.upper);
+        updateRequirementItem('req-number', rules.number);
+        updateRequirementItem('req-special', rules.special);
+
+        return Object.values(rules).every(Boolean);
+    };
+
+    const updateRequirementItem = (elementId, isValid) => {
+        const item = document.getElementById(elementId);
+        if (!item) return;
+        
+        const icon = item.querySelector('i');
+        
+        if (isValid) {
+            item.classList.remove('text-muted');
+            item.classList.add('text-success');
+            icon.setAttribute('data-lucide', 'check-circle');
+            icon.style.color = '#16A34A';
+        } else {
+            item.classList.add('text-muted');
+            item.classList.remove('text-success');
+            icon.setAttribute('data-lucide', 'x-circle');
+            icon.style.color = '#DC2626';
         }
+        lucide.createIcons();
+    };
 
-        const submitBtn = form.querySelector('button[type="submit"]');
-        let originalText = '';
-
-        if (submitBtn) {
-            originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-left: 8px;"></i> جاري التحديث...';
-            submitBtn.style.opacity = '0.7';
+    // 3. التحقق من تطابق كلمتي المرور
+    const checkMatch = () => {
+        if (!confirmPasswordInput || !newPasswordInput || !matchError) return false;
+        
+        if (confirmPasswordInput.value.length > 0) {
+            if (newPasswordInput.value !== confirmPasswordInput.value) {
+                matchError.style.display = 'block';
+                return false;
+            } else {
+                matchError.style.display = 'none';
+                return true;
+            }
         }
+        matchError.style.display = 'none';
+        return false;
+    };
 
-        // محاكاة الاتصال بالخادم (API Call)
-        setTimeout(() => {
-            alert(successMessage);
-            
+    // 4. إدارة حالة زر الإرسال
+    const checkFormValidity = () => {
+        if (!submitBtn) return;
+        
+        const isCurrentFilled = currentPasswordInput && currentPasswordInput.value.length > 0;
+        const isNewValid = validatePassword();
+        const isMatch = checkMatch();
+
+        submitBtn.disabled = !(isCurrentFilled && isNewValid && isMatch);
+    };
+
+    // ربط الأحداث
+    if (currentPasswordInput) currentPasswordInput.addEventListener('input', checkFormValidity);
+    if (newPasswordInput) newPasswordInput.addEventListener('input', checkFormValidity);
+    if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', checkFormValidity);
+
+    // 5. محاكاة الإرسال
+    const form = document.getElementById('changePasswordForm');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('تم تحديث كلمة المرور بنجاح.');
             form.reset();
-            
-            // إعادة الزر لحالته الطبيعية
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-                submitBtn.style.opacity = '1';
-            }
-        }, 1500);
-    },
-
-    // معالجة تفعيل وإلغاء التحقق الثنائي (2FA)
-    handleTwoFactorToggle(checkbox) {
-        const isEnabled = checkbox.checked;
-        const statusText = isEnabled ? 'تفعيل' : 'إلغاء تفعيل';
-        
-        // تعطيل المؤشر مؤقتاً لمنع النقر المتعدد أثناء المعالجة
-        checkbox.disabled = true;
-
-        // محاكاة طلب التحديث في الخلفية
-        setTimeout(() => {
-            alert(`تم ${statusText} المصادقة الثنائية (2FA) بنجاح.`);
-            checkbox.disabled = false;
-        }, 800);
-    },
+            checkFormValidity();
+        });
+    }
+}); // هذا هو القوس الذي كان مفقوداً ويسبب الخطأ
