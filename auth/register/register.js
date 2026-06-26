@@ -1,19 +1,8 @@
 /**
  * بوابة الشركاء - منصة تيرا
  * محرك التحقق اللحظي الصارم وحظر الملاحة وتصفية اللغات (مرحلتين فقط)
- * + تم دمج محرك قاعدة بيانات Supabase ونظام OTP وإصلاح الاتصال
+ * + تم دمج محرك قاعدة بيانات Supabase ونظام OTP وإصلاح التوقيت
  */
-
-// =====================================================================
-// ⚠️ إعداد قاعدة البيانات (استبدل هذه القيم بمفاتيح مشروعك الفعلي)
-// =====================================================================
-const SUPABASE_URL = 'رابط_المشروع_هنا';
-const SUPABASE_ANON_KEY = 'مفتاح_anon_هنا';
-
-let teraSupabase = null;
-if (window.supabase) {
-    teraSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
 
 // محاكاة البيانات المستخدمة مسبقاً في نظام تيرا لمنع التكرار حياً
 const mockedUsedData = {
@@ -158,7 +147,6 @@ function bindRealtimeStage1() {
 
     if (nameArInput) {
         nameArInput.addEventListener("input", function() {
-            // [إصلاح الفلتر] مسح أي حرف ليس عربياً أو مسافة فوراً
             this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
             validateArabicName();
             executeGlobalStageValidator();
@@ -485,15 +473,31 @@ function triggerStageVisualErrors(stage) {
     }
 }
 
-// الدالة المحدثة للاتصال بقاعدة بيانات Supabase وتوجيه المستخدم
+// الدالة المحدثة: يتم إنشاء الاتصال بـ Supabase فقط عند النقر لضمان تحميل المكتبة
 async function submitForm() {
     if (validateStage1Logic() && validateStage2Logic()) {
         const submitBtn = document.getElementById("action-submit-btn");
         const originalText = submitBtn.innerHTML;
+
+        // التحقق من وجود المكتبة وتجهيز الاتصال
+        if (!window.supabase) {
+            alert("❌ مكتبة قاعدة البيانات لم يتم تحميلها بعد. تأكد من وجود رابط الـ CDN في ملف HTML.");
+            return;
+        }
+
+        // =====================================================================
+        // ⚠️ ضع مفاتيح مشروعك هنا مباشرة للاتصال الناجح
+        // =====================================================================
+        const PROJECT_URL = 'رابط_المشروع_هنا';
+        const ANON_KEY = 'مفتاح_anon_هنا';
         
-        // التحقق من تحميل مكتبة Supabase
-        if (!teraSupabase) {
-            alert("❌ مكتبة قاعدة البيانات غير متصلة. تأكد من إدراج رابط الـ CDN ومفاتيح المشروع.");
+        let client;
+        if (typeof window.supabase.createClient === 'function') {
+            client = window.supabase.createClient(PROJECT_URL, ANON_KEY);
+        } else if (window.supabase.auth) {
+            client = window.supabase;
+        } else {
+            alert("❌ خطأ غير معروف في مكتبة قاعدة البيانات.");
             return;
         }
 
@@ -507,7 +511,8 @@ async function submitForm() {
         const password = document.getElementById("password").value;
 
         try {
-            const { data, error } = await teraSupabase.auth.signUp({
+            // إرسال البيانات
+            const { data, error } = await client.auth.signUp({
                 email: email,
                 password: password,
                 options: {
