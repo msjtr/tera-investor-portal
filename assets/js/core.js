@@ -8,8 +8,25 @@
  * 2. إضافة قفل (Flag) يمنع تكرار تكدس الأحداث في الذاكرة.
  * 3. حفظ حالة القائمة (مفتوحة/مغلقة) في localStorage.
  * 4. تحديث هندسة الأزرار باستخدام preventDefault و return لرفع كفاءة المعالجة.
+ * 5. تهيئة الاتصال المركزي بقاعدة بيانات Supabase لجميع صفحات المنصة.
  * ============================================================
  */
+
+// ============================================================
+// 0. تهيئة قاعدة بيانات Supabase (مركزياً لجميع الواجهات)
+// ============================================================
+// ⚠️ هام: قم بتغيير هذه القيم بمفاتيح مشروعك الحقيقية من لوحة تحكم Supabase
+const SUPABASE_URL = 'https://your-project-id.supabase.co'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+
+// التحقق من وجود مكتبة Supabase (من الـ CDN) ثم إنشاء الاتصال
+if (window.supabase) {
+    // استبدال الكائن المرجعي بعميل الاتصال لتعمل عليه باقي الملفات (مثل register.js) مباشرة
+    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ [core.js] تم إنشاء الاتصال المركزي بقاعدة بيانات Supabase بنجاح.');
+} else {
+    console.warn('⚠️ [core.js] تعذر العثور على مكتبة Supabase. تأكد من وضع رابط الـ CDN في ملف الـ HTML.');
+}
 
 (function() {
     'use strict';
