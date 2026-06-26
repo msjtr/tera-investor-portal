@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>المعلومات الشخصية | Tera Investor Portal</title>
 
-    <!-- الشعار والأيقونات -->
+    <!-- الأيقونات -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- الملفات المشتركة -->
+    <!-- ملفات CSS المشتركة -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
@@ -21,48 +21,51 @@
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
     <style>
-        /* =========================================
-               التنسيقات الأساسية – نفس الهوية والألوان
-               ========================================= */
+        /* ============================================================
+           التنسيقات العامة – متوافقة مع هوية Tera
+           ============================================================ */
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
+        html,
         body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
             background-color: #f1f5f9;
             font-family: 'Tajawal', sans-serif;
-            margin: 0;
             color: #1e293b;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-            overflow-x: hidden;
-            width: 100%;
         }
 
-        /* =========================================
-               الهيدر العلوي
-               ========================================= */
+        /* ============================================================
+           الهيدر العلوي (بدون شعار)
+           ============================================================ */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 12px 40px;
+            padding: 10px 40px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
             box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+            min-height: 60px;
         }
-        .focused-header .logo img {
-            height: 38px;
-        }
+
         .focused-header .client-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
+
         .focused-header .client-info h5 {
             margin: 0;
             font-family: 'Cairo', sans-serif;
@@ -70,6 +73,7 @@
             color: #0A1B3F;
             font-weight: 800;
         }
+
         .focused-header .client-info .avatar {
             width: 38px;
             height: 38px;
@@ -82,21 +86,47 @@
             font-weight: 800;
             font-size: 16px;
             border: 2px solid #028090;
+            flex-shrink: 0;
         }
 
-        /* =========================================
-               عنوان الصفحة
-               ========================================= */
+        /* ============================================================
+           الشعار أسفل الهيدر (Full Width)
+           ============================================================ */
+        .brand-banner {
+            width: 100%;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .brand-banner img {
+            height: 48px;
+            width: auto;
+            display: block;
+            filter: none;
+            opacity: 1;
+            image-rendering: auto;
+            max-width: 100%;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           عنوان الصفحة
+           ============================================================ */
         .page-subheader {
             background: #0A1B3F;
-            padding: 20px 40px;
-            margin-top: 16px;
+            padding: 18px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 16px;
         }
+
         .page-subheader h1 {
             margin: 0;
             color: #ffffff;
@@ -107,9 +137,11 @@
             align-items: center;
             gap: 10px;
         }
+
         .page-subheader h1 i {
             color: #5eead4;
         }
+
         .btn-back {
             background: rgba(255, 255, 255, 0.10);
             color: #ffffff;
@@ -124,18 +156,19 @@
             gap: 8px;
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
+
         .btn-back:hover {
             background: #028090;
             border-color: #028090;
         }
 
-        /* =========================================
-               الحاوية الرئيسية
-               ========================================= */
+        /* ============================================================
+           المحتوى الرئيسي
+           ============================================================ */
         .content-container {
             max-width: 1060px;
             margin: 0 auto 40px auto;
-            padding: 28px 24px 0 24px;
+            padding: 24px 24px 0 24px;
             flex: 1;
             width: 100%;
         }
@@ -148,45 +181,44 @@
             padding: 16px 22px;
             border-radius: 12px;
             border-right: 5px solid #028090;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
             display: flex;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
         }
+
         .page-desc i {
             color: #028090;
             font-size: 20px;
         }
+
         .page-desc strong {
             color: #0A1B3F;
         }
 
-        /* =========================================
-               البطاقات
-               ========================================= */
+        /* ============================================================
+           البطاقات
+           ============================================================ */
         .panel-card {
             background: #ffffff;
             border-radius: 18px;
             border: 1px solid #e9edf2;
-            padding: 28px 32px 32px 32px;
-            margin-bottom: 28px;
+            padding: 24px 28px 28px 28px;
+            margin-bottom: 24px;
             box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
-            transition: box-shadow 0.2s;
-        }
-        .panel-card:hover {
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
         }
 
         .panel-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #f1f5f9;
         }
+
         .panel-header i {
             color: #028090;
             font-size: 22px;
@@ -197,29 +229,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
+
         .panel-header h3 {
             margin: 0;
             font-size: 18px;
             color: #0A1B3F;
             font-family: 'Cairo', sans-serif;
             font-weight: 800;
-            letter-spacing: -0.3px;
         }
 
-        /* =========================================
-               شبكة النموذج – ضبط حجم المربعات
-               ========================================= */
+        /* ============================================================
+           شبكة النموذج
+           ============================================================ */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px 30px;
+            gap: 20px 28px;
         }
+
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
+
         .form-group.full-width {
             grid-column: 1 / -1;
         }
@@ -232,12 +267,12 @@
             align-items: center;
             gap: 4px;
         }
+
         .form-label .req {
             color: #dc2626;
             font-size: 16px;
         }
 
-        /* ضبط حجم المربعات بشكل موحد */
         .form-control {
             width: 100%;
             padding: 12px 16px;
@@ -252,23 +287,36 @@
             height: 48px;
             line-height: 1.5;
         }
+
         .form-control:focus {
             border-color: #028090;
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
             background: #ffffff;
         }
+
         .form-control::placeholder {
             color: #94a3b8;
         }
+
         select.form-control {
             appearance: auto;
             cursor: pointer;
             height: 48px;
         }
 
-        /* =========================================
-               صناديق التلميحات
-               ========================================= */
+        /* حقل "أخرى" المخفي */
+        .other-field {
+            display: none;
+            margin-top: 6px;
+        }
+
+        .other-field.show {
+            display: block;
+        }
+
+        /* ============================================================
+           صناديق التلميحات
+           ============================================================ */
         .input-hint-box {
             background: #f8fafc;
             border: 1px dashed #d1d9e6;
@@ -276,12 +324,14 @@
             border-radius: 10px;
             margin-top: 4px;
         }
+
         .input-hint-box p {
             margin: 0 0 4px 0;
             font-size: 12px;
             font-weight: 700;
             color: #0A1B3F;
         }
+
         .input-hint-box ul {
             margin: 0;
             padding-right: 20px;
@@ -289,6 +339,7 @@
             color: #64748b;
             line-height: 1.7;
         }
+
         .input-hint-box ul li {
             list-style-type: disc;
         }
@@ -300,20 +351,21 @@
             padding: 4px 0;
         }
 
-        /* =========================================
-               مجموعة الراديو (الجنس) – تنسيق محسّن ومرتب
-               ========================================= */
+        /* ============================================================
+           مجموعة الراديو
+           ============================================================ */
         .radio-group {
             display: flex;
-            gap: 40px;
+            gap: 32px;
             align-items: center;
             padding: 8px 20px;
             border: 1px solid #d1d9e6;
             border-radius: 10px;
             background: #fafcff;
-            height: 48px;
-            flex-wrap: nowrap;
+            min-height: 48px;
+            flex-wrap: wrap;
         }
+
         .radio-label {
             display: flex;
             align-items: center;
@@ -324,6 +376,7 @@
             margin: 0;
             color: #1e293b;
         }
+
         .radio-label input[type="radio"] {
             width: 20px;
             height: 20px;
@@ -333,13 +386,13 @@
             flex-shrink: 0;
         }
 
-        /* =========================================
-               منطقة رفع الملفات
-               ========================================= */
+        /* ============================================================
+           منطقة رفع الملفات
+           ============================================================ */
         .upload-zone {
             border: 2px dashed #d1d9e6;
             border-radius: 12px;
-            padding: 20px 16px;
+            padding: 18px 16px;
             text-align: center;
             background: #fafcff;
             cursor: pointer;
@@ -347,56 +400,63 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
-            min-height: 110px;
+            gap: 4px;
+            min-height: 100px;
             justify-content: center;
         }
+
         .upload-zone:hover {
             border-color: #028090;
             background: #f0fdfa;
         }
+
         .upload-zone i {
-            font-size: 28px;
+            font-size: 26px;
             color: #028090;
         }
+
         .upload-zone span {
             font-size: 13px;
             font-weight: 700;
             color: #0A1B3F;
         }
+
         .upload-zone .sub-text {
             font-size: 11px;
             font-weight: 400;
             color: #94a3b8;
         }
 
-        /* =========================================
-               صندوق الإقرار
-               ========================================= */
+        /* ============================================================
+           صندوق الإقرار
+           ============================================================ */
         .declaration-box {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
-            padding: 20px 24px;
+            padding: 18px 22px;
             border-radius: 14px;
             display: flex;
             align-items: flex-start;
-            gap: 18px;
-            margin-bottom: 24px;
+            gap: 16px;
+            margin-bottom: 20px;
         }
+
         .declaration-box input[type="checkbox"] {
             width: 22px;
             height: 22px;
             min-width: 22px;
-            margin-top: 4px;
+            margin-top: 3px;
             cursor: pointer;
             accent-color: #028090;
         }
+
         .declaration-box p {
             margin: 0 0 4px 0;
             font-weight: 800;
             color: #065f46;
             font-size: 15px;
         }
+
         .declaration-box ul {
             margin: 6px 0 0 0;
             padding-right: 22px;
@@ -405,18 +465,19 @@
             font-weight: 600;
             line-height: 1.8;
         }
+
         .declaration-box ul li {
             list-style-type: circle;
         }
 
-        /* =========================================
-               زر الإرسال
-               ========================================= */
+        /* ============================================================
+           زر الإرسال
+           ============================================================ */
         .btn-submit {
             background: #028090;
             color: #fff;
             border: none;
-            padding: 18px 32px;
+            padding: 16px 28px;
             border-radius: 12px;
             font-size: 17px;
             font-weight: 800;
@@ -428,23 +489,24 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            letter-spacing: 0.3px;
-            height: 56px;
+            min-height: 56px;
         }
+
         .btn-submit:hover {
             background: #0A1B3F;
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
         }
+
         .btn-submit i {
             font-size: 18px;
         }
 
-        /* =========================================
-               تنبيهات إضافية
-               ========================================= */
+        /* ============================================================
+           تنبيهات إضافية
+           ============================================================ */
         .alert-warning-box {
-            margin-top: 18px;
+            margin-top: 16px;
             font-size: 13px;
             color: #b91c1c;
             font-weight: 700;
@@ -456,30 +518,32 @@
             align-items: center;
             gap: 10px;
         }
+
         .alert-warning-box i {
             font-size: 18px;
         }
 
         .otp-notice {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             font-size: 13px;
             color: #475569;
             background: #f8fafc;
-            padding: 14px 20px;
+            padding: 12px 18px;
             border-radius: 10px;
             border: 1px solid #e9edf2;
         }
+
         .otp-notice strong {
             color: #0A1B3F;
         }
 
-        /* =========================================
-               تذييل الصفحة
-               ========================================= */
+        /* ============================================================
+           التذييل
+           ============================================================ */
         .page-footer {
             text-align: center;
-            padding: 22px 20px;
+            padding: 20px 20px;
             color: #94a3b8;
             font-size: 13px;
             border-top: 1px solid #e2e8f0;
@@ -487,88 +551,158 @@
             margin-top: auto;
         }
 
-        /* =========================================
-               استجابة للشاشات الصغيرة (الجوال) – تحسين شامل
-               ========================================= */
+        /* ============================================================
+           حاوية التمرير الأفقي
+           ============================================================ */
+        .scroll-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            width: 100%;
+        }
+
+        .scroll-wrapper::-webkit-scrollbar {
+            height: 5px;
+        }
+
+        .scroll-wrapper::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .scroll-wrapper::-webkit-scrollbar-thumb {
+            background: #028090;
+            border-radius: 4px;
+        }
+
+        /* ============================================================
+           تنسيق حقول التاريخ (Date Picker)
+           ============================================================ */
+        input[type="date"] {
+            appearance: none;
+            -webkit-appearance: none;
+            padding: 12px 16px;
+            background: #fafcff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") no-repeat left 12px center;
+            background-size: 18px;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.6;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        input[type="date"]::-webkit-datetime-edit {
+            color: #1e293b;
+        }
+
+        input[type="date"]:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+        }
+
+        /* ============================================================
+           تحسينات الجوال الشاملة
+           ============================================================ */
 
         /* شاشات متوسطة (تابلت) */
         @media (max-width: 992px) {
             .focused-header {
-                padding: 10px 20px;
+                padding: 8px 20px;
+                min-height: 54px;
+                justify-content: flex-end;
             }
-            .focused-header .logo img {
-                height: 34px;
-            }
+
             .focused-header .client-info h5 {
                 font-size: 13px;
             }
+
             .focused-header .client-info .avatar {
                 width: 34px;
                 height: 34px;
                 font-size: 14px;
             }
+
+            .brand-banner img {
+                height: 40px;
+            }
+
             .page-subheader {
-                padding: 16px 20px;
+                padding: 14px 20px;
                 flex-direction: column;
                 align-items: flex-start;
             }
+
             .page-subheader h1 {
                 font-size: 19px;
             }
+
             .btn-back {
                 font-size: 12px;
                 padding: 6px 14px;
             }
+
             .content-container {
-                padding: 20px 16px 0 16px;
+                padding: 18px 16px 0 16px;
             }
+
             .form-grid {
                 grid-template-columns: 1fr;
-                gap: 18px;
+                gap: 16px;
             }
+
             .panel-card {
-                padding: 20px 18px 24px 18px;
+                padding: 18px 16px 20px 16px;
             }
+
             .radio-group {
-                gap: 24px;
-                padding: 8px 16px;
-                height: auto;
+                gap: 20px;
+                padding: 6px 14px;
+                min-height: auto;
                 flex-wrap: wrap;
-                justify-content: flex-start;
             }
+
             .radio-label {
                 font-size: 14px;
                 gap: 8px;
             }
+
             .declaration-box {
                 flex-direction: column;
                 align-items: flex-start;
             }
+
             .declaration-box input[type="checkbox"] {
                 margin-top: 0;
             }
+
             .form-control,
             select.form-control {
                 height: 44px;
                 padding: 10px 14px;
                 font-size: 13px;
             }
+
             .upload-zone {
-                min-height: 90px;
-                padding: 16px 12px;
+                min-height: 80px;
+                padding: 14px 12px;
             }
+
             .btn-submit {
-                height: 50px;
+                min-height: 50px;
                 font-size: 15px;
-                padding: 14px 20px;
+                padding: 12px 18px;
             }
+
             .page-desc {
                 font-size: 13px;
-                padding: 14px 18px;
+                padding: 12px 16px;
             }
+
             .panel-header h3 {
                 font-size: 16px;
             }
+
             .panel-header i {
                 width: 32px;
                 height: 32px;
@@ -579,328 +713,445 @@
         /* شاشات صغيرة (جوال) */
         @media (max-width: 576px) {
             .focused-header {
-                padding: 8px 12px;
+                padding: 6px 12px;
+                min-height: 48px;
             }
-            .focused-header .logo img {
-                height: 28px;
-            }
+
             .focused-header .client-info h5 {
                 font-size: 12px;
             }
+
             .focused-header .client-info .avatar {
                 width: 30px;
                 height: 30px;
                 font-size: 12px;
             }
-            .page-subheader {
-                padding: 14px 16px;
-                gap: 12px;
+
+            .brand-banner img {
+                height: 32px;
             }
+
+            .page-subheader {
+                padding: 12px 14px;
+                gap: 10px;
+            }
+
             .page-subheader h1 {
                 font-size: 17px;
             }
+
             .btn-back {
                 font-size: 11px;
                 padding: 5px 12px;
             }
+
             .content-container {
-                padding: 16px 10px 0 10px;
-                margin-bottom: 20px;
+                padding: 14px 8px 0 8px;
+                margin-bottom: 16px;
             }
+
             .page-desc {
                 font-size: 12px;
-                padding: 12px 14px;
-                margin-bottom: 20px;
-                gap: 8px;
+                padding: 10px 12px;
+                margin-bottom: 16px;
+                gap: 6px;
             }
+
             .page-desc i {
                 font-size: 16px;
             }
+
             .panel-card {
-                padding: 16px 14px 18px 14px;
-                margin-bottom: 18px;
+                padding: 14px 12px 16px 12px;
+                margin-bottom: 16px;
                 border-radius: 14px;
             }
+
             .panel-header {
-                margin-bottom: 16px;
+                margin-bottom: 14px;
                 padding-bottom: 10px;
-                gap: 8px;
+                gap: 6px;
             }
+
             .panel-header i {
                 width: 28px;
                 height: 28px;
                 font-size: 16px;
             }
+
             .panel-header h3 {
                 font-size: 15px;
             }
+
             .form-grid {
-                gap: 14px;
+                gap: 12px;
             }
+
             .form-label {
                 font-size: 13px;
             }
+
             .form-control,
             select.form-control {
                 height: 40px;
                 padding: 8px 12px;
                 font-size: 13px;
             }
+
             .input-hint-box {
-                padding: 8px 12px;
+                padding: 6px 10px;
             }
+
             .input-hint-box p {
                 font-size: 11px;
             }
+
             .input-hint-box ul {
                 font-size: 11px;
-                padding-right: 16px;
+                padding-right: 14px;
             }
+
             .format-hint {
                 font-size: 10px;
             }
+
             .radio-group {
-                gap: 16px;
-                padding: 6px 12px;
-                min-height: 42px;
+                gap: 14px;
+                padding: 6px 10px;
+                min-height: 40px;
             }
+
             .radio-label {
                 font-size: 13px;
                 gap: 6px;
             }
+
             .radio-label input[type="radio"] {
                 width: 18px;
                 height: 18px;
             }
+
             .upload-zone {
-                min-height: 70px;
-                padding: 12px 10px;
+                min-height: 60px;
+                padding: 10px 8px;
             }
+
             .upload-zone i {
                 font-size: 22px;
             }
+
             .upload-zone span {
                 font-size: 12px;
             }
+
             .upload-zone .sub-text {
                 font-size: 10px;
             }
+
             .declaration-box {
-                padding: 14px 16px;
-                gap: 12px;
-                margin-bottom: 16px;
+                padding: 12px 14px;
+                gap: 10px;
+                margin-bottom: 14px;
             }
+
             .declaration-box input[type="checkbox"] {
                 width: 20px;
                 height: 20px;
                 min-width: 20px;
-                margin-top: 2px;
             }
+
             .declaration-box p {
                 font-size: 14px;
             }
+
             .declaration-box ul {
                 font-size: 12px;
-                padding-right: 18px;
+                padding-right: 16px;
             }
+
             .alert-warning-box {
                 font-size: 12px;
-                padding: 10px 14px;
-                margin-top: 14px;
+                padding: 8px 12px;
+                margin-top: 12px;
             }
+
             .alert-warning-box i {
                 font-size: 16px;
             }
+
             .otp-notice {
                 font-size: 12px;
-                padding: 12px 14px;
-                margin-bottom: 16px;
+                padding: 10px 12px;
+                margin-bottom: 14px;
             }
+
             .btn-submit {
-                height: 46px;
+                min-height: 44px;
                 font-size: 14px;
-                padding: 12px 16px;
+                padding: 10px 14px;
             }
+
             .btn-submit i {
                 font-size: 16px;
             }
+
             .page-footer {
                 font-size: 12px;
-                padding: 16px 12px;
+                padding: 14px 10px;
+            }
+
+            input[type="date"] {
+                padding: 8px 12px;
+                background-size: 16px;
+                background-position: left 10px center;
             }
         }
 
         /* شاشات صغيرة جداً */
         @media (max-width: 400px) {
-            .focused-header .logo img {
-                height: 24px;
-            }
             .focused-header .client-info h5 {
                 font-size: 11px;
             }
+
             .focused-header .client-info .avatar {
                 width: 26px;
                 height: 26px;
                 font-size: 11px;
             }
+
+            .brand-banner img {
+                height: 28px;
+            }
+
             .page-subheader h1 {
                 font-size: 15px;
             }
+
             .btn-back {
                 font-size: 10px;
                 padding: 4px 10px;
             }
+
             .panel-card {
-                padding: 12px 10px 14px 10px;
+                padding: 10px 8px 12px 8px;
             }
+
             .form-control,
             select.form-control {
-                height: 38px;
+                height: 36px;
                 padding: 6px 10px;
                 font-size: 12px;
             }
+
             .radio-label {
                 font-size: 12px;
             }
+
             .btn-submit {
-                height: 42px;
+                min-height: 40px;
                 font-size: 13px;
-                padding: 10px 14px;
+                padding: 8px 12px;
             }
+
             .declaration-box ul {
                 font-size: 11px;
             }
+
+            input[type="date"] {
+                padding: 6px 10px;
+                font-size: 12px;
+                background-size: 14px;
+                background-position: left 8px center;
+            }
         }
 
-        /* دعم الوضع المظلم */
+        /* ============================================================
+           الوضع المظلم
+           ============================================================ */
         @media (prefers-color-scheme: dark) {
+            html,
             body {
                 background-color: #0f172a;
             }
+
             .focused-header {
                 background: #1e293b;
                 border-bottom-color: #334155;
             }
+
             .focused-header .client-info h5 {
                 color: #f8fafc;
             }
+
             .focused-header .client-info .avatar {
                 background: #0f172a;
                 border-color: #14b8a6;
             }
+
+            .brand-banner {
+                background: #1e293b;
+                border-bottom-color: #334155;
+            }
+
             .page-subheader {
                 background: #0f172a;
             }
+
             .panel-card {
                 background: #1e293b;
                 border-color: #334155;
             }
+
             .panel-header {
                 border-bottom-color: #334155;
             }
+
             .panel-header h3 {
                 color: #f8fafc;
             }
+
             .panel-header i {
                 background: rgba(20, 184, 166, 0.15);
             }
+
             .page-desc {
                 background: #1e293b;
                 border-right-color: #14b8a6;
                 color: #e2e8f0;
             }
+
             .page-desc strong {
                 color: #f8fafc;
             }
+
             .form-label {
                 color: #f1f5f9;
             }
+
             .form-control {
                 background: #0f172a;
                 border-color: #334155;
                 color: #e2e8f0;
             }
+
             .form-control:focus {
                 border-color: #14b8a6;
                 box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
             }
+
             .form-control::placeholder {
                 color: #64748b;
             }
+
             .radio-group {
                 background: #0f172a;
                 border-color: #334155;
             }
+
             .radio-label {
                 color: #e2e8f0;
             }
+
             .input-hint-box {
                 background: #0f172a;
                 border-color: #334155;
             }
+
             .input-hint-box p {
                 color: #f1f5f9;
             }
+
             .input-hint-box ul {
                 color: #94a3b8;
             }
+
             .declaration-box {
                 background: rgba(22, 101, 52, 0.15);
                 border-color: #166534;
             }
+
             .declaration-box p {
                 color: #bbf7d0;
             }
+
             .declaration-box ul {
                 color: #86efac;
             }
+
             .otp-notice {
                 background: #0f172a;
                 border-color: #334155;
                 color: #94a3b8;
             }
+
             .otp-notice strong {
                 color: #f8fafc;
             }
+
             .alert-warning-box {
                 background: rgba(220, 38, 38, 0.15);
                 border-color: #991b1b;
                 color: #fca5a5;
             }
+
             .page-footer {
                 background: #1e293b;
                 border-top-color: #334155;
                 color: #64748b;
             }
+
             .upload-zone {
                 background: #0f172a;
                 border-color: #334155;
             }
+
             .upload-zone:hover {
                 border-color: #14b8a6;
                 background: rgba(20, 184, 166, 0.08);
+            }
+
+            input[type="date"] {
+                background-color: #0f172a;
+                border-color: #334155;
+                color: #e2e8f0;
+            }
+
+            input[type="date"]::-webkit-datetime-edit {
+                color: #e2e8f0;
+            }
+
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                filter: invert(1);
+            }
+
+            .scroll-wrapper::-webkit-scrollbar-track {
+                background: #1e293b;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- =========================================
-    الهيدر العلوي
-    ========================================= -->
+    <!-- ============================================================
+    الهيدر العلوي (بدون شعار)
+    ============================================================ -->
     <header class="focused-header no-print">
-        <div class="logo">
-            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
-        </div>
         <div class="client-info">
             <h5>محمد عبدالله الشمري</h5>
             <div class="avatar">م</div>
         </div>
     </header>
 
-    <!-- =========================================
+    <!-- ============================================================
+    الشعار أسفل الهيدر (Full Width)
+    ============================================================ -->
+    <div class="brand-banner">
+        <img src="/images/logo.svg" alt="Tera Investor Portal" onerror="this.src='https://via.placeholder.com/200x60/028090/fff?text=Tera+Portal'" />
+    </div>
+
+    <!-- ============================================================
     عنوان الصفحة
-    ========================================= -->
+    ============================================================ -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-user-shield"></i> المعلومات الشخصية</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -908,9 +1159,9 @@
         </a>
     </div>
 
-    <!-- =========================================
+    <!-- ============================================================
     المحتوى الرئيسي
-    ========================================= -->
+    ============================================================ -->
     <main class="content-container">
 
         <div class="page-desc">
@@ -920,9 +1171,9 @@
 
         <form id="personalInfoForm" novalidate>
 
-            <!-- =========================================
+            <!-- ============================================================
             القسم 1: البيانات الأساسية
-            ========================================= -->
+            ============================================================ -->
             <div class="panel-card">
                 <div class="panel-header">
                     <i class="fas fa-user-edit"></i>
@@ -934,7 +1185,7 @@
                     <!-- الاسم بالعربية -->
                     <div class="form-group full-width">
                         <label class="form-label">الاسم الكامل بالعربية <span class="req">*</span></label>
-                        <input type="text" class="form-control" required placeholder="مثال: محمد عبدالله الشمري" oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
+                        <input type="text" class="form-control" id="fullNameAr" required placeholder="مثال: محمد عبدالله الشمري" oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
                         <div class="input-hint-box">
                             <p>ملاحظات:</p>
                             <ul>
@@ -948,7 +1199,7 @@
                     <!-- الاسم بالإنجليزية -->
                     <div class="form-group full-width">
                         <label class="form-label">Full Name in English <span class="req">*</span></label>
-                        <input type="text" class="form-control" required placeholder="Example: Mohammed Abdullah Alshammari" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
+                        <input type="text" class="form-control" id="fullNameEn" required placeholder="Example: Mohammed Abdullah Alshammari" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')">
                         <div class="input-hint-box">
                             <p>ملاحظات:</p>
                             <ul>
@@ -959,10 +1210,10 @@
                         </div>
                     </div>
 
-                    <!-- الجنسية -->
+                    <!-- الجنسية مع خيار "أخرى" -->
                     <div class="form-group">
                         <label class="form-label">الجنسية <span class="req">*</span></label>
-                        <select class="form-control" required>
+                        <select class="form-control" id="nationality" required>
                             <option value="">اختر الجنسية...</option>
                             <option value="saudi">السعودية</option>
                             <option value="kuwait">الكويت</option>
@@ -973,12 +1224,15 @@
                             <option value="egypt">مصر</option>
                             <option value="other">أخرى</option>
                         </select>
+                        <div class="other-field" id="nationalityOtherContainer">
+                            <input type="text" class="form-control" id="nationalityOther" placeholder="يرجى تحديد الجنسية" />
+                        </div>
                     </div>
 
                     <!-- نوع الهوية -->
                     <div class="form-group">
                         <label class="form-label">نوع الهوية <span class="req">*</span></label>
-                        <select class="form-control" id="idType" required onchange="handleIdTypeChange()">
+                        <select class="form-control" id="idType" required>
                             <option value="">اختر نوع الهوية...</option>
                             <option value="national">هوية وطنية</option>
                             <option value="residency">هوية مقيم</option>
@@ -998,25 +1252,25 @@
                     <!-- تاريخ الميلاد -->
                     <div class="form-group">
                         <label class="form-label">تاريخ الميلاد <span class="req">*</span></label>
-                        <input type="date" class="form-control" required>
+                        <input type="date" class="form-control" id="birthDate" required>
                     </div>
 
-                    <!-- 📅 تاريخ الإصدار -->
+                    <!-- تاريخ الإصدار -->
                     <div class="form-group">
                         <label class="form-label">تاريخ الإصدار <span class="req">*</span></label>
-                        <input type="date" class="form-control" required>
+                        <input type="date" class="form-control" id="issueDate" required>
                     </div>
 
-                    <!-- 📅 تاريخ الانتهاء -->
+                    <!-- تاريخ الانتهاء -->
                     <div class="form-group">
                         <label class="form-label">تاريخ الانتهاء <span class="req">*</span></label>
-                        <input type="date" class="form-control" required>
+                        <input type="date" class="form-control" id="expiryDate" required>
                     </div>
 
-                    <!-- الجنس (راديو) -->
+                    <!-- الجنس -->
                     <div class="form-group full-width">
                         <label class="form-label">الجنس <span class="req">*</span></label>
-                        <div class="radio-group">
+                        <div class="radio-group" id="genderGroup">
                             <label class="radio-label">
                                 <input type="radio" name="gender" value="male" required> ذكر
                             </label>
@@ -1029,16 +1283,16 @@
                 </div><!-- /form-grid -->
             </div><!-- /panel-card -->
 
-            <!-- =========================================
+            <!-- ============================================================
             القسم 2: الوثائق المطلوبة (ديناميكي)
-            ========================================= -->
+            ============================================================ -->
             <div class="panel-card" id="documentsCard" style="display: none;">
                 <div class="panel-header">
                     <i class="fas fa-file-upload"></i>
                     <h3>الوثائق المطلوبة</h3>
                 </div>
 
-                <div style="font-size:13px; color:#64748b; margin-bottom:18px; background:#f8fafc; padding:10px 16px; border-radius:8px;">
+                <div style="font-size:13px; color:#64748b; margin-bottom:16px; background:#f8fafc; padding:8px 14px; border-radius:8px;">
                     <i class="fas fa-sync-alt" style="margin-left:6px;"></i>
                     يتم عرض المرفقات المطلوبة تلقائياً حسب نوع الهوية المختار.
                 </div>
@@ -1053,9 +1307,9 @@
                 </div>
             </div>
 
-            <!-- =========================================
+            <!-- ============================================================
             القسم 3: بيانات إضافية
-            ========================================= -->
+            ============================================================ -->
             <div class="panel-card">
                 <div class="panel-header">
                     <i class="fas fa-briefcase"></i>
@@ -1066,7 +1320,7 @@
 
                     <div class="form-group">
                         <label class="form-label">الحالة الاجتماعية</label>
-                        <select class="form-control">
+                        <select class="form-control" id="maritalStatus">
                             <option value="">اختر...</option>
                             <option value="single">أعزب</option>
                             <option value="married">متزوج</option>
@@ -1077,12 +1331,12 @@
 
                     <div class="form-group">
                         <label class="form-label">المهنة</label>
-                        <input type="text" class="form-control" placeholder="مثال: مهندس">
+                        <input type="text" class="form-control" id="occupation" placeholder="مثال: مهندس">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">جهة العمل</label>
-                        <input type="text" class="form-control" placeholder="اسم الجهة">
+                        <input type="text" class="form-control" id="employer" placeholder="اسم الجهة">
                     </div>
 
                     <div class="form-group">
@@ -1097,15 +1351,15 @@
 
                     <div class="form-group">
                         <label class="form-label">الدخل الشهري</label>
-                        <input type="number" class="form-control" placeholder="ر.س" min="0" step="100">
+                        <input type="number" class="form-control" id="monthlyIncome" placeholder="ر.س" min="0" step="100">
                     </div>
 
                 </div><!-- /form-grid -->
             </div><!-- /panel-card -->
 
-            <!-- =========================================
+            <!-- ============================================================
             القسم 4: الإقرار والتعهد
-            ========================================= -->
+            ============================================================ -->
             <div class="panel-card">
                 <div class="panel-header">
                     <i class="fas fa-file-signature"></i>
@@ -1139,24 +1393,22 @@
 
     </main>
 
-    <!-- =========================================
+    <!-- ============================================================
     التذييل
-    ========================================= -->
+    ============================================================ -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- =========================================
-    ربط الملفات المشتركة
-    ========================================= -->
+    <!-- ============================================================
+    ربط ملفات JavaScript
+    ============================================================ -->
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/app.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/profile.js"></script>
 
-    <!-- =========================================
-    الملف المخصص للصفحة (الجافا مفصولة هنا)
-    ========================================= -->
+    <!-- الملف المخصص للصفحة (JavaScript مستقل) -->
     <script src="/assets/js/profile-personal-information.js"></script>
 
 </body>
