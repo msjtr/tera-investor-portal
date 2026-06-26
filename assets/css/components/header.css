@@ -1,1 +1,147 @@
+/* ============================================================
+   TERA INVESTOR PORTAL - HEADER COMPONENT STYLES
+   ============================================================ */
 
+/* 1. الحاوية الرئيسية للهيدر */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* 2. الجهة اليمنى (الشعار وزر العودة) */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* مسافة فاصلة بين الشعار وزر العودة */
+}
+
+/* تنسيق زر العودة للوحة التحكم */
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: #072B72; /* اللون الأساسي Primary */
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    color: #08C7CF; /* اللون الثانوي Secondary */
+    background-color: #F8FAFC;
+}
+
+.btn-back i {
+    width: 20px;
+    height: 20px;
+}
+
+/* 3. الجهة اليسرى (ملف العميل) */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.client-profile-dropdown {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.client-profile-dropdown:hover {
+    background-color: #F8FAFC;
+}
+
+/* نصوص بيانات العميل */
+.client-info {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+.client-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #072B72;
+    font-family: 'Cairo', sans-serif;
+}
+
+.client-role {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+/* الدائرة التي تحتوي على أول حرف من اسم العميل */
+.client-avatar-circle {
+    width: 42px;
+    height: 42px;
+    background-color: #072B72; /* Primary Background */
+    border: 2px solid #08C7CF; /* Secondary Border */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(7, 43, 114, 0.15);
+}
+
+.avatar-letter {
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: 'Cairo', sans-serif;
+    line-height: 1;
+}
+
+/* ============================================================
+   التجاوب مع شاشات الجوال (Mobile Responsiveness)
+   ============================================================ */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 12px 20px; /* تقليل الحواف الجانبية */
+    }
+
+    .header-right {
+        gap: 15px; /* تقليل المسافة بين الشعار وزر العودة */
+    }
+
+    .btn-back span {
+        display: none; /* إخفاء نص "العودة للوحة التحكم" والإبقاء على الأيقونة فقط لتوفير المساحة */
+    }
+    
+    .btn-back {
+        padding: 8px;
+    }
+
+    .client-info {
+        display: none; /* إخفاء اسم العميل والاكتفاء بالدائرة التي تحتوي على الحرف الأول */
+    }
+
+    .client-avatar-circle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .avatar-letter {
+        font-size: 16px;
+    }
+}
