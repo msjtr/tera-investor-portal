@@ -1,6 +1,7 @@
 /**
  * بوابة الشركاء - منصة تيرا
  * محرك التحقق اللحظي الصارم وحظر الملاحة وتصفية اللغات (مرحلتين فقط)
+ * + تم الدمج مع نظام Supabase Auth و OTP
  */
 
 // محاكاة البيانات المستخدمة مسبقاً في نظام تيرا لمنع التكرار حياً
@@ -146,7 +147,6 @@ function bindRealtimeStage1() {
 
     if (nameArInput) {
         nameArInput.addEventListener("input", function() {
-            // منع الحروف الإنجليزية والأرقام والرموز في الاسم العربي حيا
             this.value = this.value.replace(/[a-zA-Z0-9~`!@#$%\^&*()_\-+={[}\]|\\:;"'<,>.?\/]/g, '');
             validateArabicName();
             executeGlobalStageValidator();
@@ -155,7 +155,6 @@ function bindRealtimeStage1() {
 
     if (usernameInput) {
         usernameInput.addEventListener("input", function() {
-            // طرد ومنع الأحرف العربية تماماً من حقل اسم المستخدم حياً
             this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
             validateUsernameField();
             executeGlobalStageValidator();
@@ -164,7 +163,6 @@ function bindRealtimeStage1() {
 
     if (emailInput) {
         emailInput.addEventListener("input", function() {
-            // طرد ومنع الأحرف العربية تماماً من حقل البريد حياً
             this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
             validateEmailFields();
             executeGlobalStageValidator();
@@ -181,7 +179,6 @@ function bindRealtimeStage1() {
 
     if (passwordInput) {
         passwordInput.addEventListener("input", function() {
-            // طرد ومنع الأحرف العربية تماماً من حقل كلمة المرور حياً
             this.value = this.value.replace(/[\u0600-\u06FF]/g, '');
             validatePasswordFields();
             executeGlobalStageValidator();
@@ -199,7 +196,7 @@ function bindRealtimeStage1() {
     if (mobileInput) {
         mobileInput.addEventListener("input", function() {
             let val = this.value.replace(/\D/g, '');
-            while (val.startsWith('0')) { val = val.substring(1); } // حذف وإلغاء الصفر الأول حيا فوراً
+            while (val.startsWith('0')) { val = val.substring(1); }
             this.value = val;
             
             const isMobValid = val.length >= 8 && val.length <= 11;
@@ -249,7 +246,6 @@ function validateUsernameField() {
 
     const isEmpty = val.length === 0;
 
-    // إلزامية أن يكون الحقل غير فارغ لتفعيل التحقق الأخضر
     const rLen = !isEmpty && val.length >= 4 && val.length <= 20;
     const rStart = !isEmpty && /^[a-zA-Z]/.test(val);
     const rChar = !isEmpty && /[a-zA-Z]/.test(val);
@@ -263,7 +259,7 @@ function validateUsernameField() {
     updateRuleMarker('u-rule-len', rLen);
     updateRuleMarker('u-rule-start', rStart);
     updateRuleMarker('u-rule-char', rChar);
-    updateRuleMarker('u-rule-num', rNum || !isEmpty); // متاح ومسموح
+    updateRuleMarker('u-rule-num', rNum || !isEmpty);
     updateRuleMarker('u-rule-upper', rUpper || !isEmpty);
     updateRuleMarker('u-rule-lower', rLower || !isEmpty);
     updateRuleMarker('u-rule-space', rSpace);
@@ -477,8 +473,62 @@ function triggerStageVisualErrors(stage) {
     }
 }
 
-function submitForm() {
+// التحديث الجديد: دالة الإرسال لترتبط بـ Supabase 
+async function submitForm() {
     if (validateStage1Logic() && validateStage2Logic()) {
-        alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني.");
+        const submitBtn = document.getElementById("action-submit-btn");
+        const originalText = submitBtn.innerHTML;
+        
+        // 1. تغيير حالة الزر لمنع التكرار وإظهار حالة التحميل
+        submitBtn.innerHTML = "جاري إنشاء الحساب... ⏳";
+        submitBtn.setAttribute("disabled", "true");
+
+        // 2. سحب البيانات النظيفة من الحقول
+        const fullName = document.getElementById("fullname_ar").value.trim();
+        const username = document.getElementById("username").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const mobileNumber = document.getElementById("mobile_number").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+            // 3. إرسال طلب التسجيل إلى Supabase Auth
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullName,       // سيتم نقله لجدول المستثمرين/الشركاء تلقائياً
+                        username: username,
+                        mobile_number: mobileNumber
+                    }
+                }
+            });
+
+            if (error) {
+                // معالجة أخطاء التسجيل (مثل: الإيميل مسجل مسبقاً في الخادم)
+                console.error("Supabase Error:", error.message);
+                alert("❌ حدث خطأ أثناء التسجيل: " + error.message);
+                
+                // إعادة الزر لحالته الطبيعية
+                submitBtn.innerHTML = originalText;
+                submitBtn.removeAttribute("disabled");
+            } else {
+                // 4. نجاح العملية وحفظ البريد للتفعيل
+                alert("🎉 تم إنشاء حساب الشريك بنجاح! جاري إرسال رمز التحقق (OTP) إلى بريدك الإلكتروني.");
+                
+                // حفظ الإيميل في ذاكرة المتصفح المؤقتة لاستخدامه في صفحة التحقق
+                localStorage.setItem('pendingVerificationEmail', email);
+                
+                // توجيه الشريك لصفحة إدخال الرمز (تأكد أن المسار صحيح لملفك)
+                window.location.href = "../verify-otp.html"; 
+            }
+        } catch (err) {
+            console.error("Connection Error:", err);
+            alert("❌ تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
+            submitBtn.innerHTML = originalText;
+            submitBtn.removeAttribute("disabled");
+        }
+    } else {
+        triggerStageVisualErrors(1);
     }
 }
