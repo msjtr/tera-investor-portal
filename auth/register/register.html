@@ -16,6 +16,7 @@
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
 </head>
 <body>
+    <!-- كل المحتوى كما هو دون تغيير -->
     <div class="auth-layout">
         <div class="auth-container">
             <div class="text-center mb-5">
@@ -132,7 +133,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- ===== التغيير الوحيد: استبدال رابط CDN برابط بديل ===== -->
+    <!-- استخدمنا unpkg بدلاً من jsdelivr لحل مشكلة التحميل -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <!-- باقي الملفات كما هي بدون أي تغيير -->
     <script src="../../assets/js/supabase-client.js"></script>
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/app.js"></script>
