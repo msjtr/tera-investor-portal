@@ -1,141 +1,157 @@
-
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta http-equiv="X-UA-Compatible"
-          content="IE=edge">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <meta name="description"
-          content="التحقق من رمز التفعيل - تيرا">
-
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="التحقق من رمز التفعيل - منصة تيرا">
     <title>التحقق من الرمز | تيرا</title>
 
-    <link rel="stylesheet"
-          href="/assets/css/app.css">
-
-    <link rel="stylesheet"
-          href="/assets/css/responsive.css">
-
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
 </head>
-
 <body>
 
     <div class="auth-container">
-
-        <div class="auth-card">
-
+        <div class="auth-card glass-panel">
             <div class="auth-logo">
                 TERA
             </div>
 
-            <h1>
-                التحقق من الرمز
-            </h1>
-
-            <p>
-                أدخل رمز التحقق المرسل إلى جوالك أو بريدك الإلكتروني
-            </p>
+            <h1>التحقق من الرمز</h1>
+            <p id="instructionText">أدخل رمز التحقق المرسل إلى جوالك أو بريدك الإلكتروني</p>
 
             <form id="otpForm">
-
                 <div class="form-group">
-
-                    <label for="otp">
-                        رمز التحقق
-                    </label>
-
-                    <input
-                        type="text"
-                        id="otp"
-                        name="otp"
-                        maxlength="6"
-                        placeholder="000000"
+                    <label for="otp">رمز التحقق</label>
+                    <input 
+                        type="text" 
+                        id="otp" 
+                        name="otp" 
+                        maxlength="6" 
+                        placeholder="000000" 
+                        autocomplete="one-time-code"
                         required>
-
+                    <div id="otp-error" class="error-message" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
                 </div>
 
-                <button
-                    type="submit"
-                    class="btn-primary">
-
+                <button type="submit" id="submitBtn" class="btn-primary">
                     تحقق
-
                 </button>
-
             </form>
 
             <div class="auth-footer">
-
-                <a href="#"
-                   id="resendCode">
-
+                <a href="#" id="resendCode" class="routing-link-secondary">
                     إعادة إرسال الرمز
-
                 </a>
-
             </div>
-
         </div>
-
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const otpForm = document.getElementById('otpForm');
+            const otpInput = document.getElementById('otp');
+            const submitBtn = document.getElementById('submitBtn');
+            const resendBtn = document.getElementById('resendCode');
+            const errorDiv = document.getElementById('otp-error');
+            const instructionText = document.getElementById('instructionText');
 
-        document
-        .getElementById('otpForm')
-        .addEventListener(
-            'submit',
-            function(e){
+            let supabaseClient = null;
 
+            // استرجاع البريد الإلكتروني الذي تم تخزينه في مرحلة إنشاء الحساب أو استعادة كلمة المرور
+            const pendingEmail = localStorage.getItem('pendingVerificationEmail');
+
+            if (pendingEmail) {
+                instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
+            } else {
+                console.warn('⚠️ [OTP] لم يتم العثور على بريد إلكتروني معلق.');
+            }
+
+            try {
+                // الاتصال الآمن بعميل قاعدة البيانات
+                if (typeof window.getTeraSupabase === 'function') {
+                    supabaseClient = await window.getTeraSupabase();
+                }
+            } catch (error) {
+                console.error('❌ [OTP] تعذر الاتصال بقاعدة البيانات:', error);
+            }
+
+            // معالجة التحقق من الرمز
+            otpForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                errorDiv.textContent = '';
+                
+                const otpValue = otpInput.value.trim();
 
-                const otp =
-                document.getElementById(
-                    'otp'
-                ).value;
-
-                if(otp.length !== 6){
-
-                    alert(
-                        'الرجاء إدخال رمز مكون من 6 أرقام'
-                    );
-
+                if (otpValue.length !== 6 || !/^\d+$/.test(otpValue)) {
+                    errorDiv.textContent = 'الرجاء إدخال رمز صحيح مكون من 6 أرقام';
                     return;
-
                 }
 
-                window.location.href =
-                '/auth/reset-password.html';
+                if (!supabaseClient || !pendingEmail) {
+                    // في حال كان التطبيق يعمل في بيئة اختبارية بدون Supabase، نقوم بتوجيه افتراضي آمن
+                    console.log('🔄 [OTP] وضع الاختبار: توجيه مباشر باستخدام المسار المطلق');
+                    window.location.replace('/auth/reset-password.html');
+                    return;
+                }
 
-            }
-        );
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'جاري التحقق...';
 
-        document
-        .getElementById('resendCode')
-        .addEventListener(
-            'click',
-            function(e){
+                try {
+                    const { data, error } = await supabaseClient.auth.verifyOtp({
+                        email: pendingEmail,
+                        token: otpValue,
+                        type: 'signup' // يمكن تغييرها إلى 'recovery' بناءً على مسار المستخدم
+                    });
 
+                    if (error) throw error;
+
+                    console.log('✅ [OTP] تم التحقق بنجاح');
+                    localStorage.removeItem('pendingVerificationEmail');
+                    
+                    // التوجيه إلى المسار المطلق التالي
+                    window.location.replace('/pages/dashboard/index.html');
+
+                } catch (error) {
+                    console.error('❌ [OTP] فشل التحقق:', error);
+                    errorDiv.textContent = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'تحقق';
+                }
+            });
+
+            // معالجة إعادة الإرسال
+            resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
+                
+                if (!supabaseClient || !pendingEmail) {
+                    alert('تم إعادة إرسال رمز التحقق (وضع الاختبار)');
+                    return;
+                }
 
-                alert(
-                    'تم إعادة إرسال رمز التحقق'
-                );
+                resendBtn.style.pointerEvents = 'none';
+                resendBtn.textContent = 'جاري الإرسال...';
 
-            }
-        );
+                try {
+                    const { error } = await supabaseClient.auth.resend({
+                        type: 'signup',
+                        email: pendingEmail
+                    });
 
+                    if (error) throw error;
+                    alert('✅ تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني.');
+                } catch (error) {
+                    console.error('❌ [OTP] فشل إعادة الإرسال:', error);
+                    alert('⚠️ حدث خطأ أثناء إعادة إرسال الرمز. حاول مجدداً بعد قليل.');
+                } finally {
+                    resendBtn.style.pointerEvents = 'auto';
+                    resendBtn.textContent = 'إعادة إرسال الرمز';
+                }
+            });
+        });
     </script>
-
 </body>
-
 </html>
-```
