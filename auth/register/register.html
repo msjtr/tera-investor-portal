@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب شريك | بوابة الشركاء - تيرا</title>
-
-    <!-- روابط CSS (سيتم إصلاحها تلقائياً للعمل مع أي بنية مجلدات) -->
+    
     <link rel="stylesheet" href="../../assets/css/core.css">
     <link rel="stylesheet" href="../../assets/css/app.css">
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="../../assets/css/auth.css">
     <link rel="stylesheet" href="register.css">
-
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
 </head>
@@ -46,7 +45,7 @@
             <form id="teraRegisterForm" onsubmit="event.preventDefault();">
                 <div class="form-stage-section active" id="stage-1-content">
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
-
+                    
                     <div class="form-field-group">
                         <label class="field-label">الاسم الكامل <span class="required">*</span></label>
                         <div class="input-wrapper">
@@ -127,233 +126,18 @@
                 <div class="form-navigation-actions-bar">
                     <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
                     <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
-                    <!-- زر إنشاء الحساب النهائي -->
-                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled>
-                        إنشاء حساب شريك
-                    </button>
+                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled>إنشاء حساب شريك</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ================== تحميل Supabase وتطبيق المنطق ================== -->
+    <!-- تحميل مكتبة Supabase من CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-    (function() {
-        'use strict';
-
-        // ---------- إصلاح المسارات تلقائياً ----------
-        const pagePath = window.location.pathname;
-        const pageDir = pagePath.substring(0, pagePath.lastIndexOf('/'));
-        const parentDir = pageDir.substring(0, pageDir.lastIndexOf('/'));
-        const baseDir = parentDir.substring(0, parentDir.lastIndexOf('/'));
-        window.__BASE = baseDir;
-
-        document.querySelectorAll('link[rel="stylesheet"][href^="../../assets"]').forEach(link => {
-            const fileName = link.href.split('/').pop();
-            link.href = baseDir + '/assets/css/' + fileName;
-        });
-        const favicon = document.querySelector('link[rel="icon"]');
-        if (favicon) favicon.href = baseDir + '/images/favicon.svg';
-        const logoImg = document.querySelector('img[src="../../images/logo.svg"]');
-        if (logoImg) logoImg.src = baseDir + '/images/logo.svg';
-
-        // ---------- إعداد Supabase ----------
-        const PROJECT_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
-        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjbXphdnJzZ2tmcHlwZ2V3cGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODkxMDUsImV4cCI6MjA5ODA2NTEwNX0.TzbZvdRnPuDyL5LVmSBLQYpYe7DgSJNtehKz5kE9uzc';
-
-        function createClientAndNotify() {
-            window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY);
-            document.dispatchEvent(new CustomEvent('supabase:ready', { detail: { client: window.teraSupabase } }));
-        }
-
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
-            createClientAndNotify();
-        } else {
-            const checkInterval = setInterval(() => {
-                if (window.supabase && typeof window.supabase.createClient === 'function') {
-                    clearInterval(checkInterval);
-                    createClientAndNotify();
-                }
-            }, 100);
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                if (!window.teraSupabase) document.dispatchEvent(new CustomEvent('supabase:error'));
-            }, 10000);
-        }
-
-        // ---------- تطبيق register.js ----------
-        let supabaseClient = null;
-        let currentStage = 1;
-
-        function updateFieldStatus(fieldId, isValid, errorMsg) {
-            const statusIcon = document.getElementById(fieldId + '-status');
-            const errorDiv = document.getElementById(fieldId + '-error');
-            if (statusIcon) statusIcon.textContent = isValid ? '✅' : '❌';
-            if (errorDiv) errorDiv.textContent = isValid ? '' : errorMsg;
-        }
-
-        function checkStage1Complete() {
-            const fields = ['name_ar', 'mobile', 'email', 'username', 'password'];
-            const allValid = fields.every(id => {
-                const icon = document.getElementById(id + '-status');
-                return icon && icon.textContent === '✅';
-            });
-            const nextBtn = document.getElementById('action-next-btn');
-            if (nextBtn) nextBtn.disabled = !allValid;
-        }
-
-        function goToStage(stage) {
-            const stage1Content = document.getElementById('stage-1-content');
-            const stage2Content = document.getElementById('stage-2-content');
-            const step1 = document.getElementById('step-1');
-            const step2 = document.getElementById('step-2');
-            const prevBtn = document.getElementById('action-prev-btn');
-            const nextBtn = document.getElementById('action-next-btn');
-            const submitBtn = document.getElementById('action-submit-btn');
-
-            if (!stage1Content || !stage2Content) return;
-
-            if (stage === 2 && currentStage === 1) {
-                if (document.getElementById('action-next-btn').disabled) {
-                    alert('يرجى استكمال جميع الحقول بشكل صحيح أولاً');
-                    return;
-                }
-            }
-
-            stage1Content.classList.toggle('active', stage === 1);
-            stage2Content.classList.toggle('active', stage === 2);
-            step1?.classList.toggle('active', stage === 1);
-            step2?.classList.toggle('active', stage === 2);
-
-            if (prevBtn) prevBtn.style.visibility = stage === 1 ? 'hidden' : 'visible';
-            if (nextBtn) nextBtn.style.display = stage === 2 ? 'none' : 'inline-block';
-            if (submitBtn) {
-                submitBtn.style.display = stage === 2 ? 'inline-block' : 'none';
-                submitBtn.disabled = true;
-            }
-            currentStage = stage;
-        }
-
-        // الدالة العامة التي يناديها زر "إنشاء حساب شريك"
-        window.submitForm = async function() {
-            if (!supabaseClient) {
-                alert('❌ الاتصال بقاعدة البيانات غير جاهز.');
-                return;
-            }
-
-            const fullname = document.getElementById('fullname_ar')?.value.trim();
-            const countryCode = document.getElementById('country_code_select')?.value;
-            const mobile = document.getElementById('mobile_number')?.value.trim();
-            const email = document.getElementById('email')?.value.trim();
-            const username = document.getElementById('username')?.value.trim();
-            const password = document.getElementById('password')?.value;
-
-            if (!fullname || !mobile || !email || !username || !password) {
-                alert('يرجى ملء جميع الحقول.');
-                return;
-            }
-
-            const submitBtn = document.getElementById('action-submit-btn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'جاري إنشاء الحساب...';
-            }
-
-            try {
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: fullname,
-                            mobile: countryCode + mobile,
-                            username: username
-                        }
-                    }
-                });
-
-                if (error) throw error;
-
-                alert('✅ تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني لتأكيد الحساب.');
-                // توجيه المستخدم بعد النجاح (اختياري)
-                // window.location.href = '/login';
-            } catch (error) {
-                console.error('❌ فشل إنشاء الحساب:', error);
-                alert('⚠️ فشل إنشاء الحساب: ' + (error.message || 'خطأ غير معروف'));
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'إنشاء حساب شريك';
-                }
-            }
-        };
-
-        function startApp(client) {
-            supabaseClient = client;
-
-            // ربط أحداث التحقق من الحقول
-            document.getElementById('fullname_ar')?.addEventListener('input', function() {
-                const valid = /^[\u0621-\u064A\s]+$/.test(this.value.trim());
-                updateFieldStatus('name_ar', valid, 'أحرف عربية فقط');
-                const ruleIcon = document.querySelector('#nar-rule-char .icon-marker');
-                if (ruleIcon) ruleIcon.textContent = valid ? '✅' : '❌';
-                checkStage1Complete();
-            });
-            document.getElementById('mobile_number')?.addEventListener('input', function() {
-                const valid = /^5\d{8}$/.test(this.value.trim());
-                updateFieldStatus('mobile', valid, 'رقم جوال غير صحيح');
-                checkStage1Complete();
-            });
-            document.getElementById('email')?.addEventListener('input', function() {
-                const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim());
-                updateFieldStatus('email', valid, 'بريد إلكتروني غير صحيح');
-                checkStage1Complete();
-            });
-            document.getElementById('username')?.addEventListener('input', function() {
-                const valid = /^[a-zA-Z0-9_]{3,20}$/.test(this.value.trim());
-                updateFieldStatus('username', valid, '3-20 حرف إنجليزي أو رقم');
-                checkStage1Complete();
-            });
-            document.getElementById('password')?.addEventListener('input', function() {
-                const val = this.value;
-                const valid = val.length >= 8 && /[A-Za-z]/.test(val) && /[0-9]/.test(val);
-                updateFieldStatus('password', valid, '8 أحرف على الأقل وحرف ورقم');
-                checkStage1Complete();
-            });
-            document.getElementById('show-password')?.addEventListener('change', function() {
-                const pwd = document.getElementById('password');
-                if (pwd) pwd.type = this.checked ? 'text' : 'password';
-            });
-            document.getElementById('master-global-agree')?.addEventListener('change', function() {
-                const submitBtn = document.getElementById('action-submit-btn');
-                if (submitBtn) submitBtn.disabled = !this.checked;
-            });
-
-            // أزرار التنقل
-            document.getElementById('action-prev-btn')?.addEventListener('click', () => goToStage(1));
-            document.getElementById('action-next-btn')?.addEventListener('click', () => goToStage(2));
-
-            // ربط زر "إنشاء حساب شريك" (على الرغم من أنه معرف بـ onclick في HTML لكن نربطه أيضاً احتياطاً)
-            document.getElementById('action-submit-btn')?.addEventListener('click', window.submitForm);
-
-            goToStage(1);
-            checkStage1Complete();
-        }
-
-        // انتظار الجاهزية
-        if (window.teraSupabase) {
-            startApp(window.teraSupabase);
-        } else {
-            document.addEventListener('supabase:ready', function(e) {
-                if (e.detail && e.detail.client) startApp(e.detail.client);
-                else alert('⚠️ فشل الاتصال بقاعدة البيانات.');
-            });
-            document.addEventListener('supabase:error', function() {
-                alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
-            });
-        }
-    })();
-    </script>
+    
+    <!-- ملفات الجافاسكربت بالترتيب الصحيح -->
+    <script src="../../assets/js/supabase-client.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>
