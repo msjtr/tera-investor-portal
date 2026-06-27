@@ -1,13 +1,14 @@
-/* ============================================================
-   TERA INVESTOR PORTAL - SUPABASE CONNECTION CLIENT
-   ============================================================ */
+/**
+ * منصة تيرا - محرك الاتصال المركزي بـ Supabase
+ */
+(function() {
+    const PROJECT_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
+    const ANON_KEY = 'YOUR_ACTUAL_LONG_JWT_KEY_HERE'; // ⚠️ ضع المفتاح الحقيقي هنا
 
-// 1. تحديد مفاتيح الربط (Project URL & Publishable Key)
-const supabaseUrl = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
-const supabaseKey = 'sb_publishable_QYc4AcGWtJGxalINA_UGZw_fjfVbGqg';
-
-// 2. تهيئة الاتصال بقاعدة البيانات
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-// رسالة تأكيد في لوحة المطورين (Console) للتحقق من نجاح التهيئة
-console.log("تم تهيئة الاتصال بقاعدة بيانات تيرا بنجاح.");
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY);
+        console.log('✅ [supabase-client.js] تم تهيئة العميل المركزي بنجاح.');
+    } else {
+        console.error('❌ [supabase-client.js] مكتبة Supabase غير محملة.');
+    }
+})();
