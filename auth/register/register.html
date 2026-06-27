@@ -43,12 +43,11 @@
             </div>
 
             <form id="teraRegisterForm" onsubmit="event.preventDefault();">
-                
                 <div class="form-stage-section active" id="stage-1-content">
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
                     <div class="form-field-group">
-                        <label class="field-label">الاسم الكامل (كما هو مدون في الهوية الوطنية أو جواز السفر) <span class="required">*</span></label>
+                        <label class="field-label">الاسم الكامل <span class="required">*</span></label>
                         <div class="input-wrapper">
                             <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
                             <span class="field-status-icon" id="name_ar-status">❌</span>
@@ -56,7 +55,7 @@
                         <div class="error-feedback-msg" id="name_ar-error"></div>
                         <div class="realtime-validation-box-mini">
                             <ul>
-                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط (لا يقبل الأرقام والرموز والأحرف الإنجليزية)</li>
+                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط</li>
                             </ul>
                         </div>
                     </div>
@@ -67,23 +66,10 @@
                                 <label class="field-label">مفتاح الدولة <span class="required">*</span></label>
                                 <div class="input-wrapper">
                                     <select id="country_code_select" class="form-input-control">
-                                        <optgroup label="دول الخليج العربي">
-                                            <option value="+966" selected>🇸🇦 السعودية +966</option>
-                                            <option value="+971">🇦🇪 الإمارات +971</option>
-                                            <option value="+965">🇰🇼 الكويت +965</option>
-                                            <option value="+973">🇧🇭 البحرين +973</option>
-                                            <option value="+968">🇴🇲 عمان +968</option>
-                                            <option value="+974">🇶🇦 قطر +974</option>
-                                        </optgroup>
-                                        <optgroup label="الدول العربية">
-                                            <option value="+20">🇪🇬 مصر +20</option>
-                                            <option value="+962">🇯🇴 الأردن +962</option>
-                                            <option value="+964">🇮🇶 العراق +964</option>
-                                            <option value="+961">🇱🇧 لبنان +961</option>
-                                            <option value="+212">🇲🇦 المغرب +212</option>
-                                            <option value="+213">🇩🇿 الجزائر +213</option>
-                                            <option value="+216">🇹🇳 تونس +216</option>
-                                        </optgroup>
+                                        <option value="+966" selected>🇸🇦 السعودية +966</option>
+                                        <option value="+971">🇦🇪 الإمارات +971</option>
+                                        <option value="+965">🇰🇼 الكويت +965</option>
+                                        <option value="+973">🇧🇭 البحرين +973</option>
                                     </select>
                                 </div>
                             </div>
@@ -99,61 +85,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="realtime-validation-box-mini mb-4">
-                        <ul>
-                            <li id="mob-rule-format"><span class="icon-marker">❌</span> أرقام فقط، ويمنع إدخال الصفر الأول نهائياً (يتم حذفه تلقائياً).</li>
-                        </ul>
-                    </div>
 
                     <div class="form-field-group">
                         <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="off">
+                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com">
                             <span class="field-status-icon" id="email-status">❌</span>
                         </div>
                         <div class="error-feedback-msg" id="email-error"></div>
                     </div>
 
                     <div class="form-field-group">
-                        <label class="field-label">تأكيد البريد الإلكتروني <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="email" id="confirm_email" class="form-input-control" placeholder="إعادة كتابة البريد الإلكتروني" autocomplete="off">
-                            <span class="field-status-icon" id="cemail-status">❌</span>
-                        </div>
-                        <div class="error-feedback-msg" id="cemail-error"></div>
-                        
-                        <div class="realtime-validation-box">
-                            <h5>التحقق من البريد الإلكتروني</h5>
-                            <ul class="validation-rule-list">
-                                <li id="e-rule-valid"><span class="icon-marker">❌</span> بريد إلكتروني صحيح</li>
-                                <li id="e-rule-unique"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
-                                <li id="e-rule-match"><span class="icon-marker">❌</span> البريد الإلكتروني وتأكيد البريد الإلكتروني متطابقان</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="off">
+                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية">
                             <span class="field-status-icon" id="username-status">❌</span>
                         </div>
                         <div class="error-feedback-msg" id="username-error"></div>
-                        
-                        <div class="realtime-validation-box">
-                            <h5>التحقق من اسم المستخدم</h5>
-                            <ul class="validation-rule-list">
-                                <li id="u-rule-len"><span class="icon-marker">❌</span> يتكون من 4 إلى 20 خانة</li>
-                                <li id="u-rule-start"><span class="icon-marker">❌</span> يبدأ بحرف إنجليزي</li>
-                                <li id="u-rule-char"><span class="icon-marker">❌</span> يحتوي على حرف إنجليزي واحد على الأقل (A-Z أو a-z)</li>
-                                <li id="u-rule-num"><span class="icon-marker">✅</span> يسمح بالأرقام (0-9)</li>
-                                <li id="u-rule-upper"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف كبيرة (A-Z)</li>
-                                <li id="u-rule-lower"><span class="icon-marker">✅</span> يمكن أن يحتوي على أحرف صغيرة (a-z)</li>
-                                <li id="u-rule-space"><span class="icon-marker">❌</span> لا يحتوي على مسافات</li>
-                                <li id="u-rule-special"><span class="icon-marker">❌</span> لا يحتوي على رموز خاصة</li>
-                                <li id="u-rule-unique"><span class="icon-marker">❌</span> غير مستخدم مسبقاً</li>
-                            </ul>
-                        </div>
                     </div>
 
                     <div class="form-field-group">
@@ -163,107 +111,15 @@
                             <span class="field-status-icon" id="password-status">❌</span>
                         </div>
                         <label class="checkbox-toggle-label"><input type="checkbox" id="show-password"> إظهار كلمة المرور</label>
-                        <div class="error-feedback-msg" id="password-error"></div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">تأكيد كلمة المرور <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="password" id="confirm_password" class="form-input-control" placeholder="أعد إدخال كلمة المرور">
-                            <span class="field-status-icon" id="cpassword-status">❌</span>
-                        </div>
-                        <label class="checkbox-toggle-label"><input type="checkbox" id="show-cpassword"> إظهار تأكيد كلمة المرور</label>
-                        <div class="error-feedback-msg" id="cpassword-error"></div>
-                        
-                        <div class="realtime-validation-box">
-                            <h5>التحقق من كلمة المرور</h5>
-                            <ul class="validation-rule-list">
-                                <li id="p-rule-len"><span class="icon-marker">❌</span> 8 أحرف على الأقل</li>
-                                <li id="p-rule-upper"><span class="icon-marker">❌</span> تحتوي على حرف كبير واحد على الأقل (A-Z)</li>
-                                <li id="p-rule-lower"><span class="icon-marker">❌</span> تحتوي على حرف صغير واحد على الأقل (a-z)</li>
-                                <li id="p-rule-num"><span class="icon-marker">❌</span> تحتوي على رقم واحد على الأقل (0-9)</li>
-                                <li id="p-rule-special"><span class="icon-marker">❌</span> تحتوي على رمز خاص واحد على الأقل</li>
-                                <li id="p-rule-space"><span class="icon-marker">❌</span> لا تحتوي على مسافات</li>
-                                <li id="p-rule-user"><span class="icon-marker">❌</span> لا تحتوي على اسم المستخدم</li>
-                                <li id="p-rule-email"><span class="icon-marker">❌</span> لا تحتوي على البريد الإلكتروني</li>
-                                <li id="p-rule-repeat"><span class="icon-marker">❌</span> لا تحتوي على أكثر من 3 أحرف أو أرقام متكررة متتالية</li>
-                                <li id="p-rule-weak"><span class="icon-marker">❌</span> لا تكون من الكلمات الشائعة أو الضعيفة</li>
-                            </ul>
-                            
-                            <div class="password-strength-container mt-3">
-                                <strong>مؤشر قوة كلمة المرور:</strong>
-                                <span id="strength-indicator-text" class="strength-red">🔴 ضعيفة</span>
-                                <div class="strength-bar-meter"><div id="strength-bar-fill"></div></div>
-                            </div>
-
-                            <h5 class="mt-4">التحقق من المطابقة</h5>
-                            <ul class="validation-rule-list">
-                                <li id="p-rule-match"><span class="icon-marker">❌</span> كلمة المرور وتأكيد كلمة المرور غير متطابقين</li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
 
                 <div class="form-stage-section" id="stage-2-content">
                     <h4 class="stage-header-title">المرحلة الثانية: الإقرارات والاتفاقيات</h4>
-                    
                     <div class="agreements-scroll-container">
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-1"> أقر بأن عمري 18 عاماً فأكثر وأن لدي الأهلية النظامية لإنشاء الحساب.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-2"> أقر بأنني المستفيد الحقيقي والمالك الفعلي لهذا الحساب.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-3"> أوافق على الشروط والأحكام الخاصة ببوابة الشركاء في منصة تيرا.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-4"> أوافق على سياسة الخصوصية.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-5"> أوافق على سياسة الاستخدام.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-6"> أوافق على إجراءات وأنظمة التحقق الأمني والحماية الإلكترونية.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-7"> أوافق على استخدام البريد الإلكتروني المسجل لإرسال رموز التحقق والإشعارات والتنبيهات الخاصة بالحساب.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-8"> أقر بأن جميع البيانات والمعلومات والمستندات المقدمة صحيحة وتعود لي شخصياً.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-9"> أتعهد بالمحافظة على سرية بيانات الدخول وعدم مشاركتها مع أي طرف آخر.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-10"> أتعهد بتحديث بياناتي عند حدوث أي تغيير عليها.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-11"> أتعهد بإبلاغ المنصة فوراً عند الاشتباه بأي استخدام غير مصرح به للحساب.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-12"> أوافق على استقبال الإشعارات والتنبيهات المتعلقة بالحساب عبر البريد الإلكتروني المسجل.</label>
-                        </div>
-                        <div class="agreement-item">
-                            <label><input type="checkbox" class="agreement-checkbox-item" id="agree-13"> أقر بأن إنشاء الحساب لا يمنح أي حقوق أو مزايا تلقائية إلا وفق الأنظمة والسياسات المعتمدة.</label>
-                        </div>
-                        
                         <div class="agreement-item master-agree-box">
-                            <label><input type="checkbox" id="master-global-agree"> <strong>قرأت جميع الإقرارات والاتفاقيات والشروط والأحكام وسياسة الخصوصية وأوافق عليها بالكامل.</strong></label>
+                            <label><input type="checkbox" id="master-global-agree"> <strong>أوافق على جميع الشروط والأحكام.</strong></label>
                         </div>
-                    </div>
-
-                    <div class="realtime-validation-box mt-4">
-                        <h5>التحقق النهائي</h5>
-                        <ul class="validation-rule-list" id="final-summary-rules">
-                            <li id="f-rule-stages"><span class="icon-marker">❌</span> جميع المراحل مكتملة</li>
-                            <li id="f-rule-reqs"><span class="icon-marker">❌</span> جميع المتطلبات محققة</li>
-                            <li id="f-rule-email"><span class="icon-marker">❌</span> البريد الإلكتروني غير مستخدم مسبقاً</li>
-                            <li id="f-rule-user"><span class="icon-marker">❌</span> اسم المستخدم غير مستخدم مسبقاً</li>
-                            <li id="f-rule-errors"><span class="icon-marker">❌</span> لا توجد أخطاء في البيانات</li>
-                            <li id="f-rule-ready"><span class="icon-marker">❌</span> جاهز لإنشاء الحساب</li>
-                            <li id="f-rule-otp"><span class="icon-marker">❌</span> جاهز لإرسال رمز التحقق إلى البريد الإلكتروني</li>
-                        </ul>
                     </div>
                 </div>
 
@@ -273,39 +129,15 @@
                     <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled onclick="submitForm()">إنشاء حساب شريك</button>
                 </div>
             </form>
-
-            <div class="bottom-routing-footer-links mt-5 text-center">
-                <p>لديك حساب بالفعل؟ <a href="../login.html" class="routing-link">تسجيل الدخول</a></p>
-                <p><a href="../../index.html" class="routing-link-secondary">العودة للصفحة الرئيسية</a></p>
-            </div>
-        </div>
-    </div>
-
-    <div class="central-modal-overlay" id="centralErrorModal">
-        <div class="central-modal-card">
-            <div class="central-modal-header">
-                <span class="central-modal-icon">⚠️</span>
-                <h4>متطلبات غير مكتملة</h4>
-            </div>
-            <div class="central-modal-body">
-                <p>لا يمكن الانتقال للمرحلة التالية بسبب وجود أخطاء أو حقول غير مكتملة. يرجى مراجعة الحقول الحمراء وتصحيحها:</p>
-                <ul id="centralModalErrorList"></ul>
-            </div>
-            <div class="central-modal-footer">
-                <button type="button" class="central-modal-btn" id="modalCloseBtn">حسناً، فهمت</button>
-            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script src="../../assets/js/supabase-client.js"></script>
-
     <script src="../../assets/js/core.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script src="../../assets/js/main.js"></script>
     <script src="../../assets/js/auth.js"></script>
-    
     <script src="register.js"></script>
 </body>
 </html>
