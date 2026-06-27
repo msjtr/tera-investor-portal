@@ -3,20 +3,20 @@
  * login.js - صفحة تسجيل الدخول
  * ============================================================
  * - تم حل مشكلة تداخل المتغيرات (PATHS Collision Fixed)
- * - يستخدم مسارات نسبية لتفادي أخطاء الاستضافة (404)
+ * - يستخدم مسارات مطلقة (Absolute Paths) حصراً لتفادي أخطاء الاستضافة (404)
  */
 
 (function() {
     'use strict';
 
     // ========================================================================
-    // 1. المسارات النسبية (استخدمنا اسم جديد لمنع التداخل مع auth.js)
+    // 1. المسارات المطلقة (لضمان دقة التوجيه من أي مستوى في هيكل الملفات)
     // ========================================================================
     const LOGIN_ROUTES = {
-        dashboard: '../../../pages/dashboard/index.html',
-        register: '../../register/register.html',
-        forgotPassword: '../../forgot-password.html',
-        home: '../../../index.html'
+        dashboard: '/pages/dashboard/index.html',
+        register: '/auth/register/register.html',
+        forgotPassword: '/auth/forgot-password.html',
+        home: '/index.html'
     };
 
     // ========================================================================
@@ -118,7 +118,7 @@
 
                 if (creativeLoaderScreen) creativeLoaderScreen.style.display = 'none';
                 
-                // التوجيه للوحة التحكم بالاعتماد على المتغير الجديد
+                // التوجيه للوحة التحكم بالاعتماد على المسار المطلق
                 window.location.replace(LOGIN_ROUTES.dashboard);
                 
             } catch (error) {
@@ -153,7 +153,7 @@
             }
         });
 
-        console.log('✅ [Login] السكربت جاهز بدون أي تداخل برمجي');
+        console.log('✅ [Login] السكربت جاهز بدون أي تداخل برمجي ومع مسارات مطلقة');
     });
 
 })(); // نهاية التغليف لحماية المتغيرات
