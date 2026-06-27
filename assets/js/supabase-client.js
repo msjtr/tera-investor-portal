@@ -4,8 +4,8 @@
  * ============================================================
  * - يُهيئ عميل Supabase ويُخزنه في window.teraSupabase
  * - يُطلق حدث "supabase:ready" عند الجهوزية
+ * - يوفر دالة window.getTeraSupabase() لضمان جلب العميل بأمان في أي وقت
  * - إذا تعذّر تحميل مكتبة Supabase من CDN، يقوم بتحميلها تلقائياً
- * - صُمم ليكون مستقلاً ويعمل في جميع الصفحات
  */
 (function() {
     'use strict';
@@ -13,6 +13,11 @@
     // ========== بيانات مشروع Supabase ==========
     const PROJECT_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjbXphdnJzZ2tmcHlwZ2V3cGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODkxMDUsImV4cCI6MjA5ODA2NTEwNX0.TzbZvdRnPuDyL5LVmSBLQYpYe7DgSJNtehKz5kE9uzc';
+
+    // منع تكرار التهيئة إذا تم استدعاء الملف أكثر من مرة
+    if (window.teraSupabase) return;
+
+    let isInitializing = false;
 
     /**
      * إنشاء العميل وتخزينه في النطاق العام، ثم إطلاق حدث الجاهزية
@@ -31,6 +36,9 @@
      * محاولة تحميل المكتبة من رابط احتياطي في حالة فشل تحميلها من HTML
      */
     function loadFallbackLibrary() {
+        if (isInitializing) return;
+        isInitializing = true;
+
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
         script.onload = () => {
@@ -47,6 +55,36 @@
         };
         document.head.appendChild(script);
     }
+
+    /**
+     * دالة مساعدة لضمان الحصول على العميل (Client) بشكل آمن من أي ملف آخر
+     * مثال للاستخدام: const supabase = await window.getTeraSupabase();
+     */
+    window.getTeraSupabase = function() {
+        return new Promise((resolve, reject) => {
+            // إذا كان جاهزاً، أرسله فوراً
+            if (window.teraSupabase) {
+                resolve(window.teraSupabase);
+                return;
+            }
+
+            // إذا لم يكن جاهزاً، انتظر الحدث
+            const onReady = (e) => {
+                document.removeEventListener('supabase:ready', onReady);
+                document.removeEventListener('supabase:error', onError);
+                resolve(e.detail.client);
+            };
+
+            const onError = () => {
+                document.removeEventListener('supabase:ready', onReady);
+                document.removeEventListener('supabase:error', onError);
+                reject(new Error('فشل تهيئة Supabase'));
+            };
+
+            document.addEventListener('supabase:ready', onReady);
+            document.addEventListener('supabase:error', onError);
+        });
+    };
 
     // ========== المنطق الرئيسي ==========
     // إذا كانت المكتبة محمّلة مسبقاً (من وسم <script> في HTML)
