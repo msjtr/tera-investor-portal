@@ -3,9 +3,9 @@
  * auth.js - محرك المصادقة والحماية الذكي (النسخة الكاملة)
  * ============================================================
  * - يدعم Supabase Auth ويتزامن مع localStorage
- * - يحسب المسارات النسبية تلقائياً (يمنع أخطاء 404 و Redirect Loops)
+ * - يستخدم المسارات المطلقة (Absolute Paths) حصراً لمنع أخطاء 404
  * - يستمع لتغييرات حالة المصادقة (SIGNED_IN / SIGNED_OUT)
- * - يتوافق مع البيئة المحلية وبيئة الخادم (Render)
+ * - يعتمد على window.getTeraSupabase() لضمان الاتصال الآمن
  * - صُمم للعمل مع نظام التسجيل عبر Trigger (حالة pending بعد signUp)
  */
 'use strict';
@@ -39,22 +39,10 @@ if (typeof window.TeraAuth !== 'undefined') {
             },
 
             /**
-             * حساب المسار النسبي للوصول إلى ملف معين من أي عمق.
-             * يعتمد على تحليل المسار الحالي لتوليد "../../" المناسبة.
+             * استخدام المسارات المطلقة لضمان دقة التوجيه من أي مسار فرعي
              */
-            getRelativePath: function(targetPath) {
-                const path = this.getCurrentPath();
-                let depth = 0;
-
-                if (path.includes('/pages/')) {
-                    depth = 2; // مجلد فرعي داخل pages (مثل dashboard)
-                } else if (path.includes('/auth/auth/')) {
-                    depth = 3; // مجلد مزدوج مثل auth/login
-                } else if (path.includes('/auth/')) {
-                    depth = 2; // مجلد auth الرئيسي
-                }
-
-                return '../'.repeat(depth) + targetPath;
+            getAbsolutePath: function(targetPath) {
+                return targetPath.startsWith('/') ? targetPath : '/' + targetPath;
             },
 
             redirectTo: function(url) {
@@ -116,13 +104,13 @@ if (typeof window.TeraAuth !== 'undefined') {
 
                     if (!loggedIn && isProtected) {
                         console.log('🔐 [Auth] غير مسجل → تحويل إلى صفحة الدخول');
-                        this.redirectTo(this.getRelativePath('auth/auth/login/login.html'));
+                        this.redirectTo(this.getAbsolutePath('auth/auth/login/login.html'));
                         return;
                     }
 
                     if (loggedIn && (isAuth || isLanding)) {
                         console.log('🚀 [Auth] مسجل دخول → تحويل إلى لوحة التحكم');
-                        this.redirectTo(this.getRelativePath('pages/dashboard/index.html'));
+                        this.redirectTo(this.getAbsolutePath('pages/dashboard/index.html'));
                         return;
                     }
 
@@ -165,7 +153,7 @@ if (typeof window.TeraAuth !== 'undefined') {
                 localStorage.removeItem('tera_remember');
                 localStorage.removeItem('tera_identifier');
                 sessionStorage.clear();
-                this.redirectTo(this.getRelativePath('auth/auth/login/login.html'));
+                this.redirectTo(this.getAbsolutePath('auth/auth/login/login.html'));
             },
 
             // ---- ٥. أدوات تحكم إضافية ----
@@ -229,23 +217,11 @@ if (typeof window.TeraAuth !== 'undefined') {
         async function initAuth() {
             const currentPage = window.location.pathname;
 
-            // انتظار توفر عميل Supabase (في حال لم يكن جاهزاً بعد)
-            if (!window.teraSupabase) {
-                try {
-                    await new Promise((resolve, reject) => {
-                        const handler = (e) => resolve(e.detail.client);
-                        const errorHandler = () => reject(new Error('supabase:error'));
-                        document.addEventListener('supabase:ready', handler, { once: true });
-                        document.addEventListener('supabase:error', errorHandler, { once: true });
-                        setTimeout(() => reject(new Error('Timeout waiting for Supabase')), 5000);
-                    });
-                } catch (e) {
-                    console.error('❌ [Auth] تعذر الاتصال بـ Supabase:', e);
-                }
-            }
+            try {
+                // انتظار توفر عميل Supabase بشكل آمن
+                await window.getTeraSupabase();
 
-            // الاستماع لتغييرات حالة المصادقة من Supabase
-            if (window.teraSupabase) {
+                // الاستماع لتغييرات حالة المصادقة من Supabase
                 window.teraSupabase.auth.onAuthStateChange(async (event, session) => {
                     console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
                     await TeraAuth.syncSession(session);
@@ -253,19 +229,22 @@ if (typeof window.TeraAuth !== 'undefined') {
                         TeraAuth.checkSession();
                     }
                 });
-            }
 
-            // تنفيذ منطق التوجيه الأولي حسب نوع الصفحة
-            if (TeraAuth.isAuthPage(currentPage)) {
-                TeraAuth.disableAutoRedirect();
-                TeraAuth.blockCheck();
-                console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة لمنع التكرار');
-            } else {
-                TeraAuth.checkSession();
-            }
+                // تنفيذ منطق التوجيه الأولي حسب نوع الصفحة
+                if (TeraAuth.isAuthPage(currentPage)) {
+                    TeraAuth.disableAutoRedirect();
+                    TeraAuth.blockCheck();
+                    console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة لمنع التكرار');
+                } else {
+                    TeraAuth.checkSession();
+                }
 
-            // تفعيل زر إظهار كلمة المرور
-            TeraAuth.initPasswordToggles();
+                // تفعيل زر إظهار كلمة المرور
+                TeraAuth.initPasswordToggles();
+
+            } catch (error) {
+                console.error('❌ [Auth] تعذر الاتصال بـ Supabase:', error);
+            }
         }
 
         // تشغيل التهيئة
