@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
 
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="../../../images/favicon.svg">
+    <link rel="shortcut icon" type="image/x-icon" href="../../../images/favicon.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,137 +15,93 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/auth.css">
-    
+    <link rel="stylesheet" href="../../../assets/css/core.css">
+    <link rel="stylesheet" href="../../../assets/css/main.css">
+    <link rel="stylesheet" href="../../../assets/css/auth.css">
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
     <div class="auth-layout">
-        <div class="auth-container glass-panel" id="loginCardBlock">
+        <div class="auth-container" id="loginCardBlock">
             <div class="auth-card-header text-center">
                 <div class="brand-logo-box">
-                    <img src="/images/logo.svg" alt="تيرا">
+                    <img src="../../../images/logo.svg" alt="تيرا">
                 </div>
                 <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
                 <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
                 <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
             </div>
 
-            <div class="error-summary-box" id="loginErrorBox" style="display: none; background-color: rgba(255, 77, 79, 0.1); border: 1px solid #ff4d4f; padding: 10px; border-radius: 6px; margin-bottom: 15px; color: #ff4d4f; font-size: 13px; align-items: center; gap: 8px;">
+            <div class="error-summary-box" id="loginErrorBox" style="display: none;">
                 <span class="error-box-icon">❌</span>
-                <span id="errorBoxText">البيانات المدخلة غير متطابقة مع سجلات المستثمرين.</span>
+                <span id="errorBoxText">البيانات المدخلة غير صحيحة</span>
             </div>
 
             <form id="teraLoginForm" novalidate>
                 <div class="form-field-group">
                     <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
                     <div class="input-wrapper">
-                        <input type="text" id="login_identifier" class="form-input-control" 
+                        <input type="email" id="login_identifier" class="form-input-control" 
                                placeholder="أدخل بريدك الإلكتروني" 
                                autocomplete="username" required>
                     </div>
-                    <div class="error-feedback-msg" id="identifier-error" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
+                    <div class="error-feedback-msg" id="identifier-error"></div>
                 </div>
 
                 <div class="form-field-group">
-                    <div class="field-label-flex" style="display: flex; justify-content: space-between;">
+                    <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <a href="/auth/forgot-password.html" class="forgot-pass-link" style="font-size: 13px;">نسيت كلمة المرور؟</a>
+                        <a href="../../forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
                         <input type="password" id="login_password" class="form-input-control" 
                                placeholder="أدخل كلمة المرور" 
                                autocomplete="current-password" required>
                     </div>
-                    <div class="checkbox-options-container" style="margin-top: 8px;">
-                        <label class="checkbox-toggle-label" style="font-size: 13px; cursor: pointer;">
+                    <div class="checkbox-options-container">
+                        <label class="checkbox-toggle-label">
                             <input type="checkbox" id="show_login_password" class="show-password-btn"> إظهار كلمة المرور
                         </label>
                     </div>
-                    <div class="error-feedback-msg" id="password-error" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
+                    <div class="error-feedback-msg" id="password-error"></div>
                 </div>
 
-                <div class="form-field-group remember-me-box" style="margin-top: 15px;">
-                    <label class="checkbox-toggle-label" style="font-size: 13px; cursor: pointer;">
+                <div class="form-field-group remember-me-box">
+                    <label class="checkbox-toggle-label">
                         <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
                     </label>
                 </div>
 
-                <div class="form-actions-block" style="margin-top: 20px;">
-                    <button type="submit" class="btn-submit-login btn-primary" id="loginSubmitBtn" style="width: 100%;">
+                <div class="form-actions-block">
+                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">
                         <i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن
                     </button>
                 </div>
             </form>
 
-            <div class="bottom-routing-footer-links text-center" style="margin-top: 25px; font-size: 14px;">
-                <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="/index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
+            <div class="bottom-routing-footer-links text-center">
+                <p>ليس لديك حساب؟ <a href="../../register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
+                <p><a href="../../../index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
 
+        <!-- اللودر الإبداعي -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
-            <div class="loader-content-card glass-panel text-center">
+            <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
                 <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
                 <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة بياناتك الاستثمارية...</p>
-                <div class="loading-progress-track" style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 15px;">
-                    <div class="progress-fill-bar" id="progressFillBar" style="width: 0%; background: #0d9488; height: 100%; transition: width 0.3s;"></div>
+                <div class="loading-progress-track">
+                    <div class="progress-fill-bar" id="progressFillBar"></div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ملفات JavaScript الخارجية فقط (بدون أي كود داخلي) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="/assets/js/supabase-client.js"></script>
-
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/auth.js"></script>
+    <script src="../../../assets/js/supabase-client.js"></script>
+    <script src="../../../assets/js/auth.js"></script>
     <script src="login.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            'use strict';
-            console.log('🚀 [login.html] تم تحميل واجهة الدخول بشكل صحيح.');
-
-            try {
-                // التأكد من توفر العميل بشكل آمن قبل تنفيذ أي شيء
-                if (typeof window.getTeraSupabase === 'function') {
-                    await window.getTeraSupabase();
-                } else {
-                    console.error('❌ [login.html] الدالة window.getTeraSupabase غير معرفة. راجع ترتيب السكربتات.');
-                }
-            } catch (err) {
-                console.error('❌ [login.html] خطأ في تهيئة الاتصال:', err);
-            }
-
-            // 1. التحقق من وجود توكن، التوجيه بالمسار المطلق
-            const token = localStorage.getItem('tera_token');
-            if (token && window.TeraAuth) {
-                console.log('✅ [login.html] مستخدم مسجل الدخول، جاري التوجيه للوحة التحكم...');
-                window.location.replace('/pages/dashboard/index.html');
-                return;
-            }
-
-            // 2. تأمين الواجهة لمنع التكرار اللانهائي
-            if (window.TeraAuth) {
-                window.TeraAuth.disableAutoRedirect();
-                window.TeraAuth.blockCheck();
-                console.log('🔒 [login.html] تم تأمين صفحة الدخول بنجاح.');
-            }
-
-            // 3. تفعيل زر عرض كلمة المرور
-            const showPasswordCheckbox = document.getElementById('show_login_password');
-            const passwordInput = document.getElementById('login_password');
-            if (showPasswordCheckbox && passwordInput) {
-                showPasswordCheckbox.addEventListener('change', function() {
-                    passwordInput.type = this.checked ? 'text' : 'password';
-                });
-            }
-        });
-    </script>
 </body>
 </html>
