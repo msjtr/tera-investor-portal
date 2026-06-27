@@ -1,20 +1,22 @@
 /**
  * منصة تيرا - بوابة الشركاء
- * ملف register.js: إدارة نموذج إنشاء حساب الشريك
- * ينتظر إشارة supabase:ready من supabase-client.js
+ * register.js - إدارة نموذج إنشاء حساب الشريك
+ * يعتمد على:
+ * - حدث 'supabase:ready' من supabase-client.js لتوفر العميل
+ * - نظام TeraAuth (auth.js) لمزامنة الجلسة بعد التسجيل
  */
 (function() {
     'use strict';
 
-    // ----------------------------------------------
-    // متغيرات عامة للملف
-    // ----------------------------------------------
+    // --------------------------------------------------------
+    // المتغيرات العامة للملف
+    // --------------------------------------------------------
     let supabaseClient = null;
     let currentStage = 1;
 
-    // ----------------------------------------------
+    // --------------------------------------------------------
     // دوال التحقق من الحقول
-    // ----------------------------------------------
+    // --------------------------------------------------------
     function updateFieldStatus(fieldId, isValid, errorMsg) {
         const statusIcon = document.getElementById(fieldId + '-status');
         const errorDiv = document.getElementById(fieldId + '-error');
@@ -58,9 +60,9 @@
         if (nextBtn) nextBtn.disabled = !allValid;
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------------
     // التنقل بين المراحل
-    // ----------------------------------------------
+    // --------------------------------------------------------
     function goToStage(stage) {
         const stage1Content = document.getElementById('stage-1-content');
         const stage2Content = document.getElementById('stage-2-content');
@@ -96,15 +98,16 @@
         currentStage = stage;
     }
 
-    // ----------------------------------------------
-    // إرسال النموذج (دالة عامة لأنها تنادى من HTML)
-    // ----------------------------------------------
+    // --------------------------------------------------------
+    // إرسال النموذج (يتم استدعاؤها من زر HTML)
+    // --------------------------------------------------------
     window.submitForm = async function() {
         if (!supabaseClient) {
             alert('❌ الاتصال بقاعدة البيانات غير جاهز. حاول مرة أخرى.');
             return;
         }
 
+        // تجميع البيانات من الحقول
         const fullname = document.getElementById('fullname_ar')?.value.trim();
         const countryCode = document.getElementById('country_code_select')?.value;
         const mobile = document.getElementById('mobile_number')?.value.trim();
@@ -124,6 +127,7 @@
         }
 
         try {
+            // استدعاء Supabase للتسجيل مع البيانات الإضافية
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
@@ -138,13 +142,47 @@
 
             if (error) throw error;
 
-            alert('✅ تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني لتأكيد الحساب.');
-            // إعادة توجيه أو مسح النموذج اختياري
-            // window.location.href = '/login';
+            // التحقق من وجود جلسة (عند عدم طلب تأكيد البريد)
+            if (data.session) {
+                // مزامنة الجلسة عبر TeraAuth إذا كان موجوداً، وإلا نخزن مباشرة
+                if (window.TeraAuth && typeof window.TeraAuth.syncSession === 'function') {
+                    await window.TeraAuth.syncSession(data.session);
+                } else {
+                    // تخزين احتياطي في localStorage
+                    localStorage.setItem('tera_token', data.session.access_token);
+                    localStorage.setItem('tera_user', JSON.stringify({
+                        id: data.user.id,
+                        email: data.user.email,
+                        name: data.user.user_metadata?.full_name || fullname,
+                        role: 'partner'
+                    }));
+                }
+                console.log('✅ تم التسجيل وجلسة المستخدم نشطة.');
+            } else {
+                console.log('ℹ️ تم إنشاء الحساب، لكن الجلسة غير متاحة (قد يكون تأكيد البريد مطلوباً).');
+            }
+
+            // إعلام المستخدم بالنجاح
+            alert('✅ تم إنشاء الحساب بنجاح! ' + 
+                (data.session ? 'سيتم تحويلك إلى لوحة التحكم.' : 'تحقق من بريدك الإلكتروني لتأكيد الحساب.'));
+
+            // إذا كانت الجلسة متاحة، يمكن توجيه المستخدم إلى لوحة التحكم
+            if (data.session) {
+                // احصل على مسار لوحة التحكم النسبي باستخدام TeraAuth إن وجد
+                if (window.TeraAuth && typeof window.TeraAuth.getRelativePath === 'function') {
+                    const dashboardPath = window.TeraAuth.getRelativePath('pages/dashboard/index.html');
+                    window.location.replace(dashboardPath);
+                } else {
+                    // fallback: الانتقال النسبي
+                    window.location.replace('../../pages/dashboard/index.html');
+                }
+            }
 
         } catch (error) {
             console.error('❌ فشل إنشاء الحساب:', error);
-            alert('⚠️ فشل إنشاء الحساب: ' + (error.message || 'خطأ غير معروف'));
+            let msg = error.message || 'خطأ غير معروف';
+            if (error.status) msg += ' (كود: ' + error.status + ')';
+            alert('⚠️ فشل إنشاء الحساب: ' + msg);
         } finally {
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -153,14 +191,14 @@
         }
     };
 
-    // ----------------------------------------------
-    // بدء التطبيق عند الجاهزية
-    // ----------------------------------------------
+    // --------------------------------------------------------
+    // بدء التطبيق عند جاهزية العميل
+    // --------------------------------------------------------
     function startApp(client) {
         supabaseClient = client;
         console.log('🚀 تطبيق register.js يعمل الآن.');
 
-        // ربط أحداث الحقول
+        // ربط أحداث التحقق من الحقول
         const fullnameAr = document.getElementById('fullname_ar');
         const mobileInput = document.getElementById('mobile_number');
         const emailInput = document.getElementById('email');
@@ -172,6 +210,7 @@
         const nextBtn = document.getElementById('action-next-btn');
         const submitBtn = document.getElementById('action-submit-btn');
 
+        // الاسم العربي
         if (fullnameAr) {
             fullnameAr.addEventListener('input', function() {
                 const valid = validateArabicName(this.value);
@@ -182,6 +221,7 @@
             });
         }
 
+        // رقم الجوال
         if (mobileInput) {
             mobileInput.addEventListener('input', function() {
                 const valid = validateMobile(this.value);
@@ -190,6 +230,7 @@
             });
         }
 
+        // البريد الإلكتروني
         if (emailInput) {
             emailInput.addEventListener('input', function() {
                 const valid = validateEmail(this.value);
@@ -198,6 +239,7 @@
             });
         }
 
+        // اسم المستخدم
         if (usernameInput) {
             usernameInput.addEventListener('input', function() {
                 const valid = validateUsername(this.value);
@@ -206,6 +248,7 @@
             });
         }
 
+        // كلمة المرور
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
                 const valid = validatePassword(this.value);
@@ -214,6 +257,7 @@
             });
         }
 
+        // إظهار/إخفاء كلمة المرور
         if (showPassword) {
             showPassword.addEventListener('change', function() {
                 if (passwordInput) {
@@ -222,23 +266,30 @@
             });
         }
 
+        // الموافقة على الشروط
         if (masterAgree) {
             masterAgree.addEventListener('change', function() {
                 if (submitBtn) submitBtn.disabled = !this.checked;
             });
         }
 
+        // أزرار التنقل
         if (prevBtn) prevBtn.addEventListener('click', () => goToStage(1));
         if (nextBtn) nextBtn.addEventListener('click', () => goToStage(2));
+
+        // ربط زر الإرسال احتياطياً
+        if (submitBtn) {
+            submitBtn.addEventListener('click', window.submitForm);
+        }
 
         // الحالة الأولية: الذهاب للمرحلة الأولى، وتعطيل زر التالي حتى تكتمل الحقول
         goToStage(1);
         checkStage1Complete();
     }
 
-    // ----------------------------------------------
+    // --------------------------------------------------------
     // آلية الانتظار: إما أن العميل موجود أو ننتظر الحدث
-    // ----------------------------------------------
+    // --------------------------------------------------------
     if (window.teraSupabase) {
         // العميل موجود مسبقاً (تم تحميل supabase-client.js قبله)
         startApp(window.teraSupabase);
