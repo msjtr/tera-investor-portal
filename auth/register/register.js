@@ -1,6 +1,6 @@
 /**
  * register.js - إدارة نموذج تسجيل الشريك (هيكل Trigger)
- * يعتمد على حدث 'supabase:ready' من supabase-client.js
+ * يعتمد على دالة window.getTeraSupabase() لضمان الاتصال الآمن
  * لا يقوم بأي insert مباشر، فقط signUp ثم توجيه لصفحة التحقق
  */
 (function() {
@@ -100,9 +100,10 @@
             // تخزين البريد للتحقق
             localStorage.setItem('pendingVerificationEmail', email);
 
-            // التوجيه إلى صفحة التحقق
+            // التوجيه إلى صفحة التحقق باستخدام مسار مطلق (Absolute Path)
             alert('✅ تم إنشاء الحساب بنجاح! سيتم توجيهك إلى صفحة التحقق.');
-            window.location.href = '../../auth/verify-otp.html';
+            window.location.href = '/auth/verify-otp.html';
+            
         } catch (error) {
             console.error('❌ فشل إنشاء الحساب:', error);
             let msg = error.message || 'خطأ غير معروف';
@@ -165,15 +166,16 @@
         checkStage1Complete();
     }
 
-    if (window.teraSupabase) {
-        startApp(window.teraSupabase);
-    } else {
-        document.addEventListener('supabase:ready', e => {
-            if (e.detail?.client) startApp(e.detail.client);
-            else alert('⚠️ فشل الاتصال بقاعدة البيانات.');
-        });
-        document.addEventListener('supabase:error', () => {
-            alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
-        });
-    }
+    // تهيئة التطبيق عند اكتمال تحميل شجرة الـ DOM
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // استخدام الدالة الجديدة للحصول على العميل بأمان
+            const client = await window.getTeraSupabase();
+            startApp(client);
+        } catch (error) {
+            console.error('❌ فشل الاتصال بقاعدة البيانات:', error);
+            alert('⚠️ تعذر الاتصال بقاعدة البيانات. يرجى تحديث الصفحة.');
+        }
+    });
+
 })();
