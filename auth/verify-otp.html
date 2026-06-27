@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="التحقق من رمز التفعيل - منصة تيرا">
+    <meta name="description" content="التحقق من رمز التفعيل الحقيقي - منصة تيرا">
     <title>التحقق من الرمز | تيرا</title>
 
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
     <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
 </head>
@@ -19,24 +21,30 @@
             </div>
 
             <h1>التحقق من الرمز</h1>
-            <p id="instructionText">أدخل رمز التحقق المرسل إلى جوالك أو بريدك الإلكتروني</p>
+            <p id="instructionText">أدخل رمز التحقق المكون من 8 أرقام للمتابعة</p>
+
+            <div id="loginErrorBox" style="display: none; background-color: rgba(255, 77, 79, 0.1); border: 1px solid #ff4d4f; padding: 10px; border-radius: 6px; margin-bottom: 15px; color: #ff4d4f; font-size: 13px; align-items: center; gap: 8px;">
+                <span>❌</span>
+                <span id="errorBoxText"></span>
+            </div>
 
             <form id="otpForm">
                 <div class="form-group">
-                    <label for="otp">رمز التحقق</label>
+                    <label for="otp">رمز التحقق الأمني (8 أرقام)</label>
                     <input 
                         type="text" 
                         id="otp" 
                         name="otp" 
-                        maxlength="6" 
-                        placeholder="000000" 
+                        maxlength="8" 
+                        placeholder="00000000" 
                         autocomplete="one-time-code"
+                        style="text-align: center; letter-spacing: 4px; font-weight: bold; font-size: 20px;"
                         required>
                     <div id="otp-error" class="error-message" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn-primary">
-                    تحقق
+                    تأكيد الرمز والتحقق
                 </button>
             </form>
 
@@ -48,6 +56,9 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             const otpForm = document.getElementById('otpForm');
@@ -55,102 +66,116 @@
             const submitBtn = document.getElementById('submitBtn');
             const resendBtn = document.getElementById('resendCode');
             const errorDiv = document.getElementById('otp-error');
+            const loginErrorBox = document.getElementById('loginErrorBox');
+            const errorBoxText = document.getElementById('errorBoxText');
             const instructionText = document.getElementById('instructionText');
 
             let supabaseClient = null;
 
-            // استرجاع البريد الإلكتروني الذي تم تخزينه في مرحلة إنشاء الحساب أو استعادة كلمة المرور
+            // جلب البريد الإلكتروني المعلق والمحفوظ من خطوة التسجيل
             const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-
             if (pendingEmail) {
                 instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
-            } else {
-                console.warn('⚠️ [OTP] لم يتم العثور على بريد إلكتروني معلق.');
             }
 
             try {
-                // الاتصال الآمن بعميل قاعدة البيانات
-                if (typeof window.getTeraSupabase === 'function') {
-                    supabaseClient = await window.getTeraSupabase();
-                }
+                // الحصول على اتصال قاعدة البيانات الحقيقي والمستقر
+                supabaseClient = await window.getTeraSupabase();
             } catch (error) {
-                console.error('❌ [OTP] تعذر الاتصال بقاعدة البيانات:', error);
+                console.error('❌ [OTP] فشل جلب عميل Supabase المركزي:', error);
+                showGlobalError('تعذر الاتصال بخادم قاعدة البيانات، يرجى تحديث الصفحة.');
             }
 
-            // معالجة التحقق من الرمز
+            function showGlobalError(message) {
+                if (errorBoxText && loginErrorBox) {
+                    errorBoxText.textContent = message;
+                    loginErrorBox.style.display = 'flex';
+                }
+            }
+
+            // معالجة إرسال النموذج والتحقق الفعلي لـ 8 أرقام
             otpForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 errorDiv.textContent = '';
+                if (loginErrorBox) loginErrorBox.style.display = 'none';
                 
                 const otpValue = otpInput.value.trim();
 
-                if (otpValue.length !== 6 || !/^\d+$/.test(otpValue)) {
-                    errorDiv.textContent = 'الرجاء إدخال رمز صحيح مكون من 6 أرقام';
+                // التحقق الأولي من طول الخانات الجديد (8 خانات)
+                if (otpValue.length !== 8 || !/^\d+$/.test(otpValue)) {
+                    errorDiv.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام بشكل صحيح';
                     return;
                 }
 
-                if (!supabaseClient || !pendingEmail) {
-                    // في حال كان التطبيق يعمل في بيئة اختبارية بدون Supabase، نقوم بتوجيه افتراضي آمن
-                    console.log('🔄 [OTP] وضع الاختبار: توجيه مباشر باستخدام المسار المطلق');
-                    window.location.replace('/auth/reset-password.html');
+                if (!supabaseClient) {
+                    errorDiv.textContent = 'نظام الاتصال غير جاهز حالياً، أعد تحميل الصفحة.';
+                    return;
+                }
+
+                if (!pendingEmail) {
+                    showGlobalError('لم يتم العثور على بيانات جلسة التسجيل المعلقة، يرجى إعادة محاولة إنشاء الحساب.');
                     return;
                 }
 
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'جاري التحقق...';
+                submitBtn.textContent = 'جاري التحقق الفعلي...';
 
                 try {
+                    // تنفيذ عملية التحقق الحقيقية عبر خوادم قاعدة البيانات
                     const { data, error } = await supabaseClient.auth.verifyOtp({
                         email: pendingEmail,
                         token: otpValue,
-                        type: 'signup' // يمكن تغييرها إلى 'recovery' بناءً على مسار المستخدم
+                        type: 'signup'
                     });
 
                     if (error) throw error;
 
-                    console.log('✅ [OTP] تم التحقق بنجاح');
-                    localStorage.removeItem('pendingVerificationEmail');
+                    console.log('✅ [OTP] تم تفعيل الحساب بنجاح عبر الخادم الرئيسي.');
                     
-                    // التوجيه إلى المسار المطلق التالي
-                    window.location.replace('/pages/dashboard/index.html');
+                    // تنظيف بيانات الجلسة المؤقتة بعد النجاح
+                    localStorage.removeItem('pendingVerificationEmail');
+
+                    // التوجيه الفوري والحقيقي إلى صفحة الدخول بالمسار المطلق المعتمد
+                    window.location.replace('/auth/auth/login/login.html');
 
                 } catch (error) {
-                    console.error('❌ [OTP] فشل التحقق:', error);
-                    errorDiv.textContent = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+                    console.error('❌ [OTP Error]:', error.message);
+                    showGlobalError(error.message || 'رمز التحقق المكون من 8 أرقام غير صحيح، أو منتهي الصلاحية.');
                 } finally {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = 'تحقق';
+                    submitBtn.textContent = 'تأكيد الرمز والتحقق';
                 }
             });
 
-            // معالجة إعادة الإرسال
-            resendBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                if (!supabaseClient || !pendingEmail) {
-                    alert('تم إعادة إرسال رمز التحقق (وضع الاختبار)');
-                    return;
-                }
+            // طلب إعادة إرسال الرمز الحقيقي إلى البريد الإلكتروني للعميل
+            if (resendBtn) {
+                resendBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    if (!supabaseClient || !pendingEmail) {
+                        alert('بيانات الجلسة غير متوفرة لإعادة الإرسال.');
+                        return;
+                    }
 
-                resendBtn.style.pointerEvents = 'none';
-                resendBtn.textContent = 'جاري الإرسال...';
+                    resendBtn.style.pointerEvents = 'none';
+                    resendBtn.textContent = 'جاري إعادة الإرسال...';
 
-                try {
-                    const { error } = await supabaseClient.auth.resend({
-                        type: 'signup',
-                        email: pendingEmail
-                    });
+                    try {
+                        const { error } = await supabaseClient.auth.resend({
+                            type: 'signup',
+                            email: pendingEmail
+                        });
 
-                    if (error) throw error;
-                    alert('✅ تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني.');
-                } catch (error) {
-                    console.error('❌ [OTP] فشل إعادة الإرسال:', error);
-                    alert('⚠️ حدث خطأ أثناء إعادة إرسال الرمز. حاول مجدداً بعد قليل.');
-                } finally {
-                    resendBtn.style.pointerEvents = 'auto';
-                    resendBtn.textContent = 'إعادة إرسال الرمز';
-                }
-            });
+                        if (error) throw error;
+                        alert('✅ تم إعادة إرسال رمز التحقق الأمني بنجاح إلى بريدكم المسجل.');
+                    } catch (error) {
+                        console.error('❌ [OTP Resend Error]:', error.message);
+                        alert('⚠️ فشل إعادة الإرسال: ' + error.message);
+                    } finally {
+                        resendBtn.style.pointerEvents = 'auto';
+                        resendBtn.textContent = 'إعادة إرسال الرمز';
+                    }
+                });
+            }
         });
     </script>
 </body>
