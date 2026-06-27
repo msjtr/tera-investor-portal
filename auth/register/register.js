@@ -1,11 +1,10 @@
 /**
- * منصة تيرا - بوابة الشركاء
- * register.js - إدارة نموذج إنشاء حساب الشريك
+ * register.js - إدارة نموذج تسجيل الشريك (هيكل Trigger)
  * يعتمد على حدث 'supabase:ready' من supabase-client.js
+ * لا يقوم بأي insert مباشر، فقط signUp ثم توجيه لصفحة التحقق
  */
 (function() {
     'use strict';
-
     let supabaseClient = null;
     let currentStage = 1;
 
@@ -87,35 +86,23 @@
                 options: {
                     data: {
                         full_name: fullname,
-                        mobile: countryCode + mobile,
-                        username: username
+                        username: username,
+                        mobile_number: countryCode + mobile
                     }
                 }
             });
 
             if (error) throw error;
+            if (!data.user) throw new Error('لم يتم إنشاء المستخدم في Auth');
 
-            if (data.session) {
-                // تخزين الجلسة محلياً
-                localStorage.setItem('tera_token', data.session.access_token);
-                localStorage.setItem('tera_user', JSON.stringify({
-                    id: data.user.id,
-                    email: data.user.email,
-                    name: data.user.user_metadata?.full_name || fullname,
-                    role: 'partner'
-                }));
+            // لا نقوم بأي insert، الـ Trigger سيتولى الباقي
 
-                // محاولة مزامنة TeraAuth إن وجد
-                if (window.TeraAuth?.syncSession) {
-                    await window.TeraAuth.syncSession(data.session);
-                }
+            // تخزين البريد للتحقق
+            localStorage.setItem('pendingVerificationEmail', email);
 
-                alert('✅ تم إنشاء الحساب بنجاح! سيتم تحويلك إلى لوحة التحكم.');
-                const basePath = window.__BASE || '../../';
-                window.location.replace(basePath + 'pages/dashboard/index.html');
-            } else {
-                alert('✅ تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني لتأكيد الحساب.');
-            }
+            // التوجيه إلى صفحة التحقق
+            alert('✅ تم إنشاء الحساب بنجاح! سيتم توجيهك إلى صفحة التحقق.');
+            window.location.href = '../../auth/verify-otp.html';
         } catch (error) {
             console.error('❌ فشل إنشاء الحساب:', error);
             let msg = error.message || 'خطأ غير معروف';
@@ -131,7 +118,6 @@
 
     function startApp(client) {
         supabaseClient = client;
-        console.log('🚀 تطبيق register.js جاهز.');
 
         document.getElementById('fullname_ar')?.addEventListener('input', function() {
             const valid = /^[\u0621-\u064A\s]+$/.test(this.value.trim());
@@ -140,25 +126,21 @@
             if (marker) marker.textContent = valid ? '✅' : '❌';
             checkStage1Complete();
         });
-
         document.getElementById('mobile_number')?.addEventListener('input', function() {
             const valid = /^5\d{8}$/.test(this.value.trim());
             updateFieldStatus('mobile', valid, 'رقم جوال غير صحيح');
             checkStage1Complete();
         });
-
         document.getElementById('email')?.addEventListener('input', function() {
             const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value.trim());
             updateFieldStatus('email', valid, 'بريد إلكتروني غير صحيح');
             checkStage1Complete();
         });
-
         document.getElementById('username')?.addEventListener('input', function() {
             const valid = /^[a-zA-Z0-9_]{3,20}$/.test(this.value.trim());
             updateFieldStatus('username', valid, '3-20 حرف إنجليزي أو رقم');
             checkStage1Complete();
         });
-
         document.getElementById('password')?.addEventListener('input', function() {
             const val = this.value;
             const valid = val.length >= 8 && /[A-Za-z]/.test(val) && /[0-9]/.test(val);
@@ -170,7 +152,6 @@
             const pwd = document.getElementById('password');
             if (pwd) pwd.type = this.checked ? 'text' : 'password';
         });
-
         document.getElementById('master-global-agree')?.addEventListener('change', function() {
             const btn = document.getElementById('action-submit-btn');
             if (btn) btn.disabled = !this.checked;
@@ -184,15 +165,14 @@
         checkStage1Complete();
     }
 
-    // انتظار جاهزية العميل
     if (window.teraSupabase) {
         startApp(window.teraSupabase);
     } else {
-        document.addEventListener('supabase:ready', function(e) {
+        document.addEventListener('supabase:ready', e => {
             if (e.detail?.client) startApp(e.detail.client);
             else alert('⚠️ فشل الاتصال بقاعدة البيانات.');
         });
-        document.addEventListener('supabase:error', function() {
+        document.addEventListener('supabase:error', () => {
             alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
         });
     }
