@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نسيت كلمة المرور | بوابة تيرا</title>
+    <title>إكمال الملف الشخصي | بوابة تيرا</title>
 
     <!-- أيقونات وخطوط -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-    <!-- ملفات التنسيق الأساسية (المسارات المطلقة) -->
+    <!-- ملفات التنسيق الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
@@ -20,53 +20,137 @@
 
     <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+
+    <style>
+        .complete-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: #0284c7;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+        }
+        .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+        .has-icon {
+            padding-right: 35px;
+        }
+    </style>
 </head>
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <!-- شعار المنصة والعنوان -->
+            <!-- الشعار والعنوان -->
             <div class="text-center mb-5">
                 <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <div class="complete-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
                 <h2 class="portal-title mt-3">بوابة تيرا</h2>
-                <h3 class="page-subtitle">استعادة كلمة المرور</h3>
-                <p class="welcome-text">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.</p>
+                <h3 class="page-subtitle">إكمال الملف الشخصي</h3>
+                <p class="welcome-text">مرحباً بك! يرجى إدخال بياناتك الأساسية لإكمال إعداد حسابك.</p>
             </div>
 
-            <!-- صندوق عرض الأخطاء أو التنبيهات -->
+            <!-- صندوق التنبيهات -->
             <div class="alert-box" id="formAlert" style="display: none;">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span class="alert-message" id="alertMessage"></span>
             </div>
 
-            <!-- نموذج استعادة كلمة المرور -->
-            <form id="forgotPasswordForm" novalidate>
+            <!-- نموذج إكمال البيانات -->
+            <form id="completeProfileForm" novalidate>
+                <!-- الاسم الكامل -->
                 <div class="form-field-group">
-                    <label class="field-label" for="identity">البريد الإلكتروني <span class="required">*</span></label>
+                    <label class="field-label" for="fullname">
+                        <i class="fas fa-user"></i> الاسم الكامل <span class="required">*</span>
+                    </label>
                     <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-pen"></i></span>
                         <input
-                            type="email"
-                            id="identity"
-                            name="identity"
-                            class="form-input-control"
-                            placeholder="example@domain.com"
+                            type="text"
+                            id="fullname"
+                            class="form-input-control has-icon"
+                            placeholder="أدخل الاسم الكامل بالعربية"
                             required
-                            autocomplete="email"
                         >
                     </div>
-                    <div class="error-feedback-msg" id="identity-error"></div>
+                    <div class="error-feedback-msg" id="fullname-error"></div>
                 </div>
 
+                <!-- اسم المستخدم -->
+                <div class="form-field-group">
+                    <label class="field-label" for="username">
+                        <i class="fas fa-at"></i> اسم المستخدم <span class="required">*</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="input-icon"><i class="fas fa-user-tag"></i></span>
+                        <input
+                            type="text"
+                            id="username"
+                            class="form-input-control has-icon"
+                            placeholder="اختر اسم مستخدم بالإنجليزية"
+                            required
+                        >
+                    </div>
+                    <div class="error-feedback-msg" id="username-error"></div>
+                </div>
+
+                <!-- مفتاح الدولة ورقم الجوال -->
+                <div class="row-flex container-grid">
+                    <div class="col-inline-4">
+                        <div class="form-field-group">
+                            <label class="field-label" for="countryCode">مفتاح الدولة <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <select id="countryCode" class="form-input-control">
+                                    <option value="+966" selected>🇸🇦 +966</option>
+                                    <option value="+971">🇦🇪 +971</option>
+                                    <option value="+965">🇰🇼 +965</option>
+                                    <option value="+973">🇧🇭 +973</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-inline-8">
+                        <div class="form-field-group">
+                            <label class="field-label" for="mobile">
+                                <i class="fas fa-mobile-alt"></i> رقم الجوال <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <span class="input-icon"><i class="fas fa-phone"></i></span>
+                                <input
+                                    type="text"
+                                    id="mobile"
+                                    class="form-input-control has-icon"
+                                    placeholder="5xxxxxxxx"
+                                    required
+                                >
+                            </div>
+                            <div class="error-feedback-msg" id="mobile-error"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- زر الإرسال -->
                 <div class="form-actions-block">
                     <button type="submit" class="btn-submit-login" id="submitBtn">
-                        <i class="fas fa-paper-plane"></i> إرسال رابط الاستعادة
+                        <i class="fas fa-check-circle"></i> إكمال التسجيل
                     </button>
                 </div>
             </form>
 
-            <!-- روابط التنقل السفلية -->
+            <!-- روابط سفلية -->
             <div class="bottom-routing-footer-links text-center">
                 <p><a href="/auth/login.html" class="routing-link"><i class="fa-solid fa-arrow-right"></i> العودة إلى تسجيل الدخول</a></p>
-                <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
             </div>
         </div>
 
@@ -74,7 +158,7 @@
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
-                <h4 class="loader-primary-heading">جاري المعالجة</h4>
+                <h4 class="loader-primary-heading">جاري إكمال التسجيل</h4>
                 <p class="creative-motivational-text" id="creativeQuoteText">يرجى الانتظار...</p>
                 <div class="loading-progress-track">
                     <div class="progress-fill-bar" id="progressFillBar"></div>
@@ -83,10 +167,10 @@
         </div>
     </div>
 
-    <!-- السكريبتات الأساسية -->
+    <!-- السكريبتات الأساسية (جميعها خارجية) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/forgot-password.js"></script>
+    <script src="/assets/js/complete-profile.js"></script>
 </body>
 </html>
