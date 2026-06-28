@@ -4,205 +4,134 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="التحقق من رمز التفعيل الحقيقي - منصة تيرا">
-    <title>التحقق من الرمز | تيرا</title>
+    <title>التحقق من الرمز | بوابة تيرا</title>
 
+    <!-- أيقونات وخطوط -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- ملفات التنسيق الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
+
+    <!-- أيقونة الموقع -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+
+    <style>
+        .otp-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: #059669;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2);
+        }
+        .otp-input {
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: bold;
+            font-size: 22px;
+            direction: ltr;
+        }
+        .resend-link {
+            color: #028090;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        .resend-link:hover {
+            color: #026b7a;
+        }
+    </style>
 </head>
 <body>
-
-    <div class="auth-container">
-        <div class="auth-card glass-panel">
-            <div class="auth-logo">
-                TERA
+    <div class="auth-layout">
+        <div class="auth-container">
+            <!-- شعار المنصة والعنوان -->
+            <div class="text-center mb-5">
+                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <div class="otp-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="portal-title mt-3">بوابة تيرا</h2>
+                <h3 class="page-subtitle">التحقق من الرمز</h3>
+                <p class="welcome-text" id="instructionText">أدخل رمز التحقق المكون من 8 أرقام للمتابعة</p>
             </div>
 
-            <h1>التحقق من الرمز</h1>
-            <p id="instructionText">أدخل رمز التحقق المكون من 8 أرقام للمتابعة</p>
-
-            <div id="loginErrorBox" style="display: none; background-color: rgba(255, 77, 79, 0.1); border: 1px solid #ff4d4f; padding: 10px; border-radius: 6px; margin-bottom: 15px; color: #ff4d4f; font-size: 13px; align-items: center; gap: 8px;">
-                <span>❌</span>
-                <span id="errorBoxText"></span>
+            <!-- صندوق التنبيهات -->
+            <div class="alert-box" id="formAlert" style="display: none;">
+                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
+                <span class="alert-message" id="alertMessage"></span>
             </div>
 
-            <form id="otpForm">
-                <div class="form-group">
-                    <label for="otp">رمز التحقق الأمني (8 أرقام)</label>
-                    <input 
-                        type="text" 
-                        id="otp" 
-                        name="otp" 
-                        maxlength="8" 
-                        placeholder="00000000" 
-                        autocomplete="one-time-code"
-                        inputmode="numeric"
-                        pattern="[0-9]*"
-                        style="text-align: center; letter-spacing: 4px; font-weight: bold; font-size: 20px;"
-                        required>
-                    <div id="otp-error" class="error-message" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
+            <!-- نموذج إدخال الرمز -->
+            <form id="otpForm" novalidate>
+                <div class="form-field-group">
+                    <label class="field-label" for="otp">
+                        <i class="fas fa-keyboard"></i> رمز التحقق (8 أرقام)
+                    </label>
+                    <div class="input-wrapper">
+                        <input
+                            type="text"
+                            id="otp"
+                            class="form-input-control otp-input"
+                            maxlength="8"
+                            placeholder="00000000"
+                            autocomplete="one-time-code"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            required
+                        >
+                    </div>
+                    <div class="error-feedback-msg" id="otp-error"></div>
                 </div>
 
-                <button type="submit" id="submitBtn" class="btn-primary">
-                    تأكيد الرمز والتحقق
-                </button>
+                <div class="form-actions-block">
+                    <button type="submit" class="btn-submit-login" id="submitBtn">
+                        <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
+                    </button>
+                </div>
             </form>
 
-            <div class="auth-footer">
-                <a href="#" id="resendCode" class="routing-link-secondary">
-                    إعادة إرسال الرمز
-                </a>
+            <!-- إعادة إرسال الرمز -->
+            <div class="text-center mt-4">
+                <span class="resend-link" id="resendCode">
+                    <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
+                </span>
+            </div>
+
+            <!-- روابط سفلية -->
+            <div class="bottom-routing-footer-links text-center">
+                <p><a href="/auth/login.html" class="routing-link"><i class="fa-solid fa-arrow-right"></i> العودة إلى تسجيل الدخول</a></p>
+            </div>
+        </div>
+
+        <!-- اللودر الإبداعي -->
+        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
+            <div class="loader-content-card">
+                <div class="spinning-infinity-ring"></div>
+                <h4 class="loader-primary-heading">جاري التحقق من الرمز</h4>
+                <p class="creative-motivational-text" id="creativeQuoteText">يرجى الانتظار...</p>
+                <div class="loading-progress-track">
+                    <div class="progress-fill-bar" id="progressFillBar"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- السكريبتات الأساسية (جميعها خارجية) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            const otpForm = document.getElementById('otpForm');
-            const otpInput = document.getElementById('otp');
-            const submitBtn = document.getElementById('submitBtn');
-            const resendBtn = document.getElementById('resendCode');
-            const errorDiv = document.getElementById('otp-error');
-            const loginErrorBox = document.getElementById('loginErrorBox');
-            const errorBoxText = document.getElementById('errorBoxText');
-            const instructionText = document.getElementById('instructionText');
-
-            let supabaseClient = null;
-
-            // تحديد نوع العملية (افتراضياً: signup)
-            const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; 
-            
-            // جلب البريد الإلكتروني المعلق والمحفوظ من خطوة التسجيل أو الاستعادة
-            const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-            if (pendingEmail) {
-                instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
-            }
-
-            try {
-                // الحصول على اتصال قاعدة البيانات الحقيقي والمستقر
-                supabaseClient = await window.getTeraSupabase();
-            } catch (error) {
-                console.error('❌ [OTP] فشل جلب عميل Supabase المركزي:', error);
-                showGlobalError('تعذر الاتصال بخادم قاعدة البيانات، يرجى تحديث الصفحة.');
-            }
-
-            function showGlobalError(message) {
-                if (errorBoxText && loginErrorBox) {
-                    errorBoxText.textContent = message;
-                    loginErrorBox.style.display = 'flex';
-                }
-            }
-
-            // فلترة الإدخال الفورية (أرقام فقط) والإرسال التلقائي
-            otpInput.addEventListener('input', function(e) {
-                this.value = this.value.replace(/\D/g, ''); // إزالة أي رموز غير رقمية
-                errorDiv.textContent = '';
-                
-                // الإرسال التلقائي بمجرد اكتمال 8 أرقام
-                if (this.value.length === 8) {
-                    if (typeof otpForm.requestSubmit === 'function') {
-                        otpForm.requestSubmit();
-                    } else {
-                        otpForm.dispatchEvent(new Event('submit'));
-                    }
-                }
-            });
-
-            // معالجة إرسال النموذج والتحقق الفعلي لـ 8 أرقام
-            otpForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                errorDiv.textContent = '';
-                if (loginErrorBox) loginErrorBox.style.display = 'none';
-                
-                const otpValue = otpInput.value.trim();
-
-                if (otpValue.length !== 8) {
-                    errorDiv.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام بشكل صحيح';
-                    return;
-                }
-
-                if (!supabaseClient) {
-                    errorDiv.textContent = 'نظام الاتصال غير جاهز حالياً، أعد تحميل الصفحة.';
-                    return;
-                }
-
-                if (!pendingEmail) {
-                    showGlobalError('لم يتم العثور على بيانات جلسة معلقة، يرجى إعادة طلب الرمز.');
-                    return;
-                }
-
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
-
-                try {
-                    // تنفيذ عملية التحقق الحقيقية عبر خوادم قاعدة البيانات
-                    const { data, error } = await supabaseClient.auth.verifyOtp({
-                        email: pendingEmail,
-                        token: otpValue,
-                        type: verifyType // يدعم signup أو recovery ديناميكياً
-                    });
-
-                    if (error) throw error;
-
-                    console.log('✅ [OTP] تم التحقق بنجاح عبر الخادم الرئيسي.');
-                    
-                    // تنظيف بيانات الجلسة المؤقتة بعد النجاح
-                    localStorage.removeItem('pendingVerificationEmail');
-                    localStorage.removeItem('tera_verify_type');
-
-                    // التوجيه بناءً على نوع العملية
-                    if (verifyType === 'recovery') {
-                        window.location.replace('/auth/reset-password.html');
-                    } else {
-                        window.location.replace('/auth/auth/login/login.html');
-                    }
-
-                } catch (error) {
-                    console.error('❌ [OTP Error]:', error.message);
-                    showGlobalError(error.message || 'رمز التحقق غير صحيح، أو منتهي الصلاحية.');
-                    otpInput.value = ''; // تفريغ الحقل لإعادة الإدخال
-                    otpInput.focus();
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'تأكيد الرمز والتحقق';
-                }
-            });
-
-            // طلب إعادة إرسال الرمز الحقيقي إلى البريد الإلكتروني
-            if (resendBtn) {
-                resendBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    if (!supabaseClient || !pendingEmail) {
-                        alert('بيانات الجلسة غير متوفرة لإعادة الإرسال.');
-                        return;
-                    }
-
-                    resendBtn.style.pointerEvents = 'none';
-                    resendBtn.textContent = 'جاري إعادة الإرسال...';
-
-                    try {
-                        const { error } = await supabaseClient.auth.resend({
-                            type: verifyType,
-                            email: pendingEmail
-                        });
-
-                        if (error) throw error;
-                        alert('✅ تم إعادة إرسال رمز التحقق الأمني بنجاح إلى بريدكم المسجل.');
-                    } catch (error) {
-                        console.error('❌ [OTP Resend Error]:', error.message);
-                        alert('⚠️ فشل إعادة الإرسال: ' + error.message);
-                    } finally {
-                        resendBtn.style.pointerEvents = 'auto';
-                        resendBtn.textContent = 'إعادة إرسال الرمز';
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/verify-otp.js"></script>
 </body>
 </html>
