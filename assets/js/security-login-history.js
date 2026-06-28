@@ -1,189 +1,84 @@
 /**
  * ============================================================
- * سجل عمليات الدخول - Login History
+ * سجل عمليات الدخول - Login History (نسخة المؤسسات)
  * ============================================================
  * الموقع: /assets/js/security-login-history.js
+ * - جلب البيانات الحقيقية من جدول auth_login عبر Supabase.
+ * - دعم الفلاتر (الحالة، التاريخ) والترقيم.
+ * - ينتظر حدث 'supabase:ready' لضمان جاهزية العميل.
  * ============================================================
  */
 
-// التأكد من وجود الكائن العام
 window.SecurityPages = window.SecurityPages || {};
 
 window.SecurityPages['login-history'] = {
-    // بيانات تجريبية لسجل الدخول
-    loginEntries: [
-        {
-            id: 1,
-            date: '2026-06-26 09:30:15',
-            ip: '192.168.1.100',
-            device: 'Chrome 120',
-            os: 'macOS Sonoma 14.2',
-            location: 'الرياض، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: true
-        },
-        {
-            id: 2,
-            date: '2026-06-25 22:15:42',
-            ip: '192.168.1.101',
-            device: 'Safari 17',
-            os: 'iOS 17.4',
-            location: 'الرياض، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 3,
-            date: '2026-06-25 14:20:08',
-            ip: '10.0.0.5',
-            device: 'Edge 124',
-            os: 'Windows 11',
-            location: 'جدة، المملكة العربية السعودية',
-            status: 'failed',
-            isCurrent: false
-        },
-        {
-            id: 4,
-            date: '2026-06-24 18:45:33',
-            ip: '192.168.1.102',
-            device: 'Chrome 120',
-            os: 'Android 14',
-            location: 'الدمام، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 5,
-            date: '2026-06-24 11:30:21',
-            ip: '10.0.0.12',
-            device: 'Firefox 125',
-            os: 'Ubuntu 24.04',
-            location: 'دبي، الإمارات العربية المتحدة',
-            status: 'failed',
-            isCurrent: false
-        },
-        {
-            id: 6,
-            date: '2026-06-23 08:15:50',
-            ip: '192.168.1.103',
-            device: 'Safari 17',
-            os: 'iPadOS 17.4',
-            location: 'الرياض، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 7,
-            date: '2026-06-22 16:40:12',
-            ip: '172.16.0.8',
-            device: 'Chrome 120',
-            os: 'Windows 10',
-            location: 'الكويت، دولة الكويت',
-            status: 'failed',
-            isCurrent: false
-        },
-        {
-            id: 8,
-            date: '2026-06-21 12:05:37',
-            ip: '192.168.1.104',
-            device: 'Edge 123',
-            os: 'Windows 11',
-            location: 'الرياض، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 9,
-            date: '2026-06-20 09:55:18',
-            ip: '10.0.0.3',
-            device: 'Firefox 124',
-            os: 'macOS Sonoma 14.1',
-            location: 'الدوحة، دولة قطر',
-            status: 'failed',
-            isCurrent: false
-        },
-        {
-            id: 10,
-            date: '2026-06-19 21:20:44',
-            ip: '192.168.1.105',
-            device: 'Safari 16',
-            os: 'iOS 16.7',
-            location: 'المنامة، مملكة البحرين',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 11,
-            date: '2026-06-18 14:10:29',
-            ip: '172.16.0.10',
-            device: 'Chrome 119',
-            os: 'Android 13',
-            location: 'مسقط، سلطنة عمان',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 12,
-            date: '2026-06-17 07:35:52',
-            ip: '192.168.1.106',
-            device: 'Edge 122',
-            os: 'Windows 10',
-            location: 'القاهرة، جمهورية مصر العربية',
-            status: 'failed',
-            isCurrent: false
-        },
-        {
-            id: 13,
-            date: '2026-06-16 18:50:11',
-            ip: '10.0.0.7',
-            device: 'Chrome 120',
-            os: 'macOS Ventura 13.6',
-            location: 'الرياض، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 14,
-            date: '2026-06-15 11:25:38',
-            ip: '192.168.1.107',
-            device: 'Safari 17',
-            os: 'iOS 17.3',
-            location: 'جدة، المملكة العربية السعودية',
-            status: 'success',
-            isCurrent: false
-        },
-        {
-            id: 15,
-            date: '2026-06-14 16:15:05',
-            ip: '172.16.0.15',
-            device: 'Firefox 123',
-            os: 'Ubuntu 22.04',
-            location: 'الخرطوم، جمهورية السودان',
-            status: 'failed',
-            isCurrent: false
-        }
-    ],
-
-    // متغيرات الترقيم والفلترة
+    // البيانات القادمة من الخادم
+    allEntries: [],
+    filteredData: [],
     currentPage: 1,
     pageSize: 10,
-    filteredData: [],
+    isLoading: false,
 
-    init: function() {
-        console.log('📋 Initializing Login History page...');
+    init: async function() {
+        console.log('📋 تهيئة صفحة سجل الدخول (Enterprise)...');
 
-        // تهيئة البيانات المفلترة
-        this.filteredData = [...this.loginEntries];
-        this.applyFilters();
+        // انتظار جاهزية Supabase
+        if (!window.teraSupabase) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
+                    document.addEventListener('supabase:ready', (e) => {
+                        clearTimeout(timeout);
+                        resolve(e.detail.client);
+                    }, { once: true });
+                    document.addEventListener('supabase:error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('فشل تحميل Supabase'));
+                    }, { once: true });
+                });
+            } catch (err) {
+                console.error('❌ تعذر الاتصال بـ Supabase:', err);
+                this.showEmptyState('تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.');
+                return;
+            }
+        }
 
         // تهيئة المستمعات
         this.initEventListeners();
-
-        console.log('✅ Login History page initialized successfully.');
+        // جلب البيانات وعرضها
+        await this.loadData();
     },
 
     /**
-     * تهيئة مستمعات الأحداث
+     * جلب جميع سجلات الدخول من قاعدة البيانات
+     */
+    loadData: async function() {
+        const tbody = document.getElementById('loginHistoryBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:48px 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i>
+                <p>جاري تحميل سجل الدخول...</p>
+            </td></tr>`;
+        }
+
+        try {
+            const { data, error } = await window.teraSupabase
+                .from('auth_login')
+                .select('*')
+                .order('login_at', { ascending: false });
+
+            if (error) throw error;
+
+            this.allEntries = data || [];
+            this.applyFilters();
+        } catch (error) {
+            console.error('❌ خطأ في جلب سجل الدخول:', error);
+            this.showEmptyState('تعذر تحميل سجل الدخول. ' + (error.message || ''));
+        }
+    },
+
+    /**
+     * تهيئة مستمعات الأحداث (فلاتر، أزرار)
      */
     initEventListeners: function() {
         // فلاتر
@@ -192,45 +87,37 @@ window.SecurityPages['login-history'] = {
         const filterDateTo = document.getElementById('filterDateTo');
         const resetBtn = document.getElementById('resetFiltersBtn');
 
-        if (filterStatus) {
-            filterStatus.addEventListener('change', this.applyFilters.bind(this));
-        }
-        if (filterDateFrom) {
-            filterDateFrom.addEventListener('change', this.applyFilters.bind(this));
-        }
-        if (filterDateTo) {
-            filterDateTo.addEventListener('change', this.applyFilters.bind(this));
-        }
-        if (resetBtn) {
-            resetBtn.addEventListener('click', this.resetFilters.bind(this));
-        }
+        if (filterStatus) filterStatus.addEventListener('change', this.applyFilters.bind(this));
+        if (filterDateFrom) filterDateFrom.addEventListener('change', this.applyFilters.bind(this));
+        if (filterDateTo) filterDateTo.addEventListener('change', this.applyFilters.bind(this));
+        if (resetBtn) resetBtn.addEventListener('click', this.resetFilters.bind(this));
 
         // أزرار الترقيم
         const prevBtn = document.getElementById('prevPage');
         const nextBtn = document.getElementById('nextPage');
 
         if (prevBtn) {
-            prevBtn.addEventListener('click', function() {
+            prevBtn.addEventListener('click', () => {
                 if (this.currentPage > 1) {
                     this.currentPage--;
                     this.renderTable();
                 }
-            }.bind(this));
+            });
         }
 
         if (nextBtn) {
-            nextBtn.addEventListener('click', function() {
+            nextBtn.addEventListener('click', () => {
                 const totalPages = Math.ceil(this.filteredData.length / this.pageSize);
                 if (this.currentPage < totalPages) {
                     this.currentPage++;
                     this.renderTable();
                 }
-            }.bind(this));
+            });
         }
     },
 
     /**
-     * تطبيق الفلاتر على البيانات
+     * تطبيق الفلاتر على البيانات المسترجعة
      */
     applyFilters: function() {
         const filterStatus = document.getElementById('filterStatus');
@@ -241,35 +128,24 @@ window.SecurityPages['login-history'] = {
         const dateFrom = filterDateFrom ? filterDateFrom.value : '';
         const dateTo = filterDateTo ? filterDateTo.value : '';
 
-        this.filteredData = this.loginEntries.filter(function(entry) {
+        this.filteredData = this.allEntries.filter(entry => {
             // فلتر الحالة
-            if (status !== 'all' && entry.status !== status) {
-                return false;
-            }
+            if (status !== 'all' && entry.login_status !== status) return false;
 
-            // فلتر التاريخ من
-            if (dateFrom) {
-                const entryDate = entry.date.split(' ')[0];
-                if (entryDate < dateFrom) {
-                    return false;
-                }
-            }
-
-            // فلتر التاريخ إلى
-            if (dateTo) {
-                const entryDate = entry.date.split(' ')[0];
-                if (entryDate > dateTo) {
-                    return false;
-                }
+            // فلتر التاريخ
+            if (entry.login_at) {
+                const entryDate = entry.login_at.split('T')[0]; // yyyy-mm-dd
+                if (dateFrom && entryDate < dateFrom) return false;
+                if (dateTo && entryDate > dateTo) return false;
+            } else {
+                // إذا لم توجد login_at نعرضها أم لا؟ حسب المنطق، لا نفلتر
             }
 
             return true;
         });
 
-        // إعادة تعيين الصفحة إلى 1
         this.currentPage = 1;
         this.renderTable();
-        this.updatePagination();
     },
 
     /**
@@ -288,129 +164,121 @@ window.SecurityPages['login-history'] = {
     },
 
     /**
-     * عرض الجدول مع البيانات المفلترة والمرقمة
+     * عرض الجدول بالبيانات المصفّاة
      */
     renderTable: function() {
         const tbody = document.getElementById('loginHistoryBody');
         const totalCount = document.getElementById('totalEntries');
         const entriesCount = document.getElementById('entriesCount');
         const logCount = document.getElementById('logCount');
+        const showingStart = document.getElementById('showingStart');
+        const showingEnd = document.getElementById('showingEnd');
 
         if (!tbody) return;
 
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        const endIndex = Math.min(startIndex + this.pageSize, this.filteredData.length);
-        const pageData = this.filteredData.slice(startIndex, endIndex);
-
-        // تحديث الإحصائيات
         const total = this.filteredData.length;
         if (totalCount) totalCount.textContent = total;
         if (entriesCount) entriesCount.textContent = total;
         if (logCount) logCount.textContent = total + ' سجل';
 
-        // تحديث معلومات العرض
-        const showingStart = document.getElementById('showingStart');
-        const showingEnd = document.getElementById('showingEnd');
+        const startIndex = (this.currentPage - 1) * this.pageSize;
+        const endIndex = Math.min(startIndex + this.pageSize, total);
+        const pageData = this.filteredData.slice(startIndex, endIndex);
+
         if (showingStart) showingStart.textContent = total > 0 ? startIndex + 1 : 0;
         if (showingEnd) showingEnd.textContent = total > 0 ? endIndex : 0;
 
         if (pageData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align:center; padding:48px 20px; color:#94a3b8;">
-                        <i class="fas fa-inbox" style="font-size:32px; display:block; margin-bottom:12px;"></i>
-                        لا توجد سجلات تطابق معايير البحث
-                    </td>
-                </tr>
-            `;
+            this.showEmptyState('لا توجد سجلات تطابق معايير البحث');
             return;
         }
 
         let html = '';
-        pageData.forEach(function(entry, index) {
-            const globalIndex = startIndex + index + 1;
-            const statusBadge = this.getStatusBadge(entry.status);
-            const locationIcon = this.getLocationIcon(entry.location);
-            const isCurrent = entry.isCurrent ? ' <span class="device-tag" style="background:#D1E7DD;color:#0F5132;"><i class="fas fa-check-circle"></i> الحالي</span>' : '';
+        pageData.forEach((entry, idx) => {
+            const globalIndex = startIndex + idx + 1;
+            const loginAt = entry.login_at ? this.formatDate(entry.login_at) : '-';
+            const ip = entry.ip_address || '-';
+            const device = entry.device_name || entry.browser || '-';
+            const os = entry.operating_system || '-';
+            const status = entry.login_status || 'unknown';
+            const statusBadge = this.getStatusBadge(status);
+            const locationText = '-'; // في حال أردت إضافة موقع يمكن استخراجه لاحقاً
+            const deviceIcon = this.getDeviceIcon(device);
+            const locationIcon = 'fa-map-marker-alt';
+            const isCurrent = false; // لا نملك حالياً إشارة للجلسة الحالية
 
             html += `
                 <tr>
                     <td>${globalIndex}</td>
-                    <td>${this.formatDate(entry.date)}</td>
-                    <td><span class="ip-address">${entry.ip}</span></td>
+                    <td>${loginAt}</td>
+                    <td><span class="ip-address">${ip}</span></td>
                     <td>
-                        <span class="device-tag"><i class="fas ${this.getDeviceIcon(entry.device)}"></i> ${entry.device}</span>
-                        <span style="font-size:12px; color:#94a3b8; display:block; margin-top:2px;">${entry.os}${isCurrent}</span>
+                        <span class="device-tag"><i class="fas ${deviceIcon}"></i> ${device}</span>
+                        <span style="font-size:12px; color:#94a3b8; display:block; margin-top:2px;">${os}</span>
                     </td>
-                    <td><span class="location-text"><i class="fas ${locationIcon}"></i> ${entry.location}</span></td>
+                    <td><span class="location-text"><i class="fas ${locationIcon}"></i> ${locationText}</span></td>
                     <td>${statusBadge}</td>
                 </tr>
             `;
-        }.bind(this));
+        });
 
         tbody.innerHTML = html;
         this.updatePagination();
     },
 
-    /**
-     * الحصول على أيقونة الجهاز
-     */
+    showEmptyState: function(message) {
+        const tbody = document.getElementById('loginHistoryBody');
+        if (!tbody) return;
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center; padding:48px 20px; color:#94a3b8;">
+                    <i class="fas fa-inbox" style="font-size:32px; display:block; margin-bottom:12px;"></i>
+                    ${message}
+                </td>
+            </tr>
+        `;
+        // إعادة تعيين الإحصائيات
+        const totalCount = document.getElementById('totalEntries');
+        const entriesCount = document.getElementById('entriesCount');
+        const logCount = document.getElementById('logCount');
+        const showingStart = document.getElementById('showingStart');
+        const showingEnd = document.getElementById('showingEnd');
+        if (totalCount) totalCount.textContent = '0';
+        if (entriesCount) entriesCount.textContent = '0';
+        if (logCount) logCount.textContent = '0 سجل';
+        if (showingStart) showingStart.textContent = '0';
+        if (showingEnd) showingEnd.textContent = '0';
+    },
+
     getDeviceIcon: function(device) {
-        const deviceLower = device.toLowerCase();
-        if (deviceLower.includes('chrome')) return 'fa-chrome';
-        if (deviceLower.includes('safari')) return 'fa-safari';
-        if (deviceLower.includes('edge')) return 'fa-edge';
-        if (deviceLower.includes('firefox')) return 'fa-firefox';
+        const d = device.toLowerCase();
+        if (d.includes('chrome')) return 'fa-chrome';
+        if (d.includes('safari')) return 'fa-safari';
+        if (d.includes('edge')) return 'fa-edge';
+        if (d.includes('firefox')) return 'fa-firefox';
         return 'fa-globe';
     },
 
-    /**
-     * الحصول على أيقونة الموقع
-     */
-    getLocationIcon: function(location) {
-        if (location.includes('الرياض')) return 'fa-city';
-        if (location.includes('جدة')) return 'fa-city';
-        if (location.includes('الدمام')) return 'fa-city';
-        if (location.includes('دبي')) return 'fa-city';
-        if (location.includes('الكويت')) return 'fa-city';
-        if (location.includes('الدوحة')) return 'fa-city';
-        if (location.includes('المنامة')) return 'fa-city';
-        if (location.includes('مسقط')) return 'fa-city';
-        if (location.includes('القاهرة')) return 'fa-city';
-        if (location.includes('الخرطوم')) return 'fa-city';
-        return 'fa-map-marker-alt';
-    },
-
-    /**
-     * الحصول على حالة الدخول مع البادج المناسب
-     */
     getStatusBadge: function(status) {
         if (status === 'success') {
             return '<span class="status-badge success"><i class="fas fa-check-circle"></i> ناجحة</span>';
         } else if (status === 'failed') {
             return '<span class="status-badge failed"><i class="fas fa-times-circle"></i> فاشلة</span>';
         } else {
-            return '<span class="status-badge pending"><i class="fas fa-clock"></i> قيد الانتظار</span>';
+            return '<span class="status-badge pending"><i class="fas fa-clock"></i> ' + status + '</span>';
         }
     },
 
-    /**
-     * تنسيق التاريخ
-     */
     formatDate: function(dateStr) {
         try {
-            const parts = dateStr.split(' ');
-            if (parts.length === 2) {
-                const dateParts = parts[0].split('-');
-                const timeParts = parts[1].split(':');
-                const year = dateParts[0];
-                const month = dateParts[1];
-                const day = dateParts[2];
-                const hour = timeParts[0];
-                const minute = timeParts[1];
-                return `${year}/${month}/${day} ${hour}:${minute}`;
-            }
-            return dateStr;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
         } catch (e) {
             return dateStr;
         }
@@ -424,33 +292,21 @@ window.SecurityPages['login-history'] = {
         const prevBtn = document.getElementById('prevPage');
         const nextBtn = document.getElementById('nextPage');
         const paginationContainer = document.getElementById('paginationButtons');
-
         if (!paginationContainer) return;
 
-        // حذف أزرار الصفحات القديمة (مع الاحتفاظ بأزرار السابق والتالي)
-        const oldPageBtns = paginationContainer.querySelectorAll('.page-btn:not(#prevPage):not(#nextPage)');
-        oldPageBtns.forEach(function(btn) {
-            btn.remove();
-        });
+        // إزالة أزرار الصفحات القديمة (ماعدا أزرار السابق والتالي)
+        paginationContainer.querySelectorAll('.page-btn:not(#prevPage):not(#nextPage)').forEach(btn => btn.remove());
 
-        // إضافة أزرار الصفحات الجديدة
         const maxVisiblePages = 5;
         let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
         let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
         if (endPage - startPage + 1 < maxVisiblePages) {
             startPage = Math.max(1, endPage - maxVisiblePages + 1);
         }
 
-        // إضافة زر الصفحة الأولى إذا لزم الأمر
         if (startPage > 1) {
-            const firstBtn = document.createElement('button');
-            firstBtn.className = 'page-btn';
-            firstBtn.dataset.page = '1';
-            firstBtn.textContent = '1';
-            firstBtn.addEventListener('click', this.goToPage.bind(this));
+            const firstBtn = this.createPageBtn(1);
             paginationContainer.insertBefore(firstBtn, nextBtn);
-
             if (startPage > 2) {
                 const dots = document.createElement('span');
                 dots.textContent = '…';
@@ -460,11 +316,8 @@ window.SecurityPages['login-history'] = {
         }
 
         for (let i = startPage; i <= endPage; i++) {
-            const btn = document.createElement('button');
-            btn.className = 'page-btn' + (i === this.currentPage ? ' active' : '');
-            btn.dataset.page = i;
-            btn.textContent = i;
-            btn.addEventListener('click', this.goToPage.bind(this));
+            const btn = this.createPageBtn(i);
+            if (i === this.currentPage) btn.classList.add('active');
             paginationContainer.insertBefore(btn, nextBtn);
         }
 
@@ -475,26 +328,23 @@ window.SecurityPages['login-history'] = {
                 dots.style.cssText = 'padding:0 4px; color:#94a3b8;';
                 paginationContainer.insertBefore(dots, nextBtn);
             }
-            const lastBtn = document.createElement('button');
-            lastBtn.className = 'page-btn';
-            lastBtn.dataset.page = totalPages;
-            lastBtn.textContent = totalPages;
-            lastBtn.addEventListener('click', this.goToPage.bind(this));
+            const lastBtn = this.createPageBtn(totalPages);
             paginationContainer.insertBefore(lastBtn, nextBtn);
         }
 
-        // تحديث حالة أزرار السابق والتالي
-        if (prevBtn) {
-            prevBtn.disabled = this.currentPage <= 1;
-        }
-        if (nextBtn) {
-            nextBtn.disabled = this.currentPage >= totalPages || totalPages === 0;
-        }
+        if (prevBtn) prevBtn.disabled = this.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = this.currentPage >= totalPages || totalPages === 0;
     },
 
-    /**
-     * الانتقال إلى صفحة محددة
-     */
+    createPageBtn: function(page) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.dataset.page = page;
+        btn.textContent = page;
+        btn.addEventListener('click', this.goToPage.bind(this));
+        return btn;
+    },
+
     goToPage: function(e) {
         const page = parseInt(e.target.dataset.page);
         if (!isNaN(page) && page !== this.currentPage) {
