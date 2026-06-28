@@ -1,9 +1,12 @@
 /**
- * login.js - معالجة تسجيل الدخول عبر Supabase
- * يعتمد على TeraAuth.login (من auth.js) التي تستخدم supabase.auth.signInWithPassword
- * يتضمن فحص الجلسة المسبقة، تأمين الصفحة، تفعيل إظهار كلمة المرور، وعرض اللودر.
+ * ============================================================
+ * login.js - معالجة تسجيل الدخول عبر Supabase (النسخة المؤسسية)
+ * ============================================================
+ * - يعتمد على TeraAuth.login للاتصال الفعلي بخوادم Supabase.
+ * - يستخدم المسارات المطلقة (Absolute Paths) حصراً للتوجيه.
+ * - يتضمن فحص الجلسة، عرض اللودر، ومعالجة رسائل الخطأ من السيرفر.
  */
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
     // ---------- عناصر الصفحة ----------
@@ -15,10 +18,12 @@
     const showPasswordCheckbox = document.getElementById('show_login_password');
     const passwordInput = document.getElementById('login_password');
 
+    if (!form) return;
+
     // ---------- ١. فحص الجلسة الحالية ----------
     if (window.TeraAuth && window.TeraAuth.isLoggedIn()) {
-        // المستخدم مسجل دخول مسبقاً -> توجيه فوري للوحة التحكم
-        window.TeraAuth.redirectTo(window.TeraAuth.getRelativePath('pages/dashboard/index.html'));
+        // المستخدم مسجل دخول مسبقاً -> توجيه فوري للوحة التحكم باستخدام مسار مطلق
+        window.location.replace('/pages/dashboard/index.html');
         return; // إيقاف التنفيذ
     }
 
@@ -26,7 +31,7 @@
     if (window.TeraAuth) {
         window.TeraAuth.disableAutoRedirect();
         window.TeraAuth.blockCheck();
-        console.log('🔒 [login.js] تم تأمين صفحة الدخول');
+        console.log('🔒 [Login] تم تأمين صفحة الدخول');
     }
 
     // ---------- ٣. تفعيل إظهار/إخفاء كلمة المرور ----------
@@ -61,22 +66,25 @@
                 throw new Error('نظام المصادقة غير جاهز، أعد تحميل الصفحة.');
             }
 
+            // الاتصال الحقيقي بخادم Supabase
             const user = await window.TeraAuth.login(email, password);
             console.log('✅ [Login] تم تسجيل الدخول بنجاح:', user);
 
-            // التوجيه إلى لوحة التحكم
-            const dashboardPath = window.TeraAuth.getRelativePath('pages/dashboard/index.html');
-            window.location.replace(dashboardPath);
+            // التوجيه المباشر بالمسار المطلق إلى لوحة التحكم
+            window.location.replace('/pages/dashboard/index.html');
+            
         } catch (error) {
             console.error('❌ [Login] فشل تسجيل الدخول:', error);
+            
             let message = 'بيانات الدخول غير صحيحة';
             if (error.message.includes('Invalid login credentials')) {
-                message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة. تأكد من صحة البيانات ومن تأكيد بريدك الإلكتروني (إن لزم).';
+                message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة. تأكد من صحة البيانات.';
             } else if (error.message.includes('Email not confirmed')) {
                 message = 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
             } else {
                 message = error.message || message;
             }
+            
             showError(message);
         } finally {
             showLoader(false);
@@ -87,7 +95,7 @@
     // ---------- دوال مساعدة ----------
     function showLoader(show) {
         if (loaderOverlay) loaderOverlay.style.display = show ? 'flex' : 'none';
-        // محاكاة شريط التقدم
+        // محاكاة شريط التقدم للواجهة فقط
         const progressBar = document.getElementById('progressFillBar');
         if (show && progressBar) {
             progressBar.style.width = '0%';
@@ -101,7 +109,8 @@
     function showError(message) {
         if (errorBox && errorText) {
             errorText.textContent = message;
-            errorBox.style.display = 'block';
+            // استخدام flex ليتوافق مع تنسيق الصندوق الجديد المحتوي على أيقونة ونص
+            errorBox.style.display = 'flex'; 
         }
     }
-})();
+});
