@@ -1,7 +1,11 @@
 /**
- * register.js - إدارة نموذج تسجيل الشريك (هيكل Trigger)
- * يعتمد على دالة window.getTeraSupabase() لضمان الاتصال الآمن
- * لا يقوم بأي insert مباشر، فقط signUp ثم توجيه لصفحة التحقق
+ * ============================================================
+ * register.js - إدارة نموذج تسجيل الشريك (النسخة المؤسسية - Enterprise)
+ * ============================================================
+ * - يعتمد على دالة window.getTeraSupabase() لضمان الاتصال الآمن.
+ * - يمرر البيانات بشكل يتوافق مع هيكل الجداول الجديد (auth_register).
+ * - لا يقوم بأي insert مباشر، يترك المهمة لـ Trigger قاعدة البيانات.
+ * - يستخدم المسارات المطلقة (Absolute Paths) للتوجيه.
  */
 (function() {
     'use strict';
@@ -62,7 +66,7 @@
         }
 
         const fullname = document.getElementById('fullname_ar')?.value.trim();
-        const countryCode = document.getElementById('country_code_select')?.value;
+        const countryCode = document.getElementById('country_code_select')?.value || '+966';
         const mobile = document.getElementById('mobile_number')?.value.trim();
         const email = document.getElementById('email')?.value.trim();
         const username = document.getElementById('username')?.value.trim();
@@ -76,18 +80,23 @@
         const submitBtn = document.getElementById('action-submit-btn');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = 'جاري إنشاء الحساب...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
         }
 
+        const fullPhoneNumber = countryCode + mobile;
+
         try {
+            // تنفيذ طلب التسجيل الفعلي في خادم Supabase
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
+                phone: fullPhoneNumber, // تسجيل رقم الجوال الأصيل ليدعمه الـ Trigger
                 options: {
                     data: {
                         full_name: fullname,
                         username: username,
-                        mobile_number: countryCode + mobile
+                        mobile_number: fullPhoneNumber,
+                        role: 'investor' // تحديد الصلاحية الافتراضية
                     }
                 }
             });
@@ -95,21 +104,20 @@
             if (error) throw error;
             if (!data.user) throw new Error('لم يتم إنشاء المستخدم في Auth');
 
-            // لا نقوم بأي insert، الـ Trigger سيتولى الباقي
+            // لا نقوم بأي إدراج (Insert) مباشر، الـ Trigger سيتولى مزامنة جدول auth_register
 
-            // تخزين البريد للتحقق
+            // تخزين البريد للتحقق في الصفحة التالية
             localStorage.setItem('pendingVerificationEmail', email);
 
             // التوجيه إلى صفحة التحقق باستخدام مسار مطلق (Absolute Path)
-            alert('✅ تم إنشاء الحساب بنجاح! سيتم توجيهك إلى صفحة التحقق.');
-            window.location.href = '/auth/verify-otp.html';
+            window.location.replace('/auth/verify-otp.html');
             
         } catch (error) {
             console.error('❌ فشل إنشاء الحساب:', error);
             let msg = error.message || 'خطأ غير معروف';
             if (error.status) msg += ' (كود: ' + error.status + ')';
             alert('⚠️ فشل إنشاء الحساب: ' + msg);
-        } finally {
+            
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'إنشاء حساب شريك';
@@ -129,7 +137,7 @@
         });
         document.getElementById('mobile_number')?.addEventListener('input', function() {
             const valid = /^5\d{8}$/.test(this.value.trim());
-            updateFieldStatus('mobile', valid, 'رقم جوال غير صحيح');
+            updateFieldStatus('mobile', valid, 'رقم جوال غير صحيح (يبدأ بـ 5)');
             checkStage1Complete();
         });
         document.getElementById('email')?.addEventListener('input', function() {
@@ -145,7 +153,7 @@
         document.getElementById('password')?.addEventListener('input', function() {
             const val = this.value;
             const valid = val.length >= 8 && /[A-Za-z]/.test(val) && /[0-9]/.test(val);
-            updateFieldStatus('password', valid, '8 أحرف على الأقل وحرف ورقم');
+            updateFieldStatus('password', valid, '8 أحرف على الأقل، تتضمن حرف ورقم');
             checkStage1Complete();
         });
 
@@ -172,8 +180,9 @@
             // استخدام الدالة الجديدة للحصول على العميل بأمان
             const client = await window.getTeraSupabase();
             startApp(client);
+            console.log('✅ [Register] تم تهيئة صفحة التسجيل والربط بقاعدة البيانات بنجاح.');
         } catch (error) {
-            console.error('❌ فشل الاتصال بقاعدة البيانات:', error);
+            console.error('❌ [Register] فشل الاتصال بقاعدة البيانات:', error);
             alert('⚠️ تعذر الاتصال بقاعدة البيانات. يرجى تحديث الصفحة.');
         }
     });
