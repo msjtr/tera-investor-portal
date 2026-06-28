@@ -1,11 +1,11 @@
 /**
  * ============================================================
- * supabase-client.js - محرك الاتصال المركزي بـ Supabase
+ * supabase-client.js - محرك الاتصال المركزي بـ Supabase (Enterprise v3.0)
  * ============================================================
  * - يُهيئ عميل Supabase ويُخزنه في window.teraSupabase
  * - يُطلق حدث "supabase:ready" عند الجهوزية
  * - يوفر دالة window.getTeraSupabase() لضمان جلب العميل بأمان في أي وقت
- * - إذا تعذّر تحميل مكتبة Supabase من CDN، يقوم بتحميلها تلقائياً
+ * - يتضمن مفاتيح الوصول والربط المباشر مع خوادم المنصة
  */
 (function() {
     'use strict';
@@ -13,6 +13,9 @@
     // ========== بيانات مشروع Supabase ==========
     const PROJECT_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
     const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjbXphdnJzZ2tmcHlwZ2V3cGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODkxMDUsImV4cCI6MjA5ODA2NTEwNX0.TzbZvdRnPuDyL5LVmSBLQYpYe7DgSJNtehKz5kE9uzc';
+    
+    // مفتاح النشر السري المعتمد
+    const PUBLISHABLE_SECRET = 'sb_publishable_QYc4AcGWtJGxalINA_UGZw_fjfVbGqg';
 
     // منع تكرار التهيئة إذا تم استدعاء الملف أكثر من مرة
     if (window.teraSupabase) return;
@@ -20,10 +23,48 @@
     let isInitializing = false;
 
     /**
+     * دالة مساعدة لضمان الحصول على العميل (Client) بشكل آمن من أي ملف آخر
+     * تم رفع تعريفها هنا لتكون متاحة فورا لتلافي خطأ is not a function
+     */
+    window.getTeraSupabase = function() {
+        return new Promise((resolve, reject) => {
+            // إذا كان جاهزاً، أرسله فوراً
+            if (window.teraSupabase) {
+                resolve(window.teraSupabase);
+                return;
+            }
+
+            // إذا لم يكن جاهزاً، انتظر الحدث
+            const onReady = (e) => {
+                document.removeEventListener('supabase:ready', onReady);
+                document.removeEventListener('supabase:error', onError);
+                resolve(e.detail.client);
+            };
+
+            const onError = () => {
+                document.removeEventListener('supabase:ready', onReady);
+                document.removeEventListener('supabase:error', onError);
+                reject(new Error('فشل تهيئة Supabase'));
+            };
+
+            document.addEventListener('supabase:ready', onReady);
+            document.addEventListener('supabase:error', onError);
+        });
+    };
+
+    /**
      * إنشاء العميل وتخزينه في النطاق العام، ثم إطلاق حدث الجاهزية
      */
     function createClientAndNotify() {
-        window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY);
+        // تضمين المفتاح السري في الترويسات (Headers) للطلبات
+        window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY, {
+            global: {
+                headers: {
+                    'x-publishable-key': PUBLISHABLE_SECRET
+                }
+            }
+        });
+        
         console.log('✅ [supabase-client] تم تهيئة العميل المركزي بنجاح.');
 
         // إعلام جميع الملفات المنتظرة بأن العميل أصبح جاهزاً
@@ -55,36 +96,6 @@
         };
         document.head.appendChild(script);
     }
-
-    /**
-     * دالة مساعدة لضمان الحصول على العميل (Client) بشكل آمن من أي ملف آخر
-     * مثال للاستخدام: const supabase = await window.getTeraSupabase();
-     */
-    window.getTeraSupabase = function() {
-        return new Promise((resolve, reject) => {
-            // إذا كان جاهزاً، أرسله فوراً
-            if (window.teraSupabase) {
-                resolve(window.teraSupabase);
-                return;
-            }
-
-            // إذا لم يكن جاهزاً، انتظر الحدث
-            const onReady = (e) => {
-                document.removeEventListener('supabase:ready', onReady);
-                document.removeEventListener('supabase:error', onError);
-                resolve(e.detail.client);
-            };
-
-            const onError = () => {
-                document.removeEventListener('supabase:ready', onReady);
-                document.removeEventListener('supabase:error', onError);
-                reject(new Error('فشل تهيئة Supabase'));
-            };
-
-            document.addEventListener('supabase:ready', onReady);
-            document.addEventListener('supabase:error', onError);
-        });
-    };
 
     // ========== المنطق الرئيسي ==========
     // إذا كانت المكتبة محمّلة مسبقاً (من وسم <script> في HTML)
