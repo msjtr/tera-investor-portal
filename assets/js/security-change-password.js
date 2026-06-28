@@ -1,20 +1,44 @@
 /**
  * ============================================================
- * تغيير كلمة المرور - Change Password
+ * تغيير كلمة المرور - Change Password (نسخة المؤسسات)
  * ============================================================
  * الموقع: /assets/js/security-change-password.js
+ * - ربط حقيقي مع Supabase Auth.
+ * - يتحقق من كلمة المرور الحالية قبل التحديث.
+ * - يعرض مؤشر قوة كلمة المرور ومتطلباتها.
+ * - ينتظر جاهزية العميل (supabase:ready).
  * ============================================================
  */
 
-// التأكد من وجود الكائن العام
 window.SecurityPages = window.SecurityPages || {};
 
 window.SecurityPages['change-password'] = {
-    init: function() {
-        console.log('🔑 Initializing Change Password page...');
+    init: async function() {
+        console.log('🔑 تهيئة صفحة تغيير كلمة المرور (Enterprise)...');
 
-        // تهيئة زر إظهار/إخفاء كلمة المرور
-        document.querySelectorAll('.password-toggle').forEach(function(btn) {
+        // انتظار جاهزية عميل Supabase (في حال تأخر التحميل)
+        if (!window.teraSupabase) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
+                    document.addEventListener('supabase:ready', (e) => {
+                        clearTimeout(timeout);
+                        resolve(e.detail.client);
+                    }, { once: true });
+                    document.addEventListener('supabase:error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('فشل تحميل Supabase'));
+                    }, { once: true });
+                });
+            } catch (err) {
+                console.error('❌ تعذر الاتصال بـ Supabase:', err);
+                alert('تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.');
+                return;
+            }
+        }
+
+        // ---------- 1. تهيئة أزرار إظهار/إخفاء كلمة المرور ----------
+        document.querySelectorAll('.password-toggle').forEach(btn => {
             btn.addEventListener('click', function() {
                 const targetId = this.dataset.target;
                 const input = document.getElementById(targetId);
@@ -31,7 +55,7 @@ window.SecurityPages['change-password'] = {
             });
         });
 
-        // تهيئة مؤشر قوة كلمة المرور
+        // ---------- 2. مؤشر قوة كلمة المرور ----------
         const passwordInput = document.getElementById('newPassword');
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
@@ -41,54 +65,35 @@ window.SecurityPages['change-password'] = {
 
                 if (strengthFill) {
                     strengthFill.style.width = strength.percentage + '%';
-                    if (strength.percentage < 30) {
-                        strengthFill.style.background = '#dc2626';
-                        if (strengthLabel) {
-                            strengthLabel.className = 'strength-label weak';
-                            strengthLabel.textContent = 'ضعيفة';
-                        }
-                    } else if (strength.percentage < 50) {
-                        strengthFill.style.background = '#f59e0b';
-                        if (strengthLabel) {
-                            strengthLabel.className = 'strength-label medium';
-                            strengthLabel.textContent = 'متوسطة';
-                        }
-                    } else if (strength.percentage < 75) {
-                        strengthFill.style.background = '#16a34a';
-                        if (strengthLabel) {
-                            strengthLabel.className = 'strength-label strong';
-                            strengthLabel.textContent = 'قوية';
-                        }
-                    } else {
-                        strengthFill.style.background = '#028090';
-                        if (strengthLabel) {
-                            strengthLabel.className = 'strength-label very-strong';
-                            strengthLabel.textContent = 'قوية جداً';
-                        }
-                    }
+                    strengthFill.style.background = strength.percentage < 30 ? '#dc2626' :
+                        strength.percentage < 50 ? '#f59e0b' :
+                        strength.percentage < 75 ? '#16a34a' : '#028090';
+                }
+                if (strengthLabel) {
+                    const strengthText = strength.percentage < 30 ? 'ضعيفة' :
+                        strength.percentage < 50 ? 'متوسطة' :
+                        strength.percentage < 75 ? 'قوية' : 'قوية جداً';
+                    strengthLabel.className = 'strength-label ' + strengthText.replace(' ', '-');
+                    strengthLabel.textContent = strengthText;
                 }
 
-                // تحديث متطلبات كلمة المرور
                 Security.updatePasswordRequirements(this.value);
             });
-
-            // تهيئة متطلبات كلمة المرور
             Security.updatePasswordRequirements('');
         }
 
-        // تهيئة التحقق من تطابق كلمة المرور
+        // ---------- 3. التحقق من تطابق كلمة المرور ----------
         const newPassword = document.getElementById('newPassword');
         const confirmPassword = document.getElementById('confirmPassword');
         const confirmHint = document.getElementById('confirmPasswordHint');
 
         if (newPassword && confirmPassword && confirmHint) {
-            const checkMatch = function() {
+            const checkMatch = () => {
                 if (confirmPassword.value.length === 0) {
                     confirmHint.textContent = '';
                     confirmPassword.style.borderColor = '';
                     return;
                 }
-
                 if (newPassword.value === confirmPassword.value) {
                     confirmHint.textContent = '✅ كلمة المرور متطابقة';
                     confirmHint.style.color = '#16a34a';
@@ -99,73 +104,91 @@ window.SecurityPages['change-password'] = {
                     confirmPassword.style.borderColor = '#dc2626';
                 }
             };
-
             newPassword.addEventListener('input', checkMatch);
             confirmPassword.addEventListener('input', checkMatch);
         }
 
-        // معالج إرسال النموذج
+        // ---------- 4. معالج تقديم النموذج ----------
         const form = document.getElementById('changePasswordForm');
         if (form) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const currentPassword = document.getElementById('currentPassword');
-                const newPassword = document.getElementById('newPassword');
-                const confirmPassword = document.getElementById('confirmPassword');
+                const newPasswordInput = document.getElementById('newPassword');
+                const confirmPasswordInput = document.getElementById('confirmPassword');
 
-                if (!currentPassword || !currentPassword.value) {
+                // التحقق من تعبئة الحقول
+                if (!currentPassword.value) {
                     Security.showAlert('يرجى إدخال كلمة المرور الحالية.', 'error');
                     currentPassword.focus();
                     return;
                 }
-
-                if (!newPassword || !newPassword.value) {
+                if (!newPasswordInput.value) {
                     Security.showAlert('يرجى إدخال كلمة المرور الجديدة.', 'error');
-                    newPassword.focus();
+                    newPasswordInput.focus();
+                    return;
+                }
+                if (newPasswordInput.value !== confirmPasswordInput.value) {
+                    Security.showAlert('كلمة المرور الجديدة وتأكيدها غير متطابقين.', 'error');
+                    confirmPasswordInput.focus();
                     return;
                 }
 
-                const strength = Security.calculatePasswordStrength(newPassword.value);
+                // التحقق من قوة كلمة المرور
+                const strength = Security.calculatePasswordStrength(newPasswordInput.value);
                 if (strength.percentage < 50) {
                     Security.showAlert('كلمة المرور ضعيفة جداً. يرجى اختيار كلمة مرور أقوى.', 'error');
-                    newPassword.focus();
-                    return;
-                }
-
-                if (newPassword.value !== confirmPassword.value) {
-                    Security.showAlert('كلمة المرور الجديدة وتأكيدها غير متطابقين.', 'error');
-                    confirmPassword.focus();
+                    newPasswordInput.focus();
                     return;
                 }
 
                 const submitBtn = document.getElementById('submitBtn');
-                Security.showAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
-
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق والتحديث...';
                 }
 
-                setTimeout(function() {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور';
+                try {
+                    // 1. إعادة المصادقة باستخدام كلمة المرور الحالية للتأكد من صحتها
+                    const { data: signInData, error: signInError } = await window.teraSupabase.auth.signInWithPassword({
+                        email: window.TeraAuth?.getCurrentUser()?.email, // الحصول على البريد من الجلسة الحالية
+                        password: currentPassword.value
+                    });
+
+                    if (signInError) {
+                        throw new Error('كلمة المرور الحالية غير صحيحة.');
                     }
+
+                    // 2. تحديث كلمة المرور الجديدة
+                    const { error: updateError } = await window.teraSupabase.auth.updateUser({
+                        password: newPasswordInput.value
+                    });
+
+                    if (updateError) throw updateError;
+
+                    // نجاح التغيير
+                    Security.showAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
                     form.reset();
                     Security.updatePasswordRequirements('');
                     const strengthFill = document.getElementById('strengthFill');
                     if (strengthFill) strengthFill.style.width = '0%';
                     const strengthLabel = document.getElementById('strengthLabel');
-                    if (strengthLabel) {
-                        strengthLabel.className = 'strength-label';
-                        strengthLabel.textContent = 'ضعيفة';
-                    }
+                    if (strengthLabel) strengthLabel.textContent = 'ضعيفة';
                     if (confirmHint) confirmHint.textContent = '';
-                }, 2500);
+
+                } catch (error) {
+                    console.error('❌ خطأ في تغيير كلمة المرور:', error);
+                    Security.showAlert(error.message || 'تعذر تغيير كلمة المرور. تأكد من صحة البيانات.', 'error');
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور';
+                    }
+                }
             });
         }
 
-        console.log('✅ Change Password page initialized successfully.');
+        console.log('✅ صفحة تغيير كلمة المرور مهيأة بالكامل.');
     }
 };
