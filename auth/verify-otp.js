@@ -64,7 +64,6 @@
             this.value = this.value.replace(/\D/g, '');
             if (otpError) otpError.textContent = '';
             if (this.value.length === 8) {
-                // إرسال تلقائي
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();
                 } else {
