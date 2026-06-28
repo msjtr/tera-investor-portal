@@ -1,123 +1,92 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نسيت كلمة المرور | بوابة تيرا</title>
 
-    <meta http-equiv="X-UA-Compatible"
-          content="IE=edge">
+    <!-- أيقونات وخطوط -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <!-- ملفات التنسيق الأساسية (المسارات المطلقة) -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
 
-    <meta name="description"
-          content="استعادة كلمة المرور - تيرا">
-
-    <title>نسيت كلمة المرور | تيرا</title>
-
-    <link rel="stylesheet"
-          href="/assets/css/app.css">
-
-    <link rel="stylesheet"
-          href="/assets/css/responsive.css">
-
+    <!-- أيقونة الموقع -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 </head>
-
 <body>
-
-    <div class="auth-container">
-
-        <div class="auth-card">
-
-            <div class="auth-logo">
-                TERA
+    <div class="auth-layout">
+        <div class="auth-container">
+            <!-- شعار المنصة والعنوان -->
+            <div class="text-center mb-5">
+                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <h2 class="portal-title mt-3">بوابة تيرا</h2>
+                <h3 class="page-subtitle">استعادة كلمة المرور</h3>
+                <p class="welcome-text">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.</p>
             </div>
 
-            <h1>
-                استعادة كلمة المرور
-            </h1>
+            <!-- صندوق عرض الأخطاء أو التنبيهات -->
+            <div class="alert-box" id="formAlert" style="display: none;">
+                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
+                <span class="alert-message" id="alertMessage"></span>
+            </div>
 
-            <p>
-                أدخل البريد الإلكتروني أو رقم الجوال لإرسال رمز التحقق
-            </p>
-
-            <form id="forgotPasswordForm">
-
-                <div class="form-group">
-
-                    <label for="identity">
-                        البريد الإلكتروني أو رقم الجوال
-                    </label>
-
-                    <input
-                        type="text"
-                        id="identity"
-                        name="identity"
-                        placeholder="البريد الإلكتروني أو رقم الجوال"
-                        required>
-
+            <!-- نموذج استعادة كلمة المرور -->
+            <form id="forgotPasswordForm" novalidate>
+                <div class="form-field-group">
+                    <label class="field-label" for="identity">البريد الإلكتروني <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input
+                            type="email"
+                            id="identity"
+                            name="identity"
+                            class="form-input-control"
+                            placeholder="example@domain.com"
+                            required
+                            autocomplete="email"
+                        >
+                    </div>
+                    <div class="error-feedback-msg" id="identity-error"></div>
                 </div>
 
-                <button
-                    type="submit"
-                    class="btn-primary">
-
-                    إرسال رمز التحقق
-
-                </button>
-
+                <div class="form-actions-block">
+                    <button type="submit" class="btn-submit-login" id="submitBtn">
+                        <i class="fas fa-paper-plane"></i> إرسال رابط الاستعادة
+                    </button>
+                </div>
             </form>
 
-            <div class="auth-footer">
-
-                <a href="/auth/login.html">
-                    العودة إلى تسجيل الدخول
-                </a>
-
+            <!-- روابط التنقل السفلية -->
+            <div class="bottom-routing-footer-links text-center">
+                <p><a href="/auth/login.html" class="routing-link"><i class="fa-solid fa-arrow-right"></i> العودة إلى تسجيل الدخول</a></p>
+                <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
             </div>
-
         </div>
 
+        <!-- اللودر الإبداعي -->
+        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
+            <div class="loader-content-card">
+                <div class="spinning-infinity-ring"></div>
+                <h4 class="loader-primary-heading">جاري المعالجة</h4>
+                <p class="creative-motivational-text" id="creativeQuoteText">يرجى الانتظار...</p>
+                <div class="loading-progress-track">
+                    <div class="progress-fill-bar" id="progressFillBar"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-
-        document
-        .getElementById('forgotPasswordForm')
-        .addEventListener(
-            'submit',
-            function(e){
-
-                e.preventDefault();
-
-                const identity =
-                document.getElementById(
-                    'identity'
-                ).value;
-
-                if(!identity){
-
-                    alert(
-                        'الرجاء إدخال البريد الإلكتروني أو رقم الجوال'
-                    );
-
-                    return;
-
-                }
-
-                alert(
-                    'تم إرسال رمز التحقق'
-                );
-
-                window.location.href =
-                '/auth/verify-otp.html';
-
-            }
-        );
-
-    </script>
-
+    <!-- السكريبتات الأساسية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/forgot-password.js"></script>
 </body>
-
 </html>
