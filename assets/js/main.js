@@ -106,15 +106,16 @@
                     if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
                         await window.TeraAuth.logout();
                     } else {
-                        // الإجراء الاحتياطي: مسح البيانات والتوجيه بالمسار المطلق
+                        // الإجراء الاحتياطي: مسح البيانات والتوجيه بالمسار المطلق إلى صفحة الدخول
                         console.warn("⚠️ [Main] محرك TeraAuth غير متوفر، سيتم فرض التوجيه الاحتياطي.");
                         localStorage.clear();
                         sessionStorage.clear();
-                        window.location.replace('/auth/auth/login/login.html');
+                        // تم التوجيه إلى المسار المطلق الجديد /auth/login.html بدلاً من المسار القديم
+                        window.location.replace('/auth/login.html');
                     }
                 } catch (error) {
                     console.error('❌ [Main] خطأ أثناء الخروج:', error);
-                    window.location.replace('/auth/auth/login/login.html');
+                    window.location.replace('/auth/login.html');
                 }
             }
         });
