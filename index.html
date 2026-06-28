@@ -5,46 +5,151 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | بوابة المستثمر وإدارة المحافظ الرقمية</title>
-    
-    <link rel="icon" type="image/svg+xml" href="./images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="./images/favicon.svg">
+    <meta name="description" content="منصة تيرا للاستثمار الرقمي - بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء.">
 
+    <!-- أيقونة الموقع -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
+
+    <!-- خط Tajawal -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- أيقونات Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="./assets/css/core.css">
-    <link rel="stylesheet" href="./assets/css/main.css">
-    <link rel="stylesheet" href="./assets/css/responsive.css">
+    <!-- ملفات التنسيق الأساسية (المسارات المطلقة) -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
 
     <style>
-        /* أنماط الصفحة الرئيسية */
+        /* أنماط الصفحة الرئيسية (خاصة بها فقط) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%) !important; min-height: 100vh !important; color: #0A2540 !important; display: flex !important; flex-direction: column !important; }
-        .hero-section { flex-grow: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 60px 20px !important; }
-        .hero-card { width: 100% !important; max-width: 900px !important; background: rgba(255, 255, 255, 0.96) !important; backdrop-filter: blur(12px) !important; border-radius: 24px !important; padding: 65px !important; text-align: center !important; box-shadow: 0 25px 60px rgba(10, 37, 64, 0.05) !important; border: 1px solid rgba(226, 232, 240, 0.8) !important; }
-        .brand-logo { margin-bottom: 35px !important; display: flex !important; justify-content: center !important; }
-        .brand-logo img { width: 160px !important; height: auto !important; object-fit: contain !important; }
-        .main-title { font-size: 36px !important; color: #0A2540 !important; margin-bottom: 20px !important; font-weight: 800 !important; }
-        .main-subtitle { font-size: 18px !important; color: #475569 !important; margin-bottom: 50px !important; line-height: 1.8 !important; max-width: 750px !important; margin-left: auto !important; margin-right: auto !important; }
-        .auth-actions { display: flex !important; justify-content: center !important; gap: 20px !important; flex-wrap: wrap !important; margin-bottom: 50px !important; }
-        .btn-action { display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 10px !important; text-decoration: none !important; padding: 18px 50px !important; border-radius: 12px !important; font-weight: 700 !important; font-size: 17px !important; transition: all 0.3s ease !important; min-width: 200px !important; }
-        .btn-login { background: linear-gradient(135deg, #0A2540 0%, #028090 100%) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25) !important; }
-        .btn-login:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35) !important; }
-        .btn-register { background: #f8fafc !important; color: #0A2540 !important; border: 2px solid #e2e8f0 !important; }
-        .btn-register:hover { background: #e2e8f0 !important; transform: translateY(-3px) !important; }
-        .features-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; gap: 25px !important; margin-top: 20px !important; }
-        .feature-card { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 16px !important; padding: 25px !important; text-align: right !important; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .feature-card h3 { margin-bottom: 10px !important; color: #0A2540 !important; font-size: 18px !important; font-weight: 700 !important; }
-        .feature-card p { color: #64748b !important; line-height: 1.6 !important; font-size: 14px !important; }
+        body {
+            background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
+            min-height: 100vh;
+            color: #0A2540;
+            display: flex;
+            flex-direction: column;
+        }
+        .hero-section {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+        .hero-card {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 65px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(10, 37, 64, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .brand-logo {
+            margin-bottom: 35px;
+            display: flex;
+            justify-content: center;
+        }
+        .brand-logo img {
+            width: 160px;
+            height: auto;
+            object-fit: contain;
+        }
+        .main-title {
+            font-size: 36px;
+            color: #0A2540;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+        .main-subtitle {
+            font-size: 18px;
+            color: #475569;
+            margin-bottom: 50px;
+            line-height: 1.8;
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .auth-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            padding: 18px 50px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 17px;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25);
+        }
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35);
+        }
+        .btn-register {
+            background: #f8fafc;
+            color: #0A2540;
+            border: 2px solid #e2e8f0;
+        }
+        .btn-register:hover {
+            background: #e2e8f0;
+            transform: translateY(-3px);
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: right;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .feature-card h3 {
+            margin-bottom: 10px;
+            color: #0A2540;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.6;
+            font-size: 14px;
+        }
         @media (max-width: 576px) {
-            .hero-card { padding: 35px 20px !important; }
-            .main-title { font-size: 26px !important; }
-            .main-subtitle { font-size: 16px !important; }
-            .btn-action { padding: 14px 30px !important; font-size: 15px !important; min-width: 160px !important; }
-            .brand-logo img { width: 120px !important; }
+            .hero-card { padding: 35px 20px; }
+            .main-title { font-size: 26px; }
+            .main-subtitle { font-size: 16px; }
+            .btn-action { padding: 14px 30px; font-size: 15px; min-width: 160px; }
+            .brand-logo img { width: 120px; }
         }
         .auth-actions .btn-action i { font-size: 18px; }
     </style>
@@ -53,61 +158,48 @@
 
     <main class="hero-section">
         <div class="hero-card">
+            <!-- الشعار -->
             <div class="brand-logo">
-                <img src="./images/logo.svg" alt="تيرا - بوابة المستثمر">
+                <img src="/images/logo.svg" alt="تيرا - بوابة المستثمر">
             </div>
 
+            <!-- العنوان الرئيسي -->
             <h1 class="main-title">منصة تيرا للاستثمار الرقمي</h1>
             <p class="main-subtitle">
                 بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء. تابع نمو أصولك، استكشف فرصاً استثنائية، واطلع على تقاريرك المالية بكل شفافية وأمان.
             </p>
 
+            <!-- أزرار الدخول والتسجيل -->
             <div class="auth-actions">
-                <a href="./auth/auth/login/login.html" class="btn-action btn-login">
+                <a href="/auth/login.html" class="btn-action btn-login">
                     <i class="fa-solid fa-lock"></i> تسجيل الدخول
                 </a>
-                <a href="./auth/register/register.html" class="btn-action btn-register">
+                <a href="/auth/register/register.html" class="btn-action btn-register">
                     <i class="fa-solid fa-user-plus"></i> إنشاء حساب جديد
                 </a>
             </div>
 
+            <!-- بطاقات الميزات -->
             <div class="features-grid">
                 <div class="feature-card">
-                    <h3>استثمارات واعدة</h3>
+                    <h3><i class="fas fa-chart-line" style="color: #028090; margin-left: 8px;"></i> استثمارات واعدة</h3>
                     <p>فرص استثمارية مدروسة وموثقة تضمن لك عوائد مجزية ومستدامة.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>إدارة المحفظة</h3>
+                    <h3><i class="fas fa-wallet" style="color: #028090; margin-left: 8px;"></i> إدارة المحفظة</h3>
                     <p>لوحة تحكم ذكية تتيح لك مراقبة الأصول والأرباح لحظة بلحظة.</p>
                 </div>
                 <div class="feature-card">
-                    <h3>تقارير شفافية</h3>
+                    <h3><i class="fas fa-file-invoice" style="color: #028090; margin-left: 8px;"></i> تقارير شفافية</h3>
                     <p>كشوفات حساب تفصيلية وتقارير أداء دورية معتمدة بكل سهولة.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <script src="./assets/js/core.js"></script>
-    <script src="./assets/js/auth.js"></script>
-    <script src="./assets/js/main.js"></script>
-
-    <script>
-        (function() {
-            'use strict';
-            if (window.TeraAuth) {
-                const token = localStorage.getItem('tera_token');
-                if (token) {
-                    console.log('🚀 [index.html] مستخدم مسجل بالفعل، جاري الانتقال للوحة التحكم...');
-                    window.location.replace('./pages/dashboard/index.html');
-                } else {
-                    console.log('🔓 [index.html] صفحة عامة، تم إلغاء فحص الحماية لتأمين استقرار الواجهة');
-                    TeraAuth.blockCheck();
-                    TeraAuth.disableAutoRedirect();
-                }
-            }
-        })();
-    </script>
-
+    <!-- السكريبتات الأساسية (جميعها خارجية) -->
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/landing.js"></script>
 </body>
 </html>
