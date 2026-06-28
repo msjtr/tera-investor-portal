@@ -1,12 +1,11 @@
 /**
  * ============================================================
- * auth.js - محرك المصادقة والحماية الذكي (النسخة الكاملة)
+ * auth.js - محرك المصادقة والحماية الذكي (النسخة المؤسسية - Enterprise)
  * ============================================================
- * - يدعم Supabase Auth ويتزامن مع localStorage
- * - يستخدم المسارات المطلقة (Absolute Paths) حصراً لمنع أخطاء 404
- * - يستمع لتغييرات حالة المصادقة (SIGNED_IN / SIGNED_OUT)
- * - يعتمد على window.getTeraSupabase() لضمان الاتصال الآمن
- * - صُمم للعمل مع نظام التسجيل عبر Trigger (حالة pending بعد signUp)
+ * - ربط حقيقي بـ Supabase Auth دون أي محاكاة أو بيانات وهمية.
+ * - مزامنة حية للجلسات وتسجيل حركات الدخول في جدول auth_login.
+ * - يعتمد حصراً على المسارات المطلقة (Absolute Paths) لحل مشاكل التوجيه.
+ * - يعتمد على window.getTeraSupabase() لضمان الاتصال الآمن والمستقر.
  */
 'use strict';
 
@@ -40,6 +39,7 @@ if (typeof window.TeraAuth !== 'undefined') {
 
             /**
              * استخدام المسارات المطلقة لضمان دقة التوجيه من أي مسار فرعي
+             * يمنع مشاكل 404 عند استدعاء الملفات
              */
             getAbsolutePath: function(targetPath) {
                 return targetPath.startsWith('/') ? targetPath : '/' + targetPath;
@@ -50,17 +50,19 @@ if (typeof window.TeraAuth !== 'undefined') {
                 window.location.replace(url);
             },
 
-            // ---- ٢. مزامنة الجلسة مع localStorage ----
+            // ---- ٢. مزامنة الجلسة الحقيقية مع localStorage ----
             syncSession: async function(session) {
                 if (session) {
                     localStorage.setItem('tera_token', session.access_token);
                     const user = session.user;
                     if (user) {
+                        // استخراج البيانات الحقيقية من الميتا داتا بدون بيانات وهمية
                         localStorage.setItem('tera_user', JSON.stringify({
                             id: user.id,
                             email: user.email,
-                            name: user.user_metadata?.full_name || '',
-                            role: 'partner'
+                            name: user.user_metadata?.full_name || 'مستثمر',
+                            role: user.user_metadata?.role || 'user', // جلب الصلاحية الفعلية
+                            status: 'active'
                         }));
                     }
                 } else {
@@ -69,7 +71,7 @@ if (typeof window.TeraAuth !== 'undefined') {
                 }
             },
 
-            // استرجاع الجلسة الحالية من Supabase
+            // استرجاع الجلسة الحالية من Supabase الفعلي
             getCurrentSession: async function() {
                 if (!window.teraSupabase) return null;
                 const { data, error } = await window.teraSupabase.auth.getSession();
@@ -77,7 +79,7 @@ if (typeof window.TeraAuth !== 'undefined') {
                 return data.session;
             },
 
-            // ---- ٣. فحص الجلسة والتوجيه ----
+            // ---- ٣. فحص الجلسة والتوجيه الآمن ----
             checkSession: async function() {
                 // تجنب التكرار أو الفحص المتزامن
                 if (this._blockCheck) {
@@ -103,8 +105,8 @@ if (typeof window.TeraAuth !== 'undefined') {
                     const loggedIn = !!session;
 
                     if (!loggedIn && isProtected) {
-                        console.log('🔐 [Auth] غير مسجل → تحويل إلى صفحة الدخول');
-                        this.redirectTo(this.getAbsolutePath('auth/auth/login/login.html'));
+                        console.log('🔐 [Auth] غير مسجل → تحويل إلى صفحة الدخول بالمسار المطلق');
+                        this.redirectTo(this.getAbsolutePath('auth/login.html'));
                         return;
                     }
 
@@ -116,31 +118,51 @@ if (typeof window.TeraAuth !== 'undefined') {
 
                     console.log('✅ [Auth] الجلسة آمنة، المسار:', currentPath);
                 } catch (error) {
-                    console.warn('⚠️ [Auth] خطأ أثناء فحص الجلسة:', error);
+                    console.error('⚠️ [Auth] خطأ في التحقق من الجلسة المؤسسية:', error);
                 } finally {
                     this._isChecking = false;
                 }
             },
 
-            // ---- ٤. تسجيل الدخول / الخروج ----
+            // ---- ٤. تسجيل الدخول الحقيقي المؤسسي ----
             login: async function(email, password) {
                 if (!window.teraSupabase) throw new Error('Supabase غير جاهز');
+                
+                // 1. المصادقة الفعلية
                 const { data, error } = await window.teraSupabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
 
-                if (error) throw error;
+                if (error) {
+                    // تسجيل محاولة الدخول الفاشلة أمنياً (اختياري إذا رغبت بالاعتماد على الايميل فقط هنا)
+                    throw error;
+                }
 
+                // 2. تسجيل الحدث الفعلي في جدول auth_login المؤسسي
+                const user = data.user;
+                try {
+                    await window.teraSupabase.from('auth_login').insert([{
+                        user_id: user.id,
+                        email: user.email,
+                        login_status: 'success',
+                        browser: navigator.userAgent,
+                        operating_system: navigator.platform
+                    }]);
+                } catch (logError) {
+                    console.error('⚠️ [Auth] تعذر كتابة سجل الدخول:', logError);
+                }
+
+                // 3. مزامنة وتوجيه
                 await this.syncSession(data.session);
                 this.unblockCheck();
                 this.enableAutoRedirect();
 
                 return {
-                    id: data.user.id,
-                    email: data.user.email,
-                    name: data.user.user_metadata?.full_name || '',
-                    role: 'partner'
+                    id: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.full_name || '',
+                    role: user.user_metadata?.role || 'user'
                 };
             },
 
@@ -153,7 +175,9 @@ if (typeof window.TeraAuth !== 'undefined') {
                 localStorage.removeItem('tera_remember');
                 localStorage.removeItem('tera_identifier');
                 sessionStorage.clear();
-                this.redirectTo(this.getAbsolutePath('auth/auth/login/login.html'));
+                
+                // توجيه باستخدام مسار مطلق دقيق
+                this.redirectTo(this.getAbsolutePath('auth/login.html'));
             },
 
             // ---- ٥. أدوات تحكم إضافية ----
@@ -194,7 +218,7 @@ if (typeof window.TeraAuth !== 'undefined') {
                     const toggleBtn = e.target.closest('.password-toggle, .toggle-password, .show-password-btn');
                     if (!toggleBtn) return;
 
-                    const wrapper = toggleBtn.closest('.password-wrapper, .input-group, .form-group');
+                    const wrapper = toggleBtn.closest('.password-wrapper, .input-group, .form-group, .input-wrapper');
                     if (!wrapper) return;
 
                     const input = wrapper.querySelector('input[type="password"], input[type="text"]');
@@ -218,10 +242,10 @@ if (typeof window.TeraAuth !== 'undefined') {
             const currentPage = window.location.pathname;
 
             try {
-                // انتظار توفر عميل Supabase بشكل آمن
+                // انتظار توفر عميل Supabase بشكل آمن ومتزامن
                 await window.getTeraSupabase();
 
-                // الاستماع لتغييرات حالة المصادقة من Supabase
+                // الاستماع لتغييرات حالة المصادقة من Supabase الفعلي
                 window.teraSupabase.auth.onAuthStateChange(async (event, session) => {
                     console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
                     await TeraAuth.syncSession(session);
@@ -234,7 +258,7 @@ if (typeof window.TeraAuth !== 'undefined') {
                 if (TeraAuth.isAuthPage(currentPage)) {
                     TeraAuth.disableAutoRedirect();
                     TeraAuth.blockCheck();
-                    console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة لمنع التكرار');
+                    console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة لمنع التكرار اللانهائي');
                 } else {
                     TeraAuth.checkSession();
                 }
@@ -254,7 +278,7 @@ if (typeof window.TeraAuth !== 'undefined') {
             initAuth();
         }
 
-        // ربط النطاق العام
+        // ربط النطاق العام للمنصة
         window.TeraAuth = TeraAuth;
         window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
         window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
