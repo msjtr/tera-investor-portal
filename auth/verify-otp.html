@@ -38,6 +38,8 @@
                         maxlength="8" 
                         placeholder="00000000" 
                         autocomplete="one-time-code"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
                         style="text-align: center; letter-spacing: 4px; font-weight: bold; font-size: 20px;"
                         required>
                     <div id="otp-error" class="error-message" style="color: #ff4d4f; font-size: 12px; margin-top: 5px;"></div>
@@ -72,7 +74,10 @@
 
             let supabaseClient = null;
 
-            // جلب البريد الإلكتروني المعلق والمحفوظ من خطوة التسجيل
+            // تحديد نوع العملية (افتراضياً: signup)
+            const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; 
+            
+            // جلب البريد الإلكتروني المعلق والمحفوظ من خطوة التسجيل أو الاستعادة
             const pendingEmail = localStorage.getItem('pendingVerificationEmail');
             if (pendingEmail) {
                 instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
@@ -93,6 +98,21 @@
                 }
             }
 
+            // فلترة الإدخال الفورية (أرقام فقط) والإرسال التلقائي
+            otpInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, ''); // إزالة أي رموز غير رقمية
+                errorDiv.textContent = '';
+                
+                // الإرسال التلقائي بمجرد اكتمال 8 أرقام
+                if (this.value.length === 8) {
+                    if (typeof otpForm.requestSubmit === 'function') {
+                        otpForm.requestSubmit();
+                    } else {
+                        otpForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+
             // معالجة إرسال النموذج والتحقق الفعلي لـ 8 أرقام
             otpForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -101,8 +121,7 @@
                 
                 const otpValue = otpInput.value.trim();
 
-                // التحقق الأولي من طول الخانات الجديد (8 خانات)
-                if (otpValue.length !== 8 || !/^\d+$/.test(otpValue)) {
+                if (otpValue.length !== 8) {
                     errorDiv.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام بشكل صحيح';
                     return;
                 }
@@ -113,41 +132,48 @@
                 }
 
                 if (!pendingEmail) {
-                    showGlobalError('لم يتم العثور على بيانات جلسة التسجيل المعلقة، يرجى إعادة محاولة إنشاء الحساب.');
+                    showGlobalError('لم يتم العثور على بيانات جلسة معلقة، يرجى إعادة طلب الرمز.');
                     return;
                 }
 
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'جاري التحقق الفعلي...';
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
 
                 try {
                     // تنفيذ عملية التحقق الحقيقية عبر خوادم قاعدة البيانات
                     const { data, error } = await supabaseClient.auth.verifyOtp({
                         email: pendingEmail,
                         token: otpValue,
-                        type: 'signup'
+                        type: verifyType // يدعم signup أو recovery ديناميكياً
                     });
 
                     if (error) throw error;
 
-                    console.log('✅ [OTP] تم تفعيل الحساب بنجاح عبر الخادم الرئيسي.');
+                    console.log('✅ [OTP] تم التحقق بنجاح عبر الخادم الرئيسي.');
                     
                     // تنظيف بيانات الجلسة المؤقتة بعد النجاح
                     localStorage.removeItem('pendingVerificationEmail');
+                    localStorage.removeItem('tera_verify_type');
 
-                    // التوجيه الفوري والحقيقي إلى صفحة الدخول بالمسار المطلق المعتمد
-                    window.location.replace('/auth/auth/login/login.html');
+                    // التوجيه بناءً على نوع العملية
+                    if (verifyType === 'recovery') {
+                        window.location.replace('/auth/reset-password.html');
+                    } else {
+                        window.location.replace('/auth/auth/login/login.html');
+                    }
 
                 } catch (error) {
                     console.error('❌ [OTP Error]:', error.message);
-                    showGlobalError(error.message || 'رمز التحقق المكون من 8 أرقام غير صحيح، أو منتهي الصلاحية.');
+                    showGlobalError(error.message || 'رمز التحقق غير صحيح، أو منتهي الصلاحية.');
+                    otpInput.value = ''; // تفريغ الحقل لإعادة الإدخال
+                    otpInput.focus();
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'تأكيد الرمز والتحقق';
                 }
             });
 
-            // طلب إعادة إرسال الرمز الحقيقي إلى البريد الإلكتروني للعميل
+            // طلب إعادة إرسال الرمز الحقيقي إلى البريد الإلكتروني
             if (resendBtn) {
                 resendBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
@@ -161,7 +187,7 @@
 
                     try {
                         const { error } = await supabaseClient.auth.resend({
-                            type: 'signup',
+                            type: verifyType,
                             email: pendingEmail
                         });
 
