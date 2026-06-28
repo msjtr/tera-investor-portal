@@ -3,8 +3,11 @@
  * TERA INVESTOR PORTAL - 2FA (نسخة المؤسسات - Enterprise)
  * ============================================================
  * الموقع: /assets/js/security-two-factor-authentication.js
- * التحديثات: ربط حقيقي مع محرك TeraAuth، عمليات غير متزامنة، 
- * حماية واجهة المستخدم أثناء إرسال الطلبات، وإنشاء رموز حقيقية.
+ * التحديثات:
+ * - إزالة جميع المحاكاة وبيانات الاختبار.
+ * - ربط حقيقي مع محرك TeraAuth وسحابة Supabase.
+ * - عمليات غير متزامنة مع حماية واجهة المستخدم أثناء الاتصال.
+ * - توليد مفاتيح ورموز استرداد حقيقية عبر الخادم.
  * ============================================================
  */
 
@@ -73,28 +76,26 @@ window.SecurityPages['two-factor-authentication'] = {
                 enableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحضير...';
 
                 try {
-                    // الاتصال الحقيقي بخادم المصادقة لتوليد المفتاح (Supabase / Backend)
-                    let secret = '';
-                    if (window.TeraAuth && typeof window.TeraAuth.generate2FASecret === 'function') {
-                        const response = await window.TeraAuth.generate2FASecret();
-                        secret = response.secret;
-                        // يمكن هنا أيضاً تحديث صورة الـ QR Code إذا كان الخادم يرجعها
-                    } else {
-                        console.warn('⚠️ محرك TeraAuth غير متصل، جاري استخدام التوليد المحلي للاختبار.');
-                        secret = generateLocalSecret(); 
+                    // الاتصال الحقيقي بخادم المصادقة لتوليد المفتاح
+                    if (!window.TeraAuth || typeof window.TeraAuth.generate2FASecret !== 'function') {
+                        throw new Error('خدمة المصادقة الثنائية غير متوفرة حالياً.');
                     }
 
-                    secretKey.textContent = secret;
-                    
+                    const response = await window.TeraAuth.generate2FASecret();
+                    secretKey.textContent = response.secret;
+
+                    // إذا كان الخادم يعيد رابط QR يمكن عرضه هنا (اختياري)
+                    // if (response.qr_code_url) { ... }
+
                     setupSection.style.display = 'block';
                     setupSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    
+
                     if (window.Security && typeof window.Security.showAlert === 'function') {
                         window.Security.showAlert('📱 قم بمسح رمز QR أو إدخال المفتاح السري في تطبيق المصادقة الخاص بك.', 'info');
                     }
                 } catch (error) {
                     console.error('❌ خطأ في توليد مفتاح 2FA:', error);
-                    alert('تعذر الاتصال بالخادم لتوليد المفتاح السري. يرجى المحاولة لاحقاً.');
+                    alert(error.message || 'تعذر الاتصال بالخادم لتوليد المفتاح السري. يرجى المحاولة لاحقاً.');
                 } finally {
                     enableBtn.disabled = false;
                     enableBtn.innerHTML = 'تفعيل المصادقة الثنائية';
@@ -114,42 +115,36 @@ window.SecurityPages['two-factor-authentication'] = {
                     return;
                 }
 
-                // حماية الزر أثناء الاتصال بالخادم
                 const originalText = verifyAndEnableBtn.innerHTML;
                 verifyAndEnableBtn.disabled = true;
                 verifyAndEnableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
                 verifyCode.disabled = true;
 
                 try {
-                    let isVerified = false;
-                    
-                    // الاتصال الحقيقي بمحرك المصادقة
-                    if (window.TeraAuth && typeof window.TeraAuth.verify2FA === 'function') {
-                        isVerified = await window.TeraAuth.verify2FA(code);
-                    } else {
-                        // وضع التطوير والاحتياط
-                        isVerified = (code === '123456'); 
+                    if (!window.TeraAuth || typeof window.TeraAuth.verify2FA !== 'function') {
+                        throw new Error('خدمة التحقق الثنائي غير متوفرة.');
                     }
+
+                    const isVerified = await window.TeraAuth.verify2FA(code);
 
                     if (isVerified) {
                         is2FAEnabled = true;
                         updateUI();
-                        
+
                         if (window.Security) window.Security.showAlert('✅ تم تفعيل المصادقة الثنائية بنجاح!', 'success');
-                        
                         showInputSuccess('✅ تم التحقق بنجاح.');
-                        
+
+                        // جلب رموز الاسترداد الحقيقية من الخادم
+                        await fetchAndDisplayBackupCodes();
                         recoverySection.style.display = 'block';
                         recoverySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        generateBackupCodes();
-
                     } else {
                         showInputError('❌ رمز التحقق غير صحيح أو منتهي الصلاحية.');
                         if (window.Security) window.Security.showAlert('❌ رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.', 'error');
                     }
                 } catch (error) {
                     console.error('❌ خطأ أثناء التحقق من الرمز:', error);
-                    showInputError('⚠️ حدث خطأ في الاتصال بالخادم.');
+                    showInputError(error.message || '⚠️ حدث خطأ في الاتصال بالخادم.');
                 } finally {
                     verifyAndEnableBtn.disabled = false;
                     verifyAndEnableBtn.innerHTML = originalText;
@@ -164,34 +159,34 @@ window.SecurityPages['two-factor-authentication'] = {
         // ============================================
         if (disableBtn) {
             disableBtn.addEventListener('click', async function() {
-                if (confirm('هل أنت متأكد من إلغاء تفعيل المصادقة الثنائية؟ هذا سيقلل من أمان حسابك.')) {
-                    
-                    disableBtn.disabled = true;
-                    disableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
+                if (!confirm('هل أنت متأكد من إلغاء تفعيل المصادقة الثنائية؟ هذا سيقلل من أمان حسابك.')) return;
 
-                    try {
-                        if (window.TeraAuth && typeof window.TeraAuth.disable2FA === 'function') {
-                            await window.TeraAuth.disable2FA();
-                        }
-                        
-                        is2FAEnabled = false;
-                        updateUI();
-                        if (window.Security) window.Security.showAlert('🔴 تم إلغاء تفعيل المصادقة الثنائية.', 'info');
-                    } catch (error) {
-                        console.error('❌ خطأ في إلغاء التفعيل:', error);
-                        alert('حدث خطأ أثناء محاولة إلغاء التفعيل. يرجى المحاولة لاحقاً.');
-                    } finally {
-                        disableBtn.disabled = false;
-                        disableBtn.innerHTML = 'إلغاء التفعيل';
+                disableBtn.disabled = true;
+                disableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
+
+                try {
+                    if (!window.TeraAuth || typeof window.TeraAuth.disable2FA !== 'function') {
+                        throw new Error('خدمة المصادقة غير متوفرة.');
                     }
+
+                    await window.TeraAuth.disable2FA();
+                    is2FAEnabled = false;
+                    updateUI();
+                    if (window.Security) window.Security.showAlert('🔴 تم إلغاء تفعيل المصادقة الثنائية.', 'info');
+                } catch (error) {
+                    console.error('❌ خطأ في إلغاء التفعيل:', error);
+                    alert(error.message || 'حدث خطأ أثناء محاولة إلغاء التفعيل. يرجى المحاولة لاحقاً.');
+                } finally {
+                    disableBtn.disabled = false;
+                    disableBtn.innerHTML = 'إلغاء التفعيل';
                 }
             });
         }
 
         // ============================================
-        // 5. وظائف مساعدة (نسخ المفتاح، توليد رموز الاسترداد)
+        // 5. وظائف مساعدة (نسخ المفتاح، رموز الاسترداد)
         // ============================================
-        
+
         if (copySecretBtn && secretKey) {
             copySecretBtn.addEventListener('click', () => copyToClipboard(secretKey.textContent, 'المفتاح السري'));
         }
@@ -205,19 +200,24 @@ window.SecurityPages['two-factor-authentication'] = {
         }
 
         if (regenerateCodesBtn) {
-            regenerateCodesBtn.addEventListener('click', function() {
-                if (confirm('سيتم إنشاء رموز استرداد جديدة، وستصبح الرموز القديمة غير صالحة. هل أنت متأكد؟')) {
-                    generateBackupCodes();
+            regenerateCodesBtn.addEventListener('click', async function() {
+                if (!confirm('سيتم إنشاء رموز استرداد جديدة، وستصبح الرموز القديمة غير صالحة. هل أنت متأكد؟')) return;
+
+                regenerateCodesBtn.disabled = true;
+                try {
+                    await fetchAndDisplayBackupCodes();
                     if (window.Security) window.Security.showAlert('🔄 تم إنشاء رموز استرداد جديدة.', 'success');
+                } catch (error) {
+                    alert(error.message || 'تعذر إنشاء رموز جديدة.');
+                } finally {
+                    regenerateCodesBtn.disabled = false;
                 }
             });
         }
 
         if (verifyCode) {
             verifyCode.addEventListener('input', function() {
-                // فلترة الإدخال ليقبل أرقام فقط
                 this.value = this.value.replace(/[^0-9]/g, '');
-                
                 const value = this.value;
                 if (value.length === 6) {
                     showInputSuccess('✅ رمز مكتمل. اضغط "تأكيد وتفعيل" للمتابعة.');
@@ -276,46 +276,31 @@ window.SecurityPages['two-factor-authentication'] = {
             });
         }
 
-        function generateLocalSecret() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            let secret = '';
-            for (let i = 0; i < 20; i++) {
-                secret += chars.charAt(Math.floor(Math.random() * chars.length));
-                if ((i + 1) % 4 === 0 && i < 19) secret += '-';
+        async function fetchAndDisplayBackupCodes() {
+            if (window.TeraAuth && typeof window.TeraAuth.generateBackupCodes === 'function') {
+                const codes = await window.TeraAuth.generateBackupCodes();
+                displayCodes(codes);
+            } else {
+                throw new Error('خدمة استرداد الرموز غير متوفرة.');
             }
-            return secret;
         }
 
-        function generateBackupCodes() {
-            const codes = [];
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            for (let i = 0; i < 6; i++) {
-                let code = '';
-                for (let j = 0; j < 4; j++) {
-                    for (let k = 0; k < 4; k++) {
-                        code += chars.charAt(Math.floor(Math.random() * chars.length));
-                    }
-                    if (j < 3) code += '-';
-                }
-                codes.push(code);
-            }
+        function displayCodes(codesArray) {
             const grid = document.getElementById('backupCodesGrid');
-            if (grid) {
-                grid.innerHTML = codes.map(c => `<div class="code-item">${c}</div>`).join('');
-            }
-            return codes;
+            if (!grid) return;
+            grid.innerHTML = codesArray.map(c => `<div class="code-item">${c}</div>`).join('');
         }
 
         // ============================================
         // 6. التهيئة الأولية والتحقق من حالة الحساب
         // ============================================
-        
+
         try {
-            // التحقق الفعلي من حالة المستخدم عند تحميل الصفحة
             if (window.TeraAuth && typeof window.TeraAuth.check2FAStatus === 'function') {
                 is2FAEnabled = await window.TeraAuth.check2FAStatus();
             } else {
-                is2FAEnabled = false; // الوضع الافتراضي
+                // في حال عدم توفر الخدمة، نترك الحالة الافتراضية (غير مفعلة)
+                console.warn('⚠️ لا يمكن التحقق من حالة 2FA: دالة check2FAStatus غير موجودة.');
             }
         } catch (error) {
             console.error('❌ تعذر جلب حالة المصادقة:', error);
