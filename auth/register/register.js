@@ -2,7 +2,7 @@
  * ============================================================
  * register.js - إدارة نموذج تسجيل الشريك (النسخة المؤسسية - Enterprise)
  * ============================================================
- * - يعتمد على دالة window.getTeraSupabase() لضمان الاتصال الآمن.
+ * - ينتظر إشارة 'supabase:ready' من supabase-client.js.
  * - يمرر البيانات بشكل يتوافق مع هيكل الجداول الجديد (auth_register).
  * - لا يقوم بأي insert مباشر، يترك المهمة لـ Trigger قاعدة البيانات.
  * - يستخدم المسارات المطلقة (Absolute Paths) للتوجيه.
@@ -90,13 +90,13 @@
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
-                phone: fullPhoneNumber, // تسجيل رقم الجوال الأصيل ليدعمه الـ Trigger
+                phone: fullPhoneNumber,
                 options: {
                     data: {
                         full_name: fullname,
                         username: username,
                         mobile_number: fullPhoneNumber,
-                        role: 'investor' // تحديد الصلاحية الافتراضية
+                        role: 'partner'
                     }
                 }
             });
@@ -109,15 +109,15 @@
             // تخزين البريد للتحقق في الصفحة التالية
             localStorage.setItem('pendingVerificationEmail', email);
 
-            // التوجيه إلى صفحة التحقق باستخدام مسار مطلق (Absolute Path)
+            // التوجيه إلى صفحة التحقق باستخدام مسار مطلق
             window.location.replace('/auth/verify-otp.html');
-            
+
         } catch (error) {
             console.error('❌ فشل إنشاء الحساب:', error);
             let msg = error.message || 'خطأ غير معروف';
             if (error.status) msg += ' (كود: ' + error.status + ')';
             alert('⚠️ فشل إنشاء الحساب: ' + msg);
-            
+
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'إنشاء حساب شريك';
@@ -127,6 +127,7 @@
 
     function startApp(client) {
         supabaseClient = client;
+        console.log('🚀 تطبيق register.js يعمل الآن.');
 
         document.getElementById('fullname_ar')?.addEventListener('input', function() {
             const valid = /^[\u0621-\u064A\s]+$/.test(this.value.trim());
@@ -174,17 +175,16 @@
         checkStage1Complete();
     }
 
-    // تهيئة التطبيق عند اكتمال تحميل شجرة الـ DOM
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            // استخدام الدالة الجديدة للحصول على العميل بأمان
-            const client = await window.getTeraSupabase();
-            startApp(client);
-            console.log('✅ [Register] تم تهيئة صفحة التسجيل والربط بقاعدة البيانات بنجاح.');
-        } catch (error) {
-            console.error('❌ [Register] فشل الاتصال بقاعدة البيانات:', error);
-            alert('⚠️ تعذر الاتصال بقاعدة البيانات. يرجى تحديث الصفحة.');
-        }
-    });
-
+    // آلية الانتظار: إما أن العميل موجود أو ننتظر الحدث
+    if (window.teraSupabase) {
+        startApp(window.teraSupabase);
+    } else {
+        document.addEventListener('supabase:ready', function(e) {
+            if (e.detail?.client) startApp(e.detail.client);
+            else alert('⚠️ فشل الاتصال بقاعدة البيانات.');
+        });
+        document.addEventListener('supabase:error', function() {
+            alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
+        });
+    }
 })();
