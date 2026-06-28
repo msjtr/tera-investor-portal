@@ -5,6 +5,7 @@
  * - يعتمد على TeraAuth.login للاتصال الفعلي بخوادم Supabase.
  * - يستخدم المسارات المطلقة (Absolute Paths) حصراً للتوجيه.
  * - يتضمن فحص الجلسة، عرض اللودر، ومعالجة رسائل الخطأ من السيرفر.
+ * - جاهز للإنتاج بالكامل، بدون أي محاكاة أو بيانات وهمية.
  */
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
@@ -95,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ---------- دوال مساعدة ----------
     function showLoader(show) {
         if (loaderOverlay) loaderOverlay.style.display = show ? 'flex' : 'none';
-        // محاكاة شريط التقدم للواجهة فقط
+        // محاكاة شريط التقدم للواجهة فقط (تأثير بصري وليس عملية حقيقية)
         const progressBar = document.getElementById('progressFillBar');
         if (show && progressBar) {
             progressBar.style.width = '0%';
