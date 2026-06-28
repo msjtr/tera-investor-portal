@@ -1,11 +1,17 @@
-/* ============================================================
-   TERA INVESTOR PORTAL - APP.JS (نسخة محسنة وجاهزة للإطلاق)
-   ============================================================ */
+/**
+ * ============================================================
+ * TERA INVESTOR PORTAL - APP.JS (نسخة المؤسسات - Enterprise)
+ * ============================================================
+ * - تم تحديث مسارات تسجيل الخروج لتكون مسارات مطلقة (Absolute Paths).
+ * - تم ربط زر تسجيل الخروج بمحرك المصادقة الفعلي (TeraAuth) لإنهاء جلسة Supabase.
+ * - إدارة تفويض الأحداث (Event Delegation) للقائمة الجانبية والقوائم الفرعية.
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // استخدام تفويض الأحداث على مستوى الـ document بالكامل
-    document.addEventListener('click', function(e) {
+    'use strict';
+
+    // استخدام تفويض الأحداث على مستوى الـ document بالكامل لضمان الأداء العالي
+    document.addEventListener('click', async function(e) {
         
         const sidebar = document.getElementById('sidebar');
         
@@ -42,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (el !== parentLi) {
                     el.classList.remove('submenu-open');
                     const link = el.querySelector('a');
-                    if(link) link.setAttribute('aria-expanded', 'false');
+                    if (link) link.setAttribute('aria-expanded', 'false');
                 }
             });
             
@@ -51,12 +57,32 @@ document.addEventListener('DOMContentLoaded', function() {
             submenuLink.setAttribute('aria-expanded', isOpen);
         }
 
-        // 4. زر تسجيل الخروج
-        if (e.target.closest('#logoutBtn')) {
+        // 4. ربط زر تسجيل الخروج بمحرك المصادقة الحقيقي (Supabase Auth)
+        const logoutBtn = e.target.closest('#logoutBtn');
+        if (logoutBtn) {
             e.preventDefault();
-            console.log("جاري تسجيل الخروج...");
-            // مسار تسجيل الخروج
-            // window.location.href = '../auth/login.html'; 
+            console.log("🔒 [App] جاري تسجيل الخروج الآمن وإنهاء الجلسة...");
+
+            // تعطيل الزر مؤقتاً لمنع تكرار النقرات أثناء الاتصال بالخادم
+            logoutBtn.style.pointerEvents = 'none';
+
+            try {
+                // الاعتماد على المحرك المركزي لإنهاء الجلسة بشكل حقيقي
+                if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
+                    await window.TeraAuth.logout();
+                } else {
+                    // إجراء احتياطي: مسح التخزين المحلي والتوجيه بالمسار المطلق
+                    console.warn("⚠️ [App] محرك TeraAuth غير متوفر، سيتم فرض التوجيه الاحتياطي.");
+                    localStorage.removeItem('tera_token');
+                    localStorage.removeItem('tera_user');
+                    sessionStorage.clear();
+                    window.location.replace('/auth/auth/login/login.html');
+                }
+            } catch (error) {
+                console.error('❌ [App] خطأ أثناء تسجيل الخروج:', error);
+                // فرض الخروج أمنياً في حال فشل الاتصال بخادم Supabase
+                window.location.replace('/auth/auth/login/login.html');
+            }
         }
     });
 });
