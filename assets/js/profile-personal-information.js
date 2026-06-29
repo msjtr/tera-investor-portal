@@ -1,15 +1,12 @@
 /**
  * ============================================================
- * profile-personal-information.js – معلومات شخصية + مرفقات + تحقق OTP (v4.0)
+ * profile-personal-information.js – معلومات شخصية + رحلة العميل (v5.0)
  * ============================================================
- * - ينتظر جاهزية Supabase.
- * - يتحقق من جلسة المستخدم.
- * - إذا لم توجد بيانات في user_personal_info، تُجلب من auth_register.
- * - يبني حقول رفع المرفقات حسب نوع الهوية (ديناميكي).
- * - يرفع الملفات إلى Supabase Storage ويحفظ مساراتها في user_attachments.
- * - يرسل رمز تحقق (OTP) إلى بريد المستخدم قبل إنشاء طلب المراجعة.
- * - يُوجَّه إلى verify-otp.html لإكمال التحقق.
- * - يمنع الإرسال قبل اكتمال جميع الحقول والمرفقات المطلوبة.
+ * - يبني شريط التقدم من جدول verification_requests.
+ * - يبني حقول رفع المرفقات حسب نوع الهوية.
+ * - يحفظ البيانات ويحدث progress تلقائياً.
+ * - بعد اكتمال جميع المراحل، يُظهر زر "إرسال الطلب للمراجعة".
+ * - يحافظ على إرسال رمز OTP للتحقق.
  */
 (function() {
     'use strict';
@@ -57,9 +54,6 @@
         if (el) el.value = value;
     }
 
-    /**
-     * رفع ملف إلى Supabase Storage وإرجاع بياناته العامة
-     */
     async function uploadFile(file, userId, folder) {
         const supabase = window.teraSupabase;
         const fileName = `${folder}/${userId}/${Date.now()}-${file.name}`;
@@ -68,17 +62,9 @@
             .upload(fileName, file, { upsert: true });
         if (error) throw error;
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(fileName);
-        return {
-            path: fileName,
-            publicUrl: urlData.publicUrl,
-            size: file.size,
-            type: file.type
-        };
+        return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
     }
 
-    /**
-     * بناء حقول رفع المرفقات حسب نوع الهوية
-     */
     function buildUploadFields(idType) {
         const container = document.getElementById('uploadFieldsContainer');
         if (!container) return;
@@ -129,30 +115,80 @@
         });
     }
 
+    /**
+     * تحديث شريط التقدم بناءً على بيانات verification_requests
+     */
+    async function updateProgressTracker(supabase, userId) {
+        const tracker = document.getElementById('progressTracker');
+        if (!tracker) return;
+
+        const { data: req } = await supabase
+            .from('verification_requests')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        const reqData = req || {};
+        const stages = [
+            { key: 'email_verified', label: 'التحقق من البريد', icon: 'fa-envelope' },
+            { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user' },
+            { key: 'national_address_completed', label: 'العنوان الوطني', icon: 'fa-map-marker-alt' },
+            { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone' },
+            { key: 'bank_info_completed', label: 'المعلومات البنكية', icon: 'fa-university' },
+            { key: 'attachments_completed', label: 'المرفقات', icon: 'fa-paperclip' },
+            { key: 'agreed', label: 'الإقرار', icon: 'fa-check' },
+            { key: 'submitted', label: 'إرسال الطلب', icon: 'fa-paper-plane' }
+        ];
+
+        let html = '';
+        let activeFound = false;
+        stages.forEach((stage, index) => {
+            const completed = reqData[stage.key] || (stage.key === 'email_verified');
+            let active = false;
+            if (!completed && !activeFound) {
+                active = true;
+                activeFound = true;
+            }
+            html += `<div class="progress-step ${completed ? 'completed' : ''} ${active ? 'active' : ''}">
+                <i class="fas ${stage.icon}"></i> ${stage.label}
+            </div>`;
+        });
+
+        const percentageEl = document.getElementById('progressPercentage');
+        if (percentageEl) percentageEl.textContent = (reqData.progress || 0) + '% مكتمل';
+
+        // الاحتفاظ بعنصر النسبة المئوية في النهاية
+        const existingPercent = tracker.querySelector('.progress-percentage');
+        tracker.innerHTML = html + (existingPercent ? existingPercent.outerHTML : '');
+
+        // إظهار أو إخفاء زر الإرسال للمراجعة
+        const submitReviewBtn = document.getElementById('submitReviewBtn');
+        if (submitReviewBtn) {
+            const allCompleted = stages.slice(0, -1).every(s => reqData[s.key] || s.key === 'email_verified');
+            submitReviewBtn.style.display = allCompleted && !reqData.submitted ? 'inline-block' : 'none';
+        }
+    }
+
     // ---------- المنطق الرئيسي ----------
     async function initPage() {
         let supabase;
-        try {
-            supabase = await waitForSupabase();
-        } catch (err) {
-            console.error('❌ تعذر الاتصال بـ Supabase:', err);
-            showAlert('تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.', 'error');
-            return;
-        }
+        try { supabase = await waitForSupabase(); }
+        catch (err) { showAlert('تعذر الاتصال بقاعدة البيانات.', 'error'); return; }
 
-        // التحقق من جلسة المستخدم
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            showAlert('يجب تسجيل الدخول للوصول إلى هذه الصفحة.', 'error');
+            showAlert('يجب تسجيل الدخول أولاً.', 'error');
             setTimeout(() => window.location.replace('/auth/auth/login/login.html'), 2000);
             return;
         }
 
-        // تحديث الهيدر
         const userName = user.user_metadata?.full_name || 'مستخدم';
         setElementValue('headerUserName', userName);
         const avatar = document.getElementById('headerAvatar');
         if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
+
+        // تحديث شريط التقدم
+        await updateProgressTracker(supabase, user.id);
 
         // ========== جلب البيانات الشخصية ==========
         let profile = null;
@@ -163,11 +199,8 @@
                 .eq('user_id', user.id)
                 .maybeSingle();
             profile = personalData;
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب user_personal_info:', e);
-        }
+        } catch (e) { console.warn('⚠️ تعذر جلب user_personal_info:', e); }
 
-        // إذا لم توجد بيانات شخصية بعد (عميل جديد)، نجلب من auth_register
         if (!profile) {
             try {
                 const { data: regData } = await supabase
@@ -183,11 +216,8 @@
                     const countryCode = document.getElementById('countryCode');
                     if (countryCode) countryCode.value = '+966';
                 }
-            } catch (e) {
-                console.warn('⚠️ تعذر جلب auth_register:', e);
-            }
+            } catch (e) { console.warn('⚠️ تعذر جلب auth_register:', e); }
         } else {
-            // ملء الحقول من user_personal_info
             setElementValue('fullNameAr', profile.full_name_ar || '');
             setElementValue('fullNameEn', profile.full_name_en || '');
             setElementValue('nationality', profile.nationality || '');
@@ -214,7 +244,6 @@
                 setElementValue('nationalityOther', profile.nationality_other || '');
             }
 
-            // إذا كان هناك id_type سابق، نعرض المرفقات المناسبة
             if (profile.id_type) {
                 const docCard = document.getElementById('documentsCard');
                 if (docCard) docCard.style.display = 'block';
@@ -222,14 +251,12 @@
             }
         }
 
-        // ---------- أحداث تغيير نوع الهوية (تبني الحقول الديناميكية) ----------
         const idTypeSelect = document.getElementById('idType');
         if (idTypeSelect) {
             idTypeSelect.addEventListener('change', function() {
                 const docCard = document.getElementById('documentsCard');
                 if (docCard) docCard.style.display = 'block';
                 buildUploadFields(this.value);
-                // إخفاء تحذير سابق
                 const uploadWarning = document.getElementById('uploadWarning');
                 if (uploadWarning) uploadWarning.style.display = 'none';
             });
@@ -261,14 +288,12 @@
                     countryCode: document.getElementById('countryCode')?.value || '+966'
                 };
 
-                // التحقق من الحقول الإلزامية
                 if (!formData.fullNameAr || !formData.fullNameEn || !formData.nationality ||
                     !formData.idType || !formData.idNumber || !formData.birthDate || !formData.gender) {
                     showAlert('يرجى ملء جميع الحقول الإلزامية.', 'error');
                     return;
                 }
 
-                // التحقق من المرفقات المطلوبة
                 const requiredUploads = document.querySelectorAll('#uploadFieldsContainer input[type="file"]');
                 let allUploaded = requiredUploads.length > 0;
                 requiredUploads.forEach(inp => {
@@ -277,7 +302,7 @@
                 if (!allUploaded) {
                     const uploadWarning = document.getElementById('uploadWarning');
                     if (uploadWarning) uploadWarning.style.display = 'flex';
-                    showAlert('يجب رفع جميع المرفقات المطلوبة حسب نوع الهوية.', 'error');
+                    showAlert('يجب رفع جميع المرفقات المطلوبة.', 'error');
                     return;
                 } else {
                     const uploadWarning = document.getElementById('uploadWarning');
@@ -288,16 +313,14 @@
                 const originalText = submitBtn ? submitBtn.innerHTML : '';
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ والرفع...';
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
                 }
 
                 try {
-                    // 1. رفع الملفات إلى Storage وحفظ سجلاتها
                     const fileRecords = [];
                     for (let inp of requiredUploads) {
                         if (inp.files[0]) {
-                            const folder = formData.idType;
-                            const uploaded = await uploadFile(inp.files[0], user.id, folder);
+                            const uploaded = await uploadFile(inp.files[0], user.id, formData.idType);
                             fileRecords.push({
                                 user_id: user.id,
                                 file_name: inp.files[0].name,
@@ -310,7 +333,6 @@
                         }
                     }
 
-                    // 2. حفظ بيانات المستخدم الشخصية
                     const personalPayload = {
                         user_id: user.id,
                         full_name_ar: formData.fullNameAr,
@@ -331,53 +353,43 @@
                         updated_at: new Date().toISOString()
                     };
 
-                    const { error: personalError } = await supabase
-                        .from('user_personal_info')
-                        .upsert(personalPayload, { onConflict: 'user_id' });
+                    await supabase.from('user_personal_info').upsert(personalPayload, { onConflict: 'user_id' });
 
-                    if (personalError) throw personalError;
-
-                    // 3. تحديث auth_register (الاسم ورقم الجوال)
                     const fullPhone = formData.countryCode + formData.mobile;
-                    const { error: regError } = await supabase
-                        .from('auth_register')
-                        .update({
-                            full_name: formData.fullNameAr,
-                            mobile_number: fullPhone,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('user_id', user.id);
+                    await supabase.from('auth_register').update({
+                        full_name: formData.fullNameAr,
+                        mobile_number: fullPhone,
+                        updated_at: new Date().toISOString()
+                    }).eq('user_id', user.id);
 
-                    if (regError) {
-                        console.warn('⚠️ تعذر تحديث auth_register:', regError);
-                    }
-
-                    // 4. إدراج سجلات المرفقات
                     if (fileRecords.length > 0) {
-                        const { error: attachError } = await supabase
-                            .from('user_attachments')
-                            .insert(fileRecords);
-                        if (attachError) {
-                            console.warn('⚠️ تعذر حفظ سجلات المرفقات:', attachError);
-                        }
+                        await supabase.from('user_attachments').insert(fileRecords);
                     }
 
-                    // ✅ 5. إرسال رمز التحقق إلى البريد الإلكتروني
+                    // تحديث تقدم الطلب في verification_requests
+                    await supabase.from('verification_requests').upsert({
+                        user_id: user.id,
+                        personal_info_completed: true,
+                        attachments_completed: true,
+                        agreed: document.getElementById('declarationCheck')?.checked || false,
+                        progress: 60, // يمكن حسابها بشكل ديناميكي لاحقاً
+                        current_stage: 'personal_info',
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+
+                    // إرسال رمز OTP للتحقق
                     const { error: otpError } = await supabase.auth.signInWithOtp({
                         email: user.email,
                         options: { shouldCreateUser: false }
                     });
-                    if (otpError) {
-                        console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
-                        // نستمر في التوجيه حتى لو فشل الإرسال (يمكن للمستخدم إعادة الإرسال من صفحة التحقق)
-                    }
+                    if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
 
-                    // ✅ 6. تخزين بيانات التوجيه
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'personal_info');
 
-                    // ✅ 7. توجيه إلى صفحة التحقق
-                    showAlert('✅ تم حفظ البيانات ورفع المرفقات. تم إرسال رمز تحقق إلى بريدك. جاري التوجيه...', 'success');
+                    await updateProgressTracker(supabase, user.id);
+
+                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success');
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
@@ -394,7 +406,28 @@
             });
         }
 
-        // إظهار حقل "أخرى" عند اختيار الجنسية "أخرى"
+        // زر إرسال الطلب للمراجعة (يظهر عند اكتمال جميع المراحل)
+        const submitReviewBtn = document.getElementById('submitReviewBtn');
+        if (submitReviewBtn) {
+            submitReviewBtn.addEventListener('click', async function() {
+                try {
+                    await supabase.from('verification_requests').upsert({
+                        user_id: user.id,
+                        status: 'under_review',
+                        submitted: true,
+                        submitted_at: new Date().toISOString(),
+                        progress: 100,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+
+                    await updateProgressTracker(supabase, user.id);
+                    showAlert('✅ تم إرسال طلبك للمراجعة بنجاح!', 'success');
+                } catch (error) {
+                    showAlert('تعذر الإرسال: ' + error.message, 'error');
+                }
+            });
+        }
+
         const nationalitySelect = document.getElementById('nationality');
         if (nationalitySelect) {
             nationalitySelect.addEventListener('change', function() {
@@ -406,7 +439,6 @@
         }
     }
 
-    // بدء التهيئة عند اكتمال تحميل DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPage);
     } else {
