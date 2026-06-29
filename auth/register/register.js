@@ -6,6 +6,7 @@
  * - يمرر البيانات بشكل يتوافق مع هيكل الجداول الجديد (auth_register).
  * - لا يقوم بأي insert مباشر، يترك المهمة لـ Trigger قاعدة البيانات.
  * - يستخدم المسارات المطلقة (Absolute Paths) للتوجيه.
+ * - يخزن نوع التحقق (signup) لتوجيه صحيح بعد التحقق.
  */
 (function() {
     'use strict';
@@ -86,7 +87,6 @@
         const fullPhoneNumber = countryCode + mobile;
 
         try {
-            // تنفيذ طلب التسجيل الفعلي في خادم Supabase
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
@@ -104,12 +104,11 @@
             if (error) throw error;
             if (!data.user) throw new Error('لم يتم إنشاء المستخدم في Auth');
 
-            // لا نقوم بأي إدراج (Insert) مباشر، الـ Trigger سيتولى مزامنة جدول auth_register
-
-            // تخزين البريد للتحقق في الصفحة التالية
+            // تخزين البريد ونوع العملية للتحقق في الصفحة التالية
             localStorage.setItem('pendingVerificationEmail', email);
+            localStorage.setItem('tera_verify_type', 'signup');  // ← ضروري لتوجيه verify-otp
 
-            // التوجيه إلى صفحة التحقق باستخدام مسار مطلق
+            // التوجيه المطلق إلى صفحة التحقق
             window.location.replace('/auth/verify-otp.html');
 
         } catch (error) {
