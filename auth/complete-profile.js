@@ -49,7 +49,8 @@
         const { data: { session } } = await window.teraSupabase.auth.getSession();
         if (!session) {
             showAlert('يجب تسجيل الدخول أولاً للوصول إلى هذه الصفحة.', 'error');
-            setTimeout(() => window.location.replace('/auth/login.html'), 2000);
+            // تم إصلاح المسار إلى صفحة الدخول الفعلية
+            setTimeout(() => window.location.replace('/auth/auth/login/login.html'), 2000);
             return;
         }
 
