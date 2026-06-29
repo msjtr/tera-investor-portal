@@ -1,13 +1,14 @@
 /**
  * ============================================================
- * profile-personal-information.js – معلومات شخصية + مرفقات + طلب اعتماد (v3.0)
+ * profile-personal-information.js – معلومات شخصية + مرفقات + تحقق OTP (v4.0)
  * ============================================================
  * - ينتظر جاهزية Supabase.
  * - يتحقق من جلسة المستخدم.
  * - إذا لم توجد بيانات في user_personal_info، تُجلب من auth_register.
  * - يبني حقول رفع المرفقات حسب نوع الهوية (ديناميكي).
  * - يرفع الملفات إلى Supabase Storage ويحفظ مساراتها في user_attachments.
- * - ينشئ/يُحدّث طلب تحقق في verification_requests.
+ * - يرسل رمز تحقق (OTP) إلى بريد المستخدم قبل إنشاء طلب المراجعة.
+ * - يُوجَّه إلى verify-otp.html لإكمال التحقق.
  * - يمنع الإرسال قبل اكتمال جميع الحقول والمرفقات المطلوبة.
  */
 (function() {
@@ -361,33 +362,26 @@
                         }
                     }
 
-                    // 5. إنشاء / تحديث طلب التحقق
-                    const { data: existingReq } = await supabase
-                        .from('verification_requests')
-                        .select('id')
-                        .eq('user_id', user.id)
-                        .maybeSingle();
-
-                    if (existingReq) {
-                        await supabase
-                            .from('verification_requests')
-                            .update({
-                                status: 'under_review',
-                                submitted_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('user_id', user.id);
-                    } else {
-                        await supabase
-                            .from('verification_requests')
-                            .insert({
-                                user_id: user.id,
-                                status: 'under_review',
-                                submitted_at: new Date().toISOString()
-                            });
+                    // ✅ 5. إرسال رمز التحقق إلى البريد الإلكتروني
+                    const { error: otpError } = await supabase.auth.signInWithOtp({
+                        email: user.email,
+                        options: { shouldCreateUser: false }
+                    });
+                    if (otpError) {
+                        console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
+                        // نستمر في التوجيه حتى لو فشل الإرسال (يمكن للمستخدم إعادة الإرسال من صفحة التحقق)
                     }
 
-                    showAlert('✅ تم حفظ البيانات ورفع المرفقات بنجاح. طلبك قيد المراجعة الآن.', 'success');
+                    // ✅ 6. تخزين بيانات التوجيه
+                    localStorage.setItem('pendingVerificationEmail', user.email);
+                    localStorage.setItem('tera_verify_type', 'personal_info');
+
+                    // ✅ 7. توجيه إلى صفحة التحقق
+                    showAlert('✅ تم حفظ البيانات ورفع المرفقات. تم إرسال رمز تحقق إلى بريدك. جاري التوجيه...', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/verify-otp.html');
+                    }, 2000);
+
                 } catch (error) {
                     console.error('❌ فشل الحفظ:', error);
                     showAlert('تعذر الحفظ: ' + (error.message || 'خطأ غير معروف'), 'error');
