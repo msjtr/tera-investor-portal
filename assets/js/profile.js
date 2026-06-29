@@ -1,11 +1,12 @@
 /**
  * ============================================================
- * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (v2.0)
+ * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (v2.1)
  * ============================================================
  * - يعمل مع جميع صفحات الملف الشخصي (بها Sidebar أو بدون).
  * - يُحاول تحميل الملف الفرعي للصفحة (IIFE مستقل أو عبر ProfilePages).
  * - يدعم تسجيل الخروج الحقيقي عبر TeraAuth.
  * - يقوم بتهيئة المكونات المشتركة فقط عند وجودها.
+ * - لا يُفعّل مناطق رفع الملفات إذا كانت الصفحة تديرها بنفسها.
  */
 (function() {
     'use strict';
@@ -53,11 +54,12 @@
 
             // المحاولة الثانية: الملفات المستقلة (IIFE) مثل profile-personal-information.js
             // هذه الملفات تُنفذ نفسها عند تحميلها ولا تحتاج استدعاء إضافي
-            // إذا لم نجد أي شيء، نُسجل تحذيراً
             console.log(`ℹ️ ${currentPage}: سيتم التهيئة عبر الملف المستقل (إذا كان محملاً).`);
 
-            // تفعيل مناطق رفع الملفات (احتياطي)
-            this.initUploadZones();
+            // تفعيل مناطق رفع الملفات (احتياطي) فقط إذا لم تكن هناك حقول رفع مبنية مسبقاً
+            if (document.getElementById('uploadFieldsContainer')?.children.length === 0) {
+                this.initUploadZones();
+            }
         },
 
         /**
@@ -74,10 +76,12 @@
         },
 
         /**
-         * تفعيل مناطق رفع الملفات
+         * تفعيل مناطق رفع الملفات (احتياطي)
          */
         initUploadZones: function() {
             document.querySelectorAll('.upload-zone').forEach(function(zone) {
+                if (zone.dataset.profileHandled === 'true') return; // لا تعيد التهيئة
+                zone.dataset.profileHandled = 'true';
                 const fileInput = zone.querySelector('input[type="file"]');
                 if (fileInput) {
                     zone.addEventListener('click', function(e) {
@@ -223,7 +227,7 @@
         },
 
         /**
-         * تسجيل الخروج
+         * تسجيل الخروج الحقيقي
          */
         initLogout: function() {
             const logoutBtn = document.getElementById('logoutBtn');
