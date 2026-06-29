@@ -12,8 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ---------- عناصر الصفحة ----------
     const form = document.getElementById('teraLoginForm');
-    const errorBox = document.getElementById('loginErrorBox');
-    const errorText = document.getElementById('errorBoxText');
+    const alertBox = document.getElementById('formAlert');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertMessage = document.getElementById('alertMessage');
     const loaderOverlay = document.getElementById('creativeLoaderScreen');
     const submitBtn = document.getElementById('loginSubmitBtn');
     const showPasswordCheckbox = document.getElementById('show_login_password');
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
 
         // إخفاء أي خطأ سابق
-        if (errorBox) errorBox.style.display = 'none';
+        if (alertBox) alertBox.style.display = 'none';
 
         // جلب البيانات
         const email = document.getElementById('login_identifier').value.trim();
@@ -108,10 +109,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showError(message) {
-        if (errorBox && errorText) {
-            errorText.textContent = message;
-            // استخدام flex ليتوافق مع تنسيق الصندوق الجديد المحتوي على أيقونة ونص
-            errorBox.style.display = 'flex'; 
+        if (alertBox && alertMessage) {
+            // استخدام صندوق التنبيهات الموحد (alert-box) بدلاً من Error Summary القديم
+            alertMessage.textContent = message;
+            if (alertIcon) {
+                alertIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            }
+            alertBox.style.display = 'flex';
+            alertBox.className = 'alert-box show error';
         }
     }
 });
