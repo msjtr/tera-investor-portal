@@ -4,22 +4,60 @@
             <img src="/images/logo.png" alt="TERA Logo" class="logo-img" />
         </div>
         
-        <button type="button" class="btn-back" onclick="history.back()">
+        <!-- تم استبدال history.back() برابط مباشر للوحة التحكم -->
+        <a href="/pages/dashboard/index.html" class="btn-back">
             <i data-lucide="arrow-right"></i>
             <span>العودة للوحة التحكم</span>
-        </button>
+        </a>
     </div>
     
     <div class="header-left">
         <div class="client-profile-dropdown">
             <div class="client-info">
-                <span class="client-name" id="globalClientName">محمد صالح جميعان الشمري</span>
+                <!-- الاسم يُملأ تلقائياً من Supabase -->
+                <span class="client-name" id="globalClientName">مستخدم</span>
                 <span class="client-role">بوابة الشركاء</span>
             </div>
             
             <div class="client-avatar-circle">
-                <span class="avatar-letter">م</span>
+                <!-- الحرف الأول من الاسم يُملأ تلقائياً -->
+                <span class="avatar-letter" id="globalAvatarLetter">م</span>
             </div>
         </div>
     </div>
 </header>
+
+<!-- سكريبت صغير لتحديث بيانات المستخدم (يمكن وضعه في ملف منفصل) -->
+<script>
+    (async function() {
+        try {
+            // انتظار جاهزية Supabase
+            let supabase = window.teraSupabase;
+            if (!supabase) {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                    document.addEventListener('supabase:ready', e => {
+                        clearTimeout(timeout);
+                        resolve(e.detail.client);
+                    }, { once: true });
+                    document.addEventListener('supabase:error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('error'));
+                    }, { once: true });
+                });
+                supabase = window.teraSupabase;
+            }
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const name = user.user_metadata?.full_name || 'مستخدم';
+                const nameEl = document.getElementById('globalClientName');
+                const avatarEl = document.getElementById('globalAvatarLetter');
+                if (nameEl) nameEl.textContent = name;
+                if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            console.warn('تعذر تحديث الهيدر:', e);
+        }
+    })();
+</script>
