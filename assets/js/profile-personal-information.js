@@ -1,11 +1,15 @@
 /**
  * ============================================================
- * profile-personal-information.js - المعلومات الشخصية (v1.1)
+ * profile-personal-information.js - المعلومات الشخصية (v2.0)
  * ============================================================
- * - ينتظر جاهزية Supabase.
- * - يتحقق من جلسة المستخدم ويجلب بياناته الشخصية.
- * - يملأ النموذج ويعرض اسم المستخدم في الهيدر.
- * - يحفظ البيانات (upsert) عند تقديم النموذج.
+ * الموقع: /assets/js/profile-personal-information.js
+ * - ينتظر جاهزية Supabase (حدث supabase:ready).
+ * - يتحقق من جلسة المستخدم ويجلب بياناته الأساسية.
+ * - إذا كانت user_personal_info فارغة (عميل جديد)، يتم جلب
+ *   الاسم والجوال من auth_register (بيانات التسجيل) تلقائيًا.
+ * - يحفظ البيانات في user_personal_info عند تقديم النموذج،
+ *   مع تحديث auth_register بالمعلومات الجديدة.
+ * - يعرض اسم المستخدم في الهيدر مباشرة.
  */
 (function() {
     'use strict';
@@ -72,53 +76,74 @@
             return;
         }
 
-        // تحديث الهيدر باسم المستخدم
+        // تحديث الهيدر باسم المستخدم (من بيانات التسجيل أو metadata)
         const userName = user.user_metadata?.full_name || 'مستخدم';
         setElementValue('headerUserName', userName);
         const avatar = document.getElementById('headerAvatar');
         if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
 
-        // جلب البيانات الشخصية من جدول user_personal_info
+        // ========== جلب البيانات الشخصية ==========
+        let profile = null;
         try {
-            const { data: profile, error } = await supabase
+            const { data: personalData } = await supabase
                 .from('user_personal_info')
                 .select('*')
                 .eq('user_id', user.id)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('⚠️ خطأ في جلب البيانات الشخصية:', error);
-            }
-
-            if (profile) {
-                setElementValue('fullNameAr', profile.full_name_ar || '');
-                setElementValue('fullNameEn', profile.full_name_en || '');
-                setElementValue('nationality', profile.nationality || '');
-                setElementValue('idType', profile.id_type || '');
-                setElementValue('idNumber', profile.id_number || '');
-                setElementValue('birthDate', profile.birth_date || '');
-                setElementValue('issueDate', profile.issue_date || '');
-                setElementValue('expiryDate', profile.expiry_date || '');
-
-                if (profile.gender) {
-                    const radio = document.querySelector(`input[name="gender"][value="${profile.gender}"]`);
-                    if (radio) radio.checked = true;
-                }
-
-                setElementValue('maritalStatus', profile.marital_status || '');
-                setElementValue('occupation', profile.occupation || '');
-                setElementValue('employer', profile.employer || '');
-                setElementValue('employmentStatus', profile.employment_status || '');
-                setElementValue('monthlyIncome', profile.monthly_income || '');
-
-                if (profile.nationality === 'other') {
-                    const otherContainer = document.getElementById('nationalityOtherContainer');
-                    if (otherContainer) otherContainer.classList.add('show');
-                    setElementValue('nationalityOther', profile.nationality_other || '');
-                }
-            }
+                .maybeSingle();   // لا يرمي خطأ إذا لم توجد صفوف
+            profile = personalData;
         } catch (e) {
-            console.warn('⚠️ فشل جلب البيانات الشخصية:', e);
+            console.warn('⚠️ تعذر جلب user_personal_info:', e);
+        }
+
+        // إذا لم توجد بيانات شخصية بعد (عميل جديد)، نجلب من auth_register
+        if (!profile) {
+            try {
+                const { data: regData } = await supabase
+                    .from('auth_register')
+                    .select('full_name, username, mobile_number')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (regData) {
+                    // تعبئة الاسم العربي من بيانات التسجيل
+                    setElementValue('fullNameAr', regData.full_name || '');
+                    // استخراج رقم الجوال بدون مفتاح الدولة
+                    const mobile = (regData.mobile_number || '').replace('+966', '');
+                    setElementValue('mobile', mobile);
+                    // ضبط مفتاح الدولة الافتراضي
+                    const countryCode = document.getElementById('countryCode');
+                    if (countryCode) countryCode.value = '+966';
+                }
+            } catch (e) {
+                console.warn('⚠️ تعذر جلب auth_register:', e);
+            }
+        } else {
+            // ملء الحقول من user_personal_info
+            setElementValue('fullNameAr', profile.full_name_ar || '');
+            setElementValue('fullNameEn', profile.full_name_en || '');
+            setElementValue('nationality', profile.nationality || '');
+            setElementValue('idType', profile.id_type || '');
+            setElementValue('idNumber', profile.id_number || '');
+            setElementValue('birthDate', profile.birth_date || '');
+            setElementValue('issueDate', profile.issue_date || '');
+            setElementValue('expiryDate', profile.expiry_date || '');
+
+            if (profile.gender) {
+                const radio = document.querySelector(`input[name="gender"][value="${profile.gender}"]`);
+                if (radio) radio.checked = true;
+            }
+
+            setElementValue('maritalStatus', profile.marital_status || '');
+            setElementValue('occupation', profile.occupation || '');
+            setElementValue('employer', profile.employer || '');
+            setElementValue('employmentStatus', profile.employment_status || '');
+            setElementValue('monthlyIncome', profile.monthly_income || '');
+
+            if (profile.nationality === 'other') {
+                const otherContainer = document.getElementById('nationalityOtherContainer');
+                if (otherContainer) otherContainer.classList.add('show');
+                setElementValue('nationalityOther', profile.nationality_other || '');
+            }
         }
 
         // ---------- معالج تقديم النموذج ----------
@@ -142,7 +167,9 @@
                     occupation: document.getElementById('occupation')?.value.trim() || '',
                     employer: document.getElementById('employer')?.value.trim() || '',
                     employmentStatus: document.getElementById('employmentStatus')?.value || '',
-                    monthlyIncome: document.getElementById('monthlyIncome')?.value || ''
+                    monthlyIncome: document.getElementById('monthlyIncome')?.value || '',
+                    mobile: document.getElementById('mobile')?.value.trim() || '',
+                    countryCode: document.getElementById('countryCode')?.value || '+966'
                 };
 
                 if (!formData.fullNameAr || !formData.fullNameEn || !formData.nationality ||
@@ -159,6 +186,7 @@
                 }
 
                 try {
+                    // 1. تحديث user_personal_info
                     const payload = {
                         user_id: user.id,
                         full_name_ar: formData.fullNameAr,
@@ -179,11 +207,26 @@
                         updated_at: new Date().toISOString()
                     };
 
-                    const { error } = await supabase
+                    const { error: personalError } = await supabase
                         .from('user_personal_info')
                         .upsert(payload, { onConflict: 'user_id' });
 
-                    if (error) throw error;
+                    if (personalError) throw personalError;
+
+                    // 2. تحديث auth_register (الاسم ورقم الجوال)
+                    const fullPhone = formData.countryCode + formData.mobile;
+                    const { error: regError } = await supabase
+                        .from('auth_register')
+                        .update({
+                            full_name: formData.fullNameAr,
+                            mobile_number: fullPhone,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('user_id', user.id);
+
+                    if (regError) {
+                        console.warn('⚠️ تعذر تحديث auth_register:', regError);
+                    }
 
                     showAlert('✅ تم حفظ البيانات الشخصية بنجاح.', 'success');
                 } catch (error) {
@@ -204,11 +247,7 @@
             nationalitySelect.addEventListener('change', function() {
                 const otherContainer = document.getElementById('nationalityOtherContainer');
                 if (otherContainer) {
-                    if (this.value === 'other') {
-                        otherContainer.classList.add('show');
-                    } else {
-                        otherContainer.classList.remove('show');
-                    }
+                    otherContainer.classList.toggle('show', this.value === 'other');
                 }
             });
         }
