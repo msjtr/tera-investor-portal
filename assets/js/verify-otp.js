@@ -1,14 +1,15 @@
 /**
  * ============================================================
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info
+ * verify-otp.js – تأكيد الرمز OTP (6 أرقام) – يدعم signup | recovery | personal_info
  * ============================================================
  * الموقع: /assets/js/verify-otp.js
  * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
  * - يستخدم localStorage للبريد ونوع العملية (signup / recovery / personal_info).
- * - يتحقق من الرمز (8 أرقام) باستخدام supabase.auth.verifyOtp.
+ * - يتحقق من الرمز (6 أرقام) باستخدام supabase.auth.verifyOtp.
  * - بعد نجاح تأكيد التسجيل: يوجه المستخدم إلى صفحة الدخول.
  * - بعد نجاح استعادة كلمة المرور: يوجه إلى إعادة تعيين كلمة المرور.
  * - بعد نجاح اعتماد المعلومات الشخصية: ينشئ طلب مراجعة ويوجه إلى لوحة التحكم.
+ * - يعرض رسائل مناسبة حسب نوع العملية.
  */
 (function() {
     'use strict';
@@ -42,7 +43,7 @@
                     }, { once: true });
                 });
             } catch (err) {
-                showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+                showAlert('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.', 'error');
                 if (submitBtn) submitBtn.disabled = true;
                 return;
             }
@@ -54,18 +55,28 @@
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
         const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
 
+        // عرض عنوان مخصص حسب نوع العملية
         if (pendingEmail) {
-            instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
+            let intro = 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني';
+            if (verifyType === 'signup') {
+                intro = 'أدخل رمز تأكيد التسجيل المرسل إلى بريدك الإلكتروني';
+            } else if (verifyType === 'recovery') {
+                intro = 'أدخل رمز إعادة تعيين كلمة المرور المرسل إلى بريدك الإلكتروني';
+            } else if (verifyType === 'personal_info') {
+                intro = 'أدخل رمز تأكيد المعلومات الشخصية المرسل إلى بريدك الإلكتروني';
+            }
+            instructionText.textContent = intro + ': ' + pendingEmail;
         } else {
-            showAlert('لم يتم العثور على بريد إلكتروني معلق.', 'error');
+            showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
             if (submitBtn) submitBtn.disabled = true;
         }
 
-        // فلترة الإدخال: أرقام فقط، وإرسال تلقائي عند 8 أرقام
-        otpInput.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
-            if (otpError) otpError.textContent = '';
-            if (this.value.length === 8) {
+        // فلترة الإدخال: أرقام فقط (يُدار الآن عبر المربعات الشبكية، لكننا نضبط الحقل المخفي)
+        // الإدخال الفعلي يتم عبر مربعات .otp-box ويُجمع في #otp
+        // نراقب تغير قيمة الحقل المخفي (الذي تحدثه المربعات)
+        const observer = new MutationObserver(function() {
+            const val = otpInput.value;
+            if (val.length === 6) {
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();
                 } else {
@@ -73,6 +84,7 @@
                 }
             }
         });
+        observer.observe(otpInput, { attributes: true, attributeFilter: ['value'] });
 
         // معالجة تقديم النموذج
         form.addEventListener('submit', async function(e) {
@@ -81,13 +93,13 @@
             if (otpError) otpError.textContent = '';
 
             const otpValue = otpInput.value.trim();
-            if (otpValue.length !== 8) {
-                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام';
+            if (otpValue.length !== 6) {
+                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 6 أرقام';
                 return;
             }
 
             if (!pendingEmail) {
-                showAlert('بيانات الجلسة غير متوفرة.', 'error');
+                showAlert('بيانات الجلسة غير متوفرة. أعد المحاولة.', 'error');
                 return;
             }
 
@@ -141,6 +153,7 @@
                                 await supabaseClient.from('verification_requests')
                                     .update({
                                         status: 'under_review',
+                                        submitted: true,
                                         submitted_at: new Date().toISOString(),
                                         updated_at: new Date().toISOString()
                                     })
@@ -150,6 +163,7 @@
                                     .insert({
                                         user_id: user.id,
                                         status: 'under_review',
+                                        submitted: true,
                                         submitted_at: new Date().toISOString()
                                     });
                             }
@@ -168,8 +182,12 @@
                 console.error('❌ فشل التحقق من الرمز:', error);
                 let msg = error.message || 'رمز التحقق غير صحيح أو منتهي الصلاحية';
                 showAlert(msg, 'error');
+                // مسح المربعات الشبكية
+                document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('filled'); });
                 otpInput.value = '';
-                otpInput.focus();
+                // تركيز أول مربع
+                const firstBox = document.querySelector('.otp-box');
+                if (firstBox) firstBox.focus();
             } finally {
                 showLoader(false);
                 submitBtn.disabled = false;
