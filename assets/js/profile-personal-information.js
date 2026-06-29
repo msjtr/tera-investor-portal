@@ -1,12 +1,14 @@
 /**
  * ============================================================
- * profile-personal-information.js – معلومات شخصية + رحلة العميل (v5.0.1)
+ * profile-personal-information.js – معلومات شخصية + رحلة العميل (v5.1)
  * ============================================================
  * - يبني شريط التقدم من جدول verification_requests.
  * - يبني حقول رفع المرفقات حسب نوع الهوية (مع التحقق من وجود الحاوية).
  * - يحفظ البيانات ويحدث progress تلقائياً.
  * - بعد اكتمال جميع المراحل، يُظهر زر "إرسال الطلب للمراجعة".
  * - يحافظ على إرسال رمز OTP للتحقق.
+ * - [إصلاح] تنظيف اسم الملف قبل الرفع لمنع أخطاء "Invalid key".
+ * - [إضافة] مؤشر تحميل فردي لكل حقل رفع.
  */
 (function() {
     'use strict';
@@ -54,13 +56,25 @@
         if (el) el.value = value;
     }
 
+    /**
+     * رفع ملف إلى Supabase Storage مع تنظيف اسم الملف تلقائياً
+     */
     async function uploadFile(file, userId, folder) {
         const supabase = window.teraSupabase;
-        const fileName = `${folder}/${userId}/${Date.now()}-${file.name}`;
+
+        // ✅ إصلاح: تنظيف اسم الملف من الأحرف العربية والمسافات والرموز
+        const safeName = file.name
+            .replace(/[^a-zA-Z0-9.\-_]/g, '_')  // استبدال أي حرف غير إنجليزي/رقم/نقطة/شرطة بـ _
+            .replace(/\s+/g, '_');               // استبدال المسافات بـ _
+
+        const fileName = `${folder}/${userId}/${Date.now()}-${safeName}`;
+
         const { data, error } = await supabase.storage
             .from('attachments')
             .upload(fileName, file, { upsert: true });
+
         if (error) throw error;
+
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(fileName);
         return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
     }
@@ -104,8 +118,9 @@
         fields.forEach(f => {
             const div = document.createElement('div');
             div.className = 'upload-zone';
-            // أيقونة الرفع
-            div.innerHTML = `<i class="fas fa-cloud-upload-alt"></i>
+            // أيقونة الرفع مع سبينر مخفي
+            div.innerHTML = `<i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <i class="fas fa-spinner fa-spin upload-spinner" style="display:none; font-size:26px; color:#028090;"></i>
                 <span>${f.label}</span>
                 <small class="sub-text">PDF, JPG, PNG (max 5MB)</small>
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="${f.key}" style="display:none">`;
@@ -323,19 +338,34 @@
                 }
 
                 try {
+                    // ✅ مؤشر تحميل لكل ملف
                     const fileRecords = [];
                     for (let inp of requiredUploads) {
                         if (inp.files[0]) {
-                            const uploaded = await uploadFile(inp.files[0], user.id, formData.idType);
-                            fileRecords.push({
-                                user_id: user.id,
-                                file_name: inp.files[0].name,
-                                file_path: uploaded.path,
-                                file_type: uploaded.type,
-                                file_size: uploaded.size,
-                                description: inp.dataset.key,
-                                uploaded_at: new Date().toISOString()
-                            });
+                            const uploadZone = inp.closest('.upload-zone');
+                            const icon = uploadZone?.querySelector('.upload-icon');
+                            const spinner = uploadZone?.querySelector('.upload-spinner');
+
+                            // إظهار السبينر وإخفاء الأيقونة
+                            if (icon) icon.style.display = 'none';
+                            if (spinner) spinner.style.display = 'inline-block';
+
+                            try {
+                                const uploaded = await uploadFile(inp.files[0], user.id, formData.idType);
+                                fileRecords.push({
+                                    user_id: user.id,
+                                    file_name: inp.files[0].name,
+                                    file_path: uploaded.path,
+                                    file_type: uploaded.type,
+                                    file_size: uploaded.size,
+                                    description: inp.dataset.key,
+                                    uploaded_at: new Date().toISOString()
+                                });
+                            } finally {
+                                // إعادة الأيقونة وإخفاء السبينر
+                                if (icon) icon.style.display = '';
+                                if (spinner) spinner.style.display = 'none';
+                            }
                         }
                     }
 
