@@ -14,12 +14,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
+    <!-- الأنماط (بدون تغيير) -->
     <style>
-        /* جميع الأنماط المضمنة (نفس النسخة السابقة – لم يتم تغييرها) */
-        /* ============================================================
-           جميع الأنماط – مع شريط تمرير فخم
-           ============================================================ */
-
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -30,1388 +26,238 @@
             --sidebar-collapsed-width: 80px;
             --header-height: 75px;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-            background-color: var(--tera-bg);
-            font-family: 'Tajawal', sans-serif;
-            color: #1e293b;
-        }
-
-        .app-wrapper {
-            display: flex;
-            min-height: 100vh;
-            width: 100%;
-            max-width: 100%;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* --------------------------------------------
-           الهيدر العلوي
-           -------------------------------------------- */
-        .top-header {
-            height: var(--header-height);
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 998;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-        }
-
-        .header-right-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-logo {
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .header-logo img {
-            height: 44px !important;
-            width: auto !important;
-            display: block;
-            flex-shrink: 0;
-            filter: none !important;
-            opacity: 1 !important;
-            max-width: none !important;
-            image-rendering: auto;
-        }
-
-        .menu-toggle-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            font-size: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.25s;
-            flex-shrink: 0;
-        }
-
-        .menu-toggle-btn:hover {
-            background: var(--tera-teal);
-            border-color: var(--tera-teal);
-            color: #ffffff;
-        }
-
-        .header-left-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-profile-block {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .user-meta {
-            text-align: left;
-        }
-
-        .user-meta h5 {
-            margin: 0;
-            font-size: 15px;
-            color: var(--tera-navy);
-            font-weight: 800;
-            font-family: 'Cairo', sans-serif;
-        }
-
-        .user-meta p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--tera-gray);
-            font-weight: 600;
-        }
-
-        .user-avatar-circle {
-            width: 46px;
-            height: 46px;
-            background-color: var(--tera-navy);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: 800;
-            border: 2px solid var(--tera-teal);
-            flex-shrink: 0;
-        }
-
-        /* --------------------------------------------
-           القائمة الجانبية – مع شريط تمرير فخم
-           -------------------------------------------- */
-        .sidebar-container {
-            width: var(--sidebar-width);
-            background: var(--tera-navy);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 999;
-            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
-            height: calc(100vh - var(--header-height));
-            position: fixed;
-            top: var(--header-height);
-            right: 0;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-
-            /* دعم Firefox */
-            scrollbar-width: thin;
-            scrollbar-color: var(--tera-teal) rgba(255, 255, 255, 0.06);
-        }
-
-        /* ============================================================
-           تخصيص شريط التمرير – فخامة وجمال
-           ============================================================ */
-        .sidebar-container::-webkit-scrollbar {
-            width: 7px;
-        }
-
-        .sidebar-container::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            margin: 8px 0;
-        }
-
-        .sidebar-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--tera-teal), var(--tera-teal-light));
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.4s ease;
-            box-shadow: 0 0 12px rgba(2, 128, 144, 0.25);
-        }
-
-        .sidebar-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--tera-teal-light), #0d9488);
-            box-shadow: 0 0 24px rgba(2, 128, 144, 0.45);
-            transform: scale(1.02);
-        }
-
-        .sidebar-container::-webkit-scrollbar-thumb:active {
-            background: var(--tera-teal);
-            box-shadow: 0 0 30px rgba(2, 128, 144, 0.6);
-        }
-
-        /* تنسيقات القائمة الجانبية الأخرى */
-        .sidebar-container.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
-
-        .sidebar-container.collapsed .nav-label,
-        .sidebar-container.collapsed .submenu-toggle,
-        .sidebar-container.collapsed .submenu,
-        .sidebar-container.collapsed .sidebar-footer span {
-            display: none !important;
-        }
-
-        .sidebar-container.collapsed .nav-item a {
-            justify-content: center;
-            padding: 14px;
-        }
-
-        .sidebar-mobile-header {
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .sidebar-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        .sidebar-close-btn {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 16px 12px;
-            overflow-y: auto;
-        }
-
-        .nav-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .nav-item a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #cbd5e1;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            transition: 0.2s;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        .nav-item a i:first-child {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .nav-item a:hover,
-        .nav-item.active > a {
-            background: rgba(2, 128, 144, 0.15);
-            color: var(--tera-teal-light);
-        }
-
-        .submenu-toggle {
-            margin-right: auto;
-            transition: transform 0.3s;
-            font-size: 12px;
-        }
-
-        .submenu {
-            list-style: none;
-            padding: 4px 0 4px 0;
-            margin: 0 0 0 10px;
-            display: none;
-            flex-direction: column;
-            gap: 2px;
-            border-right: 2px solid rgba(20, 184, 166, 0.2);
-        }
-
-        .submenu a {
-            padding: 10px 16px 10px 10px;
-            font-size: 13px;
-            color: #94a3b8;
-            font-weight: 600;
-            white-space: normal;
-        }
-
-        .submenu a:hover {
-            color: #fff;
-        }
-
-        .submenu-open .submenu {
-            display: flex;
-        }
-
-        .submenu-open > a .submenu-toggle {
-            transform: rotate(180deg);
-        }
-
-        .sidebar-footer {
-            padding: 16px 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .logout-btn {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: transparent;
-            border: none;
-            color: #f87171;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 14px;
-            border-radius: 10px;
-            text-align: right;
-        }
-
-        .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        /* --------------------------------------------
-           طبقة الخلفية (للجوال)
-           -------------------------------------------- */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 998;
-            cursor: pointer;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-        }
-
-        /* --------------------------------------------
-           المحتوى الرئيسي
-           -------------------------------------------- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            margin-right: var(--sidebar-width);
-            margin-top: var(--header-height);
-            padding: 24px 30px 30px 30px;
-            transition: margin 0.3s ease;
-            overflow-x: hidden;
-        }
-
-        .sidebar-container.collapsed ~ .main-content {
-            margin-right: var(--sidebar-collapsed-width);
-        }
-
-        /* --------------------------------------------
-           الترحيب (Welcome Banner)
-           -------------------------------------------- */
-        .welcome-banner {
-            background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%);
-            border-radius: 16px;
-            padding: 28px 32px;
-            margin-bottom: 28px;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            box-shadow: 0 4px 20px rgba(10, 27, 63, 0.2);
-        }
-
-        .welcome-banner h2 {
-            font-family: 'Cairo', sans-serif;
-            font-weight: 800;
-            font-size: 22px;
-            margin: 0;
-            color: #fff;
-        }
-
-        .welcome-banner h2 i {
-            color: var(--tera-teal-light);
-            margin-left: 10px;
-        }
-
-        .welcome-banner p {
-            margin: 4px 0 0 0;
-            opacity: 0.85;
-            font-size: 14px;
-        }
-
-        .welcome-banner .date-badge {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .quick-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .quick-actions .btn-quick {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.25s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .quick-actions .btn-quick:hover {
-            background: var(--tera-teal);
-            border-color: var(--tera-teal);
-        }
-
-        /* --------------------------------------------
-           بطاقات الإحصائيات
-           -------------------------------------------- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: #fff;
-            padding: 24px 26px;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-            transition: 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--tera-teal-light);
-            box-shadow: 0 8px 25px rgba(2, 128, 144, 0.08);
-        }
-
-        .stat-icon {
-            width: 58px;
-            height: 58px;
-            border-radius: 14px;
-            background: rgba(2, 128, 144, 0.08);
-            color: var(--tera-teal);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            flex-shrink: 0;
-        }
-
-        .stat-card:hover .stat-icon {
-            background: var(--tera-teal);
-            color: #fff;
-        }
-
-        .stat-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: var(--tera-gray);
-            font-weight: 700;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--tera-navy);
-            font-family: monospace;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-trend-up,
-        .stat-trend-down,
-        .stat-trend-neutral {
-            font-size: 13px;
-            font-weight: 700;
-            padding: 2px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stat-trend-up {
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.12);
-        }
-        .stat-trend-down {
-            color: #ef4444;
-            background: rgba(239, 68, 68, 0.12);
-        }
-        .stat-trend-neutral {
-            color: #6b7280;
-            background: rgba(107, 114, 128, 0.12);
-        }
-
-        /* --------------------------------------------
-           شبكة اللوحات
-           -------------------------------------------- */
-        .dashboard-layout-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        .panel-card {
-            background: #fff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            padding: 24px 26px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 14px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .panel-header h3 {
-            margin: 0;
-            font-size: 17px;
-            color: var(--tera-navy);
-            font-weight: 800;
-            font-family: 'Cairo', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .panel-header h3 i {
-            color: var(--tera-teal);
-        }
-
-        .btn-text-action {
-            background: transparent;
-            border: none;
-            color: var(--tera-teal);
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-
-        .btn-text-action:hover {
-            background: rgba(2, 128, 144, 0.08);
-        }
-
-        .filter-select {
-            padding: 6px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 13px;
-            background: #fff;
-            color: var(--tera-navy);
-            font-weight: 700;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .link-view-action {
-            color: var(--tera-teal);
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-
-        .link-view-action:hover {
-            color: var(--tera-navy);
-            text-decoration: underline;
-        }
-
-        /* --------------------------------------------
-           التنبيهات
-           -------------------------------------------- */
-        .alert-item-box {
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            line-height: 1.6;
-            border: 1px solid transparent;
-        }
-
-        .alert-item-box:last-child {
-            margin-bottom: 0;
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            border-color: #bbf7d0;
-            color: #166534;
-        }
-        .alert-warning {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            color: #9a3412;
-        }
-        .alert-info {
-            background: #f0f9ff;
-            border-color: #bae6fd;
-            color: #0369a1;
-        }
-
-        .mono {
-            font-family: monospace;
-            font-weight: 800;
-        }
-
-        /* --------------------------------------------
-           الجداول (مع التمرير في الجوال)
-           -------------------------------------------- */
-        .data-table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin: 0 -6px;
-            padding: 0 6px;
-            scroll-behavior: smooth;
-        }
-
-        .data-table-wrapper::-webkit-scrollbar {
-            height: 5px;
-        }
-
-        .data-table-wrapper::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .data-table-wrapper::-webkit-scrollbar-thumb {
-            background: var(--tera-teal);
-            border-radius: 4px;
-        }
-
-        .data-table-list {
-            width: 100%;
-            min-width: 500px;
-            border-collapse: collapse;
-            text-align: right;
-            font-size: 14px;
-        }
-
-        .data-table-list th {
-            padding: 12px 14px;
-            font-size: 13px;
-            color: var(--tera-gray);
-            font-weight: 800;
-            border-bottom: 2px solid #f1f5f9;
-            white-space: nowrap;
-        }
-
-        .data-table-list td {
-            padding: 14px 14px;
-            font-size: 14px;
-            color: #334155;
-            font-weight: 700;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .data-table-list td.text-title {
-            font-family: 'Tajawal', sans-serif;
-            color: var(--tera-navy);
-            font-weight: 800;
-        }
-
-        .data-table-list .amount-cell {
-            font-family: monospace;
-            font-weight: 700;
-        }
-
-        .data-table-list tbody tr:hover td {
-            background: #f8fafc;
-        }
-
-        .btn-table-link {
-            background: var(--tera-teal);
-            color: #fff;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            text-decoration: none;
-            font-weight: 800;
-            display: inline-flex;
-            align-items: center;
-            white-space: nowrap;
-            transition: 0.2s;
-        }
-
-        .btn-table-link:hover {
-            background: var(--tera-navy);
-            color: #fff;
-        }
-
-        /* --------------------------------------------
-           الرسم البياني
-           -------------------------------------------- */
-        #mainChart {
-            width: 100% !important;
-            height: 100% !important;
-            max-height: 280px;
-        }
-
-        /* --------------------------------------------
-           التذييل
-           -------------------------------------------- */
-        .page-footer {
-            text-align: center;
-            padding: 18px 20px;
-            color: #94a3b8;
-            font-size: 13px;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
-            margin-top: auto;
-        }
-
-        /* --------------------------------------------
-           طبقة التحميل
-           -------------------------------------------- */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #e2e8f0;
-            border-top-color: var(--tera-teal);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-overlay p {
-            color: var(--tera-navy);
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        /* --------------------------------------------
-           تحسينات الجوال الشاملة
-           -------------------------------------------- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; background-color: var(--tera-bg); font-family: 'Tajawal', sans-serif; color: #1e293b; }
+        .app-wrapper { display: flex; min-height: 100vh; width: 100%; max-width: 100%; overflow-x: hidden; position: relative; }
+        .top-header { height: var(--header-height); background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 998; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .header-right-actions { display: flex; align-items: center; gap: 20px; }
+        .header-logo { flex-shrink: 0; display: flex; align-items: center; }
+        .header-logo img { height: 44px !important; width: auto !important; display: block; flex-shrink: 0; filter: none !important; opacity: 1 !important; max-width: none !important; image-rendering: auto; }
+        .menu-toggle-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; font-size: 20px; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.25s; flex-shrink: 0; }
+        .menu-toggle-btn:hover { background: var(--tera-teal); border-color: var(--tera-teal); color: #ffffff; }
+        .header-left-actions { display: flex; align-items: center; }
+        .user-profile-block { display: flex; align-items: center; gap: 14px; }
+        .user-meta { text-align: left; }
+        .user-meta h5 { margin: 0; font-size: 15px; color: var(--tera-navy); font-weight: 800; font-family: 'Cairo', sans-serif; }
+        .user-meta p { margin: 0; font-size: 12px; color: var(--tera-gray); font-weight: 600; }
+        .user-avatar-circle { width: 46px; height: 46px; background-color: var(--tera-navy); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 20px; font-weight: 800; border: 2px solid var(--tera-teal); flex-shrink: 0; }
+        .sidebar-container { width: var(--sidebar-width); background: var(--tera-navy); color: #fff; display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 999; box-shadow: 4px 0 25px rgba(0,0,0,0.1); height: calc(100vh - var(--header-height)); position: fixed; top: var(--header-height); right: 0; overflow-y: auto; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--tera-teal) rgba(255,255,255,0.06); }
+        .sidebar-container::-webkit-scrollbar { width: 7px; }
+        .sidebar-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 12px; margin: 8px 0; }
+        .sidebar-container::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--tera-teal), var(--tera-teal-light)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); transition: all 0.4s ease; box-shadow: 0 0 12px rgba(2,128,144,0.25); }
+        .sidebar-container::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--tera-teal-light), #0d9488); box-shadow: 0 0 24px rgba(2,128,144,0.45); }
+        .sidebar-container.collapsed { width: var(--sidebar-collapsed-width); }
+        .sidebar-container.collapsed .nav-label, .sidebar-container.collapsed .submenu-toggle, .sidebar-container.collapsed .submenu, .sidebar-container.collapsed .sidebar-footer span { display: none !important; }
+        .sidebar-container.collapsed .nav-item a { justify-content: center; padding: 14px; }
+        .sidebar-mobile-header { display: none; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-title { font-size: 16px; font-weight: 800; color: #fff; }
+        .sidebar-close-btn { background: transparent; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 4px; }
+        .sidebar-menu { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #cbd5e1; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px; transition: 0.2s; cursor: pointer; white-space: nowrap; }
+        .nav-item a i:first-child { font-size: 18px; width: 24px; text-align: center; }
+        .nav-item a:hover, .nav-item.active > a { background: rgba(2,128,144,0.15); color: var(--tera-teal-light); }
+        .submenu-toggle { margin-right: auto; transition: transform 0.3s; font-size: 12px; }
+        .submenu { list-style: none; padding: 4px 0 4px 0; margin: 0 0 0 10px; display: none; flex-direction: column; gap: 2px; border-right: 2px solid rgba(20,184,166,0.2); }
+        .submenu a { padding: 10px 16px 10px 10px; font-size: 13px; color: #94a3b8; font-weight: 600; white-space: normal; }
+        .submenu a:hover { color: #fff; }
+        .submenu-open .submenu { display: flex; }
+        .submenu-open > a .submenu-toggle { transform: rotate(180deg); }
+        .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .logout-btn { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: transparent; border: none; color: #f87171; cursor: pointer; font-weight: 700; font-size: 14px; border-radius: 10px; text-align: right; }
+        .logout-btn:hover { background: rgba(239,68,68,0.1); }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 998; cursor: pointer; }
+        .sidebar-overlay.active { display: block; }
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; margin-right: var(--sidebar-width); margin-top: var(--header-height); padding: 24px 30px 30px 30px; transition: margin 0.3s ease; overflow-x: hidden; }
+        .sidebar-container.collapsed ~ .main-content { margin-right: var(--sidebar-collapsed-width); }
+        .welcome-banner { background: linear-gradient(135deg, var(--tera-navy) 0%, #1a3a6b 100%); border-radius: 16px; padding: 28px 32px; margin-bottom: 28px; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 20px rgba(10,27,63,0.2); }
+        .welcome-banner h2 { font-family: 'Cairo', sans-serif; font-weight: 800; font-size: 22px; margin: 0; color: #fff; }
+        .welcome-banner h2 i { color: var(--tera-teal-light); margin-left: 10px; }
+        .welcome-banner p { margin: 4px 0 0 0; opacity: 0.85; font-size: 14px; }
+        .welcome-banner .date-badge { background: rgba(255,255,255,0.12); padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.08); }
+        .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .quick-actions .btn-quick { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.25s; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .quick-actions .btn-quick:hover { background: var(--tera-teal); border-color: var(--tera-teal); }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #fff; padding: 24px 26px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-4px); border-color: var(--tera-teal-light); box-shadow: 0 8px 25px rgba(2,128,144,0.08); }
+        .stat-icon { width: 58px; height: 58px; border-radius: 14px; background: rgba(2,128,144,0.08); color: var(--tera-teal); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+        .stat-card:hover .stat-icon { background: var(--tera-teal); color: #fff; }
+        .stat-info { display: flex; flex-direction: column; gap: 5px; }
+        .stat-label { font-size: 14px; color: var(--tera-gray); font-weight: 700; }
+        .stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); font-family: monospace; letter-spacing: 0.5px; }
+        .stat-trend-up, .stat-trend-down, .stat-trend-neutral { font-size: 13px; font-weight: 700; padding: 2px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+        .stat-trend-up { color: #10b981; background: rgba(16,185,129,0.12); }
+        .stat-trend-down { color: #ef4444; background: rgba(239,68,68,0.12); }
+        .stat-trend-neutral { color: #6b7280; background: rgba(107,114,128,0.12); }
+        .dashboard-layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px; }
+        .panel-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px 26px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #f1f5f9; padding-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+        .panel-header h3 { margin: 0; font-size: 17px; color: var(--tera-navy); font-weight: 800; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 8px; }
+        .panel-header h3 i { color: var(--tera-teal); }
+        .btn-text-action { background: transparent; border: none; color: var(--tera-teal); font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; }
+        .btn-text-action:hover { background: rgba(2,128,144,0.08); }
+        .filter-select { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 13px; background: #fff; color: var(--tera-navy); font-weight: 700; cursor: pointer; outline: none; }
+        .link-view-action { color: var(--tera-teal); text-decoration: none; font-weight: 800; font-size: 13px; transition: 0.2s; }
+        .link-view-action:hover { color: var(--tera-navy); text-decoration: underline; }
+        .alert-item-box { padding: 14px 18px; border-radius: 12px; margin-bottom: 12px; font-size: 14px; font-weight: 700; display: flex; align-items: flex-start; gap: 12px; line-height: 1.6; border: 1px solid transparent; }
+        .alert-item-box:last-child { margin-bottom: 0; }
+        .alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+        .alert-warning { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+        .alert-info { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+        .mono { font-family: monospace; font-weight: 800; }
+        .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 0 6px; scroll-behavior: smooth; }
+        .data-table-wrapper::-webkit-scrollbar { height: 5px; }
+        .data-table-wrapper::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .data-table-wrapper::-webkit-scrollbar-thumb { background: var(--tera-teal); border-radius: 4px; }
+        .data-table-list { width: 100%; min-width: 500px; border-collapse: collapse; text-align: right; font-size: 14px; }
+        .data-table-list th { padding: 12px 14px; font-size: 13px; color: var(--tera-gray); font-weight: 800; border-bottom: 2px solid #f1f5f9; white-space: nowrap; }
+        .data-table-list td { padding: 14px 14px; font-size: 14px; color: #334155; font-weight: 700; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .data-table-list td.text-title { font-family: 'Tajawal', sans-serif; color: var(--tera-navy); font-weight: 800; }
+        .data-table-list .amount-cell { font-family: monospace; font-weight: 700; }
+        .data-table-list tbody tr:hover td { background: #f8fafc; }
+        .btn-table-link { background: var(--tera-teal); color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 13px; text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap; transition: 0.2s; }
+        .btn-table-link:hover { background: var(--tera-navy); color: #fff; }
+        #mainChart { width: 100% !important; height: 100% !important; max-height: 280px; }
+        .page-footer { text-align: center; padding: 18px 20px; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
+        .loading-overlay.active { display: flex; }
+        .spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: var(--tera-teal); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-overlay p { color: var(--tera-navy); font-weight: 700; font-size: 16px; }
         @media (max-width: 991px) {
-            :root {
-                --header-height: 64px;
-            }
-
-            .top-header {
-                height: var(--header-height) !important;
-                padding: 0 16px !important;
-            }
-
-            .header-logo img {
-                height: 40px !important;
-            }
-
-            .menu-toggle-btn {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 18px !important;
-            }
-
-            .user-meta {
-                display: none !important;
-            }
-
-            .user-avatar-circle {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 18px !important;
-            }
-
-            .header-right-actions {
-                gap: 12px !important;
-            }
-
-            .sidebar-container {
-                right: calc(-1 * var(--sidebar-width));
-                top: 0;
-                height: 100vh;
-                box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
-                transition: right 0.3s ease;
-            }
-
-            .sidebar-container.sidebar-open {
-                right: 0;
-            }
-
-            .sidebar-mobile-header {
-                display: flex !important;
-            }
-
-            .main-content {
-                margin-right: 0 !important;
-                padding: 16px 14px 20px 14px !important;
-                margin-top: var(--header-height) !important;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-            }
-
-            .welcome-banner {
-                padding: 18px 20px !important;
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 14px !important;
-                margin-bottom: 20px !important;
-            }
-
-            .welcome-banner h2 {
-                font-size: 19px !important;
-            }
-
-            .welcome-banner p {
-                font-size: 13px !important;
-            }
-
-            .welcome-banner .date-badge {
-                font-size: 13px !important;
-                padding: 8px 16px !important;
-                justify-content: center !important;
-                width: 100% !important;
-            }
-
-            .quick-actions {
-                width: 100% !important;
-            }
-
-            .quick-actions .btn-quick {
-                flex: 1 !important;
-                justify-content: center !important;
-                font-size: 14px !important;
-                padding: 10px 12px !important;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr !important;
-                gap: 14px !important;
-                margin-bottom: 20px !important;
-            }
-
-            .stat-card {
-                padding: 18px 20px !important;
-                gap: 16px !important;
-            }
-
-            .stat-icon {
-                width: 50px !important;
-                height: 50px !important;
-                font-size: 22px !important;
-            }
-
-            .stat-value {
-                font-size: 20px !important;
-            }
-
-            .stat-label {
-                font-size: 13px !important;
-            }
-
-            .stat-trend-up,
-            .stat-trend-down,
-            .stat-trend-neutral {
-                font-size: 12px !important;
-                padding: 2px 10px !important;
-            }
-
-            .dashboard-layout-grid {
-                grid-template-columns: 1fr !important;
-                gap: 16px !important;
-                margin-bottom: 20px !important;
-            }
-
-            .panel-card {
-                padding: 16px 18px !important;
-            }
-
-            .panel-header h3 {
-                font-size: 16px !important;
-            }
-
-            .panel-header {
-                margin-bottom: 14px !important;
-                padding-bottom: 12px !important;
-            }
-
-            .btn-text-action {
-                font-size: 13px !important;
-                padding: 4px 8px !important;
-            }
-
-            .filter-select {
-                font-size: 13px !important;
-                padding: 4px 10px !important;
-            }
-
-            .data-table-wrapper {
-                margin: 0 -8px !important;
-                padding: 0 8px !important;
-            }
-
-            .data-table-list {
-                min-width: 420px !important;
-                font-size: 13px !important;
-            }
-
-            .data-table-list th {
-                font-size: 12px !important;
-                padding: 8px 10px !important;
-            }
-
-            .data-table-list td {
-                font-size: 13px !important;
-                padding: 10px 10px !important;
-            }
-
-            .btn-table-link {
-                font-size: 12px !important;
-                padding: 4px 12px !important;
-            }
-
-            .alert-item-box {
-                font-size: 13px !important;
-                padding: 12px 16px !important;
-            }
-
-            #mainChart {
-                max-height: 220px !important;
-            }
+            :root { --header-height: 64px; }
+            .top-header { height: var(--header-height) !important; padding: 0 16px !important; }
+            .header-logo img { height: 40px !important; }
+            .menu-toggle-btn { width: 40px !important; height: 40px !important; font-size: 18px !important; }
+            .user-meta { display: none !important; }
+            .user-avatar-circle { width: 40px !important; height: 40px !important; font-size: 18px !important; }
+            .header-right-actions { gap: 12px !important; }
+            .sidebar-container { right: calc(-1 * var(--sidebar-width)); top: 0; height: 100vh; box-shadow: -10px 0 30px rgba(0,0,0,0.2); transition: right 0.3s ease; }
+            .sidebar-container.sidebar-open { right: 0; }
+            .sidebar-mobile-header { display: flex !important; }
+            .main-content { margin-right: 0 !important; padding: 16px 14px 20px 14px !important; margin-top: var(--header-height) !important; }
+            .sidebar-overlay.active { display: block; }
+            .welcome-banner { padding: 18px 20px !important; flex-direction: column !important; align-items: stretch !important; gap: 14px !important; margin-bottom: 20px !important; }
+            .welcome-banner h2 { font-size: 19px !important; }
+            .welcome-banner p { font-size: 13px !important; }
+            .welcome-banner .date-badge { font-size: 13px !important; padding: 8px 16px !important; justify-content: center !important; width: 100% !important; }
+            .quick-actions { width: 100% !important; }
+            .quick-actions .btn-quick { flex: 1 !important; justify-content: center !important; font-size: 14px !important; padding: 10px 12px !important; }
+            .stats-grid { grid-template-columns: 1fr !important; gap: 14px !important; margin-bottom: 20px !important; }
+            .stat-card { padding: 18px 20px !important; gap: 16px !important; }
+            .stat-icon { width: 50px !important; height: 50px !important; font-size: 22px !important; }
+            .stat-value { font-size: 20px !important; }
+            .stat-label { font-size: 13px !important; }
+            .stat-trend-up, .stat-trend-down, .stat-trend-neutral { font-size: 12px !important; padding: 2px 10px !important; }
+            .dashboard-layout-grid { grid-template-columns: 1fr !important; gap: 16px !important; margin-bottom: 20px !important; }
+            .panel-card { padding: 16px 18px !important; }
+            .panel-header h3 { font-size: 16px !important; }
+            .panel-header { margin-bottom: 14px !important; padding-bottom: 12px !important; }
+            .btn-text-action { font-size: 13px !important; padding: 4px 8px !important; }
+            .filter-select { font-size: 13px !important; padding: 4px 10px !important; }
+            .data-table-wrapper { margin: 0 -8px !important; padding: 0 8px !important; }
+            .data-table-list { min-width: 420px !important; font-size: 13px !important; }
+            .data-table-list th { font-size: 12px !important; padding: 8px 10px !important; }
+            .data-table-list td { font-size: 13px !important; padding: 10px 10px !important; }
+            .btn-table-link { font-size: 12px !important; padding: 4px 12px !important; }
+            .alert-item-box { font-size: 13px !important; padding: 12px 16px !important; }
+            #mainChart { max-height: 220px !important; }
         }
-
         @media (max-width: 480px) {
-            .header-logo img {
-                height: 34px !important;
-            }
-
-            .menu-toggle-btn {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 16px !important;
-            }
-
-            .user-avatar-circle {
-                width: 36px !important;
-                height: 36px !important;
-                font-size: 16px !important;
-            }
-
-            .welcome-banner {
-                padding: 14px 14px !important;
-            }
-
-            .welcome-banner h2 {
-                font-size: 17px !important;
-            }
-
-            .welcome-banner p {
-                font-size: 12px !important;
-            }
-
-            .quick-actions .btn-quick {
-                font-size: 13px !important;
-                padding: 8px 10px !important;
-            }
-
-            .stat-card {
-                padding: 14px 16px !important;
-                gap: 14px !important;
-            }
-
-            .stat-icon {
-                width: 44px !important;
-                height: 44px !important;
-                font-size: 20px !important;
-            }
-
-            .stat-value {
-                font-size: 18px !important;
-            }
-
-            .panel-card {
-                padding: 12px 14px !important;
-            }
-
-            .panel-header h3 {
-                font-size: 15px !important;
-            }
-
-            .data-table-list {
-                min-width: 340px !important;
-                font-size: 12px !important;
-            }
-
-            .data-table-list th {
-                font-size: 11px !important;
-                padding: 6px 8px !important;
-            }
-
-            .data-table-list td {
-                font-size: 12px !important;
-                padding: 8px 8px !important;
-            }
-
-            .btn-table-link {
-                font-size: 11px !important;
-                padding: 3px 8px !important;
-            }
-
-            .alert-item-box {
-                font-size: 12px !important;
-                padding: 10px 14px !important;
-            }
-
-            #mainChart {
-                max-height: 180px !important;
-            }
-
-            .filter-select {
-                font-size: 12px !important;
-                padding: 4px 8px !important;
-            }
+            .header-logo img { height: 34px !important; }
+            .menu-toggle-btn { width: 36px !important; height: 36px !important; font-size: 16px !important; }
+            .user-avatar-circle { width: 36px !important; height: 36px !important; font-size: 16px !important; }
+            .welcome-banner { padding: 14px 14px !important; }
+            .welcome-banner h2 { font-size: 17px !important; }
+            .welcome-banner p { font-size: 12px !important; }
+            .quick-actions .btn-quick { font-size: 13px !important; padding: 8px 10px !important; }
+            .stat-card { padding: 14px 16px !important; gap: 14px !important; }
+            .stat-icon { width: 44px !important; height: 44px !important; font-size: 20px !important; }
+            .stat-value { font-size: 18px !important; }
+            .panel-card { padding: 12px 14px !important; }
+            .panel-header h3 { font-size: 15px !important; }
+            .data-table-list { min-width: 340px !important; font-size: 12px !important; }
+            .data-table-list th { font-size: 11px !important; padding: 6px 8px !important; }
+            .data-table-list td { font-size: 12px !important; padding: 8px 8px !important; }
+            .btn-table-link { font-size: 11px !important; padding: 3px 8px !important; }
+            .alert-item-box { font-size: 12px !important; padding: 10px 14px !important; }
+            #mainChart { max-height: 180px !important; }
+            .filter-select { font-size: 12px !important; padding: 4px 8px !important; }
         }
-
-        /* --------------------------------------------
-           وضع مظلم
-           -------------------------------------------- */
         @media (prefers-color-scheme: dark) {
-            .top-header {
-                background: #1e293b !important;
-                border-bottom-color: #334155 !important;
-            }
-
-            .top-header .user-meta h5 {
-                color: #f8fafc !important;
-            }
-
-            .top-header .user-meta p {
-                color: #94a3b8 !important;
-            }
-
-            .menu-toggle-btn {
-                background: #334155 !important;
-                border-color: #475569 !important;
-                color: #cbd5e1 !important;
-            }
-
-            .menu-toggle-btn:hover {
-                background: var(--tera-teal) !important;
-                color: #fff !important;
-            }
-
-            .stat-card,
-            .panel-card {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-
-            .stat-card .stat-value,
-            .panel-header h3,
-            .data-table-list td.text-title {
-                color: #f8fafc !important;
-            }
-
-            .stat-icon {
-                background: rgba(20, 184, 166, 0.15) !important;
-                color: var(--tera-teal-light) !important;
-            }
-
-            .stat-card:hover .stat-icon {
-                background: var(--tera-teal-light) !important;
-                color: #0f172a !important;
-            }
-
-            .panel-header {
-                border-bottom-color: #334155 !important;
-            }
-
-            .data-table-list th {
-                color: #94a3b8 !important;
-                border-bottom-color: #334155 !important;
-            }
-
-            .data-table-list td {
-                color: #e2e8f0 !important;
-                border-bottom-color: #1e293b !important;
-            }
-
-            .data-table-list tbody tr:hover td {
-                background: #334155 !important;
-            }
-
-            .data-table-wrapper::-webkit-scrollbar-track {
-                background: #1e293b !important;
-            }
-
-            .alert-success {
-                background: rgba(22, 101, 52, 0.2) !important;
-                border-color: #166534 !important;
-                color: #bbf7d0 !important;
-            }
-            .alert-warning {
-                background: rgba(154, 52, 18, 0.2) !important;
-                border-color: #9a3412 !important;
-                color: #fed7aa !important;
-            }
-
-            .loading-overlay {
-                background: rgba(15, 23, 42, 0.8) !important;
-            }
-            .loading-overlay p {
-                color: #f8fafc !important;
-            }
-            .spinner {
-                border-color: #334155 !important;
-                border-top-color: var(--tera-teal-light) !important;
-            }
-
-            /* تخصيص شريط التمرير في الوضع المظلم */
-            .sidebar-container::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.04) !important;
-            }
-
-            .sidebar-container::-webkit-scrollbar-thumb {
-                background: linear-gradient(180deg, var(--tera-teal-light), #0d9488) !important;
-                box-shadow: 0 0 15px rgba(20, 184, 166, 0.3) !important;
-            }
-
-            .sidebar-container::-webkit-scrollbar-thumb:hover {
-                box-shadow: 0 0 28px rgba(20, 184, 166, 0.5) !important;
-            }
+            .top-header { background: #1e293b !important; border-bottom-color: #334155 !important; }
+            .top-header .user-meta h5 { color: #f8fafc !important; }
+            .top-header .user-meta p { color: #94a3b8 !important; }
+            .menu-toggle-btn { background: #334155 !important; border-color: #475569 !important; color: #cbd5e1 !important; }
+            .menu-toggle-btn:hover { background: var(--tera-teal) !important; color: #fff !important; }
+            .stat-card, .panel-card { background: #1e293b !important; border-color: #334155 !important; }
+            .stat-card .stat-value, .panel-header h3, .data-table-list td.text-title { color: #f8fafc !important; }
+            .stat-icon { background: rgba(20,184,166,0.15) !important; color: var(--tera-teal-light) !important; }
+            .stat-card:hover .stat-icon { background: var(--tera-teal-light) !important; color: #0f172a !important; }
+            .panel-header { border-bottom-color: #334155 !important; }
+            .data-table-list th { color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+            .data-table-list td { color: #e2e8f0 !important; border-bottom-color: #1e293b !important; }
+            .data-table-list tbody tr:hover td { background: #334155 !important; }
+            .data-table-wrapper::-webkit-scrollbar-track { background: #1e293b !important; }
+            .alert-success { background: rgba(22,101,52,0.2) !important; border-color: #166534 !important; color: #bbf7d0 !important; }
+            .alert-warning { background: rgba(154,52,18,0.2) !important; border-color: #9a3412 !important; color: #fed7aa !important; }
+            .loading-overlay { background: rgba(15,23,42,0.8) !important; }
+            .loading-overlay p { color: #f8fafc !important; }
+            .spinner { border-color: #334155 !important; border-top-color: var(--tera-teal-light) !important; }
+            .sidebar-container::-webkit-scrollbar-track { background: rgba(255,255,255,0.04) !important; }
+            .sidebar-container::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--tera-teal-light), #0d9488) !important; box-shadow: 0 0 15px rgba(20,184,166,0.3) !important; }
+            .sidebar-container::-webkit-scrollbar-thumb:hover { box-shadow: 0 0 28px rgba(20,184,166,0.5) !important; }
         }
-
-        /* --------------------------------------------
-           تقليل الحركة
-           -------------------------------------------- */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* --------------------------------------------
-           فئات مساعدة
-           -------------------------------------------- */
-        .d-lg-none {
-            display: none !important;
-        }
-
-        @media (max-width: 991px) {
-            .d-lg-none {
-                display: flex !important;
-            }
-        }
+        @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+        .d-lg-none { display: none !important; }
+        @media (max-width: 991px) { .d-lg-none { display: flex !important; } }
     </style>
 </head>
 <body>
 
-    <!-- طبقة التحميل -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>جاري تحميل لوحة التحكم...</p>
-    </div>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><p>جاري تحميل لوحة التحكم...</p></div>
 
-    <!-- الهيكل الرئيسي -->
     <div class="app-wrapper">
-
-        <!-- الهيدر العلوي -->
         <header class="top-header no-print">
-
             <div class="header-right-actions">
-                <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية">
-                    <i class="fas fa-bars"></i>
-                </button>
-
-                <div class="header-logo">
-                    <a href="/pages/dashboard/index.html">
-                        <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'" />
-                    </a>
-                </div>
+                <button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية"><i class="fas fa-bars"></i></button>
+                <div class="header-logo"><a href="/pages/dashboard/index.html"><img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/150x45/028090/fff?text=Tera+Portal'"/></a></div>
             </div>
-
             <div class="header-left-actions">
                 <div class="user-profile-block">
-                    <div class="user-meta">
-                        <h5>محمد صالح جميعان الشمري</h5>
-                        <p>بوابة المستثمر، حائل</p>
-                    </div>
+                    <div class="user-meta"><h5>مستخدم</h5><p>بوابة المستثمر</p></div>
                     <div class="user-avatar-circle">م</div>
                 </div>
             </div>
         </header>
 
-        <!-- طبقة الخلفية (للجوال) -->
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- القائمة الجانبية -->
         <aside class="sidebar-container" id="sidebar">
-
-            <div class="sidebar-mobile-header d-lg-none">
-                <span class="sidebar-title">القائمة الرئيسية</span>
-                <button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
+            <div class="sidebar-mobile-header d-lg-none"><span class="sidebar-title">القائمة الرئيسية</span><button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة"><i class="fas fa-times"></i></button></div>
             <nav class="sidebar-menu">
                 <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة</a></li>
-                            <li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history"></i> سجل الشراكة الممتدة</a></li>
-                            <li><a href="/pages/investments/opportunities.html"><i class="fas fa-list-ul"></i> سجل فرص الشراكة</a></li>
-                            <li><a href="/pages/investments/active-investments.html"><i class="fas fa-file-signature"></i> سجل العقود</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye"></i> نظرة عامة</a></li>
-                            <li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt"></i> المعاملات المالية</a></li>
-                            <li><a href="/pages/portfolio/profits.html"><i class="fas fa-arrow-trend-up"></i> الأرباح الدورية</a></li>
-                            <li><a href="/pages/portfolio/withdraw-request.html"><i class="fas fa-money-bill-wave"></i> طلب سحب</a></li>
-                            <li><a href="/pages/portfolio/withdrawal-history.html"><i class="fas fa-clock"></i> سجل السحوبات</a></li>
-                            <li><a href="/pages/portfolio/account-statement.html"><i class="fas fa-file-invoice-dollar"></i> كشف الحساب الموثق</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar"></i> لوحة التقارير</a></li>
-                            <li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open"></i> تقرير المحفظة</a></li>
-                            <li><a href="/pages/reports/investments-report.html"><i class="fas fa-chart-pie"></i> تقرير الاستثمارات</a></li>
-                            <li><a href="/pages/reports/profits-report.html"><i class="fas fa-coins"></i> تقرير الأرباح الصافية</a></li>
-                            <li><a href="/pages/reports/withdrawals-report.html"><i class="fas fa-receipt"></i> تقرير السحوبات</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card"></i> المعلومات الشخصية</a></li>
-                            <li><a href="/pages/profile/contact-information.html"><i class="fas fa-envelope"></i> معلومات الاتصال</a></li>
-                            <li><a href="/pages/profile/national-address.html"><i class="fas fa-map-marker-alt"></i> العنوان الوطني الموثق</a></li>
-                            <li><a href="/pages/profile/bank-information.html"><i class="fas fa-university"></i> المعلومات البنكية (IBAN)</a></li>
-                            <li><a href="/pages/profile/attachments.html"><i class="fas fa-paperclip"></i> المرفقات والوثائق</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/security/change-password.html"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
-                            <li><a href="/pages/security/change-email.html"><i class="fas fa-at"></i> تغيير البريد الإلكتروني</a></li>
-                            <li><a href="/pages/security/change-mobile.html"><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</a></li>
-                            <li><a href="/pages/security/two-factor-authentication.html"><i class="fas fa-user-shield"></i> المصادقة الثنائية (2FA)</a></li>
-                            <li><a href="/pages/security/registered-devices.html"><i class="fas fa-laptop-house"></i> الأجهزة المصرحة</a></li>
-                            <li><a href="/pages/security/login-history.html"><i class="fas fa-user-clock"></i> سجل عمليات الدخول</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item has-submenu">
-                        <a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a>
-                        <ul class="submenu">
-                            <li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle"></i> مركز المساعدة الرقمي</a></li>
-                            <li><a href="/pages/support/faq.html"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li>
-                            <li><a href="/pages/support/tickets.html"><i class="fas fa-ticket-alt"></i> تذاكر الدعم الفني</a></li>
-                            <li><a href="/pages/support/notifications.html"><i class="fas fa-bell"></i> مركز الإشعارات</a></li>
-                            <li><a href="/pages/support/privacy-policy.html"><i class="fas fa-user-lock"></i> سياسة الخصوصية</a></li>
-                            <li><a href="/pages/support/terms-and-conditions.html"><i class="fas fa-gavel"></i> الشروط والأحكام القانونية</a></li>
-                        </ul>
-                    </li>
+                    <li class="nav-item active"><a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة</a></li><li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history"></i> سجل الشراكة الممتدة</a></li><li><a href="/pages/investments/opportunities.html"><i class="fas fa-list-ul"></i> سجل فرص الشراكة</a></li><li><a href="/pages/investments/active-investments.html"><i class="fas fa-file-signature"></i> سجل العقود</a></li></ul></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye"></i> نظرة عامة</a></li><li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt"></i> المعاملات المالية</a></li><li><a href="/pages/portfolio/profits.html"><i class="fas fa-arrow-trend-up"></i> الأرباح الدورية</a></li><li><a href="/pages/portfolio/withdraw-request.html"><i class="fas fa-money-bill-wave"></i> طلب سحب</a></li><li><a href="/pages/portfolio/withdrawal-history.html"><i class="fas fa-clock"></i> سجل السحوبات</a></li><li><a href="/pages/portfolio/account-statement.html"><i class="fas fa-file-invoice-dollar"></i> كشف الحساب الموثق</a></li></ul></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar"></i> لوحة التقارير</a></li><li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open"></i> تقرير المحفظة</a></li><li><a href="/pages/reports/investments-report.html"><i class="fas fa-chart-pie"></i> تقرير الاستثمارات</a></li><li><a href="/pages/reports/profits-report.html"><i class="fas fa-coins"></i> تقرير الأرباح الصافية</a></li><li><a href="/pages/reports/withdrawals-report.html"><i class="fas fa-receipt"></i> تقرير السحوبات</a></li></ul></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card"></i> المعلومات الشخصية</a></li><li><a href="/pages/profile/contact-information.html"><i class="fas fa-envelope"></i> معلومات الاتصال</a></li><li><a href="/pages/profile/national-address.html"><i class="fas fa-map-marker-alt"></i> العنوان الوطني الموثق</a></li><li><a href="/pages/profile/bank-information.html"><i class="fas fa-university"></i> المعلومات البنكية (IBAN)</a></li><li><a href="/pages/profile/attachments.html"><i class="fas fa-paperclip"></i> المرفقات والوثائق</a></li></ul></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/security/change-password.html"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li><li><a href="/pages/security/change-email.html"><i class="fas fa-at"></i> تغيير البريد الإلكتروني</a></li><li><a href="/pages/security/change-mobile.html"><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</a></li><li><a href="/pages/security/two-factor-authentication.html"><i class="fas fa-user-shield"></i> المصادقة الثنائية (2FA)</a></li><li><a href="/pages/security/registered-devices.html"><i class="fas fa-laptop-house"></i> الأجهزة المصرحة</a></li><li><a href="/pages/security/login-history.html"><i class="fas fa-user-clock"></i> سجل عمليات الدخول</a></li></ul></li>
+                    <li class="nav-item has-submenu"><a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle"></i> مركز المساعدة الرقمي</a></li><li><a href="/pages/support/faq.html"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li><li><a href="/pages/support/tickets.html"><i class="fas fa-ticket-alt"></i> تذاكر الدعم الفني</a></li><li><a href="/pages/support/notifications.html"><i class="fas fa-bell"></i> مركز الإشعارات</a></li><li><a href="/pages/support/privacy-policy.html"><i class="fas fa-user-lock"></i> سياسة الخصوصية</a></li><li><a href="/pages/support/terms-and-conditions.html"><i class="fas fa-gavel"></i> الشروط والأحكام القانونية</a></li></ul></li>
                 </ul>
             </nav>
-
-            <div class="sidebar-footer">
-                <button class="logout-btn" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="nav-label">تسجيل الخروج</span>
-                </button>
-            </div>
+            <div class="sidebar-footer"><button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span class="nav-label">تسجيل الخروج</span></button></div>
         </aside>
 
-        <!-- المحتوى الرئيسي -->
         <main class="main-content">
-
-            <!-- الترحيب -->
             <div class="welcome-banner">
                 <div>
-                    <h2><i class="fas fa-hand-peace"></i> مرحباً بك، محمد!</h2>
+                    <h2><i class="fas fa-hand-peace"></i> مرحباً بك</h2>
                     <p>نرحب بعودتك إلى لوحة تحكم تيرا. إليك ملخص أداء محفظتك الاستثمارية.</p>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                    <div class="date-badge">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span id="currentDate">2026/06/25</span>
-                    </div>
+                    <div class="date-badge"><i class="fas fa-calendar-alt"></i> <span id="currentDate"></span></div>
                     <div class="quick-actions">
                         <a href="/pages/portfolio/withdraw-request.html" class="btn-quick"><i class="fas fa-hand-holding-usd"></i> سحب</a>
                         <a href="/pages/investments/opportunities.html" class="btn-quick"><i class="fas fa-plus-circle"></i> استثمار</a>
@@ -1419,141 +265,85 @@
                 </div>
             </div>
 
-            <!-- بطاقات الإحصائيات -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-wallet"></i></div>
                     <div class="stat-info">
                         <span class="stat-label">آخر تقييم للمحفظة</span>
-                        <span class="stat-value">124,500.00 ر.س</span>
-                        <span class="stat-trend-up"><i class="fas fa-arrow-up"></i> +4.2%</span>
+                        <span class="stat-value">0.00 ر.س</span>
+                        <!-- الإتجاهات ستُضاف لاحقاً عند توفرها -->
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(20, 184, 166, 0.08); color: var(--tera-teal-light);">
-                        <i class="fas fa-file-contract"></i>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(20,184,166,0.08); color: var(--tera-teal-light);"><i class="fas fa-file-contract"></i></div>
                     <div class="stat-info">
                         <span class="stat-label">عدد العقود الإجمالي</span>
-                        <span class="stat-value">6 عقود نشطة</span>
-                        <span class="stat-trend-neutral"><i class="fas fa-minus"></i> +2 هذا الشهر</span>
+                        <span class="stat-value">0 عقود نشطة</span>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon" style="background: rgba(14, 165, 233, 0.08); color: #0ea5e9;">
-                        <i class="fas fa-piggy-bank"></i>
-                    </div>
+                    <div class="stat-icon" style="background: rgba(14,165,233,0.08); color: #0ea5e9;"><i class="fas fa-piggy-bank"></i></div>
                     <div class="stat-info">
                         <span class="stat-label">الرصيد المتاح بالمحفظة</span>
-                        <span class="stat-value">15,500.00 ر.س</span>
-                        <span class="stat-trend-up"><i class="fas fa-arrow-up"></i> +1,200 ر.س</span>
+                        <span class="stat-value">0.00 ر.س</span>
                     </div>
                 </div>
             </div>
 
-            <!-- الرسم البياني + التنبيهات -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
-                    <div class="panel-header">
-                        <h3><i class="fas fa-chart-area"></i> نمو المحفظة والأرباح الصافية</h3>
-                        <span style="font-size: 13px; color: var(--tera-gray); font-weight: 600;">
-                            <i class="fas fa-calendar-alt"></i> آخر 6 أشهر
-                        </span>
-                    </div>
-                    <div style="height: 280px; position: relative; width: 100%;">
-                        <canvas id="mainChart"></canvas>
-                    </div>
+                    <div class="panel-header"><h3><i class="fas fa-chart-area"></i> نمو المحفظة والأرباح الصافية</h3><span style="font-size:13px;color:var(--tera-gray);"><i class="fas fa-calendar-alt"></i> آخر 6 أشهر</span></div>
+                    <div style="height: 280px; position: relative; width: 100%;"><canvas id="mainChart"></canvas></div>
                 </div>
-
                 <div class="panel-card">
-                    <div class="panel-header">
-                        <h3><i class="fas fa-bell"></i> التنبيهات الذكية النظامية</h3>
-                        <a href="/pages/support/notifications.html" class="link-view-action">عرض الكل</a>
-                    </div>
-                    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                        <div class="alert-item-box alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            <span><strong>إشعار تسوية مالية:</strong> الشراكة الممتدة رقم <span class="mono">#Tera-8893</span> دخلت مرحلة الإقفال بنجاح.</span>
-                        </div>
-                        <div class="alert-item-box alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span><strong>تحديث الضمانات:</strong> تم توثيق السند لأمر الإلكتروني بنجاح لفرصة الشراكة رقم <span class="mono">#Tera-2044</span>.</span>
-                        </div>
-                        <div class="alert-item-box alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span><strong>تذكير:</strong> هناك 3 فرص استثمارية جديدة متاحة في سوق الشركات المطروحة.</span>
-                        </div>
+                    <div class="panel-header"><h3><i class="fas fa-bell"></i> التنبيهات الذكية النظامية</h3><a href="/pages/support/notifications.html" class="link-view-action">عرض الكل</a></div>
+                    <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+                        <!-- تنبيهات عامة (يمكن تحويلها لديناميكية لاحقاً) -->
+                        <div class="alert-item-box alert-info"><i class="fas fa-info-circle"></i> <span>مرحباً بك في منصة تيرا. نتمنى لك تجربة استثمارية ممتعة.</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- الفرص الاستثمارية + العمليات المالية -->
             <div class="dashboard-layout-grid">
                 <div class="panel-card">
-                    <div class="panel-header">
-                        <h3><i class="fas fa-rocket"></i> أحدث الفرص الاستثمارية</h3>
-                        <button class="btn-text-action" id="toggleOppBtn">
-                            <i id="toggleOppIcon" class="fas fa-eye-slash"></i>
-                            <span id="toggleOppText">إخفاء</span>
-                        </button>
-                    </div>
-                    <div id="opportunitiesPanelWrapper" style="overflow: hidden; transition: all 0.3s ease; max-height: 600px;">
+                    <div class="panel-header"><h3><i class="fas fa-rocket"></i> أحدث الفرص الاستثمارية</h3><button class="btn-text-action" id="toggleOppBtn"><i id="toggleOppIcon" class="fas fa-eye-slash"></i> <span id="toggleOppText">إخفاء</span></button></div>
+                    <div id="opportunitiesPanelWrapper" style="overflow:hidden; transition:all 0.3s ease; max-height:600px;">
                         <div class="data-table-wrapper">
                             <table class="data-table-list">
-                                <thead>
-                                    <tr><th class="text-start">الفرصة</th><th>قيمة السهم</th><th>العائد</th><th>الحالة</th><th></th></tr>
-                                </thead>
+                                <thead><tr><th class="text-start">الفرصة</th><th>قيمة السهم</th><th>العائد</th><th>الحالة</th><th></th></tr></thead>
                                 <tbody>
-                                    <tr><td class="text-title text-start">مشروع تمويل بطاقات الاتصالات</td><td>5,000 ر.س</td><td>15.00%</td><td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
-                                    <tr><td class="text-title text-start">صندوق التطوير العقاري 2026</td><td>10,000 ر.س</td><td>12.50%</td><td><span style="color:#f59e0b;font-weight:bold;">قيد الطرح</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
-                                    <tr><td class="text-title text-start">منصة التجارة الإلكترونية</td><td>7,500 ر.س</td><td>18.00%</td><td><span style="color:#0d9488;font-weight:bold;">نشطة</span></td><td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td></tr>
+                                    <tr><td colspan="5" style="text-align:center; padding:20px;">لا توجد فرص استثمارية حالياً</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
                 <div class="panel-card">
-                    <div class="panel-header">
-                        <h3><i class="fas fa-history"></i> آخر العمليات المالية</h3>
-                        <select id="transactionFilter" class="filter-select">
-                            <option value="all">الكل</option>
-                            <option value="deposits">إيداعات</option>
-                            <option value="deductions">خصومات</option>
-                        </select>
-                    </div>
+                    <div class="panel-header"><h3><i class="fas fa-history"></i> آخر العمليات المالية</h3><select id="transactionFilter" class="filter-select"><option value="all">الكل</option><option value="deposits">إيداعات</option><option value="deductions">خصومات</option></select></div>
                     <div class="data-table-wrapper">
                         <table class="data-table-list">
                             <thead><tr><th class="text-start">البيان</th><th>التاريخ</th><th>المبلغ</th></tr></thead>
                             <tbody id="transactionsTableBody">
-                                <tr><td class="text-title text-start">إيداع أرباح دورية</td><td>2026/06/23</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+1,250.00 ر.س</td></tr>
-                                <tr><td class="text-title text-start">سحب أرباح</td><td>2026/06/20</td><td class="amount-cell" style="color:#ef4444;font-weight:bold;">-500.00 ر.س</td></tr>
-                                <tr><td class="text-title text-start">إيداع استثماري</td><td>2026/06/18</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+10,000.00 ر.س</td></tr>
-                                <tr><td class="text-title text-start">إيداع أرباح</td><td>2026/06/15</td><td class="amount-cell" style="color:#10b981;font-weight:bold;">+780.00 ر.س</td></tr>
-                                <tr><td class="text-title text-start">رسوم إدارية</td><td>2026/06/12</td><td class="amount-cell" style="color:#ef4444;font-weight:bold;">-50.00 ر.س</td></tr>
+                                <tr><td colspan="3" style="text-align:center; padding:20px;">لا توجد عمليات مالية حديثة</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- التذييل -->
             <footer class="page-footer no-print">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; max-width: 1200px; margin: 0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; max-width:1200px; margin:0 auto;">
                     <span>© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</span>
-                    <div style="display: flex; gap: 16px;">
-                        <a href="/pages/support/privacy-policy.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 600;">سياسة الخصوصية</a>
-                        <a href="/pages/support/terms-and-conditions.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 600;">الشروط والأحكام</a>
-                        <a href="/pages/support/help-center.html" style="color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 600;">الدعم الفني</a>
+                    <div style="display:flex; gap:16px;">
+                        <a href="/pages/support/privacy-policy.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">سياسة الخصوصية</a>
+                        <a href="/pages/support/terms-and-conditions.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">الشروط والأحكام</a>
+                        <a href="/pages/support/help-center.html" style="color:#94a3b8; text-decoration:none; font-size:13px; font-weight:600;">الدعم الفني</a>
                     </div>
                 </div>
             </footer>
-
         </main>
-
     </div>
 
-    <!-- السكربتات (الترتيب الجديد للمؤسسة) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
@@ -1561,6 +351,9 @@
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
-
+    <script>
+        // تحديث التاريخ الحالي
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ar-SA');
+    </script>
 </body>
 </html>
