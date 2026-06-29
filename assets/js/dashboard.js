@@ -24,7 +24,8 @@ const Dashboard = {
         // حماية المسار: إذا لم يكن المستخدم مسجلاً، توجيه فوري إلى صفحة الدخول
         if (window.TeraAuth && !window.TeraAuth.isLoggedIn()) {
             console.log('🔐 [Dashboard] مستخدم غير مصرح → توجيه إلى صفحة الدخول');
-            window.TeraAuth.redirectTo('/auth/login.html');
+            // تم إصلاح المسار إلى صفحة الدخول الفعلية
+            window.TeraAuth.redirectTo('/auth/auth/login/login.html');
             return;
         }
 
@@ -286,11 +287,11 @@ const Dashboard = {
             if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
                 await window.TeraAuth.logout();
             } else {
-                // إجراء احتياطي في حال عدم وجود TeraAuth
+                // إجراء احتياطي في حال عدم وجود TeraAuth (توجيه إلى صفحة الدخول الصحيحة)
                 localStorage.removeItem('tera_token');
                 localStorage.removeItem('tera_user');
                 sessionStorage.clear();
-                window.location.replace('/auth/login.html');
+                window.location.replace('/auth/auth/login/login.html');
             }
         });
     },
