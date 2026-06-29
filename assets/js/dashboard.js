@@ -7,7 +7,8 @@
  * - لا توجد بيانات وهمية أو ثابتة.
  * - يعتمد على جداول: user_portfolio, portfolio_history,
  *   investment_opportunities, transactions.
- * ============================================================
+ * - يحمي المسار عبر TeraAuth.
+ * - يستخدم maybeSingle() بدلاً من single() لتجنب أخطاء 406.
  */
 
 const Dashboard = {
@@ -39,6 +40,7 @@ const Dashboard = {
 
         console.log('🚀 جاري تهيئة لوحة التحكم بالبيانات الحقيقية...');
 
+        // تهيئة المكونات المشتركة
         this.initSidebar();
         this.initSubmenus();
         this.initOpportunitiesToggle();
@@ -89,7 +91,7 @@ const Dashboard = {
     },
 
     /**
-     * تحميل إحصائيات المحفظة (من جدول user_portfolio)
+     * تحميل إحصائيات المحفظة (من جدول user_portfolio) – تم إصلاح خطأ 406
      */
     loadStats: async function() {
         const statValues = {
@@ -105,18 +107,20 @@ const Dashboard = {
                     .from('user_portfolio')
                     .select('total_value, active_contracts, available_balance')
                     .eq('user_id', user.id)
-                    .single();
+                    .maybeSingle();   // ✅ يُعيد null إذا لم يوجد صف، بدون خطأ 406
 
                 if (!error && data) {
                     statValues.portfolioValue = data.total_value || 0;
                     statValues.activeContracts = data.active_contracts || 0;
                     statValues.availableBalance = data.available_balance || 0;
                 }
+                // إذا كان data == null، تبقى القيم الافتراضية 0
             }
         } catch (e) {
             console.warn('⚠️ تعذر جلب إحصائيات المحفظة:', e);
         }
 
+        // تحديث واجهة المستخدم
         document.querySelector('.stat-card:nth-child(1) .stat-value').textContent =
             statValues.portfolioValue.toLocaleString() + ' ر.س';
         document.querySelector('.stat-card:nth-child(2) .stat-value').textContent =
@@ -283,14 +287,202 @@ const Dashboard = {
         }
     },
 
-    // ========== الدوال الثابتة (لم تتغير) ==========
-    initSidebar: function() { /* ... نفس الكود السابق ... */ },
-    initSubmenus: function() { /* ... نفس الكود السابق ... */ },
-    initOpportunitiesToggle: function() { /* ... نفس الكود السابق ... */ },
-    initTransactionFilter: function() { /* ... نفس الكود السابق ... */ },
-    initLogout: function() { /* ... نفس الكود السابق ... */ },
-    initActiveNav: function() { /* ... نفس الكود السابق ... */ },
-    handleWindowResize: function() { /* ... نفس الكود السابق ... */ }
+    // ========== دوال الواجهة (ثابتة) ==========
+    initSidebar: function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const isMobile = () => window.innerWidth <= 991;
+
+        if (!sidebar) return;
+
+        const toggleBtn = document.getElementById('sidebarToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isMobile()) {
+                    sidebar.classList.toggle('collapsed');
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                } else {
+                    const isOpen = sidebar.classList.contains('sidebar-open');
+                    if (isOpen) {
+                        sidebar.classList.remove('sidebar-open');
+                        if (overlay) overlay.classList.remove('active');
+                    } else {
+                        sidebar.classList.add('sidebar-open');
+                        if (overlay) overlay.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
+                sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+
+        const logo = document.querySelector('.header-logo a');
+        if (logo) {
+            logo.addEventListener('dblclick', function(e) {
+                if (!isMobile()) sidebar.classList.toggle('collapsed');
+            });
+        }
+    },
+
+    initSubmenus: function() {
+        const submenuToggles = document.querySelectorAll('.has-submenu > a');
+        if (!submenuToggles.length) return;
+
+        const handleSubmenuClick = function(e) {
+            const href = this.getAttribute('href');
+            const parentLi = this.closest('.has-submenu');
+            if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (!parentLi) return;
+
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
+                sidebar.classList.remove('collapsed');
+            }
+
+            document.querySelectorAll('.has-submenu').forEach(function(el) {
+                if (el !== parentLi) el.classList.remove('submenu-open');
+            });
+            parentLi.classList.toggle('submenu-open');
+        };
+
+        submenuToggles.forEach(function(link) {
+            link.removeEventListener('click', handleSubmenuClick);
+            link.addEventListener('click', handleSubmenuClick);
+        });
+    },
+
+    initOpportunitiesToggle: function() {
+        const toggleBtn = document.getElementById('toggleOppBtn');
+        const wrapper = document.getElementById('opportunitiesPanelWrapper');
+        const icon = document.getElementById('toggleOppIcon');
+        const text = document.getElementById('toggleOppText');
+
+        if (!toggleBtn || !wrapper) return;
+
+        let hidden = false;
+        wrapper.style.transition = 'all 0.3s ease';
+        wrapper.style.maxHeight = '600px';
+        wrapper.style.overflow = 'hidden';
+
+        toggleBtn.addEventListener('click', function() {
+            hidden = !hidden;
+            if (hidden) {
+                wrapper.style.maxHeight = '0';
+                wrapper.style.padding = '0';
+                wrapper.style.opacity = '0';
+                if (icon) icon.className = 'fas fa-eye';
+                if (text) text.textContent = 'عرض';
+            } else {
+                wrapper.style.maxHeight = '600px';
+                wrapper.style.padding = '';
+                wrapper.style.opacity = '1';
+                if (icon) icon.className = 'fas fa-eye-slash';
+                if (text) text.textContent = 'إخفاء';
+            }
+        });
+    },
+
+    initTransactionFilter: function() {
+        const filterSelect = document.getElementById('transactionFilter');
+        const tbody = document.getElementById('transactionsTableBody');
+        if (!filterSelect || !tbody) return;
+
+        filterSelect.addEventListener('change', function() {
+            const value = this.value;
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(function(row) {
+                const text = row.textContent.toLowerCase();
+                if (value === 'all') {
+                    row.style.display = '';
+                } else if (value === 'deposits' && (text.includes('إيداع') || text.includes('+'))) {
+                    row.style.display = '';
+                } else if (value === 'deductions' && (text.includes('سحب') || text.includes('-') || text.includes('خصم'))) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    },
+
+    initLogout: function() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (!logoutBtn) return;
+
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (!confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) return;
+
+            if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
+                await window.TeraAuth.logout();
+            } else {
+                localStorage.removeItem('tera_token');
+                localStorage.removeItem('tera_user');
+                sessionStorage.clear();
+                window.location.replace('/auth/auth/login/login.html');
+            }
+        });
+    },
+
+    initActiveNav: function() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-item > a[href]');
+
+        navLinks.forEach(function(link) {
+            const href = link.getAttribute('href');
+            if (href === currentPath || (href !== '#' && href !== 'javascript:void(0)' && currentPath.includes(href))) {
+                const parent = link.closest('.nav-item');
+                if (parent) {
+                    parent.classList.add('active');
+                    if (parent.classList.contains('has-submenu')) parent.classList.add('submenu-open');
+                }
+            }
+        });
+    },
+
+    handleWindowResize: function() {
+        let resizeTimer;
+        const isMobile = () => window.innerWidth <= 991;
+
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (!isMobile() && sidebar) {
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                }
+            }, 200);
+        });
+    }
 };
 
 // تشغيل عند تحميل الصفحة
