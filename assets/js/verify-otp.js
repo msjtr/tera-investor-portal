@@ -6,8 +6,8 @@
  * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
  * - يستخدم localStorage للبريد ونوع العملية (signup / recovery).
  * - يتحقق من الرمز (8 أرقام) باستخدام supabase.auth.verifyOtp.
- * - يعيد التوجيه إلى complete-profile.html بعد نجاح التحقق (للتسجيل).
- * - يعيد التوجيه إلى reset-password.html لاستعادة كلمة المرور.
+ * - بعد نجاح تأكيد التسجيل: يوجه المستخدم إلى صفحة الدخول.
+ * - بعد نجاح استعادة كلمة المرور: يوجه إلى إعادة تعيين كلمة المرور.
  */
 (function() {
     'use strict';
@@ -41,7 +41,7 @@
                     }, { once: true });
                 });
             } catch (err) {
-                showAlert('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.', 'error');
+                showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
                 if (submitBtn) submitBtn.disabled = true;
                 return;
             }
@@ -56,7 +56,7 @@
         if (pendingEmail) {
             instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
         } else {
-            showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
+            showAlert('لم يتم العثور على بريد إلكتروني معلق.', 'error');
             if (submitBtn) submitBtn.disabled = true;
         }
 
@@ -86,7 +86,7 @@
             }
 
             if (!pendingEmail) {
-                showAlert('بيانات الجلسة غير متوفرة. أعد المحاولة.', 'error');
+                showAlert('بيانات الجلسة غير متوفرة.', 'error');
                 return;
             }
 
@@ -108,17 +108,19 @@
                 localStorage.removeItem('pendingVerificationEmail');
                 localStorage.removeItem('tera_verify_type');
 
-                showAlert('✅ تم تأكيد البريد بنجاح! جاري التوجيه...', 'success');
-
-                // توجيه حسب نوع العملية
-                setTimeout(() => {
-                    if (verifyType === 'recovery') {
+                if (verifyType === 'signup') {
+                    // تم تأكيد التسجيل → توجيه إلى صفحة الدخول
+                    showAlert('✅ تم تأكيد البريد بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/auth/login/login.html');
+                    }, 2000);
+                } else {
+                    // استعادة كلمة المرور → التوجيه إلى صفحة إعادة التعيين
+                    showAlert('✅ تم التحقق بنجاح! جاري التوجيه لإعادة تعيين كلمة المرور.', 'success');
+                    setTimeout(() => {
                         window.location.replace('/auth/reset-password.html');
-                    } else {
-                        // بعد تأكيد التسجيل، ننتقل إلى إكمال الملف الشخصي
-                        window.location.replace('/auth/complete-profile.html');
-                    }
-                }, 1500);
+                    }, 1500);
+                }
 
             } catch (error) {
                 console.error('❌ فشل التحقق من الرمز:', error);
@@ -152,7 +154,7 @@
                     });
 
                     if (error) throw error;
-                    showAlert('✅ تمت إعادة إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
+                    showAlert('✅ تمت إعادة إرسال رمز التحقق.', 'success');
                 } catch (error) {
                     console.error('❌ فشل إعادة الإرسال:', error);
                     showAlert(error.message || 'تعذرت إعادة الإرسال. حاول لاحقاً.', 'error');
