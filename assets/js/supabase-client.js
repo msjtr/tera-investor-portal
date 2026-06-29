@@ -25,17 +25,14 @@
 
     /**
      * دالة مساعدة لضمان الحصول على العميل (Client) بشكل آمن من أي ملف آخر
-     * تم رفع تعريفها هنا لتكون متاحة فورا لتلافي خطأ is not a function
      */
     window.getTeraSupabase = function() {
         return new Promise((resolve, reject) => {
-            // إذا كان جاهزاً، أرسله فوراً
             if (window.teraSupabase) {
                 resolve(window.teraSupabase);
                 return;
             }
 
-            // إذا لم يكن جاهزاً، انتظر الحدث
             const onReady = (e) => {
                 document.removeEventListener('supabase:ready', onReady);
                 document.removeEventListener('supabase:error', onError);
@@ -57,7 +54,6 @@
      * إنشاء العميل وتخزينه في النطاق العام، ثم إطلاق حدث الجاهزية
      */
     function createClientAndNotify() {
-        // تضمين إعدادات إضافية: السكيما العامة والمفتاح السري في الترويسات
         window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY, {
             db: {
                 schema: 'public'  // يضمن استهداف سكيما public تلقائياً
@@ -71,7 +67,6 @@
         
         console.log('✅ [supabase-client] تم تهيئة العميل المركزي بنجاح.');
 
-        // إعلام جميع الملفات المنتظرة بأن العميل أصبح جاهزاً
         document.dispatchEvent(new CustomEvent('supabase:ready', {
             detail: { client: window.teraSupabase }
         }));
@@ -102,7 +97,6 @@
     }
 
     // ========== المنطق الرئيسي ==========
-    // إذا كانت المكتبة محمّلة مسبقاً (من وسم <script> في HTML)
     if (window.supabase && typeof window.supabase.createClient === 'function') {
         createClientAndNotify();
     } else {
