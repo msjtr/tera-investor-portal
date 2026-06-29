@@ -2,134 +2,67 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>التحقق من الرمز | بوابة تيرا</title>
-
-    <!-- أيقونات وخطوط -->
+    <title>التحقق من الرمز | تيرا</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-    <!-- ملفات التنسيق الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
-    <link rel="stylesheet" href="/assets/css/responsive.css">
-
-    <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-
     <style>
-        .otp-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 36px;
-            color: #059669;
-            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2);
-        }
         .otp-input {
             text-align: center;
-            letter-spacing: 6px;
+            letter-spacing: 8px;
             font-weight: bold;
-            font-size: 22px;
+            font-size: 26px;
             direction: ltr;
-        }
-        .resend-link {
-            color: #028090;
-            cursor: pointer;
-            text-decoration: underline;
-            font-weight: 500;
-        }
-        .resend-link:hover {
-            color: #026b7a;
         }
     </style>
 </head>
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <!-- شعار المنصة والعنوان -->
             <div class="text-center mb-5">
-                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
-                <div class="otp-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h2 class="portal-title mt-3">بوابة تيرا</h2>
-                <h3 class="page-subtitle">التحقق من الرمز</h3>
-                <p class="welcome-text" id="instructionText">أدخل رمز التحقق المكون من 8 أرقام للمتابعة</p>
+                <img src="/images/logo.svg" alt="تيرا" class="logo-img">
+                <h2 class="portal-title mt-3">التحقق من الرمز</h2>
+                <p id="instructionText">أدخل رمز التحقق المكون من 6 أرقام</p>
             </div>
-
-            <!-- صندوق التنبيهات -->
             <div class="alert-box" id="formAlert" style="display: none;">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span class="alert-message" id="alertMessage"></span>
+                <span id="alertMessage"></span>
             </div>
-
-            <!-- نموذج إدخال الرمز -->
             <form id="otpForm" novalidate>
                 <div class="form-field-group">
-                    <label class="field-label" for="otp">
-                        <i class="fas fa-keyboard"></i> رمز التحقق (8 أرقام)
-                    </label>
+                    <label>رمز التحقق</label>
                     <div class="input-wrapper">
-                        <input
-                            type="text"
-                            id="otp"
-                            class="form-input-control otp-input"
-                            maxlength="8"
-                            placeholder="00000000"
-                            autocomplete="one-time-code"
-                            inputmode="numeric"
-                            pattern="[0-9]*"
-                            required
-                        >
+                        <input type="text" id="otp" class="form-input-control otp-input" maxlength="6"
+                               placeholder="000000" autocomplete="one-time-code" inputmode="numeric" required>
                     </div>
                     <div class="error-feedback-msg" id="otp-error"></div>
                 </div>
-
                 <div class="form-actions-block">
-                    <button type="submit" class="btn-submit-login" id="submitBtn">
-                        <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
+                    <button type="submit" id="submitBtn" class="btn-submit-login">
+                        <i class="fas fa-check-circle"></i> تأكيد الرمز
                     </button>
                 </div>
             </form>
-
-            <!-- إعادة إرسال الرمز -->
-            <div class="text-center mt-4">
-                <span class="resend-link" id="resendCode">
-                    <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
-                </span>
+            <div class="text-center mt-3">
+                <span id="resendCode" class="resend-link"><i class="fas fa-redo-alt"></i> إعادة الإرسال</span>
             </div>
-
-            <!-- روابط سفلية -->
-            <div class="bottom-routing-footer-links text-center">
-                <!-- تم إصلاح المسار إلى صفحة الدخول الحقيقية -->
-                <p><a href="/auth/auth/login/login.html" class="routing-link"><i class="fa-solid fa-arrow-right"></i> العودة إلى تسجيل الدخول</a></p>
+            <div class="text-center mt-4">
+                <a href="/auth/auth/login/login.html"><i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول</a>
             </div>
         </div>
-
-        <!-- اللودر الإبداعي -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
-                <h4 class="loader-primary-heading">جاري التحقق من الرمز</h4>
-                <p class="creative-motivational-text" id="creativeQuoteText">يرجى الانتظار...</p>
+                <h4>جاري التحقق...</h4>
                 <div class="loading-progress-track">
                     <div class="progress-fill-bar" id="progressFillBar"></div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- السكريبتات الأساسية (جميعها خارجية) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
