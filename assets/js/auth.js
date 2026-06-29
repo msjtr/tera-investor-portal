@@ -4,7 +4,7 @@
  * ============================================================
  * - ربط حقيقي بـ Supabase Auth دون أي محاكاة أو بيانات وهمية.
  * - مزامنة حية للجلسات وتسجيل حركات الدخول في جدول auth_login.
- * - يعتمد حصراً على المسارات المطلقة (Absolute Paths) لحل مشاكل التوجيه.
+ * - يعتمد حصراً على المسارات المطلقة (Absolute Paths) الصحيحة.
  * - ينتظر حدث 'supabase:ready' من supabase-client.js لضمان الاتصال الآمن.
  */
 'use strict';
@@ -38,12 +38,8 @@ if (typeof window.TeraAuth !== 'undefined') {
             },
 
             /**
-             * استخدام المسارات المطلقة لضمان دقة التوجيه من أي مسار فرعي
+             * التوجيه الفوري باستخدام المسار المطلق
              */
-            getAbsolutePath: function(targetPath) {
-                return targetPath.startsWith('/') ? targetPath : '/' + targetPath;
-            },
-
             redirectTo: function(url) {
                 if (this.getCurrentPath() === url) return;
                 window.location.replace(url);
@@ -102,14 +98,15 @@ if (typeof window.TeraAuth !== 'undefined') {
                     const loggedIn = !!session;
 
                     if (!loggedIn && isProtected) {
-                        console.log('🔐 [Auth] غير مسجل → تحويل إلى صفحة الدخول بالمسار المطلق');
-                        this.redirectTo(this.getAbsolutePath('auth/login.html'));
+                        console.log('🔐 [Auth] غير مسجل → تحويل إلى صفحة الدخول');
+                        // المسار الصحيح لصفحة الدخول في البنية الحالية
+                        this.redirectTo('/auth/auth/login/login.html');
                         return;
                     }
 
                     if (loggedIn && (isAuth || isLanding)) {
                         console.log('🚀 [Auth] مسجل دخول → تحويل إلى لوحة التحكم');
-                        this.redirectTo(this.getAbsolutePath('pages/dashboard/index.html'));
+                        this.redirectTo('/pages/dashboard/index.html');
                         return;
                     }
 
@@ -169,7 +166,8 @@ if (typeof window.TeraAuth !== 'undefined') {
                 localStorage.removeItem('tera_identifier');
                 sessionStorage.clear();
 
-                this.redirectTo(this.getAbsolutePath('auth/login.html'));
+                // التوجيه إلى صفحة الدخول بالمسار الصحيح
+                this.redirectTo('/auth/auth/login/login.html');
             },
 
             // ---- ٥. أدوات تحكم إضافية ----
