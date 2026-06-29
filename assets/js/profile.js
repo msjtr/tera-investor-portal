@@ -1,12 +1,13 @@
 /**
  * ============================================================
- * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (v2.1)
+ * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (v2.2)
  * ============================================================
  * - يعمل مع جميع صفحات الملف الشخصي (بها Sidebar أو بدون).
  * - يُحاول تحميل الملف الفرعي للصفحة (IIFE مستقل أو عبر ProfilePages).
  * - يدعم تسجيل الخروج الحقيقي عبر TeraAuth.
  * - يقوم بتهيئة المكونات المشتركة فقط عند وجودها.
  * - لا يُفعّل مناطق رفع الملفات إذا كانت الصفحة تديرها بنفسها.
+ * - يتعرف على جميع صفحات رحلة العميل (personal, contact, address, bank, attachments).
  */
 (function() {
     'use strict';
@@ -57,7 +58,8 @@
             console.log(`ℹ️ ${currentPage}: سيتم التهيئة عبر الملف المستقل (إذا كان محملاً).`);
 
             // تفعيل مناطق رفع الملفات (احتياطي) فقط إذا لم تكن هناك حقول رفع مبنية مسبقاً
-            if (document.getElementById('uploadFieldsContainer')?.children.length === 0) {
+            const uploadContainer = document.getElementById('uploadFieldsContainer');
+            if (!uploadContainer || uploadContainer.children.length === 0) {
                 this.initUploadZones();
             }
         },
