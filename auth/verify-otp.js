@@ -6,7 +6,8 @@
  * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
  * - يستخدم localStorage للبريد ونوع العملية (signup / recovery).
  * - يتحقق من الرمز (8 أرقام) باستخدام supabase.auth.verifyOtp.
- * - يعيد التوجيه إلى complete-profile.html بعد نجاح التحقق.
+ * - يعيد التوجيه إلى complete-profile.html بعد نجاح التحقق (للتسجيل).
+ * - يعيد التوجيه إلى reset-password.html لاستعادة كلمة المرور.
  */
 (function() {
     'use strict';
