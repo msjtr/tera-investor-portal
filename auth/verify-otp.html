@@ -20,9 +20,6 @@
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 
     <style>
-        /* =========================================
-           تنسيقات مخصصة لصفحة التحقق – تصميم فاخر
-           ========================================= */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -81,43 +78,30 @@
             border-right: 4px solid var(--tera-teal);
         }
 
-        /* حقل OTP بتنسيق شبكي */
-        .otp-wrapper {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            direction: ltr;
-            margin-bottom: 10px;
-        }
-
-        .otp-box {
-            width: 52px;
-            height: 64px;
-            border: 2px solid #d1d9e6;
-            border-radius: 14px;
+        /* حقل OTP واحد بتنسيق أنيق */
+        .otp-input {
+            width: 100%;
+            padding: 18px 20px;
             text-align: center;
-            font-size: 28px;
+            letter-spacing: 10px;
             font-weight: 800;
-            color: var(--tera-navy);
+            font-size: 26px;
+            direction: ltr;
+            border: 2px solid #d1d9e6;
+            border-radius: 16px;
             background: #ffffff;
-            outline: none;
             transition: 0.25s;
-            font-family: 'Tajawal', sans-serif;
             caret-color: var(--tera-teal);
+            font-family: 'Tajawal', sans-serif;
         }
 
-        .otp-box:focus {
+        .otp-input:focus {
             border-color: var(--tera-teal);
             box-shadow: 0 0 0 4px rgba(2,128,144,0.12);
             background: #f0fdfa;
+            outline: none;
         }
 
-        .otp-box.filled {
-            border-color: var(--tera-teal);
-            background: #f0fdfa;
-        }
-
-        /* رسائل التحقق */
         .verification-note {
             background: #fefce8;
             border: 1px solid #fde68a;
@@ -193,10 +177,10 @@
                 padding: 32px 18px 28px 18px;
                 border-radius: 24px;
             }
-            .otp-box {
-                width: 44px;
-                height: 54px;
-                font-size: 24px;
+            .otp-input {
+                font-size: 22px;
+                letter-spacing: 8px;
+                padding: 14px 16px;
             }
             .btn-submit-login {
                 padding: 14px 20px;
@@ -208,7 +192,6 @@
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <!-- الأيقونة والعنوان -->
             <div class="text-center mb-4">
                 <img src="/images/logo.svg" alt="تيرا" class="logo-img" style="height:44px; margin-bottom:18px;">
                 <div class="otp-icon-circle">
@@ -218,25 +201,15 @@
                 <p id="instructionText">أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني</p>
             </div>
 
-            <!-- صندوق التنبيهات -->
             <div class="alert-box" id="formAlert" style="display: none;">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span id="alertMessage"></span>
             </div>
 
-            <!-- نموذج إدخال رمز OTP (شبكي) -->
             <form id="otpForm" novalidate>
                 <div class="form-field-group">
-                    <div class="otp-wrapper" id="otpContainer">
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
-                    </div>
-                    <!-- حقل مخفي لتجميع القيم -->
-                    <input type="hidden" id="otp" maxlength="6">
+                    <input type="text" id="otp" class="form-input-control otp-input" maxlength="6"
+                           placeholder="000000" autocomplete="one-time-code" inputmode="numeric" required>
                     <div class="error-feedback-msg" id="otp-error"></div>
                 </div>
 
@@ -247,13 +220,11 @@
                 </div>
             </form>
 
-            <!-- ملاحظة أمنية -->
             <div class="verification-note">
                 <i class="fas fa-clock"></i>
                 <span>ينتهي الرمز خلال 10 دقائق. لم تستلم الرمز؟ تحقق من صندوق البريد غير المرغوب فيه (Spam).</span>
             </div>
 
-            <!-- إعادة الإرسال والعودة -->
             <div class="text-center mt-4">
                 <span id="resendCode" class="resend-link">
                     <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
@@ -266,7 +237,6 @@
             </div>
         </div>
 
-        <!-- اللودر الإبداعي -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
@@ -279,7 +249,7 @@
         </div>
     </div>
 
-    <!-- سكريبتات (جميعها خارجية) -->
+    <!-- ملفات الجافاسكريبت الأساسية فقط (بدون أي كود داخلي) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
