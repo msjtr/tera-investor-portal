@@ -110,12 +110,12 @@
                         console.warn("⚠️ [Main] محرك TeraAuth غير متوفر، سيتم فرض التوجيه الاحتياطي.");
                         localStorage.clear();
                         sessionStorage.clear();
-                        // تم التوجيه إلى المسار المطلق الجديد /auth/login.html بدلاً من المسار القديم
-                        window.location.replace('/auth/login.html');
+                        // تم التوجيه إلى المسار الصحيح لصفحة الدخول
+                        window.location.replace('/auth/auth/login/login.html');
                     }
                 } catch (error) {
                     console.error('❌ [Main] خطأ أثناء الخروج:', error);
-                    window.location.replace('/auth/login.html');
+                    window.location.replace('/auth/auth/login/login.html');
                 }
             }
         });
