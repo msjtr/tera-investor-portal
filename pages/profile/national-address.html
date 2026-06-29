@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>العنوان الوطني | Tera Investor Portal</title>
 
-    <!-- الشعار والأيقونات -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- الملفات المشتركة -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
@@ -21,1005 +18,188 @@
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
     <style>
-        /* =========================================
-               التنسيقات الأساسية – نفس الهوية البصرية
-               ========================================= */
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #f1f5f9;
-            font-family: 'Tajawal', sans-serif;
-            margin: 0;
-            color: #1e293b;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* =========================================
-               الهيدر العلوي
-               ========================================= */
-        .focused-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 12px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-        }
-        .focused-header .logo img {
-            height: 38px;
-        }
-        .focused-header .client-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .focused-header .client-info h5 {
-            margin: 0;
-            font-family: 'Cairo', sans-serif;
-            font-size: 15px;
-            color: #0A1B3F;
-            font-weight: 800;
-        }
-        .focused-header .client-info .avatar {
-            width: 38px;
-            height: 38px;
-            background: #0A1B3F;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 16px;
-            border: 2px solid #028090;
-        }
-
-        /* =========================================
-               عنوان الصفحة
-               ========================================= */
-        .page-subheader {
-            background: #0A1B3F;
-            padding: 20px 40px;
-            margin-top: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .page-subheader h1 {
-            margin: 0;
-            color: #ffffff;
-            font-family: 'Cairo', sans-serif;
-            font-size: 22px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .page-subheader h1 i {
-            color: #5eead4;
-        }
-        .btn-back {
-            background: rgba(255, 255, 255, 0.10);
-            color: #ffffff;
-            padding: 8px 18px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 700;
-            transition: 0.25s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .btn-back:hover {
-            background: #028090;
-            border-color: #028090;
-        }
-
-        /* =========================================
-               الحاوية الرئيسية
-               ========================================= */
-        .content-container {
-            max-width: 1060px;
-            margin: 0 auto 40px auto;
-            padding: 28px 24px 0 24px;
-            flex: 1;
-        }
-
-        .page-desc {
-            font-size: 14px;
-            color: #0c4a6e;
-            line-height: 1.7;
-            background: #e0f2fe;
-            padding: 16px 22px;
-            border-radius: 12px;
-            border-right: 5px solid #028090;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .page-desc i {
-            color: #028090;
-            font-size: 20px;
-        }
-        .page-desc strong {
-            color: #0A1B3F;
-        }
-
-        /* =========================================
-               البطاقات
-               ========================================= */
-        .panel-card {
-            background: #ffffff;
-            border-radius: 18px;
-            border: 1px solid #e9edf2;
-            padding: 28px 32px 32px 32px;
-            margin-bottom: 28px;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
-            transition: box-shadow 0.2s;
-        }
-        .panel-card:hover {
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
-        }
-
-        .panel-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            padding-bottom: 14px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-        .panel-header i {
-            color: #028090;
-            font-size: 22px;
-            width: 36px;
-            height: 36px;
-            background: #f0fdfa;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .panel-header h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #0A1B3F;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-        }
-        .panel-header .panel-badge {
-            margin-right: auto;
-            font-size: 12px;
-            font-weight: 700;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        /* =========================================
-               شبكة النموذج – ضبط حجم المربعات
-               ========================================= */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px 30px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .form-label {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0A1B3F;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .form-label .req {
-            color: #dc2626;
-            font-size: 16px;
-        }
-        .form-label .optional {
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 2px 10px;
-            border-radius: 12px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #d1d9e6;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 14px;
-            background: #fafcff;
-            outline: none;
-            transition: 0.2s;
-            color: #1e293b;
-            height: 48px;
-            line-height: 1.5;
-        }
-        .form-control:focus {
-            border-color: #028090;
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
-            background: #ffffff;
-        }
-        .form-control::placeholder {
-            color: #94a3b8;
-        }
-        select.form-control {
-            appearance: auto;
-            cursor: pointer;
-            height: 48px;
-        }
-
-        /* =========================================
-               صناديق التلميحات
-               ========================================= */
-        .input-hint-box {
-            background: #f8fafc;
-            border: 1px dashed #d1d9e6;
-            padding: 10px 16px;
-            border-radius: 10px;
-            margin-top: 4px;
-        }
-        .input-hint-box p {
-            margin: 0 0 4px 0;
-            font-size: 12px;
-            font-weight: 700;
-            color: #0A1B3F;
-        }
-        .input-hint-box ul {
-            margin: 0;
-            padding-right: 20px;
-            font-size: 12px;
-            color: #64748b;
-            line-height: 1.7;
-        }
-        .input-hint-box ul li {
-            list-style-type: disc;
-        }
-
-        .format-hint {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-            padding: 4px 0;
-        }
-
-        /* =========================================
-               مجموعة الراديو
-               ========================================= */
-        .radio-group {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-            padding: 8px 20px;
-            border: 1px solid #d1d9e6;
-            border-radius: 10px;
-            background: #fafcff;
-            min-height: 48px;
-            flex-wrap: wrap;
-        }
-        .radio-group-vertical {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 12px 20px;
-            border: 1px solid #d1d9e6;
-            border-radius: 10px;
-            background: #fafcff;
-        }
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 0;
-            color: #1e293b;
-        }
-        .radio-label input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            accent-color: #028090;
-            cursor: pointer;
-            margin: 0;
-            flex-shrink: 0;
-        }
-
-        /* =========================================
-               منطقة رفع الملفات
-               ========================================= */
-        .upload-zone {
-            border: 2px dashed #d1d9e6;
-            border-radius: 12px;
-            padding: 20px 16px;
-            text-align: center;
-            background: #fafcff;
-            cursor: pointer;
-            transition: 0.25s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            min-height: 110px;
-            justify-content: center;
-        }
-        .upload-zone:hover {
-            border-color: #028090;
-            background: #f0fdfa;
-        }
-        .upload-zone i {
-            font-size: 28px;
-            color: #028090;
-        }
-        .upload-zone span {
-            font-size: 13px;
-            font-weight: 700;
-            color: #0A1B3F;
-        }
-        .upload-zone .sub-text {
-            font-size: 11px;
-            font-weight: 400;
-            color: #94a3b8;
-        }
-
-        /* =========================================
-               صندوق الإقرار
-               ========================================= */
-        .declaration-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            padding: 22px 24px;
-            border-radius: 14px;
-            display: flex;
-            align-items: flex-start;
-            gap: 18px;
-            margin-bottom: 22px;
-        }
-        .declaration-box input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
-            min-width: 22px;
-            margin-top: 4px;
-            cursor: pointer;
-            accent-color: #028090;
-        }
-        .declaration-box p {
-            margin: 0 0 4px 0;
-            font-weight: 800;
-            color: #065f46;
-            font-size: 15px;
-        }
-        .declaration-box ul {
-            margin: 6px 0 0 0;
-            padding-right: 22px;
-            font-size: 13px;
-            color: #166534;
-            font-weight: 600;
-            line-height: 1.8;
-        }
-        .declaration-box ul li {
-            list-style-type: circle;
-        }
-
-        /* =========================================
-               تنبيه الإقرار
-               ========================================= */
-        .alert-warning-box {
-            margin-top: 24px;
-            margin-bottom: 24px;
-            padding: 16px 20px;
-            border-radius: 12px;
-            font-size: 14px;
-            color: #b91c1c;
-            font-weight: 700;
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            line-height: 1.7;
-        }
-        .alert-warning-box i {
-            font-size: 20px;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        /* =========================================
-               زر الإرسال
-               ========================================= */
-        .btn-submit {
-            background: #028090;
-            color: #fff;
-            border: none;
-            padding: 18px 32px;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 800;
-            font-family: 'Tajawal', sans-serif;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.25s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            letter-spacing: 0.3px;
-            height: 56px;
-        }
-        .btn-submit:hover {
-            background: #0A1B3F;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
-        }
-        .btn-submit i {
-            font-size: 18px;
-        }
-
-        .btn-text-action {
-            background: transparent;
-            border: none;
-            color: #028090;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-        .btn-text-action:hover {
-            background: rgba(2, 128, 144, 0.08);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #028090;
-            color: #028090;
-            padding: 10px 24px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.25s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-secondary:hover {
-            background: #028090;
-            color: #fff;
-        }
-
-        /* =========================================
-               شريط التقدم
-               ========================================= */
-        .progress-steps {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            margin-bottom: 28px;
-            padding: 0;
-            list-style: none;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .progress-steps li {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #64748b;
-            padding: 8px 16px;
-        }
-        .progress-steps li .step-num {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 800;
-            transition: 0.3s;
-        }
-        .progress-steps li.active .step-num {
-            background: #028090;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(2, 128, 144, 0.3);
-        }
-        .progress-steps li.completed .step-num {
-            background: #10b981;
-            color: #fff;
-        }
-        .progress-steps .step-line {
-            width: 40px;
-            height: 2px;
-            background: #e2e8f0;
-            flex-shrink: 0;
-        }
-        .progress-steps .step-line.completed {
-            background: #10b981;
-        }
-
-        /* =========================================
-               تذييل الصفحة
-               ========================================= */
-        .page-footer {
-            text-align: center;
-            padding: 22px 20px;
-            color: #94a3b8;
-            font-size: 13px;
-            border-top: 1px solid #e2e8f0;
-            background: #ffffff;
-            margin-top: auto;
-        }
-
-        /* =========================================
-               شروط المستند
-               ========================================= */
-        .document-conditions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            padding: 16px 20px;
-            background: #f8fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-        }
-        .document-conditions li {
-            list-style: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #334155;
-        }
-        .document-conditions li i {
-            color: #028090;
-            font-size: 16px;
-        }
-
-        /* =========================================
-               استيراد العنوان الوطني
-               ========================================= */
-        .import-section {
-            background: #f0fdfa;
-            border: 1px solid #bbf7d0;
-            border-radius: 12px;
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .import-section p {
-            margin: 0;
-            font-size: 14px;
-            color: #065f46;
-            font-weight: 600;
-        }
-        .import-section p i {
-            color: #028090;
-            margin-left: 8px;
-        }
-
-        /* =========================================
-               استجابة للشاشات الصغيرة (الجوال)
-               ========================================= */
+        * { box-sizing: border-box; }
+        body { background-color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
+        .focused-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+        .focused-header .logo img { height: 38px; }
+        .focused-header .client-info { display: flex; align-items: center; gap: 12px; }
+        .focused-header .client-info h5 { margin: 0; font-family: 'Cairo', sans-serif; font-size: 15px; color: #0A1B3F; font-weight: 800; }
+        .focused-header .client-info .avatar { width: 38px; height: 38px; background: #0A1B3F; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 800; font-size: 16px; border: 2px solid #028090; }
+        .page-subheader { background: #0A1B3F; padding: 20px 40px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .page-subheader h1 { margin: 0; color: #ffffff; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .page-subheader h1 i { color: #5eead4; }
+        .btn-back { background: rgba(255,255,255,0.10); color: #ffffff; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; transition: 0.25s; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-back:hover { background: #028090; border-color: #028090; }
+        .content-container { max-width: 1060px; margin: 0 auto 40px auto; padding: 28px 24px 0 24px; flex: 1; }
+        .page-desc { font-size: 14px; color: #0c4a6e; line-height: 1.7; background: #e0f2fe; padding: 16px 22px; border-radius: 12px; border-right: 5px solid #028090; margin-bottom: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .page-desc i { color: #028090; font-size: 20px; }
+        .page-desc strong { color: #0A1B3F; }
+        .panel-card { background: #ffffff; border-radius: 18px; border: 1px solid #e9edf2; padding: 28px 32px 32px 32px; margin-bottom: 28px; box-shadow: 0 4px 18px rgba(0,0,0,0.03); transition: box-shadow 0.2s; }
+        .panel-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.05); }
+        .panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid #f1f5f9; }
+        .panel-header i { color: #028090; font-size: 22px; width: 36px; height: 36px; background: #f0fdfa; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .panel-header h3 { margin: 0; font-size: 18px; color: #0A1B3F; font-family: 'Cairo', sans-serif; font-weight: 800; letter-spacing: -0.3px; }
+        .panel-header .panel-badge { margin-right: auto; font-size: 12px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 30px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-label { font-size: 14px; font-weight: 700; color: #0A1B3F; display: flex; align-items: center; gap: 4px; }
+        .form-label .req { color: #dc2626; font-size: 16px; }
+        .form-label .optional { font-size: 12px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 12px; }
+        .form-control { width: 100%; padding: 12px 16px; border: 1px solid #d1d9e6; border-radius: 10px; font-family: inherit; font-size: 14px; background: #fafcff; outline: none; transition: 0.2s; color: #1e293b; height: 48px; line-height: 1.5; }
+        .form-control:focus { border-color: #028090; box-shadow: 0 0 0 4px rgba(2,128,144,0.10); background: #ffffff; }
+        .form-control::placeholder { color: #94a3b8; }
+        select.form-control { appearance: auto; cursor: pointer; height: 48px; }
+        .input-hint-box { background: #f8fafc; border: 1px dashed #d1d9e6; padding: 10px 16px; border-radius: 10px; margin-top: 4px; }
+        .input-hint-box p { margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #0A1B3F; }
+        .input-hint-box ul { margin: 0; padding-right: 20px; font-size: 12px; color: #64748b; line-height: 1.7; }
+        .format-hint { font-size: 11px; color: #64748b; margin-top: 4px; padding: 4px 0; }
+        .radio-group { display: flex; gap: 32px; align-items: center; padding: 8px 20px; border: 1px solid #d1d9e6; border-radius: 10px; background: #fafcff; min-height: 48px; flex-wrap: wrap; }
+        .radio-group-vertical { display: flex; flex-direction: column; gap: 12px; padding: 12px 20px; border: 1px solid #d1d9e6; border-radius: 10px; background: #fafcff; }
+        .radio-label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin: 0; color: #1e293b; }
+        .radio-label input[type="radio"] { width: 20px; height: 20px; accent-color: #028090; cursor: pointer; margin: 0; flex-shrink: 0; }
+        .upload-zone { border: 2px dashed #d1d9e6; border-radius: 12px; padding: 20px 16px; text-align: center; background: #fafcff; cursor: pointer; transition: 0.25s; display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 110px; justify-content: center; }
+        .upload-zone:hover { border-color: #028090; background: #f0fdfa; }
+        .upload-zone i { font-size: 28px; color: #028090; }
+        .upload-zone span { font-size: 13px; font-weight: 700; color: #0A1B3F; }
+        .upload-zone .sub-text { font-size: 11px; font-weight: 400; color: #94a3b8; }
+        .declaration-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 22px 24px; border-radius: 14px; display: flex; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
+        .declaration-box input[type="checkbox"] { width: 22px; height: 22px; min-width: 22px; margin-top: 4px; cursor: pointer; accent-color: #028090; }
+        .declaration-box p { margin: 0 0 4px 0; font-weight: 800; color: #065f46; font-size: 15px; }
+        .declaration-box ul { margin: 6px 0 0 0; padding-right: 22px; font-size: 13px; color: #166534; font-weight: 600; line-height: 1.8; }
+        .alert-warning-box { margin-top: 24px; margin-bottom: 24px; padding: 16px 20px; border-radius: 12px; font-size: 14px; color: #b91c1c; font-weight: 700; background: #fef2f2; border: 1px solid #fca5a5; display: flex; align-items: flex-start; gap: 14px; line-height: 1.7; }
+        .alert-warning-box i { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .btn-submit { background: #028090; color: #fff; border: none; padding: 18px 32px; border-radius: 12px; font-size: 17px; font-weight: 800; font-family: 'Tajawal', sans-serif; width: 100%; cursor: pointer; transition: 0.25s; display: flex; align-items: center; justify-content: center; gap: 12px; letter-spacing: 0.3px; height: 56px; }
+        .btn-submit:hover { background: #0A1B3F; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(2,128,144,0.25); }
+        .btn-submit i { font-size: 18px; }
+        .btn-text-action { background: transparent; border: none; color: #028090; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; transition: 0.2s; }
+        .btn-text-action:hover { background: rgba(2,128,144,0.08); }
+        .btn-secondary { background: transparent; border: 2px solid #028090; color: #028090; padding: 10px 24px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.25s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary:hover { background: #028090; color: #fff; }
+        .progress-steps { display: flex; align-items: center; gap: 0; margin-bottom: 28px; padding: 0; list-style: none; justify-content: center; flex-wrap: wrap; }
+        .progress-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #64748b; padding: 8px 16px; }
+        .progress-steps li .step-num { width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; transition: 0.3s; }
+        .progress-steps li.active .step-num { background: #028090; color: #fff; box-shadow: 0 4px 12px rgba(2,128,144,0.3); }
+        .progress-steps li.completed .step-num { background: #10b981; color: #fff; }
+        .progress-steps .step-line { width: 40px; height: 2px; background: #e2e8f0; flex-shrink: 0; }
+        .progress-steps .step-line.completed { background: #10b981; }
+        .page-footer { text-align: center; padding: 22px 20px; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto; }
+        .document-conditions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 20px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .document-conditions li { list-style: none; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #334155; }
+        .document-conditions li i { color: #028090; font-size: 16px; }
+        .import-section { background: #f0fdfa; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .import-section p { margin: 0; font-size: 14px; color: #065f46; font-weight: 600; }
+        .import-section p i { color: #028090; margin-left: 8px; }
         @media (max-width: 820px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            .focused-header {
-                padding: 10px 20px;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .page-subheader {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 18px 24px;
-                margin-top: 12px;
-            }
-            .page-subheader h1 {
-                font-size: 19px;
-            }
-            .content-container {
-                padding: 20px 14px 0 14px;
-            }
-            .panel-card {
-                padding: 20px 18px 24px 18px;
-            }
-            .radio-group {
-                gap: 20px;
-                padding: 8px 16px;
-                min-height: auto;
-                flex-wrap: wrap;
-            }
-            .radio-group-vertical {
-                padding: 10px 16px;
-            }
-            .radio-label {
-                font-size: 14px;
-                gap: 8px;
-            }
-            .declaration-box {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .declaration-box input[type="checkbox"] {
-                margin-top: 0;
-            }
-            .focused-header .client-info h5 {
-                font-size: 13px;
-            }
-            .form-control,
-            select.form-control {
-                height: 44px;
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-            .btn-submit {
-                height: 50px;
-                font-size: 15px;
-                padding: 14px 20px;
-            }
-            .progress-steps li {
-                font-size: 11px;
-                padding: 4px 8px;
-                gap: 4px;
-            }
-            .progress-steps li .step-num {
-                width: 26px;
-                height: 26px;
-                font-size: 11px;
-            }
-            .progress-steps .step-line {
-                width: 20px;
-            }
-            .alert-warning-box {
-                padding: 14px 16px;
-                font-size: 13px;
-                margin-top: 20px;
-                margin-bottom: 20px;
-            }
-            .document-conditions {
-                grid-template-columns: 1fr;
-            }
-            .import-section {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
+            .form-grid { grid-template-columns: 1fr; gap: 20px; }
+            .focused-header { padding: 10px 20px; flex-wrap: wrap; gap: 8px; }
+            .page-subheader { flex-direction: column; align-items: flex-start; padding: 18px 24px; margin-top: 12px; }
+            .page-subheader h1 { font-size: 19px; }
+            .content-container { padding: 20px 14px 0 14px; }
+            .panel-card { padding: 20px 18px 24px 18px; }
+            .radio-group { gap: 20px; padding: 8px 16px; min-height: auto; flex-wrap: wrap; }
+            .radio-group-vertical { padding: 10px 16px; }
+            .radio-label { font-size: 14px; gap: 8px; }
+            .declaration-box { flex-direction: column; align-items: flex-start; }
+            .declaration-box input[type="checkbox"] { margin-top: 0; }
+            .focused-header .client-info h5 { font-size: 13px; }
+            .form-control, select.form-control { height: 44px; padding: 10px 14px; font-size: 13px; }
+            .btn-submit { height: 50px; font-size: 15px; padding: 14px 20px; }
+            .progress-steps li { font-size: 11px; padding: 4px 8px; gap: 4px; }
+            .progress-steps li .step-num { width: 26px; height: 26px; font-size: 11px; }
+            .progress-steps .step-line { width: 20px; }
+            .alert-warning-box { padding: 14px 16px; font-size: 13px; margin-top: 20px; margin-bottom: 20px; }
+            .document-conditions { grid-template-columns: 1fr; }
+            .import-section { flex-direction: column; align-items: stretch; text-align: center; }
         }
-
         @media (max-width: 480px) {
-            .page-subheader h1 {
-                font-size: 17px;
-            }
-            .btn-back {
-                font-size: 12px;
-                padding: 6px 14px;
-            }
-            .panel-header h3 {
-                font-size: 16px;
-            }
-            .radio-group {
-                gap: 14px;
-                padding: 6px 12px;
-            }
-            .radio-group-vertical {
-                padding: 8px 12px;
-            }
-            .radio-label {
-                font-size: 13px;
-                gap: 6px;
-            }
-            .radio-label input[type="radio"] {
-                width: 18px;
-                height: 18px;
-            }
-            .form-control,
-            select.form-control {
-                height: 42px;
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-            .btn-submit {
-                height: 46px;
-                font-size: 14px;
-                padding: 12px 16px;
-            }
-            .declaration-box {
-                padding: 16px 16px;
-            }
-            .declaration-box ul {
-                font-size: 12px;
-            }
-            .page-desc {
-                font-size: 13px;
-                padding: 12px 16px;
-            }
-            .panel-header i {
-                width: 32px;
-                height: 32px;
-                font-size: 18px;
-            }
-            .panel-header .panel-badge {
-                font-size: 10px;
-                padding: 2px 8px;
-            }
-            .progress-steps li .step-label {
-                display: none;
-            }
-            .progress-steps .step-line {
-                width: 12px;
-            }
-            .alert-warning-box {
-                padding: 12px 14px;
-                font-size: 12px;
-                margin-top: 16px;
-                margin-bottom: 16px;
-                gap: 10px;
-            }
-            .alert-warning-box i {
-                font-size: 18px;
-            }
-            .import-section {
-                padding: 14px 16px;
-            }
-            .import-section p {
-                font-size: 13px;
-            }
-            .btn-secondary {
-                width: 100%;
-                justify-content: center;
-                font-size: 13px;
-                padding: 8px 16px;
-            }
-            .upload-zone {
-                min-height: 80px;
-                padding: 12px 10px;
-            }
-            .upload-zone i {
-                font-size: 22px;
-            }
-            .document-conditions {
-                padding: 12px 14px;
-            }
-            .document-conditions li {
-                font-size: 12px;
-            }
+            .page-subheader h1 { font-size: 17px; }
+            .btn-back { font-size: 12px; padding: 6px 14px; }
+            .panel-header h3 { font-size: 16px; }
+            .radio-group { gap: 14px; padding: 6px 12px; }
+            .radio-group-vertical { padding: 8px 12px; }
+            .radio-label { font-size: 13px; gap: 6px; }
+            .radio-label input[type="radio"] { width: 18px; height: 18px; }
+            .form-control, select.form-control { height: 42px; padding: 8px 12px; font-size: 13px; }
+            .btn-submit { height: 46px; font-size: 14px; padding: 12px 16px; }
+            .declaration-box { padding: 16px 16px; }
+            .declaration-box ul { font-size: 12px; }
+            .page-desc { font-size: 13px; padding: 12px 16px; }
+            .panel-header i { width: 32px; height: 32px; font-size: 18px; }
+            .panel-header .panel-badge { font-size: 10px; padding: 2px 8px; }
+            .progress-steps li .step-label { display: none; }
+            .progress-steps .step-line { width: 12px; }
+            .alert-warning-box { padding: 12px 14px; font-size: 12px; margin-top: 16px; margin-bottom: 16px; gap: 10px; }
+            .alert-warning-box i { font-size: 18px; }
+            .import-section { padding: 14px 16px; }
+            .import-section p { font-size: 13px; }
+            .btn-secondary { width: 100%; justify-content: center; font-size: 13px; padding: 8px 16px; }
+            .upload-zone { min-height: 80px; padding: 12px 10px; }
+            .upload-zone i { font-size: 22px; }
+            .document-conditions { padding: 12px 14px; }
+            .document-conditions li { font-size: 12px; }
         }
-
-        /* =========================================
-               وضع مظلم (نفس الهوية)
-               ========================================= */
         @media (prefers-color-scheme: dark) {
-            .focused-header {
-                background: #1e293b !important;
-                border-bottom-color: #334155 !important;
-            }
-            .focused-header .client-info h5 {
-                color: #f8fafc !important;
-            }
-            .focused-header .client-info .avatar {
-                background: #0f172a !important;
-                border-color: #14b8a6 !important;
-            }
-            .page-subheader {
-                background: #0f172a !important;
-            }
-            .panel-card {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-            .panel-header {
-                border-bottom-color: #334155 !important;
-            }
-            .panel-header h3 {
-                color: #f8fafc !important;
-            }
-            .panel-header .panel-badge {
-                background: #334155 !important;
-                color: #94a3b8 !important;
-            }
-            .page-desc {
-                background: #1e293b !important;
-                border-right-color: #14b8a6 !important;
-                color: #e2e8f0 !important;
-            }
-            .page-desc strong {
-                color: #f8fafc !important;
-            }
-            .form-label {
-                color: #f1f5f9 !important;
-            }
-            .form-control {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-                color: #e2e8f0 !important;
-            }
-            .form-control:focus {
-                border-color: #14b8a6 !important;
-                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
-            }
-            .form-control::placeholder {
-                color: #64748b !important;
-            }
-            .radio-group {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-            .radio-group-vertical {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-            .radio-label {
-                color: #e2e8f0 !important;
-            }
-            .input-hint-box {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-            .input-hint-box p {
-                color: #f1f5f9 !important;
-            }
-            .input-hint-box ul {
-                color: #94a3b8 !important;
-            }
-            .declaration-box {
-                background: rgba(22, 101, 52, 0.15) !important;
-                border-color: #166534 !important;
-            }
-            .declaration-box p {
-                color: #bbf7d0 !important;
-            }
-            .declaration-box ul {
-                color: #86efac !important;
-            }
-            .alert-warning-box {
-                background: rgba(220, 38, 38, 0.15) !important;
-                border-color: #991b1b !important;
-                color: #fca5a5 !important;
-            }
-            .page-footer {
-                background: #1e293b !important;
-                border-top-color: #334155 !important;
-                color: #64748b !important;
-            }
-            .panel-header i {
-                background: rgba(20, 184, 166, 0.15) !important;
-            }
-            .progress-steps li {
-                color: #94a3b8 !important;
-            }
-            .progress-steps li .step-num {
-                background: #334155 !important;
-                color: #94a3b8 !important;
-            }
-            .progress-steps li.active .step-num {
-                background: #14b8a6 !important;
-                color: #0f172a !important;
-                box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3) !important;
-            }
-            .progress-steps li.completed .step-num {
-                background: #10b981 !important;
-                color: #0f172a !important;
-            }
-            .progress-steps .step-line {
-                background: #334155 !important;
-            }
-            .progress-steps .step-line.completed {
-                background: #10b981 !important;
-            }
-            .upload-zone {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-            .upload-zone:hover {
-                border-color: #14b8a6 !important;
-                background: rgba(20, 184, 166, 0.08) !important;
-            }
-            .document-conditions {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-            }
-            .document-conditions li {
-                color: #e2e8f0 !important;
-            }
-            .import-section {
-                background: rgba(22, 101, 52, 0.15) !important;
-                border-color: #166534 !important;
-            }
-            .import-section p {
-                color: #bbf7d0 !important;
-            }
-            .btn-secondary {
-                border-color: #14b8a6 !important;
-                color: #14b8a6 !important;
-            }
-            .btn-secondary:hover {
-                background: #14b8a6 !important;
-                color: #0f172a !important;
-            }
-            .btn-text-action {
-                color: #14b8a6 !important;
-            }
-            .btn-text-action:hover {
-                background: rgba(20, 184, 166, 0.15) !important;
-            }
+            .focused-header { background: #1e293b !important; border-bottom-color: #334155 !important; }
+            .focused-header .client-info h5 { color: #f8fafc !important; }
+            .focused-header .client-info .avatar { background: #0f172a !important; border-color: #14b8a6 !important; }
+            .page-subheader { background: #0f172a !important; }
+            .panel-card { background: #1e293b !important; border-color: #334155 !important; }
+            .panel-header { border-bottom-color: #334155 !important; }
+            .panel-header h3 { color: #f8fafc !important; }
+            .panel-header .panel-badge { background: #334155 !important; color: #94a3b8 !important; }
+            .page-desc { background: #1e293b !important; border-right-color: #14b8a6 !important; color: #e2e8f0 !important; }
+            .page-desc strong { color: #f8fafc !important; }
+            .form-label { color: #f1f5f9 !important; }
+            .form-control { background: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+            .form-control:focus { border-color: #14b8a6 !important; box-shadow: 0 0 0 4px rgba(20,184,166,0.15) !important; }
+            .form-control::placeholder { color: #64748b !important; }
+            .radio-group { background: #0f172a !important; border-color: #334155 !important; }
+            .radio-group-vertical { background: #0f172a !important; border-color: #334155 !important; }
+            .radio-label { color: #e2e8f0 !important; }
+            .input-hint-box { background: #0f172a !important; border-color: #334155 !important; }
+            .input-hint-box p { color: #f1f5f9 !important; }
+            .input-hint-box ul { color: #94a3b8 !important; }
+            .declaration-box { background: rgba(22,101,52,0.15) !important; border-color: #166534 !important; }
+            .declaration-box p { color: #bbf7d0 !important; }
+            .declaration-box ul { color: #86efac !important; }
+            .alert-warning-box { background: rgba(220,38,38,0.15) !important; border-color: #991b1b !important; color: #fca5a5 !important; }
+            .page-footer { background: #1e293b !important; border-top-color: #334155 !important; color: #64748b !important; }
+            .panel-header i { background: rgba(20,184,166,0.15) !important; }
+            .progress-steps li { color: #94a3b8 !important; }
+            .progress-steps li .step-num { background: #334155 !important; color: #94a3b8 !important; }
+            .progress-steps li.active .step-num { background: #14b8a6 !important; color: #0f172a !important; box-shadow: 0 4px 12px rgba(20,184,166,0.3) !important; }
+            .progress-steps li.completed .step-num { background: #10b981 !important; color: #0f172a !important; }
+            .progress-steps .step-line { background: #334155 !important; }
+            .progress-steps .step-line.completed { background: #10b981 !important; }
+            .upload-zone { background: #0f172a !important; border-color: #334155 !important; }
+            .upload-zone:hover { border-color: #14b8a6 !important; background: rgba(20,184,166,0.08) !important; }
+            .document-conditions { background: #0f172a !important; border-color: #334155 !important; }
+            .document-conditions li { color: #e2e8f0 !important; }
+            .import-section { background: rgba(22,101,52,0.15) !important; border-color: #166534 !important; }
+            .import-section p { color: #bbf7d0 !important; }
+            .btn-secondary { border-color: #14b8a6 !important; color: #14b8a6 !important; }
+            .btn-secondary:hover { background: #14b8a6 !important; color: #0f172a !important; }
+            .btn-text-action { color: #14b8a6 !important; }
+            .btn-text-action:hover { background: rgba(20,184,166,0.15) !important; }
         }
-
-        /* =========================================
-               تقليل الحركة
-               ========================================= */
         @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- =========================================
-    الهيدر العلوي
-    ========================================= -->
     <header class="focused-header no-print">
         <div class="logo">
             <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
         </div>
         <div class="client-info">
-            <h5>محمد عبدالله الشمري</h5>
-            <div class="avatar">م</div>
+            <h5 id="headerUserName">مستخدم</h5>
+            <div class="avatar" id="headerAvatar">م</div>
         </div>
     </header>
 
-    <!-- =========================================
-    عنوان الصفحة
-    ========================================= -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-map-marker-alt"></i> العنوان الوطني</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -1027,9 +207,6 @@
         </a>
     </div>
 
-    <!-- =========================================
-    المحتوى الرئيسي
-    ========================================= -->
     <main class="content-container">
 
         <div class="page-desc">
@@ -1038,40 +215,17 @@
         </div>
 
         <!-- شريط التقدم -->
-        <ul class="progress-steps">
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
-                <span class="step-label">شخصي</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:11px;"></i></span>
-                <span class="step-label">تواصل</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="active">
-                <span class="step-num">3</span>
-                <span class="step-label">عنوان</span>
-            </li>
-            <li class="step-line"></li>
-            <li>
-                <span class="step-num">4</span>
-                <span class="step-label">بنكي</span>
-            </li>
-        </ul>
+        <div id="progressTracker" class="progress-steps"></div>
 
         <form id="nationalAddressForm" novalidate>
 
-            <!-- =========================================
-            القسم 1: نوع الإقامة
-            ========================================= -->
+            <!-- القسم 1: نوع الإقامة -->
             <div class="panel-card">
                 <div class="panel-header">
                     <i class="fas fa-home"></i>
                     <h3>نوع الإقامة</h3>
                     <span class="panel-badge">مطلوب</span>
                 </div>
-
                 <div class="form-group full-width">
                     <div class="radio-group" id="residencyType">
                         <label class="radio-label">
@@ -1087,201 +241,52 @@
                 </div>
             </div>
 
-            <!-- =========================================
-            القسم 2: العنوان الوطني (للمواطنين والمقيمين داخل المملكة)
-            ========================================= -->
+            <!-- القسم 2: العنوان الوطني (للمواطنين والمقيمين داخل المملكة) -->
             <div class="panel-card" id="nationalAddressSection">
                 <div class="panel-header">
                     <i class="fas fa-map-pin"></i>
                     <h3>العنوان الوطني</h3>
                     <span class="panel-badge">للمواطنين والمقيمين داخل المملكة</span>
                 </div>
-
                 <div class="form-grid">
-
-                    <div class="form-group">
-                        <label class="form-label">رقم المبنى <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="buildingNumber" placeholder="مثال: 1234" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">اسم الشارع <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="streetName" placeholder="مثال: شارع الملك فهد" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">الحي <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="neighborhood" placeholder="مثال: حي النخيل" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">المدينة <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="city" placeholder="مثال: الرياض" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">المنطقة <span class="req">*</span></label>
-                        <select class="form-control" id="region" required>
-                            <option value="">اختر المنطقة...</option>
-                            <option value="riyadh">الرياض</option>
-                            <option value="makkah">مكة المكرمة</option>
-                            <option value="madinah">المدينة المنورة</option>
-                            <option value="eastern">الشرقية</option>
-                            <option value="asir">عسير</option>
-                            <option value="tabuk">تبوك</option>
-                            <option value="hail">حائل</option>
-                            <option value="northern">الحدود الشمالية</option>
-                            <option value="jazan">جازان</option>
-                            <option value="najran">نجران</option>
-                            <option value="baha">الباحة</option>
-                            <option value="jouf">الجوف</option>
-                            <option value="qassim">القصيم</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">الرمز البريدي <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="postalCode" placeholder="مثال: 12345" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">الرقم الإضافي <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="additionalNumber" placeholder="مثال: 6789" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">رقم الوحدة <span class="optional">اختياري</span></label>
-                        <input type="text" class="form-control" id="unitNumber" placeholder="مثال: 101" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    </div>
-
+                    <div class="form-group"><label class="form-label">رقم المبنى <span class="req">*</span></label><input type="text" class="form-control" id="buildingNumber" placeholder="مثال: 1234" required></div>
+                    <div class="form-group"><label class="form-label">اسم الشارع <span class="req">*</span></label><input type="text" class="form-control" id="streetName" placeholder="مثال: شارع الملك فهد" required></div>
+                    <div class="form-group"><label class="form-label">الحي <span class="req">*</span></label><input type="text" class="form-control" id="neighborhood" placeholder="مثال: حي النخيل" required></div>
+                    <div class="form-group"><label class="form-label">المدينة <span class="req">*</span></label><input type="text" class="form-control" id="city" placeholder="مثال: الرياض" required></div>
+                    <div class="form-group"><label class="form-label">المنطقة <span class="req">*</span></label><select class="form-control" id="region" required><option value="">اختر المنطقة...</option><option value="riyadh">الرياض</option><option value="makkah">مكة المكرمة</option><option value="madinah">المدينة المنورة</option><option value="eastern">الشرقية</option><option value="asir">عسير</option><option value="tabuk">تبوك</option><option value="hail">حائل</option><option value="northern">الحدود الشمالية</option><option value="jazan">جازان</option><option value="najran">نجران</option><option value="baha">الباحة</option><option value="jouf">الجوف</option><option value="qassim">القصيم</option></select></div>
+                    <div class="form-group"><label class="form-label">الرمز البريدي <span class="req">*</span></label><input type="text" class="form-control" id="postalCode" placeholder="مثال: 12345" required oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                    <div class="form-group"><label class="form-label">الرقم الإضافي <span class="req">*</span></label><input type="text" class="form-control" id="additionalNumber" placeholder="مثال: 6789" required oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
+                    <div class="form-group"><label class="form-label">رقم الوحدة <span class="optional">اختياري</span></label><input type="text" class="form-control" id="unitNumber" placeholder="مثال: 101" oninput="this.value = this.value.replace(/[^0-9]/g, '')"></div>
                 </div>
-
-                <!-- استيراد العنوان الوطني -->
                 <div class="import-section" style="margin-top: 22px;">
                     <p><i class="fas fa-cloud-download-alt"></i> يمكن للمستخدم جلب بيانات العنوان الوطني المسجل لديه تلقائياً من خلال الربط مع الجهات المعتمدة عند توفر الخدمة.</p>
-                    <button type="button" class="btn-secondary" id="importAddressBtn">
-                        <i class="fas fa-download"></i> استيراد العنوان الوطني
-                    </button>
+                    <button type="button" class="btn-secondary" id="importAddressBtn"><i class="fas fa-download"></i> استيراد العنوان الوطني</button>
                 </div>
-
-                <!-- المرفقات -->
                 <div style="margin-top: 24px;">
                     <label class="form-label">المرفقات المطلوبة <span class="optional">اختياري</span></label>
                     <p style="font-size:13px; color:#64748b; margin-bottom:12px;">صورة أو ملف العنوان الوطني (اختياري عند عدم توفر الربط الإلكتروني).</p>
-                    <div class="upload-zone" id="nationalAddressUpload">
-                        <i class="fas fa-file-upload"></i>
-                        <span>اضغط لرفع الملف</span>
-                        <span class="sub-text">JPG, PNG, PDF حتى 5 ميجابايت</span>
-                        <input type="file" style="display:none;" accept="image/*,.pdf">
-                    </div>
+                    <div class="upload-zone" id="nationalAddressUpload"><i class="fas fa-file-upload"></i><span>اضغط لرفع الملف</span><span class="sub-text">JPG, PNG, PDF حتى 5 ميجابايت</span><input type="file" style="display:none;" accept="image/*,.pdf"></div>
                 </div>
             </div>
 
-            <!-- =========================================
-            القسم 3: للمقيمين خارج المملكة
-            ========================================= -->
+            <!-- القسم 3: للمقيمين خارج المملكة -->
             <div class="panel-card" id="outsideAddressSection" style="display: none;">
-                <div class="panel-header">
-                    <i class="fas fa-globe-asia"></i>
-                    <h3>بيانات العنوان</h3>
-                    <span class="panel-badge">للمقيمين خارج المملكة</span>
-                </div>
-
+                <div class="panel-header"><i class="fas fa-globe-asia"></i><h3>بيانات العنوان</h3><span class="panel-badge">للمقيمين خارج المملكة</span></div>
                 <div class="form-grid">
-
-                    <div class="form-group">
-                        <label class="form-label">الدولة <span class="req">*</span></label>
-                        <select class="form-control" id="outsideCountry" required>
-                            <option value="">اختر الدولة...</option>
-                            <option value="ae">الإمارات العربية المتحدة</option>
-                            <option value="kw">الكويت</option>
-                            <option value="qa">قطر</option>
-                            <option value="bh">البحرين</option>
-                            <option value="om">عُمان</option>
-                            <option value="eg">مصر</option>
-                            <option value="jo">الأردن</option>
-                            <option value="lb">لبنان</option>
-                            <option value="ps">فلسطين</option>
-                            <option value="sy">سوريا</option>
-                            <option value="iq">العراق</option>
-                            <option value="ye">اليمن</option>
-                            <option value="sd">السودان</option>
-                            <option value="ly">ليبيا</option>
-                            <option value="tn">تونس</option>
-                            <option value="dz">الجزائر</option>
-                            <option value="ma">المغرب</option>
-                            <option value="mr">موريتانيا</option>
-                            <option value="tr">تركيا</option>
-                            <option value="pk">باكستان</option>
-                            <option value="in">الهند</option>
-                            <option value="us">الولايات المتحدة</option>
-                            <option value="uk">المملكة المتحدة</option>
-                            <option value="fr">فرنسا</option>
-                            <option value="de">ألمانيا</option>
-                            <option value="other">أخرى</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">المدينة <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsideCity" placeholder="مثال: دبي" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">المنطقة / المحافظة <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsideRegion" placeholder="مثال: دبي" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">الرمز البريدي <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsidePostalCode" placeholder="مثال: 12345" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">اسم الشارع <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsideStreet" placeholder="مثال: شارع الشيخ زايد" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">رقم المبنى أو المنزل <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsideBuilding" placeholder="مثال: 123" required>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label class="form-label">العنوان التفصيلي <span class="req">*</span></label>
-                        <textarea class="form-control" id="outsideDetailedAddress" placeholder="يرجى كتابة العنوان بشكل واضح وكامل" required style="height:80px; resize:vertical;"></textarea>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label class="form-label">العنوان باللغة الإنجليزية <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="outsideAddressEnglish" placeholder="يجب إدخال العنوان كما هو مستخدم لدى الجهات الرسمية أو شركات الشحن" required>
-                        <div class="input-hint-box">
-                            <p>ملاحظات:</p>
-                            <ul>
-                                <li>يجب إدخال العنوان كما هو مستخدم لدى الجهات الرسمية أو شركات الشحن.</li>
-                                <li>يقبل الأحرف الإنجليزية والأرقام والرموز المسموحة.</li>
-                            </ul>
-                        </div>
-                    </div>
-
+                    <div class="form-group"><label class="form-label">الدولة <span class="req">*</span></label><select class="form-control" id="outsideCountry" required><option value="">اختر الدولة...</option><option value="ae">الإمارات</option><option value="kw">الكويت</option><option value="qa">قطر</option><option value="bh">البحرين</option><option value="om">عُمان</option><option value="eg">مصر</option><option value="other">أخرى</option></select></div>
+                    <div class="form-group"><label class="form-label">المدينة <span class="req">*</span></label><input type="text" class="form-control" id="outsideCity" placeholder="مثال: دبي" required></div>
+                    <div class="form-group"><label class="form-label">المنطقة / المحافظة <span class="req">*</span></label><input type="text" class="form-control" id="outsideRegion" placeholder="مثال: دبي" required></div>
+                    <div class="form-group"><label class="form-label">الرمز البريدي <span class="req">*</span></label><input type="text" class="form-control" id="outsidePostalCode" placeholder="مثال: 12345" required></div>
+                    <div class="form-group"><label class="form-label">اسم الشارع <span class="req">*</span></label><input type="text" class="form-control" id="outsideStreet" placeholder="مثال: شارع الشيخ زايد" required></div>
+                    <div class="form-group"><label class="form-label">رقم المبنى أو المنزل <span class="req">*</span></label><input type="text" class="form-control" id="outsideBuilding" placeholder="مثال: 123" required></div>
+                    <div class="form-group full-width"><label class="form-label">العنوان التفصيلي <span class="req">*</span></label><textarea class="form-control" id="outsideDetailedAddress" placeholder="يرجى كتابة العنوان بشكل واضح وكامل" required style="height:80px; resize:vertical;"></textarea></div>
+                    <div class="form-group full-width"><label class="form-label">العنوان باللغة الإنجليزية <span class="req">*</span></label><input type="text" class="form-control" id="outsideAddressEnglish" placeholder="يجب إدخال العنوان كما هو مستخدم لدى الجهات الرسمية أو شركات الشحن" required></div>
                 </div>
             </div>
 
-            <!-- =========================================
-            القسم 4: إثبات العنوان
-            ========================================= -->
+            <!-- القسم 4: إثبات العنوان -->
             <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-file-alt"></i>
-                    <h3>إثبات العنوان</h3>
-                    <span class="panel-badge">مطلوب</span>
-                </div>
-
-                <p style="font-size:13px; color:#64748b; margin-bottom:16px;">
-                    <i class="fas fa-info-circle" style="color:#028090;"></i>
-                    يتم طلب أحد المستندات التالية لإثبات العنوان:
-                </p>
-
+                <div class="panel-header"><i class="fas fa-file-alt"></i><h3>إثبات العنوان</h3><span class="panel-badge">مطلوب</span></div>
                 <div class="document-conditions">
                     <li><i class="fas fa-check-circle"></i> كشف حساب بنكي</li>
                     <li><i class="fas fa-check-circle"></i> فاتورة كهرباء</li>
@@ -1290,74 +295,15 @@
                     <li><i class="fas fa-check-circle"></i> عقد إيجار موثق</li>
                     <li><i class="fas fa-check-circle"></i> شهادة سكن رسمية</li>
                 </div>
-
                 <div style="margin-top: 18px;">
                     <label class="form-label">رفع مستند إثبات العنوان <span class="req">*</span></label>
-                    <div class="upload-zone" id="proofAddressUpload">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>اضغط لرفع المستند</span>
-                        <span class="sub-text">JPG, PNG, PDF حتى 5 ميجابايت</span>
-                        <input type="file" style="display:none;" accept="image/*,.pdf" required>
-                    </div>
-                    <div class="input-hint-box" style="margin-top:12px;">
-                        <p>شروط المستند:</p>
-                        <ul>
-                            <li>أن يكون باسم صاحب الحساب.</li>
-                            <li>أن يكون حديثاً (لا يتجاوز 3 أشهر).</li>
-                            <li>أن تكون البيانات والعنوان واضحة بالكامل.</li>
-                        </ul>
-                    </div>
+                    <div class="upload-zone" id="proofAddressUpload"><i class="fas fa-file-pdf"></i><span>اضغط لرفع المستند</span><span class="sub-text">JPG, PNG, PDF حتى 5 ميجابايت</span><input type="file" style="display:none;" accept="image/*,.pdf" required></div>
                 </div>
             </div>
 
-            <!-- =========================================
-            القسم 5: التحقق
-            ========================================= -->
+            <!-- القسم 5: الإقرار -->
             <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>التحقق</h3>
-                    <span class="panel-badge">أمان</span>
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; padding:8px 0;">
-                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                        <i class="fas fa-link" style="color:#028090; font-size:20px;"></i>
-                        <div>
-                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">الربط الإلكتروني</div>
-                            <div style="font-size:12px; color:#64748b;">تحقق فوري</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                        <i class="fas fa-file-upload" style="color:#028090; font-size:20px;"></i>
-                        <div>
-                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">مراجعة المستندات</div>
-                            <div style="font-size:12px; color:#64748b;">تدقيق يدوي</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
-                        <i class="fas fa-phone-alt" style="color:#028090; font-size:20px;"></i>
-                        <div>
-                            <div style="font-weight:700; font-size:14px; color:#0A1B3F;">التواصل مع صاحب الحساب</div>
-                            <div style="font-size:12px; color:#64748b;">عند الحاجة</div>
-                        </div>
-                    </div>
-                </div>
-                <p style="font-size:13px; color:#64748b; margin-top:12px;">
-                    <i class="fas fa-info-circle" style="color:#028090;"></i>
-                    قد يتم التحقق من العنوان من خلال إحدى الطرق المذكورة أعلاه.
-                </p>
-            </div>
-
-            <!-- =========================================
-            القسم 6: الإقرار والتعهد
-            ========================================= -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-file-signature"></i>
-                    <h3>الإقرار والتعهد</h3>
-                </div>
-
+                <div class="panel-header"><i class="fas fa-file-signature"></i><h3>الإقرار والتعهد</h3></div>
                 <div class="declaration-box">
                     <input type="checkbox" required id="declarationCheck">
                     <div>
@@ -1370,42 +316,24 @@
                         </ul>
                     </div>
                 </div>
-
-                <div class="alert-warning-box">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div>
-                        <strong>تنبيه:</strong> قد يؤدي تقديم عنوان غير صحيح أو مستندات غير مطابقة إلى تعليق الحساب أو طلب مستندات إضافية للتحقق.
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-save"></i> حفظ العنوان
-                </button>
+                <button type="submit" class="btn-submit"><i class="fas fa-save"></i> حفظ العنوان</button>
             </div>
 
         </form>
-
     </main>
 
-    <!-- =========================================
-    التذييل
-    ========================================= -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- =========================================
-    ربط الملفات المشتركة
-    ========================================= -->
+    <!-- السكريبتات الأساسية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/app.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/profile.js"></script>
-
-    <!-- =========================================
-    الملف المخصص للصفحة (الجافا مفصولة هنا)
-    ========================================= -->
     <script src="/assets/js/profile-national-address.js"></script>
-
 </body>
 </html>
