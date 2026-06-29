@@ -1,61 +1,300 @@
 /**
  * ============================================================
- * TERA INVESTOR PORTAL - DASHBOARD LOGIC (FIXED)
+ * TERA INVESTOR PORTAL - DASHBOARD LOGIC (PRODUCTION)
  * ============================================================
  * الموقع: /assets/js/dashboard.js
- * تاريخ التحديث: 2026-06-25
- * ============================================================
+ * - جميع البيانات تُجلب من Supabase بشكل حي.
+ * - لا توجد بيانات وهمية أو ثابتة.
+ * - يعتمد على جداول: user_portfolio, portfolio_history,
+ *   investment_opportunities, transactions.
+ * - يحمي المسار عبر TeraAuth.
  */
-
 const Dashboard = {
-    // تخزين مرجع الرسم البياني لتدميره عند إعادة التهيئة
     chartInstance: null,
+    _initialized: false,
+    _supabase: null,
 
     /**
      * تهيئة لوحة التحكم بالكامل
      */
-    init: function() {
-        // منع التهيئة المتكررة
-        if (this._initialized) {
-            console.warn('⚠️ Dashboard already initialized.');
-            return;
-        }
+    init: async function() {
+        if (this._initialized) return;
         this._initialized = true;
 
-        console.log('🚀 Initializing Tera Dashboard...');
+        // حماية المسار: إذا لم يكن المستخدم مسجلاً، توجيه إلى صفحة الدخول
+        if (window.TeraAuth && !window.TeraAuth.isLoggedIn()) {
+            window.TeraAuth.redirectTo('/auth/auth/login/login.html');
+            return;
+        }
+
+        // انتظار جاهزية Supabase
+        try {
+            this._supabase = await this._waitForSupabase();
+        } catch (err) {
+            console.error('❌ Supabase غير متوفر، توجيه للدخول');
+            window.location.replace('/auth/auth/login/login.html');
+            return;
+        }
+
+        console.log('🚀 جاري تهيئة لوحة التحكم بالبيانات الحقيقية...');
+
+        // تهيئة الواجهة (القوائم، الأزرار، إلخ)
         this.initSidebar();
         this.initSubmenus();
         this.initOpportunitiesToggle();
         this.initTransactionFilter();
-        this.initChart(); // سيتم تدمير الرسم البياني السابق إن وجد
         this.initLogout();
         this.initActiveNav();
         this.handleWindowResize();
-        console.log('✅ Dashboard initialized successfully.');
+
+        // تحميل البيانات الحقيقية
+        await this.loadUserInfo();
+        await this.loadStats();
+        await this.loadChartData();
+        await this.loadOpportunities();
+        await this.loadTransactions();
+
+        console.log('✅ لوحة التحكم جاهزة.');
+    },
+
+    _waitForSupabase: function() {
+        return new Promise((resolve, reject) => {
+            if (window.teraSupabase) return resolve(window.teraSupabase);
+            const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+            document.addEventListener('supabase:ready', e => {
+                clearTimeout(timeout);
+                resolve(e.detail.client);
+            }, { once: true });
+            document.addEventListener('supabase:error', () => {
+                clearTimeout(timeout);
+                reject(new Error('error'));
+            }, { once: true });
+        });
+    },
+
+    /* ---------- دوال تحميل البيانات ---------- */
+
+    /**
+     * تحميل اسم المستخدم وعرضه في شريط الترحيب
+     */
+    loadUserInfo: async function() {
+        try {
+            const { data: { user } } = await this._supabase.auth.getUser();
+            if (user) {
+                const name = user.user_metadata?.full_name || 'مستثمر';
+                const h2 = document.querySelector('.welcome-banner h2');
+                if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب بيانات المستخدم:', e);
+        }
     },
 
     /**
-     * ============================================================
-     * 1. تهيئة القائمة الجانبية (Sidebar)
-     * ============================================================
+     * تحميل إحصائيات المحفظة من جدول user_portfolio
      */
+    loadStats: async function() {
+        const statValues = { portfolioValue: 0, activeContracts: 0, availableBalance: 0 };
+
+        try {
+            const { data: { user } } = await this._supabase.auth.getUser();
+            if (user) {
+                const { data, error } = await this._supabase
+                    .from('user_portfolio')
+                    .select('total_value, active_contracts, available_balance')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (!error && data) {
+                    statValues.portfolioValue = data.total_value || 0;
+                    statValues.activeContracts = data.active_contracts || 0;
+                    statValues.availableBalance = data.available_balance || 0;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب إحصائيات المحفظة:', e);
+        }
+
+        document.querySelector('.stat-card:nth-child(1) .stat-value').textContent =
+            statValues.portfolioValue.toLocaleString() + ' ر.س';
+        document.querySelector('.stat-card:nth-child(2) .stat-value').textContent =
+            statValues.activeContracts + ' عقود نشطة';
+        document.querySelector('.stat-card:nth-child(3) .stat-value').textContent =
+            statValues.availableBalance.toLocaleString() + ' ر.س';
+    },
+
+    /**
+     * تحميل بيانات الرسم البياني من جدول portfolio_history
+     */
+    loadChartData: async function() {
+        let labels = [];
+        let values = [];
+
+        try {
+            const { data: { user } } = await this._supabase.auth.getUser();
+            if (user) {
+                const { data, error } = await this._supabase
+                    .from('portfolio_history')
+                    .select('month, value')
+                    .eq('user_id', user.id)
+                    .order('month', { ascending: true });
+
+                if (!error && data && data.length > 0) {
+                    labels = data.map(r => r.month);
+                    values = data.map(r => r.value);
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب بيانات الرسم البياني:', e);
+        }
+
+        if (labels.length === 0) {
+            labels = ['لا توجد بيانات'];
+            values = [0];
+        }
+
+        const ctx = document.getElementById('mainChart');
+        if (ctx && typeof Chart !== 'undefined') {
+            if (this.chartInstance) {
+                this.chartInstance.destroy();
+                this.chartInstance = null;
+            }
+            this.chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'قيمة المحفظة (ر.س)',
+                        data: values,
+                        borderColor: '#028090',
+                        backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#028090',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { font: { family: 'Tajawal', size: 12 }, color: '#334155', padding: 20 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.parsed.y.toLocaleString() + ' ر.س'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b', callback: v => v.toLocaleString() + ' ر.س' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+    },
+
+    /**
+     * تحميل الفرص الاستثمارية من جدول investment_opportunities
+     */
+    loadOpportunities: async function() {
+        const tbody = document.querySelector('#opportunitiesPanelWrapper tbody');
+        if (!tbody) return;
+
+        try {
+            const { data, error } = await this._supabase
+                .from('investment_opportunities')
+                .select('title, share_price, annual_return, status')
+                .eq('status', 'active')
+                .limit(3);
+
+            if (!error && data && data.length > 0) {
+                let html = '';
+                data.forEach(opp => {
+                    html += `<tr>
+                        <td class="text-title text-start">${opp.title}</td>
+                        <td>${opp.share_price.toLocaleString()} ر.س</td>
+                        <td>${opp.annual_return}%</td>
+                        <td><span style="color:#0d9488;font-weight:bold;">${opp.status}</span></td>
+                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">لا توجد فرص استثمارية حالياً</td></tr>';
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب الفرص:', e);
+        }
+    },
+
+    /**
+     * تحميل آخر العمليات المالية من جدول transactions
+     */
+    loadTransactions: async function() {
+        const tbody = document.getElementById('transactionsTableBody');
+        if (!tbody) return;
+
+        try {
+            const { data: { user } } = await this._supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await this._supabase
+                .from('transactions')
+                .select('description, created_at, amount')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (!error && data && data.length > 0) {
+                let html = '';
+                data.forEach(tr => {
+                    const date = new Date(tr.created_at).toLocaleDateString('ar-SA');
+                    const amount = tr.amount;
+                    const color = amount >= 0 ? '#10b981' : '#ef4444';
+                    const sign = amount >= 0 ? '+' : '';
+                    html += `<tr>
+                        <td class="text-title text-start">${tr.description}</td>
+                        <td>${date}</td>
+                        <td class="amount-cell" style="color:${color};font-weight:bold;">${sign}${amount.toLocaleString()} ر.س</td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">لا توجد عمليات مالية حديثة</td></tr>';
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب العمليات المالية:', e);
+        }
+    },
+
+    /* ---------- دوال الواجهة الثابتة (بقيت كما هي) ---------- */
+
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const isMobile = () => window.innerWidth <= 991;
 
-        if (!sidebar) {
-            console.error('❌ Error: Element with ID "sidebar" NOT FOUND.');
-            return;
-        }
+        if (!sidebar) return;
 
         const toggleBtn = document.getElementById('sidebarToggle');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🟢 Sidebar Toggle Clicked');
-
                 if (!isMobile()) {
                     sidebar.classList.toggle('collapsed');
                     sidebar.classList.remove('sidebar-open');
@@ -71,8 +310,6 @@ const Dashboard = {
                     }
                 }
             });
-        } else {
-            console.warn('⚠️ Warning: #sidebarToggle not found.');
         }
 
         const closeBtn = document.getElementById('closeSidebarBtn');
@@ -82,7 +319,6 @@ const Dashboard = {
                 e.stopPropagation();
                 sidebar.classList.remove('sidebar-open');
                 if (overlay) overlay.classList.remove('active');
-                console.log('🔴 Sidebar closed via #closeSidebarBtn.');
             });
         }
 
@@ -90,7 +326,6 @@ const Dashboard = {
             overlay.addEventListener('click', function() {
                 sidebar.classList.remove('sidebar-open');
                 overlay.classList.remove('active');
-                console.log('🔴 Sidebar closed via overlay.');
             });
         }
 
@@ -98,46 +333,25 @@ const Dashboard = {
             if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
                 sidebar.classList.remove('sidebar-open');
                 if (overlay) overlay.classList.remove('active');
-                console.log('🔴 Sidebar closed via Escape key.');
             }
         });
 
         const logo = document.querySelector('.header-logo a');
         if (logo) {
             logo.addEventListener('dblclick', function(e) {
-                if (!isMobile()) {
-                    sidebar.classList.toggle('collapsed');
-                    console.log('🔄 Sidebar toggled via double-click on logo.');
-                }
+                if (!isMobile()) sidebar.classList.toggle('collapsed');
             });
         }
-
-        console.log('✅ Sidebar initialized successfully.');
     },
 
-    /**
-     * ============================================================
-     * 2. إدارة القوائم الفرعية (Submenus)
-     * ============================================================
-     */
     initSubmenus: function() {
         const submenuToggles = document.querySelectorAll('.has-submenu > a');
-
-        if (!submenuToggles.length) {
-            console.warn('⚠️ No submenus found.');
-            return;
-        }
-
-        console.log(`🔄 Found ${submenuToggles.length} submenu toggles.`);
+        if (!submenuToggles.length) return;
 
         const handleSubmenuClick = function(e) {
             const href = this.getAttribute('href');
             const parentLi = this.closest('.has-submenu');
-
-            if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                console.log(`🔗 Navigating to: ${href}`);
-                return;
-            }
+            if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') return;
 
             e.preventDefault();
             e.stopPropagation();
@@ -145,10 +359,8 @@ const Dashboard = {
             if (!parentLi) return;
 
             const sidebar = document.getElementById('sidebar');
-
             if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
                 sidebar.classList.remove('collapsed');
-                console.log('🔄 Sidebar expanded automatically to show submenu.');
             }
 
             document.querySelectorAll('.has-submenu').forEach(function(el) {
@@ -156,7 +368,6 @@ const Dashboard = {
             });
 
             parentLi.classList.toggle('submenu-open');
-            console.log(`🔄 Submenu toggled: ${parentLi.classList.contains('submenu-open') ? 'open' : 'closed'}`);
         };
 
         submenuToggles.forEach(function(link) {
@@ -165,21 +376,13 @@ const Dashboard = {
         });
     },
 
-    /**
-     * ============================================================
-     * 3. تبديل عرض الفرص الاستثمارية
-     * ============================================================
-     */
     initOpportunitiesToggle: function() {
         const toggleBtn = document.getElementById('toggleOppBtn');
         const wrapper = document.getElementById('opportunitiesPanelWrapper');
         const icon = document.getElementById('toggleOppIcon');
         const text = document.getElementById('toggleOppText');
 
-        if (!toggleBtn || !wrapper) {
-            console.warn('⚠️ Opportunities toggle elements not found.');
-            return;
-        }
+        if (!toggleBtn || !wrapper) return;
 
         let hidden = false;
         wrapper.style.transition = 'all 0.3s ease';
@@ -201,28 +404,17 @@ const Dashboard = {
                 if (icon) icon.className = 'fas fa-eye-slash';
                 if (text) text.textContent = 'إخفاء';
             }
-            console.log(`🔄 Opportunities ${hidden ? 'hidden' : 'shown'}.`);
         });
     },
 
-    /**
-     * ============================================================
-     * 4. فلتر العمليات المالية
-     * ============================================================
-     */
     initTransactionFilter: function() {
         const filterSelect = document.getElementById('transactionFilter');
         const tbody = document.getElementById('transactionsTableBody');
-
-        if (!filterSelect || !tbody) {
-            console.warn('⚠️ Transaction filter elements not found.');
-            return;
-        }
+        if (!filterSelect || !tbody) return;
 
         filterSelect.addEventListener('change', function() {
             const value = this.value;
             const rows = tbody.querySelectorAll('tr');
-
             rows.forEach(function(row) {
                 const text = row.textContent.toLowerCase();
                 if (value === 'all') {
@@ -235,132 +427,28 @@ const Dashboard = {
                     row.style.display = 'none';
                 }
             });
-            console.log(`🔄 Transaction filter changed to: ${value}`);
         });
     },
 
-    /**
-     * ============================================================
-     * 5. الرسم البياني – مع تدمير الرسم السابق
-     * ============================================================
-     */
-    initChart: function() {
-        const ctx = document.getElementById('mainChart');
-        if (!ctx) {
-            console.warn('⚠️ Chart canvas #mainChart not found.');
-            return;
-        }
-
-        if (typeof Chart === 'undefined') {
-            console.warn('⚠️ Chart.js library not loaded.');
-            return;
-        }
-
-        // إذا كان هناك رسم بياني سابق، قم بتدميره
-        if (this.chartInstance) {
-            try {
-                this.chartInstance.destroy();
-                console.log('🔄 Previous chart destroyed.');
-            } catch (e) {
-                console.warn('⚠️ Error destroying previous chart:', e);
-            }
-            this.chartInstance = null;
-        }
-
-        try {
-            // إنشاء الرسم البياني الجديد
-            this.chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                    datasets: [{
-                        label: 'قيمة المحفظة (ر.س)',
-                        data: [85000, 92000, 98000, 105000, 115000, 124500],
-                        borderColor: '#028090',
-                        backgroundColor: 'rgba(2, 128, 144, 0.1)',
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: '#028090',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: { family: 'Tajawal', size: 12 },
-                                color: '#334155',
-                                padding: 20,
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.parsed.y.toLocaleString() + ' ر.س';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: {
-                                font: { family: 'Tajawal', size: 11 },
-                                color: '#64748b',
-                                callback: function(value) {
-                                    return value.toLocaleString() + ' ر.س';
-                                }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                font: { family: 'Tajawal', size: 11 },
-                                color: '#64748b'
-                            }
-                        }
-                    }
-                }
-            });
-            console.log('✅ Chart.js initialized successfully.');
-        } catch (error) {
-            console.error('❌ Error initializing chart:', error);
-        }
-    },
-
-    /**
-     * ============================================================
-     * 6. تسجيل الخروج
-     * ============================================================
-     */
     initLogout: function() {
         const logoutBtn = document.getElementById('logoutBtn');
-        if (!logoutBtn) {
-            console.warn('⚠️ Logout button not found.');
-            return;
-        }
+        if (!logoutBtn) return;
 
-        logoutBtn.addEventListener('click', function() {
-            if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                console.log('🔴 User logged out.');
-                alert('سيتم توجيهك إلى صفحة تسجيل الدخول.');
-                // window.location.href = '/auth/login/login.html';
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (!confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) return;
+
+            if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
+                await window.TeraAuth.logout();
+            } else {
+                localStorage.removeItem('tera_token');
+                localStorage.removeItem('tera_user');
+                sessionStorage.clear();
+                window.location.replace('/auth/auth/login/login.html');
             }
         });
     },
 
-    /**
-     * ============================================================
-     * 7. تفعيل الحالة النشطة للقائمة
-     * ============================================================
-     */
     initActiveNav: function() {
         const currentPath = window.location.pathname;
         const navLinks = document.querySelectorAll('.nav-item > a[href]');
@@ -371,19 +459,12 @@ const Dashboard = {
                 const parent = link.closest('.nav-item');
                 if (parent) {
                     parent.classList.add('active');
-                    if (parent.classList.contains('has-submenu')) {
-                        parent.classList.add('submenu-open');
-                    }
+                    if (parent.classList.contains('has-submenu')) parent.classList.add('submenu-open');
                 }
             }
         });
     },
 
-    /**
-     * ============================================================
-     * 8. معالجة تغيير حجم النافذة
-     * ============================================================
-     */
     handleWindowResize: function() {
         let resizeTimer;
         const isMobile = () => window.innerWidth <= 991;
@@ -393,7 +474,6 @@ const Dashboard = {
             resizeTimer = setTimeout(() => {
                 const sidebar = document.getElementById('sidebar');
                 const overlay = document.getElementById('sidebarOverlay');
-
                 if (!isMobile() && sidebar) {
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
@@ -403,14 +483,11 @@ const Dashboard = {
     }
 };
 
-// ============================================================
 // تشغيل عند تحميل الصفحة
-// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     Dashboard.init();
 });
 
-// تصدير للاستخدام في بيئات أخرى
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = Dashboard;
 }
