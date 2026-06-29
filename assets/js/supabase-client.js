@@ -1,11 +1,12 @@
 /**
  * ============================================================
- * supabase-client.js - محرك الاتصال المركزي بـ Supabase (Enterprise v3.0)
+ * supabase-client.js - محرك الاتصال المركزي بـ Supabase (Enterprise v3.1)
  * ============================================================
  * - يُهيئ عميل Supabase ويُخزنه في window.teraSupabase
  * - يُطلق حدث "supabase:ready" عند الجهوزية
- * - يوفر دالة window.getTeraSupabase() لضمان جلب العميل بأمان في أي وقت
+ * - يوفر دالة window.getTeraSupabase() لضمان جلب العميل بأمان
  * - يتضمن مفاتيح الوصول والربط المباشر مع خوادم المنصة
+ * - يحدد schema: 'public' بشكل افتراضي لجميع الاستعلامات
  */
 (function() {
     'use strict';
@@ -56,8 +57,11 @@
      * إنشاء العميل وتخزينه في النطاق العام، ثم إطلاق حدث الجاهزية
      */
     function createClientAndNotify() {
-        // تضمين المفتاح السري في الترويسات (Headers) للطلبات
+        // تضمين إعدادات إضافية: السكيما العامة والمفتاح السري في الترويسات
         window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY, {
+            db: {
+                schema: 'public'  // يضمن استهداف سكيما public تلقائياً
+            },
             global: {
                 headers: {
                     'x-publishable-key': PUBLISHABLE_SECRET
