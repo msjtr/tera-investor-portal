@@ -227,6 +227,7 @@
         </div>
 
         <form id="personalInfoForm" novalidate>
+            <!-- البيانات الأساسية -->
             <div class="panel-card">
                 <div class="panel-header"><i class="fas fa-user-edit"></i><h3>البيانات الأساسية</h3></div>
                 <div class="form-grid">
@@ -293,15 +294,25 @@
                 </div>
             </div>
 
+            <!-- قسم الوثائق (بعد التصحيح ليطابق ID الكود البرمجي) -->
             <div class="panel-card" id="documentsCard" style="display: none;">
-                <div class="panel-header"><i class="fas fa-file-upload"></i><h3>الوثائق المطلوبة</h3></div>
-                <div style="font-size:13px; color:#64748b; margin-bottom:16px; background:#f8fafc; padding:8px 14px; border-radius:8px;">
-                    <i class="fas fa-sync-alt" style="margin-left:6px;"></i> يتم عرض المرفقات المطلوبة تلقائياً حسب نوع الهوية المختار.
+                <div class="panel-header">
+                    <i class="fas fa-file-upload"></i>
+                    <h3>الوثائق المطلوبة</h3>
                 </div>
-                <div id="dynamicUploadArea" class="form-grid"><!-- تُحقن بواسطة JavaScript --></div>
-                <div class="alert-warning-box"><i class="fas fa-exclamation-triangle"></i><span>تنبيه: يجب أن تكون الصور ملونة وواضحة وسارية المفعول.</span></div>
+                <div style="font-size:13px; color:#64748b; margin-bottom:16px; background:#f8fafc; padding:8px 14px; border-radius:8px;">
+                    <i class="fas fa-sync-alt" style="margin-left:6px;"></i>
+                    يتم عرض المرفقات المطلوبة تلقائياً حسب نوع الهوية المختار.
+                </div>
+                <!-- ✅ المعرف الصحيح الذي يبحث عنه الكود -->
+                <div id="uploadFieldsContainer" class="form-grid"></div>
+                <div class="alert-warning-box" id="uploadWarning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>يجب رفع جميع المرفقات المطلوبة قبل الحفظ.</span>
+                </div>
             </div>
 
+            <!-- بيانات إضافية -->
             <div class="panel-card">
                 <div class="panel-header"><i class="fas fa-briefcase"></i><h3>بيانات إضافية</h3></div>
                 <div class="form-grid">
@@ -339,6 +350,7 @@
                 </div>
             </div>
 
+            <!-- الإقرار والتعهد -->
             <div class="panel-card">
                 <div class="panel-header"><i class="fas fa-file-signature"></i><h3>الإقرار والتعهد</h3></div>
                 <div class="declaration-box">
