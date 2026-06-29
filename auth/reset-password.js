@@ -7,7 +7,7 @@
  * - يتحقق من وجود جلسة (المستخدم قادم من رابط البريد).
  * - يتحقق من قوة كلمة المرور وتطابقها.
  * - يستخدم supabase.auth.updateUser لتحديث كلمة المرور.
- * - يوجه إلى لوحة التحكم بعد النجاح.
+ * - يوجه إلى لوحة التحكم بعد النجاح (مسار مطلق).
  */
 (function() {
     'use strict';
@@ -51,7 +51,6 @@
         const { data: { session } } = await window.teraSupabase.auth.getSession();
         if (!session) {
             showAlert('انتهت صلاحية الرابط أو أن الجلسة غير صالحة. يرجى طلب رابط جديد.', 'error');
-            // تعطيل النموذج
             if (newPasswordInput) newPasswordInput.disabled = true;
             if (confirmPasswordInput) confirmPasswordInput.disabled = true;
             if (submitBtn) submitBtn.disabled = true;
@@ -156,7 +155,6 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // إخفاء التنبيهات السابقة
             hideAlert();
             document.getElementById('newPassword-error').textContent = '';
             document.getElementById('confirmPassword-error').textContent = '';
@@ -187,7 +185,6 @@
 
             if (hasError) return;
 
-            // إظهار اللودر وتعطيل الزر
             showLoader(true);
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
@@ -202,6 +199,7 @@
                 showAlert('✅ تم تغيير كلمة المرور بنجاح! جاري التوجيه إلى لوحة التحكم...', 'success');
 
                 setTimeout(() => {
+                    // توجيه إلى لوحة التحكم (مسار مطلق)
                     window.location.replace('/pages/dashboard/index.html');
                 }, 2000);
 
@@ -215,7 +213,6 @@
             }
         });
 
-        // دوال مساعدة
         function showAlert(message, type) {
             if (!alertBox || !alertMessage) return;
             alertBox.style.display = 'flex';
