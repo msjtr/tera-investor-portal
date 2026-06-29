@@ -1,13 +1,14 @@
 /**
  * ============================================================
- * verify-otp.js - تأكيد البريد برمز OTP (8 أرقام) – إنتاج
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info
  * ============================================================
  * الموقع: /assets/js/verify-otp.js
  * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
- * - يستخدم localStorage للبريد ونوع العملية (signup / recovery).
+ * - يستخدم localStorage للبريد ونوع العملية (signup / recovery / personal_info).
  * - يتحقق من الرمز (8 أرقام) باستخدام supabase.auth.verifyOtp.
  * - بعد نجاح تأكيد التسجيل: يوجه المستخدم إلى صفحة الدخول.
  * - بعد نجاح استعادة كلمة المرور: يوجه إلى إعادة تعيين كلمة المرور.
+ * - بعد نجاح اعتماد المعلومات الشخصية: ينشئ طلب مراجعة ويوجه إلى لوحة التحكم.
  */
 (function() {
     'use strict';
@@ -51,7 +52,7 @@
 
         // جلب بيانات الجلسة المؤقتة من localStorage
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup أو recovery
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
 
         if (pendingEmail) {
             instructionText.textContent = `أدخل رمز التحقق المرسل إلى: ${pendingEmail}`;
@@ -96,10 +97,15 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
+                // تحديد نوع الرمز الصحيح:
+                // بالنسبة لـ signup / recovery : type = verifyType
+                // بالنسبة لـ personal_info : الرمز أُرسل عبر signInWithOtp لذا نستخدم type = 'email'
+                const otpType = (verifyType === 'personal_info') ? 'email' : verifyType;
+
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
                     token: otpValue,
-                    type: verifyType
+                    type: otpType
                 });
 
                 if (error) throw error;
@@ -114,12 +120,48 @@
                     setTimeout(() => {
                         window.location.replace('/auth/auth/login/login.html');
                     }, 2000);
-                } else {
+                } else if (verifyType === 'recovery') {
                     // استعادة كلمة المرور → التوجيه إلى صفحة إعادة التعيين
                     showAlert('✅ تم التحقق بنجاح! جاري التوجيه لإعادة تعيين كلمة المرور.', 'success');
                     setTimeout(() => {
                         window.location.replace('/auth/reset-password.html');
                     }, 1500);
+                } else if (verifyType === 'personal_info') {
+                    // اعتماد المعلومات الشخصية – إنشاء طلب مراجعة
+                    try {
+                        const { data: { user } } = await supabaseClient.auth.getUser();
+                        if (user) {
+                            const { data: existingReq } = await supabaseClient
+                                .from('verification_requests')
+                                .select('id')
+                                .eq('user_id', user.id)
+                                .maybeSingle();
+
+                            if (existingReq) {
+                                await supabaseClient.from('verification_requests')
+                                    .update({
+                                        status: 'under_review',
+                                        submitted_at: new Date().toISOString(),
+                                        updated_at: new Date().toISOString()
+                                    })
+                                    .eq('user_id', user.id);
+                            } else {
+                                await supabaseClient.from('verification_requests')
+                                    .insert({
+                                        user_id: user.id,
+                                        status: 'under_review',
+                                        submitted_at: new Date().toISOString()
+                                    });
+                            }
+                        }
+                        showAlert('✅ تم تأكيد هويتك. طلبك قيد المراجعة الآن.', 'success');
+                        setTimeout(() => {
+                            window.location.replace('/pages/dashboard/index.html');
+                        }, 1500);
+                    } catch (reqError) {
+                        console.error('❌ خطأ في إنشاء طلب المراجعة:', reqError);
+                        showAlert('تم التأكيد ولكن حدث خطأ أثناء إنشاء الطلب. حاول مجدداً.', 'error');
+                    }
                 }
 
             } catch (error) {
@@ -148,12 +190,18 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إعادة الإرسال...';
 
                 try {
-                    const { error } = await supabaseClient.auth.resend({
-                        type: verifyType,
-                        email: pendingEmail
-                    });
-
-                    if (error) throw error;
+                    if (verifyType === 'personal_info') {
+                        // إعادة إرسال رمز OTP عبر signInWithOtp (نفس الآلية المستخدمة عند الحفظ)
+                        await supabaseClient.auth.signInWithOtp({
+                            email: pendingEmail,
+                            options: { shouldCreateUser: false }
+                        });
+                    } else {
+                        await supabaseClient.auth.resend({
+                            type: verifyType,
+                            email: pendingEmail
+                        });
+                    }
                     showAlert('✅ تمت إعادة إرسال رمز التحقق.', 'success');
                 } catch (error) {
                     console.error('❌ فشل إعادة الإرسال:', error);
