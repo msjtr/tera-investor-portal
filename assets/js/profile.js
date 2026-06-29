@@ -1,273 +1,240 @@
 /**
  * ============================================================
- * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي
- * يشغل 5 صفحات:个人信息، الاتصال، العنوان، البنكي، المرفقات
+ * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (Enterprise)
  * ============================================================
  * الموقع: /assets/js/profile.js
- * تاريخ التحديث: 2026-06-25
- * ============================================================
+ * - يدير القوائم والمكونات المشتركة لصفحات الملف الشخصي.
+ * - يستخدم TeraAuth.logout() لتسجيل الخروج الحقيقي.
+ * - متوافق مع الملفات المستقلة لكل صفحة (personal‑information, contact, ...).
  */
+(function() {
+    'use strict';
 
-// تعريف الكائن العام الذي ستستخدمه الملفات الفرعية
-window.ProfilePages = window.ProfilePages || {};
+    // تعريف الكائن العام للصفحات الفرعية (اختياري)
+    window.ProfilePages = window.ProfilePages || {};
 
-const Profile = {
-    /**
-     * تهيئة الملف الشخصي بالكامل
-     */
-    init: function() {
-        console.log('🚀 Initializing Profile Pages...');
+    const Profile = {
+        init: function() {
+            console.log('🚀 تهيئة صفحات الملف الشخصي...');
 
-        // تهيئة المكونات المشتركة بين جميع الصفحات
-        this.initSidebar();
-        this.initSubmenus();
-        this.initLogout();
-        this.initActiveNav();
+            this.initSidebar();
+            this.initSubmenus();
+            this.initLogout();
+            this.initActiveNav();
+            this.loadPageScript();
 
-        // تحميل وتهيئة الملف الفرعي المناسب للصفحة الحالية
-        this.loadPageScript();
+            console.log('✅ صفحات الملف الشخصي مهيأة.');
+        },
 
-        console.log('✅ Profile pages initialized successfully.');
-    },
+        loadPageScript: function() {
+            const currentPage = this.getCurrentPage();
+            console.log(`📄 الصفحة الحالية: ${currentPage}`);
 
-    /**
-     * تحميل الملف الفرعي المناسب للصفحة الحالية
-     */
-    loadPageScript: function() {
-        const currentPage = this.getCurrentPage();
-        console.log(`📄 Current page: ${currentPage}`);
-
-        // التحقق من وجود الكائن العام والتهيئة الخاصة بالصفحة
-        if (window.ProfilePages && typeof window.ProfilePages === 'object') {
-            const pageModule = window.ProfilePages[currentPage];
-            if (pageModule && typeof pageModule.init === 'function') {
-                try {
-                    pageModule.init();
-                    console.log(`✅ ${currentPage} initialized from external file.`);
-                    return;
-                } catch (e) {
-                    console.warn(`⚠️ Error initializing ${currentPage}:`, e);
+            if (window.ProfilePages && typeof window.ProfilePages === 'object') {
+                const pageModule = window.ProfilePages[currentPage];
+                if (pageModule && typeof pageModule.init === 'function') {
+                    try {
+                        pageModule.init();
+                        console.log(`✅ تم تهيئة ${currentPage} من ملفه الفرعي.`);
+                        return;
+                    } catch (e) {
+                        console.warn(`⚠️ خطأ في تهيئة ${currentPage}:`, e);
+                    }
                 }
             }
-        }
 
-        // إذا لم يتم تحميل الملف الفرعي، نقدم تهيئة أساسية
-        console.warn(`⚠️ External script for ${currentPage} not loaded or no init method. Using fallback.`);
-        this.initFallback(currentPage);
-    },
+            // إذا لم يوجد ملف فرعي، نقوم بتهيئة احتياطية (رفع الملفات فقط)
+            console.warn(`⚠️ لم يتم العثور على ملف منفصل لـ ${currentPage}، تشغيل احتياطي.`);
+            this.initUploadZones();
+        },
 
-    /**
-     * تحديد الصفحة الحالية بناءً على مسار URL
-     */
-    getCurrentPage: function() {
-        const path = window.location.pathname;
-        if (path.includes('personal-information')) return 'personal-information';
-        if (path.includes('contact-information')) return 'contact-information';
-        if (path.includes('national-address')) return 'national-address';
-        if (path.includes('bank-information')) return 'bank-information';
-        if (path.includes('attachments')) return 'attachments';
-        return 'unknown';
-    },
+        getCurrentPage: function() {
+            const path = window.location.pathname;
+            if (path.includes('personal-information')) return 'personal-information';
+            if (path.includes('contact-information')) return 'contact-information';
+            if (path.includes('national-address')) return 'national-address';
+            if (path.includes('bank-information')) return 'bank-information';
+            if (path.includes('attachments')) return 'attachments';
+            return 'unknown';
+        },
 
-    /**
-     * تهيئة احتياطية (في حال عدم تحميل الملف الفرعي)
-     */
-    initFallback: function(page) {
-        console.log(`🔄 Using fallback initialization for ${page}`);
-        this.initUploadZones();
-    },
+        initUploadZones: function() {
+            document.querySelectorAll('.upload-zone').forEach(function(zone) {
+                const fileInput = zone.querySelector('input[type="file"]');
+                if (fileInput) {
+                    zone.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        fileInput.click();
+                    });
+                    fileInput.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        if (this.files && this.files.length > 0) {
+                            const fileName = this.files[0].name;
+                            const span = zone.querySelector('span:first-of-type');
+                            if (span) {
+                                span.textContent = fileName.length > 25 ? fileName.slice(0, 22) + '…' : fileName;
+                                span.style.color = '#028090';
+                            }
+                        }
+                    });
+                }
+            });
+        },
 
-    /**
-     * تفعيل مناطق رفع الملفات (دالة مساعدة مشتركة)
-     */
-    initUploadZones: function() {
-        document.querySelectorAll('.upload-zone').forEach(function(zone) {
-            const fileInput = zone.querySelector('input[type="file"]');
-            if (fileInput) {
-                zone.addEventListener('click', function(e) {
+        // القائمة الجانبية
+        initSidebar: function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isMobile = () => window.innerWidth <= 991;
+
+            if (!sidebar) return;
+
+            const toggleBtn = document.getElementById('sidebarToggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
-                    fileInput.click();
-                });
-                fileInput.addEventListener('change', function(e) {
-                    e.stopPropagation();
-                    if (this.files && this.files.length > 0) {
-                        const fileName = this.files[0].name;
-                        const span = zone.querySelector('span:first-of-type');
-                        if (span) {
-                            span.textContent = fileName.length > 25 ? fileName.slice(0, 22) + '…' : fileName;
-                            span.style.color = '#028090';
+                    if (!isMobile()) {
+                        sidebar.classList.toggle('collapsed');
+                        sidebar.classList.remove('sidebar-open');
+                        if (overlay) overlay.classList.remove('active');
+                    } else {
+                        const isOpen = sidebar.classList.contains('sidebar-open');
+                        if (isOpen) {
+                            sidebar.classList.remove('sidebar-open');
+                            if (overlay) overlay.classList.remove('active');
+                        } else {
+                            sidebar.classList.add('sidebar-open');
+                            if (overlay) overlay.classList.add('active');
                         }
                     }
                 });
             }
-        });
-    },
 
-    // ============================================================
-    // 1. تهيئة القائمة الجانبية
-    // ============================================================
-    initSidebar: function() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const isMobile = () => window.innerWidth <= 991;
-
-        if (!sidebar) {
-            console.warn('⚠️ Sidebar element not found. Skipping sidebar initialization.');
-            return;
-        }
-
-        const toggleBtn = document.getElementById('sidebarToggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (!isMobile()) {
-                    sidebar.classList.toggle('collapsed');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
-                } else {
-                    const isOpen = sidebar.classList.contains('sidebar-open');
-                    if (isOpen) {
-                        sidebar.classList.remove('sidebar-open');
-                        if (overlay) overlay.classList.remove('active');
-                    } else {
-                        sidebar.classList.add('sidebar-open');
-                        if (overlay) overlay.classList.add('active');
-                    }
+                });
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('sidebar-open');
+                    overlay.classList.remove('active');
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
                 }
             });
-        }
 
-        const closeBtn = document.getElementById('closeSidebarBtn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function(e) {
+            const logo = document.querySelector('.header-logo a');
+            if (logo) {
+                logo.addEventListener('dblclick', function(e) {
+                    if (!isMobile()) sidebar.classList.toggle('collapsed');
+                });
+            }
+
+            window.addEventListener('resize', function() {
+                if (!isMobile() && sidebar) {
+                    sidebar.classList.remove('sidebar-open');
+                    if (overlay) overlay.classList.remove('active');
+                }
+            });
+        },
+
+        // القوائم الفرعية
+        initSubmenus: function() {
+            const submenuToggles = document.querySelectorAll('.has-submenu > a');
+            if (!submenuToggles.length) return;
+
+            const handleSubmenuClick = function(e) {
+                const href = this.getAttribute('href');
+                const parentLi = this.closest('.has-submenu');
+                if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') return;
                 e.preventDefault();
                 e.stopPropagation();
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            });
-        }
+                if (!parentLi) return;
 
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('sidebar-open');
-                overlay.classList.remove('active');
-            });
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar.classList.contains('sidebar-open')) {
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
-
-        const logo = document.querySelector('.header-logo a');
-        if (logo) {
-            logo.addEventListener('dblclick', function(e) {
-                if (!isMobile()) {
-                    sidebar.classList.toggle('collapsed');
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
+                    sidebar.classList.remove('collapsed');
                 }
+
+                document.querySelectorAll('.has-submenu').forEach(function(el) {
+                    if (el !== parentLi) el.classList.remove('submenu-open');
+                });
+                parentLi.classList.toggle('submenu-open');
+            };
+
+            submenuToggles.forEach(function(link) {
+                link.removeEventListener('click', handleSubmenuClick);
+                link.addEventListener('click', handleSubmenuClick);
             });
-        }
+        },
 
-        window.addEventListener('resize', function() {
-            if (!isMobile() && sidebar) {
-                sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
-    },
+        // الحالة النشطة للقائمة
+        initActiveNav: function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-item > a[href]');
+            if (!navLinks.length) return;
 
-    // ============================================================
-    // 2. إدارة القوائم الفرعية
-    // ============================================================
-    initSubmenus: function() {
-        const submenuToggles = document.querySelectorAll('.has-submenu > a');
-        if (!submenuToggles.length) return;
-
-        const handleSubmenuClick = function(e) {
-            const href = this.getAttribute('href');
-            const parentLi = this.closest('.has-submenu');
-
-            if (href && href !== '#' && href !== 'javascript:void(0)' && href !== 'javascript:;') {
-                return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (!parentLi) return;
-
-            const sidebar = document.getElementById('sidebar');
-            if (sidebar && sidebar.classList.contains('collapsed') && window.innerWidth > 991) {
-                sidebar.classList.remove('collapsed');
-            }
-
-            document.querySelectorAll('.has-submenu').forEach(function(el) {
-                if (el !== parentLi) el.classList.remove('submenu-open');
-            });
-
-            parentLi.classList.toggle('submenu-open');
-        };
-
-        submenuToggles.forEach(function(link) {
-            link.removeEventListener('click', handleSubmenuClick);
-            link.addEventListener('click', handleSubmenuClick);
-        });
-    },
-
-    // ============================================================
-    // 3. تفعيل الحالة النشطة للقائمة
-    // ============================================================
-    initActiveNav: function() {
-        const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.nav-item > a[href]');
-        if (!navLinks.length) return;
-
-        navLinks.forEach(function(link) {
-            const href = link.getAttribute('href');
-            if (href === currentPath || (href !== '#' && href !== 'javascript:void(0)' && currentPath.includes(href))) {
-                const parent = link.closest('.nav-item');
-                if (parent) {
-                    parent.classList.add('active');
-                    if (parent.classList.contains('has-submenu')) {
-                        parent.classList.add('submenu-open');
+            navLinks.forEach(function(link) {
+                const href = link.getAttribute('href');
+                if (href === currentPath || (href !== '#' && href !== 'javascript:void(0)' && currentPath.includes(href))) {
+                    const parent = link.closest('.nav-item');
+                    if (parent) {
+                        parent.classList.add('active');
+                        if (parent.classList.contains('has-submenu')) parent.classList.add('submenu-open');
                     }
                 }
-            }
-        });
-    },
+            });
+        },
 
-    // ============================================================
-    // 4. تسجيل الخروج
-    // ============================================================
-    initLogout: function() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (!logoutBtn) return;
+        // تسجيل الخروج الحقيقي
+        initLogout: function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (!logoutBtn) return;
 
-        logoutBtn.addEventListener('click', function() {
-            if (confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) {
-                localStorage.clear();
-                sessionStorage.clear();
-                document.cookie.split(';').forEach(function(c) {
-                    document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
-                });
-                window.location.replace('https://tera-investor-portal.onrender.com');
-            }
-        });
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                if (!confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) return;
+
+                console.log('🔴 جاري تسجيل الخروج...');
+
+                try {
+                    if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
+                        await window.TeraAuth.logout();
+                    } else {
+                        // إجراء احتياطي
+                        console.warn('⚠️ TeraAuth غير متوفر، توجيه احتياطي.');
+                        localStorage.removeItem('tera_token');
+                        localStorage.removeItem('tera_user');
+                        sessionStorage.clear();
+                        window.location.replace('/auth/auth/login/login.html');
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ أثناء تسجيل الخروج:', error);
+                    window.location.replace('/auth/auth/login/login.html');
+                }
+            });
+        }
+    };
+
+    // تشغيل عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        Profile.init();
+    });
+
+    // تصدير للاستخدام الخارجي
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = Profile;
     }
-};
-
-// ============================================================
-// تشغيل عند تحميل الصفحة
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    Profile.init();
-});
-
-// تصدير للاستخدام في بيئات أخرى
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Profile;
-}
+})();
