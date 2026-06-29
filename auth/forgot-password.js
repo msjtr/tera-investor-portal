@@ -2,9 +2,10 @@
  * ============================================================
  * forgot-password.js - معالجة نسيان كلمة المرور (Enterprise)
  * ============================================================
- * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
- * - يرسل رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني.
- * - يستخدم المسارات المطلقة.
+ * الموقع: /assets/js/forgot-password.js
+ * - ينتظر جاهزية Supabase.
+ * - يرسل رابط إعادة تعيين كلمة المرور عبر البريد.
+ * - يخزن نوع العملية (recovery) لتوجيه verify-otp لاحقاً.
  * - يعرض مؤشرات تحميل وتنبيهات للمستخدم.
  */
 (function() {
@@ -18,64 +19,64 @@
         const alertIcon = document.getElementById('alertIcon');
         const alertMessage = document.getElementById('alertMessage');
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
+        const identityError = document.getElementById('identity-error');
 
         if (!form) return;
 
-        // انتظار جاهزية Supabase
         if (!window.teraSupabase) {
             try {
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-                    document.addEventListener('supabase:ready', (e) => {
-                        clearTimeout(timeout);
-                        resolve(e.detail.client);
-                    }, { once: true });
-                    document.addEventListener('supabase:error', () => {
-                        clearTimeout(timeout);
-                        reject(new Error('فشل تحميل Supabase'));
-                    }, { once: true });
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                    document.addEventListener('supabase:ready', (e) => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('Supabase load error')); }, { once: true });
                 });
             } catch (err) {
                 showAlert('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.', 'error');
+                if (submitBtn) submitBtn.disabled = true;
                 return;
             }
         }
 
+        const supabaseClient = window.teraSupabase;
+
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
+            hideAlert();
+            if (identityError) identityError.textContent = '';
 
             const email = identityInput.value.trim();
-
-            // تحقق بسيط من صحة البريد
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showAlert('يرجى إدخال بريد إلكتروني صحيح.', 'error');
+                if (identityError) identityError.textContent = 'يرجى إدخال بريد إلكتروني صحيح';
                 identityInput.focus();
                 return;
             }
 
-            // إظهار اللودر وتعطيل الزر
+            // تخزين البريد ونوع العملية
+            localStorage.setItem('pendingVerificationEmail', email);
+            localStorage.setItem('tera_verify_type', 'recovery');
+
             showLoader(true);
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
             try {
-                const { error } = await window.teraSupabase.auth.resetPasswordForEmail(email, {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + '/auth/reset-password.html'
                 });
 
                 if (error) throw error;
 
-                showAlert('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. تحقق من صندوق الوارد.', 'success');
-                form.reset();
+                showAlert('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.', 'success');
+                // ننتقل إلى صفحة التحقق لإدخال الرمز إن أردت، أو نكتفي بالرسالة
+                // لكن حسب التصميم السابق، المستخدم سيذهب إلى verify-otp.html
+                // لذا نوجهه إلى هناك مع الاحتفاظ بالبريد ونوع recovery
+                window.location.replace('/auth/verify-otp.html');
 
             } catch (error) {
-                console.error('❌ خطأ في إرسال رابط الاستعادة:', error);
+                console.error('❌ فشل إرسال رابط الاستعادة:', error);
                 let msg = 'تعذر إرسال رابط الاستعادة.';
-                if (error.message.includes('User not found')) {
-                    msg = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني.';
-                } else if (error.message) {
-                    msg = error.message;
-                }
+                if (error.message.includes('User not found')) msg = 'لا يوجد حساب مرتبط بهذا البريد.';
+                else if (error.message) msg = error.message;
                 showAlert(msg, 'error');
             } finally {
                 showLoader(false);
@@ -87,19 +88,19 @@
         function showAlert(message, type) {
             if (!alertBox || !alertMessage) return;
             alertBox.style.display = 'flex';
-            alertBox.className = 'alert-box show ' + type;
+            alertBox.className = 'alert-box show ' + (type || 'error');
             if (alertIcon) {
-                alertIcon.innerHTML = type === 'success' 
-                    ? '<i class="fas fa-check-circle"></i>' 
-                    : '<i class="fas fa-exclamation-circle"></i>';
+                alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
             }
             alertMessage.textContent = message;
-
-            // إخفاء تلقائي بعد 8 ثوانٍ
             clearTimeout(window._alertTimer);
-            window._alertTimer = setTimeout(() => {
-                alertBox.classList.remove('show');
-            }, 8000);
+            window._alertTimer = setTimeout(() => alertBox.classList.remove('show'), 8000);
+        }
+
+        function hideAlert() {
+            if (!alertBox) return;
+            alertBox.classList.remove('show');
+            alertBox.style.display = 'none';
         }
 
         function showLoader(show) {
