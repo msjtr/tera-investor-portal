@@ -4,65 +4,282 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>التحقق من الرمز | تيرا</title>
+
+    <!-- أيقونات وخطوط -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- ملفات التنسيق الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
+
+    <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+
     <style>
-        .otp-input {
-            text-align: center;
-            letter-spacing: 8px;
-            font-weight: bold;
-            font-size: 26px;
+        /* =========================================
+           تنسيقات مخصصة لصفحة التحقق – تصميم فاخر
+           ========================================= */
+        :root {
+            --tera-teal: #028090;
+            --tera-teal-light: #14b8a6;
+            --tera-navy: #0A1B3F;
+        }
+
+        .auth-layout {
+            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .auth-container {
+            max-width: 520px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 48px 38px 38px 38px;
+            box-shadow: 0 30px 60px rgba(2, 128, 144, 0.08), 0 0 0 1px rgba(2, 128, 144, 0.05);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        .otp-icon-circle {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 42px;
+            color: #059669;
+            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.18);
+            border: 4px solid rgba(255,255,255,0.8);
+        }
+
+        .portal-title {
+            color: var(--tera-navy);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        #instructionText {
+            font-size: 15px;
+            color: #475569;
+            margin-bottom: 28px;
+            line-height: 1.7;
+            background: #f8fafc;
+            padding: 14px 18px;
+            border-radius: 14px;
+            border-right: 4px solid var(--tera-teal);
+        }
+
+        /* حقل OTP بتنسيق شبكي */
+        .otp-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
             direction: ltr;
+            margin-bottom: 10px;
+        }
+
+        .otp-box {
+            width: 52px;
+            height: 64px;
+            border: 2px solid #d1d9e6;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--tera-navy);
+            background: #ffffff;
+            outline: none;
+            transition: 0.25s;
+            font-family: 'Tajawal', sans-serif;
+            caret-color: var(--tera-teal);
+        }
+
+        .otp-box:focus {
+            border-color: var(--tera-teal);
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.12);
+            background: #f0fdfa;
+        }
+
+        .otp-box.filled {
+            border-color: var(--tera-teal);
+            background: #f0fdfa;
+        }
+
+        /* رسائل التحقق */
+        .verification-note {
+            background: #fefce8;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #92400e;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .verification-note i {
+            color: #d97706;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .resend-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--tera-teal);
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 15px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: rgba(2,128,144,0.04);
+        }
+
+        .resend-link:hover {
+            background: rgba(2,128,144,0.1);
+            color: #0A1B3F;
+        }
+
+        .btn-submit-login {
+            background: linear-gradient(135deg, var(--tera-teal) 0%, #0d9488 100%);
+            border: none;
+            color: white;
+            padding: 16px 28px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 800;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 18px rgba(2,128,144,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-submit-login:hover {
+            background: linear-gradient(135deg, #0d9488 0%, var(--tera-navy) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(2,128,144,0.3);
+        }
+
+        .btn-submit-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 32px 18px 28px 18px;
+                border-radius: 24px;
+            }
+            .otp-box {
+                width: 44px;
+                height: 54px;
+                font-size: 24px;
+            }
+            .btn-submit-login {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <div class="text-center mb-5">
-                <img src="/images/logo.svg" alt="تيرا" class="logo-img">
-                <h2 class="portal-title mt-3">التحقق من الرمز</h2>
-                <p id="instructionText">أدخل رمز التحقق المكون من 8 أرقام</p>
+            <!-- الأيقونة والعنوان -->
+            <div class="text-center mb-4">
+                <img src="/images/logo.svg" alt="تيرا" class="logo-img" style="height:44px; margin-bottom:18px;">
+                <div class="otp-icon-circle">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2 class="portal-title">التحقق من الرمز</h2>
+                <p id="instructionText">أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني</p>
             </div>
+
+            <!-- صندوق التنبيهات -->
             <div class="alert-box" id="formAlert" style="display: none;">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span id="alertMessage"></span>
             </div>
+
+            <!-- نموذج إدخال رمز OTP (شبكي) -->
             <form id="otpForm" novalidate>
                 <div class="form-field-group">
-                    <label>رمز التحقق</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="otp" class="form-input-control otp-input" maxlength="8"
-                               placeholder="00000000" autocomplete="one-time-code" inputmode="numeric" required>
+                    <div class="otp-wrapper" id="otpContainer">
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
+                        <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" required>
                     </div>
+                    <!-- حقل مخفي لتجميع القيم -->
+                    <input type="hidden" id="otp" maxlength="6">
                     <div class="error-feedback-msg" id="otp-error"></div>
                 </div>
+
                 <div class="form-actions-block">
                     <button type="submit" id="submitBtn" class="btn-submit-login">
-                        <i class="fas fa-check-circle"></i> تأكيد الرمز
+                        <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
                     </button>
                 </div>
             </form>
-            <div class="text-center mt-3">
-                <span id="resendCode" class="resend-link"><i class="fas fa-redo-alt"></i> إعادة الإرسال</span>
+
+            <!-- ملاحظة أمنية -->
+            <div class="verification-note">
+                <i class="fas fa-clock"></i>
+                <span>ينتهي الرمز خلال 10 دقائق. لم تستلم الرمز؟ تحقق من صندوق البريد غير المرغوب فيه (Spam).</span>
             </div>
+
+            <!-- إعادة الإرسال والعودة -->
             <div class="text-center mt-4">
-                <a href="/auth/auth/login/login.html"><i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول</a>
+                <span id="resendCode" class="resend-link">
+                    <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
+                </span>
+            </div>
+            <div class="text-center mt-3">
+                <a href="/auth/auth/login/login.html" style="color:#64748b; font-size:14px; text-decoration:none; font-weight:600;">
+                    <i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول
+                </a>
             </div>
         </div>
+
+        <!-- اللودر الإبداعي -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
-                <h4>جاري التحقق...</h4>
+                <h4>جاري التحقق من الرمز</h4>
+                <p>يرجى الانتظار...</p>
                 <div class="loading-progress-track">
                     <div class="progress-fill-bar" id="progressFillBar"></div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- سكريبتات (جميعها خارجية) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
