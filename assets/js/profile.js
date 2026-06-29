@@ -5,12 +5,11 @@
  * الموقع: /assets/js/profile.js
  * - يدير القوائم والمكونات المشتركة لصفحات الملف الشخصي.
  * - يستخدم TeraAuth.logout() لتسجيل الخروج الحقيقي.
- * - متوافق مع الملفات المستقلة لكل صفحة (personal‑information, contact, ...).
+ * - متوافق مع الملفات المستقلة لكل صفحة.
  */
 (function() {
     'use strict';
 
-    // تعريف الكائن العام للصفحات الفرعية (اختياري)
     window.ProfilePages = window.ProfilePages || {};
 
     const Profile = {
@@ -43,7 +42,6 @@
                 }
             }
 
-            // إذا لم يوجد ملف فرعي، نقوم بتهيئة احتياطية (رفع الملفات فقط)
             console.warn(`⚠️ لم يتم العثور على ملف منفصل لـ ${currentPage}، تشغيل احتياطي.`);
             this.initUploadZones();
         },
@@ -81,7 +79,6 @@
             });
         },
 
-        // القائمة الجانبية
         initSidebar: function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -150,7 +147,6 @@
             });
         },
 
-        // القوائم الفرعية
         initSubmenus: function() {
             const submenuToggles = document.querySelectorAll('.has-submenu > a');
             if (!submenuToggles.length) return;
@@ -180,7 +176,6 @@
             });
         },
 
-        // الحالة النشطة للقائمة
         initActiveNav: function() {
             const currentPath = window.location.pathname;
             const navLinks = document.querySelectorAll('.nav-item > a[href]');
@@ -198,7 +193,6 @@
             });
         },
 
-        // تسجيل الخروج الحقيقي
         initLogout: function() {
             const logoutBtn = document.getElementById('logoutBtn');
             if (!logoutBtn) return;
@@ -213,7 +207,6 @@
                     if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
                         await window.TeraAuth.logout();
                     } else {
-                        // إجراء احتياطي
                         console.warn('⚠️ TeraAuth غير متوفر، توجيه احتياطي.');
                         localStorage.removeItem('tera_token');
                         localStorage.removeItem('tera_user');
@@ -228,12 +221,10 @@
         }
     };
 
-    // تشغيل عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', function() {
         Profile.init();
     });
 
-    // تصدير للاستخدام الخارجي
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = Profile;
     }
