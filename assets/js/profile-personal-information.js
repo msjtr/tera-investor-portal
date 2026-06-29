@@ -1,9 +1,9 @@
 /**
  * ============================================================
- * profile-personal-information.js – معلومات شخصية + رحلة العميل (v5.0)
+ * profile-personal-information.js – معلومات شخصية + رحلة العميل (v5.0.1)
  * ============================================================
  * - يبني شريط التقدم من جدول verification_requests.
- * - يبني حقول رفع المرفقات حسب نوع الهوية.
+ * - يبني حقول رفع المرفقات حسب نوع الهوية (مع التحقق من وجود الحاوية).
  * - يحفظ البيانات ويحدث progress تلقائياً.
  * - بعد اكتمال جميع المراحل، يُظهر زر "إرسال الطلب للمراجعة".
  * - يحافظ على إرسال رمز OTP للتحقق.
@@ -65,9 +65,17 @@
         return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
     }
 
+    /**
+     * بناء حقول رفع المرفقات حسب نوع الهوية
+     * مع التحقق من وجود الحاوية #uploadFieldsContainer
+     */
     function buildUploadFields(idType) {
         const container = document.getElementById('uploadFieldsContainer');
-        if (!container) return;
+        if (!container) {
+            console.error('❌ عنصر #uploadFieldsContainer غير موجود في الصفحة. تأكد من إضافته داخل documentsCard.');
+            showAlert('خطأ في عرض حقول الرفع. يرجى الاتصال بالدعم.', 'error');
+            return;
+        }
         container.innerHTML = '';
 
         const types = {
@@ -96,6 +104,7 @@
         fields.forEach(f => {
             const div = document.createElement('div');
             div.className = 'upload-zone';
+            // أيقونة الرفع
             div.innerHTML = `<i class="fas fa-cloud-upload-alt"></i>
                 <span>${f.label}</span>
                 <small class="sub-text">PDF, JPG, PNG (max 5MB)</small>
@@ -157,11 +166,9 @@
         const percentageEl = document.getElementById('progressPercentage');
         if (percentageEl) percentageEl.textContent = (reqData.progress || 0) + '% مكتمل';
 
-        // الاحتفاظ بعنصر النسبة المئوية في النهاية
         const existingPercent = tracker.querySelector('.progress-percentage');
         tracker.innerHTML = html + (existingPercent ? existingPercent.outerHTML : '');
 
-        // إظهار أو إخفاء زر الإرسال للمراجعة
         const submitReviewBtn = document.getElementById('submitReviewBtn');
         if (submitReviewBtn) {
             const allCompleted = stages.slice(0, -1).every(s => reqData[s.key] || s.key === 'email_verified');
@@ -187,7 +194,6 @@
         const avatar = document.getElementById('headerAvatar');
         if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
 
-        // تحديث شريط التقدم
         await updateProgressTracker(supabase, user.id);
 
         // ========== جلب البيانات الشخصية ==========
@@ -366,18 +372,16 @@
                         await supabase.from('user_attachments').insert(fileRecords);
                     }
 
-                    // تحديث تقدم الطلب في verification_requests
                     await supabase.from('verification_requests').upsert({
                         user_id: user.id,
                         personal_info_completed: true,
                         attachments_completed: true,
                         agreed: document.getElementById('declarationCheck')?.checked || false,
-                        progress: 60, // يمكن حسابها بشكل ديناميكي لاحقاً
+                        progress: 60,
                         current_stage: 'personal_info',
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
 
-                    // إرسال رمز OTP للتحقق
                     const { error: otpError } = await supabase.auth.signInWithOtp({
                         email: user.email,
                         options: { shouldCreateUser: false }
@@ -406,7 +410,6 @@
             });
         }
 
-        // زر إرسال الطلب للمراجعة (يظهر عند اكتمال جميع المراحل)
         const submitReviewBtn = document.getElementById('submitReviewBtn');
         if (submitReviewBtn) {
             submitReviewBtn.addEventListener('click', async function() {
