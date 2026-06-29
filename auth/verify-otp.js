@@ -7,6 +7,7 @@
  * - يستخدم localStorage للحصول على البريد ونوع العملية.
  * - يتحقق من الرمز (8 أرقام) باستخدام supabase.auth.verifyOtp.
  * - يدعم نوعي signup و recovery، ويُعيد التوجيه بناءً عليهما.
+ * - جميع المسارات مطلقة ومتوافقة مع بنية المشروع.
  */
 (function() {
     'use strict';
@@ -112,9 +113,10 @@
                 // توجيه حسب نوع العملية
                 setTimeout(() => {
                     if (verifyType === 'recovery') {
+                        // رابط إعادة تعيين كلمة المرور (مسار مطلق)
                         window.location.replace('/auth/reset-password.html');
                     } else {
-                        // بعد تأكيد التسجيل، نذهب إلى صفحة إكمال البيانات أو الدخول
+                        // رابط إكمال الملف الشخصي بعد التسجيل (مسار مطلق)
                         window.location.replace('/auth/complete-profile.html');
                     }
                 }, 1500);
