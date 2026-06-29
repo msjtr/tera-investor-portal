@@ -1,40 +1,49 @@
 /**
  * ============================================================
- * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (Enterprise)
+ * profile.js - الملف الرئيسي لإدارة صفحات الملف الشخصي (v2.0)
  * ============================================================
- * الموقع: /assets/js/profile.js
- * - يدير القوائم والمكونات المشتركة لصفحات الملف الشخصي.
- * - يستخدم TeraAuth.logout() لتسجيل الخروج الحقيقي.
- * - متوافق مع الملفات المستقلة لكل صفحة.
+ * - يعمل مع جميع صفحات الملف الشخصي (بها Sidebar أو بدون).
+ * - يُحاول تحميل الملف الفرعي للصفحة (IIFE مستقل أو عبر ProfilePages).
+ * - يدعم تسجيل الخروج الحقيقي عبر TeraAuth.
+ * - يقوم بتهيئة المكونات المشتركة فقط عند وجودها.
  */
 (function() {
     'use strict';
-
-    window.ProfilePages = window.ProfilePages || {};
 
     const Profile = {
         init: function() {
             console.log('🚀 تهيئة صفحات الملف الشخصي...');
 
-            this.initSidebar();
-            this.initSubmenus();
+            // تهيئة المكونات المشتركة فقط إذا كانت موجودة (لصفحات الـ Sidebar)
+            if (document.getElementById('sidebar')) {
+                this.initSidebar();
+                this.initSubmenus();
+                this.initActiveNav();
+            }
+
+            // زر الخروج قد يكون موجوداً في الـ Sidebar أو في هيدر خاص
             this.initLogout();
-            this.initActiveNav();
+
+            // تحميل المنطق الخاص بالصفحة
             this.loadPageScript();
 
             console.log('✅ صفحات الملف الشخصي مهيأة.');
         },
 
+        /**
+         * تحميل الملف الفرعي المناسب للصفحة الحالية
+         */
         loadPageScript: function() {
             const currentPage = this.getCurrentPage();
             console.log(`📄 الصفحة الحالية: ${currentPage}`);
 
+            // المحاولة الأولى: البحث عن دالة بنمط ProfilePages (للتوافق مع الملفات القديمة)
             if (window.ProfilePages && typeof window.ProfilePages === 'object') {
                 const pageModule = window.ProfilePages[currentPage];
                 if (pageModule && typeof pageModule.init === 'function') {
                     try {
                         pageModule.init();
-                        console.log(`✅ تم تهيئة ${currentPage} من ملفه الفرعي.`);
+                        console.log(`✅ تم تهيئة ${currentPage} من ProfilePages.`);
                         return;
                     } catch (e) {
                         console.warn(`⚠️ خطأ في تهيئة ${currentPage}:`, e);
@@ -42,10 +51,18 @@
                 }
             }
 
-            console.warn(`⚠️ لم يتم العثور على ملف منفصل لـ ${currentPage}، تشغيل احتياطي.`);
+            // المحاولة الثانية: الملفات المستقلة (IIFE) مثل profile-personal-information.js
+            // هذه الملفات تُنفذ نفسها عند تحميلها ولا تحتاج استدعاء إضافي
+            // إذا لم نجد أي شيء، نُسجل تحذيراً
+            console.log(`ℹ️ ${currentPage}: سيتم التهيئة عبر الملف المستقل (إذا كان محملاً).`);
+
+            // تفعيل مناطق رفع الملفات (احتياطي)
             this.initUploadZones();
         },
 
+        /**
+         * تحديد الصفحة الحالية بناءً على مسار URL
+         */
         getCurrentPage: function() {
             const path = window.location.pathname;
             if (path.includes('personal-information')) return 'personal-information';
@@ -56,6 +73,9 @@
             return 'unknown';
         },
 
+        /**
+         * تفعيل مناطق رفع الملفات
+         */
         initUploadZones: function() {
             document.querySelectorAll('.upload-zone').forEach(function(zone) {
                 const fileInput = zone.querySelector('input[type="file"]');
@@ -79,6 +99,9 @@
             });
         },
 
+        /**
+         * القائمة الجانبية (فقط للصفحات التي تحتوي عليها)
+         */
         initSidebar: function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -147,6 +170,9 @@
             });
         },
 
+        /**
+         * القوائم الفرعية
+         */
         initSubmenus: function() {
             const submenuToggles = document.querySelectorAll('.has-submenu > a');
             if (!submenuToggles.length) return;
@@ -176,6 +202,9 @@
             });
         },
 
+        /**
+         * الحالة النشطة للقائمة
+         */
         initActiveNav: function() {
             const currentPath = window.location.pathname;
             const navLinks = document.querySelectorAll('.nav-item > a[href]');
@@ -193,6 +222,9 @@
             });
         },
 
+        /**
+         * تسجيل الخروج
+         */
         initLogout: function() {
             const logoutBtn = document.getElementById('logoutBtn');
             if (!logoutBtn) return;
@@ -221,11 +253,10 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
+    // تشغيل التهيئة عند تحميل الصفحة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', Profile.init.bind(Profile));
+    } else {
         Profile.init();
-    });
-
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = Profile;
     }
 })();
