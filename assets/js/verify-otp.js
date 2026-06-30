@@ -1,6 +1,7 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info
  * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
+ * تم التحديث ليتوافق مع تصميم HTML الجديد الذي يفصل بين النص الرئيسي والبريد.
  */
 (function() {
     'use strict';
@@ -16,7 +17,9 @@
         const alertBox = document.getElementById('formAlert');
         const alertIcon = document.getElementById('alertIcon');
         const alertMessage = document.getElementById('alertMessage');
-        const instructionText = document.getElementById('instructionText');
+        // العناصر الجديدة لتعليمات منفصلة
+        const instructionMainText = document.getElementById('instructionMainText');
+        const instructionEmailText = document.getElementById('instructionEmailText');
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
         const backLink = document.getElementById('backLink');
         const backLinkText = document.getElementById('backLinkText');
@@ -57,11 +60,15 @@
         const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
 
         if (pendingEmail) {
-            let intro = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
-            if (verifyType === 'signup') intro = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
-            else if (verifyType === 'recovery') intro = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
-            else if (verifyType === 'personal_info') intro = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
-            instructionText.textContent = intro + ': ' + pendingEmail;
+            // تعيين النص الرئيسي (يختلف حسب نوع العملية)
+            let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
+            if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
+            else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
+            else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
+            
+            if (instructionMainText) instructionMainText.textContent = mainMessage;
+            // تعيين البريد في العنصر المنفصل
+            if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
         } else {
             showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
             if (submitBtn) submitBtn.disabled = true;
