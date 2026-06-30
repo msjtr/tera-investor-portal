@@ -1,12 +1,11 @@
 /**
- * profile-contact-information.js – معلومات الاتصال (حقيقي مع Supabase)
+ * profile-contact-information.js – معلومات الاتصال + ربط التحقق OTP
  * ============================================================
- * الموقع: /assets/js/profile-contact-information.js
  * - ينتظر جاهزية Supabase.
  * - يجلب بيانات المستخدم ويعرض اسمه في الهيدر.
  * - يجلب بيانات الاتصال المخزنة من user_contact_info ويملأ النموذج.
- * - يحفظ البيانات في user_contact_info و auth_register.
- * - يُحدّث شريط التقدم (Progress Tracker) تلقائياً.
+ * - عند الحفظ: يرسل رمز OTP إلى البريد الإلكتروني، ثم يُوجَّه إلى verify-otp.html.
+ * - بعد التحقق الناجح يتم تحديث شريط التقدم تلقائياً.
  */
 (function() {
     'use strict';
@@ -134,6 +133,7 @@
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
 
                 try {
+                    // حفظ بيانات الاتصال
                     const payload = {
                         user_id: user.id,
                         email: primaryEmail,
@@ -147,16 +147,24 @@
                     };
 
                     await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
-
-                    // تحديث auth_register برقم الجوال الجديد (اختياري)
                     await supabase.from('auth_register').update({ mobile_number: countryCode + mobile, updated_at: new Date().toISOString() }).eq('user_id', user.id);
 
-                    // تحديث تقدم الرحلة
-                    await supabase.from('verification_requests').upsert({ user_id: user.id, contact_info_completed: true, progress: 70, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                    // إرسال رمز التحقق إلى البريد الإلكتروني
+                    const { error: otpError } = await supabase.auth.signInWithOtp({
+                        email: user.email,
+                        options: { shouldCreateUser: false }
+                    });
+                    if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
 
-                    await updateProgressTracker(supabase, user.id);
+                    // تخزين بيانات التوجيه
+                    localStorage.setItem('pendingVerificationEmail', user.email);
+                    localStorage.setItem('tera_verify_type', 'contact_info');
 
-                    showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/verify-otp.html');
+                    }, 2000);
+
                 } catch (error) {
                     console.error('فشل الحفظ:', error);
                     showAlert('تعذر حفظ البيانات: ' + (error.message || 'خطأ غير معروف'), 'error');
