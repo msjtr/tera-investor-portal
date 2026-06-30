@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address
  * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
  */
 (function() {
@@ -55,7 +55,7 @@
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address
 
         if (pendingEmail) {
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
@@ -63,6 +63,7 @@
             else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
             else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
             else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
+            else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
             
             if (instructionMainText) instructionMainText.textContent = mainMessage;
             if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
@@ -72,7 +73,7 @@
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info') {
+        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -155,7 +156,8 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info') ? 'email' : verifyType;
+                // الأنواع التي تستخدم OTP عبر البريد الإلكتروني (وليس signup/recovery)
+                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
@@ -179,6 +181,8 @@
                         createReviewRequest(supabaseClient);
                     } else if (verifyType === 'contact_info') {
                         updateContactInfoProgress(supabaseClient);
+                    } else if (verifyType === 'national_address') {
+                        updateNationalAddressProgress(supabaseClient);
                     }
                 }, 1500);
 
@@ -215,7 +219,8 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info') {
+                    // الأنواع التي تستخدم signInWithOtp لإعادة إرسال رمز لمرة واحدة
+                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -242,7 +247,6 @@
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (user) {
-                    // استخدام upsert لتجنب مشاكل الـ insert/update المزدوجة
                     await client.from('verification_requests').upsert({
                         user_id: user.id,
                         status: 'under_review',
@@ -262,7 +266,6 @@
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (user) {
-                    // تحديث حقل contact_info_completed والتقدم (70% مثال، يمكن تعديله حسب الحاجة)
                     await client.from('verification_requests').upsert({
                         user_id: user.id,
                         contact_info_completed: true,
@@ -272,6 +275,24 @@
                 }
             } catch (e) {
                 console.error('خطأ في تحديث تقدم معلومات الاتصال:', e);
+            } finally {
+                window.location.replace('/pages/dashboard/index.html');
+            }
+        }
+
+        async function updateNationalAddressProgress(client) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (user) {
+                    await client.from('verification_requests').upsert({
+                        user_id: user.id,
+                        national_address_completed: true,
+                        progress: 80,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) {
+                console.error('خطأ في تحديث تقدم العنوان الوطني:', e);
             } finally {
                 window.location.replace('/pages/dashboard/index.html');
             }
