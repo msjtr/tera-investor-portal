@@ -10,7 +10,7 @@
  * - يحمي المسار عبر TeraAuth.
  * - يستخدم maybeSingle() بدلاً من single() لتجنب أخطاء 406.
  * - يتضمن تنبيه استكمال الملف الشخصي ومؤشر المراحل مع روابط.
- * - بعد تقديم الطلب: يظهر قسم حالة الطلب فقط.
+ * - بعد تقديم الطلب: يظهر قسم حالة الطلب بأيقونات وألوان حسب الحالة.
  * - بعد الاعتماد: يختفي كل شيء.
  * - مؤقت الجلسة يبدأ من تحميل الصفحة.
  */
@@ -144,6 +144,7 @@ const Dashboard = {
 
             this._requestData = req;
 
+            // 1. تنبيه الاستكمال (يظهر فقط إذا لم يتم تقديم الطلب بعد)
             const banner = document.getElementById('profileAlertBanner');
             if (banner) {
                 if (!req || !req.submitted) {
@@ -153,16 +154,34 @@ const Dashboard = {
                 }
             }
 
+            // 2. محتوى لوحة حالة الطلب / مؤشر المراحل
             const statusPanel = document.getElementById('requestStatusPanel');
             if (statusPanel) {
+                // إذا كان الطلب قد قُدِّم (تحت المراجعة أو أي حالة أخرى غير approved)
                 if (req && req.submitted) {
+                    // إذا كان معتمداً بالكامل، نُخفي اللوحة
                     if (req.status === 'approved') {
                         statusPanel.innerHTML = '';
                     } else {
-                        let html = `<div class="panel-card">
+                        // أيقونات وألوان حسب الحالة
+                        const statusIcons = {
+                            'under_review': 'fa-search',
+                            'approved': 'fa-check-circle',
+                            'rejected': 'fa-times-circle',
+                            'needs_revision': 'fa-edit',
+                            'draft': 'fa-file-alt',
+                            'pending_information': 'fa-info-circle'
+                        };
+                        const statusClass = req.status ? `status-${req.status}` : 'status-draft';
+                        const statusIcon = statusIcons[req.status] || 'fa-clock';
+
+                        let html = `<div class="panel-card ${statusClass}">
                             <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الطلب</h3></div>
+                            <div style="text-align:center; margin-bottom:16px;">
+                                <i class="fas ${statusIcon} request-status-icon"></i>
+                                <div><span class="request-status-badge">${this._getStatusLabel(req.status)}</span></div>
+                            </div>
                             <div style="margin-bottom:16px;">
-                                <p><strong>الحالة:</strong> ${this._getStatusLabel(req.status)}</p>
                                 <p><strong>تاريخ التقديم:</strong> ${this._formatDateTime(req.submitted_at)}</p>
                                 <p><strong>آخر تحديث:</strong> ${this._formatDateTime(req.updated_at)}</p>
                                 <p><strong>المدة المنقضية:</strong> ${this._getElapsedDays(req.submitted_at)}</p>
@@ -170,6 +189,7 @@ const Dashboard = {
                                 <p><strong>ملاحظات:</strong> ${req.notes || 'لا توجد'}</p>
                             </div>`;
 
+                        // التحقق من وجود مراحل تحتاج تعديل
                         const stagesToCheck = [
                             { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
                             { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
@@ -196,6 +216,7 @@ const Dashboard = {
                         statusPanel.innerHTML = html;
                     }
                 } else {
+                    // لم يتم تقديم الطلب بعد: عرض مؤشر المراحل مع الروابط
                     const stages = [
                         { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
                         { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
@@ -251,6 +272,9 @@ const Dashboard = {
         }
     },
 
+    /**
+     * منع الروابط الحساسة حتى يكتمل الملف
+     */
     lockSensitiveLinks: function() {
         const isApproved = this._requestData && this._requestData.status === 'approved';
         if (isApproved) return;
