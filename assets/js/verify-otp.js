@@ -1,6 +1,6 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (6 أرقام) – يدعم signup | recovery | personal_info
- * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، ورسائل عربية.
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info
+ * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
  */
 (function() {
     'use strict';
@@ -40,22 +40,34 @@
 
         const supabaseClient = window.teraSupabase;
 
-        // ---------- ٢. قراءة السياق ----------
+        // ---------- ٢. تحديث اسم العميل في الهيدر ----------
+        try {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                const fullName = user.user_metadata?.full_name || 'مستخدم';
+                document.getElementById('headerUserName').textContent = fullName;
+                document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            console.warn('تعذر تحميل اسم المستخدم:', e);
+        }
+
+        // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
         const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
 
         if (pendingEmail) {
-            let intro = 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني';
-            if (verifyType === 'signup') intro = 'أدخل رمز تأكيد التسجيل المرسل إلى';
-            else if (verifyType === 'recovery') intro = 'أدخل رمز إعادة تعيين كلمة المرور المرسل إلى';
-            else if (verifyType === 'personal_info') intro = 'أدخل رمز تأكيد المعلومات الشخصية المرسل إلى';
+            let intro = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
+            if (verifyType === 'signup') intro = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
+            else if (verifyType === 'recovery') intro = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
+            else if (verifyType === 'personal_info') intro = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
             instructionText.textContent = intro + ': ' + pendingEmail;
         } else {
             showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
             if (submitBtn) submitBtn.disabled = true;
         }
 
-        // ---------- ٣. تخصيص رابط العودة حسب نوع العملية ----------
+        // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
         if (verifyType === 'personal_info') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
@@ -64,7 +76,7 @@
             backLinkText.textContent = 'العودة لتسجيل الدخول';
         }
 
-        // ---------- ٤. مؤقت إعادة الإرسال (60 ثانية) ----------
+        // ---------- ٥. مؤقت إعادة الإرسال (60 ثانية) ----------
         let timerSeconds = 60;
         let timerInterval = null;
 
@@ -92,14 +104,13 @@
             timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
         }
 
-        // بدء المؤقت تلقائياً
         startTimer();
 
-        // ---------- ٥. إدخال الرمز وإرسال تلقائي ----------
+        // ---------- ٦. إدخال الرمز (8 أرقام) وإرسال تلقائي ----------
         otpInput.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
             if (otpError) otpError.textContent = '';
-            if (this.value.length === 6) {
+            if (this.value.length === 8) {
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();
                 } else {
@@ -108,26 +119,25 @@
             }
         });
 
-        // منع لصق أحرف غير رقمية
         otpInput.addEventListener('paste', function(e) {
             e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 8);
             this.value = paste;
-            if (paste.length === 6) {
+            if (paste.length === 8) {
                 if (typeof form.requestSubmit === 'function') form.requestSubmit();
                 else form.dispatchEvent(new Event('submit'));
             }
         });
 
-        // ---------- ٦. تقديم النموذج ----------
+        // ---------- ٧. تقديم النموذج ----------
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideAlert();
             if (otpError) otpError.textContent = '';
 
             const otpValue = otpInput.value.trim();
-            if (otpValue.length !== 6) {
-                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 6 أرقام';
+            if (otpValue.length !== 8) {
+                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام';
                 return;
             }
 
@@ -136,7 +146,6 @@
                 return;
             }
 
-            // منع الضغط المتكرر
             showLoader(true);
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -152,29 +161,27 @@
 
                 if (error) throw error;
 
-                // نجاح التحقق
                 localStorage.removeItem('pendingVerificationEmail');
                 localStorage.removeItem('tera_verify_type');
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                // توجيه حسب نوع العملية
                 setTimeout(() => {
                     if (verifyType === 'signup') {
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
                     } else if (verifyType === 'personal_info') {
-                        // إنشاء طلب المراجعة بعد تأكيد المعلومات الشخصية
                         createReviewRequest(supabaseClient);
                     }
                 }, 1500);
 
             } catch (error) {
                 console.error('❌ فشل التحقق من الرمز:', error);
-                let msg = 'رمز التحقق غير صحيح';
-                if (error.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق';
-                else if (error.message.includes('Invalid')) msg = 'رمز التحقق غير صحيح';
+                let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+                if (error.message.includes('expired') || error.message.includes('invalid')) {
+                    msg = 'انتهت صلاحية رمز التحقق أو أنه غير صحيح. حاول مرة أخرى.';
+                }
                 showAlert(msg, 'error');
                 otpInput.value = '';
                 otpInput.focus();
@@ -185,7 +192,7 @@
             }
         });
 
-        // ---------- ٧. إعادة الإرسال ----------
+        // ---------- ٨. إعادة الإرسال ----------
         if (resendBtn) {
             resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -214,7 +221,7 @@
                         });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
-                    startTimer(); // إعادة بدء المؤقت
+                    startTimer();
                 } catch (error) {
                     showAlert('حدث خطأ أثناء إرسال الرمز. يرجى المحاولة مرة أخرى.', 'error');
                 } finally {
@@ -224,7 +231,7 @@
             });
         }
 
-        // ---------- ٨. إنشاء طلب المراجعة (للمعلومات الشخصية) ----------
+        // ---------- ٩. إنشاء طلب المراجعة (للمعلومات الشخصية) ----------
         async function createReviewRequest(client) {
             try {
                 const { data: { user } } = await client.auth.getUser();
@@ -251,7 +258,7 @@
             }
         }
 
-        // ---------- ٩. دوال العرض ----------
+        // ---------- ١٠. دوال العرض ----------
         function showAlert(message, type) {
             if (!alertBox || !alertMessage) return;
             alertBox.style.display = 'flex';
