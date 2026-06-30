@@ -1,7 +1,6 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info
  * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
- * تم التحديث ليتوافق مع تصميم HTML الجديد الذي يفصل بين النص الرئيسي والبريد.
  */
 (function() {
     'use strict';
@@ -17,7 +16,6 @@
         const alertBox = document.getElementById('formAlert');
         const alertIcon = document.getElementById('alertIcon');
         const alertMessage = document.getElementById('alertMessage');
-        // العناصر الجديدة لتعليمات منفصلة
         const instructionMainText = document.getElementById('instructionMainText');
         const instructionEmailText = document.getElementById('instructionEmailText');
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
@@ -35,7 +33,7 @@
                     document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
                 });
             } catch (err) {
-                showAlert('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.', 'error');
+                showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
                 if (submitBtn) submitBtn.disabled = true;
                 return;
             }
@@ -57,25 +55,24 @@
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info
 
         if (pendingEmail) {
-            // تعيين النص الرئيسي (يختلف حسب نوع العملية)
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
             if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
             else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
             else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
+            else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
             
             if (instructionMainText) instructionMainText.textContent = mainMessage;
-            // تعيين البريد في العنصر المنفصل
             if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
         } else {
-            showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
+            showAlert('لم يتم العثور على بريد إلكتروني معلق.', 'error');
             if (submitBtn) submitBtn.disabled = true;
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info') {
+        if (verifyType === 'personal_info' || verifyType === 'contact_info') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -149,7 +146,7 @@
             }
 
             if (!pendingEmail) {
-                showAlert('بيانات الجلسة غير متوفرة. أعد المحاولة.', 'error');
+                showAlert('بيانات الجلسة غير متوفرة.', 'error');
                 return;
             }
 
@@ -158,7 +155,7 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                const otpType = (verifyType === 'personal_info') ? 'email' : verifyType;
+                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
@@ -180,6 +177,8 @@
                         window.location.replace('/auth/reset-password.html');
                     } else if (verifyType === 'personal_info') {
                         createReviewRequest(supabaseClient);
+                    } else if (verifyType === 'contact_info') {
+                        updateContactInfoProgress(supabaseClient);
                     }
                 }, 1500);
 
@@ -216,7 +215,7 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info') {
+                    if (verifyType === 'personal_info' || verifyType === 'contact_info') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -238,7 +237,7 @@
             });
         }
 
-        // ---------- ٩. إنشاء طلب المراجعة (للمعلومات الشخصية) ----------
+        // ---------- ٩. دوال التحديث بعد التحقق ----------
         async function createReviewRequest(client) {
             try {
                 const { data: { user } } = await client.auth.getUser();
@@ -261,6 +260,24 @@
                 window.location.replace('/pages/dashboard/index.html');
             } catch (e) {
                 console.error('خطأ في إنشاء الطلب:', e);
+                window.location.replace('/pages/dashboard/index.html');
+            }
+        }
+
+        async function updateContactInfoProgress(client) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (user) {
+                    await client.from('verification_requests').upsert({
+                        user_id: user.id,
+                        contact_info_completed: true,
+                        progress: 70,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                }
+                window.location.replace('/pages/dashboard/index.html');
+            } catch (e) {
+                console.error('خطأ في تحديث تقدم معلومات الاتصال:', e);
                 window.location.replace('/pages/dashboard/index.html');
             }
         }
