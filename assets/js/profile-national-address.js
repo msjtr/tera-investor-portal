@@ -68,9 +68,25 @@
         if (el) el.value = value;
     }
 
+    /**
+     * تعقيم اسم الملف لإزالة الأحرف غير الآمنة (مثل العربية) التي قد ترفضها Supabase Storage.
+     * يُنشئ اسمًا فريدًا مكوّنًا من طابع زمني + UUID مع الاحتفاظ بامتداد الملف الأصلي.
+     * @param {string} originalName - الاسم الأصلي للملف.
+     * @returns {string} اسم آمن بالكامل (ASCII فقط).
+     */
+    function sanitizeFileName(originalName) {
+        // استخراج الامتداد (بدون النقطة)
+        const ext = originalName.split('.').pop().toLowerCase();
+        // اسم آمن: طابع زمني + UUID عشوائي (يمكن استخدام crypto.randomUUID() في المتصفحات الحديثة)
+        const safeBase = `${Date.now()}-${crypto.randomUUID()}`;
+        return `${safeBase}.${ext}`;
+    }
+
     async function uploadFile(file, userId, folder) {
         const supabase = window.teraSupabase;
-        const fileName = `${folder}/${userId}/${Date.now()}-${file.name}`;
+        // استخدام الاسم المُعقَّم بدلاً من file.name مباشرةً
+        const safeName = sanitizeFileName(file.name);
+        const fileName = `${folder}/${userId}/${safeName}`;
         const { data, error } = await supabase.storage
             .from('attachments')
             .upload(fileName, file, { upsert: true });
@@ -222,7 +238,7 @@
                 }
 
                 try {
-                    // رفع مستند إثبات العنوان
+                    // رفع مستند إثبات العنوان (الآن باسم آمن خالٍ من الأحرف الممنوعة)
                     const fileRecord = await uploadFile(proofInput.files[0], user.id, 'address_proof');
 
                     // حفظ العنوان الوطني
@@ -244,7 +260,7 @@
                         .upsert(payload, { onConflict: 'user_id' });
                     if (error) throw error;
 
-                    // إدراج سجل المرفق
+                    // إدراج سجل المرفق (يحتفظ بالاسم الأصلي للعرض)
                     await supabase.from('user_attachments').insert({
                         user_id: user.id,
                         file_name: proofInput.files[0].name,
