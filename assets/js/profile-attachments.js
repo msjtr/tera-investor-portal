@@ -1,9 +1,8 @@
 /**
- * profile-attachments.js – المرفقات والوثائق + Secure Document Viewer (مُصلَح)
+ * profile-attachments.js – المرفقات والوثائق + Secure Document Viewer (مُصلَح بالكامل)
  * ============================================================
- * - جلب وعرض المرفقات، رفع وحذف.
  * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
- * - تم إصلاح: نوع OTP إلى 'magiclink'، فحوصات العناصر، وصلاحية الرابط.
+ * - تسجيل سجل الوصول لا يؤثر على عرض المستند.
  */
 (function() {
     'use strict';
@@ -269,7 +268,6 @@
                 this.disabled = true;
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
                 try {
-                    // ✅ التصحيح: استخدام النوع 'magiclink'
                     const { error } = await supabase.auth.verifyOtp({
                         email,
                         token: otpValue,
@@ -290,15 +288,22 @@
                     document.getElementById('docViewerStep3').style.display = 'block';
                     startSignedUrlTimer(120);
 
-                    // تسجيل الدخول
-                    const { data: { user } } = await supabase.auth.getUser();
-                    await supabase.from('document_access_logs').insert({
-                        user_id: user.id,
-                        document_name: currentDocName,
-                        document_path: currentDocPath,
-                        ip_address: '',
-                        user_agent: navigator.userAgent
-                    });
+                    // تسجيل الدخول (غير معطل للعرض)
+                    try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) {
+                            await supabase.from('document_access_logs').insert({
+                                user_id: user.id,
+                                document_name: currentDocName,
+                                document_path: currentDocPath,
+                                ip_address: '',
+                                user_agent: navigator.userAgent
+                            });
+                        }
+                    } catch (logError) {
+                        console.warn('تعذر تسجيل سجل الوصول:', logError);
+                    }
+
                 } catch (error) {
                     if (otpError) otpError.textContent = error.message.includes('expired') ? 'انتهت صلاحية الرمز' : 'رمز التحقق غير صحيح';
                 } finally {
