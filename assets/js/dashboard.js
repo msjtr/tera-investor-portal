@@ -196,15 +196,38 @@ const Dashboard = {
     },
 
     /**
-     * تحميل بيانات المستخدم وعرضها في واجهة الترحيب
+     * تحميل بيانات المستخدم وعرضها في واجهة الترحيب والهيدر
      */
     loadUserInfo: async function() {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
             if (user) {
-                const name = user.user_metadata?.full_name || 'مستثمر';
+                // 1. الحصول على الاسم من user_metadata أو استخدام الاسم الافتراضي
+                let name = user.user_metadata?.full_name || 'مستخدم';
+
+                // 2. إذا لم يكن الاسم موجوداً، حاول جلبه من جدول auth_register (أو أي جدول مخصص)
+                if (!user.user_metadata?.full_name) {
+                    const { data: reg } = await this._supabase
+                        .from('auth_register')
+                        .select('full_name')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+                    if (reg?.full_name) {
+                        name = reg.full_name;
+                    }
+                }
+
+                // 3. تحديث واجهة الترحيب
                 const h2 = document.querySelector('.welcome-banner h2');
                 if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
+
+                // 4. تحديث اسم المستخدم في الهيدر (تم إضافة id="headerUserName" في HTML)
+                const headerName = document.getElementById('headerUserName');
+                if (headerName) headerName.textContent = name;
+
+                // 5. تحديث الأفاتار (الحرف الأول من الاسم)
+                const headerAvatar = document.getElementById('headerAvatar');
+                if (headerAvatar) headerAvatar.textContent = name.charAt(0).toUpperCase();
             }
         } catch (e) {
             console.warn('⚠️ تعذر جلب بيانات المستخدم:', e);
@@ -235,7 +258,6 @@ const Dashboard = {
                     statValues.activeContracts = data.active_contracts || 0;
                     statValues.availableBalance = data.available_balance || 0;
                 }
-                // إذا كان data == null، تبقى القيم الافتراضية 0
             }
         } catch (e) {
             console.warn('⚠️ تعذر جلب إحصائيات المحفظة:', e);
@@ -409,10 +431,79 @@ const Dashboard = {
     },
 
     // ========== دوال الواجهة (ثابتة) ==========
-    initSidebar: function() { /* ... لم يتغير ... */ },
-    initSubmenus: function() { /* ... لم يتغير ... */ },
-    initOpportunitiesToggle: function() { /* ... لم يتغير ... */ },
-    initTransactionFilter: function() { /* ... لم يتغير ... */ },
+    initSidebar: function() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                if (window.innerWidth <= 991) {
+                    sidebar.classList.toggle('sidebar-open');
+                    overlay.classList.toggle('active');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                }
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
+        }
+    },
+
+    initSubmenus: function() {
+        const submenuParents = document.querySelectorAll('.has-submenu > a');
+        submenuParents.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const parent = this.parentElement;
+                parent.classList.toggle('submenu-open');
+            });
+        });
+    },
+
+    initOpportunitiesToggle: function() {
+        const toggleBtn = document.getElementById('toggleOppBtn');
+        const icon = document.getElementById('toggleOppIcon');
+        const text = document.getElementById('toggleOppText');
+        const wrapper = document.getElementById('opportunitiesPanelWrapper');
+
+        if (!toggleBtn || !wrapper) return;
+
+        toggleBtn.addEventListener('click', function() {
+            if (wrapper.style.maxHeight === '0px') {
+                wrapper.style.maxHeight = '600px';
+                if (icon) icon.className = 'fas fa-eye-slash';
+                if (text) text.textContent = 'إخفاء';
+            } else {
+                wrapper.style.maxHeight = '0px';
+                if (icon) icon.className = 'fas fa-eye';
+                if (text) text.textContent = 'إظهار';
+            }
+        });
+    },
+
+    initTransactionFilter: function() {
+        const filter = document.getElementById('transactionFilter');
+        if (!filter) return;
+        filter.addEventListener('change', function() {
+            // يمكن إعادة تحميل البيانات بناءً على الفلتر، حالياً لا تطبيق
+            console.log('تطبيق فلتر:', this.value);
+        });
+    },
+
     initLogout: function() {
         const logoutBtn = document.getElementById('logoutBtn');
         if (!logoutBtn) return;
@@ -431,8 +522,26 @@ const Dashboard = {
             }
         });
     },
-    initActiveNav: function() { /* ... لم يتغير ... */ },
-    handleWindowResize: function() { /* ... لم يتغير ... */ }
+
+    initActiveNav: function() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-item a').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.parentElement.classList.add('active');
+            }
+        });
+    },
+
+    handleWindowResize: function() {
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (window.innerWidth > 991) {
+                if (sidebar) sidebar.classList.remove('sidebar-open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    }
 };
 
 // تشغيل عند تحميل الصفحة
