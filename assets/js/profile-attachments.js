@@ -1,7 +1,8 @@
 /**
- * profile-attachments.js – المرفقات والوثائق + Secure Document Viewer (مُصلَح بالكامل)
+ * profile-attachments.js – المرفقات والوثائق + Secure Document Viewer (مُحدَّث)
  * ============================================================
  * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
+ * - معالجة خطأ 429 (Too Many Requests).
  * - تسجيل سجل الوصول لا يؤثر على عرض المستند.
  */
 (function() {
@@ -246,8 +247,16 @@
                     document.getElementById('docViewerStep2').style.display = 'block';
                     const docOtpInput = document.getElementById('docOtpInput');
                     if (docOtpInput) docOtpInput.focus();
-                } catch (err) { showAlert('حدث خطأ: ' + err.message, 'error'); }
-                finally { this.disabled = false; this.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق'; }
+                } catch (err) {
+                    if (err.status === 429 || (err.message && err.message.includes('429'))) {
+                        showAlert('تم تجاوز عدد المحاولات المسموح بها. يرجى الانتظار 5 دقائق ثم المحاولة مرة أخرى.', 'error');
+                    } else {
+                        showAlert('حدث خطأ: ' + err.message, 'error');
+                    }
+                } finally {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
+                }
             });
         }
 
@@ -271,7 +280,7 @@
                     const { error } = await supabase.auth.verifyOtp({
                         email,
                         token: otpValue,
-                        type: 'magiclink'
+                        type: 'email'
                     });
                     if (error) throw error;
                     localStorage.removeItem('pendingVerificationEmail');
