@@ -1,10 +1,9 @@
 /**
- * profile-contact-information.js – معلومات الاتصال (حفظ + تحقق OTP)
+ * profile-contact-information.js – معلومات الاتصال (إصدار نهائي مُصلَح)
  * ============================================================
- * - يحفظ البيانات في user_contact_info أولاً.
- * - ثم يرسل رمز OTP ويُوجّه إلى verify-otp.html.
- * - يعرض اسم المستخدم في الهيدر.
- * - يجلب البيانات المخزنة ويعرضها بشكل صحيح.
+ * - يعرض اسم المستخدم الحقيقي في الهيدر.
+ * - يجلب بيانات الاتصال من user_contact_info ويعرضها بشكل صحيح.
+ * - عند الحفظ: يُحدّث user_contact_info و auth_register، ثم يرسل OTP.
  */
 (function() {
     'use strict';
@@ -21,8 +20,7 @@
     function showAlert(message, type) {
         const box = document.getElementById('formAlert');
         if (!box) return alert(message);
-        box.innerHTML = `<span id="alertIcon">${type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>'}</span>
-                         <span id="alertMessage">${message}</span>`;
+        box.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
         box.style.display = 'flex';
         box.className = `alert-box show ${type || 'error'}`;
         clearTimeout(window._alertTimer);
@@ -52,10 +50,9 @@
         let html = '';
         stages.forEach((stage, index) => {
             const completed = reqData[stage.key] || (stage.key === 'email_verified');
-            let active = false;
-            if (!completed && (index === 0 || stages[index-1]?.completed)) active = true;
+            let active = !completed && index === 0;
             html += `<li class="${completed ? 'completed' : ''} ${active ? 'active' : ''}">
-                <span class="step-num">${completed ? '<i class="fas fa-check" style="font-size:11px;"></i>' : (index+1)}</span>
+                <span class="step-num">${completed ? '<i class="fas fa-check"></i>' : (index+1)}</span>
                 <span class="step-label">${stage.label}</span>
             </li>`;
             if (index < stages.length - 1) html += `<li class="step-line ${completed ? 'completed' : ''}"></li>`;
@@ -74,17 +71,16 @@
             return;
         }
 
-        // ---------- تحديث الهيدر باسم المستخدم ----------
+        // ---------- تحديث الهيدر ----------
         const fullName = user.user_metadata?.full_name || 'مستخدم';
         const headerName = document.getElementById('headerUserName');
         if (headerName) headerName.textContent = fullName;
         const headerAvatar = document.getElementById('headerAvatar');
         if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
 
-        // شريط التقدم
         await updateProgressTracker(supabase, user.id);
 
-        // ---------- جلب بيانات الاتصال المخزنة ----------
+        // ---------- جلب بيانات الاتصال ----------
         try {
             const { data: contact } = await supabase.from('user_contact_info').select('*').eq('user_id', user.id).maybeSingle();
 
@@ -92,66 +88,31 @@
                 setElementValue('primaryEmail', contact.email || user.email);
                 setElementValue('backupEmail', contact.secondary_email || '');
 
-                // معالجة رقم الهاتف: استخراج رمز الدولة والرقم
+                // معالجة رقم الهاتف الأساسي
                 if (contact.phone) {
-                    // افتراض أن رقم الهاتف يبدأ برمز الدولة (مثلاً "966551234567")
-                    let phoneNumber = contact.phone;
-                    let countryCode = '966'; // افتراضي السعودية
-                    // محاولة فصل رمز الدولة عن الرقم إذا كان الطول أكبر من 9
-                    if (phoneNumber.length > 9) {
-                        // نأخذ أول 3 أرقام كرمز دولة (أو أكثر حسب الدولة)
-                        const possibleCode = phoneNumber.substring(0, 3);
-                        // قائمة رموز الدول المدعومة
-                        const knownCodes = ['966', '971', '965', '974', '973', '968', '20'];
-                        if (knownCodes.includes(possibleCode)) {
-                            countryCode = possibleCode;
-                            phoneNumber = phoneNumber.substring(3);
-                        }
-                    }
-                    setElementValue('countryCode', countryCode);
-                    setElementValue('mobileNumber', phoneNumber);
+                    const { code, number } = extractPhoneParts(contact.phone);
+                    setElementValue('countryCode', code);
+                    setElementValue('mobileNumber', number);
                 }
 
                 // جهة اتصال الطوارئ
                 setElementValue('emergencyName', contact.emergency_contact_name || '');
                 setElementValue('emergencyRelation', contact.emergency_contact_relation || '');
-
                 if (contact.emergency_contact_phone) {
-                    let emergencyPhone = contact.emergency_contact_phone;
-                    let emergencyCode = '966';
-                    if (emergencyPhone.length > 9) {
-                        const possibleCode = emergencyPhone.substring(0, 3);
-                        const knownCodes = ['966', '971', '965', '974', '973', '968', '20'];
-                        if (knownCodes.includes(possibleCode)) {
-                            emergencyCode = possibleCode;
-                            emergencyPhone = emergencyPhone.substring(3);
-                        }
-                    }
-                    setElementValue('emergencyCountryCode', emergencyCode);
-                    setElementValue('emergencyMobile', emergencyPhone);
+                    const { code, number } = extractPhoneParts(contact.emergency_contact_phone);
+                    setElementValue('emergencyCountryCode', code);
+                    setElementValue('emergencyMobile', number);
                 }
-
                 setElementValue('emergencyEmail', contact.emergency_contact_email || '');
             } else {
-                // لا توجد بيانات اتصال سابقة، نستخدم البريد الإلكتروني من الجلسة
                 setElementValue('primaryEmail', user.email || '');
-                // يمكن محاولة جلب رقم الجوال من auth_register إن وُجد
+                // محاولة جلب رقم الجوال من auth_register
                 try {
                     const { data: reg } = await supabase.from('auth_register').select('mobile_number').eq('user_id', user.id).maybeSingle();
                     if (reg && reg.mobile_number) {
-                        let phone = reg.mobile_number;
-                        let code = '966';
-                        if (phone.startsWith('+')) phone = phone.substring(1);
-                        if (phone.length > 9) {
-                            const possibleCode = phone.substring(0, 3);
-                            const knownCodes = ['966', '971', '965', '974', '973', '968', '20'];
-                            if (knownCodes.includes(possibleCode)) {
-                                code = possibleCode;
-                                phone = phone.substring(3);
-                            }
-                        }
+                        const { code, number } = extractPhoneParts(reg.mobile_number);
                         setElementValue('countryCode', code);
-                        setElementValue('mobileNumber', phone);
+                        setElementValue('mobileNumber', number);
                     }
                 } catch (e) {}
             }
@@ -194,7 +155,7 @@
                     const { error: saveError } = await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
                     if (saveError) throw saveError;
 
-                    // 2. تحديث auth_register برقم الجوال
+                    // 2. تحديث auth_register
                     await supabase.from('auth_register').update({ mobile_number: countryCode + mobile, updated_at: new Date().toISOString() }).eq('user_id', user.id);
 
                     // 3. إرسال رمز التحقق
@@ -204,14 +165,11 @@
                     });
                     if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
 
-                    // 4. تخزين بيانات التوجيه
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'contact_info');
 
                     showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success');
-                    setTimeout(() => {
-                        window.location.replace('/auth/verify-otp.html');
-                    }, 2000);
+                    setTimeout(() => window.location.replace('/auth/verify-otp.html'), 2000);
 
                 } catch (error) {
                     console.error('فشل الحفظ:', error);
@@ -221,6 +179,23 @@
                 }
             });
         }
+    }
+
+    // دالة مساعدة لاستخراج رمز الدولة ورقم الهاتف
+    function extractPhoneParts(fullPhone) {
+        const knownCodes = ['966', '971', '965', '974', '973', '968', '20'];
+        // إزالة علامة + إن وُجدت
+        let phone = fullPhone.replace(/^\+/, '');
+        let code = '966';
+        let number = phone;
+        for (let c of knownCodes) {
+            if (phone.startsWith(c)) {
+                code = c;
+                number = phone.substring(c.length);
+                break;
+            }
+        }
+        return { code, number };
     }
 
     if (document.readyState === 'loading') {
