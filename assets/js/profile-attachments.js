@@ -3,7 +3,7 @@
  * ============================================================
  * - جلب وعرض المرفقات، رفع وحذف.
  * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
- * - تم إصلاح مشاكل: عناصر null، نوع OTP، وصلاحية الرابط.
+ * - تم إصلاح: نوع OTP إلى 'email'، فحوصات العناصر، وصلاحية الرابط.
  */
 (function() {
     'use strict';
@@ -38,7 +38,27 @@
     }
 
     async function updateProgressTracker(supabase, userId) {
-        // نفس الكود السابق بدون تغيير
+        const tracker = document.getElementById('progressTracker');
+        if (!tracker) return;
+        const { data: req } = await supabase.from('verification_requests').select('*').eq('user_id', userId).maybeSingle();
+        const reqData = req || {};
+        const stages = [
+            { key: 'email_verified', label: 'التحقق من البريد', icon: 'fa-envelope' },
+            { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user' },
+            { key: 'national_address_completed', label: 'العنوان الوطني', icon: 'fa-map-marker-alt' },
+            { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone' },
+            { key: 'bank_info_completed', label: 'المعلومات البنكية', icon: 'fa-university' },
+            { key: 'attachments_completed', label: 'المرفقات', icon: 'fa-paperclip' },
+            { key: 'agreed', label: 'الإقرار', icon: 'fa-check' },
+            { key: 'submitted', label: 'إرسال الطلب', icon: 'fa-paper-plane' }
+        ];
+        let html = '';
+        stages.forEach((stage, index) => {
+            const completed = reqData[stage.key] || (stage.key === 'email_verified');
+            html += `<li class="${completed ? 'completed' : ''}"><span class="step-num">${completed ? '<i class="fas fa-check"></i>' : (index+1)}</span><span class="step-label">${stage.label}</span></li>`;
+            if (index < stages.length - 1) html += `<li class="step-line ${completed ? 'completed' : ''}"></li>`;
+        });
+        tracker.innerHTML = html;
     }
 
     // ---------- Secure Document Viewer ----------
@@ -65,7 +85,6 @@
     }
 
     async function loadAttachments(supabase, userId) {
-        // نفس الكود السابق، مع استبدال رابط العرض العام بزر آمن
         const tbody = document.getElementById('documentsTableBody');
         if (!tbody) return;
 
@@ -129,9 +148,26 @@
         });
     }
 
-    function updateStats(data) { /* نفس الكود السابق */ }
+    function updateStats(data) {
+        const total = data.length;
+        const approved = data.filter(d => d.status === 'approved').length;
+        const pending = data.filter(d => d.status !== 'approved' && d.status !== 'rejected').length;
+        const rejected = data.filter(d => d.status === 'rejected').length;
 
-    async function uploadFile(file, userId) { /* نفس الكود السابق */ }
+        document.getElementById('totalDocs').textContent = total;
+        document.getElementById('approvedDocs').textContent = approved;
+        document.getElementById('pendingDocs').textContent = pending;
+        document.getElementById('rejectedDocs').textContent = rejected;
+    }
+
+    async function uploadFile(file, userId) {
+        const supabase = window.teraSupabase;
+        const fileName = `manual/${userId}/${Date.now()}-${file.name}`;
+        const { data, error } = await supabase.storage.from('attachments').upload(fileName, file, { upsert: true });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(fileName);
+        return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
+    }
 
     function formatTime(sec) {
         const m = Math.floor(sec / 60);
@@ -182,7 +218,7 @@
         await updateProgressTracker(supabase, user.id);
         await loadAttachments(supabase, user.id);
 
-        // ---------- Secure Viewer Listeners (مع فحوصات وجود العناصر) ----------
+        // ---------- Secure Viewer Listeners ----------
         const closeDocViewerModal = document.getElementById('closeDocViewerModal');
         if (closeDocViewerModal) {
             closeDocViewerModal.addEventListener('click', () => {
@@ -233,11 +269,11 @@
                 this.disabled = true;
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
                 try {
-                    // استخدام type: 'signup' المناسب لـ signInWithOtp
+                    // ✅ الإصلاح: استخدام النوع 'email' الصحيح
                     const { error } = await supabase.auth.verifyOtp({
                         email,
                         token: otpValue,
-                        type: 'signup'
+                        type: 'email'
                     });
                     if (error) throw error;
                     localStorage.removeItem('pendingVerificationEmail');
@@ -314,7 +350,6 @@
         if (addDocumentForm) {
             addDocumentForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                // ... (نفس كود الرفع السابق، بفحص وجود العناصر)
                 const fileInput = document.getElementById('docFile');
                 if (!fileInput || !fileInput.files || !fileInput.files[0]) {
                     showAlert('يرجى اختيار ملف للرفع.', 'error');
