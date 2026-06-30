@@ -6,8 +6,9 @@
  * - ينتظر جاهزية Supabase.
  * - يجلب بيانات المستخدم ويعرض اسمه في الهيدر.
  * - يجلب العنوان الوطني المخزن من user_national_address ويملأ النموذج.
- * - يدعم رفع الملفات إلى Supabase Storage.
- * - يحفظ البيانات في user_national_address ويربطها بـ verification_requests.
+ * - يدعم رفع الملفات إلى Supabase Storage (أسماء آمنة).
+ * - يحفظ البيانات ويرسل OTP للتأكيد.
+ * - يربط مرفق إثبات العنوان بالقسم ويُظهره تلقائياً.
  * - يُحدّث شريط التقدم (Progress Tracker) تلقائياً.
  */
 (function() {
@@ -68,23 +69,15 @@
         if (el) el.value = value;
     }
 
-    /**
-     * تعقيم اسم الملف لإزالة الأحرف غير الآمنة (مثل العربية) التي قد ترفضها Supabase Storage.
-     * يُنشئ اسمًا فريدًا مكوّنًا من طابع زمني + UUID مع الاحتفاظ بامتداد الملف الأصلي.
-     * @param {string} originalName - الاسم الأصلي للملف.
-     * @returns {string} اسم آمن بالكامل (ASCII فقط).
-     */
+    /** تعقيم اسم الملف لإزالة الأحرف غير الآمنة (ASCII فقط) */
     function sanitizeFileName(originalName) {
-        // استخراج الامتداد (بدون النقطة)
         const ext = originalName.split('.').pop().toLowerCase();
-        // اسم آمن: طابع زمني + UUID عشوائي (يمكن استخدام crypto.randomUUID() في المتصفحات الحديثة)
         const safeBase = `${Date.now()}-${crypto.randomUUID()}`;
         return `${safeBase}.${ext}`;
     }
 
     async function uploadFile(file, userId, folder) {
         const supabase = window.teraSupabase;
-        // استخدام الاسم المُعقَّم بدلاً من file.name مباشرةً
         const safeName = sanitizeFileName(file.name);
         const fileName = `${folder}/${userId}/${safeName}`;
         const { data, error } = await supabase.storage
@@ -133,6 +126,19 @@
         tracker.innerHTML = html;
     }
 
+    /** جلب آخر مرفق إثبات عنوان */
+    async function loadExistingProofAttachment(supabase, userId) {
+        const { data } = await supabase
+            .from('user_attachments')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('description', 'proof_address')
+            .order('uploaded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        return data || null;
+    }
+
     // ---------- المنطق الرئيسي ----------
     async function initPage() {
         ensureAlertBox();
@@ -147,21 +153,17 @@
             return;
         }
 
-        // تحديث الهيدر - الإصلاح: استخدام textContent بدلاً من setElementValue
+        // تحديث الهيدر
         const userName = user.user_metadata?.full_name || 'مستخدم';
         const headerNameEl = document.getElementById('headerUserName');
-        if (headerNameEl) {
-            headerNameEl.textContent = userName;
-        }
+        if (headerNameEl) headerNameEl.textContent = userName;
         const avatar = document.getElementById('headerAvatar');
-        if (avatar) {
-            avatar.textContent = userName.charAt(0).toUpperCase();
-        }
+        if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
 
         // شريط التقدم
         await updateProgressTracker(supabase, user.id);
 
-        // جلب البيانات المخزنة (إن وُجدت)
+        // جلب العنوان الوطني المخزن
         try {
             const { data: addr } = await supabase
                 .from('user_national_address')
@@ -180,6 +182,22 @@
                 setElementValue('unitNumber', addr.unit_number || '');
             }
         } catch (e) { console.warn('تعذر جلب العنوان:', e); }
+
+        // 🔁 تحميل مرفق الإثبات الموجود سابقاً وربطه بالقسم
+        let existingProofAttachment = null;
+        try {
+            existingProofAttachment = await loadExistingProofAttachment(supabase, user.id);
+            if (existingProofAttachment) {
+                const zone = document.getElementById('proofAddressUpload');
+                if (zone) {
+                    const span = zone.querySelector('span:first-of-type');
+                    if (span) {
+                        span.textContent = existingProofAttachment.file_name;
+                        span.style.color = '#028090';
+                    }
+                }
+            }
+        } catch (e) { console.warn('تعذر تحميل مرفق الإثبات:', e); }
 
         // إظهار/إخفاء الأقسام حسب نوع الإقامة
         const residencyRadios = document.querySelectorAll('input[name="residencyType"]');
@@ -230,7 +248,10 @@
                 }
 
                 const proofInput = document.querySelector('#proofAddressUpload input[type="file"]');
-                if (!proofInput || !proofInput.files || !proofInput.files[0]) {
+                const newFile = proofInput?.files?.[0];
+
+                // يجب وجود ملف جديد أو مرفق سابق
+                if (!newFile && !existingProofAttachment) {
                     showAlert('يرجى رفع مستند إثبات العنوان.', 'error');
                     return;
                 }
@@ -243,8 +264,44 @@
                 }
 
                 try {
-                    // رفع مستند إثبات العنوان (الآن باسم آمن خالٍ من الأحرف الممنوعة)
-                    const fileRecord = await uploadFile(proofInput.files[0], user.id, 'address_proof');
+                    let fileRecord;
+
+                    if (newFile) {
+                        // رفع الملف الجديد
+                        fileRecord = await uploadFile(newFile, user.id, 'address_proof');
+                        // إدراج سجل جديد في المرفقات
+                        await supabase.from('user_attachments').insert({
+                            user_id: user.id,
+                            file_name: newFile.name,
+                            file_path: fileRecord.path,
+                            file_type: fileRecord.type,
+                            file_size: fileRecord.size,
+                            description: 'proof_address',
+                            uploaded_at: new Date().toISOString()
+                        });
+                        // تحديث المتغير ليعكس المرفق الجديد
+                        existingProofAttachment = {
+                            id: null, // سيكون له id جديد بعد الإدراج، لكن لا بأس
+                            file_name: newFile.name,
+                            file_path: fileRecord.path,
+                            file_size: fileRecord.size,
+                            file_type: fileRecord.type
+                        };
+                    } else {
+                        // استخدام المرفق القديم
+                        fileRecord = {
+                            path: existingProofAttachment.file_path,
+                            publicUrl: '',
+                            size: existingProofAttachment.file_size,
+                            type: existingProofAttachment.file_type
+                        };
+                        // تحديث تاريخ المرفق فقط
+                        if (existingProofAttachment.id) {
+                            await supabase.from('user_attachments')
+                                .update({ uploaded_at: new Date().toISOString() })
+                                .eq('id', existingProofAttachment.id);
+                        }
+                    }
 
                     // حفظ العنوان الوطني
                     const payload = {
@@ -265,17 +322,6 @@
                         .upsert(payload, { onConflict: 'user_id' });
                     if (error) throw error;
 
-                    // إدراج سجل المرفق (يحتفظ بالاسم الأصلي للعرض)
-                    await supabase.from('user_attachments').insert({
-                        user_id: user.id,
-                        file_name: proofInput.files[0].name,
-                        file_path: fileRecord.path,
-                        file_type: fileRecord.type,
-                        file_size: fileRecord.size,
-                        description: 'proof_address',
-                        uploaded_at: new Date().toISOString()
-                    });
-
                     // تحديث verification_requests
                     await supabase.from('verification_requests').upsert({
                         user_id: user.id,
@@ -286,7 +332,22 @@
 
                     await updateProgressTracker(supabase, user.id);
 
-                    showAlert('✅ تم حفظ العنوان الوطني ورفع المستندات بنجاح.', 'success');
+                    // ✉️ إرسال رمز التحقق (OTP)
+                    const { error: otpError } = await supabase.auth.signInWithOtp({
+                        email: user.email,
+                        options: { shouldCreateUser: false }
+                    });
+                    if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
+
+                    // تخزين بيانات التوجيه
+                    localStorage.setItem('pendingVerificationEmail', user.email);
+                    localStorage.setItem('tera_verify_type', 'national_address');
+
+                    showAlert('✅ تم حفظ العنوان الوطني. جاري توجيهك لتأكيد هويتك...', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/verify-otp.html');
+                    }, 2000);
+
                 } catch (error) {
                     console.error('فشل الحفظ:', error);
                     showAlert('تعذر حفظ العنوان: ' + (error.message || 'خطأ غير معروف'), 'error');
