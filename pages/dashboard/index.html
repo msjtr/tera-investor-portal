@@ -14,8 +14,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- الأنماط (بدون تغيير) -->
     <style>
+        /* الأنماط الكاملة كما في السابق دون تغيير */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -86,10 +86,6 @@
         .stat-info { display: flex; flex-direction: column; gap: 5px; }
         .stat-label { font-size: 14px; color: var(--tera-gray); font-weight: 700; }
         .stat-value { font-size: 24px; font-weight: 800; color: var(--tera-navy); font-family: monospace; letter-spacing: 0.5px; }
-        .stat-trend-up, .stat-trend-down, .stat-trend-neutral { font-size: 13px; font-weight: 700; padding: 2px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
-        .stat-trend-up { color: #10b981; background: rgba(16,185,129,0.12); }
-        .stat-trend-down { color: #ef4444; background: rgba(239,68,68,0.12); }
-        .stat-trend-neutral { color: #6b7280; background: rgba(107,114,128,0.12); }
         .dashboard-layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px; }
         .panel-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px 26px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid #f1f5f9; padding-bottom: 14px; flex-wrap: wrap; gap: 8px; }
@@ -226,7 +222,6 @@
             </div>
             <div class="header-left-actions">
                 <div class="user-profile-block">
-                    <!-- ✅ المعرفات المضافة لتمكين dashboard.js من تحديث الاسم -->
                     <div class="user-meta"><h5 id="headerUserName">مستخدم</h5><p>بوابة المستثمر</p></div>
                     <div class="user-avatar-circle" id="headerAvatar">م</div>
                 </div>
@@ -253,7 +248,7 @@
 
         <main class="main-content">
 
-            <!-- 🆕 تنبيه استكمال الملف الشخصي (بالنص الرسمي المطلوب) -->
+            <!-- تنبيه الاستكمال (فقط قبل التقديم) -->
             <div id="profileAlertBanner" style="display:none; background: #fef3c7; border:1px solid #fcd34d; padding:16px 20px; margin-bottom:20px; border-radius:12px; align-items:center; gap:12px; flex-wrap:wrap;">
                 <i class="fas fa-exclamation-triangle" style="color:#d97706; font-size:24px;"></i>
                 <div style="flex:1;">
@@ -263,7 +258,7 @@
                 <a href="/pages/profile/personal-information.html" style="background:#d97706; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">استكمال الملف الشخصي</a>
             </div>
 
-            <!-- ✅ لوحة حالة الطلب (نموذج ثابت يُستبدل ديناميكياً) -->
+            <!-- لوحة حالة الطلب (نموذج أولي، سيستبدل ديناميكياً) -->
             <div id="requestStatusPanel" style="margin-bottom:20px;">
                 <div class="panel-card">
                     <div class="panel-header">
@@ -272,12 +267,12 @@
                     </div>
                     <div style="margin-bottom:16px;">
                         <p><strong>الحالة:</strong> قيد المراجعة</p>
-                        <p><strong>تاريخ التقديم:</strong> 2026-06-01</p>
-                        <p><strong>آخر تحديث:</strong> 2026-06-15</p>
+                        <p><strong>تاريخ التقديم:</strong> 2026-06-01 10:30 صباحاً</p>
+                        <p><strong>آخر تحديث:</strong> 2026-06-15 02:45 مساءً</p>
+                        <p><strong>المدة المنقضية:</strong> 14 يوم</p>
                         <p><strong>نسبة الإنجاز:</strong> 80%</p>
                         <p><strong>ملاحظات:</strong> لا توجد</p>
                     </div>
-                    <!-- تنبيه بوجود مراحل تحتاج تعديل -->
                     <div class="alert-warning-box" style="margin-top:16px;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
@@ -390,7 +385,6 @@
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
     <script>
-        // تحديث التاريخ الحالي
         document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ar-SA');
     </script>
 </body>
