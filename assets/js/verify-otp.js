@@ -1,7 +1,7 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info
  * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
- * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
+ * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل (بدون اشتراط email_verified).
  */
 (function() {
     'use strict';
@@ -285,8 +285,8 @@
 
                 if (!req) return;
 
+                // المصفوفة بدون email_verified
                 const requiredStages = [
-                    'email_verified',
                     'personal_info_completed',
                     'national_address_completed',
                     'contact_info_completed',
