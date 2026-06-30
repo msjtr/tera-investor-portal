@@ -242,24 +242,18 @@
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (user) {
-                    const { data: existingReq } = await client
-                        .from('verification_requests')
-                        .select('id')
-                        .eq('user_id', user.id)
-                        .maybeSingle();
-
-                    if (existingReq) {
-                        await client.from('verification_requests')
-                            .update({ status: 'under_review', submitted: true, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-                            .eq('user_id', user.id);
-                    } else {
-                        await client.from('verification_requests')
-                            .insert({ user_id: user.id, status: 'under_review', submitted: true, submitted_at: new Date().toISOString() });
-                    }
+                    // استخدام upsert لتجنب مشاكل الـ insert/update المزدوجة
+                    await client.from('verification_requests').upsert({
+                        user_id: user.id,
+                        status: 'under_review',
+                        submitted: true,
+                        submitted_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
                 }
-                window.location.replace('/pages/dashboard/index.html');
             } catch (e) {
                 console.error('خطأ في إنشاء الطلب:', e);
+            } finally {
                 window.location.replace('/pages/dashboard/index.html');
             }
         }
@@ -268,6 +262,7 @@
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (user) {
+                    // تحديث حقل contact_info_completed والتقدم (70% مثال، يمكن تعديله حسب الحاجة)
                     await client.from('verification_requests').upsert({
                         user_id: user.id,
                         contact_info_completed: true,
@@ -275,9 +270,9 @@
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
                 }
-                window.location.replace('/pages/dashboard/index.html');
             } catch (e) {
                 console.error('خطأ في تحديث تقدم معلومات الاتصال:', e);
+            } finally {
                 window.location.replace('/pages/dashboard/index.html');
             }
         }
