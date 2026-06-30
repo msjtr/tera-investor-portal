@@ -147,11 +147,16 @@
             return;
         }
 
-        // تحديث الهيدر
+        // تحديث الهيدر - الإصلاح: استخدام textContent بدلاً من setElementValue
         const userName = user.user_metadata?.full_name || 'مستخدم';
-        setElementValue('headerUserName', userName);
+        const headerNameEl = document.getElementById('headerUserName');
+        if (headerNameEl) {
+            headerNameEl.textContent = userName;
+        }
         const avatar = document.getElementById('headerAvatar');
-        if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
+        if (avatar) {
+            avatar.textContent = userName.charAt(0).toUpperCase();
+        }
 
         // شريط التقدم
         await updateProgressTracker(supabase, user.id);
