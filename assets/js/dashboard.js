@@ -76,6 +76,28 @@ const Dashboard = {
     },
 
     /**
+     * تنسيق التاريخ مع الوقت باللغة العربية
+     */
+    _formatDateTime: function(isoString) {
+        if (!isoString) return '';
+        const d = new Date(isoString);
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return d.toLocaleDateString('ar-SA', options);
+    },
+
+    /**
+     * حساب المدة المنقضية منذ تقديم الطلب
+     */
+    _getElapsedDays: function(isoString) {
+        if (!isoString) return '';
+        const now = new Date();
+        const past = new Date(isoString);
+        const diff = Math.floor((now - past) / (1000 * 60 * 60 * 24));
+        if (diff < 1) return 'أقل من يوم';
+        return `${diff} يوم`;
+    },
+
+    /**
      * ✅ رحلة العميل: تنبيه + مؤشر المراحل (قبل التقديم) / حالة الطلب (بعد التقديم) + قفل الروابط
      */
     loadCustomerJourney: async function() {
@@ -110,13 +132,14 @@ const Dashboard = {
                     if (req.status === 'approved') {
                         statusPanel.innerHTML = '';
                     } else {
-                        // عرض حالة الطلب
+                        // عرض حالة الطلب مع الوقت والمدة
                         let html = `<div class="panel-card">
                             <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الطلب</h3></div>
                             <div style="margin-bottom:16px;">
                                 <p><strong>الحالة:</strong> ${this._getStatusLabel(req.status)}</p>
-                                <p><strong>تاريخ التقديم:</strong> ${req.submitted_at ? new Date(req.submitted_at).toLocaleDateString('ar-SA') : ''}</p>
-                                <p><strong>آخر تحديث:</strong> ${req.updated_at ? new Date(req.updated_at).toLocaleDateString('ar-SA') : ''}</p>
+                                <p><strong>تاريخ التقديم:</strong> ${this._formatDateTime(req.submitted_at)}</p>
+                                <p><strong>آخر تحديث:</strong> ${this._formatDateTime(req.updated_at)}</p>
+                                <p><strong>المدة المنقضية:</strong> ${this._getElapsedDays(req.submitted_at)}</p>
                                 <p><strong>نسبة الإنجاز:</strong> ${req.progress || 0}%</p>
                                 <p><strong>ملاحظات:</strong> ${req.notes || 'لا توجد'}</p>
                             </div>`;
