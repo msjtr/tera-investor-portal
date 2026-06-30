@@ -226,7 +226,7 @@
             </div>
             <div class="header-left-actions">
                 <div class="user-profile-block">
-                    <!-- ✅ تمت إضافة المعرفات لتمكين dashboard.js من تحديث الاسم -->
+                    <!-- ✅ المعرفات المضافة لتمكين dashboard.js من تحديث الاسم -->
                     <div class="user-meta"><h5 id="headerUserName">مستخدم</h5><p>بوابة المستثمر</p></div>
                     <div class="user-avatar-circle" id="headerAvatar">م</div>
                 </div>
@@ -253,15 +253,18 @@
 
         <main class="main-content">
 
-            <!-- 🆕 تنبيه استكمال الملف الشخصي -->
-            <div id="profileAlertBanner" style="display:none; background: #fef3c7; border: 1px solid #fcd34d; padding: 14px 20px; margin: 0 0 20px 0; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-exclamation-triangle" style="color: #d97706; font-size: 24px;"></i>
-                <div>
-                    <strong style="color: #92400e;">تنبيه</strong>
-                    <p style="margin:0; color: #a16207;">لإتاحة جميع خدمات بوابة الشركاء، يتوجب عليكم استكمال الملف الشخصي وإرسال الطلب للمراجعة.</p>
+            <!-- 🆕 تنبيه استكمال الملف الشخصي (بالنص الرسمي المطلوب) -->
+            <div id="profileAlertBanner" style="display:none; background: #fef3c7; border:1px solid #fcd34d; padding:16px 20px; margin-bottom:20px; border-radius:12px; align-items:center; gap:12px; flex-wrap:wrap;">
+                <i class="fas fa-exclamation-triangle" style="color:#d97706; font-size:24px;"></i>
+                <div style="flex:1;">
+                    <strong style="color:#92400e;">مرحباً بكم في بوابة شركاء تيرا.</strong>
+                    <p style="margin:4px 0 0; color:#a16207;">يتوجب عليكم استكمال الملف الشخصي قبل الاستفادة من خدمات البوابة. لن تتمكنوا من تقديم الطلبات أو استخدام الخدمات حتى يتم اعتماد بياناتكم.</p>
                 </div>
-                <a href="/pages/profile/personal-information.html" style="margin-right: auto; background: #d97706; color: #fff; padding: 8px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">استكمل ملفك</a>
+                <a href="/pages/profile/personal-information.html" style="background:#d97706; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">استكمال الملف الشخصي</a>
             </div>
+
+            <!-- ✅ مؤشر مراحل الاستكمال (يُملأ عبر dashboard.js) -->
+            <div id="requestStatusPanel" style="margin-bottom:20px;"></div>
 
             <div class="welcome-banner">
                 <div>
