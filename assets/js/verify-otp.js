@@ -1,6 +1,7 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info
  * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
+ * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
  */
 (function() {
     'use strict';
@@ -173,19 +174,15 @@
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
+                // التوجيه حسب نوع العملية
                 setTimeout(() => {
                     if (verifyType === 'signup') {
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
-                    } else if (verifyType === 'personal_info') {
-                        createReviewRequest(supabaseClient);
-                    } else if (verifyType === 'contact_info') {
-                        updateContactInfoProgress(supabaseClient);
-                    } else if (verifyType === 'national_address') {
-                        updateNationalAddressProgress(supabaseClient);
-                    } else if (verifyType === 'bank_info') {
-                        updateBankInfoProgress(supabaseClient);
+                    } else {
+                        // لجميع أنواع الملف الشخصي: التحقق من اكتمال جميع المراحل
+                        finalizeRequestIfComplete(supabaseClient);
                     }
                 }, 1500);
 
@@ -222,7 +219,6 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    // الأنواع التي تستخدم signInWithOtp لإعادة إرسال رمز لمرة واحدة
                     if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
@@ -245,11 +241,36 @@
             });
         }
 
-        // ---------- ٩. دوال التحديث بعد التحقق ----------
-        async function createReviewRequest(client) {
+        // ---------- ٩. دالة إكمال الطلب إلى "قيد المراجعة" إذا اكتملت جميع المراحل ----------
+        async function finalizeRequestIfComplete(client) {
             try {
                 const { data: { user } } = await client.auth.getUser();
-                if (user) {
+                if (!user) return;
+
+                // جلب السجل الحالي
+                const { data: req } = await client
+                    .from('verification_requests')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (!req) return;
+
+                // قائمة جميع المراحل المطلوبة (باستثناء submitted نفسه)
+                const requiredStages = [
+                    'email_verified',
+                    'personal_info_completed',
+                    'national_address_completed',
+                    'contact_info_completed',
+                    'bank_info_completed',
+                    'attachments_completed',
+                    'agreed'
+                ];
+
+                const allCompleted = requiredStages.every(key => req[key] === true);
+
+                if (allCompleted) {
+                    // تحويل الطلب إلى "قيد المراجعة"
                     await client.from('verification_requests').upsert({
                         user_id: user.id,
                         status: 'under_review',
@@ -258,63 +279,12 @@
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
                 }
-            } catch (e) {
-                console.error('خطأ في إنشاء الطلب:', e);
-            } finally {
-                window.location.replace('/pages/dashboard/index.html');
-            }
-        }
 
-        async function updateContactInfoProgress(client) {
-            try {
-                const { data: { user } } = await client.auth.getUser();
-                if (user) {
-                    await client.from('verification_requests').upsert({
-                        user_id: user.id,
-                        contact_info_completed: true,
-                        progress: 70,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id' });
-                }
-            } catch (e) {
-                console.error('خطأ في تحديث تقدم معلومات الاتصال:', e);
-            } finally {
+                // العودة إلى لوحة التحكم في جميع الأحوال
                 window.location.replace('/pages/dashboard/index.html');
-            }
-        }
 
-        async function updateNationalAddressProgress(client) {
-            try {
-                const { data: { user } } = await client.auth.getUser();
-                if (user) {
-                    await client.from('verification_requests').upsert({
-                        user_id: user.id,
-                        national_address_completed: true,
-                        progress: 80,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id' });
-                }
             } catch (e) {
-                console.error('خطأ في تحديث تقدم العنوان الوطني:', e);
-            } finally {
-                window.location.replace('/pages/dashboard/index.html');
-            }
-        }
-
-        async function updateBankInfoProgress(client) {
-            try {
-                const { data: { user } } = await client.auth.getUser();
-                if (user) {
-                    await client.from('verification_requests').upsert({
-                        user_id: user.id,
-                        bank_info_completed: true,
-                        progress: 90,
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id' });
-                }
-            } catch (e) {
-                console.error('خطأ في تحديث تقدم المعلومات البنكية:', e);
-            } finally {
+                console.error('خطأ في إنهاء الطلب:', e);
                 window.location.replace('/pages/dashboard/index.html');
             }
         }
