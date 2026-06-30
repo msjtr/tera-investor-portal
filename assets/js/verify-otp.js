@@ -158,7 +158,6 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                // الأنواع التي تستخدم OTP عبر البريد الإلكتروني (وليس signup/recovery)
                 const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
@@ -174,14 +173,16 @@
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                // التوجيه حسب نوع العملية
-                setTimeout(() => {
+                // التوجيه بعد نجاح التحقق
+                setTimeout(async () => {
                     if (verifyType === 'signup') {
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
                     } else {
-                        // لجميع أنواع الملف الشخصي: التحقق من اكتمال جميع المراحل
+                        // 1. تحديث المرحلة المكتملة في verification_requests
+                        await updateStageCompleted(supabaseClient, verifyType);
+                        // 2. فحص إن كانت جميع المراحل مكتملة وتحويل الطلب إلى "قيد المراجعة"
                         finalizeRequestIfComplete(supabaseClient);
                     }
                 }, 1500);
@@ -241,13 +242,41 @@
             });
         }
 
-        // ---------- ٩. دالة إكمال الطلب إلى "قيد المراجعة" إذا اكتملت جميع المراحل ----------
+        // ---------- ٩. دوال التحديث بعد التحقق ----------
+
+        // تحديث حقل المرحلة المكتملة بناءً على نوع التحقق
+        async function updateStageCompleted(client, type) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) return;
+
+                let fields = { updated_at: new Date().toISOString() };
+
+                if (type === 'personal_info') {
+                    fields.personal_info_completed = true;
+                } else if (type === 'contact_info') {
+                    fields.contact_info_completed = true;
+                } else if (type === 'national_address') {
+                    fields.national_address_completed = true;
+                } else if (type === 'bank_info') {
+                    fields.bank_info_completed = true;
+                }
+
+                await client.from('verification_requests').upsert({
+                    user_id: user.id,
+                    ...fields
+                }, { onConflict: 'user_id' });
+            } catch (e) {
+                console.error('خطأ في تحديث المرحلة:', e);
+            }
+        }
+
+        // التحقق من اكتمال جميع المراحل وتحويل الطلب إلى "قيد المراجعة"
         async function finalizeRequestIfComplete(client) {
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (!user) return;
 
-                // جلب السجل الحالي
                 const { data: req } = await client
                     .from('verification_requests')
                     .select('*')
@@ -256,7 +285,6 @@
 
                 if (!req) return;
 
-                // قائمة جميع المراحل المطلوبة (باستثناء submitted نفسه)
                 const requiredStages = [
                     'email_verified',
                     'personal_info_completed',
@@ -270,7 +298,6 @@
                 const allCompleted = requiredStages.every(key => req[key] === true);
 
                 if (allCompleted) {
-                    // تحويل الطلب إلى "قيد المراجعة"
                     await client.from('verification_requests').upsert({
                         user_id: user.id,
                         status: 'under_review',
@@ -280,9 +307,7 @@
                     }, { onConflict: 'user_id' });
                 }
 
-                // العودة إلى لوحة التحكم في جميع الأحوال
                 window.location.replace('/pages/dashboard/index.html');
-
             } catch (e) {
                 console.error('خطأ في إنهاء الطلب:', e);
                 window.location.replace('/pages/dashboard/index.html');
