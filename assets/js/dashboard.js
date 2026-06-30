@@ -12,6 +12,7 @@
  * - يتضمن تنبيه استكمال الملف الشخصي ومؤشر المراحل مع روابط.
  * - بعد تقديم الطلب: يظهر قسم حالة الطلب فقط.
  * - بعد الاعتماد: يختفي كل شيء.
+ * - مؤقت الجلسة يبدأ من تحميل الصفحة.
  */
 
 const Dashboard = {
@@ -19,10 +20,14 @@ const Dashboard = {
     _initialized: false,
     _supabase: null,
     _requestData: null,
+    _sessionStart: null,   // وقت بداية الجلسة
 
     init: async function() {
         if (this._initialized) return;
         this._initialized = true;
+
+        // تسجيل وقت بدء الجلسة
+        this._sessionStart = new Date();
 
         if (window.TeraAuth && !window.TeraAuth.isLoggedIn()) {
             window.TeraAuth.redirectTo('/auth/auth/login/login.html');
@@ -57,6 +62,9 @@ const Dashboard = {
         this.toggleActionsBasedOnStatus();
         this.lockSensitiveLinks();
 
+        // بدء مؤقت الجلسة
+        this.startSessionTimer();
+
         console.log('✅ لوحة التحكم جاهزة.');
     },
 
@@ -76,8 +84,34 @@ const Dashboard = {
     },
 
     /**
-     * تنسيق التاريخ مع الوقت باللغة العربية
+     * مؤقت الجلسة: يُحدَّث كل دقيقة
      */
+    startSessionTimer: function() {
+        const el = document.getElementById('sessionTimer');
+        if (!el) return;
+
+        const update = () => {
+            const now = new Date();
+            const diffMs = now - this._sessionStart;
+            const totalMinutes = Math.floor(diffMs / 60000);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            let text = '';
+            if (hours > 0) {
+                text = `منذ ${hours} ساعة`;
+                if (minutes > 0) text += ` و ${minutes} دقيقة`;
+            } else {
+                text = `منذ ${minutes} دقيقة`;
+            }
+            if (totalMinutes < 1) text = 'منذ أقل من دقيقة';
+            el.textContent = text;
+        };
+
+        update();
+        setInterval(update, 60000); // كل دقيقة
+    },
+
     _formatDateTime: function(isoString) {
         if (!isoString) return '';
         const d = new Date(isoString);
@@ -85,9 +119,6 @@ const Dashboard = {
         return d.toLocaleDateString('ar-SA', options);
     },
 
-    /**
-     * حساب المدة المنقضية منذ تقديم الطلب
-     */
     _getElapsedDays: function(isoString) {
         if (!isoString) return '';
         const now = new Date();
@@ -113,7 +144,6 @@ const Dashboard = {
 
             this._requestData = req;
 
-            // 1. تنبيه الاستكمال (يظهر فقط إذا لم يتم تقديم الطلب بعد)
             const banner = document.getElementById('profileAlertBanner');
             if (banner) {
                 if (!req || !req.submitted) {
@@ -123,16 +153,12 @@ const Dashboard = {
                 }
             }
 
-            // 2. محتوى لوحة حالة الطلب / مؤشر المراحل
             const statusPanel = document.getElementById('requestStatusPanel');
             if (statusPanel) {
-                // إذا كان الطلب قد قُدِّم (تحت المراجعة أو أي حالة أخرى غير approved)
                 if (req && req.submitted) {
-                    // إذا كان معتمداً بالكامل، نُخفي اللوحة
                     if (req.status === 'approved') {
                         statusPanel.innerHTML = '';
                     } else {
-                        // عرض حالة الطلب مع الوقت والمدة
                         let html = `<div class="panel-card">
                             <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الطلب</h3></div>
                             <div style="margin-bottom:16px;">
@@ -144,7 +170,6 @@ const Dashboard = {
                                 <p><strong>ملاحظات:</strong> ${req.notes || 'لا توجد'}</p>
                             </div>`;
 
-                        // التحقق من وجود مراحل تحتاج تعديل
                         const stagesToCheck = [
                             { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
                             { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
@@ -171,7 +196,6 @@ const Dashboard = {
                         statusPanel.innerHTML = html;
                     }
                 } else {
-                    // لم يتم تقديم الطلب بعد: عرض مؤشر المراحل مع الروابط
                     const stages = [
                         { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
                         { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
@@ -227,9 +251,6 @@ const Dashboard = {
         }
     },
 
-    /**
-     * منع الروابط الحساسة حتى يكتمل الملف
-     */
     lockSensitiveLinks: function() {
         const isApproved = this._requestData && this._requestData.status === 'approved';
         if (isApproved) return;
@@ -285,9 +306,6 @@ const Dashboard = {
         return labels[status] || status;
     },
 
-    /**
-     * تحميل بيانات المستخدم (الاسم في الهيدر والترحيب)
-     */
     loadUserInfo: async function() {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
