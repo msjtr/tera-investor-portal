@@ -10,6 +10,8 @@
  * - يحمي المسار عبر TeraAuth.
  * - يستخدم maybeSingle() بدلاً من single() لتجنب أخطاء 406.
  * - يتضمن تنبيه استكمال الملف الشخصي ومؤشر المراحل مع روابط.
+ * - بعد تقديم الطلب: يظهر قسم حالة الطلب فقط.
+ * - بعد الاعتماد: يختفي كل شيء.
  */
 
 const Dashboard = {
@@ -74,7 +76,7 @@ const Dashboard = {
     },
 
     /**
-     * ✅ رحلة العميل: تنبيه + مؤشر المراحل (مع روابط) + قفل الروابط
+     * ✅ رحلة العميل: تنبيه + مؤشر المراحل (قبل التقديم) / حالة الطلب (بعد التقديم) + قفل الروابط
      */
     loadCustomerJourney: async function() {
         try {
@@ -89,66 +91,112 @@ const Dashboard = {
 
             this._requestData = req;
 
-            // 1. تنبيه الاستكمال
+            // 1. تنبيه الاستكمال (يظهر فقط إذا لم يتم تقديم الطلب بعد)
             const banner = document.getElementById('profileAlertBanner');
             if (banner) {
-                if (!req || req.status !== 'approved') {
+                if (!req || !req.submitted) {
                     banner.style.display = 'flex';
                 } else {
                     banner.style.display = 'none';
                 }
             }
 
-            // 2. مؤشر المراحل (بدون التحقق من البريد)
+            // 2. محتوى لوحة حالة الطلب / مؤشر المراحل
             const statusPanel = document.getElementById('requestStatusPanel');
             if (statusPanel) {
-                const stages = [
-                    { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
-                    { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
-                    { key: 'national_address_completed', label: 'العنوان الوطني الموثق', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
-                    { key: 'bank_info_completed',    label: 'المعلومات البنكية',    icon: 'fa-university',      link: '/pages/profile/bank-information.html' },
-                    { key: 'attachments_completed',  label: 'المرفقات والوثائق',    icon: 'fa-paperclip',       link: '/pages/profile/attachments.html' },
-                    { key: 'agreed',                 label: 'الإقرار',             icon: 'fa-check',           link: null },
-                    { key: 'submitted',              label: 'المراجعة النهائية',    icon: 'fa-paper-plane',     link: null }
-                ];
+                // إذا كان الطلب قد قُدِّم (تحت المراجعة أو أي حالة أخرى غير approved)
+                if (req && req.submitted) {
+                    // إذا كان معتمداً بالكامل، نُخفي اللوحة
+                    if (req.status === 'approved') {
+                        statusPanel.innerHTML = '';
+                    } else {
+                        // عرض حالة الطلب
+                        let html = `<div class="panel-card">
+                            <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الطلب</h3></div>
+                            <div style="margin-bottom:16px;">
+                                <p><strong>الحالة:</strong> ${this._getStatusLabel(req.status)}</p>
+                                <p><strong>تاريخ التقديم:</strong> ${req.submitted_at ? new Date(req.submitted_at).toLocaleDateString('ar-SA') : ''}</p>
+                                <p><strong>آخر تحديث:</strong> ${req.updated_at ? new Date(req.updated_at).toLocaleDateString('ar-SA') : ''}</p>
+                                <p><strong>نسبة الإنجاز:</strong> ${req.progress || 0}%</p>
+                                <p><strong>ملاحظات:</strong> ${req.notes || 'لا توجد'}</p>
+                            </div>`;
 
-                const allCompleted = stages.every(s => req?.[s.key] === true);
+                        // التحقق من وجود مراحل تحتاج تعديل
+                        const stagesToCheck = [
+                            { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
+                            { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
+                            { key: 'national_address_completed', label: 'العنوان الوطني الموثق', link: '/pages/profile/national-address.html' },
+                            { key: 'bank_info_completed', label: 'المعلومات البنكية', link: '/pages/profile/bank-information.html' },
+                            { key: 'attachments_completed', label: 'المرفقات والوثائق', link: '/pages/profile/attachments.html' }
+                        ];
 
-                let html = `<div class="panel-card">
-                    <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div>
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; padding:8px 0;">`;
+                        const pendingStages = stagesToCheck.filter(s => !req[s.key]);
 
-                stages.forEach(stage => {
-                    const done = req?.[stage.key] === true;
-                    const linkOpen = stage.link ? `<a href="${stage.link}" style="text-decoration:none; color:inherit; display:block;">` : '';
-                    const linkClose = stage.link ? `</a>` : '';
+                        if (pendingStages.length > 0) {
+                            html += `<div class="alert-warning-box" style="margin-top:16px;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <div>
+                                    <strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:
+                                    <ul style="margin:8px 0 0 16px;">`;
+                            pendingStages.forEach(s => {
+                                html += `<li><a href="${s.link}">${s.label}</a></li>`;
+                            });
+                            html += `</ul></div></div>`;
+                        }
 
-                    html += `
-                    <div style="flex: 1 1 140px; background:${done ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${done ? '#bbf7d0' : '#e2e8f0'}; border-radius:10px; padding:12px; text-align:center; transition: transform 0.2s; ${stage.link ? 'cursor:pointer;' : ''}">
-                        ${linkOpen}
-                        <i class="fas ${stage.icon}" style="color:${done ? '#10b981' : '#94a3b8'}; font-size:24px; margin-bottom:6px; display:block;"></i>
-                        <span style="font-weight:700; font-size:14px; color:${done ? '#166534' : '#334155'};">${stage.label}</span>
-                        <div style="font-size:12px; margin-top:4px; color:${done ? '#10b981' : '#64748b'};">
-                            ${done ? '✔ تم الإكمال' : '⏳ بانتظار الإكمال'}
-                        </div>
-                        ${linkClose}
-                    </div>`;
-                });
+                        html += `</div>`;
+                        statusPanel.innerHTML = html;
+                    }
+                } else {
+                    // لم يتم تقديم الطلب بعد: عرض مؤشر المراحل مع الروابط
+                    const stages = [
+                        { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
+                        { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
+                        { key: 'national_address_completed', label: 'العنوان الوطني الموثق', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
+                        { key: 'bank_info_completed',    label: 'المعلومات البنكية',    icon: 'fa-university',      link: '/pages/profile/bank-information.html' },
+                        { key: 'attachments_completed',  label: 'المرفقات والوثائق',    icon: 'fa-paperclip',       link: '/pages/profile/attachments.html' },
+                        { key: 'agreed',                 label: 'الإقرار',             icon: 'fa-check',           link: null },
+                        { key: 'submitted',              label: 'المراجعة النهائية',    icon: 'fa-paper-plane',     link: null }
+                    ];
 
-                html += `</div>`;
+                    const allCompleted = stages.every(s => req?.[s.key] === true);
 
-                if (!allCompleted) {
-                    html += `<div style="margin-top:12px; text-align:center;">
-                        <a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a>
-                    </div>`;
-                } else if (req?.status !== 'approved') {
-                    html += `<div class="alert-item-box alert-success" style="margin-top:12px;">
-                        <i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وتم تحويله إلى فريق المراجعة.
-                    </div>`;
+                    let html = `<div class="panel-card">
+                        <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div>
+                        <div style="display:flex; flex-wrap:wrap; gap:12px; padding:8px 0;">`;
+
+                    stages.forEach(stage => {
+                        const done = req?.[stage.key] === true;
+                        const linkOpen = stage.link ? `<a href="${stage.link}" style="text-decoration:none; color:inherit; display:block;">` : '';
+                        const linkClose = stage.link ? `</a>` : '';
+
+                        html += `
+                        <div style="flex: 1 1 140px; background:${done ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${done ? '#bbf7d0' : '#e2e8f0'}; border-radius:10px; padding:12px; text-align:center; transition: transform 0.2s; ${stage.link ? 'cursor:pointer;' : ''}">
+                            ${linkOpen}
+                            <i class="fas ${stage.icon}" style="color:${done ? '#10b981' : '#94a3b8'}; font-size:24px; margin-bottom:6px; display:block;"></i>
+                            <span style="font-weight:700; font-size:14px; color:${done ? '#166534' : '#334155'};">${stage.label}</span>
+                            <div style="font-size:12px; margin-top:4px; color:${done ? '#10b981' : '#64748b'};">
+                                ${done ? '✔ تم الإكمال' : '⏳ بانتظار الإكمال'}
+                            </div>
+                            ${linkClose}
+                        </div>`;
+                    });
+
+                    html += `</div>`;
+
+                    if (!allCompleted) {
+                        html += `<div style="margin-top:12px; text-align:center;">
+                            <a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a>
+                        </div>`;
+                    } else if (req?.status !== 'approved') {
+                        html += `<div class="alert-item-box alert-success" style="margin-top:12px;">
+                            <i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وتم تحويله إلى فريق المراجعة.
+                        </div>`;
+                    }
+
+                    html += `</div>`;
+                    statusPanel.innerHTML = html;
                 }
-
-                html += `</div>`;
-                statusPanel.innerHTML = html;
             }
 
         } catch (e) {
