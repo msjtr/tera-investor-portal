@@ -3,7 +3,7 @@
  * ============================================================
  * - جلب وعرض المرفقات، رفع وحذف.
  * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
- * - تم إصلاح: نوع OTP إلى 'email'، فحوصات العناصر، وصلاحية الرابط.
+ * - تم إصلاح: نوع OTP إلى 'magiclink'، فحوصات العناصر، وصلاحية الرابط.
  */
 (function() {
     'use strict';
@@ -269,11 +269,11 @@
                 this.disabled = true;
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
                 try {
-                    // ✅ الإصلاح: استخدام النوع 'email' الصحيح
+                    // ✅ التصحيح: استخدام النوع 'magiclink'
                     const { error } = await supabase.auth.verifyOtp({
                         email,
                         token: otpValue,
-                        type: 'email'
+                        type: 'magiclink'
                     });
                     if (error) throw error;
                     localStorage.removeItem('pendingVerificationEmail');
