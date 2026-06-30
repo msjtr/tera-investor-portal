@@ -1,15 +1,6 @@
 /**
- * ============================================================
  * verify-otp.js – تأكيد الرمز OTP (6 أرقام) – يدعم signup | recovery | personal_info
- * ============================================================
- * الموقع: /assets/js/verify-otp.js
- * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
- * - يستخدم localStorage للبريد ونوع العملية (signup / recovery / personal_info).
- * - يتحقق من الرمز (6 أرقام) باستخدام supabase.auth.verifyOtp.
- * - بعد نجاح تأكيد التسجيل: يوجه المستخدم إلى صفحة الدخول.
- * - بعد نجاح استعادة كلمة المرور: يوجه إلى إعادة تعيين كلمة المرور.
- * - بعد نجاح اعتماد المعلومات الشخصية: ينشئ طلب مراجعة ويوجه إلى لوحة التحكم.
- * - يعرض رسائل مناسبة حسب نوع العملية.
+ * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، ورسائل عربية.
  */
 (function() {
     'use strict';
@@ -19,28 +10,26 @@
         const otpInput = document.getElementById('otp');
         const submitBtn = document.getElementById('submitBtn');
         const resendBtn = document.getElementById('resendCode');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerContainer = document.getElementById('timerContainer');
         const otpError = document.getElementById('otp-error');
         const alertBox = document.getElementById('formAlert');
         const alertIcon = document.getElementById('alertIcon');
         const alertMessage = document.getElementById('alertMessage');
         const instructionText = document.getElementById('instructionText');
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
+        const backLink = document.getElementById('backLink');
+        const backLinkText = document.getElementById('backLinkText');
 
         if (!form) return;
 
-        // انتظار جاهزية Supabase
+        // ---------- ١. انتظار جاهزية Supabase ----------
         if (!window.teraSupabase) {
             try {
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-                    document.addEventListener('supabase:ready', (e) => {
-                        clearTimeout(timeout);
-                        resolve(e.detail.client);
-                    }, { once: true });
-                    document.addEventListener('supabase:error', () => {
-                        clearTimeout(timeout);
-                        reject(new Error('فشل تحميل Supabase'));
-                    }, { once: true });
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
                 });
             } catch (err) {
                 showAlert('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.', 'error');
@@ -51,32 +40,66 @@
 
         const supabaseClient = window.teraSupabase;
 
-        // جلب بيانات الجلسة المؤقتة من localStorage
+        // ---------- ٢. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
         const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info
 
-        // عرض عنوان مخصص حسب نوع العملية
         if (pendingEmail) {
             let intro = 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني';
-            if (verifyType === 'signup') {
-                intro = 'أدخل رمز تأكيد التسجيل المرسل إلى بريدك الإلكتروني';
-            } else if (verifyType === 'recovery') {
-                intro = 'أدخل رمز إعادة تعيين كلمة المرور المرسل إلى بريدك الإلكتروني';
-            } else if (verifyType === 'personal_info') {
-                intro = 'أدخل رمز تأكيد المعلومات الشخصية المرسل إلى بريدك الإلكتروني';
-            }
+            if (verifyType === 'signup') intro = 'أدخل رمز تأكيد التسجيل المرسل إلى';
+            else if (verifyType === 'recovery') intro = 'أدخل رمز إعادة تعيين كلمة المرور المرسل إلى';
+            else if (verifyType === 'personal_info') intro = 'أدخل رمز تأكيد المعلومات الشخصية المرسل إلى';
             instructionText.textContent = intro + ': ' + pendingEmail;
         } else {
             showAlert('لم يتم العثور على بريد إلكتروني معلق. يرجى بدء العملية من جديد.', 'error');
             if (submitBtn) submitBtn.disabled = true;
         }
 
-        // فلترة الإدخال: أرقام فقط (يُدار الآن عبر المربعات الشبكية، لكننا نضبط الحقل المخفي)
-        // الإدخال الفعلي يتم عبر مربعات .otp-box ويُجمع في #otp
-        // نراقب تغير قيمة الحقل المخفي (الذي تحدثه المربعات)
-        const observer = new MutationObserver(function() {
-            const val = otpInput.value;
-            if (val.length === 6) {
+        // ---------- ٣. تخصيص رابط العودة حسب نوع العملية ----------
+        if (verifyType === 'personal_info') {
+            backLink.href = '/pages/dashboard/index.html';
+            backLinkText.textContent = 'العودة';
+        } else {
+            backLink.href = '/auth/auth/login/login.html';
+            backLinkText.textContent = 'العودة لتسجيل الدخول';
+        }
+
+        // ---------- ٤. مؤقت إعادة الإرسال (60 ثانية) ----------
+        let timerSeconds = 60;
+        let timerInterval = null;
+
+        function startTimer() {
+            resendBtn.classList.add('disabled');
+            timerContainer.style.display = 'block';
+            timerSeconds = 60;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerContainer.style.display = 'none';
+                    resendBtn.classList.remove('disabled');
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timerSeconds / 60);
+            const sec = timerSeconds % 60;
+            timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        // بدء المؤقت تلقائياً
+        startTimer();
+
+        // ---------- ٥. إدخال الرمز وإرسال تلقائي ----------
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (otpError) otpError.textContent = '';
+            if (this.value.length === 6) {
                 if (typeof form.requestSubmit === 'function') {
                     form.requestSubmit();
                 } else {
@@ -84,9 +107,19 @@
                 }
             }
         });
-        observer.observe(otpInput, { attributes: true, attributeFilter: ['value'] });
 
-        // معالجة تقديم النموذج
+        // منع لصق أحرف غير رقمية
+        otpInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            this.value = paste;
+            if (paste.length === 6) {
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // ---------- ٦. تقديم النموذج ----------
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideAlert();
@@ -103,15 +136,12 @@
                 return;
             }
 
-            // تعطيل الزر وإظهار اللودر
+            // منع الضغط المتكرر
             showLoader(true);
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                // تحديد نوع الرمز الصحيح:
-                // بالنسبة لـ signup / recovery : type = verifyType
-                // بالنسبة لـ personal_info : الرمز أُرسل عبر signInWithOtp لذا نستخدم type = 'email'
                 const otpType = (verifyType === 'personal_info') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
@@ -122,72 +152,32 @@
 
                 if (error) throw error;
 
-                // نجاح التحقق – تنظيف التخزين
+                // نجاح التحقق
                 localStorage.removeItem('pendingVerificationEmail');
                 localStorage.removeItem('tera_verify_type');
 
-                if (verifyType === 'signup') {
-                    // تم تأكيد التسجيل → توجيه إلى صفحة الدخول
-                    showAlert('✅ تم تأكيد البريد بنجاح! يمكنك الآن تسجيل الدخول.', 'success');
-                    setTimeout(() => {
-                        window.location.replace('/auth/auth/login/login.html');
-                    }, 2000);
-                } else if (verifyType === 'recovery') {
-                    // استعادة كلمة المرور → التوجيه إلى صفحة إعادة التعيين
-                    showAlert('✅ تم التحقق بنجاح! جاري التوجيه لإعادة تعيين كلمة المرور.', 'success');
-                    setTimeout(() => {
-                        window.location.replace('/auth/reset-password.html');
-                    }, 1500);
-                } else if (verifyType === 'personal_info') {
-                    // اعتماد المعلومات الشخصية – إنشاء طلب مراجعة
-                    try {
-                        const { data: { user } } = await supabaseClient.auth.getUser();
-                        if (user) {
-                            const { data: existingReq } = await supabaseClient
-                                .from('verification_requests')
-                                .select('id')
-                                .eq('user_id', user.id)
-                                .maybeSingle();
+                showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                            if (existingReq) {
-                                await supabaseClient.from('verification_requests')
-                                    .update({
-                                        status: 'under_review',
-                                        submitted: true,
-                                        submitted_at: new Date().toISOString(),
-                                        updated_at: new Date().toISOString()
-                                    })
-                                    .eq('user_id', user.id);
-                            } else {
-                                await supabaseClient.from('verification_requests')
-                                    .insert({
-                                        user_id: user.id,
-                                        status: 'under_review',
-                                        submitted: true,
-                                        submitted_at: new Date().toISOString()
-                                    });
-                            }
-                        }
-                        showAlert('✅ تم تأكيد هويتك. طلبك قيد المراجعة الآن.', 'success');
-                        setTimeout(() => {
-                            window.location.replace('/pages/dashboard/index.html');
-                        }, 1500);
-                    } catch (reqError) {
-                        console.error('❌ خطأ في إنشاء طلب المراجعة:', reqError);
-                        showAlert('تم التأكيد ولكن حدث خطأ أثناء إنشاء الطلب. حاول مجدداً.', 'error');
+                // توجيه حسب نوع العملية
+                setTimeout(() => {
+                    if (verifyType === 'signup') {
+                        window.location.replace('/auth/auth/login/login.html');
+                    } else if (verifyType === 'recovery') {
+                        window.location.replace('/auth/reset-password.html');
+                    } else if (verifyType === 'personal_info') {
+                        // إنشاء طلب المراجعة بعد تأكيد المعلومات الشخصية
+                        createReviewRequest(supabaseClient);
                     }
-                }
+                }, 1500);
 
             } catch (error) {
                 console.error('❌ فشل التحقق من الرمز:', error);
-                let msg = error.message || 'رمز التحقق غير صحيح أو منتهي الصلاحية';
+                let msg = 'رمز التحقق غير صحيح';
+                if (error.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق';
+                else if (error.message.includes('Invalid')) msg = 'رمز التحقق غير صحيح';
                 showAlert(msg, 'error');
-                // مسح المربعات الشبكية
-                document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('filled'); });
                 otpInput.value = '';
-                // تركيز أول مربع
-                const firstBox = document.querySelector('.otp-box');
-                if (firstBox) firstBox.focus();
+                otpInput.focus();
             } finally {
                 showLoader(false);
                 submitBtn.disabled = false;
@@ -195,21 +185,24 @@
             }
         });
 
-        // إعادة إرسال الرمز
+        // ---------- ٧. إعادة الإرسال ----------
         if (resendBtn) {
             resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
+                if (timerInterval) {
+                    showAlert('يرجى الانتظار حتى انتهاء المؤقت لإعادة الإرسال.', 'error');
+                    return;
+                }
                 if (!pendingEmail) {
                     showAlert('لا يوجد بريد لإعادة الإرسال.', 'error');
                     return;
                 }
 
                 resendBtn.style.pointerEvents = 'none';
-                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إعادة الإرسال...';
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
                     if (verifyType === 'personal_info') {
-                        // إعادة إرسال رمز OTP عبر signInWithOtp (نفس الآلية المستخدمة عند الحفظ)
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -220,10 +213,10 @@
                             email: pendingEmail
                         });
                     }
-                    showAlert('✅ تمت إعادة إرسال رمز التحقق.', 'success');
+                    showAlert('تم إرسال رمز تحقق جديد.', 'success');
+                    startTimer(); // إعادة بدء المؤقت
                 } catch (error) {
-                    console.error('❌ فشل إعادة الإرسال:', error);
-                    showAlert(error.message || 'تعذرت إعادة الإرسال. حاول لاحقاً.', 'error');
+                    showAlert('حدث خطأ أثناء إرسال الرمز. يرجى المحاولة مرة أخرى.', 'error');
                 } finally {
                     resendBtn.style.pointerEvents = 'auto';
                     resendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال الرمز';
@@ -231,7 +224,34 @@
             });
         }
 
-        // دوال مساعدة
+        // ---------- ٨. إنشاء طلب المراجعة (للمعلومات الشخصية) ----------
+        async function createReviewRequest(client) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (user) {
+                    const { data: existingReq } = await client
+                        .from('verification_requests')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+
+                    if (existingReq) {
+                        await client.from('verification_requests')
+                            .update({ status: 'under_review', submitted: true, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+                            .eq('user_id', user.id);
+                    } else {
+                        await client.from('verification_requests')
+                            .insert({ user_id: user.id, status: 'under_review', submitted: true, submitted_at: new Date().toISOString() });
+                    }
+                }
+                window.location.replace('/pages/dashboard/index.html');
+            } catch (e) {
+                console.error('خطأ في إنشاء الطلب:', e);
+                window.location.replace('/pages/dashboard/index.html');
+            }
+        }
+
+        // ---------- ٩. دوال العرض ----------
         function showAlert(message, type) {
             if (!alertBox || !alertMessage) return;
             alertBox.style.display = 'flex';
