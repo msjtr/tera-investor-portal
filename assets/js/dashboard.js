@@ -99,11 +99,10 @@ const Dashboard = {
                 }
             }
 
-            // 2. مؤشر المراحل
+            // 2. مؤشر المراحل (بدون التحقق من البريد)
             const statusPanel = document.getElementById('requestStatusPanel');
             if (statusPanel) {
                 const stages = [
-                    { key: 'email_verified',        label: 'التحقق من البريد',     icon: 'fa-envelope',        link: null },
                     { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
                     { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
                     { key: 'national_address_completed', label: 'العنوان الوطني الموثق', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
