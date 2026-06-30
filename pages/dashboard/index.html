@@ -263,8 +263,33 @@
                 <a href="/pages/profile/personal-information.html" style="background:#d97706; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">استكمال الملف الشخصي</a>
             </div>
 
-            <!-- ✅ مؤشر مراحل الاستكمال (يُملأ عبر dashboard.js) -->
-            <div id="requestStatusPanel" style="margin-bottom:20px;"></div>
+            <!-- ✅ لوحة حالة الطلب (نموذج ثابت يُستبدل ديناميكياً) -->
+            <div id="requestStatusPanel" style="margin-bottom:20px;">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <i class="fas fa-clipboard-check"></i>
+                        <h3>حالة الطلب</h3>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <p><strong>الحالة:</strong> قيد المراجعة</p>
+                        <p><strong>تاريخ التقديم:</strong> 2026-06-01</p>
+                        <p><strong>آخر تحديث:</strong> 2026-06-15</p>
+                        <p><strong>نسبة الإنجاز:</strong> 80%</p>
+                        <p><strong>ملاحظات:</strong> لا توجد</p>
+                    </div>
+                    <!-- تنبيه بوجود مراحل تحتاج تعديل -->
+                    <div class="alert-warning-box" style="margin-top:16px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:
+                            <ul style="margin:8px 0 0 16px;">
+                                <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
+                                <li><a href="/pages/profile/attachments.html">المرفقات والوثائق</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="welcome-banner">
                 <div>
