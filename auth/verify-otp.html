@@ -25,24 +25,129 @@
             --tera-navy: #0A1B3F;
         }
 
-        .auth-layout {
-            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Tajawal', sans-serif;
+            margin: 0;
+            color: #1e293b;
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
+        }
+
+        /* الهيدر العلوي */
+        .focused-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .focused-header .logo img {
+            height: 44px;
+            width: auto;
+            display: block;
+        }
+
+        .header-client-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-client-info h5 {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            color: #0A1B3F;
+            font-weight: 800;
+        }
+
+        .header-client-info .avatar {
+            width: 38px;
+            height: 38px;
+            background: #0A1B3F;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 16px;
+            border: 2px solid #028090;
+            flex-shrink: 0;
         }
 
-        .auth-container {
-            max-width: 480px;
+        /* عنوان الصفحة */
+        .page-title-section {
+            background: #0A1B3F;
+            padding: 16px 30px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-title-section h1 {
+            margin: 0;
+            color: #ffffff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title-section h1 i {
+            color: #5eead4;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.10);
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-back:hover {
+            background: #028090;
+            border-color: #028090;
+        }
+
+        /* المحتوى */
+        .content-container {
+            max-width: 520px;
+            margin: 40px auto;
+            padding: 0 24px;
+            flex: 1;
+            width: 100%;
+        }
+
+        .auth-card {
+            background: #ffffff;
             border-radius: 24px;
             padding: 40px 32px 32px 32px;
             box-shadow: 0 25px 50px rgba(2, 128, 144, 0.08);
-            border: 1px solid rgba(255,255,255,0.6);
+            border: 1px solid #e2e8f0;
         }
 
         .otp-icon-circle {
@@ -73,20 +178,19 @@
             margin-bottom: 24px;
             line-height: 1.6;
             background: #f8fafc;
-            padding: 12px 16px;
+            padding: 14px 16px;
             border-radius: 12px;
             border-right: 4px solid var(--tera-teal);
             word-break: break-all;
         }
 
-        /* حقل OTP واحد بتنسيق أنيق */
         .otp-input {
             width: 100%;
             padding: 16px 18px;
             text-align: center;
-            letter-spacing: 10px;
+            letter-spacing: 8px;
             font-weight: 800;
-            font-size: 24px;
+            font-size: 22px;
             direction: ltr;
             border: 2px solid #d1d9e6;
             border-radius: 14px;
@@ -103,7 +207,6 @@
             outline: none;
         }
 
-        /* مؤقت */
         .timer-container {
             text-align: center;
             margin-top: 16px;
@@ -176,25 +279,48 @@
             transform: none;
         }
 
-        .back-link {
-            color: #64748b;
-            font-size: 14px;
-            text-decoration: none;
-            font-weight: 600;
+        .page-footer {
+            text-align: center;
+            padding: 18px 20px;
+            color: #94a3b8;
+            font-size: 13px;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+            margin-top: auto;
         }
 
-        .back-link:hover {
-            color: var(--tera-navy);
-        }
-
-        @media (max-width: 480px) {
-            .auth-container {
-                padding: 28px 16px 24px 16px;
+        @media (max-width: 576px) {
+            .focused-header {
+                padding: 8px 16px;
+            }
+            .focused-header .logo img {
+                height: 36px;
+            }
+            .header-client-info h5 {
+                font-size: 13px;
+            }
+            .header-client-info .avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .page-title-section {
+                padding: 14px 20px;
+            }
+            .page-title-section h1 {
+                font-size: 19px;
+            }
+            .content-container {
+                padding: 0 16px;
+                margin: 24px auto;
+            }
+            .auth-card {
+                padding: 28px 18px 24px 18px;
                 border-radius: 20px;
             }
             .otp-input {
-                font-size: 20px;
-                letter-spacing: 8px;
+                font-size: 18px;
+                letter-spacing: 6px;
                 padding: 14px 12px;
             }
             .btn-submit-login {
@@ -205,15 +331,35 @@
     </style>
 </head>
 <body>
-    <div class="auth-layout">
-        <div class="auth-container">
+
+    <!-- هيدر علوي مع الشعار واسم العميل -->
+    <header class="focused-header no-print">
+        <div class="logo">
+            <img src="/images/logo.svg" alt="تيرا" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'">
+        </div>
+        <div class="header-client-info">
+            <h5 id="headerUserName">مستخدم</h5>
+            <div class="avatar" id="headerAvatar">م</div>
+        </div>
+    </header>
+
+    <!-- عنوان الصفحة وزر العودة -->
+    <div class="page-title-section no-print">
+        <h1><i class="fas fa-shield-alt"></i> التحقق من الرمز</h1>
+        <a href="#" id="backLink" class="btn-back">
+            <i class="fas fa-arrow-right"></i> <span id="backLinkText">العودة</span>
+        </a>
+    </div>
+
+    <!-- المحتوى -->
+    <main class="content-container">
+        <div class="auth-card">
             <div class="text-center mb-3">
-                <img src="/images/logo.svg" alt="تيرا" class="logo-img" style="height:40px; margin-bottom:16px;">
                 <div class="otp-icon-circle">
                     <i class="fas fa-shield-alt"></i>
                 </div>
                 <h2 class="portal-title">التحقق من الرمز</h2>
-                <p id="instructionText">أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني</p>
+                <p id="instructionText">أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني</p>
             </div>
 
             <div class="alert-box" id="formAlert" style="display: none;">
@@ -223,8 +369,8 @@
 
             <form id="otpForm" novalidate>
                 <div class="form-field-group">
-                    <input type="text" id="otp" class="form-input-control otp-input" maxlength="6"
-                           placeholder="000000" autocomplete="one-time-code" inputmode="numeric" required>
+                    <input type="text" id="otp" class="form-input-control otp-input" maxlength="8"
+                           placeholder="00000000" autocomplete="one-time-code" inputmode="numeric" required>
                     <div class="error-feedback-msg" id="otp-error"></div>
                 </div>
 
@@ -235,7 +381,6 @@
                 </div>
             </form>
 
-            <!-- المؤقت وإعادة الإرسال -->
             <div class="timer-container" id="timerContainer">
                 <span>يمكنك إعادة الإرسال بعد </span>
                 <span id="timerDisplay">01:00</span>
@@ -246,27 +391,15 @@
                     <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
                 </span>
             </div>
-
-            <div class="text-center mt-3">
-                <a href="#" id="backLink" class="back-link">
-                    <i class="fas fa-arrow-right"></i> <span id="backLinkText">العودة لتسجيل الدخول</span>
-                </a>
-            </div>
         </div>
+    </main>
 
-        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
-            <div class="loader-content-card">
-                <div class="spinning-infinity-ring"></div>
-                <h4>جاري التحقق من الرمز</h4>
-                <p>يرجى الانتظار...</p>
-                <div class="loading-progress-track">
-                    <div class="progress-fill-bar" id="progressFillBar"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- تذييل -->
+    <footer class="page-footer no-print">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
 
-    <!-- ملفات الجافاسكريبت الأساسية فقط (بدون أي كود داخلي) -->
+    <!-- ملفات الجافاسكريبت الأساسية فقط -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
