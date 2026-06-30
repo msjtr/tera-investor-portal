@@ -5,12 +5,14 @@
  * - ينتظر جاهزية Supabase.
  * - يجلب بيانات المستخدم ويعرض اسمه في الهيدر.
  * - يجلب البيانات البنكية المخزنة من user_bank_info ويملأ النموذج.
- * - يحفظ البيانات ويرفع إثبات الحساب إلى Supabase Storage.
+ * - يحفظ البيانات ويرفع إثبات الحساب إلى Supabase Storage (اسم آمن).
+ * - يرسل رمز OTP ويوجّه إلى verify-otp.html بعد الحفظ.
  * - يُحدّث شريط التقدم تلقائياً.
  */
 (function() {
     'use strict';
 
+    // ---------- دوال مساعدة ----------
     function waitForSupabase() {
         return new Promise((resolve, reject) => {
             if (window.teraSupabase) return resolve(window.teraSupabase);
@@ -36,10 +38,20 @@
         if (el) el.value = value;
     }
 
+    /** تعقيم اسم الملف لإزالة الأحرف غير الآمنة (مثل العربية) */
+    function sanitizeFileName(originalName) {
+        const ext = originalName.split('.').pop().toLowerCase();
+        const safeBase = `${Date.now()}-${crypto.randomUUID()}`;
+        return `${safeBase}.${ext}`;
+    }
+
     async function uploadFile(file, userId, folder) {
         const supabase = window.teraSupabase;
-        const fileName = `${folder}/${userId}/${Date.now()}-${file.name}`;
-        const { data, error } = await supabase.storage.from('attachments').upload(fileName, file, { upsert: true });
+        const safeName = sanitizeFileName(file.name);
+        const fileName = `${folder}/${userId}/${safeName}`;
+        const { data, error } = await supabase.storage
+            .from('attachments')
+            .upload(fileName, file, { upsert: true });
         if (error) throw error;
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(fileName);
         return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
@@ -74,6 +86,20 @@
         tracker.innerHTML = html;
     }
 
+    /** جلب مرفق إثبات الحساب البنكي السابق */
+    async function loadExistingBankProof(supabase, userId) {
+        const { data } = await supabase
+            .from('user_attachments')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('description', 'bank_proof')
+            .order('uploaded_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        return data || null;
+    }
+
+    // ---------- التهيئة الرئيسية ----------
     async function initPage() {
         let supabase;
         try { supabase = await waitForSupabase(); } catch (err) { showAlert('تعذر الاتصال بقاعدة البيانات.', 'error'); return; }
@@ -85,8 +111,10 @@
             return;
         }
 
+        // تحديث الهيدر (إصلاح: استخدام textContent)
         const userName = user.user_metadata?.full_name || 'مستخدم';
-        setElementValue('headerUserName', userName);
+        const headerNameEl = document.getElementById('headerUserName');
+        if (headerNameEl) headerNameEl.textContent = userName;
         const avatar = document.getElementById('headerAvatar');
         if (avatar) avatar.textContent = userName.charAt(0).toUpperCase();
 
@@ -112,12 +140,28 @@
             }
         } catch (e) { console.warn('تعذر جلب البيانات البنكية:', e); }
 
+        // 🔁 تحميل مرفق إثبات الحساب البنكي السابق وربطه بالقسم
+        let existingBankProof = null;
+        try {
+            existingBankProof = await loadExistingBankProof(supabase, user.id);
+            if (existingBankProof) {
+                const zone = document.getElementById('bankProofUpload');
+                if (zone) {
+                    const span = zone.querySelector('span:first-of-type');
+                    if (span) {
+                        span.textContent = existingBankProof.file_name;
+                        span.style.color = '#028090';
+                    }
+                }
+            }
+        } catch (e) { console.warn('تعذر تحميل مرفق البنكي:', e); }
+
         // إظهار/إخفاء الحقول الدولية
         document.getElementById('bankCountry').addEventListener('change', function() {
             document.getElementById('internationalFields').classList.toggle('show', this.value !== 'sa');
         });
 
-        // تفعيل رفع الملفات
+        // تفعيل رفع الملفات (عام)
         document.querySelectorAll('.upload-zone').forEach(zone => {
             const fileInput = zone.querySelector('input[type="file"]');
             if (fileInput) {
@@ -126,7 +170,10 @@
                     e.stopPropagation();
                     if (this.files && this.files[0]) {
                         const span = zone.querySelector('span:first-of-type');
-                        if (span) { span.textContent = this.files[0].name; span.style.color = '#028090'; }
+                        if (span) {
+                            span.textContent = this.files[0].name;
+                            span.style.color = '#028090';
+                        }
                     }
                 });
             }
@@ -152,18 +199,62 @@
                 }
 
                 const proofInput = document.querySelector('#bankProofUpload input[type="file"]');
-                if (!proofInput || !proofInput.files || !proofInput.files[0]) {
+                const newFile = proofInput?.files?.[0];
+
+                // يجب وجود ملف جديد أو مرفق سابق
+                if (!newFile && !existingBankProof) {
                     showAlert('يرجى رفع مستند إثبات الحساب البنكي.', 'error');
                     return;
                 }
 
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn ? submitBtn.innerHTML : '';
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+                }
 
                 try {
-                    const fileRecord = await uploadFile(proofInput.files[0], user.id, 'bank_proof');
+                    let fileRecord;
 
+                    if (newFile) {
+                        // رفع ملف جديد
+                        fileRecord = await uploadFile(newFile, user.id, 'bank_proof');
+                        // إدراج سجل جديد
+                        await supabase.from('user_attachments').insert({
+                            user_id: user.id,
+                            file_name: newFile.name,
+                            file_path: fileRecord.path,
+                            file_type: fileRecord.type,
+                            file_size: fileRecord.size,
+                            description: 'bank_proof',
+                            uploaded_at: new Date().toISOString()
+                        });
+                        // تحديث المتغير للمرفق الموجود
+                        existingBankProof = {
+                            id: null,
+                            file_name: newFile.name,
+                            file_path: fileRecord.path,
+                            file_size: fileRecord.size,
+                            file_type: fileRecord.type
+                        };
+                    } else {
+                        // استخدام المرفق القديم
+                        fileRecord = {
+                            path: existingBankProof.file_path,
+                            publicUrl: '',
+                            size: existingBankProof.file_size,
+                            type: existingBankProof.file_type
+                        };
+                        // تحديث تاريخ المرفق فقط
+                        if (existingBankProof.id) {
+                            await supabase.from('user_attachments')
+                                .update({ uploaded_at: new Date().toISOString() })
+                                .eq('id', existingBankProof.id);
+                        }
+                    }
+
+                    // حفظ البيانات البنكية
                     const payload = {
                         user_id: user.id,
                         bank_name: bankName,
@@ -179,34 +270,44 @@
                         updated_at: new Date().toISOString()
                     };
 
-                    await supabase.from('user_bank_info').upsert(payload, { onConflict: 'user_id' });
+                    const { error } = await supabase
+                        .from('user_bank_info')
+                        .upsert(payload, { onConflict: 'user_id' });
+                    if (error) throw error;
 
-                    await supabase.from('user_attachments').insert({
-                        user_id: user.id,
-                        file_name: proofInput.files[0].name,
-                        file_path: fileRecord.path,
-                        file_type: fileRecord.type,
-                        file_size: fileRecord.size,
-                        description: 'bank_proof',
-                        uploaded_at: new Date().toISOString()
-                    });
-
+                    // تحديث حالة التحقق والتقدم
                     await supabase.from('verification_requests').upsert({
                         user_id: user.id,
                         bank_info_completed: true,
-                        attachments_completed: true,
                         progress: 90,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
 
                     await updateProgressTracker(supabase, user.id);
 
-                    showAlert('✅ تم حفظ البيانات البنكية ورفع المستندات بنجاح.', 'success');
+                    // ✉️ إرسال رمز التحقق (OTP) وتوجيه إلى صفحة التحقق
+                    const { error: otpError } = await supabase.auth.signInWithOtp({
+                        email: user.email,
+                        options: { shouldCreateUser: false }
+                    });
+                    if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
+
+                    localStorage.setItem('pendingVerificationEmail', user.email);
+                    localStorage.setItem('tera_verify_type', 'bank_info');
+
+                    showAlert('✅ تم حفظ البيانات البنكية. جاري توجيهك لتأكيد هويتك...', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/verify-otp.html');
+                    }, 2000);
+
                 } catch (error) {
                     console.error('فشل الحفظ:', error);
                     showAlert('تعذر حفظ البيانات: ' + (error.message || 'خطأ غير معروف'), 'error');
                 } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalText; }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
                 }
             });
         }
