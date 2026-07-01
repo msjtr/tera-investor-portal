@@ -53,6 +53,17 @@
             text-align: right;
             line-height: 1.6;
         }
+        .debug {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 16px;
+            word-break: break-all;
+            text-align: left;
+            direction: ltr;
+        }
     </style>
 </head>
 <body>
@@ -65,6 +76,7 @@
         <div class="note" id="noteBox" style="display:none;">
             <strong>ملاحظة:</strong> إذا وصلتك رسالة تأكيد إلى بريدك القديم، فهي مجرد إشعار أمان. رابط التأكيد الحقيقي يكون في <strong>البريد الإلكتروني الجديد</strong> الذي أدخلته.
         </div>
+        <div class="debug" id="debugBox" style="display:none;"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -76,6 +88,7 @@
             const subMessage = document.getElementById('subMessage');
             const actionBtn = document.getElementById('actionBtn');
             const noteBox = document.getElementById('noteBox');
+            const debugBox = document.getElementById('debugBox');
 
             // انتظار Supabase
             if (!window.teraSupabase) {
@@ -97,36 +110,67 @@
 
             const supabase = window.teraSupabase;
 
-            // استخراج الرمز (token) من الرابط بدقة
+            // ---- استخراج الرمز (token) بكل الطرق الممكنة ----
             let token = null;
+            const fullUrl = window.location.href;
             const queryString = window.location.search.substring(1);
             const hash = window.location.hash.substring(1);
 
+            // عرض معلومات الرابط للمساعدة في التشخيص (يمكن إخفاؤها لاحقاً)
+            debugBox.style.display = 'block';
+            debugBox.innerHTML = `<strong>الرابط الكامل:</strong><br>${fullUrl}<br><br><strong>query:</strong> ${queryString || '(فارغ)'}<br><strong>hash:</strong> ${hash || '(فارغ)'}`;
+
+            // 1. محاولة استخراج token من query string
             if (queryString) {
-                const queryParams = new URLSearchParams(queryString);
-                token = queryParams.get('token');
+                const qParams = new URLSearchParams(queryString);
+                token = qParams.get('token') || qParams.get('access_token') || qParams.get('confirmation_token');
             }
+
+            // 2. إذا لم يوجد، نبحث في hash
             if (!token && hash) {
-                // قد يكون الرمز مباشرة بعد # بدون مفتاح
-                if (!hash.includes('=')) {
-                    token = hash;
+                // إذا كان hash يحتوي على معطيات (مثل token=...)
+                if (hash.includes('=')) {
+                    const hParams = new URLSearchParams(hash);
+                    token = hParams.get('token') || hParams.get('access_token') || hParams.get('confirmation_token');
                 } else {
-                    const hashParams = new URLSearchParams(hash);
-                    token = hashParams.get('token');
+                    // ربما hash هو الرمز نفسه
+                    token = hash;
                 }
             }
 
+            // 3. إذا لم يوجد بعد، قد يكون الرمز مدمجًا في المسار (pathname) – نأخذ الجزء الأخير
             if (!token) {
-                showError('الرابط غير صالح. لم يتم العثور على رمز التأكيد. تأكد من فتح الرابط من البريد الجديد.', true);
+                const pathParts = window.location.pathname.split('/');
+                const lastPart = pathParts[pathParts.length - 1];
+                if (lastPart && lastPart.length > 30) { // رمز طويل عادة
+                    token = lastPart;
+                }
+            }
+
+            console.log('الرمز المستخرج:', token);
+
+            if (!token) {
+                showError('الرابط لا يحتوي على رمز تأكيد. يرجى نسخ الرابط كاملاً من البريد الجديد وإعادة لصقه في المتصفح. تأكد من فتح الرابط من البريد الجديد وليس القديم.', true);
                 return;
             }
 
+            // ---- محاولة تأكيد البريد باستخدام الرمز ----
             try {
-                // تبادل الرمز لتأكيد تغيير البريد الإلكتروني
-                const { error } = await supabase.auth.verifyOtp({
+                // نجرب type 'email_change' أولاً
+                let { error } = await supabase.auth.verifyOtp({
                     token: token,
                     type: 'email_change'
                 });
+
+                // إذا فشل، نجرب type 'signup' أو 'recovery' كتجربة
+                if (error) {
+                    console.warn('فشل email_change، نجرب signup:', error.message);
+                    const { error: error2 } = await supabase.auth.verifyOtp({
+                        token: token,
+                        type: 'signup'
+                    });
+                    error = error2;
+                }
 
                 if (error) throw error;
 
@@ -135,7 +179,8 @@
                 message.textContent = 'تم تأكيد البريد الإلكتروني بنجاح.';
                 subMessage.textContent = 'تم تغيير بريدك الإلكتروني. يمكنك الآن المتابعة.';
                 actionBtn.style.display = 'inline-block';
-                noteBox.style.display = 'none'; // إخفاء الملاحظة
+                noteBox.style.display = 'none';
+                debugBox.style.display = 'none';
 
             } catch (err) {
                 console.error('فشل تأكيد البريد:', err);
