@@ -1,7 +1,7 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info
- * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
- * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل (بدون اشتراط email_verified).
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments
+ * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
+ * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
  */
 (function() {
     'use strict';
@@ -56,7 +56,7 @@
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments
 
         if (pendingEmail) {
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
@@ -66,6 +66,7 @@
             else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
             else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
             else if (verifyType === 'bank_info') mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى';
+            else if (verifyType === 'attachments') mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى';
             
             if (instructionMainText) instructionMainText.textContent = mainMessage;
             if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
@@ -75,7 +76,7 @@
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info') {
+        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -83,14 +84,14 @@
             backLinkText.textContent = 'العودة لتسجيل الدخول';
         }
 
-        // ---------- ٥. مؤقت إعادة الإرسال (60 ثانية) ----------
-        let timerSeconds = 60;
+        // ---------- ٥. مؤقت إعادة الإرسال (5 دقائق = 300 ثانية) ----------
+        let timerSeconds = 300;
         let timerInterval = null;
 
         function startTimer() {
             resendBtn.classList.add('disabled');
             timerContainer.style.display = 'block';
-            timerSeconds = 60;
+            timerSeconds = 300;
             updateTimerDisplay();
 
             timerInterval = setInterval(() => {
@@ -158,7 +159,8 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info') ? 'email' : verifyType;
+                // الأنواع التي تستخدم OTP عبر البريد الإلكتروني (وليس signup/recovery)
+                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
@@ -173,16 +175,16 @@
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                // التوجيه بعد نجاح التحقق
+                // التوجيه حسب نوع العملية
                 setTimeout(async () => {
                     if (verifyType === 'signup') {
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
                     } else {
-                        // 1. تحديث المرحلة المكتملة في verification_requests
+                        // تحديث المرحلة المكتملة في verification_requests
                         await updateStageCompleted(supabaseClient, verifyType);
-                        // 2. فحص إن كانت جميع المراحل مكتملة وتحويل الطلب إلى "قيد المراجعة"
+                        // فحص إن كانت جميع المراحل مكتملة وتحويل الطلب إلى "قيد المراجعة"
                         finalizeRequestIfComplete(supabaseClient);
                     }
                 }, 1500);
@@ -220,7 +222,7 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info') {
+                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -260,6 +262,8 @@
                     fields.national_address_completed = true;
                 } else if (type === 'bank_info') {
                     fields.bank_info_completed = true;
+                } else if (type === 'attachments') {
+                    fields.attachments_completed = true;
                 }
 
                 await client.from('verification_requests').upsert({
@@ -285,7 +289,6 @@
 
                 if (!req) return;
 
-                // المصفوفة بدون email_verified
                 const requiredStages = [
                     'personal_info_completed',
                     'national_address_completed',
