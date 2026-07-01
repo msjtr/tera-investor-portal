@@ -1,8 +1,8 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email | change_mobile
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
  * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
- * يدعم تغيير البريد الإلكتروني وتغيير رقم الجوال.
+ * يدعم تغيير رقم الجوال عبر change_mobile.
  */
 (function() {
     'use strict';
@@ -28,16 +28,26 @@
 
         // ---------- ١. انتظار جاهزية Supabase ----------
         if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
-                if (submitBtn) submitBtn.disabled = true;
-                return;
+            // محاولة استخدام waitForSupabase من security.js إن وُجدت
+            if (typeof waitForSupabase === 'function') {
+                try { await waitForSupabase(); } catch (e) {
+                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+                    if (submitBtn) submitBtn.disabled = true;
+                    return;
+                }
+            } else {
+                // احتياطي: الطريقة التقليدية
+                try {
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                        document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                        document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
+                    });
+                } catch (err) {
+                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+                    if (submitBtn) submitBtn.disabled = true;
+                    return;
+                }
             }
         }
 
@@ -57,7 +67,7 @@
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email | change_mobile
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
 
         if (pendingEmail) {
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
@@ -68,7 +78,6 @@
             else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
             else if (verifyType === 'bank_info') mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى';
             else if (verifyType === 'attachments') mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى';
-            else if (verifyType === 'change_email') mainMessage = 'أدخل رمز تأكيد تغيير البريد الإلكتروني (8 أرقام) المرسل إلى';
             else if (verifyType === 'change_mobile') mainMessage = 'أدخل رمز تأكيد تغيير رقم الجوال (8 أرقام) المرسل إلى';
             
             if (instructionMainText) instructionMainText.textContent = mainMessage;
@@ -79,7 +88,7 @@
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') {
+        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -162,8 +171,7 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                // الأنواع التي تستخدم OTP عبر البريد الإلكتروني (وليس signup/recovery)
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') ? 'email' : verifyType;
+                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
@@ -178,20 +186,15 @@
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                // التوجيه حسب نوع العملية
                 setTimeout(async () => {
                     if (verifyType === 'signup') {
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
-                    } else if (verifyType === 'change_email') {
-                        await changeEmail(supabaseClient);
                     } else if (verifyType === 'change_mobile') {
                         await changeMobile(supabaseClient);
                     } else {
-                        // تحديث المرحلة المكتملة في verification_requests
                         await updateStageCompleted(supabaseClient, verifyType);
-                        // فحص إن كانت جميع المراحل مكتملة وتحويل الطلب إلى "قيد المراجعة"
                         finalizeRequestIfComplete(supabaseClient);
                     }
                 }, 1500);
@@ -229,7 +232,7 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') {
+                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -253,7 +256,6 @@
 
         // ---------- ٩. دوال التحديث بعد التحقق ----------
 
-        // تحديث حقل المرحلة المكتملة بناءً على نوع التحقق
         async function updateStageCompleted(client, type) {
             try {
                 const { data: { user } } = await client.auth.getUser();
@@ -282,26 +284,6 @@
             }
         }
 
-        // دالة تغيير البريد الإلكتروني
-        async function changeEmail(client) {
-            try {
-                const newEmail = localStorage.getItem('pendingNewEmail');
-                if (newEmail) {
-                    await client.auth.updateUser({ email: newEmail });
-                }
-                localStorage.removeItem('pendingNewEmail');
-                showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
-                setTimeout(() => {
-                    window.location.replace('/pages/security/change-email.html');
-                }, 2000);
-            } catch (e) {
-                console.error('خطأ في تغيير البريد:', e);
-                showAlert('تعذر تغيير البريد الإلكتروني.', 'error');
-                window.location.replace('/pages/security/change-email.html');
-            }
-        }
-
-        // دالة تغيير رقم الجوال
         async function changeMobile(client) {
             try {
                 const newMobile = localStorage.getItem('pendingNewMobile');
@@ -320,7 +302,6 @@
             }
         }
 
-        // التحقق من اكتمال جميع المراحل وتحويل الطلب إلى "قيد المراجعة"
         async function finalizeRequestIfComplete(client) {
             try {
                 const { data: { user } } = await client.auth.getUser();
