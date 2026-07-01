@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ========== الأنماط الأساسية (كما هي) ========== */
+        /* ========== الأنماط الأساسية ========== */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -74,7 +74,6 @@
         .welcome-banner h2 { font-family: 'Cairo', sans-serif; font-weight: 800; font-size: 22px; margin: 0; color: #fff; }
         .welcome-banner h2 i { color: var(--tera-teal-light); margin-left: 10px; }
         .welcome-banner p { margin: 4px 0 0 0; opacity: 0.85; font-size: 14px; }
-        .welcome-banner .date-badge { background: rgba(255,255,255,0.12); padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.08); }
         .quick-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .quick-actions .btn-quick { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.25s; display: flex; align-items: center; gap: 8px; text-decoration: none; }
         .quick-actions .btn-quick:hover { background: var(--tera-teal); border-color: var(--tera-teal); }
@@ -122,33 +121,37 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-overlay p { color: var(--tera-navy); font-weight: 700; font-size: 16px; }
 
-        /* ========== أنماط لوحة حالة الطلب (ألوان أيقونات حسب الحالة) ========== */
-        .request-status-icon {
-            font-size: 48px;
-            margin-bottom: 8px;
+        /* شريط التاريخ والوقت والجلسة */
+        .date-badge-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.12);
+            padding: 10px 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-        .status-under-review .request-status-icon { color: #0ea5e9; } /* أزرق */
-        .status-approved .request-status-icon { color: #10b981; }      /* أخضر */
-        .status-rejected .request-status-icon { color: #ef4444; }       /* أحمر */
-        .status-needs-revision .request-status-icon { color: #f59e0b; } /* برتقالي */
-        .status-draft .request-status-icon,
-        .status-pending_information .request-status-icon { color: #94a3b8; } /* رمادي */
-
-        .request-status-badge {
-            display: inline-block;
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-weight: 700;
+        .date-badge-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
         }
-        .status-under-review .request-status-badge { background: #e0f2fe; color: #0369a1; }
-        .status-approved .request-status-badge { background: #f0fdf4; color: #166534; }
-        .status-rejected .request-status-badge { background: #fef2f2; color: #991b1b; }
-        .status-needs-revision .request-status-badge { background: #fff7ed; color: #9a3412; }
-        .status-draft .request-status-badge,
-        .status-pending_information .request-status-badge { background: #f1f5f9; color: #475569; }
+        .date-badge-item i {
+            font-size: 16px;
+            color: var(--tera-teal-light);
+            width: 20px;
+            text-align: center;
+        }
+        .date-badge-item span {
+            white-space: nowrap;
+        }
 
-        /* ========== تحسينات تنسيق قسم حالة الطلب (شكل جديد) ========== */
+        /* أنماط حالة الطلب */
         .request-status-card {
             background: #fff;
             border-radius: 16px;
@@ -212,9 +215,9 @@
             color: #9a3412;
             border: 1px solid #fed7aa;
         }
-        .request-details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .request-details-list {
+            display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -228,12 +231,14 @@
             border: 1px solid #e2e8f0;
             font-size: 14px;
             color: #334155;
+            flex-wrap: wrap;
         }
         .request-detail-item i {
             width: 20px;
             font-size: 14px;
             color: #028090;
             text-align: center;
+            flex-shrink: 0;
         }
         .request-detail-item strong {
             color: #0A1B3F;
@@ -244,20 +249,11 @@
         .request-detail-item span {
             color: #1e293b;
             font-weight: 600;
+            flex: 1;
         }
-        .request-detail-item.full-width {
-            grid-column: 1 / -1;
-        }
-        .progress-section {
-            margin: 12px 0;
-        }
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 600;
-            color: #64748b;
-            margin-bottom: 6px;
+        .request-detail-item .progress-section {
+            width: 100%;
+            margin-top: 4px;
         }
         .progress-bar-outer {
             background: #e2e8f0;
@@ -312,23 +308,6 @@
             .progress-bar-outer {
                 background: #334155;
             }
-            .progress-label {
-                color: #94a3b8;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .request-details-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* المؤقت */
-        #sessionTimer {
-            margin-right: 10px;
-            font-size: 13px;
-            color: #cbd5e1;
-            font-weight: 600;
         }
 
         @media (max-width: 991px) {
@@ -347,7 +326,6 @@
             .welcome-banner { padding: 18px 20px !important; flex-direction: column !important; align-items: stretch !important; gap: 14px !important; margin-bottom: 20px !important; }
             .welcome-banner h2 { font-size: 19px !important; }
             .welcome-banner p { font-size: 13px !important; }
-            .welcome-banner .date-badge { font-size: 13px !important; padding: 8px 16px !important; justify-content: center !important; width: 100% !important; }
             .quick-actions { width: 100% !important; }
             .quick-actions .btn-quick { flex: 1 !important; justify-content: center !important; font-size: 14px !important; padding: 10px 12px !important; }
             .stats-grid { grid-template-columns: 1fr !important; gap: 14px !important; margin-bottom: 20px !important; }
@@ -457,7 +435,7 @@
 
         <main class="main-content">
 
-            <!-- تنبيه الاستكمال (فقط قبل التقديم) -->
+            <!-- تنبيه الاستكمال -->
             <div id="profileAlertBanner" style="display:none; background: #fef3c7; border:1px solid #fcd34d; padding:16px 20px; margin-bottom:20px; border-radius:12px; align-items:center; gap:12px; flex-wrap:wrap;">
                 <i class="fas fa-exclamation-triangle" style="color:#d97706; font-size:24px;"></i>
                 <div style="flex:1;">
@@ -467,7 +445,7 @@
                 <a href="/pages/profile/personal-information.html" style="background:#d97706; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">استكمال الملف الشخصي</a>
             </div>
 
-            <!-- لوحة حالة الطلب (يتم ملؤها بواسطة dashboard.js) -->
+            <!-- لوحة حالة الطلب -->
             <div id="requestStatusPanel" style="margin-bottom:20px;"></div>
 
             <div class="welcome-banner">
@@ -476,10 +454,19 @@
                     <p>نرحب بعودتك إلى لوحة تحكم تيرا. إليك ملخص أداء محفظتك الاستثمارية.</p>
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                    <div class="date-badge">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span id="currentDate"></span>
-                        <span id="sessionTimer" style="margin-right:10px; color:#cbd5e1; font-weight:600;"></span>
+                    <div class="date-badge-group">
+                        <div class="date-badge-item" id="dateItem">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="currentDate"></span>
+                        </div>
+                        <div class="date-badge-item" id="timeItem">
+                            <i class="fas fa-clock"></i>
+                            <span id="currentTime"></span>
+                        </div>
+                        <div class="date-badge-item" id="sessionItem">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span id="sessionTimer"></span>
+                        </div>
                     </div>
                     <div class="quick-actions">
                         <a href="/pages/portfolio/withdraw-request.html" class="btn-quick"><i class="fas fa-hand-holding-usd"></i> سحب</a>
