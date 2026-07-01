@@ -1,9 +1,9 @@
 /**
  * security.js – دوال صفحات الأمان (Enterprise)
  * =============================================
- * يعتمد على كائن window.SecurityPages لتهيئة الصفحات المختلفة:
+ * يحتوي على جميع صفحات الأمان:
  * - change-password
- * - change-email (منفصل في security-change-email.js)
+ * - change-email (OTP للقديم + رابط تأكيد للجديد)
  * - change-mobile
  * - login-history
  * - registered-devices
@@ -16,12 +16,10 @@ window.SecurityPages = window.SecurityPages || {};
 
 /**
  * انتظار جاهزية Supabase (مع محاولات متعددة)
- * @returns {Promise<object>} عميل Supabase
  */
 async function waitForSupabase() {
     if (window.teraSupabase) return window.teraSupabase;
 
-    // المحاولة الأولى: الاستماع لحدث supabase:ready
     try {
         await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
@@ -35,23 +33,17 @@ async function waitForSupabase() {
             }, { once: true });
         });
         if (window.teraSupabase) return window.teraSupabase;
-    } catch (e) {
-        // إذا فشل الحدث، ننتظر قليلاً ثم نتحقق مباشرة
-    }
+    } catch (e) {}
 
-    // المحاولة الثانية: الانتظار لظهور window.teraSupabase مباشرة
     for (let i = 0; i < 20; i++) {
         await new Promise(r => setTimeout(r, 1000));
         if (window.teraSupabase) return window.teraSupabase;
     }
-
     throw new Error('Supabase غير متوفر');
 }
 
 /**
- * عرض رسالة تنبيه في صفحة الأمان
- * @param {string} message - نص الرسالة
- * @param {string} type - نوع التنبيه (success | error | info)
+ * عرض رسالة تنبيه
  */
 function showSecurityAlert(message, type) {
     const box = document.getElementById('formAlert');
@@ -68,7 +60,6 @@ function showSecurityAlert(message, type) {
 
 /**
  * تحديث اسم المستخدم والأفاتار في الهيدر
- * @param {object} user - كائن المستخدم من Supabase
  */
 function updateHeader(user) {
     if (!user) return;
@@ -88,42 +79,145 @@ window.SecurityPages['change-password'] = {
             showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
             return;
         }
-
-        // تحديث الهيدر
         try {
             const { data: { user } } = await supabase.auth.getUser();
             updateHeader(user);
-        } catch (e) { console.warn('تعذر تحديث الهيدر:', e); }
+        } catch (e) { console.warn(e); }
 
         const form = document.getElementById('changePasswordForm');
         if (!form) return;
-
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const currentPassword = document.getElementById('currentPassword')?.value;
             const newPassword = document.getElementById('newPassword')?.value;
             const confirmPassword = document.getElementById('confirmPassword')?.value;
-
             if (newPassword !== confirmPassword) {
                 showSecurityAlert('كلمة المرور الجديدة غير متطابقة.', 'error');
                 return;
             }
-
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
-
             try {
                 const { error } = await supabase.auth.updateUser({ password: newPassword });
                 if (error) throw error;
                 showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
                 form.reset();
             } catch (error) {
-                console.error('❌ خطأ في تغيير كلمة المرور:', error);
                 showSecurityAlert(error.message || 'تعذر تغيير كلمة المرور.', 'error');
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور'; }
             }
         });
+    }
+};
+
+// ========== تغيير البريد الإلكتروني (OTP للقديم + رابط تأكيد للجديد) ==========
+window.SecurityPages['change-email'] = {
+    init: async function() {
+        console.log('📧 تهيئة صفحة تغيير البريد الإلكتروني...');
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            showSecurityAlert('يجب تسجيل الدخول أولاً.', 'error');
+            setTimeout(() => window.location.replace('/auth/auth/login/login.html'), 2000);
+            return;
+        }
+        updateHeader(user);
+
+        const currentEmail = user.email;
+        document.getElementById('currentEmailDisplay').textContent = currentEmail;
+
+        // عناصر DOM
+        const sendOldEmailOtpBtn = document.getElementById('sendOldEmailOtpBtn');
+        const step1OtpGroup = document.getElementById('step1OtpGroup');
+        const oldEmailOtp = document.getElementById('oldEmailOtp');
+        const verifyOldEmailBtn = document.getElementById('verifyOldEmailBtn');
+        const oldEmailOtpError = document.getElementById('oldEmailOtpError');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const newEmailInput = document.getElementById('newEmail');
+        const confirmEmailInput = document.getElementById('confirmEmail');
+        const changeEmailBtn = document.getElementById('changeEmailBtn');
+
+        // المرحلة 1: إرسال رمز إلى البريد القديم
+        sendOldEmailOtpBtn.addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: currentEmail,
+                    options: { shouldCreateUser: false }
+                });
+                if (error) throw error;
+                showSecurityAlert('تم إرسال رمز التحقق إلى بريدك الإلكتروني الحالي.', 'success');
+                step1OtpGroup.style.display = 'block';
+                oldEmailOtp.focus();
+                this.style.display = 'none';
+            } catch (err) {
+                showSecurityAlert(err.message || 'فشل إرسال الرمز.', 'error');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الحالي';
+            }
+        });
+
+        verifyOldEmailBtn.addEventListener('click', async function() {
+            const otp = oldEmailOtp.value.trim();
+            if (otp.length !== 8) {
+                oldEmailOtpError.textContent = 'الرجاء إدخال 8 أرقام.';
+                return;
+            }
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+            try {
+                const { error } = await supabase.auth.verifyOtp({
+                    email: currentEmail,
+                    token: otp,
+                    type: 'email'
+                });
+                if (error) throw error;
+                showSecurityAlert('تم تأكيد البريد الحالي بنجاح.', 'success');
+                step1.style.display = 'none';
+                step2.style.display = 'block';
+            } catch (err) {
+                oldEmailOtpError.textContent = err.message.includes('expired') ? 'انتهت صلاحية الرمز' : 'رمز التحقق غير صحيح.';
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+            }
+        });
+
+        // المرحلة 2: زر تغيير البريد (يرسل رابط تأكيد)
+        if (changeEmailBtn) {
+            changeEmailBtn.addEventListener('click', async function() {
+                const newEmail = newEmailInput.value.trim();
+                const confirm = confirmEmailInput.value.trim();
+                if (!newEmail || newEmail !== confirm) {
+                    showSecurityAlert('البريد الإلكتروني غير متطابق.', 'error');
+                    return;
+                }
+                if (newEmail === currentEmail) {
+                    showSecurityAlert('البريد الجديد مطابق للحالي.', 'error');
+                    return;
+                }
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                try {
+                    const { error } = await supabase.auth.updateUser({ email: newEmail });
+                    if (error) throw error;
+                    showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
+                    setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 3000);
+                } catch (err) {
+                    showSecurityAlert(err.message || 'فشل تغيير البريد.', 'error');
+                } finally {
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني';
+                }
+            });
+        }
     }
 };
 
@@ -136,7 +230,6 @@ window.SecurityPages['change-mobile'] = {
             showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
             return;
         }
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
             updateHeader(user);
@@ -144,7 +237,6 @@ window.SecurityPages['change-mobile'] = {
 
         const form = document.getElementById('changeMobileForm');
         if (!form) return;
-
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             const mobile = document.getElementById('newMobile')?.value.trim();
@@ -152,25 +244,20 @@ window.SecurityPages['change-mobile'] = {
                 showSecurityAlert('يرجى إدخال رقم الجوال الجديد.', 'error');
                 return;
             }
-
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
-
             try {
                 const { error } = await supabase.auth.signInWithOtp({
                     phone: mobile,
                     options: { shouldCreateUser: false }
                 });
                 if (error) throw error;
-
                 localStorage.setItem('pendingNewMobile', mobile);
                 localStorage.setItem('pendingVerificationEmail', mobile);
                 localStorage.setItem('tera_verify_type', 'change_mobile');
-
                 showSecurityAlert('✅ تم إرسال رمز التحقق إلى رقم الجوال الجديد.', 'success');
                 setTimeout(() => window.location.replace('/auth/verify-otp.html'), 1500);
             } catch (error) {
-                console.error('❌ فشل إرسال رمز التحقق:', error);
                 showSecurityAlert(error.message || 'تعذر إرسال الرمز.', 'error');
             } finally {
                 if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير رقم الجوال'; }
@@ -188,18 +275,15 @@ window.SecurityPages['login-history'] = {
             showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
             return;
         }
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 updateHeader(user);
-
                 const { data: logs, error } = await supabase
                     .from('auth_login')
                     .select('*')
                     .eq('user_id', user.id)
                     .order('login_at', { ascending: false });
-
                 const tbody = document.getElementById('loginHistoryTableBody');
                 if (tbody && !error) {
                     if (logs && logs.length > 0) {
@@ -218,9 +302,7 @@ window.SecurityPages['login-history'] = {
                     }
                 }
             }
-        } catch (e) {
-            console.warn('تعذر جلب سجل الدخول:', e);
-        }
+        } catch (e) { console.warn(e); }
     }
 };
 
@@ -233,18 +315,15 @@ window.SecurityPages['registered-devices'] = {
             showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
             return;
         }
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 updateHeader(user);
-
                 const { data: devices, error } = await supabase
                     .from('auth_devices')
                     .select('*')
                     .eq('user_id', user.id)
                     .order('last_login_at', { ascending: false });
-
                 const tbody = document.getElementById('devicesTableBody');
                 if (tbody && !error) {
                     if (devices && devices.length > 0) {
@@ -264,9 +343,7 @@ window.SecurityPages['registered-devices'] = {
                     }
                 }
             }
-        } catch (e) {
-            console.warn('تعذر جلب الأجهزة:', e);
-        }
+        } catch (e) { console.warn(e); }
     }
 };
 
@@ -279,31 +356,26 @@ window.SecurityPages['two-factor-authentication'] = {
             showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
             return;
         }
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 updateHeader(user);
-
                 const { data: totp, error } = await supabase
                     .from('auth_totp')
                     .select('*')
                     .eq('user_id', user.id)
                     .maybeSingle();
-
                 const statusEl = document.getElementById('totpStatus');
                 if (statusEl && totp) {
                     statusEl.textContent = totp.is_enabled ? 'مفعلة' : 'غير مفعلة';
                     statusEl.style.color = totp.is_enabled ? '#16a34a' : '#dc2626';
                 }
             }
-        } catch (e) {
-            console.warn('تعذر جلب إعدادات 2FA:', e);
-        }
+        } catch (e) { console.warn(e); }
     }
 };
 
-// بدء الصفحة المطلوبة تلقائياً
+// ========== بدء الصفحة المناسبة تلقائياً ==========
 document.addEventListener('DOMContentLoaded', function() {
     const path = window.location.pathname;
     let pageName = '';
