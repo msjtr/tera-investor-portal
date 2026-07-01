@@ -271,8 +271,8 @@ window.SecurityPages['change-email'] = {
                         { emailRedirectTo: `${window.location.origin}/pages/security/confirm-email.html` }
                     );
                     if (error) throw error;
-                    showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
-                    setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 3000);
+                    showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه (والبريد العشوائي) لإكمال التغيير.', 'success');
+                    setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 4000);
                 } catch (err) {
                     showSecurityAlert(err.message || 'فشل تغيير البريد.', 'error');
                 } finally {
