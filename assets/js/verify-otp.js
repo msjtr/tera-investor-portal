@@ -1,8 +1,8 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email | change_mobile
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
  * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
- * يدعم تغيير البريد الإلكتروني عبر change_email.
+ * يدعم تغيير البريد الإلكتروني وتغيير رقم الجوال.
  */
 (function() {
     'use strict';
@@ -57,7 +57,7 @@
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_email | change_mobile
 
         if (pendingEmail) {
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
@@ -69,6 +69,7 @@
             else if (verifyType === 'bank_info') mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى';
             else if (verifyType === 'attachments') mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى';
             else if (verifyType === 'change_email') mainMessage = 'أدخل رمز تأكيد تغيير البريد الإلكتروني (8 أرقام) المرسل إلى';
+            else if (verifyType === 'change_mobile') mainMessage = 'أدخل رمز تأكيد تغيير رقم الجوال (8 أرقام) المرسل إلى';
             
             if (instructionMainText) instructionMainText.textContent = mainMessage;
             if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
@@ -78,7 +79,7 @@
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email') {
+        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -162,7 +163,7 @@
 
             try {
                 // الأنواع التي تستخدم OTP عبر البريد الإلكتروني (وليس signup/recovery)
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email') ? 'email' : verifyType;
+                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') ? 'email' : verifyType;
 
                 const { error } = await supabaseClient.auth.verifyOtp({
                     email: pendingEmail,
@@ -185,6 +186,8 @@
                         window.location.replace('/auth/reset-password.html');
                     } else if (verifyType === 'change_email') {
                         await changeEmail(supabaseClient);
+                    } else if (verifyType === 'change_mobile') {
+                        await changeMobile(supabaseClient);
                     } else {
                         // تحديث المرحلة المكتملة في verification_requests
                         await updateStageCompleted(supabaseClient, verifyType);
@@ -226,7 +229,7 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email') {
+                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_email' || verifyType === 'change_mobile') {
                         await supabaseClient.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
@@ -295,6 +298,25 @@
                 console.error('خطأ في تغيير البريد:', e);
                 showAlert('تعذر تغيير البريد الإلكتروني.', 'error');
                 window.location.replace('/pages/security/change-email.html');
+            }
+        }
+
+        // دالة تغيير رقم الجوال
+        async function changeMobile(client) {
+            try {
+                const newMobile = localStorage.getItem('pendingNewMobile');
+                if (newMobile) {
+                    await client.auth.updateUser({ phone: newMobile });
+                }
+                localStorage.removeItem('pendingNewMobile');
+                showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
+                setTimeout(() => {
+                    window.location.replace('/pages/security/change-mobile.html');
+                }, 2000);
+            } catch (e) {
+                console.error('خطأ في تغيير رقم الجوال:', e);
+                showAlert('تعذر تغيير رقم الجوال.', 'error');
+                window.location.replace('/pages/security/change-mobile.html');
             }
         }
 
