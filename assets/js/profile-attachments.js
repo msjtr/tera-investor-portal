@@ -1,428 +1,349 @@
 /**
- * profile-attachments.js – المرفقات والوثائق + Secure Document Viewer (مُحدَّث)
- * ============================================================
- * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
- * - معالجة خطأ 429 (Too Many Requests).
- * - تسجيل سجل الوصول لا يؤثر على عرض المستند.
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments
+ * مع مؤقت إعادة إرسال، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
+ * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
  */
 (function() {
     'use strict';
 
-    // ---------- متغيرات عامة ----------
-    let currentDocPath = '';
-    let currentDocName = '';
-    let signedUrlTimerInterval = null;
+    document.addEventListener('DOMContentLoaded', async function() {
+        const form = document.getElementById('otpForm');
+        const otpInput = document.getElementById('otp');
+        const submitBtn = document.getElementById('submitBtn');
+        const resendBtn = document.getElementById('resendCode');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerContainer = document.getElementById('timerContainer');
+        const otpError = document.getElementById('otp-error');
+        const alertBox = document.getElementById('formAlert');
+        const alertIcon = document.getElementById('alertIcon');
+        const alertMessage = document.getElementById('alertMessage');
+        const instructionMainText = document.getElementById('instructionMainText');
+        const instructionEmailText = document.getElementById('instructionEmailText');
+        const loaderOverlay = document.getElementById('creativeLoaderScreen');
+        const backLink = document.getElementById('backLink');
+        const backLinkText = document.getElementById('backLinkText');
 
-    // ---------- دوال مساعدة ----------
-    function waitForSupabase() {
-        return new Promise((resolve, reject) => {
-            if (window.teraSupabase) return resolve(window.teraSupabase);
-            const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-            document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-            document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('فشل تحميل Supabase')); }, { once: true });
-        });
-    }
+        if (!form) return;
 
-    function showAlert(message, type) {
-        const box = document.createElement('div');
-        box.className = `alert-box show ${type || 'error'}`;
-        box.style.cssText = 'display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; margin-bottom:16px;';
-        box.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
-        const container = document.querySelector('.content-container');
-        if (container) {
-            container.insertBefore(box, container.firstChild);
-            setTimeout(() => box.remove(), 5000);
-        } else {
-            alert(message);
-        }
-    }
-
-    async function updateProgressTracker(supabase, userId) {
-        const tracker = document.getElementById('progressTracker');
-        if (!tracker) return;
-        const { data: req } = await supabase.from('verification_requests').select('*').eq('user_id', userId).maybeSingle();
-        const reqData = req || {};
-        const stages = [
-            { key: 'email_verified', label: 'التحقق من البريد', icon: 'fa-envelope' },
-            { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user' },
-            { key: 'national_address_completed', label: 'العنوان الوطني', icon: 'fa-map-marker-alt' },
-            { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone' },
-            { key: 'bank_info_completed', label: 'المعلومات البنكية', icon: 'fa-university' },
-            { key: 'attachments_completed', label: 'المرفقات', icon: 'fa-paperclip' },
-            { key: 'agreed', label: 'الإقرار', icon: 'fa-check' },
-            { key: 'submitted', label: 'إرسال الطلب', icon: 'fa-paper-plane' }
-        ];
-        let html = '';
-        stages.forEach((stage, index) => {
-            const completed = reqData[stage.key] || (stage.key === 'email_verified');
-            html += `<li class="${completed ? 'completed' : ''}"><span class="step-num">${completed ? '<i class="fas fa-check"></i>' : (index+1)}</span><span class="step-label">${stage.label}</span></li>`;
-            if (index < stages.length - 1) html += `<li class="step-line ${completed ? 'completed' : ''}"></li>`;
-        });
-        tracker.innerHTML = html;
-    }
-
-    // ---------- Secure Document Viewer ----------
-    function openSecureViewer(path, name) {
-        const modal = document.getElementById('docViewerModal');
-        if (!modal) return;
-        currentDocPath = path || '';
-        currentDocName = name || 'مستند';
-        document.getElementById('docNameDisplay').textContent = currentDocName;
-        document.getElementById('docViewerStep1').style.display = 'block';
-        document.getElementById('docViewerStep2').style.display = 'none';
-        document.getElementById('docViewerStep3').style.display = 'none';
-        if (document.getElementById('docOtpInput')) document.getElementById('docOtpInput').value = '';
-        if (document.getElementById('docOtpError')) document.getElementById('docOtpError').textContent = '';
-        clearTimers();
-        modal.classList.add('active');
-    }
-
-    function clearTimers() {
-        if (signedUrlTimerInterval) {
-            clearInterval(signedUrlTimerInterval);
-            signedUrlTimerInterval = null;
-        }
-    }
-
-    async function loadAttachments(supabase, userId) {
-        const tbody = document.getElementById('documentsTableBody');
-        if (!tbody) return;
-
-        const { data, error } = await supabase.from('user_attachments').select('*').eq('user_id', userId).order('uploaded_at', { ascending: false });
-        if (error) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">تعذر تحميل المرفقات.</td></tr>';
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">لا توجد مرفقات حتى الآن.</td></tr>';
-            updateStats(data || []);
-            return;
-        }
-
-        let html = '';
-        data.forEach((doc, index) => {
-            const statusClass = doc.status === 'approved' ? 'status-approved' : doc.status === 'rejected' ? 'status-rejected' : 'status-pending';
-            const statusText = doc.status === 'approved' ? 'معتمد' : doc.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة';
-            const date = doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString('ar-SA') : '-';
-
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td class="text-title">${doc.file_name || 'بدون اسم'}</td>
-                <td>${doc.file_type || '-'}</td>
-                <td>${doc.description || '-'}</td>
-                <td>${date}</td>
-                <td><span class="status-badge ${statusClass}"><i class="fas fa-circle"></i> ${statusText}</span></td>
-                <td>
-                    <div class="action-btns">
-                        <button class="action-btn view secure-view-btn" data-path="${doc.file_path}" data-name="${doc.file_name}" title="عرض آمن"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn delete" data-id="${doc.id}" title="حذف"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>`;
-        });
-
-        tbody.innerHTML = html;
-        updateStats(data);
-
-        // مستمعات الحذف
-        tbody.querySelectorAll('.action-btn.delete').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                if (!confirm('هل أنت متأكد من حذف هذا المرفق؟')) return;
-                const id = this.dataset.id;
-                const { error } = await supabase.from('user_attachments').delete().eq('id', id);
-                if (error) {
-                    showAlert('فشل حذف المرفق.', 'error');
-                } else {
-                    showAlert('تم حذف المرفق بنجاح.', 'success');
-                    loadAttachments(supabase, userId);
-                }
-            });
-        });
-
-        // مستمعات Secure Viewer
-        tbody.querySelectorAll('.secure-view-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                openSecureViewer(this.dataset.path, this.dataset.name);
-            });
-        });
-    }
-
-    function updateStats(data) {
-        const total = data.length;
-        const approved = data.filter(d => d.status === 'approved').length;
-        const pending = data.filter(d => d.status !== 'approved' && d.status !== 'rejected').length;
-        const rejected = data.filter(d => d.status === 'rejected').length;
-
-        document.getElementById('totalDocs').textContent = total;
-        document.getElementById('approvedDocs').textContent = approved;
-        document.getElementById('pendingDocs').textContent = pending;
-        document.getElementById('rejectedDocs').textContent = rejected;
-    }
-
-    async function uploadFile(file, userId) {
-        const supabase = window.teraSupabase;
-        const fileName = `manual/${userId}/${Date.now()}-${file.name}`;
-        const { data, error } = await supabase.storage.from('attachments').upload(fileName, file, { upsert: true });
-        if (error) throw error;
-        const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(fileName);
-        return { path: fileName, publicUrl: urlData.publicUrl, size: file.size, type: file.type };
-    }
-
-    function formatTime(sec) {
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function startSignedUrlTimer(seconds) {
-        const timerDisplay = document.getElementById('docUrlTimer');
-        const linkExpired = document.getElementById('linkExpiredMessage');
-        const requestNewBtn = document.getElementById('requestNewLinkBtn');
-        const link = document.getElementById('signedUrlLink');
-        if (!timerDisplay || !link || !linkExpired || !requestNewBtn) return;
-        let remaining = seconds;
-        clearTimers();
-        timerDisplay.textContent = formatTime(remaining);
-        link.style.display = '';
-        linkExpired.style.display = 'none';
-        requestNewBtn.style.display = 'none';
-
-        signedUrlTimerInterval = setInterval(() => {
-            remaining--;
-            timerDisplay.textContent = formatTime(remaining);
-            if (remaining <= 0) {
-                clearInterval(signedUrlTimerInterval);
-                link.style.display = 'none';
-                linkExpired.style.display = 'block';
-                requestNewBtn.style.display = 'inline-block';
+        // ---------- ١. انتظار جاهزية Supabase ----------
+        if (!window.teraSupabase) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
+                });
+            } catch (err) {
+                showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+                if (submitBtn) submitBtn.disabled = true;
+                return;
             }
-        }, 1000);
-    }
-
-    // ---------- التهيئة الرئيسية ----------
-    async function initPage() {
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) { showAlert('تعذر الاتصال بقاعدة البيانات.', 'error'); return; }
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            showAlert('يجب تسجيل الدخول أولاً.', 'error');
-            setTimeout(() => window.location.replace('/auth/auth/login/login.html'), 2000);
-            return;
         }
 
-        document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || 'مستخدم';
-        document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
+        const supabaseClient = window.teraSupabase;
 
-        await updateProgressTracker(supabase, user.id);
-        await loadAttachments(supabase, user.id);
-
-        // ---------- Secure Viewer Listeners ----------
-        const closeDocViewerModal = document.getElementById('closeDocViewerModal');
-        if (closeDocViewerModal) {
-            closeDocViewerModal.addEventListener('click', () => {
-                document.getElementById('docViewerModal').classList.remove('active');
-                clearTimers();
-            });
+        // ---------- ٢. تحديث اسم العميل في الهيدر ----------
+        try {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                const fullName = user.user_metadata?.full_name || 'مستخدم';
+                document.getElementById('headerUserName').textContent = fullName;
+                document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
+            }
+        } catch (e) {
+            console.warn('تعذر تحميل اسم المستخدم:', e);
         }
 
-        const sendOtpForDocBtn = document.getElementById('sendOtpForDocBtn');
-        if (sendOtpForDocBtn) {
-            sendOtpForDocBtn.addEventListener('click', async function() {
-                const supabase = window.teraSupabase;
-                if (!supabase) return;
-                this.disabled = true;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-                try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    await supabase.auth.signInWithOtp({
-                        email: user.email,
-                        options: { shouldCreateUser: false }
-                    });
-                    localStorage.setItem('pendingVerificationEmail', user.email);
-                    localStorage.setItem('tera_verify_type', 'document_view');
-                    showAlert('تم إرسال رمز التحقق إلى بريدكم الإلكتروني.', 'success');
-                    document.getElementById('docViewerStep1').style.display = 'none';
-                    document.getElementById('docViewerStep2').style.display = 'block';
-                    const docOtpInput = document.getElementById('docOtpInput');
-                    if (docOtpInput) docOtpInput.focus();
-                } catch (err) {
-                    if (err.status === 429 || (err.message && err.message.includes('429'))) {
-                        showAlert('تم تجاوز عدد المحاولات المسموح بها. يرجى الانتظار 5 دقائق ثم المحاولة مرة أخرى.', 'error');
+        // ---------- ٣. قراءة السياق ----------
+        const pendingEmail = localStorage.getItem('pendingVerificationEmail');
+        const verifyType = localStorage.getItem('tera_verify_type') || 'signup';
+
+        if (pendingEmail) {
+            let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
+            if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
+            else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
+            else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
+            else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
+            else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
+            else if (verifyType === 'bank_info') mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى';
+            else if (verifyType === 'attachments') mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى';
+            
+            if (instructionMainText) instructionMainText.textContent = mainMessage;
+            if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
+        } else {
+            showAlert('لم يتم العثور على بريد إلكتروني معلق.', 'error');
+            if (submitBtn) submitBtn.disabled = true;
+        }
+
+        // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
+        if (['personal_info','contact_info','national_address','bank_info','attachments'].includes(verifyType)) {
+            backLink.href = '/pages/dashboard/index.html';
+            backLinkText.textContent = 'العودة';
+        } else {
+            backLink.href = '/auth/auth/login/login.html';
+            backLinkText.textContent = 'العودة لتسجيل الدخول';
+        }
+
+        // ---------- ٥. مؤقت إعادة الإرسال (60 ثانية) ----------
+        let timerSeconds = 60;
+        let timerInterval = null;
+
+        function startTimer() {
+            resendBtn.classList.add('disabled');
+            timerContainer.style.display = 'block';
+            timerSeconds = 60;
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerContainer.style.display = 'none';
+                    resendBtn.classList.remove('disabled');
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timerSeconds / 60);
+            const sec = timerSeconds % 60;
+            timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        startTimer();
+
+        // ---------- ٦. إدخال الرمز (8 أرقام) وإرسال تلقائي ----------
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (otpError) otpError.textContent = '';
+            if (this.value.length === 8) {
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        otpInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 8);
+            this.value = paste;
+            if (paste.length === 8) {
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // ---------- ٧. تقديم النموذج ----------
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideAlert();
+            if (otpError) otpError.textContent = '';
+
+            const otpValue = otpInput.value.trim();
+            if (otpValue.length !== 8) {
+                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام';
+                return;
+            }
+
+            if (!pendingEmail) {
+                showAlert('بيانات الجلسة غير متوفرة.', 'error');
+                return;
+            }
+
+            showLoader(true);
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+
+            try {
+                const otpType = (['personal_info','contact_info','national_address','bank_info','attachments'].includes(verifyType)) ? 'email' : verifyType;
+
+                const { error } = await supabaseClient.auth.verifyOtp({
+                    email: pendingEmail,
+                    token: otpValue,
+                    type: otpType
+                });
+
+                if (error) throw error;
+
+                localStorage.removeItem('pendingVerificationEmail');
+                localStorage.removeItem('tera_verify_type');
+
+                showAlert('تم التحقق من الرمز بنجاح.', 'success');
+
+                setTimeout(async () => {
+                    if (verifyType === 'signup') {
+                        window.location.replace('/auth/auth/login/login.html');
+                    } else if (verifyType === 'recovery') {
+                        window.location.replace('/auth/reset-password.html');
                     } else {
-                        showAlert('حدث خطأ: ' + err.message, 'error');
+                        // تحديث المرحلة المكتملة
+                        await updateStageCompleted(supabaseClient, verifyType);
+                        // فحص الاكتمال العام
+                        finalizeRequestIfComplete(supabaseClient);
                     }
-                } finally {
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
+                }, 1500);
+
+            } catch (error) {
+                console.error('❌ فشل التحقق من الرمز:', error);
+                let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+                if (error.message.includes('expired') || error.message.includes('invalid')) {
+                    msg = 'انتهت صلاحية رمز التحقق أو أنه غير صحيح. حاول مرة أخرى.';
                 }
-            });
-        }
+                showAlert(msg, 'error');
+                otpInput.value = '';
+                otpInput.focus();
+            } finally {
+                showLoader(false);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+            }
+        });
 
-        const verifyDocOtpBtn = document.getElementById('verifyDocOtpBtn');
-        if (verifyDocOtpBtn) {
-            verifyDocOtpBtn.addEventListener('click', async function() {
-                const supabase = window.teraSupabase;
-                const otpInput = document.getElementById('docOtpInput');
-                const otpValue = otpInput ? otpInput.value.trim() : '';
-                const otpError = document.getElementById('docOtpError');
-                if (otpValue.length !== 8) {
-                    if (otpError) otpError.textContent = 'الرجاء إدخال 8 أرقام';
-                    return;
-                }
-                const email = localStorage.getItem('pendingVerificationEmail');
-                if (!email) { showAlert('بيانات الجلسة غير متوفرة.', 'error'); return; }
-
-                this.disabled = true;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-                try {
-                    const { error } = await supabase.auth.verifyOtp({
-                        email,
-                        token: otpValue,
-                        type: 'email'
-                    });
-                    if (error) throw error;
-                    localStorage.removeItem('pendingVerificationEmail');
-                    localStorage.removeItem('tera_verify_type');
-
-                    if (!currentDocPath) throw new Error('مسار المستند غير معروف');
-                    const { data, error: signedError } = await supabase.storage
-                        .from('attachments')
-                        .createSignedUrl(currentDocPath, 120);
-                    if (signedError) throw signedError;
-
-                    document.getElementById('signedUrlLink').href = data.signedUrl;
-                    document.getElementById('docViewerStep2').style.display = 'none';
-                    document.getElementById('docViewerStep3').style.display = 'block';
-                    startSignedUrlTimer(120);
-
-                    // تسجيل الدخول (غير معطل للعرض)
-                    try {
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (user) {
-                            await supabase.from('document_access_logs').insert({
-                                user_id: user.id,
-                                document_name: currentDocName,
-                                document_path: currentDocPath,
-                                ip_address: '',
-                                user_agent: navigator.userAgent
-                            });
-                        }
-                    } catch (logError) {
-                        console.warn('تعذر تسجيل سجل الوصول:', logError);
-                    }
-
-                } catch (error) {
-                    if (otpError) otpError.textContent = error.message.includes('expired') ? 'انتهت صلاحية الرمز' : 'رمز التحقق غير صحيح';
-                } finally {
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز وعرض المرفق';
-                }
-            });
-        }
-
-        const requestNewLinkBtn = document.getElementById('requestNewLinkBtn');
-        if (requestNewLinkBtn) {
-            requestNewLinkBtn.addEventListener('click', () => {
-                openSecureViewer(currentDocPath, currentDocName);
-            });
-        }
-
-        // ---------- بقية المستمعات (رفع مرفقات، إضافة) ----------
-        const addModal = document.getElementById('addModal');
-        if (addModal) {
-            document.getElementById('openAddModal')?.addEventListener('click', () => addModal.classList.add('active'));
-            document.getElementById('closeModal')?.addEventListener('click', () => addModal.classList.remove('active'));
-            document.getElementById('cancelAdd')?.addEventListener('click', () => addModal.classList.remove('active'));
-            addModal.addEventListener('click', function(e) { if (e.target === addModal) addModal.classList.remove('active'); });
-        }
-
-        const docUploadZone = document.getElementById('docUploadZone');
-        if (docUploadZone) {
-            docUploadZone.addEventListener('click', function(e) {
-                e.stopPropagation();
-                document.getElementById('docFile')?.click();
-            });
-        }
-
-        const docFile = document.getElementById('docFile');
-        if (docFile) {
-            docFile.addEventListener('change', function(e) {
-                e.stopPropagation();
-                if (this.files[0]) {
-                    const label = document.getElementById('uploadLabel');
-                    if (label) {
-                        label.textContent = this.files[0].name;
-                        label.style.color = '#028090';
-                    }
-                }
-            });
-        }
-
-        const addDocumentForm = document.getElementById('addDocumentForm');
-        if (addDocumentForm) {
-            addDocumentForm.addEventListener('submit', async function(e) {
+        // ---------- ٨. إعادة الإرسال ----------
+        if (resendBtn) {
+            resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
-                const fileInput = document.getElementById('docFile');
-                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-                    showAlert('يرجى اختيار ملف للرفع.', 'error');
+                if (timerInterval) {
+                    showAlert('يرجى الانتظار حتى انتهاء المؤقت لإعادة الإرسال.', 'error');
+                    return;
+                }
+                if (!pendingEmail) {
+                    showAlert('لا يوجد بريد لإعادة الإرسال.', 'error');
                     return;
                 }
 
-                const docName = document.getElementById('docName')?.value.trim();
-                const docType = document.getElementById('docType')?.value;
-                if (!docName || !docType) {
-                    showAlert('يرجى ملء جميع الحقول الإلزامية.', 'error');
-                    return;
-                }
-
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع...';
-                }
+                resendBtn.style.pointerEvents = 'none';
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    const uploaded = await uploadFile(fileInput.files[0], user.id);
-                    await supabase.from('user_attachments').insert({
-                        user_id: user.id,
-                        file_name: docName,
-                        file_path: uploaded.path,
-                        file_type: uploaded.type,
-                        file_size: uploaded.size,
-                        description: docType,
-                        uploaded_at: new Date().toISOString()
-                    });
+                    if (['personal_info','contact_info','national_address','bank_info','attachments'].includes(verifyType)) {
+                        await supabaseClient.auth.signInWithOtp({
+                            email: pendingEmail,
+                            options: { shouldCreateUser: false }
+                        });
+                    } else {
+                        await supabaseClient.auth.resend({
+                            type: verifyType,
+                            email: pendingEmail
+                        });
+                    }
+                    showAlert('تم إرسال رمز تحقق جديد.', 'success');
+                    startTimer();
+                } catch (error) {
+                    showAlert('حدث خطأ أثناء إرسال الرمز. يرجى المحاولة مرة أخرى.', 'error');
+                } finally {
+                    resendBtn.style.pointerEvents = 'auto';
+                    resendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال الرمز';
+                }
+            });
+        }
 
-                    showAlert('✅ تم رفع المرفق بنجاح.', 'success');
-                    addModal?.classList.remove('active');
-                    this.reset();
-                    const label = document.getElementById('uploadLabel');
-                    if (label) { label.textContent = 'اضغط لرفع الملف'; label.style.color = '#0A1B3F'; }
-                    loadAttachments(supabase, user.id);
+        // ---------- ٩. دوال التحديث بعد التحقق ----------
+        async function updateStageCompleted(client, type) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) return;
 
-                    await supabase.from('verification_requests').upsert({
+                let fields = { updated_at: new Date().toISOString() };
+
+                if (type === 'personal_info') {
+                    fields.personal_info_completed = true;
+                } else if (type === 'contact_info') {
+                    fields.contact_info_completed = true;
+                } else if (type === 'national_address') {
+                    fields.national_address_completed = true;
+                } else if (type === 'bank_info') {
+                    fields.bank_info_completed = true;
+                } else if (type === 'attachments') {
+                    fields.attachments_completed = true;
+                }
+
+                await client.from('verification_requests').upsert({
+                    user_id: user.id,
+                    ...fields
+                }, { onConflict: 'user_id' });
+            } catch (e) {
+                console.error('خطأ في تحديث المرحلة:', e);
+            }
+        }
+
+        async function finalizeRequestIfComplete(client) {
+            try {
+                const { data: { user } } = await client.auth.getUser();
+                if (!user) return;
+
+                const { data: req } = await client
+                    .from('verification_requests')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (!req) return;
+
+                const requiredStages = [
+                    'personal_info_completed',
+                    'national_address_completed',
+                    'contact_info_completed',
+                    'bank_info_completed',
+                    'attachments_completed',
+                    'agreed'
+                ];
+
+                const allCompleted = requiredStages.every(key => req[key] === true);
+
+                if (allCompleted) {
+                    await client.from('verification_requests').upsert({
                         user_id: user.id,
-                        attachments_completed: true,
-                        progress: 95,
+                        status: 'under_review',
+                        submitted: true,
+                        submitted_at: new Date().toISOString(),
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
-                    await updateProgressTracker(supabase, user.id);
-
-                } catch (error) {
-                    console.error('فشل الرفع:', error);
-                    showAlert('تعذر رفع المرفق: ' + (error.message || 'خطأ غير معروف'), 'error');
-                } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> رفع المرفق'; }
                 }
-            });
-        }
-    }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPage);
-    } else {
-        initPage();
-    }
+                window.location.replace('/pages/dashboard/index.html');
+            } catch (e) {
+                console.error('خطأ في إنهاء الطلب:', e);
+                window.location.replace('/pages/dashboard/index.html');
+            }
+        }
+
+        // ---------- ١٠. دوال العرض ----------
+        function showAlert(message, type) {
+            if (!alertBox || !alertMessage) return;
+            alertBox.style.display = 'flex';
+            alertBox.className = 'alert-box show ' + (type || 'error');
+            if (alertIcon) {
+                alertIcon.innerHTML = type === 'success'
+                    ? '<i class="fas fa-check-circle"></i>'
+                    : '<i class="fas fa-exclamation-circle"></i>';
+            }
+            alertMessage.textContent = message;
+            clearTimeout(window._alertTimer);
+            window._alertTimer = setTimeout(() => alertBox.classList.remove('show'), 8000);
+        }
+
+        function hideAlert() {
+            if (!alertBox) return;
+            alertBox.classList.remove('show');
+            alertBox.style.display = 'none';
+        }
+
+        function showLoader(show) {
+            if (!loaderOverlay) return;
+            loaderOverlay.style.display = show ? 'flex' : 'none';
+            const progressBar = document.getElementById('progressFillBar');
+            if (show && progressBar) {
+                progressBar.style.width = '0%';
+                setTimeout(() => { progressBar.style.width = '70%'; }, 500);
+                setTimeout(() => { progressBar.style.width = '90%'; }, 1500);
+            } else if (progressBar) {
+                progressBar.style.width = '0%';
+            }
+        }
+    });
 })();
