@@ -13,6 +13,7 @@
  * - بعد تقديم الطلب: يظهر قسم حالة الطلب بأيقونات وألوان حسب الحالة.
  * - بعد الاعتماد: يختفي كل شيء.
  * - مؤقت الجلسة يبدأ من تحميل الصفحة.
+ * - يُظهر الوقت الحالي مع التاريخ في شريط الترحيب.
  */
 
 const Dashboard = {
@@ -65,6 +66,9 @@ const Dashboard = {
         // بدء مؤقت الجلسة
         this.startSessionTimer();
 
+        // تحديث التاريخ والوقت الحالي في شريط الترحيب
+        this.updateCurrentDateTime();
+
         console.log('✅ لوحة التحكم جاهزة.');
     },
 
@@ -110,6 +114,17 @@ const Dashboard = {
 
         update();
         setInterval(update, 60000); // كل دقيقة
+    },
+
+    /**
+     * تحديث التاريخ والوقت الحالي في شريط الترحيب
+     */
+    updateCurrentDateTime: function() {
+        const el = document.getElementById('currentDate');
+        if (!el) return;
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        el.textContent = now.toLocaleString('ar-SA', options);
     },
 
     _formatDateTime: function(isoString) {
