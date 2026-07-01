@@ -1,148 +1,223 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>تغيير البريد الإلكتروني | Tera Investor Portal</title>
+/**
+ * ============================================================
+ * تغيير البريد الإلكتروني - Change Email (نسخة المؤسسات)
+ * ============================================================
+ * الموقع: /assets/js/security-change-email.js
+ * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
+ * - يعرض البريد الإلكتروني الحالي من حساب المستخدم.
+ * - يُرسل طلب تغيير البريد عبر Supabase Auth (يرسل رابط تأكيد).
+ * - يُحدث اسم المستخدم في الهيدر.
+ * ============================================================
+ */
 
-    <!-- الشعار والأيقونات -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
+window.SecurityPages = window.SecurityPages || {};
 
-    <!-- الخطوط -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+window.SecurityPages['change-email'] = {
+    init: async function() {
+        console.log('📧 تهيئة صفحة تغيير البريد الإلكتروني (Enterprise)...');
 
-    <!-- الملفات المشتركة -->
-    <link rel="stylesheet" href="/assets/css/core.css" />
-    <link rel="stylesheet" href="/assets/css/app.css" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link rel="stylesheet" href="/assets/css/responsive.css" />
+        // انتظار جاهزية عميل Supabase
+        if (!window.teraSupabase) {
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
+                    document.addEventListener('supabase:ready', (e) => {
+                        clearTimeout(timeout);
+                        resolve(e.detail.client);
+                    }, { once: true });
+                    document.addEventListener('supabase:error', () => {
+                        clearTimeout(timeout);
+                        reject(new Error('فشل تحميل Supabase'));
+                    }, { once: true });
+                });
+            } catch (err) {
+                console.error('❌ تعذر الاتصال بـ Supabase:', err);
+                alert('تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.');
+                return;
+            }
+        }
 
-    <!-- ملف التنسيق الخاص بصفحات الأمان -->
-    <link rel="stylesheet" href="/assets/css/security.css" />
+        const form = document.getElementById('changeEmailForm');
+        if (!form) {
+            console.warn('⚠️ نموذج تغيير البريد غير موجود.');
+            return;
+        }
 
-    <style>
-        .email-hint { font-size: 12px; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
-        .email-hint i { font-size: 14px; color: #94a3b8; }
-        .email-hint.success { color: #16a34a; }
-        .email-hint.success i { color: #16a34a; }
-        .email-hint.error { color: #dc2626; }
-        .email-hint.error i { color: #dc2626; }
-    </style>
-</head>
-<body>
+        const newEmail = document.getElementById('newEmail');
+        const confirmEmail = document.getElementById('confirmEmail');
+        const newEmailHint = document.getElementById('newEmailHint');
+        const confirmHint = document.getElementById('confirmEmailHint');
+        const currentEmailInput = document.getElementById('currentEmail');
 
-    <header class="focused-header no-print">
-        <div class="logo">
-            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
-        </div>
-        <div class="client-info">
-            <h5 id="headerUserName">مستخدم</h5>
-            <div class="avatar" id="headerAvatar">م</div>
-        </div>
-    </header>
+        // ---------- تحديث اسم المستخدم في الهيدر ----------
+        try {
+            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            if (user) {
+                const fullName = user.user_metadata?.full_name || 'مستخدم';
+                const headerName = document.getElementById('headerUserName');
+                const headerAvatar = document.getElementById('headerAvatar');
+                if (headerName) headerName.textContent = fullName;
+                if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+            }
+        } catch (e) { console.warn('تعذر تحديث الهيدر:', e); }
 
-    <div class="page-subheader no-print">
-        <h1><i class="fas fa-envelope"></i> تغيير البريد الإلكتروني</h1>
-        <a href="/pages/dashboard/index.html" class="btn-back">
-            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
-        </a>
-    </div>
+        // ---------- 1. عرض البريد الإلكتروني الحالي من الجلسة ----------
+        try {
+            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            if (user && user.email && currentEmailInput) {
+                currentEmailInput.value = user.email;
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب البريد الحالي:', e);
+        }
 
-    <main class="content-container">
+        // ---------- 2. التحقق من صحة البريد الجديد ----------
+        if (newEmail && newEmailHint) {
+            newEmail.addEventListener('input', function() {
+                const value = this.value.trim();
+                const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-        <div class="page-desc">
-            <i class="fas fa-info-circle"></i>
-            <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> يرجى إدخال البريد الإلكتروني الجديد ثم تأكيده. سيتم إرسال رمز تحقق إلى البريد الإلكتروني الجديد لإثبات الملكية.</span>
-        </div>
+                if (value === '') {
+                    newEmailHint.className = 'email-hint';
+                    newEmailHint.innerHTML = '<i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.';
+                    this.style.borderColor = '';
+                } else if (isValid) {
+                    newEmailHint.className = 'email-hint success';
+                    newEmailHint.innerHTML = '<i class="fas fa-check-circle"></i> البريد الإلكتروني صحيح.';
+                    this.style.borderColor = '#16a34a';
+                } else {
+                    newEmailHint.className = 'email-hint error';
+                    newEmailHint.innerHTML = '<i class="fas fa-times-circle"></i> يرجى إدخال بريد إلكتروني صحيح.';
+                    this.style.borderColor = '#dc2626';
+                }
 
-        <ul class="progress-steps">
-            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">الأمان</span></li>
-            <li class="step-line completed"></li>
-            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">تغيير كلمة المرور</span></li>
-            <li class="step-line completed"></li>
-            <li class="active"><span class="step-num">3</span><span class="step-label">تغيير البريد الإلكتروني</span></li>
-            <li class="step-line"></li>
-            <li><span class="step-num">4</span><span class="step-label">تغيير رقم الجوال</span></li>
-            <li class="step-line"></li>
-            <li><span class="step-num">5</span><span class="step-label">المصادقة الثنائية</span></li>
-            <li class="step-line"></li>
-            <li><span class="step-num">6</span><span class="step-label">الأجهزة المصرحة</span></li>
-            <li class="step-line"></li>
-            <li><span class="step-num">7</span><span class="step-label">سجل الدخول</span></li>
-        </ul>
+                if (confirmEmail && confirmEmail.value) checkMatch();
+            });
+        }
 
-        <div class="alert-box" id="formAlert" role="alert">
-            <i class="fas" id="alertIcon"></i>
-            <span id="alertMessage"></span>
-        </div>
+        // ---------- 3. التحقق من تطابق البريدين ----------
+        function checkMatch() {
+            if (!newEmail || !confirmEmail || !confirmHint) return;
+            const newVal = newEmail.value.trim();
+            const confirmVal = confirmEmail.value.trim();
 
-        <form id="changeEmailForm" novalidate>
-            <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-at"></i>
-                    <h3>تغيير البريد الإلكتروني</h3>
-                    <span class="panel-badge">أمان</span>
-                </div>
+            if (confirmVal === '') {
+                confirmHint.className = 'email-hint';
+                confirmHint.innerHTML = '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.';
+                confirmEmail.style.borderColor = '';
+                return;
+            }
 
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label class="form-label">البريد الإلكتروني الحالي <span class="req">*</span></label>
-                        <input type="email" class="form-control" id="currentEmail" placeholder="example@domain.com" required readonly>
-                        <span class="format-hint">البريد الإلكتروني الحالي المسجل في حسابك.</span>
-                    </div>
-                    <div class="form-group full-width">
-                        <label class="form-label">البريد الإلكتروني الجديد <span class="req">*</span></label>
-                        <input type="email" class="form-control" id="newEmail" placeholder="new-email@domain.com" required autocomplete="email">
-                        <span class="email-hint" id="newEmailHint"><i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.</span>
-                    </div>
-                    <div class="form-group full-width">
-                        <label class="form-label">تأكيد البريد الإلكتروني الجديد <span class="req">*</span></label>
-                        <input type="email" class="form-control" id="confirmEmail" placeholder="new-email@domain.com" required autocomplete="email">
-                        <span class="email-hint" id="confirmEmailHint"><i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.</span>
-                    </div>
-                </div>
+            if (newVal === confirmVal && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(confirmVal)) {
+                confirmHint.className = 'email-hint success';
+                confirmHint.innerHTML = '<i class="fas fa-check-circle"></i> البريدان متطابقان.';
+                confirmEmail.style.borderColor = '#16a34a';
+            } else {
+                confirmHint.className = 'email-hint error';
+                confirmHint.innerHTML = '<i class="fas fa-times-circle"></i> البريدان غير متطابقين.';
+                confirmEmail.style.borderColor = '#dc2626';
+            }
+        }
 
-                <div class="security-tips">
-                    <div class="tip-title"><i class="fas fa-lightbulb"></i> نصائح أمنية</div>
-                    <ul>
-                        <li><i class="fas fa-check"></i> استخدم بريداً إلكترونياً يمكنك الوصول إليه دائماً.</li>
-                        <li><i class="fas fa-check"></i> تأكد من صحة البريد الإلكتروني الجديد قبل التحديث.</li>
-                        <li><i class="fas fa-check"></i> سيتم إرسال رمز تحقق إلى البريد الجديد لتأكيد الملكية.</li>
-                        <li><i class="fas fa-check"></i> احتفظ بالبريد القديم لحين تأكيد التغيير.</li>
-                    </ul>
-                </div>
+        if (newEmail && confirmEmail && confirmHint) {
+            confirmEmail.addEventListener('input', checkMatch);
+            newEmail.addEventListener('input', function() {
+                if (confirmEmail.value) checkMatch();
+            });
+        }
 
-                <div class="otp-notice">
-                    <i class="fas fa-shield-alt"></i>
-                    <span><strong>عزيزي الشريك،</strong> سوف يصل لكم رمز تحقق لتغيير البريد الإلكتروني على البريد الجديد المسجل.</span>
-                </div>
+        // ---------- 4. معالج إرسال النموذج ----------
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-                <button type="submit" class="btn-submit" id="submitBtn">
-                    <i class="fas fa-save"></i> تغيير البريد الإلكتروني
-                </button>
-            </div>
-        </form>
+            const newEmailVal = newEmail.value.trim();
+            const confirmVal = confirmEmail.value.trim();
 
-    </main>
+            if (!newEmailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailVal)) {
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('يرجى إدخال بريد إلكتروني جديد صحيح.', 'error');
+                } else {
+                    alert('يرجى إدخال بريد إلكتروني جديد صحيح.');
+                }
+                newEmail.focus();
+                return;
+            }
 
-    <footer class="page-footer no-print">
-        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
-    </footer>
+            if (newEmailVal !== confirmVal) {
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('البريد الإلكتروني الجديد وتأكيده غير متطابقين.', 'error');
+                } else {
+                    alert('البريد الإلكتروني الجديد وتأكيده غير متطابقين.');
+                }
+                confirmEmail.focus();
+                return;
+            }
 
-    <!-- السكريبتات الأساسية -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/assets/js/supabase-client.js"></script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/main.js"></script>
+            const currentEmail = currentEmailInput ? currentEmailInput.value.trim() : '';
+            if (currentEmail === newEmailVal) {
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('البريد الإلكتروني الجديد مطابق للبريد الحالي.', 'error');
+                } else {
+                    alert('البريد الإلكتروني الجديد مطابق للبريد الحالي.');
+                }
+                newEmail.focus();
+                return;
+            }
 
-    <!-- سكريبت الأمان العام -->
-    <script src="/assets/js/security.js"></script>
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+            }
 
-    <!-- سكريبت تغيير البريد الإلكتروني -->
-    <script src="/assets/js/security-change-email.js"></script>
-</body>
-</html>
+            try {
+                const { error } = await window.teraSupabase.auth.updateUser({
+                    email: newEmailVal
+                });
+
+                if (error) throw error;
+
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('✅ تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
+                } else {
+                    alert('تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد.');
+                }
+
+                form.reset();
+
+                if (newEmailHint) {
+                    newEmailHint.className = 'email-hint';
+                    newEmailHint.innerHTML = '<i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.';
+                }
+                if (confirmHint) {
+                    confirmHint.className = 'email-hint';
+                    confirmHint.innerHTML = '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.';
+                }
+                if (newEmail) newEmail.style.borderColor = '';
+                if (confirmEmail) confirmEmail.style.borderColor = '';
+
+            } catch (error) {
+                console.error('❌ خطأ في تغيير البريد الإلكتروني:', error);
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert(error.message || 'تعذر تغيير البريد الإلكتروني.', 'error');
+                } else {
+                    alert(error.message || 'تعذر تغيير البريد الإلكتروني.');
+                }
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير البريد الإلكتروني';
+                }
+            }
+        });
+
+        console.log('✅ صفحة تغيير البريد الإلكتروني مهيأة.');
+    }
+};
+
+// بدء التهيئة تلقائياً
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.SecurityPages && window.SecurityPages['change-email']) {
+        window.SecurityPages['change-email'].init();
+    }
+});
