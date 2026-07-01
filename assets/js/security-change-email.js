@@ -170,7 +170,6 @@
                     this.disabled = true;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
                     try {
-                        // إرسال OTP إلى البريد الجديد (يجب أن يكون shouldCreateUser: false)
                         const { error } = await supabase.auth.signInWithOtp({
                             email: newEmail,
                             options: { shouldCreateUser: false }
@@ -181,7 +180,6 @@
                         newEmailOtp.focus();
                         this.style.display = 'none';
                     } catch (err) {
-                        // إذا فشل بسبب أن البريد غير مسجل، نجرب طريقة أخرى
                         console.warn('فشل إرسال OTP للبريد الجديد:', err.message);
                         showSecurityAlert(err.message || 'فشل إرسال الرمز. تأكد من أن البريد الجديد صحيح.', 'error');
                     } finally {
@@ -203,7 +201,6 @@
                     this.disabled = true;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                     try {
-                        // التحقق من رمز البريد الجديد
                         const { error: otpError } = await supabase.auth.verifyOtp({
                             email: newEmail,
                             token: otp,
@@ -211,7 +208,6 @@
                         });
                         if (otpError) throw otpError;
 
-                        // تغيير البريد الفعلي (سيُرسل إشعار للقديم وهذا طبيعي)
                         const { error: updateError } = await supabase.auth.updateUser({ email: newEmail });
                         if (updateError) throw updateError;
 
