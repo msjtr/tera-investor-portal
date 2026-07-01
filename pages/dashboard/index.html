@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ========== الأنماط الأساسية (كما هي) ========== */
+        /* ========== جميع الأنماط كما هي (دون تغيير) ========== */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -294,33 +294,7 @@
 
             <!-- لوحة حالة الطلب (نموذج أولي، سيستبدل ديناميكياً) -->
             <div id="requestStatusPanel" style="margin-bottom:20px;">
-                <div class="panel-card status-under-review">
-                    <div class="panel-header">
-                        <i class="fas fa-clipboard-check"></i>
-                        <h3>حالة الطلب</h3>
-                    </div>
-                    <div style="text-align:center; margin-bottom:16px;">
-                        <i class="fas fa-search request-status-icon"></i>
-                        <div><span class="request-status-badge">قيد المراجعة</span></div>
-                    </div>
-                    <div style="margin-bottom:16px;">
-                        <p><strong>تاريخ التقديم:</strong> 2026-06-01 10:30 صباحاً</p>
-                        <p><strong>آخر تحديث:</strong> 2026-06-15 02:45 مساءً</p>
-                        <p><strong>المدة المنقضية:</strong> 14 يوم</p>
-                        <p><strong>نسبة الإنجاز:</strong> 80%</p>
-                        <p><strong>ملاحظات:</strong> لا توجد</p>
-                    </div>
-                    <div class="alert-warning-box" style="margin-top:16px;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:
-                            <ul style="margin:8px 0 0 16px;">
-                                <li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li>
-                                <li><a href="/pages/profile/attachments.html">المرفقات والوثائق</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                <!-- سيتم استبدال المحتوى بواسطة dashboard.js -->
             </div>
 
             <div class="welcome-banner">
@@ -426,8 +400,9 @@
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="/assets/js/dashboard.js"></script>
-    <script>
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ar-SA');
-    </script>
+    <!-- 
+        تمت إزالة السطر القديم الذي كان يضبط currentDate 
+        لأن dashboard.js يتولى تحديث التاريخ والوقت ومؤقت الجلسة 
+    -->
 </body>
 </html>
