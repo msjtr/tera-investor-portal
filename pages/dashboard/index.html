@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
     <style>
-        /* ========== الأنماط الأساسية ========== */
+        /* ========== الأنماط الأساسية (كاملة) ========== */
         :root {
             --tera-teal: #028090;
             --tera-teal-light: #14b8a6;
@@ -123,154 +123,33 @@
 
         /* شريط التاريخ والوقت والجلسة */
         .date-badge-group {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.12);
-            padding: 10px 20px;
-            border-radius: 12px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+            background: rgba(255,255,255,0.12); padding: 10px 20px; border-radius: 12px;
+            backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.08);
         }
-        .date-badge-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #e2e8f0;
-        }
-        .date-badge-item i {
-            font-size: 16px;
-            color: var(--tera-teal-light);
-            width: 20px;
-            text-align: center;
-        }
-        .date-badge-item span {
-            white-space: nowrap;
-        }
+        .date-badge-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #e2e8f0; }
+        .date-badge-item i { font-size: 16px; color: var(--tera-teal-light); width: 20px; text-align: center; }
+        .date-badge-item span { white-space: nowrap; }
 
         /* أنماط حالة الطلب */
-        .request-status-card {
-            background: #fff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            padding: 24px 26px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.03);
-        }
-        .request-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-        .request-header-icon {
-            width: 44px;
-            height: 44px;
-            background: #e0f2fe;
-            color: #028090;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        .request-header h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #0A1B3F;
-            font-weight: 800;
-        }
-        .status-badge-large {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 0 0 20px 0;
-            padding: 12px 20px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        .status-under-review .status-badge-large {
-            background: #e0f2fe;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
-        }
-        .status-approved .status-badge-large {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        .status-rejected .status-badge-large {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        .status-needs-revision .status-badge-large {
-            background: #fff7ed;
-            color: #9a3412;
-            border: 1px solid #fed7aa;
-        }
-        .request-details-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .request-detail-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            background: #f8fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            font-size: 14px;
-            color: #334155;
-            flex-wrap: wrap;
-        }
-        .request-detail-item i {
-            width: 20px;
-            font-size: 14px;
-            color: #028090;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .request-detail-item strong {
-            color: #0A1B3F;
-            font-weight: 700;
-            white-space: nowrap;
-            margin-left: 4px;
-        }
-        .request-detail-item span {
-            color: #1e293b;
-            font-weight: 600;
-            flex: 1;
-        }
-        .request-detail-item .progress-section {
-            width: 100%;
-            margin-top: 4px;
-        }
-        .progress-bar-outer {
-            background: #e2e8f0;
-            border-radius: 12px;
-            height: 10px;
-            overflow: hidden;
-        }
-        .progress-bar-inner {
-            height: 100%;
-            border-radius: 12px;
-            background: linear-gradient(90deg, #028090, #14b8a6);
-            transition: width 0.4s ease;
-        }
-        .status-icon-large {
-            font-size: 52px;
-            margin-bottom: 12px;
-        }
+        .request-status-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px 26px; box-shadow: 0 4px 18px rgba(0,0,0,0.03); }
+        .request-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f1f5f9; }
+        .request-header-icon { width: 44px; height: 44px; background: #e0f2fe; color: #028090; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .request-header h3 { margin: 0; font-size: 18px; color: #0A1B3F; font-weight: 800; }
+        .status-badge-large { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 0 20px 0; padding: 12px 20px; border-radius: 14px; font-weight: 700; font-size: 16px; }
+        .status-under-review .status-badge-large { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .status-approved .status-badge-large { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .status-rejected .status-badge-large { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .status-needs-revision .status-badge-large { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+        .request-details-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .request-detail-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 14px; color: #334155; flex-wrap: wrap; }
+        .request-detail-item i { width: 20px; font-size: 14px; color: #028090; text-align: center; flex-shrink: 0; }
+        .request-detail-item strong { color: #0A1B3F; font-weight: 700; white-space: nowrap; margin-left: 4px; }
+        .request-detail-item span { color: #1e293b; font-weight: 600; flex: 1; }
+        .request-detail-item .progress-section { width: 100%; margin-top: 4px; }
+        .progress-bar-outer { background: #e2e8f0; border-radius: 12px; height: 10px; overflow: hidden; }
+        .progress-bar-inner { height: 100%; border-radius: 12px; background: linear-gradient(90deg, #028090, #14b8a6); transition: width 0.4s ease; }
+        .status-icon-large { font-size: 52px; margin-bottom: 12px; }
         .status-under-review .status-icon-large { color: #0ea5e9; }
         .status-approved .status-icon-large { color: #10b981; }
         .status-rejected .status-icon-large { color: #ef4444; }
@@ -278,36 +157,15 @@
 
         /* الوضع الداكن */
         @media (prefers-color-scheme: dark) {
-            .request-status-card {
-                background: #1e293b;
-                border-color: #334155;
-            }
-            .request-header {
-                border-bottom-color: #334155;
-            }
-            .request-header h3 {
-                color: #f8fafc;
-            }
-            .request-header-icon {
-                background: rgba(20,184,166,0.15);
-            }
-            .request-detail-item {
-                background: #0f172a;
-                border-color: #334155;
-                color: #e2e8f0;
-            }
-            .request-detail-item strong {
-                color: #f8fafc;
-            }
-            .request-detail-item span {
-                color: #e2e8f0;
-            }
-            .request-detail-item i {
-                color: #14b8a6;
-            }
-            .progress-bar-outer {
-                background: #334155;
-            }
+            .request-status-card { background: #1e293b; border-color: #334155; }
+            .request-header { border-bottom-color: #334155; }
+            .request-header h3 { color: #f8fafc; }
+            .request-header-icon { background: rgba(20,184,166,0.15); }
+            .request-detail-item { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+            .request-detail-item strong { color: #f8fafc; }
+            .request-detail-item span { color: #e2e8f0; }
+            .request-detail-item i { color: #14b8a6; }
+            .progress-bar-outer { background: #334155; }
         }
 
         @media (max-width: 991px) {
@@ -455,15 +313,15 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <div class="date-badge-group">
-                        <div class="date-badge-item" id="dateItem">
+                        <div class="date-badge-item">
                             <i class="fas fa-calendar-alt"></i>
                             <span id="currentDate"></span>
                         </div>
-                        <div class="date-badge-item" id="timeItem">
+                        <div class="date-badge-item">
                             <i class="fas fa-clock"></i>
                             <span id="currentTime"></span>
                         </div>
-                        <div class="date-badge-item" id="sessionItem">
+                        <div class="date-badge-item">
                             <i class="fas fa-hourglass-half"></i>
                             <span id="sessionTimer"></span>
                         </div>
@@ -552,12 +410,16 @@
         </main>
     </div>
 
+    <!-- السكريبتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/dashboard.js"></script>
+
+    <!-- سكريبتات لوحة التحكم (منفصلة) -->
+    <script src="/assets/js/sidebar.js"></script>
+    <script src="/assets/js/dashboard-core.js"></script>
 </body>
 </html>
