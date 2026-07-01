@@ -4,7 +4,7 @@
  * - Secure Viewer: OTP → Signed URL (120 ثانية) مع عداد.
  * - معالجة خطأ 429 (Too Many Requests).
  * - تسجيل سجل الوصول لا يؤثر على عرض المستند.
- * - بعد رفع المرفق: يرسل OTP ويوجّه إلى صفحة التحقق.
+ * - زر "حفظ المرفقات والمتابعة" يرسل OTP ويوجّه للتحقق.
  */
 (function() {
     'use strict';
@@ -163,7 +163,6 @@
 
     async function uploadFile(file, userId) {
         const supabase = window.teraSupabase;
-        // استخدم اسم ملف آمن (ASCII)
         const safeName = `${Date.now()}-${crypto.randomUUID()}.${file.name.split('.').pop()}`;
         const fileName = `manual/${userId}/${safeName}`;
         const { data, error } = await supabase.storage.from('attachments').upload(fileName, file, { upsert: true });
@@ -220,6 +219,55 @@
 
         await updateProgressTracker(supabase, user.id);
         await loadAttachments(supabase, user.id);
+
+        // ---------- زر "حفظ المرفقات والمتابعة" ----------
+        const saveAndProceedBtn = document.getElementById('saveAndProceedBtn');
+        if (saveAndProceedBtn) {
+            saveAndProceedBtn.addEventListener('click', async function() {
+                // التحقق من الإقرار
+                const declaration = document.getElementById('declarationCheck');
+                if (declaration && !declaration.checked) {
+                    showAlert('يرجى الموافقة على الإقرار قبل المتابعة.', 'error');
+                    return;
+                }
+
+                // جلب المرفقات الحالية
+                const { data: attachments } = await supabase
+                    .from('user_attachments')
+                    .select('id')
+                    .eq('user_id', user.id);
+
+                if (!attachments || attachments.length === 0) {
+                    showAlert('يجب رفع مرفق واحد على الأقل قبل المتابعة.', 'error');
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+
+                try {
+                    // إرسال رمز التحقق
+                    const { error: otpError } = await supabase.auth.signInWithOtp({
+                        email: user.email,
+                        options: { shouldCreateUser: false }
+                    });
+                    if (otpError) throw otpError;
+
+                    localStorage.setItem('pendingVerificationEmail', user.email);
+                    localStorage.setItem('tera_verify_type', 'attachments');
+
+                    showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
+                    setTimeout(() => {
+                        window.location.replace('/auth/verify-otp.html');
+                    }, 1500);
+                } catch (error) {
+                    console.error('فشل إرسال OTP:', error);
+                    showAlert('تعذر إرسال رمز التحقق: ' + (error.message || 'خطأ غير معروف'), 'error');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-save"></i> حفظ المرفقات والمتابعة';
+                }
+            });
+        }
 
         // ---------- Secure Viewer Listeners ----------
         const closeDocViewerModal = document.getElementById('closeDocViewerModal');
@@ -300,7 +348,6 @@
                     document.getElementById('docViewerStep3').style.display = 'block';
                     startSignedUrlTimer(120);
 
-                    // تسجيل الدخول (غير معطل للعرض)
                     try {
                         const { data: { user } } = await supabase.auth.getUser();
                         if (user) {
@@ -332,7 +379,7 @@
             });
         }
 
-        // ---------- بقية المستمعات (رفع مرفقات، إضافة) ----------
+        // ---------- بقية المستمعات (رفع مرفقات) ----------
         const addModal = document.getElementById('addModal');
         if (addModal) {
             document.getElementById('openAddModal')?.addEventListener('click', () => addModal.classList.add('active'));
@@ -398,25 +445,13 @@
                         uploaded_at: new Date().toISOString()
                     });
 
-                    showAlert('✅ تم رفع المرفق بنجاح. سيتم توجيهك للتحقق...', 'success');
+                    showAlert('✅ تم رفع المرفق بنجاح.', 'success');
                     addModal?.classList.remove('active');
                     this.reset();
                     const label = document.getElementById('uploadLabel');
                     if (label) { label.textContent = 'اضغط لرفع الملف'; label.style.color = '#0A1B3F'; }
-
-                    // إرسال رمز OTP للتحقق من مرحلة المرفقات
-                    const { error: otpError } = await supabase.auth.signInWithOtp({
-                        email: user.email,
-                        options: { shouldCreateUser: false }
-                    });
-                    if (otpError) console.warn('⚠️ تعذر إرسال رمز التحقق:', otpError);
-
-                    localStorage.setItem('pendingVerificationEmail', user.email);
-                    localStorage.setItem('tera_verify_type', 'attachments');
-
-                    setTimeout(() => {
-                        window.location.replace('/auth/verify-otp.html');
-                    }, 1500);
+                    loadAttachments(supabase, user.id);
+                    await updateProgressTracker(supabase, user.id);
 
                 } catch (error) {
                     console.error('فشل الرفع:', error);
