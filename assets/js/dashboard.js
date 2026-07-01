@@ -21,13 +21,12 @@ const Dashboard = {
     _initialized: false,
     _supabase: null,
     _requestData: null,
-    _sessionStart: null,   // وقت بداية الجلسة
+    _sessionStart: null,
 
     init: async function() {
         if (this._initialized) return;
         this._initialized = true;
 
-        // تسجيل وقت بدء الجلسة
         this._sessionStart = new Date();
 
         if (window.TeraAuth && !window.TeraAuth.isLoggedIn()) {
@@ -63,10 +62,7 @@ const Dashboard = {
         this.toggleActionsBasedOnStatus();
         this.lockSensitiveLinks();
 
-        // بدء مؤقت الجلسة
         this.startSessionTimer();
-
-        // تحديث التاريخ والوقت الحالي في شريط الترحيب
         this.updateCurrentDateTime();
 
         console.log('✅ لوحة التحكم جاهزة.');
@@ -87,9 +83,6 @@ const Dashboard = {
         });
     },
 
-    /**
-     * مؤقت الجلسة: يُحدَّث كل دقيقة
-     */
     startSessionTimer: function() {
         const el = document.getElementById('sessionTimer');
         if (!el) return;
@@ -103,28 +96,37 @@ const Dashboard = {
 
             let text = '';
             if (hours > 0) {
-                text = `منذ ${hours} ساعة`;
+                text = `${hours} ساعة`;
                 if (minutes > 0) text += ` و ${minutes} دقيقة`;
+            } else if (minutes > 0) {
+                text = `${minutes} دقيقة`;
             } else {
-                text = `منذ ${minutes} دقيقة`;
+                text = 'أقل من دقيقة';
             }
-            if (totalMinutes < 1) text = 'منذ أقل من دقيقة';
             el.textContent = text;
         };
 
         update();
-        setInterval(update, 60000); // كل دقيقة
+        setInterval(() => {
+            update();
+            this.updateCurrentDateTime(); // تحديث الوقت الحالي مع الجلسة
+        }, 60000);
     },
 
-    /**
-     * تحديث التاريخ والوقت الحالي في شريط الترحيب
-     */
     updateCurrentDateTime: function() {
-        const el = document.getElementById('currentDate');
-        if (!el) return;
+        const dateEl = document.getElementById('currentDate');
+        const timeEl = document.getElementById('currentTime');
+        if (!dateEl && !timeEl) return;
+
         const now = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        el.textContent = now.toLocaleString('ar-SA', options);
+        if (dateEl) {
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            dateEl.textContent = now.toLocaleDateString('ar-SA', dateOptions);
+        }
+        if (timeEl) {
+            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            timeEl.textContent = now.toLocaleTimeString('ar-SA', timeOptions);
+        }
     },
 
     _formatDateTime: function(isoString) {
@@ -143,9 +145,6 @@ const Dashboard = {
         return `${diff} يوم`;
     },
 
-    /**
-     * ✅ رحلة العميل: تنبيه + مؤشر المراحل (قبل التقديم) / حالة الطلب (بعد التقديم) + قفل الروابط
-     */
     loadCustomerJourney: async function() {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
@@ -159,7 +158,6 @@ const Dashboard = {
 
             this._requestData = req;
 
-            // 1. تنبيه الاستكمال (يظهر فقط إذا لم يتم تقديم الطلب بعد)
             const banner = document.getElementById('profileAlertBanner');
             if (banner) {
                 if (!req || !req.submitted) {
@@ -169,16 +167,12 @@ const Dashboard = {
                 }
             }
 
-            // 2. محتوى لوحة حالة الطلب / مؤشر المراحل
             const statusPanel = document.getElementById('requestStatusPanel');
             if (statusPanel) {
-                // إذا كان الطلب قد قُدِّم (تحت المراجعة أو أي حالة أخرى غير approved)
                 if (req && req.submitted) {
-                    // إذا كان معتمداً بالكامل، نُخفي اللوحة
                     if (req.status === 'approved') {
                         statusPanel.innerHTML = '';
                     } else {
-                        // أيقونات وألوان حسب الحالة
                         const statusIcons = {
                             'under_review': 'fa-search',
                             'approved': 'fa-check-circle',
@@ -190,7 +184,6 @@ const Dashboard = {
                         const statusClass = req.status ? `status-${req.status}` : 'status-draft';
                         const statusIcon = statusIcons[req.status] || 'fa-clock';
 
-                        // بناء HTML باستخدام التنسيقات الجديدة
                         let html = `<div class="request-status-card ${statusClass}">
                             <div class="request-header">
                                 <div class="request-header-icon"><i class="fas fa-clipboard-check"></i></div>
@@ -202,7 +195,7 @@ const Dashboard = {
                                     ${this._getStatusLabel(req.status)}
                                 </div>
                             </div>
-                            <div class="request-details-grid">
+                            <div class="request-details-list">
                                 <div class="request-detail-item">
                                     <i class="fas fa-calendar-plus"></i>
                                     <strong>تاريخ التقديم:</strong>
@@ -218,7 +211,7 @@ const Dashboard = {
                                     <strong>المدة المنقضية:</strong>
                                     <span>${this._getElapsedDays(req.submitted_at)}</span>
                                 </div>
-                                <div class="request-detail-item full-width">
+                                <div class="request-detail-item">
                                     <i class="fas fa-chart-line"></i>
                                     <strong>نسبة الإنجاز:</strong>
                                     <span>${req.progress || 0}%</span>
@@ -228,14 +221,13 @@ const Dashboard = {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="request-detail-item full-width">
+                                <div class="request-detail-item">
                                     <i class="fas fa-sticky-note"></i>
                                     <strong>ملاحظات:</strong>
                                     <span>${req.notes || 'لا توجد'}</span>
                                 </div>
                             </div>`;
 
-                        // التحقق من وجود مراحل تحتاج تعديل
                         const stagesToCheck = [
                             { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
                             { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
@@ -262,7 +254,6 @@ const Dashboard = {
                         statusPanel.innerHTML = html;
                     }
                 } else {
-                    // لم يتم تقديم الطلب بعد: عرض مؤشر المراحل مع الروابط
                     const stages = [
                         { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
                         { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
@@ -318,9 +309,6 @@ const Dashboard = {
         }
     },
 
-    /**
-     * منع الروابط الحساسة حتى يكتمل الملف
-     */
     lockSensitiveLinks: function() {
         const isApproved = this._requestData && this._requestData.status === 'approved';
         if (isApproved) return;
@@ -563,7 +551,7 @@ const Dashboard = {
         }
     },
 
-    // ========== أدوات الواجهة (ثابتة) ==========
+    // ========== أدوات الواجهة ==========
     initSidebar: function() {
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
