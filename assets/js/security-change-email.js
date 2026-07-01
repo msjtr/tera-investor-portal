@@ -5,8 +5,8 @@
  * الموقع: /assets/js/security-change-email.js
  * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
  * - يعرض البريد الإلكتروني الحالي من حساب المستخدم.
- * - يُرسل طلب تغيير البريد عبر Supabase Auth (يتطلب تأكيد).
- * - جاهز للإنتاج دون أي بيانات ثابتة أو محاكاة.
+ * - يُرسل طلب تغيير البريد عبر Supabase Auth (يرسل رابط تأكيد).
+ * - يُحدث اسم المستخدم في الهيدر.
  * ============================================================
  */
 
@@ -48,6 +48,18 @@ window.SecurityPages['change-email'] = {
         const newEmailHint = document.getElementById('newEmailHint');
         const confirmHint = document.getElementById('confirmEmailHint');
         const currentEmailInput = document.getElementById('currentEmail');
+
+        // ---------- تحديث اسم المستخدم في الهيدر ----------
+        try {
+            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            if (user) {
+                const fullName = user.user_metadata?.full_name || 'مستخدم';
+                const headerName = document.getElementById('headerUserName');
+                const headerAvatar = document.getElementById('headerAvatar');
+                if (headerName) headerName.textContent = fullName;
+                if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+            }
+        } catch (e) { console.warn('تعذر تحديث الهيدر:', e); }
 
         // ---------- 1. عرض البريد الإلكتروني الحالي من الجلسة ----------
         try {
@@ -122,20 +134,32 @@ window.SecurityPages['change-email'] = {
             const confirmVal = confirmEmail.value.trim();
 
             if (!newEmailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailVal)) {
-                Security.showAlert('يرجى إدخال بريد إلكتروني جديد صحيح.', 'error');
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('يرجى إدخال بريد إلكتروني جديد صحيح.', 'error');
+                } else {
+                    alert('يرجى إدخال بريد إلكتروني جديد صحيح.');
+                }
                 newEmail.focus();
                 return;
             }
 
             if (newEmailVal !== confirmVal) {
-                Security.showAlert('البريد الإلكتروني الجديد وتأكيده غير متطابقين.', 'error');
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('البريد الإلكتروني الجديد وتأكيده غير متطابقين.', 'error');
+                } else {
+                    alert('البريد الإلكتروني الجديد وتأكيده غير متطابقين.');
+                }
                 confirmEmail.focus();
                 return;
             }
 
             const currentEmail = currentEmailInput ? currentEmailInput.value.trim() : '';
             if (currentEmail === newEmailVal) {
-                Security.showAlert('البريد الإلكتروني الجديد مطابق للبريد الحالي.', 'error');
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('البريد الإلكتروني الجديد مطابق للبريد الحالي.', 'error');
+                } else {
+                    alert('البريد الإلكتروني الجديد مطابق للبريد الحالي.');
+                }
                 newEmail.focus();
                 return;
             }
@@ -153,7 +177,12 @@ window.SecurityPages['change-email'] = {
 
                 if (error) throw error;
 
-                Security.showAlert('✅ تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert('✅ تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
+                } else {
+                    alert('تم إرسال رابط تأكيد إلى بريدك الإلكتروني الجديد.');
+                }
+
                 form.reset();
 
                 // إعادة تعيين التلميحات والحقول
@@ -170,7 +199,11 @@ window.SecurityPages['change-email'] = {
 
             } catch (error) {
                 console.error('❌ خطأ في تغيير البريد الإلكتروني:', error);
-                Security.showAlert(error.message || 'تعذر تغيير البريد الإلكتروني.', 'error');
+                if (typeof Security !== 'undefined' && Security.showAlert) {
+                    Security.showAlert(error.message || 'تعذر تغيير البريد الإلكتروني.', 'error');
+                } else {
+                    alert(error.message || 'تعذر تغيير البريد الإلكتروني.');
+                }
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -182,3 +215,10 @@ window.SecurityPages['change-email'] = {
         console.log('✅ صفحة تغيير البريد الإلكتروني مهيأة.');
     }
 };
+
+// بدء التهيئة تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.SecurityPages && window.SecurityPages['change-email']) {
+        window.SecurityPages['change-email'].init();
+    }
+});
