@@ -3,7 +3,7 @@
  * =============================================
  * يعتمد على كائن window.SecurityPages لتهيئة الصفحات المختلفة:
  * - change-password
- * - change-email (سبق إنشاؤه)
+ * - change-email (منفصل في security-change-email.js)
  * - change-mobile
  * - login-history
  * - registered-devices
@@ -12,7 +12,47 @@
 
 window.SecurityPages = window.SecurityPages || {};
 
-// دالة تنبيه عامة
+// ========== دوال مساعدة عامة ==========
+
+/**
+ * انتظار جاهزية Supabase (مع محاولات متعددة)
+ * @returns {Promise<object>} عميل Supabase
+ */
+async function waitForSupabase() {
+    if (window.teraSupabase) return window.teraSupabase;
+
+    // المحاولة الأولى: الاستماع لحدث supabase:ready
+    try {
+        await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
+            document.addEventListener('supabase:ready', (e) => {
+                clearTimeout(timeout);
+                resolve(e.detail.client);
+            }, { once: true });
+            document.addEventListener('supabase:error', () => {
+                clearTimeout(timeout);
+                reject(new Error('error'));
+            }, { once: true });
+        });
+        if (window.teraSupabase) return window.teraSupabase;
+    } catch (e) {
+        // إذا فشل الحدث، ننتظر قليلاً ثم نتحقق مباشرة
+    }
+
+    // المحاولة الثانية: الانتظار لظهور window.teraSupabase مباشرة
+    for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        if (window.teraSupabase) return window.teraSupabase;
+    }
+
+    throw new Error('Supabase غير متوفر');
+}
+
+/**
+ * عرض رسالة تنبيه في صفحة الأمان
+ * @param {string} message - نص الرسالة
+ * @param {string} type - نوع التنبيه (success | error | info)
+ */
 function showSecurityAlert(message, type) {
     const box = document.getElementById('formAlert');
     const icon = document.getElementById('alertIcon');
@@ -26,63 +66,64 @@ function showSecurityAlert(message, type) {
     window._securityAlertTimer = setTimeout(() => { if (box) box.style.display = 'none'; }, 8000);
 }
 
+/**
+ * تحديث اسم المستخدم والأفاتار في الهيدر
+ * @param {object} user - كائن المستخدم من Supabase
+ */
+function updateHeader(user) {
+    if (!user) return;
+    const fullName = user.user_metadata?.full_name || 'مستخدم';
+    const headerName = document.getElementById('headerUserName');
+    const headerAvatar = document.getElementById('headerAvatar');
+    if (headerName) headerName.textContent = fullName;
+    if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+}
+
 // ========== تغيير كلمة المرور ==========
 window.SecurityPages['change-password'] = {
     init: async function() {
         console.log('🔐 تهيئة صفحة تغيير كلمة المرور...');
-        // انتظار Supabase
-        if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
         }
 
         // تحديث الهيدر
         try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
-            if (user) {
-                const fullName = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerUserName').textContent = fullName;
-                document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
-            }
+            const { data: { user } } = await supabase.auth.getUser();
+            updateHeader(user);
         } catch (e) { console.warn('تعذر تحديث الهيدر:', e); }
 
         const form = document.getElementById('changePasswordForm');
-        if (form) {
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const currentPassword = document.getElementById('currentPassword')?.value;
-                const newPassword = document.getElementById('newPassword')?.value;
-                const confirmPassword = document.getElementById('confirmPassword')?.value;
+        if (!form) return;
 
-                if (newPassword !== confirmPassword) {
-                    showSecurityAlert('كلمة المرور الجديدة غير متطابقة.', 'error');
-                    return;
-                }
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword')?.value;
+            const newPassword = document.getElementById('newPassword')?.value;
+            const confirmPassword = document.getElementById('confirmPassword')?.value;
 
-                const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
+            if (newPassword !== confirmPassword) {
+                showSecurityAlert('كلمة المرور الجديدة غير متطابقة.', 'error');
+                return;
+            }
 
-                try {
-                    const { error } = await window.teraSupabase.auth.updateUser({ password: newPassword });
-                    if (error) throw error;
-                    showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
-                    form.reset();
-                } catch (error) {
-                    console.error('❌ خطأ في تغيير كلمة المرور:', error);
-                    showSecurityAlert(error.message || 'تعذر تغيير كلمة المرور.', 'error');
-                } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور'; }
-                }
-            });
-        }
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
+
+            try {
+                const { error } = await supabase.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+                showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
+                form.reset();
+            } catch (error) {
+                console.error('❌ خطأ في تغيير كلمة المرور:', error);
+                showSecurityAlert(error.message || 'تعذر تغيير كلمة المرور.', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور'; }
+            }
+        });
     }
 };
 
@@ -90,62 +131,51 @@ window.SecurityPages['change-password'] = {
 window.SecurityPages['change-mobile'] = {
     init: async function() {
         console.log('📱 تهيئة صفحة تغيير رقم الجوال...');
-        if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
         }
 
         try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
-            if (user) {
-                document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
-            }
+            const { data: { user } } = await supabase.auth.getUser();
+            updateHeader(user);
         } catch (e) { console.warn(e); }
 
         const form = document.getElementById('changeMobileForm');
-        if (form) {
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const mobile = document.getElementById('newMobile')?.value.trim();
-                if (!mobile) {
-                    showSecurityAlert('يرجى إدخال رقم الجوال الجديد.', 'error');
-                    return;
-                }
+        if (!form) return;
 
-                const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const mobile = document.getElementById('newMobile')?.value.trim();
+            if (!mobile) {
+                showSecurityAlert('يرجى إدخال رقم الجوال الجديد.', 'error');
+                return;
+            }
 
-                try {
-                    // إرسال OTP إلى الجوال الجديد (متطلب Supabase)
-                    const { error } = await window.teraSupabase.auth.signInWithOtp({
-                        phone: mobile,
-                        options: { shouldCreateUser: false }
-                    });
-                    if (error) throw error;
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
 
-                    localStorage.setItem('pendingNewMobile', mobile);
-                    localStorage.setItem('pendingVerificationEmail', mobile); // استعارة للحفظ المؤقت
-                    localStorage.setItem('tera_verify_type', 'change_mobile');
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    phone: mobile,
+                    options: { shouldCreateUser: false }
+                });
+                if (error) throw error;
 
-                    showSecurityAlert('✅ تم إرسال رمز التحقق إلى رقم الجوال الجديد.', 'success');
-                    setTimeout(() => window.location.replace('/auth/verify-otp.html'), 1500);
-                } catch (error) {
-                    console.error('❌ فشل إرسال رمز التحقق:', error);
-                    showSecurityAlert(error.message || 'تعذر إرسال الرمز.', 'error');
-                } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير رقم الجوال'; }
-                }
-            });
-        }
+                localStorage.setItem('pendingNewMobile', mobile);
+                localStorage.setItem('pendingVerificationEmail', mobile);
+                localStorage.setItem('tera_verify_type', 'change_mobile');
+
+                showSecurityAlert('✅ تم إرسال رمز التحقق إلى رقم الجوال الجديد.', 'success');
+                setTimeout(() => window.location.replace('/auth/verify-otp.html'), 1500);
+            } catch (error) {
+                console.error('❌ فشل إرسال رمز التحقق:', error);
+                showSecurityAlert(error.message || 'تعذر إرسال الرمز.', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير رقم الجوال'; }
+            }
+        });
     }
 };
 
@@ -153,26 +183,18 @@ window.SecurityPages['change-mobile'] = {
 window.SecurityPages['login-history'] = {
     init: async function() {
         console.log('📋 تهيئة صفحة سجل الدخول...');
-        if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
         }
 
         try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
+                updateHeader(user);
 
-                const { data: logs, error } = await window.teraSupabase
+                const { data: logs, error } = await supabase
                     .from('auth_login')
                     .select('*')
                     .eq('user_id', user.id)
@@ -206,26 +228,18 @@ window.SecurityPages['login-history'] = {
 window.SecurityPages['registered-devices'] = {
     init: async function() {
         console.log('💻 تهيئة صفحة الأجهزة المصرحة...');
-        if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
         }
 
         try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
+                updateHeader(user);
 
-                const { data: devices, error } = await window.teraSupabase
+                const { data: devices, error } = await supabase
                     .from('auth_devices')
                     .select('*')
                     .eq('user_id', user.id)
@@ -260,43 +274,27 @@ window.SecurityPages['registered-devices'] = {
 window.SecurityPages['two-factor-authentication'] = {
     init: async function() {
         console.log('🔑 تهيئة صفحة المصادقة الثنائية...');
-        if (!window.teraSupabase) {
-            try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                    document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                    document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                });
-            } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+        let supabase;
+        try { supabase = await waitForSupabase(); } catch (err) {
+            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+            return;
         }
 
         try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-                document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
+                updateHeader(user);
 
-                const { data: totp, error } = await window.teraSupabase
+                const { data: totp, error } = await supabase
                     .from('auth_totp')
                     .select('*')
                     .eq('user_id', user.id)
                     .maybeSingle();
 
                 const statusEl = document.getElementById('totpStatus');
-                const toggleBtn = document.getElementById('toggleTotpBtn');
                 if (statusEl && totp) {
                     statusEl.textContent = totp.is_enabled ? 'مفعلة' : 'غير مفعلة';
                     statusEl.style.color = totp.is_enabled ? '#16a34a' : '#dc2626';
-                }
-
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', async function() {
-                        // منطق التفعيل/التعطيل يتم عبر Supabase Auth admin أو من خلال إعادة التوجيه لإعدادات الحساب
-                        showSecurityAlert('يرجى إعداد المصادقة الثنائية من خلال إعدادات الحساب الرئيسية.', 'info');
-                    });
                 }
             }
         } catch (e) {
@@ -307,7 +305,6 @@ window.SecurityPages['two-factor-authentication'] = {
 
 // بدء الصفحة المطلوبة تلقائياً
 document.addEventListener('DOMContentLoaded', function() {
-    // استخراج اسم الصفحة من المسار
     const path = window.location.pathname;
     let pageName = '';
     if (path.includes('change-password')) pageName = 'change-password';
