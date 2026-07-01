@@ -48,7 +48,7 @@
             let timerSeconds = 300; // 5 دقائق
 
             function startTimer() {
-                clearInterval(timerInterval); // إنهاء أي مؤقت سابق
+                clearInterval(timerInterval);
                 timerContainer.style.display = 'block';
                 resendOldOtpBtn.style.display = 'inline-flex';
                 timerSeconds = 300;
@@ -88,7 +88,7 @@
                     step1OtpGroup.style.display = 'block';
                     oldEmailOtp.focus();
                     this.style.display = 'none';
-                    startTimer(); // بدء المؤقت وإظهار زر الإعادة
+                    startTimer();
                 } catch (err) {
                     showSecurityAlert(err.message || 'فشل إرسال الرمز.', 'error');
                     this.disabled = false;
@@ -111,7 +111,7 @@
                     });
                     if (error) throw error;
                     showSecurityAlert('تم إرسال رمز تحقق جديد.', 'success');
-                    startTimer(); // إعادة المؤقت
+                    startTimer();
                 } catch (err) {
                     showSecurityAlert(err.message || 'فشل إرسال الرمز.', 'error');
                 } finally {
@@ -123,7 +123,7 @@
                 }
             });
 
-            // تأكيد الرمز
+            // تأكيد الرمز القديم
             verifyOldEmailBtn.addEventListener('click', async function() {
                 const otp = oldEmailOtp.value.trim();
                 if (otp.length !== 8) {
@@ -139,7 +139,7 @@
                         type: 'email'
                     });
                     if (error) throw error;
-                    clearInterval(timerInterval); // إيقاف المؤقت بعد النجاح
+                    clearInterval(timerInterval);
                     showSecurityAlert('تم تأكيد البريد الحالي بنجاح.', 'success');
                     step1.style.display = 'none';
                     step2.style.display = 'block';
@@ -151,7 +151,7 @@
                 }
             });
 
-            // المرحلة 2: زر تغيير البريد (يرسل رابط تأكيد مع emailRedirectTo)
+            // المرحلة 2: زر تغيير البريد (يرسل رابط تأكيد مع إشعار واضح)
             if (changeEmailBtn) {
                 changeEmailBtn.addEventListener('click', async function() {
                     const newEmail = newEmailInput.value.trim();
@@ -167,14 +167,15 @@
                     this.disabled = true;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                     try {
-                        // ✅ إرسال emailRedirectTo لتوجيه رابط التأكيد لصفحة confirm-email.html
                         const { error } = await supabase.auth.updateUser(
                             { email: newEmail },
                             { emailRedirectTo: `${window.location.origin}/pages/security/confirm-email.html` }
                         );
                         if (error) throw error;
-                        showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه لإكمال التغيير.', 'success');
-                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 3000);
+
+                        // رسالة نجاح تتضمن البريد الجديد
+                        showSecurityAlert(`✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد (${newEmail}). يرجى التحقق من صندوق الوارد (والبريد العشوائي) لإكمال التغيير.`, 'success');
+                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 4000);
                     } catch (err) {
                         showSecurityAlert(err.message || 'فشل تغيير البريد.', 'error');
                     } finally {
