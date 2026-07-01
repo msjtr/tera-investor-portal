@@ -93,7 +93,7 @@
     <main class="content-container">
         <div class="page-desc">
             <i class="fas fa-info-circle"></i>
-            <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> سيتم التحقق من بريدك الحالي أولاً، ثم يمكنك تغيير البريد الإلكتروني وسيتم إرسال رابط تأكيد إلى البريد الجديد.</span>
+            <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> سيتم التحقق من بريدك الحالي أولاً، ثم إدخال البريد الجديد وتأكيده برمز تحقق.</span>
         </div>
 
         <ul class="progress-steps">
@@ -143,7 +143,6 @@
                     <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
                 </button>
 
-                <!-- المؤقت وإعادة الإرسال -->
                 <div id="timerContainer" class="timer-container" style="display:none;">
                     <span>ينتهي الرمز خلال: </span><span id="timerDisplay">05:00</span>
                 </div>
@@ -178,8 +177,17 @@
                 </div>
             </div>
 
-            <button type="button" id="changeEmailBtn" class="btn-submit" style="margin-top:12px;">
-                <i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني
+            <div id="step2OtpGroup" style="display:none; margin-top:16px;">
+                <label class="form-label">أدخل رمز التحقق المرسل إلى البريد الجديد <span class="req">*</span></label>
+                <input type="text" id="newEmailOtp" class="form-control otp-input" maxlength="8" placeholder="00000000" inputmode="numeric" style="letter-spacing:10px; font-size:24px; text-align:center; direction:ltr;">
+                <div id="newEmailOtpError" style="color:#dc2626; font-size:13px; margin-top:6px;"></div>
+                <button type="button" id="verifyNewEmailBtn" class="btn-submit" style="margin-top:12px;">
+                    <i class="fas fa-check-circle"></i> تأكيد وتغيير البريد
+                </button>
+            </div>
+
+            <button type="button" id="sendNewEmailOtpBtn" class="btn-submit" style="margin-top:12px;">
+                <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الجديد
             </button>
         </div>
 
