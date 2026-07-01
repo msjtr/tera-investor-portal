@@ -74,14 +74,18 @@
             const subMessage = document.getElementById('subMessage');
             const actionBtn = document.getElementById('actionBtn');
 
-            // انتظار Supabase
+            // انتظار Supabase (باستخدام waitForSupabase من security.js إن وجدت)
             if (!window.teraSupabase) {
                 try {
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
-                        document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                        document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                    });
+                    if (typeof waitForSupabase === 'function') {
+                        await waitForSupabase();
+                    } else {
+                        await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
+                            document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                            document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
+                        });
+                    }
                 } catch (e) {
                     showError('تعذر الاتصال بخدمة المصادقة.');
                     return;
@@ -90,28 +94,26 @@
 
             const supabase = window.teraSupabase;
 
-            // الحصول على رمز التأكيد من الرابط (يوجد عادة في hash أو query)
-            const hash = window.location.hash;
-            const params = new URLSearchParams(window.location.search);
-            let token = null;
-
-            // محاولة استخراج token من الرابط
-            if (hash.includes('token=')) {
-                token = new URLSearchParams(hash.substring(1)).get('token');
-            } else if (params.get('token')) {
-                token = params.get('token');
-            } else {
-                // ربما الرابط بالكامل هو token بعد # أو ؟
-                token = hash.replace('#', '');
+            // استخراج الرمز (token) من الرابط
+            const urlParams = new URLSearchParams(window.location.search);
+            let token = urlParams.get('token');
+            if (!token) {
+                const hash = window.location.hash.substring(1); // إزالة #
+                const hashParams = new URLSearchParams(hash);
+                token = hashParams.get('token');
+                if (!token) {
+                    // إذا كان الرمز موجوداً مباشرة بعد # بدون مفتاح
+                    token = hash;
+                }
             }
 
             if (!token) {
-                showError('الرابط غير صالح.');
+                showError('الرابط غير صالح. لم يتم العثور على رمز التأكيد.');
                 return;
             }
 
             try {
-                // محاولة تبادل الرمز (هذا يثبت البريد ويؤكد التغيير)
+                // تبادل الرمز لتأكيد تغيير البريد الإلكتروني
                 const { error } = await supabase.auth.verifyOtp({
                     token: token,
                     type: 'email_change'
@@ -128,11 +130,11 @@
                 console.error('فشل تأكيد البريد:', err);
                 let errorMessage = 'فشل تأكيد البريد الإلكتروني.';
                 if (err.message.includes('expired')) {
-                    errorMessage = 'انتهت صلاحية الرابط.';
+                    errorMessage = 'انتهت صلاحية رابط التأكيد. يرجى طلب تغيير البريد مرة أخرى.';
                 } else if (err.message.includes('used')) {
-                    errorMessage = 'تم استخدام هذا الرابط مسبقاً.';
+                    errorMessage = 'تم استخدام رابط التأكيد مسبقاً. البريد الإلكتروني مؤكد بالفعل.';
                 } else if (err.message.includes('invalid')) {
-                    errorMessage = 'الرابط غير صالح.';
+                    errorMessage = 'الرابط غير صالح أو تم التلاعب به.';
                 }
                 showError(errorMessage);
             }
@@ -140,7 +142,7 @@
             function showError(msg) {
                 statusIcon.innerHTML = '<i class="fas fa-times-circle error"></i>';
                 message.textContent = msg;
-                subMessage.textContent = 'لم يتم تأكيد البريد الإلكتروني. يمكنك المحاولة مرة أخرى.';
+                subMessage.textContent = 'يمكنك المحاولة مرة أخرى من خلال صفحة تغيير البريد الإلكتروني.';
                 actionBtn.href = '/pages/security/change-email.html';
                 actionBtn.textContent = 'المحاولة مرة أخرى';
                 actionBtn.style.display = 'inline-block';
