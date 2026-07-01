@@ -23,53 +23,26 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* =========================================
-           تنسيقات إضافية للصفحة
-           ========================================= */
-        .email-hint {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .email-hint i {
-            font-size: 14px;
-            color: #94a3b8;
-        }
-        .email-hint.success {
-            color: #16a34a;
-        }
-        .email-hint.success i {
-            color: #16a34a;
-        }
-        .email-hint.error {
-            color: #dc2626;
-        }
-        .email-hint.error i {
-            color: #dc2626;
-        }
+        .email-hint { font-size: 12px; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+        .email-hint i { font-size: 14px; color: #94a3b8; }
+        .email-hint.success { color: #16a34a; }
+        .email-hint.success i { color: #16a34a; }
+        .email-hint.error { color: #dc2626; }
+        .email-hint.error i { color: #dc2626; }
     </style>
 </head>
 <body>
 
-    <!-- =========================================
-    الهيدر العلوي
-    ========================================= -->
     <header class="focused-header no-print">
         <div class="logo">
             <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
         </div>
         <div class="client-info">
-            <h5>محمد عبدالله الشمري</h5>
-            <div class="avatar">م</div>
+            <h5 id="headerUserName">مستخدم</h5>
+            <div class="avatar" id="headerAvatar">م</div>
         </div>
     </header>
 
-    <!-- =========================================
-    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
-    ========================================= -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-envelope"></i> تغيير البريد الإلكتروني</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -77,9 +50,6 @@
         </a>
     </div>
 
-    <!-- =========================================
-    المحتوى الرئيسي
-    ========================================= -->
     <main class="content-container">
 
         <div class="page-desc">
@@ -87,57 +57,28 @@
             <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> يرجى إدخال البريد الإلكتروني الجديد ثم تأكيده. سيتم إرسال رمز تحقق إلى البريد الإلكتروني الجديد لإثبات الملكية.</span>
         </div>
 
-        <!-- =========================================
-        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
-        ========================================= -->
         <ul class="progress-steps">
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">الأمان</span>
-            </li>
+            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">الأمان</span></li>
             <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير كلمة المرور</span>
-            </li>
+            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">تغيير كلمة المرور</span></li>
             <li class="step-line completed"></li>
-            <li class="active">
-                <span class="step-num">3</span>
-                <span class="step-label">تغيير البريد الإلكتروني</span>
-            </li>
+            <li class="active"><span class="step-num">3</span><span class="step-label">تغيير البريد الإلكتروني</span></li>
             <li class="step-line"></li>
-            <li>
-                <span class="step-num">4</span>
-                <span class="step-label">تغيير رقم الجوال</span>
-            </li>
+            <li><span class="step-num">4</span><span class="step-label">تغيير رقم الجوال</span></li>
             <li class="step-line"></li>
-            <li>
-                <span class="step-num">5</span>
-                <span class="step-label">المصادقة الثنائية</span>
-            </li>
+            <li><span class="step-num">5</span><span class="step-label">المصادقة الثنائية</span></li>
             <li class="step-line"></li>
-            <li>
-                <span class="step-num">6</span>
-                <span class="step-label">الأجهزة المصرحة</span>
-            </li>
+            <li><span class="step-num">6</span><span class="step-label">الأجهزة المصرحة</span></li>
             <li class="step-line"></li>
-            <li>
-                <span class="step-num">7</span>
-                <span class="step-label">سجل الدخول</span>
-            </li>
+            <li><span class="step-num">7</span><span class="step-label">سجل الدخول</span></li>
         </ul>
 
-        <!-- منطقة التنبيه -->
         <div class="alert-box" id="formAlert" role="alert">
             <i class="fas" id="alertIcon"></i>
             <span id="alertMessage"></span>
         </div>
 
         <form id="changeEmailForm" novalidate>
-
-            <!-- =========================================
-            القسم الرئيسي: تغيير البريد الإلكتروني
-            ========================================= -->
             <div class="panel-card">
                 <div class="panel-header">
                     <i class="fas fa-at"></i>
@@ -146,42 +87,25 @@
                 </div>
 
                 <div class="form-grid">
-
-                    <!-- البريد الإلكتروني الحالي -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الحالي <span class="req">*</span></label>
-                        <input type="email" class="form-control" id="currentEmail" placeholder="example@domain.com" required value="mohammed@example.com" readonly>
+                        <input type="email" class="form-control" id="currentEmail" placeholder="example@domain.com" required readonly>
                         <span class="format-hint">البريد الإلكتروني الحالي المسجل في حسابك.</span>
                     </div>
-
-                    <!-- البريد الإلكتروني الجديد -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الجديد <span class="req">*</span></label>
                         <input type="email" class="form-control" id="newEmail" placeholder="new-email@domain.com" required autocomplete="email">
-                        <span class="email-hint" id="newEmailHint">
-                            <i class="fas fa-info-circle"></i>
-                            أدخل بريداً إلكترونياً صحيحاً وفعالاً.
-                        </span>
+                        <span class="email-hint" id="newEmailHint"><i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.</span>
                     </div>
-
-                    <!-- تأكيد البريد الإلكتروني الجديد -->
                     <div class="form-group full-width">
                         <label class="form-label">تأكيد البريد الإلكتروني الجديد <span class="req">*</span></label>
                         <input type="email" class="form-control" id="confirmEmail" placeholder="new-email@domain.com" required autocomplete="email">
-                        <span class="email-hint" id="confirmEmailHint">
-                            <i class="fas fa-info-circle"></i>
-                            يجب أن يتطابق مع البريد الإلكتروني الجديد.
-                        </span>
+                        <span class="email-hint" id="confirmEmailHint"><i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.</span>
                     </div>
+                </div>
 
-                </div><!-- /form-grid -->
-
-                <!-- نصائح أمنية -->
                 <div class="security-tips">
-                    <div class="tip-title">
-                        <i class="fas fa-lightbulb"></i>
-                        نصائح أمنية
-                    </div>
+                    <div class="tip-title"><i class="fas fa-lightbulb"></i> نصائح أمنية</div>
                     <ul>
                         <li><i class="fas fa-check"></i> استخدم بريداً إلكترونياً يمكنك الوصول إليه دائماً.</li>
                         <li><i class="fas fa-check"></i> تأكد من صحة البريد الإلكتروني الجديد قبل التحديث.</li>
@@ -190,49 +114,35 @@
                     </ul>
                 </div>
 
-                <!-- =========================================
-                رسالة التحقق (OTP Notice)
-                ========================================= -->
                 <div class="otp-notice">
                     <i class="fas fa-shield-alt"></i>
-                    <span>
-                        <strong>عزيزي الشريك،</strong> سوف يصل لكم رمز تحقق لتغيير البريد الإلكتروني على البريد الجديد المسجل.
-                    </span>
+                    <span><strong>عزيزي الشريك،</strong> سوف يصل لكم رمز تحقق لتغيير البريد الإلكتروني على البريد الجديد المسجل.</span>
                 </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">
                     <i class="fas fa-save"></i> تغيير البريد الإلكتروني
                 </button>
-
-            </div><!-- /panel-card -->
-
+            </div>
         </form>
 
     </main>
 
-    <!-- =========================================
-    التذييل
-    ========================================= -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- =========================================
-    ربط الملفات المشتركة
-    ========================================= -->
+    <!-- السكريبتات الأساسية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/core.js"></script>
     <script src="/assets/js/app.js"></script>
     <script src="/assets/js/main.js"></script>
 
-    <!-- =========================================
-    الملف الرئيسي لصفحات الأمان
-    ========================================= -->
+    <!-- سكريبت الأمان العام -->
     <script src="/assets/js/security.js"></script>
 
-    <!-- =========================================
-    الملف المخصص للصفحة
-    ========================================= -->
+    <!-- سكريبت تغيير البريد الإلكتروني -->
     <script src="/assets/js/security-change-email.js"></script>
-
 </body>
 </html>
