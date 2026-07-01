@@ -1,21 +1,7 @@
 /**
- * ============================================================
- * TERA INVESTOR PORTAL - DASHBOARD LOGIC (PRODUCTION + CUSTOMER JOURNEY)
- * ============================================================
- * الموقع: /assets/js/dashboard.js
- * - جميع البيانات تُجلب من Supabase بشكل حي.
- * - لا توجد بيانات وهمية أو ثابتة.
- * - يعتمد على جداول: user_portfolio, portfolio_history,
- *   investment_opportunities, transactions.
- * - يحمي المسار عبر TeraAuth.
- * - يستخدم maybeSingle() بدلاً من single() لتجنب أخطاء 406.
- * - يتضمن تنبيه استكمال الملف الشخصي ومؤشر المراحل مع روابط.
- * - بعد تقديم الطلب: يظهر قسم حالة الطلب بأيقونات وألوان حسب الحالة.
- * - بعد الاعتماد: يختفي كل شيء.
- * - مؤقت الجلسة يبدأ من تحميل الصفحة.
- * - يُظهر الوقت الحالي مع التاريخ في شريط الترحيب.
+ * dashboard-core.js – وظائف لوحة التحكم (حالة الطلب، الإحصائيات، الرسم البياني، المؤقت)
+ * يعتمد على: supabase-client.js, auth.js, chart.js
  */
-
 const Dashboard = {
     chartInstance: null,
     _initialized: false,
@@ -43,14 +29,6 @@ const Dashboard = {
         }
 
         console.log('🚀 جاري تهيئة لوحة التحكم...');
-
-        this.initSidebar();
-        this.initSubmenus();
-        this.initOpportunitiesToggle();
-        this.initTransactionFilter();
-        this.initLogout();
-        this.initActiveNav();
-        this.handleWindowResize();
 
         await this.loadCustomerJourney();
         await this.loadUserInfo();
@@ -109,7 +87,7 @@ const Dashboard = {
         update();
         setInterval(() => {
             update();
-            this.updateCurrentDateTime(); // تحديث الوقت الحالي مع الجلسة
+            this.updateCurrentDateTime();
         }, 60000);
     },
 
@@ -120,27 +98,22 @@ const Dashboard = {
 
         const now = new Date();
         if (dateEl) {
-            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-            dateEl.textContent = now.toLocaleDateString('ar-SA', dateOptions);
+            dateEl.textContent = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
         }
         if (timeEl) {
-            const timeOptions = { hour: '2-digit', minute: '2-digit' };
-            timeEl.textContent = now.toLocaleTimeString('ar-SA', timeOptions);
+            timeEl.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
         }
     },
 
     _formatDateTime: function(isoString) {
         if (!isoString) return '';
         const d = new Date(isoString);
-        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return d.toLocaleDateString('ar-SA', options);
+        return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     },
 
     _getElapsedDays: function(isoString) {
         if (!isoString) return '';
-        const now = new Date();
-        const past = new Date(isoString);
-        const diff = Math.floor((now - past) / (1000 * 60 * 60 * 24));
+        const diff = Math.floor((new Date() - new Date(isoString)) / (1000 * 60 * 60 * 24));
         if (diff < 1) return 'أقل من يوم';
         return `${diff} يوم`;
     },
@@ -191,9 +164,7 @@ const Dashboard = {
                             </div>
                             <div style="text-align:center;">
                                 <i class="fas ${statusIcon} status-icon-large"></i>
-                                <div class="status-badge-large">
-                                    ${this._getStatusLabel(req.status)}
-                                </div>
+                                <div class="status-badge-large">${this._getStatusLabel(req.status)}</div>
                             </div>
                             <div class="request-details-list">
                                 <div class="request-detail-item">
@@ -237,35 +208,30 @@ const Dashboard = {
                         ];
 
                         const pendingStages = stagesToCheck.filter(s => !req[s.key]);
-
                         if (pendingStages.length > 0) {
                             html += `<div class="alert-warning-box" style="margin-top:16px;">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <div>
                                     <strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:
                                     <ul style="margin:8px 0 0 16px;">`;
-                            pendingStages.forEach(s => {
-                                html += `<li><a href="${s.link}">${s.label}</a></li>`;
-                            });
+                            pendingStages.forEach(s => { html += `<li><a href="${s.link}">${s.label}</a></li>`; });
                             html += `</ul></div></div>`;
                         }
-
                         html += `</div>`;
                         statusPanel.innerHTML = html;
                     }
                 } else {
                     const stages = [
-                        { key: 'personal_info_completed', label: 'المعلومات الشخصية',   icon: 'fa-user',            link: '/pages/profile/personal-information.html' },
-                        { key: 'contact_info_completed', label: 'معلومات التواصل',      icon: 'fa-phone',           link: '/pages/profile/contact-information.html' },
+                        { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
+                        { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone', link: '/pages/profile/contact-information.html' },
                         { key: 'national_address_completed', label: 'العنوان الوطني الموثق', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
-                        { key: 'bank_info_completed',    label: 'المعلومات البنكية',    icon: 'fa-university',      link: '/pages/profile/bank-information.html' },
-                        { key: 'attachments_completed',  label: 'المرفقات والوثائق',    icon: 'fa-paperclip',       link: '/pages/profile/attachments.html' },
-                        { key: 'agreed',                 label: 'الإقرار',             icon: 'fa-check',           link: null },
-                        { key: 'submitted',              label: 'المراجعة النهائية',    icon: 'fa-paper-plane',     link: null }
+                        { key: 'bank_info_completed', label: 'المعلومات البنكية', icon: 'fa-university', link: '/pages/profile/bank-information.html' },
+                        { key: 'attachments_completed', label: 'المرفقات والوثائق', icon: 'fa-paperclip', link: '/pages/profile/attachments.html' },
+                        { key: 'agreed', label: 'الإقرار', icon: 'fa-check', link: null },
+                        { key: 'submitted', label: 'المراجعة النهائية', icon: 'fa-paper-plane', link: null }
                     ];
 
                     const allCompleted = stages.every(s => req?.[s.key] === true);
-
                     let html = `<div class="panel-card">
                         <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div>
                         <div style="display:flex; flex-wrap:wrap; gap:12px; padding:8px 0;">`;
@@ -274,7 +240,6 @@ const Dashboard = {
                         const done = req?.[stage.key] === true;
                         const linkOpen = stage.link ? `<a href="${stage.link}" style="text-decoration:none; color:inherit; display:block;">` : '';
                         const linkClose = stage.link ? `</a>` : '';
-
                         html += `
                         <div style="flex: 1 1 140px; background:${done ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${done ? '#bbf7d0' : '#e2e8f0'}; border-radius:10px; padding:12px; text-align:center; transition: transform 0.2s; ${stage.link ? 'cursor:pointer;' : ''}">
                             ${linkOpen}
@@ -288,22 +253,15 @@ const Dashboard = {
                     });
 
                     html += `</div>`;
-
                     if (!allCompleted) {
-                        html += `<div style="margin-top:12px; text-align:center;">
-                            <a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a>
-                        </div>`;
+                        html += `<div style="margin-top:12px; text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a></div>`;
                     } else if (req?.status !== 'approved') {
-                        html += `<div class="alert-item-box alert-success" style="margin-top:12px;">
-                            <i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وتم تحويله إلى فريق المراجعة.
-                        </div>`;
+                        html += `<div class="alert-item-box alert-success" style="margin-top:12px;"><i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وتم تحويله إلى فريق المراجعة.</div>`;
                     }
-
                     html += `</div>`;
                     statusPanel.innerHTML = html;
                 }
             }
-
         } catch (e) {
             console.warn('⚠️ تعذر تحميل حالة الطلب:', e);
         }
@@ -339,9 +297,8 @@ const Dashboard = {
     },
 
     toggleActionsBasedOnStatus: function() {
-        const quickBtns = document.querySelectorAll('.btn-quick');
         const approved = this._requestData && this._requestData.status === 'approved';
-        quickBtns.forEach(btn => {
+        document.querySelectorAll('.btn-quick').forEach(btn => {
             if (approved) {
                 btn.style.opacity = '1';
                 btn.style.pointerEvents = 'auto';
@@ -352,14 +309,10 @@ const Dashboard = {
 
     _getStatusLabel: function(status) {
         const labels = {
-            draft: 'مسودة',
-            pending_information: 'بانتظار استكمال البيانات',
-            under_review: 'قيد المراجعة',
-            needs_revision: 'يحتاج تعديل',
-            has_notes: 'توجد ملاحظات',
-            approved: 'معتمد',
-            rejected: 'مرفوض',
-            suspended: 'موقوف'
+            draft: 'مسودة', pending_information: 'بانتظار استكمال البيانات',
+            under_review: 'قيد المراجعة', needs_revision: 'يحتاج تعديل',
+            has_notes: 'توجد ملاحظات', approved: 'معتمد',
+            rejected: 'مرفوض', suspended: 'موقوف'
         };
         return labels[status] || status;
     },
@@ -370,28 +323,17 @@ const Dashboard = {
             if (!user) return;
 
             let name = user.user_metadata?.full_name || 'مستخدم';
-
-            if (!user.user_metadata?.full_name) {
-                const { data: reg } = await this._supabase
-                    .from('auth_register')
-                    .select('full_name')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
+            if (!name || name === 'مستخدم') {
+                const { data: reg } = await this._supabase.from('auth_register').select('full_name').eq('user_id', user.id).maybeSingle();
                 if (reg?.full_name) name = reg.full_name;
             }
 
             const h2 = document.querySelector('.welcome-banner h2');
             if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
 
-            const headerName = document.getElementById('headerUserName');
-            if (headerName) headerName.textContent = name;
-
-            const avatar = document.getElementById('headerAvatar');
-            if (avatar) avatar.textContent = name.charAt(0).toUpperCase();
-
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب بيانات المستخدم:', e);
-        }
+            document.getElementById('headerUserName').textContent = name;
+            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+        } catch (e) { console.warn('⚠️ تعذر جلب بيانات المستخدم:', e); }
     },
 
     loadStats: async function() {
@@ -399,21 +341,14 @@ const Dashboard = {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
             if (user) {
-                const { data, error } = await this._supabase
-                    .from('user_portfolio')
-                    .select('total_value, active_contracts, available_balance')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
-
-                if (!error && data) {
+                const { data } = await this._supabase.from('user_portfolio').select('total_value, active_contracts, available_balance').eq('user_id', user.id).maybeSingle();
+                if (data) {
                     statValues.portfolioValue = data.total_value || 0;
                     statValues.activeContracts = data.active_contracts || 0;
                     statValues.availableBalance = data.available_balance || 0;
                 }
             }
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب إحصائيات المحفظة:', e);
-        }
+        } catch (e) { console.warn('⚠️ تعذر جلب الإحصائيات:', e); }
 
         document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = statValues.portfolioValue.toLocaleString() + ' ر.س';
         document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = statValues.activeContracts + ' عقود نشطة';
@@ -425,32 +360,19 @@ const Dashboard = {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
             if (user) {
-                const { data, error } = await this._supabase
-                    .from('portfolio_history')
-                    .select('month, value')
-                    .eq('user_id', user.id)
-                    .order('month', { ascending: true });
-
-                if (!error && data && data.length > 0) {
+                const { data } = await this._supabase.from('portfolio_history').select('month, value').eq('user_id', user.id).order('month', { ascending: true });
+                if (data && data.length > 0) {
                     labels = data.map(r => r.month);
                     values = data.map(r => r.value);
                 }
             }
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب بيانات الرسم البياني:', e);
-        }
+        } catch (e) { console.warn('⚠️ تعذر جلب الرسم البياني:', e); }
 
-        if (labels.length === 0) {
-            labels = ['لا توجد بيانات'];
-            values = [0];
-        }
+        if (labels.length === 0) { labels = ['لا توجد بيانات']; values = [0]; }
 
         const ctx = document.getElementById('mainChart');
         if (ctx && typeof Chart !== 'undefined') {
-            if (this.chartInstance) {
-                this.chartInstance.destroy();
-                this.chartInstance = null;
-            }
+            if (this.chartInstance) { this.chartInstance.destroy(); }
             this.chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -460,8 +382,7 @@ const Dashboard = {
                         data: values,
                         borderColor: '#028090',
                         backgroundColor: 'rgba(2, 128, 144, 0.1)',
-                        tension: 0.3,
-                        fill: true,
+                        tension: 0.3, fill: true,
                         pointBackgroundColor: '#028090',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
@@ -489,30 +410,19 @@ const Dashboard = {
         const tbody = document.querySelector('#opportunitiesPanelWrapper tbody');
         if (!tbody) return;
         try {
-            const { data, error } = await this._supabase
-                .from('investment_opportunities')
-                .select('title, share_price, annual_return, status')
-                .eq('status', 'active')
-                .limit(3);
-
-            if (!error && data && data.length > 0) {
-                let html = '';
-                data.forEach(opp => {
-                    html += `<tr>
-                        <td class="text-title text-start">${opp.title}</td>
-                        <td>${opp.share_price.toLocaleString()} ر.س</td>
-                        <td>${opp.annual_return}%</td>
-                        <td><span style="color:#0d9488;font-weight:bold;">${opp.status}</span></td>
-                        <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
-                    </tr>`;
-                });
-                tbody.innerHTML = html;
+            const { data } = await this._supabase.from('investment_opportunities').select('title, share_price, annual_return, status').eq('status', 'active').limit(3);
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(opp => `<tr>
+                    <td class="text-title text-start">${opp.title}</td>
+                    <td>${opp.share_price.toLocaleString()} ر.س</td>
+                    <td>${opp.annual_return}%</td>
+                    <td><span style="color:#0d9488;font-weight:bold;">${opp.status}</span></td>
+                    <td><a href="/pages/investments/investment-details.html" class="btn-table-link">استعراض</a></td>
+                </tr>`).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="5">لا توجد فرص حالياً</td></tr>';
             }
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب الفرص:', e);
-        }
+        } catch (e) { console.warn('⚠️ تعذر جلب الفرص:', e); }
     },
 
     loadTransactions: async function() {
@@ -521,148 +431,26 @@ const Dashboard = {
         try {
             const { data: { user } } = await this._supabase.auth.getUser();
             if (!user) return;
-
-            const { data, error } = await this._supabase
-                .from('transactions')
-                .select('description, created_at, amount')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (!error && data && data.length > 0) {
-                let html = '';
-                data.forEach(tr => {
+            const { data } = await this._supabase.from('transactions').select('description, created_at, amount').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5);
+            if (data && data.length > 0) {
+                tbody.innerHTML = data.map(tr => {
                     const date = new Date(tr.created_at).toLocaleDateString('ar-SA');
                     const amount = tr.amount;
                     const color = amount >= 0 ? '#10b981' : '#ef4444';
                     const sign = amount >= 0 ? '+' : '';
-                    html += `<tr>
+                    return `<tr>
                         <td class="text-title text-start">${tr.description}</td>
                         <td>${date}</td>
                         <td class="amount-cell" style="color:${color};font-weight:bold;">${sign}${amount.toLocaleString()} ر.س</td>
                     </tr>`;
-                });
-                tbody.innerHTML = html;
+                }).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="3">لا توجد عمليات مالية بعد</td></tr>';
             }
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب العمليات المالية:', e);
-        }
-    },
-
-    // ========== أدوات الواجهة ==========
-    initSidebar: function() {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const overlay = document.getElementById('sidebarOverlay');
-        const closeBtn = document.getElementById('closeSidebarBtn');
-
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                if (window.innerWidth <= 991) {
-                    sidebar.classList.toggle('sidebar-open');
-                    overlay.classList.toggle('active');
-                } else {
-                    sidebar.classList.toggle('collapsed');
-                }
-            });
-        }
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebar.classList.remove('sidebar-open');
-                overlay.classList.remove('active');
-            });
-        }
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                sidebar.classList.remove('sidebar-open');
-                overlay.classList.remove('active');
-            });
-        }
-    },
-
-    initSubmenus: function() {
-        document.querySelectorAll('.has-submenu > a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                this.parentElement.classList.toggle('submenu-open');
-            });
-        });
-    },
-
-    initOpportunitiesToggle: function() {
-        const toggleBtn = document.getElementById('toggleOppBtn');
-        const icon = document.getElementById('toggleOppIcon');
-        const text = document.getElementById('toggleOppText');
-        const wrapper = document.getElementById('opportunitiesPanelWrapper');
-        if (!toggleBtn || !wrapper) return;
-
-        toggleBtn.addEventListener('click', function() {
-            if (wrapper.style.maxHeight === '0px') {
-                wrapper.style.maxHeight = '600px';
-                if (icon) icon.className = 'fas fa-eye-slash';
-                if (text) text.textContent = 'إخفاء';
-            } else {
-                wrapper.style.maxHeight = '0px';
-                if (icon) icon.className = 'fas fa-eye';
-                if (text) text.textContent = 'إظهار';
-            }
-        });
-    },
-
-    initTransactionFilter: function() {
-        const filter = document.getElementById('transactionFilter');
-        if (!filter) return;
-        filter.addEventListener('change', function() {
-            console.log('تطبيق فلتر:', this.value);
-        });
-    },
-
-    initLogout: function() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (!logoutBtn) return;
-        logoutBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            if (!confirm('هل أنت متأكد من رغبتك في تسجيل الخروج؟')) return;
-
-            if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
-                await window.TeraAuth.logout();
-            } else {
-                localStorage.removeItem('tera_token');
-                localStorage.removeItem('tera_user');
-                sessionStorage.clear();
-                window.location.replace('/auth/auth/login/login.html');
-            }
-        });
-    },
-
-    initActiveNav: function() {
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-item a').forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
-                link.parentElement.classList.add('active');
-            }
-        });
-    },
-
-    handleWindowResize: function() {
-        window.addEventListener('resize', () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (window.innerWidth > 991) {
-                if (sidebar) sidebar.classList.remove('sidebar-open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
+        } catch (e) { console.warn('⚠️ تعذر جلب العمليات:', e); }
     }
 };
 
-// تشغيل عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     Dashboard.init();
 });
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Dashboard;
-}
