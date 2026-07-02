@@ -1,6 +1,7 @@
 /**
- * security-change-email.js – تغيير البريد الإلكتروني عبر Edge Function
+ * security-change-email.js – تغيير البريد الإلكتروني (عربي، بدون Edge Function)
  * يعتمد على security.js الذي يوفر waitForSupabase() و showSecurityAlert() و updateHeader()
+ * يقوم بالتحقق من كلمة المرور أولاً، ثم إرسال رابط تأكيد إلى البريد الجديد.
  */
 (function() {
     'use strict';
@@ -75,7 +76,7 @@
                 }
             });
 
-            // ========== المرحلة 2: تغيير البريد عبر Edge Function ==========
+            // ========== المرحلة 2: تغيير البريد (رابط تأكيد رسمي) ==========
             if (changeEmailBtn) {
                 changeEmailBtn.addEventListener('click', async function() {
                     const newEmail = newEmailInput.value.trim().toLowerCase();
@@ -87,7 +88,7 @@
                     }
 
                     if (!isValidEmail(newEmail)) {
-                        showSecurityAlert('صيغة البريد الإلكتروني الجديد غير صالحة.', 'error');
+                        showSecurityAlert('صيغة البريد الإلكتروني غير صالحة.', 'error');
                         return;
                     }
 
@@ -110,26 +111,23 @@
                             throw new Error('انتهت الجلسة. يرجى إعادة تسجيل الدخول.');
                         }
 
-                        // 🔁 استدعاء Edge Function لتغيير البريد مباشرة
-                        const EDGE_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/change-email';
+                        const redirectTo = `${window.location.origin}/pages/security/confirm-email.html`;
 
-                        const response = await fetch(EDGE_FUNCTION_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${session.access_token}`
-                            },
-                            body: JSON.stringify({ newEmail })
-                        });
+                        const { error } = await supabase.auth.updateUser(
+                            { email: newEmail },
+                            { emailRedirectTo: redirectTo }
+                        );
 
-                        const result = await response.json();
-
-                        if (!response.ok || result.error) {
-                            throw new Error(result.error || 'فشل تغيير البريد');
+                        if (error) {
+                            console.log('❌ خطأ updateUser:');
+                            console.log('error:', error);
+                            console.log('error.message:', error.message);
+                            console.log('error.status:', error.status);
+                            throw error;
                         }
 
-                        showSecurityAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
-                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 2000);
+                        showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه (والبريد العشوائي) لإكمال التغيير.', 'success');
+                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 4000);
 
                     } catch (err) {
                         console.error('❌ فشل تغيير البريد:', err);
@@ -141,6 +139,8 @@
                                 userMessage = 'صيغة البريد الإلكتروني غير صالحة.';
                             } else if (err.message.includes('rate limit') || err.message.includes('too many')) {
                                 userMessage = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
+                            } else if (err.message.includes('redirect') || err.message.includes('URL')) {
+                                userMessage = 'خطأ في إعدادات رابط التأكيد. يرجى التواصل مع الدعم الفني.';
                             } else {
                                 userMessage = err.message;
                             }
