@@ -40,37 +40,7 @@
         .old-email-box i { font-size: 28px; color: #f59e0b; }
 
         #step2 { display: none; }
-
-        .timer-container {
-            text-align: center;
-            font-size: 15px;
-            color: #64748b;
-            font-weight: 600;
-            margin: 16px 0;
-        }
-        #timerDisplay {
-            font-weight: 800;
-            color: #dc2626;
-            direction: ltr;
-            margin: 0 4px;
-        }
-        .btn-resend {
-            background: transparent;
-            border: 1px solid #028090;
-            color: #028090;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .btn-resend:hover { background: #028090; color: #fff; }
-        .btn-resend.disabled { opacity: 0.5; pointer-events: none; }
+        #step1Error { color: #dc2626; font-size:13px; margin-top:6px; display:none; }
     </style>
 </head>
 <body>
@@ -93,7 +63,7 @@
     <main class="content-container">
         <div class="page-desc">
             <i class="fas fa-info-circle"></i>
-            <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> سيتم التحقق من بريدك الحالي أولاً، ثم يمكنك إدخال البريد الجديد وتأكيده برمز تحقق.</span>
+            <span><strong>تغيير البريد الإلكتروني بشكل آمن:</strong> يرجى إدخال كلمة المرور الحالية للتحقق من هويتك، ثم إدخال البريد الجديد. سيتم إرسال رابط تأكيد إلى بريدك الجديد.</span>
         </div>
 
         <ul class="progress-steps">
@@ -117,11 +87,11 @@
             <span id="alertMessage"></span>
         </div>
 
-        <!-- المرحلة 1: تأكيد البريد القديم -->
+        <!-- المرحلة 1: التحقق من كلمة المرور الحالية -->
         <div class="panel-card" id="step1">
             <div class="panel-header">
                 <i class="fas fa-shield-alt"></i>
-                <h3>تأكيد البريد الإلكتروني الحالي</h3>
+                <h3>تأكيد الهوية</h3>
                 <span class="panel-badge">الخطوة 1/2</span>
             </div>
 
@@ -133,27 +103,16 @@
                 </div>
             </div>
 
-            <p>لأمان حسابك، يجب تأكيد بريدك الإلكتروني الحالي أولاً. سيتم إرسال رمز تحقق مكون من 8 أرقام إلى هذا البريد.</p>
+            <p>لأمان حسابك، يرجى إدخال كلمة المرور الحالية للتحقق من هويتك.</p>
 
-            <div id="step1OtpGroup" style="display:none; margin-top:16px;">
-                <label class="form-label">أدخل رمز التحقق المرسل إلى بريدك الحالي <span class="req">*</span></label>
-                <input type="text" id="oldEmailOtp" class="form-control otp-input" maxlength="8" placeholder="00000000" inputmode="numeric" style="letter-spacing:10px; font-size:24px; text-align:center; direction:ltr;">
-                <div id="oldEmailOtpError" style="color:#dc2626; font-size:13px; margin-top:6px;"></div>
-                <button type="button" id="verifyOldEmailBtn" class="btn-submit" style="margin-top:12px;">
-                    <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
-                </button>
-
-                <!-- المؤقت وإعادة الإرسال -->
-                <div id="timerContainer" class="timer-container" style="display:none;">
-                    <span>ينتهي الرمز خلال: </span><span id="timerDisplay">05:00</span>
-                </div>
-                <button type="button" id="resendOldOtpBtn" class="btn-resend" style="display:none;">
-                    <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
-                </button>
+            <div class="form-group full-width">
+                <label class="form-label">كلمة المرور الحالية <span class="req">*</span></label>
+                <input type="password" class="form-control" id="currentPassword" placeholder="كلمة المرور الحالية" required>
+                <div id="step1Error"></div>
             </div>
 
-            <button type="button" id="sendOldEmailOtpBtn" class="btn-submit" style="margin-top:12px;">
-                <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الحالي
+            <button type="button" id="verifyPasswordBtn" class="btn-submit" style="margin-top:12px;">
+                <i class="fas fa-check-circle"></i> تحقق من هويتك
             </button>
         </div>
 
@@ -178,17 +137,8 @@
                 </div>
             </div>
 
-            <div id="step2OtpGroup" style="display:none; margin-top:16px;">
-                <label class="form-label">أدخل رمز التحقق المرسل إلى البريد الجديد <span class="req">*</span></label>
-                <input type="text" id="newEmailOtp" class="form-control otp-input" maxlength="8" placeholder="00000000" inputmode="numeric" style="letter-spacing:10px; font-size:24px; text-align:center; direction:ltr;">
-                <div id="newEmailOtpError" style="color:#dc2626; font-size:13px; margin-top:6px;"></div>
-                <button type="button" id="verifyNewEmailBtn" class="btn-submit" style="margin-top:12px;">
-                    <i class="fas fa-check-circle"></i> تأكيد وتغيير البريد
-                </button>
-            </div>
-
-            <button type="button" id="sendNewEmailOtpBtn" class="btn-submit" style="margin-top:12px;">
-                <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الجديد
+            <button type="button" id="changeEmailBtn" class="btn-submit" style="margin-top:12px;">
+                <i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني
             </button>
         </div>
 
