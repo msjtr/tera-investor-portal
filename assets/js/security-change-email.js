@@ -1,5 +1,5 @@
 /**
- * security-change-email.js – تغيير البريد الإلكتروني (رسمي + تشخيص)
+ * security-change-email.js – تغيير البريد الإلكتروني (رسمي + تحقق محسَّن)
  * يعتمد على security.js الذي يوفر waitForSupabase() و showSecurityAlert() و updateHeader()
  */
 (function() {
@@ -39,6 +39,11 @@
             const confirmEmailInput = document.getElementById('confirmEmail');
             const changeEmailBtn = document.getElementById('changeEmailBtn');
 
+            // دالة مساعدة للتحقق من صيغة البريد
+            function isValidEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
             // ========== المرحلة 1: التحقق من كلمة المرور ==========
             verifyPasswordBtn.addEventListener('click', async function() {
                 const password = currentPasswordInput.value.trim();
@@ -71,46 +76,58 @@
                 }
             });
 
-            // ========== المرحلة 2: تغيير البريد (رابط تأكيد مع تشخيص) ==========
+            // ========== المرحلة 2: تغيير البريد مع تحقق محسَّن ==========
             if (changeEmailBtn) {
                 changeEmailBtn.addEventListener('click', async function() {
-                    const newEmail = newEmailInput.value.trim();
-                    const confirm = confirmEmailInput.value.trim();
-                    if (!newEmail || newEmail !== confirm) {
+                    const newEmail = newEmailInput.value.trim().toLowerCase();
+                    const confirm = confirmEmailInput.value.trim().toLowerCase();
+
+                    // التحقق من تعبئة الحقول
+                    if (!newEmail || !confirm) {
+                        showSecurityAlert('يرجى ملء جميع الحقول.', 'error');
+                        return;
+                    }
+
+                    // التحقق من الصيغة
+                    if (!isValidEmail(newEmail)) {
+                        showSecurityAlert('صيغة البريد الإلكتروني الجديد غير صالحة.', 'error');
+                        return;
+                    }
+
+                    if (newEmail !== confirm) {
                         showSecurityAlert('البريد الإلكتروني غير متطابق.', 'error');
                         return;
                     }
-                    if (newEmail === currentEmail) {
+
+                    if (newEmail === currentEmail.toLowerCase()) {
                         showSecurityAlert('البريد الجديد مطابق للحالي.', 'error');
                         return;
                     }
+
                     this.disabled = true;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
 
                     try {
-                        // التحقق من وجود جلسة صالحة
                         const { data: { session } } = await supabase.auth.getSession();
-                        console.log('🔍 الجلسة الحالية:', session ? 'موجودة' : 'لا توجد جلسة');
-
                         if (!session) {
                             throw new Error('انتهت الجلسة. يرجى إعادة تسجيل الدخول.');
                         }
 
                         const redirectTo = `${window.location.origin}/pages/security/confirm-email.html`;
-                        console.log('🔗 رابط إعادة التوجيه:', redirectTo);
+                        console.log('البريد الجديد:', newEmail);
 
                         const { data, error } = await supabase.auth.updateUser(
                             { email: newEmail },
                             { emailRedirectTo: redirectTo }
                         );
 
-                        console.log('📬 استجابة updateUser - data:', data);
-                        console.log('📬 استجابة updateUser - error:', error);
+                        console.log('DATA:', data);
+                        console.log('ERROR:', error);
+
                         if (error) {
-                            console.log('🔴 error.message:', error.message);
-                            console.log('🔴 error.status:', error.status);
-                            console.log('🔴 error.code:', error.code);
-                            console.log('🔴 error كامل:', JSON.stringify(error, null, 2));
+                            console.log('error.message:', error.message);
+                            console.log('error.status:', error.status);
+                            console.log('error.code:', error.code);
                             throw error;
                         }
 
@@ -119,17 +136,16 @@
 
                     } catch (err) {
                         console.error('❌ فشل تغيير البريد:', err);
-                        // محاولة استخراج رسالة مفيدة
                         let userMessage = 'فشل تغيير البريد.';
                         if (err.message) {
-                            if (err.message.includes('already exists') || err.message.includes('already been taken')) {
+                            if (err.message.includes('already exists')) {
                                 userMessage = 'البريد الإلكتروني الجديد مستخدم بالفعل.';
-                            } else if (err.message.includes('rate limit') || err.message.includes('too many')) {
+                            } else if (err.message.includes('invalid format')) {
+                                userMessage = 'صيغة البريد الإلكتروني غير صالحة. تأكد من صحة البريد.';
+                            } else if (err.message.includes('rate limit')) {
                                 userMessage = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
                             } else if (err.message.includes('redirect') || err.message.includes('URL')) {
-                                userMessage = 'خطأ في إعدادات رابط التأكيد. يرجى التواصل مع الدعم الفني.';
-                            } else if (err.message.includes('same')) {
-                                userMessage = 'البريد الجديد مطابق للحالي.';
+                                userMessage = 'خطأ في إعدادات رابط التأكيد.';
                             } else {
                                 userMessage = err.message;
                             }
