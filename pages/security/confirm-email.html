@@ -75,8 +75,10 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
     <script>
-        (function() {
+        (async function() {
             const statusIcon = document.getElementById('statusIcon');
             const message = document.getElementById('message');
             const subMessage = document.getElementById('subMessage');
@@ -84,29 +86,88 @@
             const noteBox = document.getElementById('noteBox');
             const buttonsContainer = document.getElementById('buttonsContainer');
 
-            // قراءة معطيات الخطأ من الرابط
-            const urlParams = new URLSearchParams(window.location.search);
-            const hashParams = new URLSearchParams(window.location.hash.substring(1));
-            
-            let error = urlParams.get('error') || hashParams.get('error');
-            let errorCode = urlParams.get('error_code') || hashParams.get('error_code');
-            let errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
-
-            // إذا لم تكن هناك معطيات خطأ ولكن الرابط فارغ، نعرض خطأ عام
-            if (!error && !errorCode && !window.location.hash && !window.location.search) {
-                error = 'invalid_link';
+            if (!window.teraSupabase) {
+                try {
+                    if (typeof waitForSupabase === 'function') {
+                        await waitForSupabase();
+                    } else {
+                        await new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
+                            document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                            document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
+                        });
+                    }
+                } catch (e) {
+                    showError('تعذر الاتصال بخدمة المصادقة.', true);
+                    return;
+                }
             }
 
-            function showError(iconClass, msg, subMsg) {
-                statusIcon.innerHTML = `<i class="fas ${iconClass} error"></i>`;
-                message.textContent = msg;
-                subMessage.textContent = subMsg;
-                actionBtn.style.display = 'inline-block';
-                actionBtn.textContent = 'المحاولة مرة أخرى';
-                actionBtn.href = '/pages/security/change-email.html';
-                actionBtn.className = 'btn';
+            const supabase = window.teraSupabase;
 
-                // إضافة زر إضافي للعودة للوحة التحكم
+            let token = null;
+            const queryString = window.location.search.substring(1);
+            const hash = window.location.hash.substring(1);
+
+            if (queryString) {
+                const qParams = new URLSearchParams(queryString);
+                token = qParams.get('token') || qParams.get('access_token') || qParams.get('confirmation_token');
+            }
+            if (!token && hash) {
+                if (!hash.includes('=')) {
+                    token = hash;
+                } else {
+                    const hParams = new URLSearchParams(hash);
+                    token = hParams.get('token') || hParams.get('access_token') || hParams.get('confirmation_token');
+                }
+            }
+
+            if (!token) {
+                showError('الرابط لا يحتوي على رمز تأكيد. تأكد من فتح الرابط من البريد الجديد.', true);
+                return;
+            }
+
+            try {
+                let { error } = await supabase.auth.verifyOtp({
+                    token: token,
+                    type: 'email_change'
+                });
+                if (error) {
+                    // تجربة نوع آخر
+                    const { error: error2 } = await supabase.auth.verifyOtp({
+                        token: token,
+                        type: 'signup'
+                    });
+                    error = error2;
+                }
+                if (error) throw error;
+
+                statusIcon.innerHTML = '<i class="fas fa-check-circle success"></i>';
+                message.textContent = 'تم تأكيد البريد الإلكتروني بنجاح.';
+                subMessage.textContent = 'تم تغيير بريدك الإلكتروني. يمكنك الآن المتابعة.';
+                actionBtn.style.display = 'inline-block';
+                noteBox.style.display = 'none';
+            } catch (err) {
+                console.error('فشل تأكيد البريد:', err);
+                let errorMessage = 'فشل تأكيد البريد الإلكتروني.';
+                if (err.message.includes('expired')) {
+                    errorMessage = 'انتهت صلاحية رابط التأكيد. يرجى طلب تغيير البريد مرة أخرى.';
+                } else if (err.message.includes('used')) {
+                    errorMessage = 'تم استخدام رابط التأكيد مسبقاً. البريد الإلكتروني مؤكد بالفعل.';
+                } else if (err.message.includes('invalid')) {
+                    errorMessage = 'الرابط غير صالح. تأكد من فتح الرابط من البريد الجديد.';
+                }
+                showError(errorMessage, true);
+            }
+
+            function showError(msg, showNote = false) {
+                statusIcon.innerHTML = '<i class="fas fa-times-circle error"></i>';
+                message.textContent = msg;
+                subMessage.textContent = 'يمكنك المحاولة مرة أخرى من خلال صفحة تغيير البريد الإلكتروني.';
+                actionBtn.href = '/pages/security/change-email.html';
+                actionBtn.textContent = 'المحاولة مرة أخرى';
+                actionBtn.style.display = 'inline-block';
+
                 const dashboardBtn = document.createElement('a');
                 dashboardBtn.href = '/pages/dashboard/index.html';
                 dashboardBtn.className = 'btn btn-outline';
@@ -114,45 +175,7 @@
                 dashboardBtn.style.display = 'inline-block';
                 buttonsContainer.appendChild(dashboardBtn);
 
-                noteBox.style.display = 'block';
-            }
-
-            if (error) {
-                // رابط يحتوي على خطأ
-                let errorMsg = 'تعذر تأكيد البريد الإلكتروني.';
-                let errorSub = '';
-
-                if (error === 'access_denied') {
-                    if (errorCode === 'otp_expired') {
-                        errorMsg = 'انتهت صلاحية رابط التأكيد.';
-                        errorSub = 'الرابط صالح لمدة ساعة واحدة فقط. يرجى طلب تغيير البريد مرة أخرى.';
-                    } else {
-                        errorMsg = 'رابط التأكيد غير صالح أو تم استخدامه مسبقاً.';
-                        errorSub = 'يرجى طلب تغيير البريد الإلكتروني مرة أخرى.';
-                    }
-                } else if (error === 'invalid_link') {
-                    errorMsg = 'الرابط الذي فتحته لا يحتوي على معلومات التأكيد.';
-                    errorSub = 'تأكد من فتح الرابط من البريد الجديد بشكل صحيح.';
-                } else {
-                    errorMsg = errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : 'فشل تأكيد البريد الإلكتروني.';
-                    errorSub = 'يمكنك المحاولة مرة أخرى من خلال صفحة تغيير البريد.';
-                }
-
-                showError('fa-times-circle', errorMsg, errorSub);
-            } else {
-                // محاولة العثور على token (لن يحدث غالباً لكن نحتفظ به)
-                let token = urlParams.get('token') || hashParams.get('token') || urlParams.get('access_token');
-                if (!token && window.location.hash) {
-                    const hash = window.location.hash.substring(1);
-                    if (!hash.includes('=')) token = hash;
-                }
-
-                if (token) {
-                    // هنا يمكننا محاولة استدعاء Supabase لكن لن نضيف تعقيدات
-                    showError('fa-check-circle', 'يبدو أن رابط التأكيد يحتوي على رمز.', 'جاري محاولة التأكيد...');
-                } else {
-                    showError('fa-times-circle', 'الرابط لا يحتوي على معلومات تأكيد.', 'يرجى طلب تغيير البريد مرة أخرى.');
-                }
+                if (showNote) noteBox.style.display = 'block';
             }
         })();
     </script>
