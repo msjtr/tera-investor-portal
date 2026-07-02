@@ -1,5 +1,5 @@
 /**
- * security-change-email.js – تغيير البريد الإلكتروني (رسمي)
+ * security-change-email.js – تغيير البريد الإلكتروني (رسمي + تشخيص)
  * يعتمد على security.js الذي يوفر waitForSupabase() و showSecurityAlert() و updateHeader()
  */
 (function() {
@@ -53,7 +53,6 @@
                 step1Error.style.display = 'none';
 
                 try {
-                    // التحقق من كلمة المرور عن طريق محاولة تسجيل الدخول (لن يؤثر على الجلسة)
                     const { error } = await supabase.auth.signInWithPassword({
                         email: currentEmail,
                         password: password
@@ -72,7 +71,7 @@
                 }
             });
 
-            // ========== المرحلة 2: تغيير البريد (رابط تأكيد) ==========
+            // ========== المرحلة 2: تغيير البريد (رابط تأكيد مع تشخيص) ==========
             if (changeEmailBtn) {
                 changeEmailBtn.addEventListener('click', async function() {
                     const newEmail = newEmailInput.value.trim();
@@ -87,16 +86,55 @@
                     }
                     this.disabled = true;
                     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+
                     try {
-                        const { error } = await supabase.auth.updateUser(
+                        // التحقق من وجود جلسة صالحة
+                        const { data: { session } } = await supabase.auth.getSession();
+                        console.log('🔍 الجلسة الحالية:', session ? 'موجودة' : 'لا توجد جلسة');
+
+                        if (!session) {
+                            throw new Error('انتهت الجلسة. يرجى إعادة تسجيل الدخول.');
+                        }
+
+                        const redirectTo = `${window.location.origin}/pages/security/confirm-email.html`;
+                        console.log('🔗 رابط إعادة التوجيه:', redirectTo);
+
+                        const { data, error } = await supabase.auth.updateUser(
                             { email: newEmail },
-                            { emailRedirectTo: `${window.location.origin}/pages/security/confirm-email.html` }
+                            { emailRedirectTo: redirectTo }
                         );
-                        if (error) throw error;
+
+                        console.log('📬 استجابة updateUser - data:', data);
+                        console.log('📬 استجابة updateUser - error:', error);
+                        if (error) {
+                            console.log('🔴 error.message:', error.message);
+                            console.log('🔴 error.status:', error.status);
+                            console.log('🔴 error.code:', error.code);
+                            console.log('🔴 error كامل:', JSON.stringify(error, null, 2));
+                            throw error;
+                        }
+
                         showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه (والبريد العشوائي) لإكمال التغيير.', 'success');
                         setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 4000);
+
                     } catch (err) {
-                        showSecurityAlert(err.message || 'فشل تغيير البريد.', 'error');
+                        console.error('❌ فشل تغيير البريد:', err);
+                        // محاولة استخراج رسالة مفيدة
+                        let userMessage = 'فشل تغيير البريد.';
+                        if (err.message) {
+                            if (err.message.includes('already exists') || err.message.includes('already been taken')) {
+                                userMessage = 'البريد الإلكتروني الجديد مستخدم بالفعل.';
+                            } else if (err.message.includes('rate limit') || err.message.includes('too many')) {
+                                userMessage = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
+                            } else if (err.message.includes('redirect') || err.message.includes('URL')) {
+                                userMessage = 'خطأ في إعدادات رابط التأكيد. يرجى التواصل مع الدعم الفني.';
+                            } else if (err.message.includes('same')) {
+                                userMessage = 'البريد الجديد مطابق للحالي.';
+                            } else {
+                                userMessage = err.message;
+                            }
+                        }
+                        showSecurityAlert(userMessage, 'error');
                     } finally {
                         this.disabled = false;
                         this.innerHTML = '<i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني';
