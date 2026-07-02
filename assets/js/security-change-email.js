@@ -1,6 +1,7 @@
 /**
- * security-change-email.js – تغيير البريد الإلكتروني (الطريقة الرسمية)
+ * security-change-email.js – تغيير البريد الإلكتروني (Internal API)
  * يعتمد على security.js الذي يوفر waitForSupabase() و showSecurityAlert() و updateHeader()
+ * يستخدم نقطة نهاية داخلية /api/change-email لتغيير البريد مباشرة.
  */
 (function() {
     'use strict';
@@ -75,7 +76,7 @@
                 }
             });
 
-            // ========== المرحلة 2: تغيير البريد (الطريقة الرسمية) ==========
+            // ========== المرحلة 2: تغيير البريد عبر Internal API ==========
             if (changeEmailBtn) {
                 changeEmailBtn.addEventListener('click', async function() {
                     const newEmail = newEmailInput.value.trim().toLowerCase();
@@ -110,36 +111,37 @@
                             throw new Error('انتهت الجلسة. يرجى إعادة تسجيل الدخول.');
                         }
 
-                        const redirectTo = `${window.location.origin}/pages/security/confirm-email.html`;
+                        // استدعاء نقطة النهاية الداخلية (لا تحتاج إلى CORS)
+                        const response = await fetch('/api/change-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                newEmail: newEmail,
+                                accessToken: session.access_token
+                            })
+                        });
 
-                        const { error } = await supabase.auth.updateUser(
-                            { email: newEmail },
-                            { emailRedirectTo: redirectTo }
-                        );
+                        const result = await response.json();
 
-                        if (error) {
-                            console.log('❌ خطأ updateUser:');
-                            console.log('error:', error);
-                            console.log('error.message:', error.message);
-                            console.log('error.status:', error.status);
-                            throw error;
+                        if (!response.ok || result.error) {
+                            throw new Error(result.error || 'فشل تغيير البريد');
                         }
 
-                        showSecurityAlert('✅ تم إرسال رابط تأكيد إلى البريد الإلكتروني الجديد. يرجى التحقق منه (والبريد العشوائي) لإكمال التغيير.', 'success');
-                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 4000);
+                        showSecurityAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
+                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 2000);
 
                     } catch (err) {
                         console.error('❌ فشل تغيير البريد:', err);
                         let userMessage = 'فشل تغيير البريد.';
                         if (err.message) {
-                            if (err.message.includes('already exists') || err.message.includes('already been taken')) {
+                            if (err.message.includes('already exists')) {
                                 userMessage = 'البريد الإلكتروني الجديد مستخدم بالفعل.';
                             } else if (err.message.includes('invalid format')) {
                                 userMessage = 'صيغة البريد الإلكتروني غير صالحة.';
-                            } else if (err.message.includes('rate limit') || err.message.includes('too many')) {
+                            } else if (err.message.includes('rate limit')) {
                                 userMessage = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
-                            } else if (err.message.includes('redirect') || err.message.includes('URL')) {
-                                userMessage = 'خطأ في إعدادات رابط التأكيد. يرجى التواصل مع الدعم الفني.';
+                            } else if (err.message.includes('session')) {
+                                userMessage = 'انتهت الجلسة. يرجى إعادة تسجيل الدخول.';
                             } else {
                                 userMessage = err.message;
                             }
