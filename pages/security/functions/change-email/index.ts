@@ -1,24 +1,28 @@
+// supabase/functions/change-email/index.ts
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
-  // السماح بطلبات CORS من أي مصدر
+  // السماح بـ CORS من أي مصدر
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
-  // معالجة طلب OPTIONS المسبق
+  // التعامل مع طلب OPTIONS المسبق
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders, status: 204 });
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
   }
 
   // السماح فقط بطلبات POST
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    return new Response(JSON.stringify({ error: "الطريقة غير مسموح بها" }), {
       status: 405,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
@@ -27,7 +31,7 @@ serve(async (req) => {
     if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
       return new Response(JSON.stringify({ error: "بريد إلكتروني غير صالح" }), {
         status: 400,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -36,7 +40,7 @@ serve(async (req) => {
     if (!token) {
       return new Response(JSON.stringify({ error: "غير مصرح" }), {
         status: 401,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -50,7 +54,7 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "جلسة غير صالحة" }), {
         status: 401,
-        headers: corsHeaders,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -69,7 +73,7 @@ serve(async (req) => {
     console.error("Change email error:", err);
     return new Response(JSON.stringify({ error: "حدث خطأ داخلي" }), {
       status: 500,
-      headers: corsHeaders,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
