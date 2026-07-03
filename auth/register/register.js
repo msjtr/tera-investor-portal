@@ -7,11 +7,28 @@
  * - لا يقوم بأي insert مباشر، يترك المهمة لـ Trigger قاعدة البيانات.
  * - يستخدم المسارات المطلقة (Absolute Paths) للتوجيه.
  * - يخزن نوع التحقق (signup) لتوجيه صحيح بعد التحقق.
+ * - متوافق مع verify-otp.js و auth.js.
  */
 (function() {
     'use strict';
     let supabaseClient = null;
     let currentStage = 1;
+
+    // دالة مساعدة لانتظار Supabase (خطة احتياطية)
+    function waitForSupabaseFallback() {
+        return new Promise((resolve, reject) => {
+            if (window.teraSupabase) return resolve(window.teraSupabase);
+            const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
+            document.addEventListener('supabase:ready', (e) => {
+                clearTimeout(timeout);
+                resolve(e.detail.client);
+            }, { once: true });
+            document.addEventListener('supabase:error', () => {
+                clearTimeout(timeout);
+                reject(new Error('Supabase error'));
+            }, { once: true });
+        });
+    }
 
     function updateFieldStatus(fieldId, isValid, errorMsg) {
         const icon = document.getElementById(fieldId + '-status');
@@ -124,7 +141,7 @@
         }
     };
 
-    function startApp(client) {
+    async function startApp(client) {
         supabaseClient = client;
         console.log('🚀 تطبيق register.js يعمل الآن.');
 
@@ -178,12 +195,11 @@
     if (window.teraSupabase) {
         startApp(window.teraSupabase);
     } else {
-        document.addEventListener('supabase:ready', function(e) {
-            if (e.detail?.client) startApp(e.detail.client);
-            else alert('⚠️ فشل الاتصال بقاعدة البيانات.');
-        });
-        document.addEventListener('supabase:error', function() {
-            alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
-        });
+        // استخدام waitForSupabaseFallback كخطة احتياطية
+        waitForSupabaseFallback()
+            .then(client => startApp(client))
+            .catch(() => {
+                alert('⚠️ تعذر الاتصال بقاعدة البيانات. أعد تحميل الصفحة.');
+            });
     }
 })();
