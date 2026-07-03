@@ -2,7 +2,7 @@
  * security-change-password.js
  * تغيير كلمة المرور عبر OTP (Magic Link / Email OTP)
  * متوافق مع security.js و TeraAuth
- * النسخة النهائية – مع منع الإرسال المتكرر وترتيب محسّن
+ * النسخة النهائية – مع تحسين معالجة الأخطاء وانتهاء صلاحية الرمز
  */
 
 'use strict';
@@ -14,7 +14,8 @@ window.SecurityPages['change-password'] = {
     _timerInterval: null,
     _timerSeconds: 300,
     _otpVerified: false,
-    _isSending: false, // لمنع الإرسال المتكرر
+    _isSending: false,
+    _isChanging: false,
 
     async init() {
         console.log('🔐 [Change Password] تهيئة الصفحة (عبر OTP)');
@@ -104,9 +105,8 @@ window.SecurityPages['change-password'] = {
         e.stopPropagation();
     },
 
-    // ==================== إرسال رمز OTP (مع منع التكرار) ====================
+    // ==================== إرسال رمز OTP ====================
     async sendOtp() {
-        // منع الإرسال المتكرر
         if (this._isSending) {
             showSecurityAlert('جاري إرسال الرمز، يرجى الانتظار.', 'warning');
             return;
@@ -137,11 +137,14 @@ window.SecurityPages['change-password'] = {
             });
             if (error) throw error;
 
+            // إعادة تعيين حالة OTP
             this._otpVerified = false;
+            this._isChanging = false;
             document.getElementById('otpSection').style.display = 'block';
             btn.style.display = 'none';
             document.getElementById('changePasswordBtn').style.display = 'none';
             document.getElementById('otpCode').value = '';
+            document.getElementById('otpCode').disabled = false;
             document.getElementById('otpCode').focus();
 
             this.startTimer();
@@ -156,7 +159,6 @@ window.SecurityPages['change-password'] = {
                 msg = 'البريد الإلكتروني غير مسجل.';
             }
             showSecurityAlert(msg, 'error');
-            // إعادة إظهار الزر إذا فشل
             btn.style.display = 'block';
         } finally {
             restoreButton(btn);
@@ -234,30 +236,40 @@ window.SecurityPages['change-password'] = {
             });
             if (verifyError) throw verifyError;
 
+            // التحقق ناجح
             this._otpVerified = true;
             showSecurityAlert('✅ تم التحقق من الرمز بنجاح. جاري تغيير كلمة المرور...', 'success');
 
-            // إظهار زر التأكيد (سيتم الضغط عليه تلقائياً)
             btn.style.display = 'block';
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-key"></i> تأكيد الرمز وتغيير كلمة المرور';
             document.getElementById('otpCode').disabled = true;
 
-            // تنفيذ التغيير فوراً بعد التحقق
+            // تنفيذ التغيير فوراً
             await this.changePassword();
 
         } catch (err) {
             console.error('❌ [Verify OTP]', err);
+
             let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
             if (err.message.includes('expired')) {
-                msg = 'انتهت صلاحية الرمز. يرجى طلب رمز جديد.';
+                msg = '⏳ انتهت صلاحية الرمز. يرجى طلب رمز جديد.';
             } else if (err.message.includes('invalid')) {
-                msg = 'الرمز غير صحيح. يرجى المحاولة مرة أخرى.';
+                msg = '❌ الرمز غير صحيح. يرجى المحاولة مرة أخرى.';
+            } else if (err.message.includes('rate limit')) {
+                msg = '⚠️ تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
             }
-            showSecurityAlert(msg, 'error');
-            document.getElementById('sendOtpBtn').style.display = 'block';
+
+            // إعادة تعيين حالة OTP
+            this._otpVerified = false;
             document.getElementById('otpCode').value = '';
+            document.getElementById('otpCode').disabled = false;
             document.getElementById('otpCode').focus();
+            document.getElementById('changePasswordBtn').style.display = 'none';
+            document.getElementById('sendOtpBtn').style.display = 'block';
+            document.getElementById('sendOtpBtn').disabled = false;
+
+            showSecurityAlert(msg, 'error');
         } finally {
             restoreButton(btn);
         }
@@ -265,6 +277,8 @@ window.SecurityPages['change-password'] = {
 
     // ==================== تغيير كلمة المرور (بعد التحقق) ====================
     async changePassword() {
+        if (this._isChanging) return;
+
         if (!this._otpVerified) {
             const otp = document.getElementById('otpCode')?.value?.trim();
             if (otp && otp.length === 8) {
@@ -292,6 +306,7 @@ window.SecurityPages['change-password'] = {
             return;
         }
 
+        this._isChanging = true;
         const btn = document.getElementById('changePasswordBtn');
         setButtonLoading(btn, 'جاري تغيير كلمة المرور...');
 
@@ -300,35 +315,39 @@ window.SecurityPages['change-password'] = {
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword
             });
-            if (updateError) throw updateError;
+            if (updateError) {
+                // معالجة خاصة لخطأ تكرار كلمة المرور
+                if (updateError.message && updateError.message.includes('should be different from the old password')) {
+                    showSecurityAlert('⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.', 'error');
+                    document.getElementById('newPassword')?.focus();
+                    document.getElementById('newPassword')?.select();
+                    // نترك _otpVerified = true ليتمكن المستخدم من المحاولة مجدداً
+                    return;
+                }
+                // أخطاء أخرى (مثل انتهاء الجلسة)
+                if (updateError.message && updateError.message.includes('session')) {
+                    this._otpVerified = false;
+                    document.getElementById('sendOtpBtn').style.display = 'block';
+                    document.getElementById('otpCode').disabled = false;
+                    document.getElementById('otpCode').value = '';
+                    document.getElementById('changePasswordBtn').style.display = 'none';
+                    showSecurityAlert('⏳ انتهت صلاحية الجلسة. يرجى طلب رمز جديد.', 'error');
+                    return;
+                }
+                throw updateError;
+            }
 
+            // نجاح تغيير كلمة المرور
             showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
             this.resetForm();
             await SecurityCore.refreshUser();
 
         } catch (err) {
             console.error('❌ [Change Password]', err);
-            let msg = 'تعذر تغيير كلمة المرور.';
-            if (err.message) {
-                if (err.message.includes('should be different from the old password')) {
-                    msg = '⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.';
-                } else if (err.message.includes('expired')) {
-                    msg = 'انتهت صلاحية الجلسة. يرجى طلب رمز جديد.';
-                    this._otpVerified = false;
-                    document.getElementById('sendOtpBtn').style.display = 'block';
-                    document.getElementById('otpCode').disabled = false;
-                    document.getElementById('otpCode').value = '';
-                } else {
-                    msg = err.message;
-                }
-            }
-            showSecurityAlert(msg, 'error');
-            if (err.message && err.message.includes('should be different from the old password')) {
-                document.getElementById('newPassword')?.focus();
-                document.getElementById('newPassword')?.select();
-            }
+            showSecurityAlert('تعذر تغيير كلمة المرور: ' + (err.message || 'خطأ غير معروف'), 'error');
         } finally {
             restoreButton(btn);
+            this._isChanging = false;
         }
     },
 
@@ -345,6 +364,7 @@ window.SecurityPages['change-password'] = {
         document.getElementById('otpSection').style.display = 'none';
         this._otpVerified = false;
         this._isSending = false;
+        this._isChanging = false;
 
         if (this._timerInterval) {
             clearInterval(this._timerInterval);
