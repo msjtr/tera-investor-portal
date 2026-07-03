@@ -6,30 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
 
-    <!-- أيقونة الموقع (مسار مطلق) --><!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
-
-    <!-- أيقونة الموقع (مسار نسبي) -->
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="../../images/favicon.svg">
+    <!-- أيقونة الموقع (مسار مطلق) -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ملفات التنسيق الأساسية (مسارات نسبية) -->
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/auth.css">
+    <!-- ملفات التنسيق الأساسية (مسارات مطلقة) -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
     <!-- ملف التنسيق الخاص بصفحة الدخول (نفس المجلد) -->
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="/auth/auth/login/login.css">
 
     <style>
         /* أنماط إضافية لتجاوز أي تعارضات وتحسين المظهر */
@@ -361,14 +353,16 @@
         <div class="auth-container" id="loginCardBlock">
             <div class="auth-card-header text-center">
                 <div class="brand-logo-box">
-                    <img src="../../images/logo.svg" alt="تيرا" onerror="this.src='https://via.placeholder.com/120x40/028090/fff?text=Tera'">
+                    <!-- صورة الشعار مع SVG احتياطي مضمّن لتجنب أخطاء الاتصال -->
+                    <img src="/images/logo.svg" alt="تيرا" 
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'">
                 </div>
                 <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
                 <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
                 <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
             </div>
 
-            <!-- صندوق التنبيهات الموحد -->
+            <!-- صندوق التنبيهات الموحد (يستخدم في login.js) -->
             <div class="alert-box" id="formAlert">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span class="alert-message" id="alertMessage"></span>
@@ -388,109 +382,6 @@
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <a href="../../auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
-                    </div>
-                    <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" 
-                               placeholder="أدخل كلمة المرور" 
-                               autocomplete="current-password" required>
-                    </div>
-                    <div class="checkbox-options-container">
-                        <label class="checkbox-toggle-label">
-                            <input type="checkbox" id="show_login_password" class="show-password-btn"> إظهار كلمة المرور
-                        </label>
-                    </div>
-                    <div class="error-feedback-msg" id="password-error"></div>
-                </div>
-
-                <div class="form-field-group remember-me-box">
-                    <label class="checkbox-toggle-label">
-                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
-                    </label>
-                </div>
-
-                <div class="form-actions-block">
-                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">
-                        <i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن
-                    </button>
-                </div>
-            </form>
-
-            <div class="bottom-routing-footer-links text-center">
-                <p>ليس لديك حساب؟ <a href="../../auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="../../index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
-            </div>
-        </div>
-
-        <!-- اللودر الإبداعي -->
-        <div class="tera-loader-overlay" id="creativeLoaderScreen">
-            <div class="loader-content-card">
-                <div class="spinning-infinity-ring"></div>
-                <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
-                <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة بياناتك الاستثمارية...</p>
-                <div class="loading-progress-track">
-                    <div class="progress-fill-bar" id="progressFillBar"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ملفات JavaScript (مسارات نسبية) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../../assets/js/supabase-client.js"></script>
-    <script src="../../assets/js/auth.js"></script>
-    <script src="login.js"></script>
-</body>
-</html>
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- ملفات التنسيق الأساسية (مسارات مطلقة) -->
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/auth.css">
-    <!-- ملف التنسيق الخاص بصفحة الدخول (نفس المجلد) -->
-    <link rel="stylesheet" href="login.css">
-</head>
-<body>
-    <div class="auth-layout">
-        <div class="auth-container" id="loginCardBlock">
-            <div class="auth-card-header text-center">
-                <div class="brand-logo-box">
-                    <img src="/images/logo.svg" alt="تيرا">
-                </div>
-                <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
-                <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
-                <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
-            </div>
-
-            <!-- صندوق التنبيهات الموحد (يستخدم في login.js) -->
-            <div class="alert-box" id="formAlert" style="display: none;">
-                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span class="alert-message" id="alertMessage"></span>
-            </div>
-
-            <form id="teraLoginForm" novalidate>
-                <div class="form-field-group">
-                    <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <input type="email" id="login_identifier" class="form-input-control" 
-                               placeholder="أدخل بريدك الإلكتروني" 
-                               autocomplete="username" required>
-                    </div>
-                    <div class="error-feedback-msg" id="identifier-error"></div>
-                </div>
-
-                <div class="form-field-group">
-                    <div class="field-label-flex">
-                        <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <!-- رابط نسيت كلمة المرور (مسار مطلق) -->
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <div class="input-wrapper">
@@ -520,15 +411,13 @@
             </form>
 
             <div class="bottom-routing-footer-links text-center">
-                <!-- رابط إنشاء حساب (مسار مطلق) -->
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <!-- رابط العودة للرئيسية (مسار مطلق) -->
                 <p><a href="/index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
 
         <!-- اللودر الإبداعي -->
-        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display: none;">
+        <div class="tera-loader-overlay" id="creativeLoaderScreen">
             <div class="loader-content-card">
                 <div class="spinning-infinity-ring"></div>
                 <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
@@ -544,7 +433,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
-    <!-- ملف login.js في نفس المجلد -->
-    <script src="login.js"></script>
+    <script src="/auth/auth/login/login.js"></script>
 </body>
 </html>
