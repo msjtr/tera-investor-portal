@@ -1,305 +1,491 @@
 /**
- * ============================================================
- * auth.js - محرك المصادقة والحماية الذكي (النسخة المؤسسية - Enterprise)
- * ============================================================
- * - ربط حقيقي بـ Supabase Auth دون أي محاكاة أو بيانات وهمية.
- * - مزامنة حية للجلسات وتسجيل حركات الدخول في جدول auth_login.
- * - يعتمد حصراً على المسارات المطلقة (Absolute Paths) الصحيحة.
- * - يدعم استعادة الجلسة من الرموز المخزنة إذا تعذر كشفها تلقائياً.
- * - يمنع إعادة التوجيه الخاطئة من الصفحات المحمية.
+ * ==========================================================
+ * Tera Investor Portal
+ * Enterprise Authentication Engine
+ * Version 2.0
+ * يعتمد على Supabase JS v2
+ * ==========================================================
  */
+
 'use strict';
 
-// منع إعادة التحميل في تطبيقات الصفحة الواحدة
-if (typeof window.TeraAuth !== 'undefined') {
-    console.log('✅ [Auth] تم تحميل المحرك مسبقاً، تم تخطي إعادة التحميل.');
+if (window.TeraAuth) {
+    console.log('✅ [Auth] المحرك محمل مسبقاً.');
 } else {
-    (function() {
 
-        const TeraAuth = {
-            _isChecking: false,
-            _lastCheckTime: 0,
-            _blockCheck: false,
+(function () {
 
-            // ---- ١. وظائف المسارات والبيئة ----
-            getCurrentPath: function() {
-                return window.location.pathname;
-            },
+    const LOGIN_PAGE = '/auth/auth/login/login.html';
+    const DASHBOARD_PAGE = '/pages/dashboard/index.html';
 
-            isAuthPage: function(path = this.getCurrentPath()) {
-                return path.includes('/auth/');
-            },
+    const TeraAuth = {
 
-            isProtectedPage: function(path = this.getCurrentPath()) {
-                return path.includes('/pages/');
-            },
+        supabase: null,
 
-            isLandingPage: function(path = this.getCurrentPath()) {
-                return !this.isAuthPage(path) && !this.isProtectedPage(path);
-            },
+        initialized: false,
 
-            redirectTo: function(url) {
-                if (this.getCurrentPath() === url) return;
-                window.location.replace(url);
-            },
+        /**
+         * انتظار جاهزية Supabase
+         */
+        async init() {
 
-            // ---- ٢. مزامنة الجلسة (مع تخزين refresh_token) ----
-            syncSession: async function(session) {
-                if (session) {
-                    localStorage.setItem('tera_token', session.access_token);
-                    if (session.refresh_token) {
-                        localStorage.setItem('tera_refresh_token', session.refresh_token);
-                    }
-                    const user = session.user;
-                    if (user) {
-                        localStorage.setItem('tera_user', JSON.stringify({
-                            id: user.id,
-                            email: user.email,
-                            name: user.user_metadata?.full_name || 'مستثمر',
-                            role: user.user_metadata?.role || 'user',
-                            status: 'active'
-                        }));
-                    }
-                } else {
-                    localStorage.removeItem('tera_token');
-                    localStorage.removeItem('tera_refresh_token');
-                    localStorage.removeItem('tera_user');
-                }
-            },
+            if (this.initialized) return;
 
-            // استرجاع الجلسة مع آلية استعادة احتياطية
-            getCurrentSession: async function() {
-                if (!window.teraSupabase) return null;
+            this.supabase = await waitForSupabase();
 
-                // 1. المحاولة الأولى: الجلسة النشطة في الـ SDK
-                const { data: { session }, error } = await window.teraSupabase.auth.getSession();
-                if (!error && session) {
-                    return session;
-                }
+            this.initialized = true;
 
-                // 2. فشل – محاولة استعادة الجلسة من الرموز المخزنة
-                const accessToken = localStorage.getItem('tera_token');
-                const refreshToken = localStorage.getItem('tera_refresh_token');
-                if (accessToken && refreshToken) {
-                    console.log('🔁 [Auth] محاولة استعادة الجلسة من التخزين المحلي...');
-                    const { data: { session: restored }, error: restoreError } =
-                        await window.teraSupabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: refreshToken
-                        });
-                    if (!restoreError && restored) {
-                        await this.syncSession(restored); // تحديث التخزين
-                        return restored;
-                    }
-                }
+            console.log('✅ [Auth] تمت تهيئة محرك المصادقة.');
 
+            this.listenAuth();
+
+        },
+
+        /**
+         * الصفحة الحالية
+         */
+        currentPath() {
+
+            return window.location.pathname;
+
+        },
+
+        /**
+         * هل الصفحة صفحة تسجيل؟
+         */
+        isLoginPage() {
+
+            return this.currentPath().includes('/auth/');
+
+        },
+
+        /**
+         * هل الصفحة محمية؟
+         */
+        isProtectedPage() {
+
+            return this.currentPath().includes('/pages/');
+
+        },
+
+        /**
+         * تحويل آمن
+         */
+        redirect(url) {
+
+            if (window.location.pathname === url)
+                return;
+
+            window.location.replace(url);
+
+        },
+
+        /**
+         * الحصول على الجلسة الحالية
+         */
+        async getSession() {
+
+            const {
+
+                data,
+                error
+
+            } = await this.supabase.auth.getSession();
+
+            if (error)
                 return null;
-            },
 
-            // ---- ٣. فحص الجلسة والتوجيه الآمن ----
-            checkSession: async function() {
-                if (this._blockCheck) {
-                    console.log('⛔ [Auth] تم تعليق الفحص لهذه الصفحة');
-                    return;
-                }
+            return data.session;
 
-                const now = Date.now();
-                if (this._isChecking || now - this._lastCheckTime < 500) return;
+        },
 
-                this._isChecking = true;
-                this._lastCheckTime = now;
+        /**
+         * الحصول على المستخدم الحالي
+         */
+        async getUser() {
 
-                try {
-                    const currentPath = this.getCurrentPath();
-                    const isAuth = this.isAuthPage(currentPath);
-                    const isProtected = this.isProtectedPage(currentPath);
-                    const isLanding = this.isLandingPage(currentPath);
+            const session = await this.getSession();
 
-                    // لا حاجة لفحص الجلسة في الصفحات العامة
-                    if (isLanding) {
-                        console.log('🏠 [Auth] صفحة عامة – تم تخطي الفحص');
-                        return;
-                    }
+            if (!session)
+                return null;
 
-                    const session = await this.getCurrentSession();
-                    await this.syncSession(session);
-                    const loggedIn = !!session;
+            return session.user;
 
-                    if (!loggedIn && isProtected) {
-                        console.log('🔐 [Auth] غير مسجل في صفحة محمية → تحويل لصفحة الدخول');
-                        this.redirectTo('/auth/auth/login/login.html');
-                        return;
-                    }
+        },
 
-                    if (loggedIn && isAuth) {
-                        console.log('🚀 [Auth] مسجل دخول في صفحة مصادقة → تحويل للوحة التحكم');
-                        this.redirectTo('/pages/dashboard/index.html');
-                        return;
-                    }
+        /**
+         * هل المستخدم مسجل؟
+         */
+        async isLoggedIn() {
 
-                    console.log('✅ [Auth] الجلسة آمنة، المسار:', currentPath);
-                } catch (error) {
-                    console.error('⚠️ [Auth] خطأ في التحقق من الجلسة:', error);
-                } finally {
-                    this._isChecking = false;
-                }
-            },
+            return !!(await this.getSession());
 
-            // ---- ٤. تسجيل الدخول الحقيقي ----
-            login: async function(email, password) {
-                if (!window.teraSupabase) throw new Error('Supabase غير جاهز');
+        },
 
-                const { data, error } = await window.teraSupabase.auth.signInWithPassword({
-                    email: email,
+        /**
+         * فحص صلاحية الصفحة
+         */
+        async checkProtection() {
+
+            const logged = await this.isLoggedIn();
+
+            if (!logged && this.isProtectedPage()) {
+
+                console.warn(
+                    '🔐 صفحة محمية بدون جلسة.'
+                );
+
+                this.redirect(LOGIN_PAGE);
+
+                return;
+
+            }
+
+            if (logged && this.isLoginPage()) {
+
+                console.log(
+                    '🚀 المستخدم مسجل مسبقاً.'
+                );
+
+                this.redirect(DASHBOARD_PAGE);
+
+                return;
+
+            }
+
+            console.log(
+                '✅ [Auth] الجلسة سليمة.'
+            );
+
+        },
+
+                /**
+         * ==========================================
+         * تسجيل الدخول
+         * ==========================================
+         */
+        async login(email, password) {
+
+            const { data, error } =
+                await this.supabase.auth.signInWithPassword({
+
+                    email: email.trim(),
+
                     password: password
+
                 });
 
-                if (error) throw error;
+            if (error) {
 
-                await this.syncSession(data.session);
+                console.error(
+                    '❌ فشل تسجيل الدخول',
+                    error
+                );
 
-                // تسجيل الدخول الناجح في جدول auth_login
-                try {
-                    await window.teraSupabase.from('auth_login').insert([{
+                throw error;
+
+            }
+
+            console.log(
+                '✅ تم تسجيل الدخول',
+                data.user.email
+            );
+
+            // تسجيل سجل الدخول (اختياري)
+            try {
+
+                await this.supabase
+                    .from('auth_login')
+                    .insert({
+
                         user_id: data.user.id,
+
                         email: data.user.email,
+
                         login_status: 'success',
+
                         browser: navigator.userAgent,
+
                         operating_system: navigator.platform
-                    }]);
-                } catch (logError) {
-                    console.error('⚠️ [Auth] تعذر كتابة سجل الدخول:', logError);
-                }
 
-                this.unblockCheck();
-                this.enableAutoRedirect();
-
-                return {
-                    id: data.user.id,
-                    email: data.user.email,
-                    name: data.user.user_metadata?.full_name || '',
-                    role: data.user.user_metadata?.role || 'user'
-                };
-            },
-
-            logout: async function() {
-                if (window.teraSupabase) {
-                    await window.teraSupabase.auth.signOut();
-                }
-                localStorage.removeItem('tera_token');
-                localStorage.removeItem('tera_refresh_token');
-                localStorage.removeItem('tera_user');
-                localStorage.removeItem('tera_remember');
-                localStorage.removeItem('tera_identifier');
-                sessionStorage.clear();
-
-                this.redirectTo('/auth/auth/login/login.html');
-            },
-
-            // ---- ٥. أدوات تحكم إضافية ----
-            blockCheck: function() { this._blockCheck = true; },
-            unblockCheck: function() { this._blockCheck = false; },
-            disableAutoRedirect: function() { this._isChecking = true; },
-            enableAutoRedirect: function() { this._isChecking = false; },
-
-            // ---- ٦. استعلامات سريعة ----
-            isLoggedIn: function() {
-                return !!localStorage.getItem('tera_token');
-            },
-
-            getCurrentUser: function() {
-                try {
-                    return JSON.parse(localStorage.getItem('tera_user'));
-                } catch {
-                    return null;
-                }
-            },
-
-            // ---- ٧. تحسينات الواجهة ----
-            initPasswordToggles: function() {
-                if (window._passwordToggleInitialized) return;
-
-                document.addEventListener('click', function(e) {
-                    const toggleBtn = e.target.closest('.password-toggle, .toggle-password, .show-password-btn');
-                    if (!toggleBtn) return;
-
-                    const wrapper = toggleBtn.closest('.password-wrapper, .input-group, .form-group, .input-wrapper');
-                    if (!wrapper) return;
-
-                    const input = wrapper.querySelector('input[type="password"], input[type="text"]');
-                    if (!input) return;
-
-                    const isPassword = input.type === 'password';
-                    input.type = isPassword ? 'text' : 'password';
-
-                    const icon = toggleBtn.querySelector('i');
-                    if (icon) {
-                        icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-                    }
-                });
-
-                window._passwordToggleInitialized = true;
-            }
-        };
-
-        // ---- ٨. التهيئة التلقائية ----
-        async function initAuth() {
-            const currentPage = window.location.pathname;
-
-            // انتظار جاهزية عميل Supabase
-            if (!window.teraSupabase) {
-                try {
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-                        document.addEventListener('supabase:ready', (e) => {
-                            clearTimeout(timeout);
-                            resolve(e.detail.client);
-                        }, { once: true });
-                        document.addEventListener('supabase:error', () => {
-                            clearTimeout(timeout);
-                            reject(new Error('فشل تحميل Supabase'));
-                        }, { once: true });
                     });
-                } catch (err) {
-                    console.error('❌ [Auth] تعذر الاتصال بـ Supabase:', err);
-                    return;
-                }
+
+            } catch (e) {
+
+                console.warn(
+                    '⚠️ تعذر تسجيل سجل الدخول',
+                    e
+                );
+
             }
 
-            // الاستماع لتغييرات المصادقة
-            window.teraSupabase.auth.onAuthStateChange(async (event, session) => {
-                console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
-                await TeraAuth.syncSession(session);
-                if (event === 'SIGNED_OUT') {
-                    TeraAuth.checkSession();
-                }
+            return data.user;
+
+        },
+
+        /**
+         * ==========================================
+         * تسجيل الخروج
+         * ==========================================
+         */
+        async logout() {
+
+            await this.supabase.auth.signOut();
+
+            console.log(
+                '🚪 تم تسجيل الخروج'
+            );
+
+            this.redirect(LOGIN_PAGE);
+
+        },
+
+        /**
+         * ==========================================
+         * المستخدم الحالي
+         * ==========================================
+         */
+        async currentUser() {
+
+            const user =
+                await this.getUser();
+
+            if (!user)
+                return null;
+
+            return {
+
+                id: user.id,
+
+                email: user.email,
+
+                name:
+                    user.user_metadata?.full_name ??
+                    'مستخدم',
+
+                role:
+                    user.user_metadata?.role ??
+                    'user',
+
+                mobile:
+                    user.user_metadata?.mobile_number ??
+                    null
+
+            };
+
+        },
+
+        /**
+         * ==========================================
+         * تحديث بيانات المستخدم
+         * ==========================================
+         */
+        async refreshUser() {
+
+            const {
+
+                data,
+
+                error
+
+            } =
+            await this.supabase.auth.getUser();
+
+            if (error)
+                return null;
+
+            return data.user;
+
+        },
+
+        /**
+         * ==========================================
+         * تغيير كلمة المرور
+         * ==========================================
+         */
+        async updatePassword(password) {
+
+            const {
+
+                error
+
+            } =
+            await this.supabase.auth.updateUser({
+
+                password
+
             });
 
-            // التوجيه حسب نوع الصفحة
-            if (TeraAuth.isAuthPage(currentPage)) {
-                // صفحات الدخول والتسجيل: نمنع التوجيه التلقائي
-                TeraAuth.disableAutoRedirect();
-                TeraAuth.blockCheck();
-                console.log('🔒 [Auth] صفحة مصادقة: تم تأمين الواجهة');
-            } else {
-                // باقي الصفحات (بما فيها العامة والمحمية) نفحص الجلسة
-                TeraAuth.checkSession();
-            }
+            if (error)
+                throw error;
 
-            TeraAuth.initPasswordToggles();
+            return true;
+
+        },
+
+        /**
+         * ==========================================
+         * تغيير البريد (الطريقة الرسمية)
+         * ==========================================
+         */
+        async updateEmail(email) {
+
+            const {
+
+                error
+
+            } =
+            await this.supabase.auth.updateUser({
+
+                email
+
+            });
+
+            if (error)
+                throw error;
+
+            return true;
+
+        },
+
+                /**
+         * ==========================================
+         * مراقبة تغير حالة المصادقة
+         * ==========================================
+         */
+        listenAuth() {
+
+            this.supabase.auth.onAuthStateChange(async (event, session) => {
+
+                console.log(`🔁 [Auth] ${event}`);
+
+                switch (event) {
+
+                    case 'INITIAL_SESSION':
+                        await this.checkProtection();
+                        break;
+
+                    case 'SIGNED_IN':
+                        console.log('✅ تم تسجيل الدخول');
+                        break;
+
+                    case 'SIGNED_OUT':
+                        console.log('🚪 تم تسجيل الخروج');
+
+                        if (this.isProtectedPage()) {
+                            this.redirect(LOGIN_PAGE);
+                        }
+
+                        break;
+
+                    case 'TOKEN_REFRESHED':
+                        console.log('🔄 تم تحديث الجلسة');
+                        break;
+
+                    case 'USER_UPDATED':
+                        console.log('👤 تم تحديث المستخدم');
+                        break;
+                }
+
+            });
+
+        },
+
+        /**
+         * ==========================================
+         * إظهار / إخفاء كلمة المرور
+         * ==========================================
+         */
+        initPasswordToggle() {
+
+            document.addEventListener('click', function (e) {
+
+                const btn = e.target.closest(
+                    '.password-toggle,.toggle-password,.show-password-btn'
+                );
+
+                if (!btn) return;
+
+                const wrapper = btn.closest(
+                    '.password-wrapper,.input-group,.form-group,.input-wrapper'
+                );
+
+                if (!wrapper) return;
+
+                const input = wrapper.querySelector('input');
+
+                if (!input) return;
+
+                const visible = input.type === 'password';
+
+                input.type = visible ? 'text' : 'password';
+
+                const icon = btn.querySelector('i');
+
+                if (icon) {
+                    icon.className = visible
+                        ? 'fa-solid fa-eye-slash'
+                        : 'fa-solid fa-eye';
+                }
+
+            });
+
         }
 
-        // تشغيل التهيئة
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAuth);
-        } else {
-            initAuth();
+    };
+
+    /**
+     * ==========================================
+     * Bootstrap
+     * ==========================================
+     */
+
+    async function bootstrap() {
+
+        try {
+
+            await TeraAuth.init();
+
+            await TeraAuth.checkProtection();
+
+            TeraAuth.initPasswordToggle();
+
+            console.log('✅ [Auth] Enterprise Engine Ready');
+
+        } catch (err) {
+
+            console.error('❌ [Auth]', err);
+
         }
 
-        // ربط النطاق العام
-        window.TeraAuth = TeraAuth;
-        window.isUserLoggedIn = TeraAuth.isLoggedIn.bind(TeraAuth);
-        window.getCurrentUser = TeraAuth.getCurrentUser.bind(TeraAuth);
+    }
 
-    })();
+    if (document.readyState === 'loading') {
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            bootstrap
+        );
+
+    } else {
+
+        bootstrap();
+
+    }
+
+    window.TeraAuth = TeraAuth;
+
+    window.isUserLoggedIn = async function () {
+
+        return await TeraAuth.isLoggedIn();
+
+    };
+
+    window.getCurrentUser = async function () {
+
+        return await TeraAuth.currentUser();
+
+    };
+
+})();
 }
