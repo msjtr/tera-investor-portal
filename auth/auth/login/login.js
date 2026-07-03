@@ -21,21 +21,17 @@
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
         const showPasswordToggle = document.getElementById('show_login_password');
 
-        // إظهار/إخفاء كلمة المرور
         if (showPasswordToggle && passwordInput) {
             showPasswordToggle.addEventListener('change', function () {
                 passwordInput.type = this.checked ? 'text' : 'password';
             });
         }
 
-        // انتظار جاهزية Supabase
         let supabase;
         if (!window.teraSupabase) {
             if (typeof waitForSupabase === 'function') {
-                try {
-                    await waitForSupabase();
-                } catch (e) {
-                    showError('تعذر الاتصال بخدمة المصادقة. تأكد من اتصالك بالإنترنت.');
+                try { await waitForSupabase(); } catch (e) {
+                    showError('تعذر الاتصال بخدمة المصادقة.');
                     disableForm(true);
                     return;
                 }
@@ -43,14 +39,8 @@
                 try {
                     await new Promise((resolve, reject) => {
                         const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
-                        document.addEventListener('supabase:ready', (e) => {
-                            clearTimeout(timeout);
-                            resolve(e.detail.client);
-                        }, { once: true });
-                        document.addEventListener('supabase:error', () => {
-                            clearTimeout(timeout);
-                            reject(new Error('error'));
-                        }, { once: true });
+                        document.addEventListener('supabase:ready', (e) => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+                        document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
                     });
                 } catch (err) {
                     showError('تعذر الاتصال بقاعدة البيانات.');
@@ -63,14 +53,13 @@
 
         console.log('🔒 [Login] تم تأمين صفحة الدخول');
 
-        // دوال مساعدة
         function disableForm(disabled) {
             if (emailInput) emailInput.disabled = disabled;
             if (passwordInput) passwordInput.disabled = disabled;
             if (submitBtn) submitBtn.disabled = disabled;
         }
 
-        function showLoader(show, text = 'جاري تسجيل الدخول...') {
+        function showLoader(show, text = 'جاري المعالجة...') {
             if (!loaderOverlay) return;
             loaderOverlay.style.display = show ? 'flex' : 'none';
             const quoteEl = document.getElementById('creativeQuoteText');
@@ -96,13 +85,9 @@
         }
 
         function hideAlert() {
-            if (alertBox) {
-                alertBox.style.display = 'none';
-                alertBox.className = 'alert-box';
-            }
+            if (alertBox) { alertBox.style.display = 'none'; alertBox.className = 'alert-box'; }
         }
 
-        // مستمع إرسال النموذج
         loginForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             hideAlert();
@@ -110,24 +95,14 @@
             const email = emailInput?.value.trim() || '';
             const password = passwordInput?.value || '';
 
-            if (!email) {
-                showError('يرجى إدخال البريد الإلكتروني.');
-                emailInput?.focus();
-                return;
-            }
-            if (!password) {
-                showError('يرجى إدخال كلمة المرور.');
-                passwordInput?.focus();
-                return;
-            }
+            if (!email) { showError('يرجى إدخال البريد الإلكتروني.'); emailInput?.focus(); return; }
+            if (!password) { showError('يرجى إدخال كلمة المرور.'); passwordInput?.focus(); return; }
 
-            console.log('📧 البريد المستخدم لتسجيل الدخول:', email);
-
+            console.log('📧 البريد:', email);
             disableForm(true);
             showLoader(true, 'جاري إرسال رمز التحقق...');
 
             try {
-                // إرسال رمز OTP عبر قالب Magic Link / Email OTP
                 const { error } = await supabase.auth.signInWithOtp({
                     email: email,
                     options: { shouldCreateUser: false }
@@ -135,29 +110,25 @@
 
                 if (error) throw error;
 
-                // تخزين بيانات الجلسة المؤقتة للتحقق
-                localStorage.setItem('tera_verify_type', 'login_otp');   // نوع العملية
+                localStorage.setItem('tera_verify_type', 'login_otp');
                 localStorage.setItem('pendingVerificationEmail', email);
                 sessionStorage.setItem('tera_login_password', password);
 
                 showLoader(false);
                 if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم إرسال الرمز';
 
-                // توجيه المستخدم إلى صفحة التحقق
                 setTimeout(() => {
                     window.location.replace('/auth/verify-otp.html');
                 }, 800);
 
             } catch (error) {
-                console.error('❌ [Login] فشل إرسال رمز التحقق:', error);
+                console.error('❌ فشل إرسال رمز التحقق:', error);
                 showLoader(false);
-
                 let msg = 'فشل إرسال رمز التحقق.';
                 if (error.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار.';
                 else if (error.message.includes('Email not found')) msg = 'البريد الإلكتروني غير مسجل.';
                 else msg = error.message;
                 showError(msg);
-
             } finally {
                 disableForm(false);
                 if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
