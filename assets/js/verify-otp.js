@@ -2,7 +2,6 @@
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
  * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل، ورسائل عربية.
- * محدث: change_mobile يستخدم type: 'sms' بدلاً من 'email'.
  */
 (function() {
     'use strict';
@@ -52,18 +51,21 @@
         supabase = window.teraSupabase;
 
         // ---------- ٢. تحديث اسم العميل في الهيدر ----------
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const fullName = user.user_metadata?.full_name || 'مستخدم';
-                const headerName = document.getElementById('headerUserName');
-                const headerAvatar = document.getElementById('headerAvatar');
-                if (headerName) headerName.textContent = fullName;
-                if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+        async function refreshHeader() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const fullName = user.user_metadata?.full_name || 'مستخدم';
+                    const headerName = document.getElementById('headerUserName');
+                    const headerAvatar = document.getElementById('headerAvatar');
+                    if (headerName) headerName.textContent = fullName;
+                    if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+                }
+            } catch (e) {
+                console.warn('تعذر تحميل اسم المستخدم:', e);
             }
-        } catch (e) {
-            console.warn('تعذر تحميل اسم المستخدم:', e);
         }
+        await refreshHeader();
 
         // ---------- ٣. قراءة السياق ----------
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
@@ -171,21 +173,16 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                // تحديد نوع OTP بناءً على نوع العملية
                 let otpType;
                 if (verifyType === 'change_mobile') {
-                    otpType = 'sms';              // يتوافق مع Change Phone Number
+                    otpType = 'sms';
                 } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
-                    otpType = 'email';            // Magic Link / Email OTP
+                    otpType = 'email';
                 } else {
-                    otpType = verifyType;         // signup أو recovery
+                    otpType = verifyType;
                 }
 
-                // في حالة change_mobile، نتحقق برقم الهاتف، وإلا نستخدم البريد
-                let verifyParams = {
-                    token: otpValue,
-                    type: otpType
-                };
+                let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
                     const mobile = localStorage.getItem('pendingNewMobile');
                     if (!mobile) throw new Error('رقم الجوال غير موجود');
@@ -195,7 +192,6 @@
                 }
 
                 const { error } = await supabase.auth.verifyOtp(verifyParams);
-
                 if (error) throw error;
 
                 localStorage.removeItem('pendingVerificationEmail');
@@ -249,24 +245,14 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    // إعادة إرسال OTP حسب النوع
                     if (verifyType === 'change_mobile') {
                         const mobile = localStorage.getItem('pendingNewMobile');
                         if (!mobile) throw new Error('رقم الجوال غير موجود');
-                        await supabase.auth.signInWithOtp({
-                            phone: mobile,
-                            options: { shouldCreateUser: false }
-                        });
+                        await supabase.auth.signInWithOtp({ phone: mobile, options: { shouldCreateUser: false } });
                     } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
-                        await supabase.auth.signInWithOtp({
-                            email: pendingEmail,
-                            options: { shouldCreateUser: false }
-                        });
+                        await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     } else {
-                        await supabase.auth.resend({
-                            type: verifyType,
-                            email: pendingEmail
-                        });
+                        await supabase.auth.resend({ type: verifyType, email: pendingEmail });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
                     startTimer();
@@ -304,16 +290,11 @@
         async function changeMobile(client) {
             try {
                 const newMobile = localStorage.getItem('pendingNewMobile');
-                if (newMobile) {
-                    await client.auth.updateUser({ phone: newMobile });
-                }
+                if (newMobile) await client.auth.updateUser({ phone: newMobile });
                 localStorage.removeItem('pendingNewMobile');
                 showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
-                setTimeout(() => {
-                    window.location.replace('/pages/security/change-mobile.html');
-                }, 2000);
+                setTimeout(() => { window.location.replace('/pages/security/change-mobile.html'); }, 2000);
             } catch (e) {
-                console.error('خطأ في تغيير رقم الجوال:', e);
                 showAlert('تعذر تغيير رقم الجوال.', 'error');
                 window.location.replace('/pages/security/change-mobile.html');
             }
@@ -324,38 +305,20 @@
                 const { data: { user } } = await client.auth.getUser();
                 if (!user) return;
 
-                const { data: req } = await client
-                    .from('verification_requests')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
-
+                const { data: req } = await client.from('verification_requests').select('*').eq('user_id', user.id).maybeSingle();
                 if (!req) return;
 
-                const requiredStages = [
-                    'personal_info_completed',
-                    'national_address_completed',
-                    'contact_info_completed',
-                    'bank_info_completed',
-                    'attachments_completed',
-                    'agreed'
-                ];
-
+                const requiredStages = ['personal_info_completed','national_address_completed','contact_info_completed','bank_info_completed','attachments_completed','agreed'];
                 const allCompleted = requiredStages.every(key => req[key] === true);
 
                 if (allCompleted) {
                     await client.from('verification_requests').upsert({
-                        user_id: user.id,
-                        status: 'under_review',
-                        submitted: true,
-                        submitted_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        user_id: user.id, status: 'under_review', submitted: true,
+                        submitted_at: new Date().toISOString(), updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
                 }
-
                 window.location.replace('/pages/dashboard/index.html');
             } catch (e) {
-                console.error('خطأ في إنهاء الطلب:', e);
                 window.location.replace('/pages/dashboard/index.html');
             }
         }
@@ -366,9 +329,7 @@
             alertBox.style.display = 'flex';
             alertBox.className = 'alert-box show ' + (type || 'error');
             if (alertIcon) {
-                alertIcon.innerHTML = type === 'success'
-                    ? '<i class="fas fa-check-circle"></i>'
-                    : '<i class="fas fa-exclamation-circle"></i>';
+                alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
             }
             alertMessage.textContent = message;
             clearTimeout(window._alertTimer);
