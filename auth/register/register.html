@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب شريك | بوابة الشركاء - تيرا</title>
     
-    <!-- مسارات نسبية لملفات CSS -->
-    <link rel="stylesheet" href="../../assets/css/core.css">
-    <link rel="stylesheet" href="../../assets/css/app.css">
-    <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/responsive.css">
-    <link rel="stylesheet" href="../../assets/css/auth.css">
-    <link rel="stylesheet" href="register.css">
+    <!-- مسارات مطلقة لملفات CSS -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
+    <link rel="stylesheet" href="/auth/register/register.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- أيقونة الموقع (مسار نسبي) -->
-    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    <!-- أيقونة الموقع (مسار مطلق) -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     
     <style>
         /* أنماط إضافية لتجاوز أي تعارضات وتحسين المظهر */
@@ -429,8 +429,9 @@
     <div class="auth-layout">
         <div class="auth-container">
             <div class="text-center mb-5">
-                <!-- شعار المنصة (مسار نسبي) -->
-                <img src="../../images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img" onerror="this.src='https://via.placeholder.com/120x40/028090/fff?text=Tera'">
+                <!-- شعار المنصة (مسار مطلق) مع SVG احتياطي مضمّن -->
+                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'">
                 <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
                 <h3 class="page-subtitle">إنشاء حساب شريك</h3>
                 <p class="welcome-text">مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
@@ -571,9 +572,9 @@
     <!-- تحميل مكتبة Supabase من CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- ملفات الجافاسكربت (مسارات نسبية) -->
-    <script src="../../assets/js/supabase-client.js"></script>
-    <script src="../../assets/js/auth.js"></script>
-    <script src="register.js"></script>
+    <!-- ملفات الجافاسكربت (مسارات مطلقة) -->
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/auth/register/register.js"></script>
 </body>
 </html>
