@@ -1,217 +1,641 @@
 /**
- * ============================================================
- * تغيير رقم الجوال - Change Mobile (نسخة المؤسسات)
- * ============================================================
- * الموقع: /assets/js/security-change-mobile.js
- * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
- * - يعرض الرقم الحالي من بيانات المستخدم.
- * - يُحدِّث رقم الجوال عبر Supabase Auth.
- * - يدعم مفتاح الدولة (966+) بشكل ديناميكي.
- * - جاهز للإنتاج دون أي بيانات ثابتة أو محاكاة.
- * ============================================================
+ * ==========================================================
+ * security-change-mobile.js
+ * تغيير رقم الجوال
+ * Enterprise Version 2026
+ * ==========================================================
  */
 
-window.SecurityPages = window.SecurityPages || {};
+'use strict';
 
-window.SecurityPages['change-mobile'] = {
-    init: async function() {
-        console.log('📱 تهيئة صفحة تغيير رقم الجوال (Enterprise)...');
+(function () {
 
-        // انتظار جاهزية عميل Supabase
-        if (!window.teraSupabase) {
+    window.SecurityPages = window.SecurityPages || {};
+
+    window.SecurityPages["change-mobile"] = {
+
+        supabase: null,
+        currentUser: null,
+        currentSession: null,
+
+        async init() {
+
+            console.log("📱 [Change Mobile] Initializing...");
+
             try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-                    document.addEventListener('supabase:ready', (e) => {
-                        clearTimeout(timeout);
-                        resolve(e.detail.client);
-                    }, { once: true });
-                    document.addEventListener('supabase:error', () => {
-                        clearTimeout(timeout);
-                        reject(new Error('فشل تحميل Supabase'));
-                    }, { once: true });
-                });
-            } catch (err) {
-                console.error('❌ تعذر الاتصال بـ Supabase:', err);
-                alert('تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.');
-                return;
+
+                this.supabase = await waitForSupabase();
+
+                const {
+                    data: { session }
+                } = await this.supabase.auth.getSession();
+
+                if (!session) {
+
+                    window.location.replace(
+                        "/auth/auth/login/login.html"
+                    );
+
+                    return;
+
+                }
+
+                this.currentSession = session;
+                this.currentUser = session.user;
+
+                updateHeader(this.currentUser);
+
+                this.cacheDom();
+
+                this.loadCurrentMobile();
+
+                this.bindEvents();
+
             }
-        }
 
-        const form = document.getElementById('changeMobileForm');
-        if (!form) {
-            console.warn('⚠️ نموذج تغيير الجوال غير موجود.');
-            return;
-        }
+            catch (error) {
 
-        const newMobile = document.getElementById('newMobile');
-        const confirmMobile = document.getElementById('confirmMobile');
-        const newMobileHint = document.getElementById('newMobileHint');
-        const confirmHint = document.getElementById('confirmMobileHint');
-        const currentCountryCode = document.getElementById('currentCountryCode');
-        const currentMobileInput = document.getElementById('currentMobile');
-        const newCountryCode = document.getElementById('newCountryCode');
+                console.error(error);
 
-        // ---------- 1. عرض رقم الجوال الحالي من بيانات المستخدم ----------
-        try {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
-            if (user) {
-                // قد يكون الرقم محفوظاً في user_metadata أو phone
-                const savedPhone = user.phone || user.user_metadata?.mobile_number || '';
-                if (savedPhone) {
-                    // استخراج مفتاح الدولة والرقم إذا كان النمط "+9665xxxxxxxx"
-                    let countryCode = '966';
-                    let number = savedPhone;
-                    if (savedPhone.startsWith('+')) {
-                        const withoutPlus = savedPhone.substring(1);
-                        // افتراض أن مفتاح الدولة أول 1-3 أرقام
-                        const matches = withoutPlus.match(/^(\d{1,3})(\d+)$/);
-                        if (matches) {
-                            countryCode = matches[1];
-                            number = matches[2];
-                        } else {
-                            countryCode = withoutPlus.substring(0, 3);
-                            number = withoutPlus.substring(3);
+                showSecurityAlert(
+                    "تعذر تحميل الصفحة.",
+                    "error"
+                );
+
+            }
+
+        },
+
+        cacheDom() {
+
+            this.currentMobileDisplay =
+                document.getElementById("currentMobileDisplay");
+
+            this.currentPassword =
+                document.getElementById("currentPassword");
+
+            this.newMobile =
+                document.getElementById("newMobile");
+
+            this.confirmMobile =
+                document.getElementById("confirmMobile");
+
+            this.changeMobileBtn =
+                document.getElementById("changeMobileBtn");
+
+            this.mobileHint =
+                document.getElementById("mobileHint");
+
+            this.confirmHint =
+                document.getElementById("confirmMobileHint");
+
+        },
+
+        loadCurrentMobile() {
+
+            const mobile =
+                this.currentUser.user_metadata?.mobile_number ||
+                "غير مسجل";
+
+            if (this.currentMobileDisplay) {
+
+                this.currentMobileDisplay.textContent =
+                    mobile;
+
+            }
+
+        },
+
+        bindEvents() {
+
+            this.newMobile.addEventListener(
+
+                "input",
+
+                () => this.validateMobile()
+
+            );
+
+            this.confirmMobile.addEventListener(
+
+                "input",
+
+                () => this.validateConfirm()
+
+            );
+
+            this.changeMobileBtn.addEventListener(
+
+                "click",
+
+                () => this.changeMobile()
+
+            );
+
+        },
+
+                validateMobile() {
+
+            const mobile =
+                this.newMobile.value.trim();
+
+            if (!this.mobileHint)
+                return;
+
+            if (!mobile.length) {
+
+                this.mobileHint.className =
+                    "email-hint";
+
+                this.mobileHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أدخل رقم الجوال الجديد';
+
+                return;
+
+            }
+
+            const regex =
+                /^(\+9665|05)[0-9]{8}$/;
+
+            if (!regex.test(mobile)) {
+
+                this.mobileHint.className =
+                    "email-hint error";
+
+                this.mobileHint.innerHTML =
+                    '<i class="fas fa-times-circle"></i> رقم الجوال غير صحيح';
+
+                return;
+
+            }
+
+            this.mobileHint.className =
+                "email-hint success";
+
+            this.mobileHint.innerHTML =
+                '<i class="fas fa-check-circle"></i> رقم الجوال صالح';
+
+        },
+
+        validateConfirm() {
+
+            if (!this.confirmHint)
+                return;
+
+            const mobile =
+                this.newMobile.value.trim();
+
+            const confirm =
+                this.confirmMobile.value.trim();
+
+            if (!confirm.length) {
+
+                this.confirmHint.className =
+                    "email-hint";
+
+                this.confirmHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أعد إدخال رقم الجوال';
+
+                return;
+
+            }
+
+            if (mobile !== confirm) {
+
+                this.confirmHint.className =
+                    "email-hint error";
+
+                this.confirmHint.innerHTML =
+                    '<i class="fas fa-times-circle"></i> رقم الجوال غير متطابق';
+
+                return;
+
+            }
+
+            this.confirmHint.className =
+                "email-hint success";
+
+            this.confirmHint.innerHTML =
+                '<i class="fas fa-check-circle"></i> رقم الجوال متطابق';
+
+        },
+
+        normalizeMobile(number) {
+
+            number = number.trim();
+
+            if (number.startsWith("05")) {
+
+                return "+966" + number.substring(1);
+
+            }
+
+            return number;
+
+        },
+
+        isValidSaudiMobile(number) {
+
+            const regex =
+                /^(\+9665|05)[0-9]{8}$/;
+
+            return regex.test(number);
+
+        },
+
+        async changeMobile() {
+
+            const password =
+                this.currentPassword.value.trim();
+
+            let mobile =
+                this.newMobile.value.trim();
+
+            let confirm =
+                this.confirmMobile.value.trim();
+
+            if (
+                !password ||
+                !mobile ||
+                !confirm
+            ) {
+
+                showSecurityAlert(
+
+                    "يرجى تعبئة جميع الحقول.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            if (
+                !this.isValidSaudiMobile(mobile)
+            ) {
+
+                showSecurityAlert(
+
+                    "رقم الجوال غير صحيح.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            if (mobile !== confirm) {
+
+                showSecurityAlert(
+
+                    "رقم الجوال غير متطابق.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            mobile =
+                this.normalizeMobile(mobile);
+
+            confirm =
+                this.normalizeMobile(confirm);
+
+            if (
+                mobile ===
+                this.currentUser.user_metadata?.mobile_number
+            ) {
+
+                showSecurityAlert(
+
+                    "رقم الجوال الجديد مطابق للحالي.",
+
+                    "warning"
+
+                );
+
+                return;
+
+            }
+
+            this.setLoading(
+
+                this.changeMobileBtn,
+
+                "جاري تحديث رقم الجوال..."
+
+            );
+
+
+                        try {
+
+                /*
+                 * التحقق من كلمة المرور الحالية
+                 */
+
+                const { error: verifyError } =
+                    await this.supabase.auth.signInWithPassword({
+
+                        email: this.currentUser.email,
+
+                        password
+
+                    });
+
+                if (verifyError) {
+
+                    throw new Error(
+                        "كلمة المرور الحالية غير صحيحة."
+                    );
+
+                }
+
+                /*
+                 * تحديث رقم الجوال داخل بيانات المستخدم
+                 */
+
+                const { error: updateError } =
+                    await this.supabase.auth.updateUser({
+
+                        data: {
+
+                            mobile_number: mobile
+
                         }
+
+                    });
+
+                if (updateError)
+                    throw updateError;
+
+                /*
+                 * تحديث جدول profiles (إن وجد)
+                 */
+
+                try {
+
+                    await this.supabase
+
+                        .from("profiles")
+
+                        .update({
+
+                            mobile_number: mobile,
+
+                            updated_at:
+                                new Date().toISOString()
+
+                        })
+
+                        .eq(
+                            "id",
+                            this.currentUser.id
+                        );
+
+                }
+
+                catch (profileError) {
+
+                    console.warn(
+                        "[Change Mobile] Profile update skipped.",
+                        profileError
+                    );
+
+                }
+
+                /*
+                 * تحديث المستخدم الحالي
+                 */
+
+                const {
+
+                    data: {
+
+                        user
+
                     }
-                    if (currentCountryCode) currentCountryCode.value = countryCode;
-                    if (currentMobileInput) currentMobileInput.value = number;
-                }
-            }
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب بيانات المستخدم الحالية:', e);
-        }
 
-        // ---------- 2. التحقق من صحة الرقم الجديد ----------
-        if (newMobile && newMobileHint) {
-            newMobile.addEventListener('input', function() {
-                const value = this.value.trim();
-                const isValid = /^[0-9]{9,12}$/.test(value);
+                } = await this.supabase.auth.getUser();
 
-                if (value === '') {
-                    newMobileHint.className = 'mobile-hint';
-                    newMobileHint.innerHTML = '<i class="fas fa-info-circle"></i> أدخل رقم الجوال بدون مفتاح الدولة.';
-                    this.style.borderColor = '';
-                } else if (isValid) {
-                    newMobileHint.className = 'mobile-hint success';
-                    newMobileHint.innerHTML = '<i class="fas fa-check-circle"></i> رقم الجوال صحيح.';
-                    this.style.borderColor = '#16a34a';
-                } else {
-                    newMobileHint.className = 'mobile-hint error';
-                    newMobileHint.innerHTML = '<i class="fas fa-times-circle"></i> يجب أن يتكون من 9-12 رقم فقط.';
-                    this.style.borderColor = '#dc2626';
+                if (user) {
+
+                    this.currentUser = user;
+
                 }
 
-                if (confirmMobile && confirmMobile.value) checkMatch();
-            });
-        }
+                /*
+                 * تحديث العرض الحالي
+                 */
 
-        // ---------- 3. التحقق من تطابق الرقمين ----------
-        function checkMatch() {
-            if (!newMobile || !confirmMobile || !confirmHint) return;
-            const newVal = newMobile.value.trim();
-            const confirmVal = confirmMobile.value.trim();
+                if (this.currentMobileDisplay) {
 
-            if (confirmVal === '') {
-                confirmHint.className = 'mobile-hint';
-                confirmHint.innerHTML = '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع رقم الجوال الجديد.';
-                confirmMobile.style.borderColor = '';
-                return;
+                    this.currentMobileDisplay.textContent =
+                        mobile;
+
+                }
+
+                showSecurityAlert(
+
+                    "تم تحديث رقم الجوال بنجاح.",
+
+                    "success"
+
+                );
+
+                /*
+                 * تنظيف الحقول
+                 */
+
+                this.currentPassword.value = "";
+
+                this.newMobile.value = "";
+
+                this.confirmMobile.value = "";
+
+                this.mobileHint.className =
+                    "email-hint";
+
+                this.mobileHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أدخل رقم الجوال الجديد';
+
+                this.confirmHint.className =
+                    "email-hint";
+
+                this.confirmHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أعد إدخال رقم الجوال';
+
             }
 
-            if (newVal === confirmVal && /^[0-9]{9,12}$/.test(confirmVal)) {
-                confirmHint.className = 'mobile-hint success';
-                confirmHint.innerHTML = '<i class="fas fa-check-circle"></i> الرقمان متطابقان.';
-                confirmMobile.style.borderColor = '#16a34a';
-            } else {
-                confirmHint.className = 'mobile-hint error';
-                confirmHint.innerHTML = '<i class="fas fa-times-circle"></i> الرقمان غير متطابقين.';
-                confirmMobile.style.borderColor = '#dc2626';
-            }
-        }
+            catch (err) {
 
-        if (newMobile && confirmMobile && confirmHint) {
-            confirmMobile.addEventListener('input', checkMatch);
-            newMobile.addEventListener('input', function() {
-                if (confirmMobile.value) checkMatch();
-            });
-        }
+                console.error(
+                    "[Change Mobile]",
+                    err
+                );
 
-        // ---------- 4. معالج إرسال النموذج ----------
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
+                showSecurityAlert(
 
-            const newVal = newMobile.value.trim();
-            const confirmVal = confirmMobile.value.trim();
-            const countryCode = newCountryCode ? newCountryCode.value : '966';
+                    err.message ||
 
-            if (!newVal || !/^[0-9]{9,12}$/.test(newVal)) {
-                Security.showAlert('يرجى إدخال رقم جوال صحيح (9-12 رقم).', 'error');
-                newMobile.focus();
-                return;
+                    "تعذر تحديث رقم الجوال.",
+
+                    "error"
+
+                );
+
             }
 
-            if (newVal !== confirmVal) {
-                Security.showAlert('رقم الجوال الجديد وتأكيده غير متطابقين.', 'error');
-                confirmMobile.focus();
-                return;
+            finally {
+
+                this.stopLoading(
+
+                    this.changeMobileBtn
+
+                );
+
             }
 
-            // التأكد من أن الرقم الجديد مختلف عن الحالي
-            const currentNumber = currentMobileInput ? currentMobileInput.value.trim() : '';
-            const currentCountry = currentCountryCode ? currentCountryCode.value : '966';
-            if (currentNumber === newVal && currentCountry === countryCode) {
-                Security.showAlert('رقم الجوال الجديد مطابق للرقم الحالي.', 'error');
-                newMobile.focus();
-                return;
+        },
+
+                /*
+        ==========================================================
+        إظهار حالة التحميل
+        ==========================================================
+        */
+
+        setLoading(button, text) {
+
+            if (!button) return;
+
+            button.disabled = true;
+
+            button.dataset.originalText =
+                button.innerHTML;
+
+            button.innerHTML =
+                `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+
+        },
+
+        /*
+        ==========================================================
+        إنهاء حالة التحميل
+        ==========================================================
+        */
+
+        stopLoading(button) {
+
+            if (!button) return;
+
+            button.disabled = false;
+
+            if (button.dataset.originalText) {
+
+                button.innerHTML =
+                    button.dataset.originalText;
+
             }
 
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+        },
+
+        /*
+        ==========================================================
+        إعادة ضبط النموذج
+        ==========================================================
+        */
+
+        resetForm() {
+
+            this.currentPassword.value = "";
+
+            this.newMobile.value = "";
+
+            this.confirmMobile.value = "";
+
+            if (this.mobileHint) {
+
+                this.mobileHint.className =
+                    "email-hint";
+
+                this.mobileHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أدخل رقم الجوال الجديد';
+
             }
+
+            if (this.confirmHint) {
+
+                this.confirmHint.className =
+                    "email-hint";
+
+                this.confirmHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أعد إدخال رقم الجوال';
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        تحديث بيانات المستخدم
+        ==========================================================
+        */
+
+        async refreshUser() {
 
             try {
-                const fullPhone = '+' + countryCode + newVal;
 
-                // تحديث رقم الجوال في Supabase Auth
-                const { error } = await window.teraSupabase.auth.updateUser({
-                    phone: fullPhone
-                });
+                const {
+                    data: { user }
+                } = await this.supabase.auth.getUser();
 
-                if (error) throw error;
+                if (user) {
 
-                Security.showAlert('✅ تم تحديث رقم الجوال بنجاح. قد تحتاج إلى تأكيد الرمز المرسل.', 'success');
-                form.reset();
+                    this.currentUser = user;
 
-                // إعادة تعيين التلميحات والحقول
-                if (newMobileHint) {
-                    newMobileHint.className = 'mobile-hint';
-                    newMobileHint.innerHTML = '<i class="fas fa-info-circle"></i> أدخل رقم الجوال بدون مفتاح الدولة.';
+                    updateHeader(user);
+
+                    this.loadCurrentMobile();
+
                 }
-                if (confirmHint) {
-                    confirmHint.className = 'mobile-hint';
-                    confirmHint.innerHTML = '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع رقم الجوال الجديد.';
-                }
-                if (newMobile) newMobile.style.borderColor = '';
-                if (confirmMobile) confirmMobile.style.borderColor = '';
 
-                // تحديث عرض الرقم الحالي في الواجهة ليعكس الجديد
-                if (currentCountryCode) currentCountryCode.value = countryCode;
-                if (currentMobileInput) currentMobileInput.value = newVal;
-
-            } catch (error) {
-                console.error('❌ خطأ في تغيير رقم الجوال:', error);
-                Security.showAlert(error.message || 'تعذر تغيير رقم الجوال.', 'error');
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير رقم الجوال';
-                }
             }
-        });
 
-        console.log('✅ صفحة تغيير رقم الجوال مهيأة.');
-    }
-};
+            catch (error) {
+
+                console.warn(
+                    "[Change Mobile] Unable to refresh user.",
+                    error
+                );
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        إعادة تحميل الصفحة
+        ==========================================================
+        */
+
+        reloadPage() {
+
+            this.resetForm();
+
+            this.refreshUser();
+
+        }
+
+    };
+
+})();
+
+
+
+        
