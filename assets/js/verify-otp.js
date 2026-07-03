@@ -1,7 +1,7 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
  * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
- * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل، ورسائل عربية.
+ * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل من auth_register، ورسائل عربية.
  */
 (function() {
     'use strict';
@@ -50,25 +50,39 @@
         }
         supabase = window.teraSupabase;
 
-        // ---------- ٢. تحديث اسم العميل في الهيدر (مرن) ----------
+        // ---------- ٢. تحديث اسم العميل في الهيدر (من auth_register إن لزم) ----------
         async function refreshHeader() {
             const headerName = document.getElementById('headerUserName');
             const headerAvatar = document.getElementById('headerAvatar');
             let displayName = 'مستخدم';
+            let userId = null;
 
             try {
+                // محاولة جلب المستخدم من الجلسة
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    displayName = user.user_metadata?.full_name || user.email || displayName;
-                } else {
-                    // لا توجد جلسة، نعرض البريد الإلكتروني من pendingEmail إن وجد
-                    const pending = localStorage.getItem('pendingVerificationEmail');
-                    if (pending) {
-                        displayName = pending.split('@')[0]; // الجزء قبل @
-                    }
+                    userId = user.id;
+                    displayName = user.user_metadata?.full_name || '';
                 }
+
+                // إذا لم نجد الاسم في metadata، نبحث في auth_register
+                if (!displayName && userId) {
+                    const { data: reg } = await supabase
+                        .from('auth_register')
+                        .select('full_name')
+                        .eq('user_id', userId)
+                        .maybeSingle();
+                    if (reg?.full_name) displayName = reg.full_name;
+                }
+
+                // إذا لم نجد حتى الآن، نستخدم البريد الإلكتروني (الجزء قبل @)
+                if (!displayName) {
+                    const email = user?.email || localStorage.getItem('pendingVerificationEmail');
+                    if (email) displayName = email.split('@')[0];
+                }
+
             } catch (e) {
-                // في حال عدم وجود جلسة، نستخدم البريد المعلق
+                // في حال عدم وجود جلسة، نعتمد على البريد المعلق
                 const pending = localStorage.getItem('pendingVerificationEmail');
                 if (pending) displayName = pending.split('@')[0];
             }
@@ -162,7 +176,7 @@
             }
         });
 
-        // ---------- ٧. تقديم النموذج ----------
+        // ---------- ٧. تقديم النموذج (مطابقة القوالب) ----------
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideAlert();
@@ -185,12 +199,11 @@
 
             try {
                 let otpType;
-                // تحديد النوع بدقة حسب قوالب Supabase
                 if (verifyType === 'signup') otpType = 'signup';
                 else if (verifyType === 'recovery') otpType = 'recovery';
                 else if (verifyType === 'change_mobile') otpType = 'sms';
                 else if (verifyType === 'email_change') otpType = 'email_change';
-                else otpType = 'email'; // الحالات المخصصة و login_otp
+                else otpType = 'email'; // جميع الحالات المخصصة (personal_info, contact_info, ...)
 
                 let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
@@ -238,7 +251,7 @@
             }
         });
 
-        // ---------- ٨. إعادة الإرسال ----------
+        // ---------- ٨. إعادة الإرسال (مطابقة القوالب) ----------
         if (resendBtn) {
             resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -255,15 +268,18 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'change_mobile') {
+                    if (verifyType === 'signup') {
+                        await supabase.auth.resend({ type: 'signup', email: pendingEmail });
+                    } else if (verifyType === 'recovery') {
+                        await supabase.auth.resend({ type: 'recovery', email: pendingEmail });
+                    } else if (verifyType === 'change_mobile') {
                         const mobile = localStorage.getItem('pendingNewMobile');
                         if (!mobile) throw new Error('رقم الجوال غير موجود');
                         await supabase.auth.signInWithOtp({ phone: mobile, options: { shouldCreateUser: false } });
-                    } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
-                        await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
+                    } else if (verifyType === 'email_change') {
+                        await supabase.auth.resend({ type: 'email_change', email: pendingEmail });
                     } else {
-                        // signup, recovery, email_change, إلخ
-                        await supabase.auth.resend({ type: verifyType, email: pendingEmail });
+                        await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
                     startTimer();
