@@ -1,276 +1,974 @@
 /**
- * security.js – دوال صفحات الأمان (Enterprise) – منسق عام
  * ============================================================
- * يحتوي على الدوال العامة وجميع صفحات الأمان ما عدا change-email
- * (الموجود منفصلاً في security-change-email.js)
+ * security.js
+ * نظام صفحات الأمان - Enterprise Edition
+ * متوافق مع Supabase JS v2
+ * ============================================================
  */
+
+'use strict';
 
 window.SecurityPages = window.SecurityPages || {};
 
-// ========== دوال مساعدة عامة ==========
+/* ============================================================
+   Security Core
+============================================================ */
 
-/**
- * انتظار جاهزية Supabase (مع محاولات متعددة)
- */
+const SecurityCore = {
+
+    supabase: null,
+    currentUser: null,
+
+    async init() {
+
+        try {
+
+            this.supabase = await waitForSupabase();
+
+            const {
+                data: { user },
+                error
+            } = await this.supabase.auth.getUser();
+
+            if (error || !user) {
+
+                window.location.replace('/auth/auth/login/login.html');
+                return null;
+
+            }
+
+            this.currentUser = user;
+
+            updateHeader(user);
+
+            return user;
+
+        } catch (err) {
+
+            console.error('Security Init Error', err);
+
+            showSecurityAlert(
+                'تعذر الاتصال بخدمة المصادقة.',
+                'error'
+            );
+
+            return null;
+
+        }
+
+    },
+
+    async getUser() {
+
+        if (this.currentUser)
+            return this.currentUser;
+
+        const {
+            data: { user }
+        } = await this.supabase.auth.getUser();
+
+        this.currentUser = user;
+
+        return user;
+
+    }
+
+};
+
+/* ============================================================
+   انتظار جاهزية Supabase
+============================================================ */
+
 async function waitForSupabase() {
-    if (window.teraSupabase) return window.teraSupabase;
 
-    try {
-        await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-            document.addEventListener('supabase:ready', (e) => {
-                clearTimeout(timeout);
-                resolve(e.detail.client);
-            }, { once: true });
-            document.addEventListener('supabase:error', () => {
-                clearTimeout(timeout);
-                reject(new Error('error'));
-            }, { once: true });
-        });
-        if (window.teraSupabase) return window.teraSupabase;
-    } catch (e) {}
+    if (window.teraSupabase)
+        return window.teraSupabase;
 
-    for (let i = 0; i < 20; i++) {
-        await new Promise(r => setTimeout(r, 1000));
-        if (window.teraSupabase) return window.teraSupabase;
-    }
-    throw new Error('Supabase غير متوفر');
+    return new Promise((resolve, reject) => {
+
+        const timeout = setTimeout(() => {
+
+            reject(new Error('Supabase Timeout'));
+
+        }, 10000);
+
+        document.addEventListener(
+            'supabase:ready',
+            () => {
+
+                clearTimeout(timeout);
+
+                resolve(window.teraSupabase);
+
+            },
+            { once: true }
+        );
+
+        document.addEventListener(
+            'supabase:error',
+            () => {
+
+                clearTimeout(timeout);
+
+                reject(new Error('Supabase Error'));
+
+            },
+            { once: true }
+        );
+
+    });
+
 }
 
-/**
- * عرض رسالة تنبيه
- */
-function showSecurityAlert(message, type) {
+/* ============================================================
+   رسائل التنبيه
+============================================================ */
+
+function showSecurityAlert(message, type = 'error') {
+
     const box = document.getElementById('formAlert');
+
+    if (!box) {
+
+        alert(message);
+
+        return;
+
+    }
+
     const icon = document.getElementById('alertIcon');
-    const msg = document.getElementById('alertMessage');
-    if (!box) return alert(message);
-    if (icon) icon.className = 'fas ' + (type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle');
-    if (msg) msg.textContent = message;
+    const text = document.getElementById('alertMessage');
+
+    box.className = `alert-box show ${type}`;
+
+    if (text)
+        text.textContent = message;
+
+    if (icon) {
+
+        if (type === 'success') {
+
+            icon.className = 'fas fa-check-circle';
+
+        } else if (type === 'warning') {
+
+            icon.className = 'fas fa-triangle-exclamation';
+
+        } else {
+
+            icon.className = 'fas fa-circle-exclamation';
+
+        }
+
+    }
+
     box.style.display = 'flex';
-    box.className = 'alert-box show ' + (type || 'error');
-    clearTimeout(window._securityAlertTimer);
-    window._securityAlertTimer = setTimeout(() => { if (box) box.style.display = 'none'; }, 8000);
+
+    clearTimeout(window.securityAlertTimer);
+
+    window.securityAlertTimer = setTimeout(() => {
+
+        box.style.display = 'none';
+
+    }, 7000);
+
 }
 
-/**
- * تحديث اسم المستخدم والأفاتار في الهيدر
- */
+/* ============================================================
+   تحديث الهيدر
+============================================================ */
+
 function updateHeader(user) {
-    if (!user) return;
-    const fullName = user.user_metadata?.full_name || 'مستخدم';
-    const headerName = document.getElementById('headerUserName');
-    const headerAvatar = document.getElementById('headerAvatar');
-    if (headerName) headerName.textContent = fullName;
-    if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+
+    if (!user)
+        return;
+
+    const fullName =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        'مستخدم';
+
+    const avatar =
+        fullName.trim().charAt(0).toUpperCase();
+
+    const headerName =
+        document.getElementById('headerUserName');
+
+    const headerAvatar =
+        document.getElementById('headerAvatar');
+
+    if (headerName)
+        headerName.textContent = fullName;
+
+    if (headerAvatar)
+        headerAvatar.textContent = avatar;
+
 }
 
-// ========== تغيير كلمة المرور ==========
+/* ============================================================
+   أدوات مساعدة
+============================================================ */
+
+function setButtonLoading(button, text = 'جاري التنفيذ...') {
+
+    if (!button)
+        return;
+
+    button.disabled = true;
+
+    button.dataset.original = button.innerHTML;
+
+    button.innerHTML =
+        `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+
+}
+
+function restoreButton(button) {
+
+    if (!button)
+        return;
+
+    button.disabled = false;
+
+    if (button.dataset.original)
+        button.innerHTML = button.dataset.original;
+
+}
+
+
+/* ============================================================
+   التحقق من صحة المدخلات
+============================================================ */
+
+function isValidEmail(email) {
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+}
+
+function isValidSaudiMobile(mobile) {
+
+    const cleaned = mobile.replace(/\s+/g, '');
+
+    return /^(\+9665|05)[0-9]{8}$/.test(cleaned);
+
+}
+
+function normalizeMobile(mobile) {
+
+    mobile = mobile.replace(/\s+/g, '');
+
+    if (mobile.startsWith('05')) {
+        return '+966' + mobile.substring(1);
+    }
+
+    return mobile;
+
+}
+
+/* ============================================================
+   تغيير كلمة المرور
+============================================================ */
+
 window.SecurityPages['change-password'] = {
-    init: async function() {
-        console.log('🔐 تهيئة صفحة تغيير كلمة المرور...');
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) {
-            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+
+    async init() {
+
+        const user = await SecurityCore.init();
+
+        if (!user)
             return;
-        }
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            updateHeader(user);
-        } catch (e) { console.warn(e); }
 
-        const form = document.getElementById('changePasswordForm');
-        if (!form) return;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const newPassword = document.getElementById('newPassword')?.value;
-            const confirmPassword = document.getElementById('confirmPassword')?.value;
-            if (newPassword !== confirmPassword) {
-                showSecurityAlert('كلمة المرور الجديدة غير متطابقة.', 'error');
-                return;
-            }
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...'; }
-            try {
-                const { error } = await supabase.auth.updateUser({ password: newPassword });
-                if (error) throw error;
-                showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
-                form.reset();
-            } catch (error) {
-                showSecurityAlert(error.message || 'تعذر تغيير كلمة المرور.', 'error');
-            } finally {
-                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير كلمة المرور'; }
-            }
-        });
-    }
-};
+        const form =
+            document.getElementById('changePasswordForm');
 
-// ========== تغيير رقم الجوال ==========
-window.SecurityPages['change-mobile'] = {
-    init: async function() {
-        console.log('📱 تهيئة صفحة تغيير رقم الجوال...');
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) {
-            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+        if (!form)
             return;
-        }
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            updateHeader(user);
-        } catch (e) { console.warn(e); }
 
-        const form = document.getElementById('changeMobileForm');
-        if (!form) return;
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const mobile = document.getElementById('newMobile')?.value.trim();
-            if (!mobile) {
-                showSecurityAlert('يرجى إدخال رقم الجوال الجديد.', 'error');
-                return;
-            }
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
-            try {
-                const { error } = await supabase.auth.signInWithOtp({
-                    phone: mobile,
-                    options: { shouldCreateUser: false }
+        form.addEventListener(
+            'submit',
+            this.submit.bind(this)
+        );
+
+    },
+
+    async submit(e) {
+
+        e.preventDefault();
+
+        const btn =
+            document.getElementById('changePasswordBtn');
+
+        const currentPassword =
+            document.getElementById('currentPassword').value.trim();
+
+        const newPassword =
+            document.getElementById('newPassword').value.trim();
+
+        const confirmPassword =
+            document.getElementById('confirmPassword').value.trim();
+
+        if (!currentPassword) {
+
+            showSecurityAlert(
+                'يرجى إدخال كلمة المرور الحالية.',
+                'error'
+            );
+
+            return;
+
+        }
+
+        if (newPassword.length < 8) {
+
+            showSecurityAlert(
+                'يجب أن تكون كلمة المرور 8 أحرف على الأقل.',
+                'error'
+            );
+
+            return;
+
+        }
+
+        if (newPassword !== confirmPassword) {
+
+            showSecurityAlert(
+                'تأكيد كلمة المرور غير مطابق.',
+                'error'
+            );
+
+            return;
+
+        }
+
+        setButtonLoading(btn);
+
+        try {
+
+            const user =
+                await SecurityCore.getUser();
+
+            const verify =
+                await SecurityCore.supabase.auth.signInWithPassword({
+
+                    email: user.email,
+
+                    password: currentPassword
+
                 });
-                if (error) throw error;
-                localStorage.setItem('pendingNewMobile', mobile);
-                localStorage.setItem('pendingVerificationEmail', mobile);
-                localStorage.setItem('tera_verify_type', 'change_mobile');
-                showSecurityAlert('✅ تم إرسال رمز التحقق إلى رقم الجوال الجديد.', 'success');
-                setTimeout(() => window.location.replace('/auth/verify-otp.html'), 1500);
-            } catch (error) {
-                showSecurityAlert(error.message || 'تعذر إرسال الرمز.', 'error');
-            } finally {
-                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> تغيير رقم الجوال'; }
-            }
-        });
+
+            if (verify.error)
+                throw verify.error;
+
+            const result =
+                await SecurityCore.supabase.auth.updateUser({
+
+                    password: newPassword
+
+                });
+
+            if (result.error)
+                throw result.error;
+
+            showSecurityAlert(
+
+                'تم تغيير كلمة المرور بنجاح.',
+
+                'success'
+
+            );
+
+            form.reset();
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            showSecurityAlert(
+
+                err.message ||
+
+                'تعذر تغيير كلمة المرور.',
+
+                'error'
+
+            );
+
+        }
+
+        finally {
+
+            restoreButton(btn);
+
+        }
+
     }
+
 };
 
-// ========== سجل عمليات الدخول ==========
-window.SecurityPages['login-history'] = {
-    init: async function() {
-        console.log('📋 تهيئة صفحة سجل الدخول...');
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) {
-            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
+/* ============================================================
+   تغيير رقم الجوال
+============================================================ */
+
+window.SecurityPages['change-mobile'] = {
+
+    async init() {
+
+        const user =
+            await SecurityCore.init();
+
+        if (!user)
             return;
+
+        document.getElementById('currentMobileDisplay').textContent =
+
+            user.user_metadata?.mobile_number ||
+
+            '--';
+
+        document
+
+            .getElementById('changeMobileBtn')
+
+            .addEventListener(
+
+                'click',
+
+                this.submit.bind(this)
+
+            );
+
+    },
+
+    async submit() {
+
+        const btn =
+            document.getElementById('changeMobileBtn');
+
+        const mobile =
+            document.getElementById('newMobile').value.trim();
+
+        if (!isValidSaudiMobile(mobile)) {
+
+            showSecurityAlert(
+
+                'رقم الجوال غير صحيح.',
+
+                'error'
+
+            );
+
+            return;
+
         }
+
+        setButtonLoading(btn);
+
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                updateHeader(user);
-                const { data: logs, error } = await supabase
+
+            const user =
+                await SecurityCore.getUser();
+
+            const result =
+                await SecurityCore.supabase.auth.updateUser({
+
+                    data: {
+
+                        mobile_number:
+
+                            normalizeMobile(mobile)
+
+                    }
+
+                });
+
+            if (result.error)
+                throw result.error;
+
+            showSecurityAlert(
+
+                'تم تحديث رقم الجوال.',
+
+                'success'
+
+            );
+
+            document.getElementById(
+
+                'currentMobileDisplay'
+
+            ).textContent =
+
+                normalizeMobile(mobile);
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            showSecurityAlert(
+
+                err.message ||
+
+                'تعذر تحديث رقم الجوال.',
+
+                'error'
+
+            );
+
+        }
+
+        finally {
+
+            restoreButton(btn);
+
+        }
+
+    }
+
+};
+
+
+/* ============================================================
+   سجل الدخول
+============================================================ */
+
+window.SecurityPages['login-history'] = {
+
+    async init() {
+
+        const user = await SecurityCore.init();
+
+        if (!user) return;
+
+        await this.load(user.id);
+
+    },
+
+    async load(userId) {
+
+        const tableBody = document.getElementById('loginHistoryBody');
+
+        if (!tableBody) return;
+
+        tableBody.innerHTML =
+            '<tr><td colspan="5">جاري تحميل البيانات...</td></tr>';
+
+        try {
+
+            const { data, error } =
+                await SecurityCore.supabase
                     .from('auth_login')
                     .select('*')
-                    .eq('user_id', user.id)
-                    .order('login_at', { ascending: false });
-                const tbody = document.getElementById('loginHistoryTableBody');
-                if (tbody && !error) {
-                    if (logs && logs.length > 0) {
-                        tbody.innerHTML = logs.map(log => `
-                            <tr>
-                                <td>${new Date(log.login_at).toLocaleDateString('ar-SA')}</td>
-                                <td>${log.ip_address || '-'}</td>
-                                <td>${log.device_name || '-'}</td>
-                                <td>${log.browser || '-'}</td>
-                                <td>${log.operating_system || '-'}</td>
-                                <td>${log.login_status || '-'}</td>
-                            </tr>
-                        `).join('');
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد عمليات دخول سابقة</td></tr>';
-                    }
-                }
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || !data.length) {
+
+                tableBody.innerHTML =
+                    '<tr><td colspan="5">لا توجد سجلات.</td></tr>';
+
+                return;
+
             }
-        } catch (e) { console.warn(e); }
+
+            tableBody.innerHTML = '';
+
+            data.forEach(row => {
+
+                tableBody.innerHTML += `
+
+<tr>
+
+<td>${formatDate(row.created_at)}</td>
+
+<td>${row.browser || '-'}</td>
+
+<td>${row.operating_system || '-'}</td>
+
+<td>${row.ip_address || '-'}</td>
+
+<td>
+
+<span class="badge-success">
+
+${row.login_status || 'Success'}
+
+</span>
+
+</td>
+
+</tr>
+
+`;
+
+            });
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            tableBody.innerHTML =
+                '<tr><td colspan="5">تعذر تحميل البيانات.</td></tr>';
+
+        }
+
     }
+
 };
 
-// ========== الأجهزة المصرحة ==========
+/* ============================================================
+   الأجهزة المصرح بها
+============================================================ */
+
 window.SecurityPages['registered-devices'] = {
-    init: async function() {
-        console.log('💻 تهيئة صفحة الأجهزة المصرحة...');
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) {
-            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-            return;
-        }
+
+    async init() {
+
+        const user =
+            await SecurityCore.init();
+
+        if (!user) return;
+
+        await this.load(user.id);
+
+    },
+
+    async load(userId) {
+
+        const container =
+            document.getElementById('devicesContainer');
+
+        if (!container) return;
+
+        container.innerHTML =
+            '<p>جاري تحميل الأجهزة...</p>';
+
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                updateHeader(user);
-                const { data: devices, error } = await supabase
-                    .from('auth_devices')
+
+            const { data, error } =
+                await SecurityCore.supabase
+                    .from('authorized_devices')
                     .select('*')
-                    .eq('user_id', user.id)
-                    .order('last_login_at', { ascending: false });
-                const tbody = document.getElementById('devicesTableBody');
-                if (tbody && !error) {
-                    if (devices && devices.length > 0) {
-                        tbody.innerHTML = devices.map(dev => `
-                            <tr>
-                                <td>${dev.device_name || '-'}</td>
-                                <td>${dev.device_type || '-'}</td>
-                                <td>${dev.browser || '-'}</td>
-                                <td>${dev.operating_system || '-'}</td>
-                                <td>${dev.ip_address || '-'}</td>
-                                <td>${dev.is_trusted ? '✅ موثوق' : '❌ غير موثوق'}</td>
-                                <td>${new Date(dev.last_login_at).toLocaleDateString('ar-SA')}</td>
-                            </tr>
-                        `).join('');
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">لا توجد أجهزة مسجلة</td></tr>';
-                    }
-                }
+                    .eq('user_id', userId)
+                    .order('last_used_at', {
+                        ascending: false
+                    });
+
+            if (error) throw error;
+
+            if (!data.length) {
+
+                container.innerHTML =
+                    '<p>لا توجد أجهزة مسجلة.</p>';
+
+                return;
+
             }
-        } catch (e) { console.warn(e); }
+
+            container.innerHTML = '';
+
+            data.forEach(device => {
+
+                container.innerHTML += `
+
+<div class="device-card">
+
+<div class="device-header">
+
+<h4>${device.device_name || 'جهاز غير معروف'}</h4>
+
+<button
+
+class="btn-danger"
+
+onclick="SecurityPages['registered-devices'].remove('${device.id}')">
+
+إزالة
+
+</button>
+
+</div>
+
+<p>
+
+<strong>المتصفح:</strong>
+
+${device.browser || '-'}
+
+</p>
+
+<p>
+
+<strong>النظام:</strong>
+
+${device.operating_system || '-'}
+
+</p>
+
+<p>
+
+<strong>آخر استخدام:</strong>
+
+${formatDate(device.last_used_at)}
+
+</p>
+
+</div>
+
+`;
+
+            });
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            container.innerHTML =
+                '<p>تعذر تحميل الأجهزة.</p>';
+
+        }
+
+    },
+
+    async remove(id) {
+
+        if (!confirm('هل تريد حذف هذا الجهاز؟'))
+            return;
+
+        try {
+
+            const { error } =
+                await SecurityCore.supabase
+                    .from('authorized_devices')
+                    .delete()
+                    .eq('id', id);
+
+            if (error) throw error;
+
+            showSecurityAlert(
+
+                'تم حذف الجهاز.',
+
+                'success'
+
+            );
+
+            const user =
+                await SecurityCore.getUser();
+
+            this.load(user.id);
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            showSecurityAlert(
+
+                'تعذر حذف الجهاز.',
+
+                'error'
+
+            );
+
+        }
+
     }
+
 };
 
-// ========== المصادقة الثنائية ==========
+/* ============================================================
+   أدوات مساعدة
+============================================================ */
+
+function formatDate(date) {
+
+    if (!date) return '-';
+
+    return new Date(date).toLocaleString('ar-SA', {
+
+        year: 'numeric',
+
+        month: '2-digit',
+
+        day: '2-digit',
+
+        hour: '2-digit',
+
+        minute: '2-digit'
+
+    });
+
+}
+
+/* ============================================================
+   المصادقة الثنائية (2FA)
+============================================================ */
+
 window.SecurityPages['two-factor-authentication'] = {
-    init: async function() {
-        console.log('🔑 تهيئة صفحة المصادقة الثنائية...');
-        let supabase;
-        try { supabase = await waitForSupabase(); } catch (err) {
-            showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-            return;
-        }
+
+    async init() {
+
+        const user = await SecurityCore.init();
+
+        if (!user) return;
+
+        const toggle =
+            document.getElementById('twoFactorToggle');
+
+        if (!toggle) return;
+
+        toggle.checked =
+            user.user_metadata?.two_factor_enabled || false;
+
+        toggle.addEventListener(
+            'change',
+            this.update.bind(this)
+        );
+
+    },
+
+    async update(e) {
+
+        const enabled = e.target.checked;
+
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                updateHeader(user);
-                const { data: totp, error } = await supabase
-                    .from('auth_totp')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
-                const statusEl = document.getElementById('totpStatus');
-                if (statusEl && totp) {
-                    statusEl.textContent = totp.is_enabled ? 'مفعلة' : 'غير مفعلة';
-                    statusEl.style.color = totp.is_enabled ? '#16a34a' : '#dc2626';
-                }
-            }
-        } catch (e) { console.warn(e); }
+
+            const { error } =
+                await SecurityCore.supabase.auth.updateUser({
+
+                    data: {
+
+                        two_factor_enabled: enabled
+
+                    }
+
+                });
+
+            if (error) throw error;
+
+            showSecurityAlert(
+
+                enabled
+                    ? 'تم تفعيل المصادقة الثنائية.'
+                    : 'تم تعطيل المصادقة الثنائية.',
+
+                'success'
+
+            );
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+            e.target.checked = !enabled;
+
+            showSecurityAlert(
+
+                err.message ||
+
+                'تعذر تحديث الإعداد.',
+
+                'error'
+
+            );
+
+        }
+
     }
+
 };
 
-// ========== بدء الصفحة المناسبة تلقائياً ==========
-document.addEventListener('DOMContentLoaded', function() {
-    const path = window.location.pathname;
-    let pageName = '';
-    if (path.includes('change-password')) pageName = 'change-password';
-    else if (path.includes('change-email')) pageName = 'change-email';
-    else if (path.includes('change-mobile')) pageName = 'change-mobile';
-    else if (path.includes('login-history')) pageName = 'login-history';
-    else if (path.includes('registered-devices')) pageName = 'registered-devices';
-    else if (path.includes('two-factor')) pageName = 'two-factor-authentication';
+/* ============================================================
+   تشغيل الصفحة الحالية تلقائياً
+============================================================ */
 
-    if (pageName && window.SecurityPages && window.SecurityPages[pageName]) {
-        window.SecurityPages[pageName].init();
+document.addEventListener(
+
+    'DOMContentLoaded',
+
+    async () => {
+
+        const page =
+
+            document.body.dataset.security ||
+
+            document.body.dataset.page ||
+
+            document.body.id ||
+
+            '';
+
+        if (!page)
+            return;
+
+        if (
+
+            window.SecurityPages &&
+
+            window.SecurityPages[page] &&
+
+            typeof window.SecurityPages[page].init === 'function'
+
+        ) {
+
+            console.log(
+
+                '🔐 Security Page:',
+
+                page
+
+            );
+
+            try {
+
+                await window.SecurityPages[page].init();
+
+            }
+
+            catch (err) {
+
+                console.error(
+
+                    'Security Init Error',
+
+                    err
+
+                );
+
+            }
+
+        }
+
     }
-});
+
+);
+
+/* ============================================================
+   واجهة عامة
+============================================================ */
+
+window.SecurityCore = SecurityCore;
+
+window.waitForSupabase = waitForSupabase;
+
+window.showSecurityAlert = showSecurityAlert;
+
+window.updateHeader = updateHeader;
+
+console.log(
+    '✅ security.js Enterprise Loaded'
+);
