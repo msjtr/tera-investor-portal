@@ -12,11 +12,21 @@
 
     const LoginPage = {
 
-        emailInput: null,
-        passwordInput: null,
-        rememberInput: null,
-        loginButton: null,
         form: null,
+
+        emailInput: null,
+
+        passwordInput: null,
+
+        rememberInput: null,
+
+        loginButton: null,
+
+        alertBox: null,
+
+        alertMessage: null,
+
+        alertIcon: null,
 
         init() {
 
@@ -33,41 +43,59 @@
         cacheDom() {
 
             this.form =
-                document.getElementById("loginForm");
+                document.getElementById("teraLoginForm");
 
             this.emailInput =
-                document.getElementById("email");
+                document.getElementById("login_identifier");
 
             this.passwordInput =
-                document.getElementById("password");
+                document.getElementById("login_password");
 
             this.rememberInput =
-                document.getElementById("rememberMe");
+                document.getElementById("remember_me");
 
             this.loginButton =
-                document.getElementById("loginBtn");
+                document.getElementById("loginSubmitBtn");
+
+            this.alertBox =
+                document.getElementById("formAlert");
+
+            this.alertMessage =
+                document.getElementById("alertMessage");
+
+            this.alertIcon =
+                document.getElementById("alertIcon");
+
+            console.log("Form :", this.form);
+            console.log("Email :", this.emailInput);
+            console.log("Password :", this.passwordInput);
+            console.log("Button :", this.loginButton);
 
         },
 
         bindEvents() {
 
-            if (this.form) {
+            if (!this.form) {
 
-                this.form.addEventListener(
+                console.error("❌ لم يتم العثور على النموذج.");
 
-                    "submit",
-
-                    (e) => {
-
-                        e.preventDefault();
-
-                        this.login();
-
-                    }
-
-                );
+                return;
 
             }
+
+            this.form.addEventListener(
+
+                "submit",
+
+                async (e) => {
+
+                    e.preventDefault();
+
+                    await this.login();
+
+                }
+
+            );
 
         },
 
@@ -76,187 +104,263 @@
             const remember =
                 localStorage.getItem("tera_remember");
 
-            const email =
+            const identifier =
                 localStorage.getItem("tera_identifier");
 
             if (
 
                 remember === "true" &&
 
-                email &&
-
-                this.emailInput
+                identifier
 
             ) {
 
-                this.emailInput.value = email;
+                this.emailInput.value =
+                    identifier;
 
-                if (this.rememberInput) {
-
-                    this.rememberInput.checked = true;
-
-                }
+                this.rememberInput.checked = true;
 
             }
 
         },
 
-                async login() {
+                /*
+        ==========================================================
+        تسجيل الدخول
+        ==========================================================
+        */
 
-            const email =
+        async login() {
+
+            console.log("🚀 بدء عملية تسجيل الدخول...");
+
+            const identifier =
                 this.emailInput.value.trim();
 
             const password =
                 this.passwordInput.value;
 
-            if (!email || !password) {
+            this.hideAlert();
+
+            if (!identifier) {
 
                 this.showError(
-                    "يرجى إدخال البريد الإلكتروني وكلمة المرور."
+                    "يرجى إدخال البريد الإلكتروني."
                 );
+
+                this.emailInput.focus();
+
+                return;
+
+            }
+
+            if (!password) {
+
+                this.showError(
+                    "يرجى إدخال كلمة المرور."
+                );
+
+                this.passwordInput.focus();
 
                 return;
 
             }
 
             this.setLoading(
-                this.loginButton,
+                true,
                 "جاري تسجيل الدخول..."
             );
 
             try {
 
-                const user =
-                    await TeraAuth.login(
-                        email,
-                        password
-                    );
+                console.log("📨 إرسال البيانات إلى TeraAuth...");
+
+                const user = await TeraAuth.login(
+
+                    identifier,
+
+                    password
+
+                );
+
+                console.log("✅ تم تسجيل الدخول", user);
 
                 /*
-                 * Remember Me
-                 */
+                ==============================================
+                Remember Me
+                ==============================================
+                */
 
-                if (
-                    this.rememberInput &&
-                    this.rememberInput.checked
-                ) {
+                if (this.rememberInput.checked) {
 
                     localStorage.setItem(
+
                         "tera_remember",
+
                         "true"
+
                     );
 
                     localStorage.setItem(
+
                         "tera_identifier",
-                        email
+
+                        identifier
+
                     );
 
-                } else {
+                }
+
+                else {
 
                     localStorage.removeItem(
+
                         "tera_remember"
+
                     );
 
                     localStorage.removeItem(
+
                         "tera_identifier"
+
                     );
 
                 }
 
                 this.showSuccess(
-                    `مرحباً ${user.name || "بك"}`
+
+                    "تم تسجيل الدخول بنجاح..."
+
                 );
 
                 setTimeout(() => {
 
-                    window.location.replace(
-                        "/pages/dashboard/index.html"
-                    );
+                    window.location.href =
 
-                }, 700);
+                        "/pages/dashboard/index.html";
+
+                }, 800);
 
             }
 
-            catch (err) {
+            catch (error) {
 
                 console.error(
-                    "[Login]",
-                    err
+
+                    "❌ Login Error",
+
+                    error
+
                 );
 
                 let message =
-                    err.message;
+
+                    error.message ||
+
+                    "تعذر تسجيل الدخول.";
 
                 if (
-                    err.message &&
-                    err.message.includes(
+
+                    message.includes(
+
                         "Invalid login credentials"
+
                     )
+
                 ) {
 
                     message =
+
                         "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
 
                 }
 
+                if (
+
+                    message.includes(
+
+                        "Email not confirmed"
+
+                    )
+
+                ) {
+
+                    message =
+
+                        "يرجى تفعيل البريد الإلكتروني أولاً.";
+
+                }
+
                 this.showError(
-                    message ||
-                    "تعذر تسجيل الدخول."
+
+                    message
+
                 );
 
             }
 
             finally {
 
-                this.stopLoading(
-                    this.loginButton
-                );
+                this.setLoading(false);
 
             }
 
         },
+
                 /*
         ==========================================================
-        بدء التحميل
+        حالة التحميل
         ==========================================================
         */
 
-        setLoading(button, text) {
+        setLoading(isLoading, text = "جاري المعالجة...") {
 
-            if (!button)
-                return;
+            if (!this.loginButton) return;
 
-            button.disabled = true;
+            if (isLoading) {
 
-            button.dataset.originalText =
-                button.innerHTML;
+                this.loginButton.disabled = true;
 
-            button.innerHTML = `
-                <i class="fas fa-spinner fa-spin"></i>
-                ${text}
-            `;
+                this.loginButton.dataset.originalText =
+                    this.loginButton.innerHTML;
+
+                this.loginButton.innerHTML = `
+                    <i class="fas fa-spinner fa-spin"></i>
+                    ${text}
+                `;
+
+            } else {
+
+                this.loginButton.disabled = false;
+
+                if (this.loginButton.dataset.originalText) {
+
+                    this.loginButton.innerHTML =
+                        this.loginButton.dataset.originalText;
+
+                }
+
+            }
 
         },
 
         /*
         ==========================================================
-        إنهاء التحميل
+        إخفاء الرسالة
         ==========================================================
         */
 
-        stopLoading(button) {
+        hideAlert() {
 
-            if (!button)
-                return;
+            if (!this.alertBox) return;
 
-            button.disabled = false;
+            this.alertBox.style.display = "none";
 
-            if (button.dataset.originalText) {
-
-                button.innerHTML =
-                    button.dataset.originalText;
-
-            }
+            this.alertBox.classList.remove(
+                "alert-success",
+                "alert-error",
+                "alert-warning"
+            );
 
         },
 
@@ -268,20 +372,24 @@
 
         showSuccess(message) {
 
-            if (
-                typeof showAlert === "function"
-            ) {
+            if (!this.alertBox) {
 
-                showAlert(
-                    message,
-                    "success"
-                );
+                alert(message);
 
                 return;
 
             }
 
-            alert(message);
+            this.alertBox.style.display = "flex";
+
+            this.alertBox.className =
+                "alert-box alert-success";
+
+            this.alertIcon.innerHTML =
+                '<i class="fas fa-circle-check"></i>';
+
+            this.alertMessage.textContent =
+                message;
 
         },
 
@@ -293,29 +401,69 @@
 
         showError(message) {
 
-            if (
-                typeof showAlert === "function"
-            ) {
+            if (!this.alertBox) {
 
-                showAlert(
-                    message,
-                    "error"
-                );
+                alert(message);
 
                 return;
 
             }
 
-            alert(message);
+            this.alertBox.style.display = "flex";
+
+            this.alertBox.className =
+                "alert-box alert-error";
+
+            this.alertIcon.innerHTML =
+                '<i class="fas fa-circle-exclamation"></i>';
+
+            this.alertMessage.textContent =
+                message;
 
         },
                 /*
         ==========================================================
-        تنظيف النموذج
+        إظهار / إخفاء كلمة المرور
         ==========================================================
         */
 
-        clearForm() {
+        togglePasswordVisibility() {
+
+            const checkbox =
+                document.getElementById(
+                    "show_login_password"
+                );
+
+            if (!checkbox || !this.passwordInput)
+                return;
+
+            checkbox.addEventListener(
+
+                "change",
+
+                () => {
+
+                    this.passwordInput.type =
+
+                        checkbox.checked
+
+                            ? "text"
+
+                            : "password";
+
+                }
+
+            );
+
+        },
+
+        /*
+        ==========================================================
+        إعادة تعيين النموذج
+        ==========================================================
+        */
+
+        resetForm() {
 
             if (this.passwordInput) {
 
@@ -323,25 +471,7 @@
 
             }
 
-        },
-
-        /*
-        ==========================================================
-        إعادة تعيين الصفحة
-        ==========================================================
-        */
-
-        reset() {
-
-            this.clearForm();
-
-            if (this.loginButton) {
-
-                this.stopLoading(
-                    this.loginButton
-                );
-
-            }
+            this.hideAlert();
 
         },
 
@@ -353,7 +483,9 @@
 
         destroy() {
 
-            this.reset();
+            this.resetForm();
+
+            this.form = null;
 
             this.emailInput = null;
 
@@ -363,9 +495,14 @@
 
             this.loginButton = null;
 
-            this.form = null;
+            this.alertBox = null;
+
+            this.alertMessage = null;
+
+            this.alertIcon = null;
 
         },
+
             };
 
     /*
@@ -387,3 +524,4 @@
     );
 
 })();
+        
