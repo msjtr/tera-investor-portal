@@ -3,6 +3,7 @@
  * ======================================================
  * يعتمد على: supabase-client.js, auth.js
  * متوافق مع: login.html (login_identifier, login_password, teraLoginForm)
+ * يرسل رمز OTP عبر قالب Magic Link / Email OTP
  */
 (function () {
     'use strict';
@@ -121,13 +122,12 @@
             }
 
             console.log('📧 البريد المستخدم لتسجيل الدخول:', email);
-            console.log('🔑 طول كلمة المرور:', password.length);
 
             disableForm(true);
             showLoader(true, 'جاري إرسال رمز التحقق...');
 
             try {
-                // 1. إرسال رمز OTP إلى البريد الإلكتروني للمستخدم
+                // إرسال رمز OTP عبر قالب Magic Link / Email OTP
                 const { error } = await supabase.auth.signInWithOtp({
                     email: email,
                     options: { shouldCreateUser: false }
@@ -135,17 +135,15 @@
 
                 if (error) throw error;
 
-                // 2. تخزين بيانات تسجيل الدخول مؤقتاً (مشفرة أو مؤقتة)
-                //    سيتم استخدامها بعد إدخال الرمز في verify-otp.html
-                localStorage.setItem('tera_verify_type', 'login_otp');
+                // تخزين بيانات الجلسة المؤقتة للتحقق
+                localStorage.setItem('tera_verify_type', 'login_otp');   // نوع العملية
                 localStorage.setItem('pendingVerificationEmail', email);
-                // تخزين كلمة المرور بشكل آمن (يمكن استخدام sessionStorage أو متغير مؤقت)
                 sessionStorage.setItem('tera_login_password', password);
 
                 showLoader(false);
                 if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم إرسال الرمز';
 
-                // 3. توجيه المستخدم إلى صفحة التحقق
+                // توجيه المستخدم إلى صفحة التحقق
                 setTimeout(() => {
                     window.location.replace('/auth/verify-otp.html');
                 }, 800);
@@ -155,15 +153,9 @@
                 showLoader(false);
 
                 let msg = 'فشل إرسال رمز التحقق.';
-                if (error.message) {
-                    if (error.message.includes('Email not found') || error.message.includes('user not found')) {
-                        msg = 'البريد الإلكتروني غير مسجل.';
-                    } else if (error.message.includes('rate limit') || error.message.includes('too many')) {
-                        msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
-                    } else {
-                        msg = error.message;
-                    }
-                }
+                if (error.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار.';
+                else if (error.message.includes('Email not found')) msg = 'البريد الإلكتروني غير مسجل.';
+                else msg = error.message;
                 showError(msg);
 
             } finally {
