@@ -1,6 +1,6 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
- * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
+ * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile | login_otp
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل من auth_register، ورسائل عربية.
  */
 (function() {
@@ -50,7 +50,7 @@
         }
         supabase = window.teraSupabase;
 
-        // ---------- ٢. تحديث اسم العميل في الهيدر (من auth_register إن لزم) ----------
+        // ---------- ٢. تحديث اسم العميل في الهيدر (من auth_register أو البريد) ----------
         async function refreshHeader() {
             const headerName = document.getElementById('headerUserName');
             const headerAvatar = document.getElementById('headerAvatar');
@@ -58,14 +58,12 @@
             let userId = null;
 
             try {
-                // محاولة جلب المستخدم من الجلسة
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
                     userId = user.id;
                     displayName = user.user_metadata?.full_name || '';
                 }
 
-                // إذا لم نجد الاسم في metadata، نبحث في auth_register
                 if (!displayName && userId) {
                     const { data: reg } = await supabase
                         .from('auth_register')
@@ -75,14 +73,11 @@
                     if (reg?.full_name) displayName = reg.full_name;
                 }
 
-                // إذا لم نجد حتى الآن، نستخدم البريد الإلكتروني (الجزء قبل @)
                 if (!displayName) {
                     const email = user?.email || localStorage.getItem('pendingVerificationEmail');
                     if (email) displayName = email.split('@')[0];
                 }
-
             } catch (e) {
-                // في حال عدم وجود جلسة، نعتمد على البريد المعلق
                 const pending = localStorage.getItem('pendingVerificationEmail');
                 if (pending) displayName = pending.split('@')[0];
             }
@@ -100,6 +95,7 @@
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
             if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
             else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
+            else if (verifyType === 'login_otp') mainMessage = 'أدخل رمز التحقق لتسجيل الدخول (8 أرقام) المرسل إلى';
             else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
             else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
             else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
@@ -115,7 +111,7 @@
         }
 
         // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
+        if (verifyType === 'login_otp' || verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
             backLink.href = '/pages/dashboard/index.html';
             backLinkText.textContent = 'العودة';
         } else {
@@ -203,7 +199,7 @@
                 else if (verifyType === 'recovery') otpType = 'recovery';
                 else if (verifyType === 'change_mobile') otpType = 'sms';
                 else if (verifyType === 'email_change') otpType = 'email_change';
-                else otpType = 'email'; // جميع الحالات المخصصة (personal_info, contact_info, ...)
+                else otpType = 'email'; // login_otp, personal_info, contact_info, ...
 
                 let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
@@ -227,6 +223,22 @@
                         window.location.replace('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
                         window.location.replace('/auth/reset-password.html');
+                    } else if (verifyType === 'login_otp') {
+                        const password = sessionStorage.getItem('tera_login_password');
+                        const email = pendingEmail;
+                        if (password && email) {
+                            try {
+                                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                                if (error) throw error;
+                                sessionStorage.removeItem('tera_login_password');
+                                window.location.replace('/pages/dashboard/index.html');
+                            } catch (err) {
+                                showAlert('فشل تسجيل الدخول. حاول مرة أخرى.', 'error');
+                                window.location.replace('/auth/auth/login/login.html');
+                            }
+                        } else {
+                            window.location.replace('/auth/auth/login/login.html');
+                        }
                     } else if (verifyType === 'change_mobile') {
                         await changeMobile(supabase);
                     } else {
@@ -279,6 +291,7 @@
                     } else if (verifyType === 'email_change') {
                         await supabase.auth.resend({ type: 'email_change', email: pendingEmail });
                     } else {
+                        // login_otp, personal_info, contact_info, ...
                         await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
