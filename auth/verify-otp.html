@@ -35,7 +35,6 @@
             min-height: 100vh;
         }
 
-        /* الهيدر العلوي */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
@@ -86,7 +85,6 @@
             flex-shrink: 0;
         }
 
-        /* عنوان الصفحة */
         .page-title-section {
             background: #0A1B3F;
             padding: 16px 30px;
@@ -133,7 +131,6 @@
             border-color: #028090;
         }
 
-        /* المحتوى */
         .content-container {
             max-width: 520px;
             margin: 40px auto;
@@ -170,6 +167,7 @@
             font-weight: 800;
             margin-bottom: 12px;
             font-size: 24px;
+            text-align: center;
         }
 
         .instruction-wrapper {
@@ -201,6 +199,24 @@
             margin-top: 8px;
         }
 
+        .alert-box {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 14px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-box.show {
+            display: flex;
+        }
+
         .otp-input {
             width: 100%;
             padding: 16px 18px;
@@ -215,7 +231,7 @@
             transition: 0.25s;
             caret-color: var(--tera-teal);
             font-family: 'Tajawal', sans-serif;
-            margin-bottom: 24px;
+            margin-bottom: 8px;
         }
 
         .otp-input:focus {
@@ -223,6 +239,13 @@
             box-shadow: 0 0 0 4px rgba(2,128,144,0.10);
             background: #f0fdfa;
             outline: none;
+        }
+
+        .error-feedback-msg {
+            color: #dc2626;
+            font-size: 13px;
+            min-height: 20px;
+            margin-bottom: 16px;
         }
 
         .btn-submit-login {
@@ -309,76 +332,24 @@
             margin-top: auto;
         }
 
-        /* تحسينات خاصة للجوال */
         @media (max-width: 576px) {
-            .focused-header {
-                padding: 8px 16px;
-            }
-            .focused-header .logo img {
-                height: 36px;
-            }
-            .header-client-info h5 {
-                font-size: 13px;
-            }
-            .header-client-info .avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
-            }
-            .page-title-section {
-                padding: 14px 16px;
-            }
-            .page-title-section h1 {
-                font-size: 19px;
-            }
-            .content-container {
-                padding: 0 12px;
-                margin: 20px auto;
-            }
-            .auth-card {
-                padding: 24px 16px 20px 16px;
-                border-radius: 20px;
-            }
-            .otp-icon-circle {
-                width: 64px;
-                height: 64px;
-                font-size: 28px;
-                margin-bottom: 20px;
-            }
-            .portal-title {
-                font-size: 20px;
-                margin-bottom: 8px;
-            }
-            .instruction-wrapper {
-                padding: 12px;
-                margin-bottom: 20px;
-            }
-            #instructionMainText {
-                font-size: 14px;
-            }
-            #instructionEmailText {
-                font-size: 14px;
-                padding: 4px 8px;
-            }
-            .otp-input {
-                font-size: 20px;
-                letter-spacing: 8px;
-                padding: 14px 12px;
-                margin-bottom: 20px;
-            }
-            .btn-submit-login {
-                padding: 13px 18px;
-                font-size: 15px;
-                margin-bottom: 24px;
-            }
-            .timer-container {
-                font-size: 14px;
-                margin-bottom: 16px;
-            }
-            .resend-link {
-                font-size: 14px;
-                padding: 6px 12px;
-            }
+            .focused-header { padding: 8px 16px; }
+            .focused-header .logo img { height: 36px; }
+            .header-client-info h5 { font-size: 13px; }
+            .header-client-info .avatar { width: 32px; height: 32px; font-size: 14px; }
+            .page-title-section { padding: 14px 16px; }
+            .page-title-section h1 { font-size: 19px; }
+            .content-container { padding: 0 12px; margin: 20px auto; }
+            .auth-card { padding: 24px 16px 20px 16px; border-radius: 20px; }
+            .otp-icon-circle { width: 64px; height: 64px; font-size: 28px; margin-bottom: 20px; }
+            .portal-title { font-size: 20px; margin-bottom: 8px; }
+            .instruction-wrapper { padding: 12px; margin-bottom: 20px; }
+            #instructionMainText { font-size: 14px; }
+            #instructionEmailText { font-size: 14px; padding: 4px 8px; }
+            .otp-input { font-size: 20px; letter-spacing: 8px; padding: 14px 12px; margin-bottom: 8px; }
+            .btn-submit-login { padding: 13px 18px; font-size: 15px; margin-bottom: 24px; }
+            .timer-container { font-size: 14px; margin-bottom: 16px; }
+            .resend-link { font-size: 14px; padding: 6px 12px; }
         }
     </style>
 </head>
@@ -419,13 +390,14 @@
                 <span id="instructionEmailText">example@domain.com</span>
             </div>
 
-            <div class="alert-box" id="formAlert" style="display: none;">
-                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
+            <!-- صندوق التنبيهات -->
+            <div id="formAlert" class="alert-box">
+                <span id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span id="alertMessage"></span>
             </div>
 
             <form id="otpForm" novalidate>
-                <input type="text" id="otp" class="form-input-control otp-input" maxlength="8"
+                <input type="text" id="otp" class="otp-input" maxlength="8"
                        placeholder="00000000" autocomplete="one-time-code" inputmode="numeric" required>
                 <div class="error-feedback-msg" id="otp-error"></div>
 
@@ -436,7 +408,7 @@
 
             <div class="timer-container" id="timerContainer">
                 <span>يمكنك إعادة الإرسال بعد </span>
-                <span id="timerDisplay">01:00</span>
+                <span id="timerDisplay">05:00</span>
             </div>
 
             <div class="text-center">
@@ -452,7 +424,7 @@
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- ملفات الجافاسكريبت الأساسية فقط -->
+    <!-- ملفات الجافاسكريبت الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
