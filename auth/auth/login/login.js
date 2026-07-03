@@ -1,122 +1,389 @@
 /**
- * ============================================================
- * login.js - معالجة تسجيل الدخول عبر Supabase (النسخة المؤسسية)
- * ============================================================
- * - يعتمد على TeraAuth.login للاتصال الفعلي بخوادم Supabase.
- * - يستخدم المسارات المطلقة (Absolute Paths) حصراً للتوجيه.
- * - يتضمن فحص الجلسة، عرض اللودر، ومعالجة رسائل الخطأ من السيرفر.
- * - جاهز للإنتاج بالكامل، بدون أي محاكاة أو بيانات وهمية.
+ * ==========================================================
+ * login.js
+ * صفحة تسجيل الدخول
+ * Enterprise Version 2026
+ * ==========================================================
  */
-document.addEventListener('DOMContentLoaded', function() {
-    'use strict';
 
-    // ---------- عناصر الصفحة ----------
-    const form = document.getElementById('teraLoginForm');
-    const alertBox = document.getElementById('formAlert');
-    const alertIcon = document.getElementById('alertIcon');
-    const alertMessage = document.getElementById('alertMessage');
-    const loaderOverlay = document.getElementById('creativeLoaderScreen');
-    const submitBtn = document.getElementById('loginSubmitBtn');
-    const showPasswordCheckbox = document.getElementById('show_login_password');
-    const passwordInput = document.getElementById('login_password');
+'use strict';
 
-    if (!form) return;
+(function () {
 
-    // ---------- ١. فحص الجلسة الحالية ----------
-    if (window.TeraAuth && window.TeraAuth.isLoggedIn()) {
-        // المستخدم مسجل دخول مسبقاً -> توجيه فوري للوحة التحكم باستخدام مسار مطلق
-        window.location.replace('/pages/dashboard/index.html');
-        return; // إيقاف التنفيذ
-    }
+    const LoginPage = {
 
-    // ---------- ٢. تأمين الصفحة (منع حلقات التوجيه) ----------
-    if (window.TeraAuth) {
-        window.TeraAuth.disableAutoRedirect();
-        window.TeraAuth.blockCheck();
-        console.log('🔒 [Login] تم تأمين صفحة الدخول');
-    }
+        emailInput: null,
+        passwordInput: null,
+        rememberInput: null,
+        loginButton: null,
+        form: null,
 
-    // ---------- ٣. تفعيل إظهار/إخفاء كلمة المرور ----------
-    if (showPasswordCheckbox && passwordInput) {
-        showPasswordCheckbox.addEventListener('change', function() {
-            passwordInput.type = this.checked ? 'text' : 'password';
-        });
-    }
+        init() {
 
-    // ---------- ٤. معالجة تقديم النموذج ----------
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
+            console.log("🔐 Login Page Initializing...");
 
-        // إخفاء أي خطأ سابق
-        if (alertBox) alertBox.style.display = 'none';
+            this.cacheDom();
 
-        // جلب البيانات
-        const email = document.getElementById('login_identifier').value.trim();
-        const password = passwordInput ? passwordInput.value : '';
+            this.bindEvents();
 
-        if (!email || !password) {
-            showError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
-            return;
-        }
+            this.restoreRememberedAccount();
 
-        // إظهار اللودر
-        showLoader(true);
-        if (submitBtn) submitBtn.disabled = true;
+        },
 
-        try {
-            if (!window.TeraAuth) {
-                throw new Error('نظام المصادقة غير جاهز، أعد تحميل الصفحة.');
+        cacheDom() {
+
+            this.form =
+                document.getElementById("loginForm");
+
+            this.emailInput =
+                document.getElementById("email");
+
+            this.passwordInput =
+                document.getElementById("password");
+
+            this.rememberInput =
+                document.getElementById("rememberMe");
+
+            this.loginButton =
+                document.getElementById("loginBtn");
+
+        },
+
+        bindEvents() {
+
+            if (this.form) {
+
+                this.form.addEventListener(
+
+                    "submit",
+
+                    (e) => {
+
+                        e.preventDefault();
+
+                        this.login();
+
+                    }
+
+                );
+
             }
 
-            // الاتصال الحقيقي بخادم Supabase
-            const user = await window.TeraAuth.login(email, password);
-            console.log('✅ [Login] تم تسجيل الدخول بنجاح:', user);
+        },
 
-            // التوجيه المباشر بالمسار المطلق إلى لوحة التحكم
-            window.location.replace('/pages/dashboard/index.html');
-            
-        } catch (error) {
-            console.error('❌ [Login] فشل تسجيل الدخول:', error);
-            
-            let message = 'بيانات الدخول غير صحيحة';
-            if (error.message.includes('Invalid login credentials')) {
-                message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة. تأكد من صحة البيانات.';
-            } else if (error.message.includes('Email not confirmed')) {
-                message = 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
-            } else {
-                message = error.message || message;
+        restoreRememberedAccount() {
+
+            const remember =
+                localStorage.getItem("tera_remember");
+
+            const email =
+                localStorage.getItem("tera_identifier");
+
+            if (
+
+                remember === "true" &&
+
+                email &&
+
+                this.emailInput
+
+            ) {
+
+                this.emailInput.value = email;
+
+                if (this.rememberInput) {
+
+                    this.rememberInput.checked = true;
+
+                }
+
             }
-            
-            showError(message);
-        } finally {
-            showLoader(false);
-            if (submitBtn) submitBtn.disabled = false;
-        }
-    });
 
-    // ---------- دوال مساعدة ----------
-    function showLoader(show) {
-        if (loaderOverlay) loaderOverlay.style.display = show ? 'flex' : 'none';
-        // محاكاة شريط التقدم للواجهة فقط (تأثير بصري وليس عملية حقيقية)
-        const progressBar = document.getElementById('progressFillBar');
-        if (show && progressBar) {
-            progressBar.style.width = '0%';
-            setTimeout(() => { progressBar.style.width = '70%'; }, 500);
-            setTimeout(() => { progressBar.style.width = '90%'; }, 1500);
-        } else if (progressBar) {
-            progressBar.style.width = '0%';
-        }
-    }
+        },
 
-    function showError(message) {
-        if (alertBox && alertMessage) {
-            // استخدام صندوق التنبيهات الموحد (alert-box) بدلاً من Error Summary القديم
-            alertMessage.textContent = message;
-            if (alertIcon) {
-                alertIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                async login() {
+
+            const email =
+                this.emailInput.value.trim();
+
+            const password =
+                this.passwordInput.value;
+
+            if (!email || !password) {
+
+                this.showError(
+                    "يرجى إدخال البريد الإلكتروني وكلمة المرور."
+                );
+
+                return;
+
             }
-            alertBox.style.display = 'flex';
-            alertBox.className = 'alert-box show error';
+
+            this.setLoading(
+                this.loginButton,
+                "جاري تسجيل الدخول..."
+            );
+
+            try {
+
+                const user =
+                    await TeraAuth.login(
+                        email,
+                        password
+                    );
+
+                /*
+                 * Remember Me
+                 */
+
+                if (
+                    this.rememberInput &&
+                    this.rememberInput.checked
+                ) {
+
+                    localStorage.setItem(
+                        "tera_remember",
+                        "true"
+                    );
+
+                    localStorage.setItem(
+                        "tera_identifier",
+                        email
+                    );
+
+                } else {
+
+                    localStorage.removeItem(
+                        "tera_remember"
+                    );
+
+                    localStorage.removeItem(
+                        "tera_identifier"
+                    );
+
+                }
+
+                this.showSuccess(
+                    `مرحباً ${user.name || "بك"}`
+                );
+
+                setTimeout(() => {
+
+                    window.location.replace(
+                        "/pages/dashboard/index.html"
+                    );
+
+                }, 700);
+
+            }
+
+            catch (err) {
+
+                console.error(
+                    "[Login]",
+                    err
+                );
+
+                let message =
+                    err.message;
+
+                if (
+                    err.message &&
+                    err.message.includes(
+                        "Invalid login credentials"
+                    )
+                ) {
+
+                    message =
+                        "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+
+                }
+
+                this.showError(
+                    message ||
+                    "تعذر تسجيل الدخول."
+                );
+
+            }
+
+            finally {
+
+                this.stopLoading(
+                    this.loginButton
+                );
+
+            }
+
+        },
+                /*
+        ==========================================================
+        بدء التحميل
+        ==========================================================
+        */
+
+        setLoading(button, text) {
+
+            if (!button)
+                return;
+
+            button.disabled = true;
+
+            button.dataset.originalText =
+                button.innerHTML;
+
+            button.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                ${text}
+            `;
+
+        },
+
+        /*
+        ==========================================================
+        إنهاء التحميل
+        ==========================================================
+        */
+
+        stopLoading(button) {
+
+            if (!button)
+                return;
+
+            button.disabled = false;
+
+            if (button.dataset.originalText) {
+
+                button.innerHTML =
+                    button.dataset.originalText;
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        رسالة نجاح
+        ==========================================================
+        */
+
+        showSuccess(message) {
+
+            if (
+                typeof showAlert === "function"
+            ) {
+
+                showAlert(
+                    message,
+                    "success"
+                );
+
+                return;
+
+            }
+
+            alert(message);
+
+        },
+
+        /*
+        ==========================================================
+        رسالة خطأ
+        ==========================================================
+        */
+
+        showError(message) {
+
+            if (
+                typeof showAlert === "function"
+            ) {
+
+                showAlert(
+                    message,
+                    "error"
+                );
+
+                return;
+
+            }
+
+            alert(message);
+
+        },
+                /*
+        ==========================================================
+        تنظيف النموذج
+        ==========================================================
+        */
+
+        clearForm() {
+
+            if (this.passwordInput) {
+
+                this.passwordInput.value = "";
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        إعادة تعيين الصفحة
+        ==========================================================
+        */
+
+        reset() {
+
+            this.clearForm();
+
+            if (this.loginButton) {
+
+                this.stopLoading(
+                    this.loginButton
+                );
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        تنظيف الموارد
+        ==========================================================
+        */
+
+        destroy() {
+
+            this.reset();
+
+            this.emailInput = null;
+
+            this.passwordInput = null;
+
+            this.rememberInput = null;
+
+            this.loginButton = null;
+
+            this.form = null;
+
+        },
+            };
+
+    /*
+    ==========================================================
+    تشغيل الصفحة
+    ==========================================================
+    */
+
+    document.addEventListener(
+
+        "DOMContentLoaded",
+
+        () => {
+
+            LoginPage.init();
+
         }
-    }
-});
+
+    );
+
+})();
