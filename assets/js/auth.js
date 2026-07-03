@@ -1,491 +1,161 @@
 /**
  * ==========================================================
- * Tera Investor Portal
- * Enterprise Authentication Engine
- * Version 2.0
- * يعتمد على Supabase JS v2
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise)
  * ==========================================================
+ * - يعتمد على window.teraSupabase من supabase-client.js
+ * - يوفر كائن TeraAuth مع دوال: login, logout, getUser, ...
+ * - يستمع لتغيرات حالة المصادقة (onAuthStateChange)
+ * - يُؤمّن الصفحات ويُحدّث واجهة المستخدم تلقائياً
+ * - متوافق مع verify-otp.js وباقي ملفات النظام
  */
 
-'use strict';
-
-if (window.TeraAuth) {
-    console.log('✅ [Auth] المحرك محمل مسبقاً.');
-} else {
-
 (function () {
+    'use strict';
 
-    const LOGIN_PAGE = '/auth/auth/login/login.html';
-    const DASHBOARD_PAGE = '/pages/dashboard/index.html';
+    // ========== انتظار Supabase ==========
+    async function waitForSupabase() {
+        if (window.teraSupabase) return window.teraSupabase;
 
-    const TeraAuth = {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
+            document.addEventListener('supabase:ready', (e) => {
+                clearTimeout(timeout);
+                resolve(e.detail.client);
+            }, { once: true });
+            document.addEventListener('supabase:error', () => {
+                clearTimeout(timeout);
+                reject(new Error('Supabase error'));
+            }, { once: true });
+        });
+    }
 
-        supabase: null,
-
-        initialized: false,
-
-        /**
-         * انتظار جاهزية Supabase
-         */
-        async init() {
-
-            if (this.initialized) return;
-
-            this.supabase = await waitForSupabase();
-
-            this.initialized = true;
-
-            console.log('✅ [Auth] تمت تهيئة محرك المصادقة.');
-
-            this.listenAuth();
-
-        },
-
-        /**
-         * الصفحة الحالية
-         */
-        currentPath() {
-
-            return window.location.pathname;
-
-        },
+    // ========== كائن TeraAuth العام ==========
+    window.TeraAuth = {
+        _client: null,
+        _session: null,
+        _user: null,
+        _initialized: false,
 
         /**
-         * هل الصفحة صفحة تسجيل؟
+         * تهيئة المدير
          */
-        isLoginPage() {
+        init: async function () {
+            if (this._initialized) return;
+            this._initialized = true;
 
-            return this.currentPath().includes('/auth/');
-
-        },
-
-        /**
-         * هل الصفحة محمية؟
-         */
-        isProtectedPage() {
-
-            return this.currentPath().includes('/pages/');
-
-        },
-
-        /**
-         * تحويل آمن
-         */
-        redirect(url) {
-
-            if (window.location.pathname === url)
-                return;
-
-            window.location.replace(url);
-
-        },
-
-        /**
-         * الحصول على الجلسة الحالية
-         */
-        async getSession() {
-
-            const {
-
-                data,
-                error
-
-            } = await this.supabase.auth.getSession();
-
-            if (error)
-                return null;
-
-            return data.session;
-
-        },
-
-        /**
-         * الحصول على المستخدم الحالي
-         */
-        async getUser() {
-
-            const session = await this.getSession();
-
-            if (!session)
-                return null;
-
-            return session.user;
-
-        },
-
-        /**
-         * هل المستخدم مسجل؟
-         */
-        async isLoggedIn() {
-
-            return !!(await this.getSession());
-
-        },
-
-        /**
-         * فحص صلاحية الصفحة
-         */
-        async checkProtection() {
-
-            const logged = await this.isLoggedIn();
-
-            if (!logged && this.isProtectedPage()) {
-
-                console.warn(
-                    '🔐 صفحة محمية بدون جلسة.'
-                );
-
-                this.redirect(LOGIN_PAGE);
-
-                return;
-
-            }
-
-            if (logged && this.isLoginPage()) {
-
-                console.log(
-                    '🚀 المستخدم مسجل مسبقاً.'
-                );
-
-                this.redirect(DASHBOARD_PAGE);
-
-                return;
-
-            }
-
-            console.log(
-                '✅ [Auth] الجلسة سليمة.'
-            );
-
-        },
-
-                /**
-         * ==========================================
-         * تسجيل الدخول
-         * ==========================================
-         */
-        async login(email, password) {
-
-            const { data, error } =
-                await this.supabase.auth.signInWithPassword({
-
-                    email: email.trim(),
-
-                    password: password
-
-                });
-
-            if (error) {
-
-                console.error(
-                    '❌ فشل تسجيل الدخول',
-                    error
-                );
-
-                throw error;
-
-            }
-
-            console.log(
-                '✅ تم تسجيل الدخول',
-                data.user.email
-            );
-
-            // تسجيل سجل الدخول (اختياري)
             try {
-
-                await this.supabase
-                    .from('auth_login')
-                    .insert({
-
-                        user_id: data.user.id,
-
-                        email: data.user.email,
-
-                        login_status: 'success',
-
-                        browser: navigator.userAgent,
-
-                        operating_system: navigator.platform
-
-                    });
-
-            } catch (e) {
-
-                console.warn(
-                    '⚠️ تعذر تسجيل سجل الدخول',
-                    e
-                );
-
+                this._client = await waitForSupabase();
+            } catch (err) {
+                console.warn('⚠️ [Auth] تعذر الاتصال بـ Supabase.');
+                return;
             }
 
-            return data.user;
+            // استمع لتغيرات المصادقة
+            const { data: { subscription } } = this._client.auth.onAuthStateChange(
+                (event, session) => {
+                    console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
+                    this._session = session;
+                    this._user = session?.user ?? null;
 
-        },
+                    // تحديث واجهة المستخدم (إن وُجدت)
+                    this._updateUI();
 
-        /**
-         * ==========================================
-         * تسجيل الخروج
-         * ==========================================
-         */
-        async logout() {
-
-            await this.supabase.auth.signOut();
-
-            console.log(
-                '🚪 تم تسجيل الخروج'
+                    // إذا تم تسجيل الدخول، يمكن إطلاق حدث مخصص
+                    document.dispatchEvent(new CustomEvent('auth:stateChanged', {
+                        detail: { event, session, user: this._user }
+                    }));
+                }
             );
 
-            this.redirect(LOGIN_PAGE);
+            // جلب الجلسة الحالية عند التحميل
+            const { data: { session } } = await this._client.auth.getSession();
+            this._session = session;
+            this._user = session?.user ?? null;
 
+            console.log('🔒 [Auth] تم تأمين الواجهة');
         },
 
         /**
-         * ==========================================
-         * المستخدم الحالي
-         * ==========================================
+         * هل المستخدم مسجل الدخول؟
          */
-        async currentUser() {
-
-            const user =
-                await this.getUser();
-
-            if (!user)
-                return null;
-
-            return {
-
-                id: user.id,
-
-                email: user.email,
-
-                name:
-                    user.user_metadata?.full_name ??
-                    'مستخدم',
-
-                role:
-                    user.user_metadata?.role ??
-                    'user',
-
-                mobile:
-                    user.user_metadata?.mobile_number ??
-                    null
-
-            };
-
+        isLoggedIn: function () {
+            return !!this._session;
         },
 
         /**
-         * ==========================================
-         * تحديث بيانات المستخدم
-         * ==========================================
+         * تسجيل الدخول بالبريد وكلمة المرور
          */
-        async refreshUser() {
-
-            const {
-
-                data,
-
-                error
-
-            } =
-            await this.supabase.auth.getUser();
-
-            if (error)
-                return null;
-
-            return data.user;
-
-        },
-
-        /**
-         * ==========================================
-         * تغيير كلمة المرور
-         * ==========================================
-         */
-        async updatePassword(password) {
-
-            const {
-
-                error
-
-            } =
-            await this.supabase.auth.updateUser({
-
+        login: async function (email, password) {
+            if (!this._client) throw new Error('Supabase غير متوفر');
+            const { data, error } = await this._client.auth.signInWithPassword({
+                email,
                 password
-
             });
-
-            if (error)
-                throw error;
-
-            return true;
-
+            if (error) throw error;
+            this._session = data.session;
+            this._user = data.user;
+            return data;
         },
 
         /**
-         * ==========================================
-         * تغيير البريد (الطريقة الرسمية)
-         * ==========================================
+         * تسجيل الخروج
          */
-        async updateEmail(email) {
-
-            const {
-
-                error
-
-            } =
-            await this.supabase.auth.updateUser({
-
-                email
-
-            });
-
-            if (error)
-                throw error;
-
-            return true;
-
-        },
-
-                /**
-         * ==========================================
-         * مراقبة تغير حالة المصادقة
-         * ==========================================
-         */
-        listenAuth() {
-
-            this.supabase.auth.onAuthStateChange(async (event, session) => {
-
-                console.log(`🔁 [Auth] ${event}`);
-
-                switch (event) {
-
-                    case 'INITIAL_SESSION':
-                        await this.checkProtection();
-                        break;
-
-                    case 'SIGNED_IN':
-                        console.log('✅ تم تسجيل الدخول');
-                        break;
-
-                    case 'SIGNED_OUT':
-                        console.log('🚪 تم تسجيل الخروج');
-
-                        if (this.isProtectedPage()) {
-                            this.redirect(LOGIN_PAGE);
-                        }
-
-                        break;
-
-                    case 'TOKEN_REFRESHED':
-                        console.log('🔄 تم تحديث الجلسة');
-                        break;
-
-                    case 'USER_UPDATED':
-                        console.log('👤 تم تحديث المستخدم');
-                        break;
-                }
-
-            });
-
+        logout: async function () {
+            if (!this._client) return;
+            await this._client.auth.signOut();
+            this._session = null;
+            this._user = null;
+            window.location.replace('/auth/auth/login/login.html');
         },
 
         /**
-         * ==========================================
-         * إظهار / إخفاء كلمة المرور
-         * ==========================================
+         * إعادة توجيه إلى صفحة
          */
-        initPasswordToggle() {
+        redirectTo: function (url) {
+            window.location.replace(url);
+        },
 
-            document.addEventListener('click', function (e) {
+        /**
+         * جلب المستخدم الحالي
+         */
+        getUser: async function () {
+            if (!this._client) return null;
+            const { data: { user } } = await this._client.auth.getUser();
+            this._user = user;
+            return user;
+        },
 
-                const btn = e.target.closest(
-                    '.password-toggle,.toggle-password,.show-password-btn'
-                );
+        /**
+         * جلب الجلسة الحالية
+         */
+        getSession: async function () {
+            if (!this._client) return null;
+            const { data: { session } } = await this._client.auth.getSession();
+            this._session = session;
+            return session;
+        },
 
-                if (!btn) return;
+        /**
+         * تحديث واجهة المستخدم (اسم العميل، الصورة الرمزية)
+         */
+        _updateUI: function () {
+            const user = this._user;
+            if (!user) return;
 
-                const wrapper = btn.closest(
-                    '.password-wrapper,.input-group,.form-group,.input-wrapper'
-                );
+            const fullName = user.user_metadata?.full_name || user.email || 'مستخدم';
+            const headerName = document.getElementById('headerUserName');
+            const headerAvatar = document.getElementById('headerAvatar');
 
-                if (!wrapper) return;
-
-                const input = wrapper.querySelector('input');
-
-                if (!input) return;
-
-                const visible = input.type === 'password';
-
-                input.type = visible ? 'text' : 'password';
-
-                const icon = btn.querySelector('i');
-
-                if (icon) {
-                    icon.className = visible
-                        ? 'fa-solid fa-eye-slash'
-                        : 'fa-solid fa-eye';
-                }
-
-            });
-
+            if (headerName) headerName.textContent = fullName;
+            if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
         }
-
     };
 
-    /**
-     * ==========================================
-     * Bootstrap
-     * ==========================================
-     */
-
-    async function bootstrap() {
-
-        try {
-
-            await TeraAuth.init();
-
-            await TeraAuth.checkProtection();
-
-            TeraAuth.initPasswordToggle();
-
-            console.log('✅ [Auth] Enterprise Engine Ready');
-
-        } catch (err) {
-
-            console.error('❌ [Auth]', err);
-
+    // ========== بدء التهيئة تلقائياً ==========
+    document.addEventListener('DOMContentLoaded', function () {
+        // لا نُهيئ إذا كنا في صفحة تسجيل الدخول أو صفحات لا تحتاج Auth (اختياري)
+        if (!window.location.pathname.includes('/auth/auth/login/')) {
+            window.TeraAuth.init();
         }
-
-    }
-
-    if (document.readyState === 'loading') {
-
-        document.addEventListener(
-            'DOMContentLoaded',
-            bootstrap
-        );
-
-    } else {
-
-        bootstrap();
-
-    }
-
-    window.TeraAuth = TeraAuth;
-
-    window.isUserLoggedIn = async function () {
-
-        return await TeraAuth.isLoggedIn();
-
-    };
-
-    window.getCurrentUser = async function () {
-
-        return await TeraAuth.currentUser();
-
-    };
-
+    });
 })();
-}
