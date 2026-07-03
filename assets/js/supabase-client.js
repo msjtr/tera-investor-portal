@@ -1,106 +1,175 @@
 /**
- * ============================================================
- * supabase-client.js - محرك الاتصال المركزي بـ Supabase (Enterprise v3.1)
- * ============================================================
- * - يُهيئ عميل Supabase ويُخزنه في window.teraSupabase
- * - يُطلق حدث "supabase:ready" عند الجهوزية
- * - يوفر دالة window.getTeraSupabase() لضمان جلب العميل بأمان
- * - يتضمن مفاتيح الوصول والربط المباشر مع خوادم المنصة
- * - يحدد schema: 'public' بشكل افتراضي لجميع الاستعلامات
+ * ==========================================================
+ * Tera Investor Portal
+ * Supabase Client
+ * Version: 2.0
+ * ==========================================================
  */
-(function() {
+
+(function () {
     'use strict';
 
-    // ========== بيانات مشروع Supabase ==========
-    const PROJECT_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjbXphdnJzZ2tmcHlwZ2V3cGJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODkxMDUsImV4cCI6MjA5ODA2NTEwNX0.TzbZvdRnPuDyL5LVmSBLQYpYe7DgSJNtehKz5kE9uzc';
-    
-    // مفتاح النشر السري المعتمد
-    const PUBLISHABLE_SECRET = 'sb_publishable_QYc4AcGWtJGxalINA_UGZw_fjfVbGqg';
+    // منع إنشاء العميل أكثر من مرة
+    if (window.teraSupabase) {
+        console.log('✅ [supabase-client] العميل موجود مسبقاً.');
+        return;
+    }
 
-    // منع تكرار التهيئة إذا تم استدعاء الملف أكثر من مرة
-    if (window.teraSupabase) return;
+    // بيانات المشروع
+    const SUPABASE_URL =
+        'https://ucmzavrsgkfpypgewpbd.supabase.co';
 
-    let isInitializing = false;
+    const SUPABASE_KEY =
+        'sb_publishable_QYc4AcGWtJGxalINA_UGZw_fjfVbGqg';
 
     /**
-     * دالة مساعدة لضمان الحصول على العميل (Client) بشكل آمن من أي ملف آخر
+     * انتظار تحميل مكتبة Supabase
      */
-    window.getTeraSupabase = function() {
+    function waitForLibrary(timeout = 10000) {
+
         return new Promise((resolve, reject) => {
+
+            if (
+                window.supabase &&
+                typeof window.supabase.createClient === 'function'
+            ) {
+                return resolve();
+            }
+
+            const start = Date.now();
+
+            const timer = setInterval(() => {
+
+                if (
+                    window.supabase &&
+                    typeof window.supabase.createClient === 'function'
+                ) {
+                    clearInterval(timer);
+                    resolve();
+                    return;
+                }
+
+                if (Date.now() - start > timeout) {
+                    clearInterval(timer);
+                    reject(new Error('Supabase JS Library timeout.'));
+                }
+
+            }, 100);
+
+        });
+
+    }
+
+    /**
+     * إنشاء العميل
+     */
+    async function initSupabase() {
+
+        try {
+
+            await waitForLibrary();
+
+            const client = window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY,
+                {
+
+                    auth: {
+
+                        autoRefreshToken: true,
+
+                        persistSession: true,
+
+                        detectSessionInUrl: true,
+
+                        flowType: 'pkce'
+
+                    }
+
+                }
+            );
+
+            window.teraSupabase = client;
+
+            console.log('✅ [supabase-client] تم إنشاء العميل بنجاح.');
+
+            document.dispatchEvent(
+                new CustomEvent('supabase:ready', {
+                    detail: {
+                        client
+                    }
+                })
+            );
+
+        } catch (error) {
+
+            console.error(
+                '❌ [supabase-client]',
+                error
+            );
+
+            document.dispatchEvent(
+                new CustomEvent('supabase:error', {
+                    detail: error
+                })
+            );
+
+        }
+
+    }
+
+    /**
+     * انتظار جاهزية العميل
+     */
+    window.waitForSupabase = function (timeout = 10000) {
+
+        return new Promise((resolve, reject) => {
+
             if (window.teraSupabase) {
                 resolve(window.teraSupabase);
                 return;
             }
 
-            const onReady = (e) => {
-                document.removeEventListener('supabase:ready', onReady);
-                document.removeEventListener('supabase:error', onError);
-                resolve(e.detail.client);
-            };
+            const timer = setTimeout(() => {
 
-            const onError = () => {
-                document.removeEventListener('supabase:ready', onReady);
-                document.removeEventListener('supabase:error', onError);
-                reject(new Error('فشل تهيئة Supabase'));
-            };
+                reject(
+                    new Error('Supabase initialization timeout.')
+                );
 
-            document.addEventListener('supabase:ready', onReady);
-            document.addEventListener('supabase:error', onError);
+            }, timeout);
+
+            document.addEventListener(
+                'supabase:ready',
+                function (event) {
+
+                    clearTimeout(timer);
+
+                    resolve(event.detail.client);
+
+                },
+                {
+                    once: true
+                }
+            );
+
+            document.addEventListener(
+                'supabase:error',
+                function (event) {
+
+                    clearTimeout(timer);
+
+                    reject(event.detail);
+
+                },
+                {
+                    once: true
+                }
+            );
+
         });
+
     };
 
-    /**
-     * إنشاء العميل وتخزينه في النطاق العام، ثم إطلاق حدث الجاهزية
-     */
-    function createClientAndNotify() {
-        window.teraSupabase = window.supabase.createClient(PROJECT_URL, ANON_KEY, {
-            db: {
-                schema: 'public'  // يضمن استهداف سكيما public تلقائياً
-            },
-            global: {
-                headers: {
-                    'x-publishable-key': PUBLISHABLE_SECRET
-                }
-            }
-        });
-        
-        console.log('✅ [supabase-client] تم تهيئة العميل المركزي بنجاح.');
+    initSupabase();
 
-        document.dispatchEvent(new CustomEvent('supabase:ready', {
-            detail: { client: window.teraSupabase }
-        }));
-    }
-
-    /**
-     * محاولة تحميل المكتبة من رابط احتياطي في حالة فشل تحميلها من HTML
-     */
-    function loadFallbackLibrary() {
-        if (isInitializing) return;
-        isInitializing = true;
-
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-        script.onload = () => {
-            if (window.supabase && typeof window.supabase.createClient === 'function') {
-                createClientAndNotify();
-            } else {
-                console.error('❌ [supabase-client] تم تحميل المكتبة الاحتياطية ولكن دون وظيفة createClient');
-                document.dispatchEvent(new CustomEvent('supabase:error'));
-            }
-        };
-        script.onerror = () => {
-            console.error('❌ [supabase-client] فشل تحميل المكتبة الاحتياطية');
-            document.dispatchEvent(new CustomEvent('supabase:error'));
-        };
-        document.head.appendChild(script);
-    }
-
-    // ========== المنطق الرئيسي ==========
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-        createClientAndNotify();
-    } else {
-        console.warn('⚠️ [supabase-client] مكتبة Supabase غير موجودة. جاري تحميل النسخة الاحتياطية...');
-        loadFallbackLibrary();
-    }
 })();
