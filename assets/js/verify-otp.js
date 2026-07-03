@@ -1,401 +1,727 @@
 /**
  * ==========================================================
  * verify-otp.js
- * مركز التحقق الموحد (OTP Center)
- * Enterprise Version 2026
- * ==========================================================
+ * OTP Center Enterprise
  * يدعم:
- * - Confirm Sign Up
- * - Magic Link / Email OTP
- * - Reset Password
- * - Change Email
- * - Change Mobile (مستقبلاً)
- * - Two Factor (مستقبلاً)
+ * signup
+ * recovery
+ * personal_info
+ * contact_info
+ * national_address
+ * bank_info
+ * attachments
+ * change_mobile
  * ==========================================================
  */
 
-"use strict";
-
 (function () {
 
-    const VerifyOTP = {
+    'use strict';
 
-        supabase: null,
+    document.addEventListener('DOMContentLoaded', async function () {
 
-        otpType: null,
+        const form = document.getElementById('otpForm');
 
-        email: null,
+        const otpInput = document.getElementById('otp');
 
-        redirect: null,
+        const submitBtn = document.getElementById('submitBtn');
 
-        title: null,
+        const resendBtn = document.getElementById('resendCode');
 
-        message: null,
+        const timerDisplay = document.getElementById('timerDisplay');
 
-        countdown: 60,
+        const timerContainer = document.getElementById('timerContainer');
 
-        timer: null,
+        const otpError = document.getElementById('otp-error');
 
-        form: null,
+        const alertBox = document.getElementById('formAlert');
 
-        otpInput: null,
+        const alertIcon = document.getElementById('alertIcon');
 
-        verifyButton: null,
+        const alertMessage = document.getElementById('alertMessage');
 
-        resendButton: null,
+        const instructionMainText =
+            document.getElementById('instructionMainText');
 
-        countdownLabel: null,
+        const instructionEmailText =
+            document.getElementById('instructionEmailText');
 
-        titleElement: null,
+        const loaderOverlay =
+            document.getElementById('creativeLoaderScreen');
 
-        messageElement: null,
+        const backLink =
+            document.getElementById('backLink');
 
-        alertBox: null,
+        const backLinkText =
+            document.getElementById('backLinkText');
 
-        alertMessage: null,
-
-        alertIcon: null,
-
-        async init() {
-
-            console.log("🔐 OTP Center Initializing...");
-
-            try {
-
-                this.supabase =
-                    await waitForSupabase();
-
-                this.cacheDom();
-
-                this.loadSessionData();
-
-                this.updatePage();
-
-                this.bindEvents();
-
-                this.startCountdown();
-
-            }
-
-            catch (error) {
-
-                console.error(error);
-
-                this.showError(
-
-                    "تعذر تهيئة صفحة التحقق."
-
-                );
-
-            }
-
-        },
-
-        cacheDom() {
-
-            this.form =
-                document.getElementById("otpForm");
-
-            this.otpInput =
-                document.getElementById("otpCode");
-
-            this.verifyButton =
-                document.getElementById("verifyOtpBtn");
-
-            this.resendButton =
-                document.getElementById("resendOtpBtn");
-
-            this.countdownLabel =
-                document.getElementById("countdown");
-
-            this.titleElement =
-                document.getElementById("otpTitle");
-
-            this.messageElement =
-                document.getElementById("otpMessage");
-
-            this.alertBox =
-                document.getElementById("formAlert");
-
-            this.alertMessage =
-                document.getElementById("alertMessage");
-
-            this.alertIcon =
-                document.getElementById("alertIcon");
-
-        },
-
-        loadSessionData() {
-
-            this.otpType =
-                sessionStorage.getItem("otp_type") ||
-                "signup";
-
-            this.email =
-                sessionStorage.getItem("otp_email");
-
-            this.redirect =
-                sessionStorage.getItem("otp_redirect") ||
-                "/pages/dashboard/index.html";
-
-            this.title =
-                sessionStorage.getItem("otp_title") ||
-                "التحقق من الرمز";
-
-            this.message =
-                sessionStorage.getItem("otp_message") ||
-                "أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.";
-
-            console.log({
-
-                otpType: this.otpType,
-
-                email: this.email,
-
-                redirect: this.redirect
-
-            });
-
-        },
-                /*
-        ==========================================================
-        تحديث واجهة الصفحة حسب نوع العملية
-        ==========================================================
-        */
-
-        updatePage() {
-
-            if (this.titleElement) {
-
-                this.titleElement.textContent =
-                    this.title;
-
-            }
-
-            if (this.messageElement) {
-
-                this.messageElement.textContent =
-                    this.message;
-
-            }
-
-        },
+        if (!form)
+            return;
 
         /*
-        ==========================================================
-        ربط الأحداث
-        ==========================================================
+        =====================================================
+        انتظار جاهزية Supabase
+        =====================================================
         */
 
-        bindEvents() {
+        let supabase;
 
-            if (this.form) {
+        try {
 
-                this.form.addEventListener(
+            supabase = await waitForSupabase();
 
-                    "submit",
+        }
 
-                    async (e) => {
+        catch (error) {
 
-                        e.preventDefault();
+            showAlert(
 
-                        await this.verify();
+                'تعذر الاتصال بخدمة المصادقة.',
 
-                    }
+                'error'
 
-                );
+            );
 
-            }
+            submitBtn.disabled = true;
 
-            if (this.verifyButton) {
+            return;
 
-                this.verifyButton.addEventListener(
-
-                    "click",
-
-                    async () => {
-
-                        await this.verify();
-
-                    }
-
-                );
-
-            }
-
-            if (this.resendButton) {
-
-                this.resendButton.addEventListener(
-
-                    "click",
-
-                    async () => {
-
-                        await this.resend();
-
-                    }
-
-                );
-
-            }
-
-            if (this.otpInput) {
-
-                this.otpInput.addEventListener(
-
-                    "input",
-
-                    () => {
-
-                        this.hideAlert();
-
-                        this.validateOtp();
-
-                    }
-
-                );
-
-                this.otpInput.addEventListener(
-
-                    "keydown",
-
-                    async (e) => {
-
-                        if (e.key === "Enter") {
-
-                            e.preventDefault();
-
-                            await this.verify();
-
-                        }
-
-                    }
-
-                );
-
-            }
-
-        },
+        }
 
         /*
-        ==========================================================
-        التحقق من الرمز
-        ==========================================================
+        =====================================================
+        قراءة بيانات OTP
+        =====================================================
         */
 
-        validateOtp() {
+        const verifyType =
 
-            if (!this.otpInput)
-                return false;
+            sessionStorage.getItem('otp_type') ||
+
+            localStorage.getItem('tera_verify_type') ||
+
+            'signup';
+
+        const email =
+
+            sessionStorage.getItem('otp_email') ||
+
+            localStorage.getItem('pendingVerificationEmail');
+
+        const redirect =
+
+            sessionStorage.getItem('otp_redirect') ||
+
+            '/pages/dashboard/index.html';
+
+        console.log({
+
+            verifyType,
+
+            email,
+
+            redirect
+
+        });
+
+        if (!email) {
+
+            showAlert(
+
+                'تعذر العثور على البريد الإلكتروني.',
+
+                'error'
+
+            );
+
+            submitBtn.disabled = true;
+
+            return;
+
+        }
+
+        if (instructionEmailText) {
+
+            instructionEmailText.textContent = email;
+
+        }
+
+                                      /*
+        =====================================================
+        تعريف نوع العملية الحالية
+        =====================================================
+        */
+
+        const verifyConfig = {
+
+            signup: {
+
+                title: "تأكيد إنشاء الحساب",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            },
+
+            recovery: {
+
+                title: "إعادة تعيين كلمة المرور",
+
+                resendType: "recovery",
+
+                verifyType: "recovery"
+
+            },
+
+            email: {
+
+                title: "تأكيد البريد الإلكتروني",
+
+                resendType: "email",
+
+                verifyType: "email"
+
+            },
+
+            email_change: {
+
+                title: "تغيير البريد الإلكتروني",
+
+                resendType: "email_change",
+
+                verifyType: "email_change"
+
+            },
+
+            change_mobile: {
+
+                title: "تأكيد رقم الجوال",
+
+                resendType: "sms",
+
+                verifyType: "sms"
+
+            },
+
+            personal_info: {
+
+                title: "التحقق من المعلومات الشخصية",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            },
+
+            contact_info: {
+
+                title: "التحقق من معلومات التواصل",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            },
+
+            national_address: {
+
+                title: "التحقق من العنوان الوطني",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            },
+
+            bank_info: {
+
+                title: "التحقق من الحساب البنكي",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            },
+
+            attachments: {
+
+                title: "التحقق من المرفقات",
+
+                resendType: "signup",
+
+                verifyType: "signup"
+
+            }
+
+        };
+
+        const currentConfig =
+
+            verifyConfig[verifyType] ||
+
+            verifyConfig.signup;
+
+        if (instructionMainText) {
+
+            instructionMainText.textContent =
+
+                currentConfig.title;
+
+        }
+
+        /*
+        =====================================================
+        مؤقت إعادة الإرسال
+        =====================================================
+        */
+
+        let timerSeconds = 300;
+
+        let timerInterval = null;
+
+        function updateTimerDisplay() {
+
+            const minutes =
+
+                Math.floor(timerSeconds / 60);
+
+            const seconds =
+
+                timerSeconds % 60;
+
+            timerDisplay.textContent =
+
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        }
+
+        function startTimer() {
+
+            if (timerInterval) {
+
+                clearInterval(timerInterval);
+
+            }
+
+            resendBtn.disabled = true;
+
+            timerContainer.style.display = "block";
+
+            timerSeconds = 300;
+
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+
+                timerSeconds--;
+
+                updateTimerDisplay();
+
+                if (timerSeconds <= 0) {
+
+                    clearInterval(timerInterval);
+
+                    timerInterval = null;
+
+                    resendBtn.disabled = false;
+
+                    timerContainer.style.display = "none";
+
+                }
+
+            }, 1000);
+
+        }
+
+                                      /*
+        =====================================================
+        رسائل التنبيه
+        =====================================================
+        */
+
+        function showAlert(message, type = "error") {
+
+            if (!alertBox) {
+
+                alert(message);
+
+                return;
+
+            }
+
+            alertBox.style.display = "flex";
+
+            alertBox.className =
+                `alert-box alert-${type}`;
+
+            if (alertIcon) {
+
+                switch (type) {
+
+                    case "success":
+
+                        alertIcon.innerHTML =
+                            '<i class="fas fa-circle-check"></i>';
+
+                        break;
+
+                    case "warning":
+
+                        alertIcon.innerHTML =
+                            '<i class="fas fa-triangle-exclamation"></i>';
+
+                        break;
+
+                    default:
+
+                        alertIcon.innerHTML =
+                            '<i class="fas fa-circle-exclamation"></i>';
+
+                        break;
+
+                }
+
+            }
+
+            if (alertMessage) {
+
+                alertMessage.textContent =
+                    message;
+
+            }
+
+        }
+
+        function hideAlert() {
+
+            if (!alertBox)
+                return;
+
+            alertBox.style.display = "none";
+
+        }
+
+        /*
+        =====================================================
+        اللودر
+        =====================================================
+        */
+
+        function showLoader(text = "جاري التحقق...") {
+
+            if (!loaderOverlay)
+                return;
+
+            loaderOverlay.style.display = "flex";
+
+            const quote =
+
+                loaderOverlay.querySelector(
+
+                    "#creativeQuoteText"
+
+                );
+
+            if (quote) {
+
+                quote.textContent = text;
+
+            }
+
+        }
+
+        function hideLoader() {
+
+            if (!loaderOverlay)
+                return;
+
+            loaderOverlay.style.display = "none";
+
+        }
+
+        /*
+        =====================================================
+        التحقق من رمز OTP
+        =====================================================
+        */
+
+        function validateOtp() {
+
+            otpError.textContent = "";
 
             const otp =
-                this.otpInput.value.trim();
 
-            if (!otp.length)
+                otpInput.value.trim();
+
+            if (!otp) {
+
+                otpError.textContent =
+                    "يرجى إدخال رمز التحقق.";
+
+                otpInput.focus();
+
                 return false;
 
-            if (!/^[0-9]{6}$/.test(otp))
+            }
+
+            /*
+            الملف الحالي يعتمد على 8 أرقام
+            */
+
+            if (!/^[0-9]{8}$/.test(otp)) {
+
+                otpError.textContent =
+                    "يجب أن يتكون الرمز من 8 أرقام.";
+
+                otpInput.focus();
+
                 return false;
+
+            }
 
             return true;
 
-        },
-                /*
-        ==========================================================
-        التحقق من الرمز
-        ==========================================================
+        }
+
+        /*
+        =====================================================
+        تنظيف الأخطاء أثناء الكتابة
+        =====================================================
         */
 
-        async verify() {
+        otpInput.addEventListener(
 
-            this.hideAlert();
+            "input",
 
-            if (!this.email) {
+            function () {
 
-                this.showError(
-                    "لم يتم العثور على البريد الإلكتروني."
-                );
+                otpError.textContent = "";
 
-                return;
+                hideAlert();
 
             }
 
-            if (!this.validateOtp()) {
+        );
 
-                this.showError(
-                    "يرجى إدخال رمز تحقق صحيح مكون من 6 أرقام."
-                );
 
-                this.otpInput.focus();
+                                      /*
+        =====================================================
+        التحقق من رمز OTP
+        =====================================================
+        */
 
+        async function verifyOtp() {
+
+            hideAlert();
+
+            if (!validateOtp())
                 return;
-
-            }
 
             const otp =
-                this.otpInput.value.trim();
+                otpInput.value.trim();
 
-            this.setLoading(
+            submitBtn.disabled = true;
 
-                this.verifyButton,
-
-                true,
-
-                "جاري التحقق..."
-
+            showLoader(
+                "جاري التحقق من رمز التأكيد..."
             );
 
             try {
 
-                console.log("OTP Type:", this.otpType);
+                let result;
 
-                console.log("Email:", this.email);
+                /*
+                =============================================
+                تغيير رقم الجوال
+                =============================================
+                */
 
-                const {
+                if (verifyType === "change_mobile") {
 
-                    data,
+                    const mobile =
 
-                    error
+                        localStorage.getItem(
+                            "pendingNewMobile"
+                        );
 
-                } = await this.supabase.auth.verifyOtp({
+                    if (!mobile) {
 
-                    email: this.email,
+                        throw new Error(
+                            "رقم الجوال غير موجود."
+                        );
 
-                    token: otp,
+                    }
 
-                    type: this.otpType
+                    result =
+                        await supabase.auth.verifyOtp({
 
-                });
+                            phone: mobile,
 
-                if (error)
-                    throw error;
+                            token: otp,
+
+                            type: currentConfig.verifyType
+
+                        });
+
+                }
+
+                /*
+                =============================================
+                جميع عمليات البريد الإلكتروني
+                =============================================
+                */
+
+                else {
+
+                    result =
+                        await supabase.auth.verifyOtp({
+
+                            email: email,
+
+                            token: otp,
+
+                            type: currentConfig.verifyType
+
+                        });
+
+                }
+
+                if (result.error)
+                    throw result.error;
 
                 console.log(
                     "✅ OTP Verified",
-                    data
+                    result.data
                 );
 
-                this.showSuccess(
+                showAlert(
 
-                    "تم التحقق بنجاح."
+                    "تم التحقق بنجاح.",
+
+                    "success"
 
                 );
 
                 /*
                 =============================================
-                تنظيف بيانات الجلسة
+                تنظيف البيانات المؤقتة
                 =============================================
                 */
 
-                sessionStorage.removeItem("otp_type");
+                sessionStorage.removeItem(
+                    "otp_type"
+                );
 
-                sessionStorage.removeItem("otp_email");
+                sessionStorage.removeItem(
+                    "otp_email"
+                );
 
-                sessionStorage.removeItem("otp_title");
+                sessionStorage.removeItem(
+                    "otp_redirect"
+                );
 
-                sessionStorage.removeItem("otp_message");
+                sessionStorage.removeItem(
+                    "otp_title"
+                );
 
-                sessionStorage.removeItem("otp_redirect");
+                sessionStorage.removeItem(
+                    "otp_message"
+                );
+
+                localStorage.removeItem(
+                    "tera_verify_type"
+                );
+
+                localStorage.removeItem(
+                    "pendingVerificationEmail"
+                );
+
+                /*
+                =============================================
+                تحديث verification_requests
+                =============================================
+                */
+
+                try {
+
+                    const {
+
+                        data: { user }
+
+                    } = await supabase.auth.getUser();
+
+                    if (user) {
+
+                        const payload = {
+
+                            user_id: user.id,
+
+                            updated_at:
+                                new Date().toISOString()
+
+                        };
+
+                        switch (verifyType) {
+
+                            case "signup":
+
+                                payload.email_verified = true;
+                                break;
+
+                            case "personal_info":
+
+                                payload.personal_info_completed = true;
+                                break;
+
+                            case "contact_info":
+
+                                payload.contact_info_completed = true;
+                                break;
+
+                            case "national_address":
+
+                                payload.national_address_completed = true;
+                                break;
+
+                            case "bank_info":
+
+                                payload.bank_info_completed = true;
+                                break;
+
+                            case "attachments":
+
+                                payload.attachments_completed = true;
+                                break;
+
+                        }
+
+                        await supabase
+
+                            .from(
+                                "verification_requests"
+                            )
+
+                            .upsert(
+                                payload,
+                                {
+                                    onConflict:
+                                        "user_id"
+                                }
+                            );
+
+                    }
+
+                }
+
+                catch (dbError) {
+
+                    console.warn(
+                        "Verification Update:",
+                        dbError
+                    );
+
+                }
 
                 /*
                 =============================================
@@ -406,33 +732,25 @@
                 setTimeout(() => {
 
                     window.location.replace(
-
-                        this.redirect
-
+                        redirect
                     );
 
-                }, 800);
+                }, 1200);
 
             }
 
             catch (error) {
 
-                console.error(
-
-                    "[OTP Verify]",
-
-                    error
-
-                );
+                console.error(error);
 
                 let message =
                     error.message ||
-                    "فشل التحقق.";
+                    "تعذر التحقق.";
 
                 switch (true) {
 
                     case message.includes(
-                        "Token has expired"
+                        "expired"
                     ):
 
                         message =
@@ -459,49 +777,50 @@
                         break;
 
                     case message.includes(
-                        "Email not confirmed"
+                        "Token has expired"
                     ):
 
                         message =
-                            "لم يتم تأكيد البريد الإلكتروني.";
+                            "انتهت صلاحية الرمز.";
 
                         break;
 
                 }
 
-                this.showError(message);
+                showAlert(
+                    message,
+                    "error"
+                );
 
             }
 
             finally {
 
-                this.setLoading(
+                hideLoader();
 
-                    this.verifyButton,
-
-                    false
-
-                );
+                submitBtn.disabled = false;
 
             }
 
-        },
+        }
 
-                /*
-        ==========================================================
+                                      /*
+        =====================================================
         إعادة إرسال رمز التحقق
-        ==========================================================
+        =====================================================
         */
 
-        async resend() {
+        async function resendOtp() {
 
-            this.hideAlert();
+            hideAlert();
 
-            if (!this.email) {
+            if (timerInterval) {
 
-                this.showError(
+                showAlert(
 
-                    "لم يتم العثور على البريد الإلكتروني."
+                    "يرجى الانتظار حتى انتهاء المؤقت.",
+
+                    "warning"
 
                 );
 
@@ -509,397 +828,752 @@
 
             }
 
-            this.setLoading(
+            resendBtn.disabled = true;
 
-                this.resendButton,
+            resendBtn.innerHTML =
 
-                true,
-
-                "جاري إعادة الإرسال..."
-
-            );
+                '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
             try {
 
-                console.log(
-
-                    "📨 Resend OTP:",
-
-                    this.otpType,
-
-                    this.email
-
-                );
-
-                const {
-
-                    error
-
-                } = await this.supabase.auth.resend({
-
-                    type: this.otpType,
-
-                    email: this.email
-
-                });
-
-                if (error)
-                    throw error;
-
-                this.showSuccess(
-
-                    "تم إرسال رمز تحقق جديد."
-
-                );
+                let response;
 
                 /*
-                =============================================
-                إعادة تشغيل العد التنازلي
-                =============================================
+                ===========================================
+                تغيير رقم الجوال
+                ===========================================
                 */
 
-                this.countdown = 60;
+                if (verifyType === "change_mobile") {
 
-                this.startCountdown();
+                    const mobile =
+
+                        localStorage.getItem(
+
+                            "pendingNewMobile"
+
+                        );
+
+                    if (!mobile) {
+
+                        throw new Error(
+
+                            "رقم الجوال غير موجود."
+
+                        );
+
+                    }
+
+                    response =
+
+                        await supabase.auth.signInWithOtp({
+
+                            phone: mobile,
+
+                            options: {
+
+                                shouldCreateUser: false
+
+                            }
+
+                        });
+
+                }
+
+                /*
+                ===========================================
+                جميع عمليات البريد
+                ===========================================
+                */
+
+                else {
+
+                    response =
+
+                        await supabase.auth.resend({
+
+                            type:
+
+                                currentConfig.resendType,
+
+                            email: email
+
+                        });
+
+                }
+
+                if (response.error)
+
+                    throw response.error;
+
+                showAlert(
+
+                    "تم إرسال رمز تحقق جديد.",
+
+                    "success"
+
+                );
+
+                startTimer();
 
             }
 
             catch (error) {
 
-                console.error(
-
-                    "[OTP Resend]",
-
-                    error
-
-                );
+                console.error(error);
 
                 let message =
+
                     error.message ||
+
                     "تعذر إعادة إرسال الرمز.";
 
                 switch (true) {
 
                     case message.includes(
+
                         "For security purposes"
+
                     ):
 
                         message =
-                            "يرجى الانتظار قبل إعادة إرسال الرمز.";
+
+                            "يرجى الانتظار قبل إعادة الإرسال.";
 
                         break;
 
                     case message.includes(
-                        "Email rate limit exceeded"
+
+                        "rate limit"
+
                     ):
 
                         message =
+
                             "تم تجاوز الحد المسموح لإرسال الرسائل.";
 
                         break;
 
                     case message.includes(
+
                         "Email not found"
+
                     ):
 
                         message =
+
                             "البريد الإلكتروني غير موجود.";
+
+                        break;
+
+                    case message.includes(
+
+                        "Phone"
+
+                    ):
+
+                        message =
+
+                            "تعذر إرسال الرمز إلى رقم الجوال.";
 
                         break;
 
                 }
 
-                this.showError(message);
+                showAlert(
 
-            }
+                    message,
 
-            finally {
-
-                this.setLoading(
-
-                    this.resendButton,
-
-                    false
+                    "error"
 
                 );
 
             }
 
-        },
+            finally {
+
+                resendBtn.disabled = false;
+
+                resendBtn.innerHTML =
+
+                    '<i class="fas fa-redo-alt"></i> إعادة إرسال الرمز';
+
+            }
+
+        };
 
         /*
-        ==========================================================
-        بدء العد التنازلي
-        ==========================================================
+        =====================================================
+        ربط الأحداث
+        =====================================================
         */
 
-        startCountdown() {
+        form.addEventListener(
 
-            if (this.timer) {
+            "submit",
 
-                clearInterval(this.timer);
+            async function (e) {
 
-            }
+                e.preventDefault();
 
-            if (this.resendButton) {
-
-                this.resendButton.disabled = true;
+                await verifyOtp();
 
             }
 
-            const update = () => {
+        );
 
-                if (this.countdownLabel) {
+        submitBtn.addEventListener(
 
-                    this.countdownLabel.textContent =
-                        this.countdown;
+            "click",
+
+            async function () {
+
+                await verifyOtp();
+
+            }
+
+        );
+
+        resendBtn.addEventListener(
+
+            "click",
+
+            async function () {
+
+                await resendOtp();
+
+            }
+
+        );
+
+        otpInput.addEventListener(
+
+            "keydown",
+
+            async function (e) {
+
+                if (e.key === "Enter") {
+
+                    e.preventDefault();
+
+                    await verifyOtp();
 
                 }
 
-                if (this.countdown <= 0) {
+            }
 
-                    clearInterval(this.timer);
+        );
 
-                    if (this.resendButton) {
+        /*
+        =====================================================
+        بدء المؤقت
+        =====================================================
+        */
 
-                        this.resendButton.disabled = false;
+        startTimer();
 
-                    }
+                                      /*
+        =====================================================
+        تحديث تقدم طلب التحقق
+        =====================================================
+        */
 
-                    if (this.countdownLabel) {
+        async function updateVerificationProgress() {
 
-                        this.countdownLabel.textContent = "";
+            try {
 
-                    }
+                const {
 
+                    data: { user }
+
+                } = await supabase.auth.getUser();
+
+                if (!user)
                     return;
 
+                const {
+
+                    data: request,
+
+                    error
+
+                } = await supabase
+
+                    .from("verification_requests")
+
+                    .select("*")
+
+                    .eq("user_id", user.id)
+
+                    .maybeSingle();
+
+                if (error)
+                    throw error;
+
+                if (!request)
+                    return;
+
+                /*
+                ==========================================
+                حساب نسبة الإنجاز
+                ==========================================
+                */
+
+                let progress = 0;
+
+                if (request.email_verified)
+                    progress += 15;
+
+                if (request.personal_info_completed)
+                    progress += 15;
+
+                if (request.contact_info_completed)
+                    progress += 15;
+
+                if (request.national_address_completed)
+                    progress += 15;
+
+                if (request.bank_info_completed)
+                    progress += 15;
+
+                if (request.attachments_completed)
+                    progress += 15;
+
+                if (request.agreed)
+                    progress += 10;
+
+                progress = Math.min(progress, 100);
+
+                /*
+                ==========================================
+                تحديث قاعدة البيانات
+                ==========================================
+                */
+
+                await supabase
+
+                    .from("verification_requests")
+
+                    .update({
+
+                        progress,
+
+                        updated_at:
+
+                            new Date().toISOString()
+
+                    })
+
+                    .eq("user_id", user.id);
+
+                /*
+                ==========================================
+                اكتمال جميع المراحل
+                ==========================================
+                */
+
+                const completed =
+
+                    request.email_verified &&
+
+                    request.personal_info_completed &&
+
+                    request.contact_info_completed &&
+
+                    request.national_address_completed &&
+
+                    request.bank_info_completed &&
+
+                    request.attachments_completed &&
+
+                    request.agreed;
+
+                if (completed) {
+
+                    await supabase
+
+                        .from("verification_requests")
+
+                        .update({
+
+                            submitted: true,
+
+                            submitted_at:
+
+                                new Date().toISOString(),
+
+                            progress: 100
+
+                        })
+
+                        .eq("user_id", user.id);
+
+                    console.log(
+
+                        "✅ تم إكمال جميع مراحل الطلب"
+
+                    );
+
                 }
 
-                this.countdown--;
+            }
 
-            };
+            catch (error) {
 
-            update();
+                console.warn(
 
-            this.timer = setInterval(
+                    "Progress:",
 
-                update,
+                    error
 
-                1000
+                );
+
+            }
+
+        }
+
+        /*
+        =====================================================
+        تحديث اسم العميل
+        =====================================================
+        */
+
+        async function refreshUserName() {
+
+            try {
+
+                const {
+
+                    data: { user }
+
+                } = await supabase.auth.getUser();
+
+                if (!user)
+                    return;
+
+                const customerName =
+
+                    user.user_metadata?.full_name ||
+
+                    user.user_metadata?.name ||
+
+                    user.email ||
+
+                    "المستثمر";
+
+                const elements =
+
+                    document.querySelectorAll(
+
+                        ".customer-name"
+
+                    );
+
+                elements.forEach(el => {
+
+                    el.textContent =
+                        customerName;
+
+                });
+
+            }
+
+            catch (error) {
+
+                console.warn(error);
+
+            }
+
+        }
+
+        /*
+        =====================================================
+        تهيئة الصفحة
+        =====================================================
+        */
+
+        refreshUserName();
+
+        updateVerificationProgress();
+
+                                      /*
+        =====================================================
+        العودة للصفحة السابقة
+        =====================================================
+        */
+
+        if (backLink) {
+
+            backLink.addEventListener(
+
+                "click",
+
+                function (e) {
+
+                    e.preventDefault();
+
+                    window.history.back();
+
+                }
 
             );
 
-        },
-                /*
-        ==========================================================
-        إظهار / إخفاء التحميل
-        ==========================================================
+        }
+
+        /*
+        =====================================================
+        تحديد نص رابط العودة
+        =====================================================
         */
 
-        setLoading(button, loading, text = "جاري المعالجة...") {
+        if (backLinkText) {
 
-            if (!button)
-                return;
+            switch (verifyType) {
 
-            if (loading) {
+                case "signup":
 
-                button.disabled = true;
+                    backLinkText.textContent =
+                        "العودة إلى التسجيل";
 
-                button.dataset.originalText =
-                    button.innerHTML;
+                    break;
 
-                button.innerHTML = `
-                    <i class="fas fa-spinner fa-spin"></i>
-                    ${text}
-                `;
+                case "recovery":
+
+                    backLinkText.textContent =
+                        "العودة إلى استعادة كلمة المرور";
+
+                    break;
+
+                case "change_mobile":
+
+                    backLinkText.textContent =
+                        "العودة إلى تغيير رقم الجوال";
+
+                    break;
+
+                case "email_change":
+
+                    backLinkText.textContent =
+                        "العودة إلى تغيير البريد الإلكتروني";
+
+                    break;
+
+                default:
+
+                    backLinkText.textContent =
+                        "العودة";
 
             }
 
-            else {
+        }
 
-                button.disabled = false;
+        /*
+        =====================================================
+        اختصارات لوحة المفاتيح
+        =====================================================
+        */
 
-                if (button.dataset.originalText) {
+        document.addEventListener(
 
-                    button.innerHTML =
-                        button.dataset.originalText;
+            "keydown",
+
+            async function (e) {
+
+                if (
+
+                    e.key === "Enter" &&
+
+                    document.activeElement === otpInput
+
+                ) {
+
+                    e.preventDefault();
+
+                    await verifyOtp();
 
                 }
 
             }
 
-        },
+        );
 
         /*
-        ==========================================================
-        إخفاء التنبيه
-        ==========================================================
+        =====================================================
+        تنظيف البيانات المؤقتة
+        =====================================================
         */
 
-        hideAlert() {
+        function clearTempData() {
 
-            if (!this.alertBox)
-                return;
+            const keys = [
 
-            this.alertBox.style.display = "none";
+                "otp_type",
 
-            this.alertBox.className =
-                "alert-box";
+                "otp_email",
 
-        },
+                "otp_redirect",
 
-        /*
-        ==========================================================
-        رسالة نجاح
-        ==========================================================
-        */
+                "otp_title",
 
-        showSuccess(message) {
+                "otp_message"
 
-            if (!this.alertBox) {
+            ];
 
-                alert(message);
+            keys.forEach(key =>
 
-                return;
+                sessionStorage.removeItem(key)
 
-            }
+            );
 
-            this.alertBox.style.display = "flex";
-
-            this.alertBox.className =
-                "alert-box alert-success";
-
-            this.alertIcon.innerHTML =
-                '<i class="fas fa-circle-check"></i>';
-
-            this.alertMessage.textContent =
-                message;
-
-        },
+        }
 
         /*
-        ==========================================================
-        رسالة خطأ
-        ==========================================================
-        */
-
-        showError(message) {
-
-            if (!this.alertBox) {
-
-                alert(message);
-
-                return;
-
-            }
-
-            this.alertBox.style.display = "flex";
-
-            this.alertBox.className =
-                "alert-box alert-error";
-
-            this.alertIcon.innerHTML =
-                '<i class="fas fa-circle-exclamation"></i>';
-
-            this.alertMessage.textContent =
-                message;
-
-        },
-
-        /*
-        ==========================================================
-        إعادة تعيين النموذج
-        ==========================================================
-        */
-
-        resetForm() {
-
-            if (this.otpInput) {
-
-                this.otpInput.value = "";
-
-                this.otpInput.focus();
-
-            }
-
-        },
-
-        /*
-        ==========================================================
+        =====================================================
         تنظيف الموارد
-        ==========================================================
+        =====================================================
         */
 
-        destroy() {
+        window.addEventListener(
 
-            if (this.timer) {
+            "beforeunload",
 
-                clearInterval(this.timer);
+            function () {
 
-                this.timer = null;
+                if (timerInterval) {
 
-            }
+                    clearInterval(
 
-            this.resetForm();
+                        timerInterval
 
-            this.supabase = null;
+                    );
 
-            this.email = null;
-
-            this.otpType = null;
-
-            this.redirect = null;
-
-            this.title = null;
-
-            this.message = null;
-
-        },
-            };
-
-    /*
-    ==========================================================
-    تشغيل الصفحة
-    ==========================================================
-    */
-
-    document.addEventListener(
-
-        "DOMContentLoaded",
-
-        () => {
-
-            VerifyOTP.init();
-
-        }
-
-    );
-
-    /*
-    ==========================================================
-    تنظيف الموارد عند مغادرة الصفحة
-    ==========================================================
-    */
-
-    window.addEventListener(
-
-        "beforeunload",
-
-        () => {
-
-            if (
-
-                typeof VerifyOTP.destroy === "function"
-
-            ) {
-
-                VerifyOTP.destroy();
+                }
 
             }
 
+        );
+
+        /*
+        =====================================================
+        التحقق من وجود OTP سابق
+        =====================================================
+        */
+
+        otpInput.focus();
+
+        hideAlert();
+
+        console.log(
+
+            "✅ OTP Center Ready"
+
+        );
+
+                                      /*
+        =====================================================
+        إخفاء رسالة الخطأ عند الكتابة
+        =====================================================
+        */
+
+        otpInput.addEventListener(
+
+            "input",
+
+            function () {
+
+                if (otpError) {
+
+                    otpError.textContent = "";
+
+                }
+
+                hideAlert();
+
+            }
+
+        );
+
+        /*
+        =====================================================
+        تحديث التعليمات حسب نوع العملية
+        =====================================================
+        */
+
+        switch (verifyType) {
+
+            case "signup":
+
+                document.title =
+                    "تأكيد إنشاء الحساب";
+
+                break;
+
+            case "recovery":
+
+                document.title =
+                    "إعادة تعيين كلمة المرور";
+
+                break;
+
+            case "email_change":
+
+                document.title =
+                    "تأكيد البريد الإلكتروني";
+
+                break;
+
+            case "change_mobile":
+
+                document.title =
+                    "تأكيد رقم الجوال";
+
+                break;
+
+            default:
+
+                document.title =
+                    "التحقق من الرمز";
+
         }
 
-    );
+        /*
+        =====================================================
+        Debug
+        =====================================================
+        */
+
+        console.group(
+
+            "OTP Center"
+
+        );
+
+        console.log(
+
+            "Type:",
+
+            verifyType
+
+        );
+
+        console.log(
+
+            "Email:",
+
+            email
+
+        );
+
+        console.log(
+
+            "Redirect:",
+
+            redirect
+
+        );
+
+        console.groupEnd();
+
+    });
 
 })();
