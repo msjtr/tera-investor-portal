@@ -2,24 +2,23 @@
  * security-change-password.js
  * تغيير كلمة المرور عبر OTP (Magic Link / Email OTP)
  * متوافق مع security.js و TeraAuth
- * النسخة النهائية مع جميع الدوال
+ * النسخة النهائية – مع منع الإرسال المتكرر وترتيب محسّن
  */
 
 'use strict';
 
 window.SecurityPages = window.SecurityPages || {};
 
-// تعريف الصفحة مع جميع الدوال
 window.SecurityPages['change-password'] = {
 
     _timerInterval: null,
     _timerSeconds: 300,
     _otpVerified: false,
+    _isSending: false, // لمنع الإرسال المتكرر
 
     async init() {
         console.log('🔐 [Change Password] تهيئة الصفحة (عبر OTP)');
 
-        // التأكد من وجود SecurityCore
         if (typeof SecurityCore === 'undefined' || !SecurityCore.supabase) {
             try {
                 if (typeof waitForSupabase === 'function') {
@@ -46,10 +45,8 @@ window.SecurityPages['change-password'] = {
             return;
         }
 
-        // ربط الأحداث
         this.bindEvents();
 
-        // ملء البريد الإلكتروني تلقائياً
         const emailInput = document.getElementById('emailForOtp');
         if (emailInput && user.email) {
             emailInput.value = user.email;
@@ -58,7 +55,6 @@ window.SecurityPages['change-password'] = {
         console.log('✅ [Change Password] جاهز.');
     },
 
-    // دالة ربط الأحداث (يتم استدعاؤها من init)
     bindEvents() {
         const sendBtn = document.getElementById('sendOtpBtn');
         if (sendBtn) {
@@ -78,20 +74,17 @@ window.SecurityPages['change-password'] = {
             otpInput.addEventListener('input', this.autoSubmitOtp.bind(this));
         }
 
-        // أزرار إظهار/إخفاء كلمة المرور
         document.querySelectorAll('.password-toggle').forEach(toggle => {
             toggle.removeEventListener('click', this.togglePasswordVisibility);
             toggle.addEventListener('click', this.togglePasswordVisibility);
         });
 
-        // التحقق من قوة كلمة المرور
         const newPassword = document.getElementById('newPassword');
         if (newPassword) {
             newPassword.removeEventListener('input', this.validatePasswordStrength);
             newPassword.addEventListener('input', this.validatePasswordStrength);
         }
 
-        // التحقق من تطابق كلمة المرور
         const confirmPassword = document.getElementById('confirmPassword');
         if (confirmPassword) {
             confirmPassword.removeEventListener('input', this.validateConfirmMatch);
@@ -111,8 +104,14 @@ window.SecurityPages['change-password'] = {
         e.stopPropagation();
     },
 
-    // ==================== إرسال رمز OTP ====================
+    // ==================== إرسال رمز OTP (مع منع التكرار) ====================
     async sendOtp() {
+        // منع الإرسال المتكرر
+        if (this._isSending) {
+            showSecurityAlert('جاري إرسال الرمز، يرجى الانتظار.', 'warning');
+            return;
+        }
+
         const emailInput = document.getElementById('emailForOtp');
         const email = emailInput?.value?.trim();
         if (!email) {
@@ -126,6 +125,7 @@ window.SecurityPages['change-password'] = {
             return;
         }
 
+        this._isSending = true;
         const btn = document.getElementById('sendOtpBtn');
         setButtonLoading(btn, 'جاري الإرسال...');
 
@@ -156,8 +156,11 @@ window.SecurityPages['change-password'] = {
                 msg = 'البريد الإلكتروني غير مسجل.';
             }
             showSecurityAlert(msg, 'error');
+            // إعادة إظهار الزر إذا فشل
+            btn.style.display = 'block';
         } finally {
             restoreButton(btn);
+            this._isSending = false;
             if (document.getElementById('otpSection').style.display !== 'block') {
                 btn.style.display = 'block';
             }
@@ -232,21 +235,16 @@ window.SecurityPages['change-password'] = {
             if (verifyError) throw verifyError;
 
             this._otpVerified = true;
-            showSecurityAlert('✅ تم التحقق من الرمز بنجاح. يمكنك الآن تغيير كلمة المرور.', 'success');
+            showSecurityAlert('✅ تم التحقق من الرمز بنجاح. جاري تغيير كلمة المرور...', 'success');
 
+            // إظهار زر التأكيد (سيتم الضغط عليه تلقائياً)
             btn.style.display = 'block';
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-key"></i> تأكيد الرمز وتغيير كلمة المرور';
             document.getElementById('otpCode').disabled = true;
 
-            // إذا كانت كلمة المرور الجديدة مملوءة وصحيحة، ننفذ التغيير تلقائياً
-            const newPassword = document.getElementById('newPassword')?.value?.trim();
-            const confirmPassword = document.getElementById('confirmPassword')?.value?.trim();
-            if (newPassword && confirmPassword && newPassword === confirmPassword && newPassword.length >= 8) {
-                await this.changePassword();
-            } else {
-                document.getElementById('newPassword')?.focus();
-            }
+            // تنفيذ التغيير فوراً بعد التحقق
+            await this.changePassword();
 
         } catch (err) {
             console.error('❌ [Verify OTP]', err);
@@ -346,6 +344,7 @@ window.SecurityPages['change-password'] = {
         document.getElementById('sendOtpBtn').disabled = false;
         document.getElementById('otpSection').style.display = 'none';
         this._otpVerified = false;
+        this._isSending = false;
 
         if (this._timerInterval) {
             clearInterval(this._timerInterval);
@@ -443,15 +442,12 @@ window.SecurityPages['change-password'] = {
     }
 };
 
-// ============================================================
-// بدء التشغيل التلقائي (خطة احتياطية)
-// ============================================================
+// بدء التشغيل التلقائي
 document.addEventListener('DOMContentLoaded', async function() {
     const page = document.body.dataset.security || document.body.dataset.page || document.body.id || '';
     if (page === 'change-password') {
         console.log('🔐 [Change Password] بدء التشغيل التلقائي...');
         try {
-            // تأكد من أن الكائن موجود وله دالة init
             if (window.SecurityPages && window.SecurityPages['change-password'] && typeof window.SecurityPages['change-password'].init === 'function') {
                 await window.SecurityPages['change-password'].init();
             } else {
