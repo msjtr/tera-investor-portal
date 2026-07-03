@@ -1,15 +1,15 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
- * يعتمد على:
- *   - supabase-client.js (يوفر window.teraSupabase)
- *   - auth.js (يوفر waitForSupabase إن وجد)
+ * يعتمد على TeraAuth (auth.js) لتنفيذ عمليات المصادقة والتوجيه
  * يدعم: signup, recovery, personal_info, contact_info, national_address,
  *       bank_info, attachments, change_mobile, login_otp, email_change
+ * النسخة المُحدَّثة: استخدام TeraAuth للتوحيد، مسارات ديناميكية، معالجة أخطاء أفضل
  */
-(function() {
+
+(function () {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', async function() {
+    document.addEventListener('DOMContentLoaded', async function () {
         // عناصر DOM
         const form = document.getElementById('otpForm');
         const otpInput = document.getElementById('otp');
@@ -27,102 +27,51 @@
         const progressFill = document.getElementById('progressFillBar');
         const backLink = document.getElementById('backLink');
         const backLinkText = document.getElementById('backLinkText');
-        const headerUserName = document.getElementById('headerUserName');
-        const headerAvatar = document.getElementById('headerAvatar');
 
         if (!form) return;
 
-        // ---------- ١. الحصول على كائن Supabase ----------
-        let supabase = window.teraSupabase;
+        // ========== التأكد من وجود TeraAuth ==========
+        if (!window.TeraAuth) {
+            showAlert('تعذر تحميل نظام المصادقة.', 'error');
+            if (submitBtn) submitBtn.disabled = true;
+            return;
+        }
 
-        // إذا لم يكن جاهزاً، ننتظر عبر الدالة المساعدة من auth.js
+        // انتظار تهيئة TeraAuth (إذا لم تكن جاهزة)
+        if (!window.TeraAuth._initialized) {
+            await window.TeraAuth.init();
+        }
+
+        const auth = window.TeraAuth;
+        const supabase = auth._client;
         if (!supabase) {
-            if (typeof waitForSupabase === 'function') {
-                try {
-                    await waitForSupabase();
-                    supabase = window.teraSupabase;
-                } catch (e) {
-                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
-                    if (submitBtn) submitBtn.disabled = true;
-                    return;
-                }
-            } else {
-                // محاولة انتظار حدث التهيئة
-                try {
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                        document.addEventListener('supabase:ready', function handler(e) {
-                            clearTimeout(timeout);
-                            document.removeEventListener('supabase:ready', handler);
-                            resolve(e.detail.client);
-                        }, { once: true });
-                        document.addEventListener('supabase:error', function() {
-                            clearTimeout(timeout);
-                            reject(new Error('error'));
-                        }, { once: true });
-                    });
-                    supabase = window.teraSupabase;
-                } catch (err) {
-                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
-                    if (submitBtn) submitBtn.disabled = true;
-                    return;
-                }
-            }
+            showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+            if (submitBtn) submitBtn.disabled = true;
+            return;
         }
 
-        // ---------- ٢. تحديث اسم العميل في الهيدر ----------
-        async function refreshHeader() {
-            let displayName = 'مستخدم';
-            let userId = null;
+        // ========== تحديث اسم المستخدم في الهيدر ==========
+        await auth.getUser();
 
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    userId = user.id;
-                    displayName = user.user_metadata?.full_name || '';
-                }
-
-                if (!displayName && userId) {
-                    const { data: reg } = await supabase
-                        .from('auth_register')
-                        .select('full_name')
-                        .eq('user_id', userId)
-                        .maybeSingle();
-                    if (reg?.full_name) displayName = reg.full_name;
-                }
-
-                if (!displayName) {
-                    const email = user?.email || localStorage.getItem('pendingVerificationEmail');
-                    if (email) displayName = email.split('@')[0];
-                }
-            } catch (e) {
-                const pending = localStorage.getItem('pendingVerificationEmail');
-                if (pending) displayName = pending.split('@')[0];
-            }
-
-            if (headerUserName) headerUserName.textContent = displayName;
-            if (headerAvatar) headerAvatar.textContent = displayName.charAt(0).toUpperCase();
-        }
-        await refreshHeader();
-
-        // ---------- ٣. قراءة السياق ----------
+        // ========== قراءة السياق ==========
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
         let verifyType = localStorage.getItem('tera_verify_type') || 'signup';
 
         if (pendingEmail) {
             let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
-            switch (verifyType) {
-                case 'signup': mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى'; break;
-                case 'recovery': mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى'; break;
-                case 'login_otp': mainMessage = 'أدخل رمز التحقق لتسجيل الدخول (8 أرقام) المرسل إلى'; break;
-                case 'email_change': mainMessage = 'أدخل رمز تأكيد تغيير البريد الإلكتروني (8 أرقام) المرسل إلى'; break;
-                case 'personal_info': mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى'; break;
-                case 'contact_info': mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى'; break;
-                case 'national_address': mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى'; break;
-                case 'bank_info': mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى'; break;
-                case 'attachments': mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى'; break;
-                case 'change_mobile': mainMessage = 'أدخل رمز تأكيد تغيير رقم الجوال (8 أرقام) المرسل إلى'; break;
-            }
+            const typeMap = {
+                'signup': 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى',
+                'recovery': 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى',
+                'login_otp': 'أدخل رمز التحقق لتسجيل الدخول (8 أرقام) المرسل إلى',
+                'email_change': 'أدخل رمز تأكيد تغيير البريد الإلكتروني (8 أرقام) المرسل إلى',
+                'personal_info': 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى',
+                'contact_info': 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى',
+                'national_address': 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى',
+                'bank_info': 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى',
+                'attachments': 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى',
+                'change_mobile': 'أدخل رمز تأكيد تغيير رقم الجوال (8 أرقام) المرسل إلى'
+            };
+            mainMessage = typeMap[verifyType] || mainMessage;
             if (instructionMainText) instructionMainText.textContent = mainMessage;
             if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
         } else {
@@ -130,16 +79,22 @@
             if (submitBtn) submitBtn.disabled = true;
         }
 
-        // ---------- ٤. تخصيص رابط العودة ----------
-        if (['login_otp', 'personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments', 'change_mobile'].includes(verifyType)) {
-            backLink.href = '../pages/dashboard/index.html';
-            backLinkText.textContent = 'العودة';
-        } else {
-            backLink.href = '../auth/auth/login/login.html';
-            backLinkText.textContent = 'العودة لتسجيل الدخول';
-        }
+        // ========== تخصيص رابط العودة ==========
+        const backRoutes = {
+            'login_otp': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'personal_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'contact_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'national_address': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'bank_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'attachments': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'change_mobile': { url: '/pages/dashboard/index.html', text: 'العودة' }
+        };
+        const defaultBack = { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' };
+        const backConfig = backRoutes[verifyType] || defaultBack;
+        backLink.href = backConfig.url;
+        backLinkText.textContent = backConfig.text;
 
-        // ---------- ٥. مؤقت إعادة الإرسال (5 دقائق) ----------
+        // ========== مؤقت إعادة الإرسال ==========
         let timerSeconds = 300;
         let timerInterval = null;
 
@@ -150,7 +105,7 @@
             updateTimerDisplay();
 
             if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(function() {
+            timerInterval = setInterval(function () {
                 timerSeconds--;
                 updateTimerDisplay();
                 if (timerSeconds <= 0) {
@@ -169,20 +124,17 @@
         }
         startTimer();
 
-        // ---------- ٦. إدخال الرمز وإرسال تلقائي ----------
-        otpInput.addEventListener('input', function() {
+        // ========== إدخال الرمز ==========
+        otpInput.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '');
             if (otpError) otpError.textContent = '';
             if (this.value.length === 8) {
-                if (typeof form.requestSubmit === 'function') {
-                    form.requestSubmit();
-                } else {
-                    form.dispatchEvent(new Event('submit'));
-                }
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit'));
             }
         });
 
-        otpInput.addEventListener('paste', function(e) {
+        otpInput.addEventListener('paste', function (e) {
             e.preventDefault();
             const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 8);
             this.value = paste;
@@ -192,8 +144,8 @@
             }
         });
 
-        // ---------- ٧. تقديم النموذج ----------
-        form.addEventListener('submit', async function(e) {
+        // ========== تقديم النموذج ==========
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
             hideAlert();
             if (otpError) otpError.textContent = '';
@@ -238,26 +190,25 @@
 
                 showAlert('تم التحقق من الرمز بنجاح.', 'success');
 
-                setTimeout(async function() {
+                setTimeout(async function () {
                     if (verifyType === 'signup') {
-                        window.location.replace('../auth/auth/login/login.html');
+                        auth.redirectTo('/auth/auth/login/login.html');
                     } else if (verifyType === 'recovery') {
-                        window.location.replace('../auth/reset-password.html');
+                        auth.redirectTo('/auth/reset-password.html');
                     } else if (verifyType === 'login_otp') {
                         const password = sessionStorage.getItem('tera_login_password');
                         const email = pendingEmail;
                         if (password && email) {
-                            try {
-                                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                                if (error) throw error;
+                            const { error } = await auth.login(email, password);
+                            if (!error) {
                                 sessionStorage.removeItem('tera_login_password');
-                                window.location.replace('../pages/dashboard/index.html');
-                            } catch (err) {
+                                auth.redirectTo('/pages/dashboard/index.html');
+                            } else {
                                 showAlert('فشل تسجيل الدخول. حاول مرة أخرى.', 'error');
-                                window.location.replace('../auth/auth/login/login.html');
+                                auth.redirectTo('/auth/auth/login/login.html');
                             }
                         } else {
-                            window.location.replace('../auth/auth/login/login.html');
+                            auth.redirectTo('/auth/auth/login/login.html');
                         }
                     } else if (verifyType === 'change_mobile') {
                         await changeMobile(supabase);
@@ -283,9 +234,9 @@
             }
         });
 
-        // ---------- ٨. إعادة الإرسال ----------
+        // ========== إعادة الإرسال ==========
         if (resendBtn) {
-            resendBtn.addEventListener('click', async function(e) {
+            resendBtn.addEventListener('click', async function (e) {
                 e.preventDefault();
                 if (timerInterval) {
                     showAlert('يرجى الانتظار حتى انتهاء المؤقت لإعادة الإرسال.', 'error');
@@ -325,18 +276,22 @@
             });
         }
 
-        // ---------- ٩. دوال التحديث بعد التحقق ----------
+        // ========== دوال التحديث بعد التحقق ==========
         async function updateStageCompleted(client, type) {
             try {
                 const { data: { user } } = await client.auth.getUser();
                 if (!user) return;
 
                 let fields = { updated_at: new Date().toISOString() };
-                if (type === 'personal_info') fields.personal_info_completed = true;
-                else if (type === 'contact_info') fields.contact_info_completed = true;
-                else if (type === 'national_address') fields.national_address_completed = true;
-                else if (type === 'bank_info') fields.bank_info_completed = true;
-                else if (type === 'attachments') fields.attachments_completed = true;
+                const stageMap = {
+                    'personal_info': 'personal_info_completed',
+                    'contact_info': 'contact_info_completed',
+                    'national_address': 'national_address_completed',
+                    'bank_info': 'bank_info_completed',
+                    'attachments': 'attachments_completed'
+                };
+                const key = stageMap[type];
+                if (key) fields[key] = true;
 
                 await client.from('verification_requests').upsert({
                     user_id: user.id,
@@ -353,12 +308,10 @@
                 if (newMobile) await client.auth.updateUser({ phone: newMobile });
                 localStorage.removeItem('pendingNewMobile');
                 showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
-                setTimeout(function() {
-                    window.location.replace('../pages/security/change-mobile.html');
-                }, 2000);
+                setTimeout(() => { auth.redirectTo('/pages/security/change-mobile.html'); }, 2000);
             } catch (e) {
                 showAlert('تعذر تغيير رقم الجوال.', 'error');
-                window.location.replace('../pages/security/change-mobile.html');
+                auth.redirectTo('/pages/security/change-mobile.html');
             }
         }
 
@@ -372,7 +325,7 @@
                     .eq('user_id', user.id)
                     .maybeSingle();
                 if (!req) {
-                    window.location.replace('../pages/dashboard/index.html');
+                    auth.redirectTo('/pages/dashboard/index.html');
                     return;
                 }
 
@@ -390,13 +343,13 @@
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id' });
                 }
-                window.location.replace('../pages/dashboard/index.html');
+                auth.redirectTo('/pages/dashboard/index.html');
             } catch (e) {
-                window.location.replace('../pages/dashboard/index.html');
+                auth.redirectTo('/pages/dashboard/index.html');
             }
         }
 
-        // ---------- ١٠. دوال العرض المساعدة ----------
+        // ========== دوال العرض ==========
         function showAlert(message, type) {
             if (!alertBox || !alertMessage) return;
             alertBox.style.display = 'flex';
@@ -406,7 +359,7 @@
             }
             alertMessage.textContent = message;
             clearTimeout(window._alertTimer);
-            window._alertTimer = setTimeout(function() {
+            window._alertTimer = setTimeout(function () {
                 alertBox.classList.remove('show');
                 alertBox.style.display = 'none';
             }, 8000);
@@ -423,8 +376,8 @@
             loaderOverlay.style.display = show ? 'flex' : 'none';
             if (show && progressFill) {
                 progressFill.style.width = '0%';
-                setTimeout(function() { progressFill.style.width = '70%'; }, 500);
-                setTimeout(function() { progressFill.style.width = '90%'; }, 1500);
+                setTimeout(function () { progressFill.style.width = '70%'; }, 500);
+                setTimeout(function () { progressFill.style.width = '90%'; }, 1500);
             } else if (progressFill) {
                 progressFill.style.width = '0%';
             }
