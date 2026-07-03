@@ -1,7 +1,15 @@
 /**
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
- * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile | login_otp
+ * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile | login_otp | email_change
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل من auth_register، ورسائل عربية.
+ * 
+ * مطابقة قوالب Supabase:
+ * - signup          → Confirm Sign Up
+ * - recovery        → Reset Password
+ * - email           → Magic Link / Email OTP (لـ personal_info, contact_info, ...)
+ * - login_otp       → Magic Link / Email OTP (تسجيل الدخول)
+ * - email_change    → Change Email Address
+ * - sms             → Change Phone Number (لـ change_mobile)
  */
 (function() {
     'use strict';
@@ -96,6 +104,7 @@
             if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
             else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
             else if (verifyType === 'login_otp') mainMessage = 'أدخل رمز التحقق لتسجيل الدخول (8 أرقام) المرسل إلى';
+            else if (verifyType === 'email_change') mainMessage = 'أدخل رمز تأكيد تغيير البريد الإلكتروني (8 أرقام) المرسل إلى';
             else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
             else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
             else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
@@ -172,7 +181,7 @@
             }
         });
 
-        // ---------- ٧. تقديم النموذج (مطابقة القوالب) ----------
+        // ---------- ٧. تقديم النموذج (مطابقة القوالب القياسية) ----------
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideAlert();
@@ -194,12 +203,13 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
+                // تحديد النوع حسب القالب المطلوب
                 let otpType;
-                if (verifyType === 'signup') otpType = 'signup';
-                else if (verifyType === 'recovery') otpType = 'recovery';
-                else if (verifyType === 'change_mobile') otpType = 'sms';
-                else if (verifyType === 'email_change') otpType = 'email_change';
-                else otpType = 'email'; // login_otp, personal_info, contact_info, ...
+                if (verifyType === 'signup') otpType = 'signup';              // Confirm Sign Up
+                else if (verifyType === 'recovery') otpType = 'recovery';     // Reset Password
+                else if (verifyType === 'email_change') otpType = 'email_change'; // Change Email Address
+                else if (verifyType === 'change_mobile') otpType = 'sms';     // Change Phone Number
+                else otpType = 'email'; // Magic Link / Email OTP (login_otp, personal_info, contact_info, ...)
 
                 let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
@@ -263,7 +273,7 @@
             }
         });
 
-        // ---------- ٨. إعادة الإرسال (مطابقة القوالب) ----------
+        // ---------- ٨. إعادة الإرسال (مطابقة القوالب القياسية) ----------
         if (resendBtn) {
             resendBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
@@ -281,17 +291,21 @@
 
                 try {
                     if (verifyType === 'signup') {
+                        // إعادة إرسال تأكيد التسجيل
                         await supabase.auth.resend({ type: 'signup', email: pendingEmail });
                     } else if (verifyType === 'recovery') {
+                        // إعادة إرسال تعيين كلمة المرور
                         await supabase.auth.resend({ type: 'recovery', email: pendingEmail });
+                    } else if (verifyType === 'email_change') {
+                        // إعادة إرسال تأكيد تغيير البريد
+                        await supabase.auth.resend({ type: 'email_change', email: pendingEmail });
                     } else if (verifyType === 'change_mobile') {
+                        // إعادة إرسال رمز الجوال
                         const mobile = localStorage.getItem('pendingNewMobile');
                         if (!mobile) throw new Error('رقم الجوال غير موجود');
                         await supabase.auth.signInWithOtp({ phone: mobile, options: { shouldCreateUser: false } });
-                    } else if (verifyType === 'email_change') {
-                        await supabase.auth.resend({ type: 'email_change', email: pendingEmail });
                     } else {
-                        // login_otp, personal_info, contact_info, ...
+                        // Magic Link / Email OTP (login_otp, personal_info, contact_info, ...)
                         await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
