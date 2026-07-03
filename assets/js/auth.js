@@ -7,12 +7,27 @@
  * - يستمع لتغيرات حالة المصادقة (onAuthStateChange)
  * - يُؤمّن الصفحات ويُحدّث واجهة المستخدم تلقائياً
  * - متوافق مع verify-otp.js وباقي ملفات النظام
+ * - النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، توثيق JSDoc
  */
 
 (function () {
     'use strict';
 
+    // ========== ثوابت المسارات ==========
+    const ROUTES = {
+        LOGIN: '/auth/auth/login/login.html',
+        DASHBOARD: '/pages/dashboard/index.html',
+        RESET_PASSWORD: '/auth/reset-password.html',
+        CHANGE_MOBILE: '/pages/security/change-mobile.html',
+        VERIFY_OTP: '/auth/verify-otp.html',
+        HOME: '/'
+    };
+
     // ========== انتظار Supabase ==========
+    /**
+     * تنتظر حتى يصبح عميل Supabase جاهزاً
+     * @returns {Promise<SupabaseClient>}
+     */
     async function waitForSupabase() {
         if (window.teraSupabase) return window.teraSupabase;
 
@@ -35,9 +50,11 @@
         _session: null,
         _user: null,
         _initialized: false,
+        _subscription: null,
 
         /**
          * تهيئة المدير
+         * @returns {Promise<void>}
          */
         init: async function () {
             if (this._initialized) return;
@@ -46,7 +63,7 @@
             try {
                 this._client = await waitForSupabase();
             } catch (err) {
-                console.warn('⚠️ [Auth] تعذر الاتصال بـ Supabase.');
+                console.warn('⚠️ [Auth] تعذر الاتصال بـ Supabase:', err.message);
                 return;
             }
 
@@ -56,27 +73,26 @@
                     console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
                     this._session = session;
                     this._user = session?.user ?? null;
-
-                    // تحديث واجهة المستخدم (إن وُجدت)
                     this._updateUI();
-
-                    // إذا تم تسجيل الدخول، يمكن إطلاق حدث مخصص
                     document.dispatchEvent(new CustomEvent('auth:stateChanged', {
                         detail: { event, session, user: this._user }
                     }));
                 }
             );
+            this._subscription = subscription;
 
-            // جلب الجلسة الحالية عند التحميل
+            // جلب الجلسة الحالية
             const { data: { session } } = await this._client.auth.getSession();
             this._session = session;
             this._user = session?.user ?? null;
+            this._updateUI();
 
             console.log('🔒 [Auth] تم تأمين الواجهة');
         },
 
         /**
          * هل المستخدم مسجل الدخول؟
+         * @returns {boolean}
          */
         isLoggedIn: function () {
             return !!this._session;
@@ -84,63 +100,127 @@
 
         /**
          * تسجيل الدخول بالبريد وكلمة المرور
+         * @param {string} email
+         * @param {string} password
+         * @returns {Promise<{data: any, error: any}>}
          */
         login: async function (email, password) {
             if (!this._client) throw new Error('Supabase غير متوفر');
-            const { data, error } = await this._client.auth.signInWithPassword({
-                email,
-                password
-            });
-            if (error) throw error;
-            this._session = data.session;
-            this._user = data.user;
-            return data;
+            try {
+                const { data, error } = await this._client.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                this._session = data.session;
+                this._user = data.user;
+                this._updateUI();
+                return { data, error: null };
+            } catch (error) {
+                console.error('❌ [Auth] فشل تسجيل الدخول:', error);
+                return { data: null, error };
+            }
         },
 
         /**
          * تسجيل الخروج
+         * @returns {Promise<void>}
          */
         logout: async function () {
             if (!this._client) return;
-            await this._client.auth.signOut();
-            this._session = null;
-            this._user = null;
-            window.location.replace('/auth/auth/login/login.html');
+            try {
+                await this._client.auth.signOut();
+                this._session = null;
+                this._user = null;
+                this._updateUI();
+                this.redirectTo(ROUTES.LOGIN);
+            } catch (error) {
+                console.error('❌ [Auth] فشل تسجيل الخروج:', error);
+            }
         },
 
         /**
          * إعادة توجيه إلى صفحة
+         * @param {string} url
          */
         redirectTo: function (url) {
             window.location.replace(url);
         },
 
         /**
-         * جلب المستخدم الحالي
+         * جلب المستخدم الحالي (من الخادم)
+         * @returns {Promise<import('@supabase/supabase-js').User|null>}
          */
         getUser: async function () {
             if (!this._client) return null;
-            const { data: { user } } = await this._client.auth.getUser();
-            this._user = user;
-            return user;
+            try {
+                const { data: { user } } = await this._client.auth.getUser();
+                this._user = user;
+                this._updateUI();
+                return user;
+            } catch (error) {
+                console.error('❌ [Auth] فشل جلب المستخدم:', error);
+                return null;
+            }
         },
 
         /**
          * جلب الجلسة الحالية
+         * @returns {Promise<import('@supabase/supabase-js').Session|null>}
          */
         getSession: async function () {
             if (!this._client) return null;
-            const { data: { session } } = await this._client.auth.getSession();
-            this._session = session;
-            return session;
+            try {
+                const { data: { session } } = await this._client.auth.getSession();
+                this._session = session;
+                return session;
+            } catch (error) {
+                console.error('❌ [Auth] فشل جلب الجلسة:', error);
+                return null;
+            }
+        },
+
+        /**
+         * تحديث بيانات المستخدم الوصفية (metadata)
+         * @param {Object} metadata
+         * @returns {Promise<{data: any, error: any}>}
+         */
+        updateUserMetadata: async function (metadata) {
+            if (!this._client) throw new Error('Supabase غير متوفر');
+            try {
+                const { data, error } = await this._client.auth.updateUser({ data: metadata });
+                if (error) throw error;
+                this._user = data.user;
+                this._updateUI();
+                return { data, error: null };
+            } catch (error) {
+                console.error('❌ [Auth] فشل تحديث البيانات:', error);
+                return { data: null, error };
+            }
+        },
+
+        /**
+         * التحقق من صلاحية المستخدم (دور معين)
+         * @param {string} role
+         * @returns {boolean}
+         */
+        hasRole: function (role) {
+            if (!this._user) return false;
+            const userRole = this._user.user_metadata?.role || 'user';
+            return userRole === role;
         },
 
         /**
          * تحديث واجهة المستخدم (اسم العميل، الصورة الرمزية)
+         * @private
          */
         _updateUI: function () {
             const user = this._user;
-            if (!user) return;
+            if (!user) {
+                // إخفاء عناصر المستخدم إذا لم يكن مسجلاً
+                const headerName = document.getElementById('headerUserName');
+                const headerAvatar = document.getElementById('headerAvatar');
+                if (headerName) headerName.textContent = 'زائر';
+                if (headerAvatar) headerAvatar.textContent = 'ز';
+                return;
+            }
 
             const fullName = user.user_metadata?.full_name || user.email || 'مستخدم';
             const headerName = document.getElementById('headerUserName');
@@ -153,8 +233,9 @@
 
     // ========== بدء التهيئة تلقائياً ==========
     document.addEventListener('DOMContentLoaded', function () {
-        // لا نُهيئ إذا كنا في صفحة تسجيل الدخول أو صفحات لا تحتاج Auth (اختياري)
-        if (!window.location.pathname.includes('/auth/auth/login/')) {
+        // لا نُهيئ في صفحات تسجيل الدخول أو الصفحات العامة (اختياري)
+        const path = window.location.pathname;
+        if (!path.includes('/auth/auth/login/') && !path.includes('/auth/register/')) {
             window.TeraAuth.init();
         }
     });
