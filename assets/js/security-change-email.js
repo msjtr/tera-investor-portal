@@ -1,158 +1,614 @@
 /**
- * security-change-email.js – تغيير البريد الإلكتروني (Internal API)
- * يعتمد على security.js الذي يوفر waitForSupabase() و showSecurityAlert() و updateHeader()
- * يستخدم نقطة نهاية داخلية /api/change-email لتغيير البريد مباشرة.
+ * ==========================================================
+ * security-change-email.js
+ * تغيير البريد الإلكتروني
+ * Enterprise Version 2026
+ * ==========================================================
  */
-(function() {
-    'use strict';
+
+'use strict';
+
+(function () {
 
     window.SecurityPages = window.SecurityPages || {};
 
-    window.SecurityPages['change-email'] = {
-        init: async function() {
-            console.log('📧 تهيئة صفحة تغيير البريد الإلكتروني...');
-            let supabase;
-            try { supabase = await waitForSupabase(); } catch (err) {
-                showSecurityAlert('تعذر الاتصال بقاعدة البيانات.', 'error');
-                return;
-            }
+    window.SecurityPages["change-email"] = {
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                showSecurityAlert('يجب تسجيل الدخول أولاً.', 'error');
-                setTimeout(() => window.location.replace('/auth/auth/login/login.html'), 2000);
-                return;
-            }
-            updateHeader(user);
+        supabase: null,
+        currentUser: null,
+        currentSession: null,
 
-            const currentEmail = user.email;
-            document.getElementById('currentEmailDisplay').textContent = currentEmail;
+        init: async function () {
 
-            // عناصر DOM – المرحلة 1
-            const currentPasswordInput = document.getElementById('currentPassword');
-            const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
-            const step1Error = document.getElementById('step1Error');
-            const step1 = document.getElementById('step1');
-            const step2 = document.getElementById('step2');
+            console.log("📧 [Change Email] Initializing...");
 
-            // عناصر DOM – المرحلة 2
-            const newEmailInput = document.getElementById('newEmail');
-            const confirmEmailInput = document.getElementById('confirmEmail');
-            const changeEmailBtn = document.getElementById('changeEmailBtn');
+            try {
 
-            function isValidEmail(email) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-            }
+                this.supabase = await waitForSupabase();
 
-            // ========== المرحلة 1: التحقق من كلمة المرور ==========
-            verifyPasswordBtn.addEventListener('click', async function() {
-                const password = currentPasswordInput.value.trim();
-                if (!password) {
-                    step1Error.textContent = 'يرجى إدخال كلمة المرور الحالية.';
-                    step1Error.style.display = 'block';
+                const {
+                    data: { session }
+                } = await this.supabase.auth.getSession();
+
+                if (!session) {
+                    window.location.replace("/auth/auth/login/login.html");
                     return;
                 }
 
-                this.disabled = true;
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-                step1Error.style.display = 'none';
+                this.currentSession = session;
+                this.currentUser = session.user;
 
-                try {
-                    const { error } = await supabase.auth.signInWithPassword({
-                        email: currentEmail,
-                        password: password
+                updateHeader(this.currentUser);
+
+                this.initializeElements();
+
+                this.initializeEvents();
+
+                this.fillCurrentEmail();
+
+            } catch (error) {
+
+                console.error(error);
+
+                showSecurityAlert(
+                    "تعذر تحميل صفحة تغيير البريد الإلكتروني.",
+                    "error"
+                );
+
+            }
+
+        },
+
+        initializeElements: function () {
+
+            this.step1 =
+                document.getElementById("step1");
+
+            this.step2 =
+                document.getElementById("step2");
+
+            this.currentEmailDisplay =
+                document.getElementById("currentEmailDisplay");
+
+            this.currentPassword =
+                document.getElementById("currentPassword");
+
+            this.verifyPasswordBtn =
+                document.getElementById("verifyPasswordBtn");
+
+            this.step1Error =
+                document.getElementById("step1Error");
+
+            this.newEmail =
+                document.getElementById("newEmail");
+
+            this.confirmEmail =
+                document.getElementById("confirmEmail");
+
+            this.changeEmailBtn =
+                document.getElementById("changeEmailBtn");
+
+            this.newEmailHint =
+                document.getElementById("newEmailHint");
+
+            this.confirmEmailHint =
+                document.getElementById("confirmEmailHint");
+
+        },
+
+        initializeEvents: function () {
+
+            this.verifyPasswordBtn.addEventListener(
+                "click",
+                () => this.verifyPassword()
+            );
+
+            this.changeEmailBtn.addEventListener(
+                "click",
+                () => this.changeEmail()
+            );
+
+            this.newEmail.addEventListener(
+                "input",
+                () => this.validateEmails()
+            );
+
+            this.confirmEmail.addEventListener(
+                "input",
+                () => this.validateEmails()
+            );
+
+        },
+
+        fillCurrentEmail: function () {
+
+            this.currentEmailDisplay.textContent =
+                this.currentUser.email || "-";
+
+        },
+
+        validateEmail: function (email) {
+
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        },
+
+        validateEmails: function () {
+
+            const email =
+                this.newEmail.value.trim().toLowerCase();
+
+            const confirm =
+                this.confirmEmail.value.trim().toLowerCase();
+
+            if (!email.length) {
+
+                this.newEmailHint.className =
+                    "email-hint";
+
+                this.newEmailHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أدخل البريد الإلكتروني الجديد';
+
+            } else if (!this.validateEmail(email)) {
+
+                this.newEmailHint.className =
+                    "email-hint error";
+
+                this.newEmailHint.innerHTML =
+                    '<i class="fas fa-times-circle"></i> صيغة البريد غير صحيحة';
+
+            } else {
+
+                this.newEmailHint.className =
+                    "email-hint success";
+
+                this.newEmailHint.innerHTML =
+                    '<i class="fas fa-check-circle"></i> البريد الإلكتروني صالح';
+
+            }
+
+            if (!confirm.length) {
+
+                this.confirmEmailHint.className =
+                    "email-hint";
+
+                this.confirmEmailHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أعد كتابة البريد الإلكتروني';
+
+            }
+
+
+                    else if (email !== confirm) {
+
+                this.confirmEmailHint.className =
+                    "email-hint error";
+
+                this.confirmEmailHint.innerHTML =
+                    '<i class="fas fa-times-circle"></i> البريدان غير متطابقين';
+
+            } else {
+
+                this.confirmEmailHint.className =
+                    "email-hint success";
+
+                this.confirmEmailHint.innerHTML =
+                    '<i class="fas fa-check-circle"></i> البريدان متطابقان';
+
+            }
+
+        },
+
+        async verifyPassword() {
+
+            const password =
+                this.currentPassword.value.trim();
+
+            this.step1Error.style.display = "none";
+
+            if (!password) {
+
+                this.step1Error.textContent =
+                    "يرجى إدخال كلمة المرور الحالية.";
+
+                this.step1Error.style.display =
+                    "block";
+
+                return;
+
+            }
+
+            this.verifyPasswordBtn.disabled = true;
+
+            this.verifyPasswordBtn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+
+            try {
+
+                const { error } =
+                    await this.supabase.auth.signInWithPassword({
+
+                        email:
+                            this.currentUser.email,
+
+                        password
+
                     });
-                    if (error) throw error;
-                    showSecurityAlert('تم التحقق من هويتك بنجاح.', 'success');
-                    step1.style.display = 'none';
-                    step2.style.display = 'block';
-                } catch (err) {
-                    console.error('فشل التحقق من كلمة المرور:', err);
-                    step1Error.textContent = 'كلمة المرور غير صحيحة.';
-                    step1Error.style.display = 'block';
-                } finally {
-                    this.disabled = false;
-                    this.innerHTML = '<i class="fas fa-check-circle"></i> تحقق من هويتك';
-                }
-            });
 
-            // ========== المرحلة 2: تغيير البريد عبر Internal API ==========
-            if (changeEmailBtn) {
-                changeEmailBtn.addEventListener('click', async function() {
-                    const newEmail = newEmailInput.value.trim().toLowerCase();
-                    const confirm = confirmEmailInput.value.trim().toLowerCase();
+                if (error)
+                    throw error;
 
-                    if (!newEmail || !confirm) {
-                        showSecurityAlert('يرجى ملء جميع الحقول.', 'error');
-                        return;
-                    }
+                showSecurityAlert(
 
-                    if (!isValidEmail(newEmail)) {
-                        showSecurityAlert('صيغة البريد الإلكتروني غير صالحة.', 'error');
-                        return;
-                    }
+                    "تم التحقق من الهوية بنجاح.",
 
-                    if (newEmail !== confirm) {
-                        showSecurityAlert('البريد الإلكتروني غير متطابق.', 'error');
-                        return;
-                    }
+                    "success"
 
-                    if (newEmail === currentEmail.toLowerCase()) {
-                        showSecurityAlert('البريد الجديد مطابق للحالي.', 'error');
-                        return;
-                    }
+                );
 
-                    this.disabled = true;
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                this.step1.style.display =
+                    "none";
+
+                this.step2.style.display =
+                    "block";
+
+            }
+
+            catch (err) {
+
+                console.error(err);
+
+                this.step1Error.textContent =
+                    "كلمة المرور غير صحيحة.";
+
+                this.step1Error.style.display =
+                    "block";
+
+            }
+
+            finally {
+
+                this.verifyPasswordBtn.disabled =
+                    false;
+
+                this.verifyPasswordBtn.innerHTML =
+                    '<i class="fas fa-check-circle"></i> تحقق من هويتك';
+
+            }
+
+        },
+
+        async changeEmail() {
+
+            const email =
+                this.newEmail.value.trim().toLowerCase();
+
+            const confirm =
+                this.confirmEmail.value.trim().toLowerCase();
+
+            if (!email || !confirm) {
+
+                showSecurityAlert(
+
+                    "يرجى تعبئة جميع الحقول.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            if (!this.validateEmail(email)) {
+
+                showSecurityAlert(
+
+                    "صيغة البريد الإلكتروني غير صحيحة.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            if (email !== confirm) {
+
+                showSecurityAlert(
+
+                    "البريد الإلكتروني غير متطابق.",
+
+                    "error"
+
+                );
+
+                return;
+
+            }
+
+            if (
+                email ===
+                this.currentUser.email.toLowerCase()
+            ) {
+
+                showSecurityAlert(
+
+                    "البريد الجديد مطابق للبريد الحالي.",
+
+                    "warning"
+
+                );
+
+                return;
+
+            }
+
+            this.changeEmailBtn.disabled = true;
+
+            this.changeEmailBtn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> جاري تغيير البريد...';
+
 
                     try {
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session) {
-                            throw new Error('انتهت الجلسة. يرجى إعادة تسجيل الدخول.');
-                        }
 
-                        // استدعاء نقطة النهاية الداخلية (لا تحتاج إلى CORS)
-                        const response = await fetch('/api/change-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                newEmail: newEmail,
-                                accessToken: session.access_token
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (!response.ok || result.error) {
-                            throw new Error(result.error || 'فشل تغيير البريد');
-                        }
-
-                        showSecurityAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
-                        setTimeout(() => window.location.replace('/pages/dashboard/index.html'), 2000);
-
-                    } catch (err) {
-                        console.error('❌ فشل تغيير البريد:', err);
-                        let userMessage = 'فشل تغيير البريد.';
-                        if (err.message) {
-                            if (err.message.includes('already exists')) {
-                                userMessage = 'البريد الإلكتروني الجديد مستخدم بالفعل.';
-                            } else if (err.message.includes('invalid format')) {
-                                userMessage = 'صيغة البريد الإلكتروني غير صالحة.';
-                            } else if (err.message.includes('rate limit')) {
-                                userMessage = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
-                            } else if (err.message.includes('session')) {
-                                userMessage = 'انتهت الجلسة. يرجى إعادة تسجيل الدخول.';
-                            } else {
-                                userMessage = err.message;
+                const { data, error } =
+                    await this.supabase.functions.invoke(
+                        "change-email",
+                        {
+                            body: {
+                                newEmail: email
                             }
                         }
-                        showSecurityAlert(userMessage, 'error');
-                    } finally {
-                        this.disabled = false;
-                        this.innerHTML = '<i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني';
-                    }
-                });
+                    );
+
+                if (error)
+                    throw error;
+
+                if (data?.error)
+                    throw new Error(data.error);
+
+                showSecurityAlert(
+
+                    "تم تغيير البريد الإلكتروني بنجاح.",
+
+                    "success"
+
+                );
+
+                /*
+                 * تحديث بيانات المستخدم بعد تغيير البريد
+                 */
+
+                const {
+                    data: { user }
+                } = await this.supabase.auth.getUser();
+
+                if (user) {
+
+                    this.currentUser = user;
+
+                    this.currentEmailDisplay.textContent =
+                        user.email;
+
+                }
+
+                /*
+                 * تنظيف الحقول
+                 */
+
+                this.currentPassword.value = "";
+
+                this.newEmail.value = "";
+
+                this.confirmEmail.value = "";
+
+                this.newEmailHint.className =
+                    "email-hint";
+
+                this.newEmailHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.';
+
+                this.confirmEmailHint.className =
+                    "email-hint";
+
+                this.confirmEmailHint.innerHTML =
+                    '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.';
+
+                /*
+                 * الرجوع للخطوة الأولى
+                 */
+
+                this.step2.style.display =
+                    "none";
+
+                this.step1.style.display =
+                    "block";
+
             }
+
+            catch (err) {
+
+                console.error(
+                    "[Change Email]",
+                    err
+                );
+
+                let message =
+                    "تعذر تغيير البريد الإلكتروني.";
+
+                if (err.message) {
+
+                    if (
+                        err.message.includes("already")
+                    ) {
+
+                        message =
+                            "البريد الإلكتروني مستخدم مسبقاً.";
+
+                    }
+
+                    else if (
+                        err.message.includes("invalid")
+                    ) {
+
+                        message =
+                            "البريد الإلكتروني غير صالح.";
+
+                    }
+
+                    else if (
+                        err.message.includes("rate")
+                    ) {
+
+                        message =
+                            "تم تجاوز عدد المحاولات، يرجى الانتظار قليلاً.";
+
+                    }
+
+                    else {
+
+                        message =
+                            err.message;
+
+                    }
+
+                }
+
+                showSecurityAlert(
+
+                    message,
+
+                    "error"
+
+                );
+
+            }
+
+            finally {
+
+                this.changeEmailBtn.disabled =
+                    false;
+
+                this.changeEmailBtn.innerHTML =
+                    '<i class="fas fa-check-circle"></i> تغيير البريد الإلكتروني';
+
+            }
+
+        },
+
+                /*
+        ============================================================
+        إعادة تعيين النموذج
+        ============================================================
+        */
+
+        resetForm() {
+
+            this.currentPassword.value = "";
+
+            this.newEmail.value = "";
+
+            this.confirmEmail.value = "";
+
+            this.step1Error.textContent = "";
+
+            this.step1Error.style.display = "none";
+
+            this.newEmailHint.className =
+                "email-hint";
+
+            this.newEmailHint.innerHTML =
+                '<i class="fas fa-info-circle"></i> أدخل بريداً إلكترونياً صحيحاً وفعالاً.';
+
+            this.confirmEmailHint.className =
+                "email-hint";
+
+            this.confirmEmailHint.innerHTML =
+                '<i class="fas fa-info-circle"></i> يجب أن يتطابق مع البريد الإلكتروني الجديد.';
+
+        },
+
+        /*
+        ============================================================
+        الرجوع إلى المرحلة الأولى
+        ============================================================
+        */
+
+        backToStepOne() {
+
+            this.resetForm();
+
+            this.step2.style.display = "none";
+
+            this.step1.style.display = "block";
+
+        },
+
+        /*
+        ============================================================
+        إظهار المرحلة الثانية
+        ============================================================
+        */
+
+        showStepTwo() {
+
+            this.step1.style.display = "none";
+
+            this.step2.style.display = "block";
+
+        },
+
+        /*
+        ============================================================
+        تحديث البريد الحالي بعد نجاح العملية
+        ============================================================
+        */
+
+        updateCurrentEmail(email) {
+
+            this.currentEmailDisplay.textContent = email;
+
+        },
+
+        /*
+        ============================================================
+        تعطيل الزر أثناء التنفيذ
+        ============================================================
+        */
+
+        setLoading(button, text) {
+
+            button.disabled = true;
+
+            button.dataset.original =
+                button.innerHTML;
+
+            button.innerHTML =
+                `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+
+        },
+
+        /*
+        ============================================================
+        إعادة الزر لوضعه الطبيعي
+        ============================================================
+        */
+
+        stopLoading(button) {
+
+            button.disabled = false;
+
+            if (button.dataset.original) {
+
+                button.innerHTML =
+                    button.dataset.original;
+
+            }
+
         }
+
     };
+
 })();
+
