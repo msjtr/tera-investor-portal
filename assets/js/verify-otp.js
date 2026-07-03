@@ -50,20 +50,31 @@
         }
         supabase = window.teraSupabase;
 
-        // ---------- ٢. تحديث اسم العميل في الهيدر ----------
+        // ---------- ٢. تحديث اسم العميل في الهيدر (مرن) ----------
         async function refreshHeader() {
+            const headerName = document.getElementById('headerUserName');
+            const headerAvatar = document.getElementById('headerAvatar');
+            let displayName = 'مستخدم';
+
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    const fullName = user.user_metadata?.full_name || 'مستخدم';
-                    const headerName = document.getElementById('headerUserName');
-                    const headerAvatar = document.getElementById('headerAvatar');
-                    if (headerName) headerName.textContent = fullName;
-                    if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+                    displayName = user.user_metadata?.full_name || user.email || displayName;
+                } else {
+                    // لا توجد جلسة، نعرض البريد الإلكتروني من pendingEmail إن وجد
+                    const pending = localStorage.getItem('pendingVerificationEmail');
+                    if (pending) {
+                        displayName = pending.split('@')[0]; // الجزء قبل @
+                    }
                 }
             } catch (e) {
-                console.warn('تعذر تحميل اسم المستخدم:', e);
+                // في حال عدم وجود جلسة، نستخدم البريد المعلق
+                const pending = localStorage.getItem('pendingVerificationEmail');
+                if (pending) displayName = pending.split('@')[0];
             }
+
+            if (headerName) headerName.textContent = displayName;
+            if (headerAvatar) headerAvatar.textContent = displayName.charAt(0).toUpperCase();
         }
         await refreshHeader();
 
@@ -174,13 +185,12 @@
 
             try {
                 let otpType;
-                if (verifyType === 'change_mobile') {
-                    otpType = 'sms';
-                } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
-                    otpType = 'email';
-                } else {
-                    otpType = verifyType;
-                }
+                // تحديد النوع بدقة حسب قوالب Supabase
+                if (verifyType === 'signup') otpType = 'signup';
+                else if (verifyType === 'recovery') otpType = 'recovery';
+                else if (verifyType === 'change_mobile') otpType = 'sms';
+                else if (verifyType === 'email_change') otpType = 'email_change';
+                else otpType = 'email'; // الحالات المخصصة و login_otp
 
                 let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
@@ -252,6 +262,7 @@
                     } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
                         await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     } else {
+                        // signup, recovery, email_change, إلخ
                         await supabase.auth.resend({ type: verifyType, email: pendingEmail });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
