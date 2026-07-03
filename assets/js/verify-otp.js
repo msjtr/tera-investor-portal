@@ -291,21 +291,16 @@
 
                 try {
                     if (verifyType === 'signup') {
-                        // إعادة إرسال تأكيد التسجيل
                         await supabase.auth.resend({ type: 'signup', email: pendingEmail });
                     } else if (verifyType === 'recovery') {
-                        // إعادة إرسال تعيين كلمة المرور
                         await supabase.auth.resend({ type: 'recovery', email: pendingEmail });
                     } else if (verifyType === 'email_change') {
-                        // إعادة إرسال تأكيد تغيير البريد
                         await supabase.auth.resend({ type: 'email_change', email: pendingEmail });
                     } else if (verifyType === 'change_mobile') {
-                        // إعادة إرسال رمز الجوال
                         const mobile = localStorage.getItem('pendingNewMobile');
                         if (!mobile) throw new Error('رقم الجوال غير موجود');
                         await supabase.auth.signInWithOtp({ phone: mobile, options: { shouldCreateUser: false } });
                     } else {
-                        // Magic Link / Email OTP (login_otp, personal_info, contact_info, ...)
                         await supabase.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: false } });
                     }
                     showAlert('تم إرسال رمز تحقق جديد.', 'success');
