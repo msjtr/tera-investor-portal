@@ -1,380 +1,480 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – يدعم signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
- * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي حسب السياق، تحديث اسم العميل، ورسائل عربية.
- * تحديث: يُكمل الطلب تلقائياً بعد اكتمال جميع المراحل.
- * يدعم تغيير رقم الجوال عبر change_mobile.
+ * ==========================================================
+ * verify-otp.js
+ * التحقق من رمز OTP
+ * Enterprise Version 2026
+ * ==========================================================
  */
-(function() {
-    'use strict';
 
-    document.addEventListener('DOMContentLoaded', async function() {
-        const form = document.getElementById('otpForm');
-        const otpInput = document.getElementById('otp');
-        const submitBtn = document.getElementById('submitBtn');
-        const resendBtn = document.getElementById('resendCode');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const timerContainer = document.getElementById('timerContainer');
-        const otpError = document.getElementById('otp-error');
-        const alertBox = document.getElementById('formAlert');
-        const alertIcon = document.getElementById('alertIcon');
-        const alertMessage = document.getElementById('alertMessage');
-        const instructionMainText = document.getElementById('instructionMainText');
-        const instructionEmailText = document.getElementById('instructionEmailText');
-        const loaderOverlay = document.getElementById('creativeLoaderScreen');
-        const backLink = document.getElementById('backLink');
-        const backLinkText = document.getElementById('backLinkText');
+'use strict';
 
-        if (!form) return;
+(function () {
 
-        // ---------- ١. انتظار جاهزية Supabase ----------
-        if (!window.teraSupabase) {
-            // محاولة استخدام waitForSupabase من security.js إن وُجدت
-            if (typeof waitForSupabase === 'function') {
-                try { await waitForSupabase(); } catch (e) {
-                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
-                    if (submitBtn) submitBtn.disabled = true;
-                    return;
-                }
-            } else {
-                // احتياطي: الطريقة التقليدية
-                try {
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
-                        document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                        document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
+    const VerifyOTP = {
+
+        supabase: null,
+
+        email: null,
+
+        verifyButton: null,
+
+        resendButton: null,
+
+        otpInput: null,
+
+        countdownElement: null,
+
+        countdown: 60,
+
+        timer: null,
+
+        async init() {
+
+            try {
+
+                this.supabase = await waitForSupabase();
+
+                this.cacheDom();
+
+                this.bindEvents();
+
+                this.loadEmail();
+
+                this.startTimer();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                this.showError(
+                    "تعذر تحميل صفحة التحقق."
+                );
+
+            }
+
+        },
+
+        cacheDom() {
+
+            this.verifyButton =
+                document.getElementById("verifyOtpBtn");
+
+            this.resendButton =
+                document.getElementById("resendOtpBtn");
+
+            this.otpInput =
+                document.getElementById("otpCode");
+
+            this.countdownElement =
+                document.getElementById("countdown");
+
+        },
+
+        bindEvents() {
+
+            if (this.verifyButton) {
+
+                this.verifyButton.addEventListener(
+
+                    "click",
+
+                    () => this.verify()
+
+                );
+
+            }
+
+            if (this.resendButton) {
+
+                this.resendButton.addEventListener(
+
+                    "click",
+
+                    () => this.resend()
+
+                );
+
+            }
+
+        },
+
+        loadEmail() {
+
+            this.email =
+                sessionStorage.getItem("otp_email") ||
+
+                localStorage.getItem("otp_email");
+
+            if (!this.email) {
+
+                window.location.replace(
+                    "/auth/auth/login/login.html"
+                );
+
+            }
+
+        },
+
+                async verify() {
+
+            const otp =
+                this.otpInput.value.trim();
+
+            if (!otp) {
+
+                this.showError(
+                    "يرجى إدخال رمز التحقق."
+                );
+
+                return;
+
+            }
+
+            this.setLoading(
+                this.verifyButton,
+                "جاري التحقق..."
+            );
+
+            try {
+
+                const { error } =
+                    await this.supabase.auth.verifyOtp({
+
+                        email: this.email,
+
+                        token: otp,
+
+                        type: "email"
+
                     });
-                } catch (err) {
-                    showAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
-                    if (submitBtn) submitBtn.disabled = true;
-                    return;
-                }
-            }
-        }
 
-        const supabaseClient = window.teraSupabase;
+                if (error)
+                    throw error;
 
-        // ---------- ٢. تحديث اسم العميل في الهيدر ----------
-        try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                const fullName = user.user_metadata?.full_name || 'مستخدم';
-                document.getElementById('headerUserName').textContent = fullName;
-                document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
-            }
-        } catch (e) {
-            console.warn('تعذر تحميل اسم المستخدم:', e);
-        }
+                this.showSuccess(
+                    "تم التحقق من الرمز بنجاح."
+                );
 
-        // ---------- ٣. قراءة السياق ----------
-        const pendingEmail = localStorage.getItem('pendingVerificationEmail');
-        const verifyType = localStorage.getItem('tera_verify_type') || 'signup'; // signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
+                sessionStorage.removeItem(
+                    "otp_email"
+                );
 
-        if (pendingEmail) {
-            let mainMessage = 'أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني';
-            if (verifyType === 'signup') mainMessage = 'أدخل رمز تأكيد التسجيل (8 أرقام) المرسل إلى';
-            else if (verifyType === 'recovery') mainMessage = 'أدخل رمز إعادة تعيين كلمة المرور (8 أرقام) المرسل إلى';
-            else if (verifyType === 'personal_info') mainMessage = 'أدخل رمز تأكيد المعلومات الشخصية (8 أرقام) المرسل إلى';
-            else if (verifyType === 'contact_info') mainMessage = 'أدخل رمز تأكيد معلومات الاتصال (8 أرقام) المرسل إلى';
-            else if (verifyType === 'national_address') mainMessage = 'أدخل رمز تأكيد العنوان الوطني (8 أرقام) المرسل إلى';
-            else if (verifyType === 'bank_info') mainMessage = 'أدخل رمز تأكيد المعلومات البنكية (8 أرقام) المرسل إلى';
-            else if (verifyType === 'attachments') mainMessage = 'أدخل رمز تأكيد المرفقات (8 أرقام) المرسل إلى';
-            else if (verifyType === 'change_mobile') mainMessage = 'أدخل رمز تأكيد تغيير رقم الجوال (8 أرقام) المرسل إلى';
-            
-            if (instructionMainText) instructionMainText.textContent = mainMessage;
-            if (instructionEmailText) instructionEmailText.textContent = pendingEmail;
-        } else {
-            showAlert('لم يتم العثور على بريد إلكتروني معلق.', 'error');
-            if (submitBtn) submitBtn.disabled = true;
-        }
+                localStorage.removeItem(
+                    "otp_email"
+                );
 
-        // ---------- ٤. تخصيص رابط العودة حسب نوع العملية ----------
-        if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
-            backLink.href = '/pages/dashboard/index.html';
-            backLinkText.textContent = 'العودة';
-        } else {
-            backLink.href = '/auth/auth/login/login.html';
-            backLinkText.textContent = 'العودة لتسجيل الدخول';
-        }
-
-        // ---------- ٥. مؤقت إعادة الإرسال (5 دقائق = 300 ثانية) ----------
-        let timerSeconds = 300;
-        let timerInterval = null;
-
-        function startTimer() {
-            resendBtn.classList.add('disabled');
-            timerContainer.style.display = 'block';
-            timerSeconds = 300;
-            updateTimerDisplay();
-
-            timerInterval = setInterval(() => {
-                timerSeconds--;
-                updateTimerDisplay();
-                if (timerSeconds <= 0) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    timerContainer.style.display = 'none';
-                    resendBtn.classList.remove('disabled');
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const min = Math.floor(timerSeconds / 60);
-            const sec = timerSeconds % 60;
-            timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-        }
-
-        startTimer();
-
-        // ---------- ٦. إدخال الرمز (8 أرقام) وإرسال تلقائي ----------
-        otpInput.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
-            if (otpError) otpError.textContent = '';
-            if (this.value.length === 8) {
-                if (typeof form.requestSubmit === 'function') {
-                    form.requestSubmit();
-                } else {
-                    form.dispatchEvent(new Event('submit'));
-                }
-            }
-        });
-
-        otpInput.addEventListener('paste', function(e) {
-            e.preventDefault();
-            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 8);
-            this.value = paste;
-            if (paste.length === 8) {
-                if (typeof form.requestSubmit === 'function') form.requestSubmit();
-                else form.dispatchEvent(new Event('submit'));
-            }
-        });
-
-        // ---------- ٧. تقديم النموذج ----------
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            hideAlert();
-            if (otpError) otpError.textContent = '';
-
-            const otpValue = otpInput.value.trim();
-            if (otpValue.length !== 8) {
-                if (otpError) otpError.textContent = 'الرجاء إدخال رمز التحقق المكون من 8 أرقام';
-                return;
-            }
-
-            if (!pendingEmail) {
-                showAlert('بيانات الجلسة غير متوفرة.', 'error');
-                return;
-            }
-
-            showLoader(true);
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-
-            try {
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') ? 'email' : verifyType;
-
-                const { error } = await supabaseClient.auth.verifyOtp({
-                    email: pendingEmail,
-                    token: otpValue,
-                    type: otpType
-                });
-
-                if (error) throw error;
-
-                localStorage.removeItem('pendingVerificationEmail');
-                localStorage.removeItem('tera_verify_type');
-
-                showAlert('تم التحقق من الرمز بنجاح.', 'success');
-
-                setTimeout(async () => {
-                    if (verifyType === 'signup') {
-                        window.location.replace('/auth/auth/login/login.html');
-                    } else if (verifyType === 'recovery') {
-                        window.location.replace('/auth/reset-password.html');
-                    } else if (verifyType === 'change_mobile') {
-                        await changeMobile(supabaseClient);
-                    } else {
-                        await updateStageCompleted(supabaseClient, verifyType);
-                        finalizeRequestIfComplete(supabaseClient);
-                    }
-                }, 1500);
-
-            } catch (error) {
-                console.error('❌ فشل التحقق من الرمز:', error);
-                let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
-                if (error.message.includes('expired') || error.message.includes('invalid')) {
-                    msg = 'انتهت صلاحية رمز التحقق أو أنه غير صحيح. حاول مرة أخرى.';
-                }
-                showAlert(msg, 'error');
-                otpInput.value = '';
-                otpInput.focus();
-            } finally {
-                showLoader(false);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
-            }
-        });
-
-        // ---------- ٨. إعادة الإرسال ----------
-        if (resendBtn) {
-            resendBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                if (timerInterval) {
-                    showAlert('يرجى الانتظار حتى انتهاء المؤقت لإعادة الإرسال.', 'error');
-                    return;
-                }
-                if (!pendingEmail) {
-                    showAlert('لا يوجد بريد لإعادة الإرسال.', 'error');
-                    return;
-                }
-
-                resendBtn.style.pointerEvents = 'none';
-                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-
-                try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
-                        await supabaseClient.auth.signInWithOtp({
-                            email: pendingEmail,
-                            options: { shouldCreateUser: false }
-                        });
-                    } else {
-                        await supabaseClient.auth.resend({
-                            type: verifyType,
-                            email: pendingEmail
-                        });
-                    }
-                    showAlert('تم إرسال رمز تحقق جديد.', 'success');
-                    startTimer();
-                } catch (error) {
-                    showAlert('حدث خطأ أثناء إرسال الرمز. يرجى المحاولة مرة أخرى.', 'error');
-                } finally {
-                    resendBtn.style.pointerEvents = 'auto';
-                    resendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال الرمز';
-                }
-            });
-        }
-
-        // ---------- ٩. دوال التحديث بعد التحقق ----------
-
-        async function updateStageCompleted(client, type) {
-            try {
-                const { data: { user } } = await client.auth.getUser();
-                if (!user) return;
-
-                let fields = { updated_at: new Date().toISOString() };
-
-                if (type === 'personal_info') {
-                    fields.personal_info_completed = true;
-                } else if (type === 'contact_info') {
-                    fields.contact_info_completed = true;
-                } else if (type === 'national_address') {
-                    fields.national_address_completed = true;
-                } else if (type === 'bank_info') {
-                    fields.bank_info_completed = true;
-                } else if (type === 'attachments') {
-                    fields.attachments_completed = true;
-                }
-
-                await client.from('verification_requests').upsert({
-                    user_id: user.id,
-                    ...fields
-                }, { onConflict: 'user_id' });
-            } catch (e) {
-                console.error('خطأ في تحديث المرحلة:', e);
-            }
-        }
-
-        async function changeMobile(client) {
-            try {
-                const newMobile = localStorage.getItem('pendingNewMobile');
-                if (newMobile) {
-                    await client.auth.updateUser({ phone: newMobile });
-                }
-                localStorage.removeItem('pendingNewMobile');
-                showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
                 setTimeout(() => {
-                    window.location.replace('/pages/security/change-mobile.html');
-                }, 2000);
-            } catch (e) {
-                console.error('خطأ في تغيير رقم الجوال:', e);
-                showAlert('تعذر تغيير رقم الجوال.', 'error');
-                window.location.replace('/pages/security/change-mobile.html');
+
+                    window.location.replace(
+                        "/pages/dashboard/index.html"
+                    );
+
+                }, 1200);
+
             }
-        }
 
-        async function finalizeRequestIfComplete(client) {
+            catch (err) {
+
+                console.error(
+                    "[Verify OTP]",
+                    err
+                );
+
+                this.showError(
+
+                    err.message ||
+
+                    "رمز التحقق غير صحيح."
+
+                );
+
+            }
+
+            finally {
+
+                this.stopLoading(
+                    this.verifyButton
+                );
+
+            }
+
+        },
+
+        async resend() {
+
+            this.setLoading(
+
+                this.resendButton,
+
+                "جاري الإرسال..."
+
+            );
+
             try {
-                const { data: { user } } = await client.auth.getUser();
-                if (!user) return;
 
-                const { data: req } = await client
-                    .from('verification_requests')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
+                const { error } =
+                    await this.supabase.auth.resend({
 
-                if (!req) return;
+                        type: "signup",
 
-                const requiredStages = [
-                    'personal_info_completed',
-                    'national_address_completed',
-                    'contact_info_completed',
-                    'bank_info_completed',
-                    'attachments_completed',
-                    'agreed'
-                ];
+                        email: this.email
 
-                const allCompleted = requiredStages.every(key => req[key] === true);
+                    });
 
-                if (allCompleted) {
-                    await client.from('verification_requests').upsert({
-                        user_id: user.id,
-                        status: 'under_review',
-                        submitted: true,
-                        submitted_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }, { onConflict: 'user_id' });
+                if (error)
+                    throw error;
+
+                this.showSuccess(
+
+                    "تم إرسال رمز جديد."
+
+                );
+
+                this.countdown = 60;
+
+                this.startTimer();
+
+            }
+
+            catch (err) {
+
+                console.error(
+                    "[Resend OTP]",
+                    err
+                );
+
+                this.showError(
+
+                    err.message ||
+
+                    "تعذر إعادة إرسال الرمز."
+
+                );
+
+            }
+
+            finally {
+
+                this.stopLoading(
+                    this.resendButton
+                );
+
+            }
+
+        },
+
+                startTimer() {
+
+            if (this.timer) {
+
+                clearInterval(this.timer);
+
+            }
+
+            if (this.resendButton) {
+
+                this.resendButton.disabled = true;
+
+            }
+
+            const updateCountdown = () => {
+
+                if (this.countdownElement) {
+
+                    this.countdownElement.textContent =
+                        this.countdown;
+
                 }
 
-                window.location.replace('/pages/dashboard/index.html');
-            } catch (e) {
-                console.error('خطأ في إنهاء الطلب:', e);
-                window.location.replace('/pages/dashboard/index.html');
+                if (this.countdown <= 0) {
+
+                    clearInterval(this.timer);
+
+                    if (this.resendButton) {
+
+                        this.resendButton.disabled = false;
+
+                    }
+
+                    if (this.countdownElement) {
+
+                        this.countdownElement.textContent = "";
+
+                    }
+
+                    return;
+
+                }
+
+                this.countdown--;
+
+            };
+
+            updateCountdown();
+
+            this.timer = setInterval(
+
+                updateCountdown,
+
+                1000
+
+            );
+
+        },
+
+        /*
+        ==========================================================
+        بدء التحميل
+        ==========================================================
+        */
+
+        setLoading(button, text) {
+
+            if (!button)
+                return;
+
+            button.disabled = true;
+
+            button.dataset.originalText =
+                button.innerHTML;
+
+            button.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                ${text}
+            `;
+
+        },
+
+        /*
+        ==========================================================
+        إنهاء التحميل
+        ==========================================================
+        */
+
+        stopLoading(button) {
+
+            if (!button)
+                return;
+
+            button.disabled = false;
+
+            if (button.dataset.originalText) {
+
+                button.innerHTML =
+                    button.dataset.originalText;
+
             }
+
+        },
+
+                /*
+        ==========================================================
+        رسالة نجاح
+        ==========================================================
+        */
+
+        showSuccess(message) {
+
+            if (typeof showSecurityAlert === "function") {
+
+                showSecurityAlert(
+                    message,
+                    "success"
+                );
+
+                return;
+
+            }
+
+            alert(message);
+
+        },
+
+        /*
+        ==========================================================
+        رسالة خطأ
+        ==========================================================
+        */
+
+        showError(message) {
+
+            if (typeof showSecurityAlert === "function") {
+
+                showSecurityAlert(
+                    message,
+                    "error"
+                );
+
+                return;
+
+            }
+
+            alert(message);
+
+        },
+
+        /*
+        ==========================================================
+        إعادة ضبط النموذج
+        ==========================================================
+        */
+
+        resetForm() {
+
+            if (this.otpInput) {
+
+                this.otpInput.value = "";
+
+                this.otpInput.focus();
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        تنظيف الموارد
+        ==========================================================
+        */
+
+        destroy() {
+
+            if (this.timer) {
+
+                clearInterval(this.timer);
+
+                this.timer = null;
+
+            }
+
+            this.resetForm();
+
+            this.supabase = null;
+
+            this.email = null;
+
+        },
+
+            };
+
+    /*
+    ==========================================================
+    تشغيل الصفحة
+    ==========================================================
+    */
+
+    document.addEventListener(
+
+        "DOMContentLoaded",
+
+        () => {
+
+            VerifyOTP.init();
+
         }
 
-        // ---------- ١٠. دوال العرض ----------
-        function showAlert(message, type) {
-            if (!alertBox || !alertMessage) return;
-            alertBox.style.display = 'flex';
-            alertBox.className = 'alert-box show ' + (type || 'error');
-            if (alertIcon) {
-                alertIcon.innerHTML = type === 'success'
-                    ? '<i class="fas fa-check-circle"></i>'
-                    : '<i class="fas fa-exclamation-circle"></i>';
-            }
-            alertMessage.textContent = message;
-            clearTimeout(window._alertTimer);
-            window._alertTimer = setTimeout(() => alertBox.classList.remove('show'), 8000);
-        }
+    );
 
-        function hideAlert() {
-            if (!alertBox) return;
-            alertBox.classList.remove('show');
-            alertBox.style.display = 'none';
-        }
-
-        function showLoader(show) {
-            if (!loaderOverlay) return;
-            loaderOverlay.style.display = show ? 'flex' : 'none';
-            const progressBar = document.getElementById('progressFillBar');
-            if (show && progressBar) {
-                progressBar.style.width = '0%';
-                setTimeout(() => { progressBar.style.width = '70%'; }, 500);
-                setTimeout(() => { progressBar.style.width = '90%'; }, 1500);
-            } else if (progressBar) {
-                progressBar.style.width = '0%';
-            }
-        }
-    });
 })();
