@@ -2,27 +2,26 @@
  * security-change-password.js
  * تغيير كلمة المرور عبر OTP (Magic Link / Email OTP)
  * متوافق مع security.js و TeraAuth
+ * النسخة المُحدَّثة: معالجة خطأ "New password should be different from the old password"
  */
 
 'use strict';
 
 window.SecurityPages = window.SecurityPages || {};
 
-// نحافظ على التعريف إذا كان موجوداً، وإلا ننشئه
 if (!window.SecurityPages['change-password']) {
     window.SecurityPages['change-password'] = {};
 }
 
 window.SecurityPages['change-password'] = {
 
-    // حالة المؤقت
     _timerInterval: null,
     _timerSeconds: 300,
+    _otpVerified: false, // لتتبع حالة التحقق من الرمز
 
     async init() {
         console.log('🔐 [Change Password] تهيئة الصفحة (عبر OTP)');
 
-        // 1. تأكد من وجود SecurityCore
         if (typeof SecurityCore === 'undefined' || !SecurityCore.supabase) {
             try {
                 if (typeof waitForSupabase === 'function') {
@@ -43,17 +42,15 @@ window.SecurityPages['change-password'] = {
             }
         }
 
-        // 2. تأكد من وجود المستخدم
         const user = await SecurityCore.getUser();
         if (!user) {
             window.location.replace('/auth/auth/login/login.html');
             return;
         }
 
-        // 3. ربط الأحداث
         this.bindEvents();
 
-        // 4. ملء البريد الإلكتروني تلقائياً (للمساعدة)
+        // ملء البريد الإلكتروني تلقائياً
         const emailInput = document.getElementById('emailForOtp');
         if (emailInput && user.email) {
             emailInput.value = user.email;
@@ -63,41 +60,35 @@ window.SecurityPages['change-password'] = {
     },
 
     bindEvents() {
-        // زر إرسال الرمز
         const sendBtn = document.getElementById('sendOtpBtn');
         if (sendBtn) {
             sendBtn.removeEventListener('click', this.sendOtp);
             sendBtn.addEventListener('click', this.sendOtp.bind(this));
         }
 
-        // زر تغيير كلمة المرور (بعد التحقق)
         const changeBtn = document.getElementById('changePasswordBtn');
         if (changeBtn) {
             changeBtn.removeEventListener('click', this.changePassword);
             changeBtn.addEventListener('click', this.changePassword.bind(this));
         }
 
-        // حقل رمز OTP – الإرسال التلقائي عند اكتمال 8 أرقام
         const otpInput = document.getElementById('otpCode');
         if (otpInput) {
             otpInput.removeEventListener('input', this.autoSubmitOtp);
             otpInput.addEventListener('input', this.autoSubmitOtp.bind(this));
         }
 
-        // أزرار إظهار/إخفاء كلمة المرور (لكلمة المرور الجديدة وتأكيدها)
         document.querySelectorAll('.password-toggle').forEach(toggle => {
             toggle.removeEventListener('click', this.togglePasswordVisibility);
             toggle.addEventListener('click', this.togglePasswordVisibility);
         });
 
-        // التحقق الفوري من قوة كلمة المرور الجديدة
         const newPassword = document.getElementById('newPassword');
         if (newPassword) {
             newPassword.removeEventListener('input', this.validatePasswordStrength);
             newPassword.addEventListener('input', this.validatePasswordStrength);
         }
 
-        // التحقق من تطابق كلمة المرور
         const confirmPassword = document.getElementById('confirmPassword');
         if (confirmPassword) {
             confirmPassword.removeEventListener('input', this.validateConfirmMatch);
@@ -126,7 +117,6 @@ window.SecurityPages['change-password'] = {
             emailInput?.focus();
             return;
         }
-
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             showSecurityAlert('البريد الإلكتروني غير صحيح.', 'error');
             emailInput?.focus();
@@ -138,24 +128,24 @@ window.SecurityPages['change-password'] = {
 
         try {
             const supabase = SecurityCore.supabase;
-            // إرسال OTP عبر البريد (Magic Link / Email OTP)
             const { error } = await supabase.auth.signInWithOtp({
                 email: email,
                 options: {
                     shouldCreateUser: false,
-                    // يمكن تخصيص القالب إن لزم
                 }
             });
-
             if (error) throw error;
 
-            // عرض حقل الرمز وإخفاء زر الإرسال
+            // إعادة تعيين حالة التحقق
+            this._otpVerified = false;
+
             document.getElementById('otpSection').style.display = 'block';
             btn.style.display = 'none';
+            document.getElementById('changePasswordBtn').style.display = 'none';
+            document.getElementById('otpCode').value = '';
+            document.getElementById('otpCode').focus();
 
-            // بدء المؤقت
             this.startTimer();
-
             showSecurityAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
 
         } catch (err) {
@@ -169,7 +159,6 @@ window.SecurityPages['change-password'] = {
             showSecurityAlert(msg, 'error');
         } finally {
             restoreButton(btn);
-            // إذا فشل، نعيد ظهور زر الإرسال
             if (document.getElementById('otpSection').style.display !== 'block') {
                 btn.style.display = 'block';
             }
@@ -178,6 +167,10 @@ window.SecurityPages['change-password'] = {
 
     // ==================== مؤقت إعادة الإرسال ====================
     startTimer() {
+        if (this._timerInterval) {
+            clearInterval(this._timerInterval);
+            this._timerInterval = null;
+        }
         this._timerSeconds = 300;
         this._timerInterval = setInterval(() => {
             this._timerSeconds--;
@@ -185,7 +178,6 @@ window.SecurityPages['change-password'] = {
             if (this._timerSeconds <= 0) {
                 clearInterval(this._timerInterval);
                 this._timerInterval = null;
-                // نعيد ظهور زر إرسال الرمز (مع إتاحة إعادة الإرسال)
                 const sendBtn = document.getElementById('sendOtpBtn');
                 if (sendBtn) {
                     sendBtn.style.display = 'block';
@@ -205,24 +197,100 @@ window.SecurityPages['change-password'] = {
     },
 
     // ==================== الإرسال التلقائي عند اكتمال 8 أرقام ====================
-    autoSubmitOtp(e) {
+    async autoSubmitOtp(e) {
         const input = e.currentTarget;
         input.value = input.value.replace(/\D/g, '');
         const otp = input.value.trim();
         if (otp.length === 8) {
-            // تشغيل تغيير كلمة المرور تلقائياً
-            this.changePassword();
+            // التحقق من الرمز أولاً، ثم تغيير كلمة المرور
+            await this.verifyOtpAndChangePassword(otp);
         }
     },
 
-    // ==================== تغيير كلمة المرور بعد التحقق من OTP ====================
-    async changePassword() {
-        const otpInput = document.getElementById('otpCode');
-        const otp = otpInput?.value?.trim();
-        if (!otp || otp.length !== 8) {
-            showSecurityAlert('يرجى إدخال رمز التحقق المكون من 8 أرقام.', 'error');
-            otpInput?.focus();
+    // ==================== التحقق من الرمز وتغيير كلمة المرور ====================
+    async verifyOtpAndChangePassword(otp) {
+        // إذا كان الرمز قد تم التحقق منه مسبقاً ولم تتغير كلمة المرور بعد، نستمر
+        if (this._otpVerified) {
+            await this.changePassword();
             return;
+        }
+
+        const emailInput = document.getElementById('emailForOtp');
+        const email = emailInput?.value?.trim();
+        if (!email) {
+            showSecurityAlert('يرجى إدخال البريد الإلكتروني.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('changePasswordBtn');
+        setButtonLoading(btn, 'جاري التحقق من الرمز...');
+
+        try {
+            const supabase = SecurityCore.supabase;
+
+            // التحقق من الرمز
+            const { error: verifyError } = await supabase.auth.verifyOtp({
+                email: email,
+                token: otp,
+                type: 'email'
+            });
+
+            if (verifyError) throw verifyError;
+
+            // الرمز صحيح
+            this._otpVerified = true;
+            showSecurityAlert('✅ تم التحقق من الرمز بنجاح. يمكنك الآن تغيير كلمة المرور.', 'success');
+
+            // إظهار زر تغيير كلمة المرور
+            btn.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-key"></i> تأكيد الرمز وتغيير كلمة المرور';
+
+            // تعطيل حقل الرمز لمنع إعادة التحقق
+            document.getElementById('otpCode').disabled = true;
+
+            // تنفيذ تغيير كلمة المرور تلقائياً (إذا كانت الحقول مملوءة)
+            const newPassword = document.getElementById('newPassword')?.value?.trim();
+            const confirmPassword = document.getElementById('confirmPassword')?.value?.trim();
+            if (newPassword && confirmPassword && newPassword === confirmPassword && newPassword.length >= 8) {
+                await this.changePassword();
+            } else {
+                // التركيز على حقل كلمة المرور الجديدة
+                document.getElementById('newPassword')?.focus();
+            }
+
+        } catch (err) {
+            console.error('❌ [Verify OTP]', err);
+            let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+            if (err.message.includes('expired')) {
+                msg = 'انتهت صلاحية الرمز. يرجى طلب رمز جديد.';
+            } else if (err.message.includes('invalid')) {
+                msg = 'الرمز غير صحيح. يرجى المحاولة مرة أخرى.';
+            }
+            showSecurityAlert(msg, 'error');
+            // إعادة تمكين زر إرسال الرمز
+            document.getElementById('sendOtpBtn').style.display = 'block';
+            // إعادة ضبط حقل الرمز
+            document.getElementById('otpCode').value = '';
+            document.getElementById('otpCode').focus();
+        } finally {
+            restoreButton(btn);
+        }
+    },
+
+    // ==================== تغيير كلمة المرور (بعد التحقق) ====================
+    async changePassword() {
+        // تأكد من التحقق من الرمز أولاً
+        if (!this._otpVerified) {
+            const otp = document.getElementById('otpCode')?.value?.trim();
+            if (otp && otp.length === 8) {
+                await this.verifyOtpAndChangePassword(otp);
+                return;
+            } else {
+                showSecurityAlert('يرجى إدخال رمز التحقق المكون من 8 أرقام أولاً.', 'error');
+                document.getElementById('otpCode')?.focus();
+                return;
+            }
         }
 
         const newPassword = document.getElementById('newPassword')?.value?.trim() || '';
@@ -241,61 +309,89 @@ window.SecurityPages['change-password'] = {
         }
 
         const btn = document.getElementById('changePasswordBtn');
-        setButtonLoading(btn, 'جاري التحقق وتغيير كلمة المرور...');
+        setButtonLoading(btn, 'جاري تغيير كلمة المرور...');
 
         try {
             const supabase = SecurityCore.supabase;
-            const email = document.getElementById('emailForOtp').value.trim();
 
-            // 1. التحقق من الرمز
-            const { error: verifyError } = await supabase.auth.verifyOtp({
-                email: email,
-                token: otp,
-                type: 'email' // أو 'magiclink' حسب الإعدادات
-            });
-
-            if (verifyError) throw verifyError;
-
-            // 2. بعد التحقق، نقوم بتحديث كلمة المرور
+            // تحديث كلمة المرور
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword
             });
 
             if (updateError) throw updateError;
 
-            // 3. نجاح
+            // نجاح
             showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
 
             // تنظيف النموذج
-            document.getElementById('changePasswordForm')?.reset();
-            document.getElementById('otpCode').value = '';
-            document.getElementById('changePasswordBtn').style.display = 'none';
-            document.getElementById('sendOtpBtn').style.display = 'block';
-            document.getElementById('otpSection').style.display = 'none';
-            document.getElementById('strengthFill').style.width = '0%';
-            document.getElementById('strengthLabel').textContent = 'ضعيفة';
-            document.querySelectorAll('#passwordRequirements ul li').forEach(li => {
-                li.className = '';
-                li.querySelector('i').className = 'fas fa-circle';
-            });
+            this.resetForm();
 
             // تحديث المستخدم
             await SecurityCore.refreshUser();
 
         } catch (err) {
             console.error('❌ [Change Password]', err);
-            let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
-            if (err.message.includes('expired')) {
-                msg = 'انتهت صلاحية الرمز. يرجى طلب رمز جديد.';
-            } else if (err.message.includes('invalid')) {
-                msg = 'الرمز غير صحيح. يرجى المحاولة مرة أخرى.';
+
+            let msg = 'تعذر تغيير كلمة المرور.';
+            if (err.message) {
+                if (err.message.includes('should be different from the old password')) {
+                    msg = '⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.';
+                } else if (err.message.includes('expired')) {
+                    msg = 'انتهت صلاحية الجلسة. يرجى طلب رمز جديد.';
+                    this._otpVerified = false;
+                    document.getElementById('sendOtpBtn').style.display = 'block';
+                    document.getElementById('otpCode').disabled = false;
+                    document.getElementById('otpCode').value = '';
+                } else {
+                    msg = err.message;
+                }
             }
             showSecurityAlert(msg, 'error');
-            // إعادة تمكين زر الإرسال إذا كان الرمز خاطئاً
-            document.getElementById('sendOtpBtn').style.display = 'block';
+
+            // إذا كان الخطأ بسبب تكرار كلمة المرور، نسمح للمستخدم بتجربة كلمة مرور مختلفة
+            if (err.message && err.message.includes('should be different from the old password')) {
+                document.getElementById('newPassword')?.focus();
+                document.getElementById('newPassword')?.select();
+            }
+
         } finally {
             restoreButton(btn);
         }
+    },
+
+    // ==================== إعادة تعيين النموذج ====================
+    resetForm() {
+        const form = document.getElementById('changePasswordForm');
+        if (form) form.reset();
+
+        document.getElementById('otpCode').value = '';
+        document.getElementById('otpCode').disabled = false;
+        document.getElementById('changePasswordBtn').style.display = 'none';
+        document.getElementById('sendOtpBtn').style.display = 'block';
+        document.getElementById('sendOtpBtn').disabled = false;
+        document.getElementById('otpSection').style.display = 'none';
+        this._otpVerified = false;
+
+        if (this._timerInterval) {
+            clearInterval(this._timerInterval);
+            this._timerInterval = null;
+        }
+        document.getElementById('timerDisplay').textContent = '05:00';
+
+        const fill = document.getElementById('strengthFill');
+        if (fill) { fill.style.width = '0%'; fill.style.background = '#e2e8f0'; }
+        const label = document.getElementById('strengthLabel');
+        if (label) { label.textContent = 'ضعيفة'; label.className = 'strength-label'; }
+
+        document.querySelectorAll('#passwordRequirements ul li').forEach(li => {
+            li.className = '';
+            const icon = li.querySelector('i');
+            if (icon) icon.className = 'fas fa-circle';
+        });
+
+        document.getElementById('confirmPasswordHint').textContent = 'أعد كتابة كلمة المرور الجديدة';
+        document.getElementById('confirmPasswordHint').style.color = '#64748b';
     },
 
     // ==================== التحقق من قوة كلمة المرور ====================
@@ -323,7 +419,8 @@ window.SecurityPages['change-password'] = {
             if (el) {
                 const valid = checks[key];
                 el.className = valid ? 'valid' : 'invalid';
-                el.querySelector('i').className = valid ? 'fas fa-check-circle' : 'fas fa-circle';
+                const icon = el.querySelector('i');
+                if (icon) icon.className = valid ? 'fas fa-check-circle' : 'fas fa-circle';
                 if (valid) score++;
             }
         });
