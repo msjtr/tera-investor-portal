@@ -1,6 +1,6 @@
 /**
- * login.js – معالج تسجيل الدخول (Enterprise)
- * ===========================================
+ * login.js – معالج تسجيل الدخول مع تحقق OTP (Enterprise)
+ * ======================================================
  * يعتمد على: supabase-client.js, auth.js
  * متوافق مع: login.html (login_identifier, login_password, teraLoginForm)
  */
@@ -124,38 +124,42 @@
             console.log('🔑 طول كلمة المرور:', password.length);
 
             disableForm(true);
-            showLoader(true, 'جاري التحقق من بياناتك...');
+            showLoader(true, 'جاري إرسال رمز التحقق...');
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                // 1. إرسال رمز OTP إلى البريد الإلكتروني للمستخدم
+                const { error } = await supabase.auth.signInWithOtp({
                     email: email,
-                    password: password
+                    options: { shouldCreateUser: false }
                 });
-
-                console.log('📬 data:', data);
-                console.log('❌ error:', error);
 
                 if (error) throw error;
 
-                showLoader(true, 'تم الدخول بنجاح، جاري توجيهك...');
-                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم الدخول بنجاح';
+                // 2. تخزين بيانات تسجيل الدخول مؤقتاً (مشفرة أو مؤقتة)
+                //    سيتم استخدامها بعد إدخال الرمز في verify-otp.html
+                localStorage.setItem('tera_verify_type', 'login_otp');
+                localStorage.setItem('pendingVerificationEmail', email);
+                // تخزين كلمة المرور بشكل آمن (يمكن استخدام sessionStorage أو متغير مؤقت)
+                sessionStorage.setItem('tera_login_password', password);
 
+                showLoader(false);
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم إرسال الرمز';
+
+                // 3. توجيه المستخدم إلى صفحة التحقق
                 setTimeout(() => {
-                    window.location.replace('/pages/dashboard/index.html');
+                    window.location.replace('/auth/verify-otp.html');
                 }, 800);
 
             } catch (error) {
-                console.error('❌ [Login] فشل تسجيل الدخول:', error);
+                console.error('❌ [Login] فشل إرسال رمز التحقق:', error);
                 showLoader(false);
 
-                let msg = 'فشل تسجيل الدخول.';
+                let msg = 'فشل إرسال رمز التحقق.';
                 if (error.message) {
-                    if (error.message.includes('Invalid login credentials') || error.message.includes('invalid')) {
-                        msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                    } else if (error.message.includes('Email not confirmed')) {
-                        msg = 'لم يتم تأكيد البريد الإلكتروني بعد. يرجى التحقق من بريدك.';
+                    if (error.message.includes('Email not found') || error.message.includes('user not found')) {
+                        msg = 'البريد الإلكتروني غير مسجل.';
                     } else if (error.message.includes('rate limit') || error.message.includes('too many')) {
-                        msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.';
+                        msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً.';
                     } else {
                         msg = error.message;
                     }
