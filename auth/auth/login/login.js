@@ -2,24 +2,30 @@
  * login.js – معالج تسجيل الدخول (Enterprise)
  * ===========================================
  * يعتمد على: supabase-client.js, auth.js
- * - ينتظر جاهزية Supabase
- * - يعالج نموذج تسجيل الدخول
- * - يعرض رسائل عربية واضحة
- * - يوجّه إلى لوحة التحكم بعد النجاح
+ * متوافق مع: login.html (login_identifier, login_password, teraLoginForm)
  */
 (function () {
     'use strict';
 
     document.addEventListener('DOMContentLoaded', async function () {
-        const loginForm = document.getElementById('loginForm');
+        const loginForm = document.getElementById('teraLoginForm');
         if (!loginForm) return;
 
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const emailInput = document.getElementById('login_identifier');
+        const passwordInput = document.getElementById('login_password');
+        const submitBtn = document.getElementById('loginSubmitBtn');
         const alertBox = document.getElementById('formAlert');
         const alertIcon = document.getElementById('alertIcon');
         const alertMessage = document.getElementById('alertMessage');
+        const loaderOverlay = document.getElementById('creativeLoaderScreen');
+        const showPasswordToggle = document.getElementById('show_login_password');
+
+        // إظهار/إخفاء كلمة المرور
+        if (showPasswordToggle && passwordInput) {
+            showPasswordToggle.addEventListener('change', function () {
+                passwordInput.type = this.checked ? 'text' : 'password';
+            });
+        }
 
         // انتظار جاهزية Supabase
         let supabase;
@@ -33,7 +39,6 @@
                     return;
                 }
             } else {
-                // انتظار احتياطي
                 try {
                     await new Promise((resolve, reject) => {
                         const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
@@ -57,14 +62,27 @@
 
         console.log('🔒 [Login] تم تأمين صفحة الدخول');
 
-        // دالة تعطيل/تفعيل النموذج
+        // دوال مساعدة
         function disableForm(disabled) {
             if (emailInput) emailInput.disabled = disabled;
             if (passwordInput) passwordInput.disabled = disabled;
             if (submitBtn) submitBtn.disabled = disabled;
         }
 
-        // عرض رسالة خطأ
+        function showLoader(show, text = 'جاري تسجيل الدخول...') {
+            if (!loaderOverlay) return;
+            loaderOverlay.style.display = show ? 'flex' : 'none';
+            const quoteEl = document.getElementById('creativeQuoteText');
+            if (quoteEl && show) quoteEl.textContent = text;
+            const progressBar = document.getElementById('progressFillBar');
+            if (progressBar && show) {
+                progressBar.style.width = '0%';
+                setTimeout(() => { progressBar.style.width = '70%'; }, 300);
+            } else if (progressBar) {
+                progressBar.style.width = '0%';
+            }
+        }
+
         function showError(msg) {
             if (alertBox && alertMessage) {
                 alertBox.style.display = 'flex';
@@ -102,14 +120,11 @@
                 return;
             }
 
-            // طباعة تشخيصية للمساعدة
             console.log('📧 البريد المستخدم لتسجيل الدخول:', email);
             console.log('🔑 طول كلمة المرور:', password.length);
 
             disableForm(true);
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
-            }
+            showLoader(true, 'جاري التحقق من بياناتك...');
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -122,18 +137,16 @@
 
                 if (error) throw error;
 
-                // نجاح – سيتم تحديث الجلسة بواسطة auth.js (إن كان محملاً)
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم الدخول بنجاح';
-                }
+                showLoader(true, 'تم الدخول بنجاح، جاري توجيهك...');
+                if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم الدخول بنجاح';
 
-                // توجيه إلى لوحة التحكم
                 setTimeout(() => {
                     window.location.replace('/pages/dashboard/index.html');
                 }, 800);
 
             } catch (error) {
                 console.error('❌ [Login] فشل تسجيل الدخول:', error);
+                showLoader(false);
 
                 let msg = 'فشل تسجيل الدخول.';
                 if (error.message) {
@@ -151,9 +164,7 @@
 
             } finally {
                 disableForm(false);
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
-                }
+                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
             }
         });
     });
