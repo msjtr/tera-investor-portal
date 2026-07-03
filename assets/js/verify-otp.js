@@ -2,6 +2,7 @@
  * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
  * يدعم: signup | recovery | personal_info | contact_info | national_address | bank_info | attachments | change_mobile
  * مع مؤقت إعادة إرسال (5 دقائق)، توجيه ذكي، تحديث اسم العميل، ورسائل عربية.
+ * محدث: change_mobile يستخدم type: 'sms' بدلاً من 'email'.
  */
 (function() {
     'use strict';
@@ -170,13 +171,30 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                const otpType = (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') ? 'email' : verifyType;
+                // تحديد نوع OTP بناءً على نوع العملية
+                let otpType;
+                if (verifyType === 'change_mobile') {
+                    otpType = 'sms';              // يتوافق مع Change Phone Number
+                } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
+                    otpType = 'email';            // Magic Link / Email OTP
+                } else {
+                    otpType = verifyType;         // signup أو recovery
+                }
 
-                const { error } = await supabase.auth.verifyOtp({
-                    email: pendingEmail,
+                // في حالة change_mobile، نتحقق برقم الهاتف، وإلا نستخدم البريد
+                let verifyParams = {
                     token: otpValue,
                     type: otpType
-                });
+                };
+                if (verifyType === 'change_mobile') {
+                    const mobile = localStorage.getItem('pendingNewMobile');
+                    if (!mobile) throw new Error('رقم الجوال غير موجود');
+                    verifyParams.phone = mobile;
+                } else {
+                    verifyParams.email = pendingEmail;
+                }
+
+                const { error } = await supabase.auth.verifyOtp(verifyParams);
 
                 if (error) throw error;
 
@@ -222,7 +240,7 @@
                     showAlert('يرجى الانتظار حتى انتهاء المؤقت لإعادة الإرسال.', 'error');
                     return;
                 }
-                if (!pendingEmail) {
+                if (!pendingEmail && verifyType !== 'change_mobile') {
                     showAlert('لا يوجد بريد لإعادة الإرسال.', 'error');
                     return;
                 }
@@ -231,7 +249,15 @@
                 resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
                 try {
-                    if (verifyType === 'personal_info' || verifyType === 'contact_info' || verifyType === 'national_address' || verifyType === 'bank_info' || verifyType === 'attachments' || verifyType === 'change_mobile') {
+                    // إعادة إرسال OTP حسب النوع
+                    if (verifyType === 'change_mobile') {
+                        const mobile = localStorage.getItem('pendingNewMobile');
+                        if (!mobile) throw new Error('رقم الجوال غير موجود');
+                        await supabase.auth.signInWithOtp({
+                            phone: mobile,
+                            options: { shouldCreateUser: false }
+                        });
+                    } else if (['personal_info', 'contact_info', 'national_address', 'bank_info', 'attachments'].includes(verifyType)) {
                         await supabase.auth.signInWithOtp({
                             email: pendingEmail,
                             options: { shouldCreateUser: false }
