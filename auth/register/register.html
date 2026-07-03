@@ -5,35 +5,450 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء حساب شريك | بوابة الشركاء - تيرا</title>
     
-    <!-- مسارات مطلقة لملفات CSS -->
-    <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/responsive.css">
-    <link rel="stylesheet" href="/assets/css/auth.css">
+    <!-- مسارات نسبية لملفات CSS -->
+    <link rel="stylesheet" href="../../assets/css/core.css">
+    <link rel="stylesheet" href="../../assets/css/app.css">
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
     <link rel="stylesheet" href="register.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- أيقونة الموقع (مسار مطلق) -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <!-- أيقونة الموقع (مسار نسبي) -->
+    <link rel="icon" type="image/svg+xml" href="../../images/favicon.svg">
+    
+    <style>
+        /* أنماط إضافية لتجاوز أي تعارضات وتحسين المظهر */
+        .auth-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e6f7f5 100%);
+            padding: 20px;
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 580px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(2, 128, 144, 0.12);
+            padding: 40px 32px 32px;
+            border: 1px solid rgba(2, 128, 144, 0.08);
+            transition: all 0.3s ease;
+        }
+        .auth-container:hover {
+            box-shadow: 0 30px 80px rgba(2, 128, 144, 0.16);
+        }
+        .logo-img {
+            height: 52px;
+            width: auto;
+        }
+        .portal-title {
+            font-family: 'Cairo', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0A1B3F;
+            margin: 0 0 4px;
+        }
+        .page-subtitle {
+            font-size: 18px;
+            font-weight: 700;
+            color: #028090;
+            margin: 0 0 8px;
+        }
+        .welcome-text {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .stepper {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0 20px;
+            justify-content: center;
+        }
+        .step {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            background: #e2e8f0;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+        .step.active {
+            background: #028090;
+            color: #fff;
+        }
+        .alert-info-box {
+            background: #f0fdfa;
+            border-right: 4px solid #028090;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        .alert-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0A1B3F;
+            margin: 0 0 8px;
+        }
+        .alert-list {
+            margin: 0;
+            padding-right: 20px;
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.8;
+        }
+        .form-stage-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .form-stage-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stage-header-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0A1B3F;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+        .form-field-group {
+            margin-bottom: 18px;
+        }
+        .field-label {
+            display: block;
+            font-weight: 700;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .required {
+            color: #dc2626;
+            margin-right: 2px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .form-input-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Tajawal', sans-serif;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: #f8fafc;
+            color: #0A1B3F;
+        }
+        .form-input-control:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+            background: #ffffff;
+            outline: none;
+        }
+        .field-status-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            pointer-events: none;
+        }
+        .error-feedback-msg {
+            color: #dc2626;
+            font-size: 13px;
+            min-height: 20px;
+            margin-top: 4px;
+        }
+        .realtime-validation-box-mini ul {
+            margin: 6px 0 0;
+            padding-right: 20px;
+            font-size: 13px;
+            color: #475569;
+            list-style: none;
+        }
+        .realtime-validation-box-mini li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .icon-marker {
+            font-size: 16px;
+        }
+        .row-flex {
+            display: flex;
+            gap: 16px;
+        }
+        .col-inline-5 {
+            flex: 0 0 40%;
+        }
+        .col-inline-7 {
+            flex: 1;
+        }
+        .checkbox-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+        .checkbox-toggle-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #028090;
+            cursor: pointer;
+        }
+        .agreements-scroll-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            background: #fafcfc;
+        }
+        .agreement-item {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .agreement-item label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .agreement-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #028090;
+            cursor: pointer;
+        }
+        .master-agree-box {
+            background: #f0fdfa;
+            border-color: #028090;
+        }
+        .form-navigation-actions-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .btn-action-nav {
+            padding: 10px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Tajawal', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action-nav:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-style-primary {
+            background: #028090;
+            color: #fff;
+        }
+        .btn-style-primary:hover:not(:disabled) {
+            background: #0A1B3F;
+            transform: translateY(-2px);
+        }
+        .btn-style-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .btn-style-secondary:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+        .btn-style-success {
+            background: #059669;
+            color: #fff;
+        }
+        .btn-style-success:hover:not(:disabled) {
+            background: #047857;
+            transform: translateY(-2px);
+        }
+
+        /* صندوق التنبيهات */
+        .alert-box {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 14px;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+        .alert-box.show {
+            display: flex;
+        }
+        .alert-box.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border-color: #6ee7b7;
+        }
+        .alert-box.error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fca5a5;
+        }
+        .alert-icon {
+            flex-shrink: 0;
+        }
+        .alert-message {
+            flex: 1;
+        }
+
+        /* اللودر الإبداعي */
+        .tera-loader-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 27, 63, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .tera-loader-overlay .loader-content-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 48px;
+            min-width: 280px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+        }
+        .spinning-infinity-ring {
+            width: 56px;
+            height: 56px;
+            border: 5px solid #e2e8f0;
+            border-top-color: #028090;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loader-primary-heading {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0A1B3F;
+            margin: 0 0 8px;
+        }
+        .creative-motivational-text {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0 0 16px;
+        }
+        .loading-progress-track {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #028090, #0d9488);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* استجابة */
+        @media (max-width: 576px) {
+            .auth-container {
+                padding: 24px 16px;
+                border-radius: 20px;
+            }
+            .portal-title {
+                font-size: 20px;
+            }
+            .page-subtitle {
+                font-size: 16px;
+            }
+            .row-flex {
+                flex-direction: column;
+                gap: 0;
+            }
+            .col-inline-5, .col-inline-7 {
+                flex: 1 1 100%;
+            }
+            .form-navigation-actions-bar {
+                flex-wrap: wrap;
+            }
+            .btn-action-nav {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+            }
+            .stepper {
+                flex-direction: column;
+                align-items: center;
+            }
+            .step {
+                width: 100%;
+                text-align: center;
+            }
+            .tera-loader-overlay .loader-content-card {
+                padding: 28px 20px;
+                min-width: 200px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="auth-layout">
         <div class="auth-container">
             <div class="text-center mb-5">
-                <!-- شعار المنصة (مسار مطلق) -->
-                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img">
+                <!-- شعار المنصة (مسار نسبي) -->
+                <img src="../../images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img" onerror="this.src='https://via.placeholder.com/120x40/028090/fff?text=Tera'">
                 <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
                 <h3 class="page-subtitle">إنشاء حساب شريك</h3>
                 <p class="welcome-text">مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
             </div>
 
+            <!-- مؤشر الخطوات -->
             <div class="stepper">
                 <div class="step active" id="step-1">1 إنشاء الحساب والبيانات الأساسية</div>
                 <div class="step" id="step-2">2 الإقرارات والاتفاقيات</div>
             </div>
 
+            <!-- صندوق التنبيهات الموحد (يستخدم في register.js) -->
+            <div class="alert-box" id="formAlert">
+                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
+                <span class="alert-message" id="alertMessage"></span>
+            </div>
+
+            <!-- ملاحظات مهمة -->
             <div class="alert-info-box">
                 <h4 class="alert-title">🔔 ملاحظة مهمة</h4>
                 <ul class="alert-list">
@@ -46,14 +461,16 @@
                 </ul>
             </div>
 
-            <form id="teraRegisterForm" onsubmit="event.preventDefault();">
+            <!-- نموذج التسجيل -->
+            <form id="teraRegisterForm" novalidate>
+                <!-- المرحلة الأولى -->
                 <div class="form-stage-section active" id="stage-1-content">
                     <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
                     
                     <div class="form-field-group">
                         <label class="field-label">الاسم الكامل <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية">
+                            <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية" autocomplete="name">
                             <span class="field-status-icon" id="name_ar-status">❌</span>
                         </div>
                         <div class="error-feedback-msg" id="name_ar-error"></div>
@@ -82,7 +499,7 @@
                             <div class="form-field-group">
                                 <label class="field-label">رقم الجوال <span class="required">*</span></label>
                                 <div class="input-wrapper">
-                                    <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX">
+                                    <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX" autocomplete="tel">
                                     <span class="field-status-icon" id="mobile-status">❌</span>
                                 </div>
                                 <div class="error-feedback-msg" id="mobile-error"></div>
@@ -93,7 +510,7 @@
                     <div class="form-field-group">
                         <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com">
+                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="email">
                             <span class="field-status-icon" id="email-status">❌</span>
                         </div>
                         <div class="error-feedback-msg" id="email-error"></div>
@@ -102,7 +519,7 @@
                     <div class="form-field-group">
                         <label class="field-label">اسم المستخدم <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية">
+                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="username">
                             <span class="field-status-icon" id="username-status">❌</span>
                         </div>
                         <div class="error-feedback-msg" id="username-error"></div>
@@ -111,22 +528,25 @@
                     <div class="form-field-group">
                         <label class="field-label">كلمة المرور <span class="required">*</span></label>
                         <div class="input-wrapper">
-                            <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية">
+                            <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية" autocomplete="new-password">
                             <span class="field-status-icon" id="password-status">❌</span>
                         </div>
                         <label class="checkbox-toggle-label"><input type="checkbox" id="show-password"> إظهار كلمة المرور</label>
                     </div>
                 </div>
 
+                <!-- المرحلة الثانية -->
                 <div class="form-stage-section" id="stage-2-content">
                     <h4 class="stage-header-title">المرحلة الثانية: الإقرارات والاتفاقيات</h4>
                     <div class="agreements-scroll-container">
                         <div class="agreement-item master-agree-box">
                             <label><input type="checkbox" id="master-global-agree"> <strong>أوافق على جميع الشروط والأحكام.</strong></label>
                         </div>
+                        <!-- يمكن إضافة المزيد من بنود الاتفاقية هنا -->
                     </div>
                 </div>
 
+                <!-- أزرار التنقل -->
                 <div class="form-navigation-actions-bar">
                     <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
                     <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
@@ -136,12 +556,24 @@
         </div>
     </div>
 
+    <!-- اللودر الإبداعي (يظهر أثناء معالجة التسجيل) -->
+    <div class="tera-loader-overlay" id="creativeLoaderScreen">
+        <div class="loader-content-card">
+            <div class="spinning-infinity-ring"></div>
+            <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
+            <p class="creative-motivational-text" id="creativeQuoteText">جاري إنشاء حسابك الاستثماري...</p>
+            <div class="loading-progress-track">
+                <div class="progress-fill-bar" id="progressFillBar"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- تحميل مكتبة Supabase من CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- ملفات الجافاسكربت (مسارات مطلقة) -->
-    <script src="/assets/js/supabase-client.js"></script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/register.js"></script>
+    <!-- ملفات الجافاسكربت (مسارات نسبية) -->
+    <script src="../../assets/js/supabase-client.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="register.js"></script>
 </body>
 </html>
