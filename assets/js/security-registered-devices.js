@@ -1,297 +1,487 @@
 /**
- * ============================================================
- * الأجهزة المصرحة - Registered Devices (نسخة المؤسسات)
- * ============================================================
- * الموقع: /assets/js/security-registered-devices.js
- * - ينتظر جاهزية Supabase عبر 'supabase:ready'.
- * - يجلب الأجهزة من جدول auth_devices المرتبط بالمستخدم الحالي.
- * - يسمح بتوثيق / إلغاء صلاحية الأجهزة مع التحديث الفوري للقاعدة.
- * - خالٍ تماماً من البيانات الثابتة أو المحاكاة.
- * ============================================================
+ * ==========================================================
+ * security-registered-devices.js
+ * الأجهزة المصرح بها
+ * Enterprise Version 2026
+ * ==========================================================
  */
 
-window.SecurityPages = window.SecurityPages || {};
+'use strict';
 
-window.SecurityPages['registered-devices'] = {
-    devices: [],
+(function () {
 
-    init: async function() {
-        console.log('💻 تهيئة صفحة الأجهزة المصرحة (Enterprise)...');
+    window.SecurityPages = window.SecurityPages || {};
 
-        if (!window.teraSupabase) {
+    window.SecurityPages["registered-devices"] = {
+
+        supabase: null,
+        currentUser: null,
+        currentSession: null,
+
+        devicesContainer: null,
+        refreshButton: null,
+
+        async init() {
+
+            console.log("💻 [Registered Devices] Initializing...");
+
             try {
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error('انتهت مهلة انتظار Supabase')), 10000);
-                    document.addEventListener('supabase:ready', (e) => {
-                        clearTimeout(timeout);
-                        resolve(e.detail.client);
-                    }, { once: true });
-                    document.addEventListener('supabase:error', () => {
-                        clearTimeout(timeout);
-                        reject(new Error('فشل تحميل Supabase'));
-                    }, { once: true });
+
+                this.supabase = await waitForSupabase();
+
+                const {
+                    data: { session }
+                } = await this.supabase.auth.getSession();
+
+                if (!session) {
+
+                    window.location.replace(
+                        "/auth/auth/login/login.html"
+                    );
+
+                    return;
+
+                }
+
+                this.currentSession = session;
+                this.currentUser = session.user;
+
+                updateHeader(this.currentUser);
+
+                this.cacheDom();
+
+                this.bindEvents();
+
+                await this.loadDevices();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                showSecurityAlert(
+                    "تعذر تحميل الأجهزة.",
+                    "error"
+                );
+
+            }
+
+        },
+
+        cacheDom() {
+
+            this.devicesContainer =
+                document.getElementById("devicesContainer");
+
+            this.refreshButton =
+                document.getElementById("refreshDevicesBtn");
+
+        },
+
+        bindEvents() {
+
+            if (this.refreshButton) {
+
+                this.refreshButton.addEventListener(
+
+                    "click",
+
+                    () => this.loadDevices()
+
+                );
+
+            }
+
+        },
+                async loadDevices() {
+
+            try {
+
+                this.setLoading();
+
+                const { data, error } =
+                    await this.supabase
+
+                        .from("auth_login")
+
+                        .select("*")
+
+                        .eq(
+                            "user_id",
+                            this.currentUser.id
+                        )
+
+                        .order(
+                            "created_at",
+                            {
+                                ascending: false
+                            }
+                        )
+
+                        .limit(100);
+
+                if (error)
+                    throw error;
+
+                if (!this.devicesContainer)
+                    return;
+
+                this.devicesContainer.innerHTML = "";
+
+                if (!data || data.length === 0) {
+
+                    this.devicesContainer.innerHTML = `
+
+                        <div class="empty-state">
+
+                            <i class="fas fa-laptop"></i>
+
+                            <p>لا توجد أجهزة مسجلة.</p>
+
+                        </div>
+
+                    `;
+
+                    return;
+
+                }
+
+                /*
+                 * إزالة التكرار
+                 */
+
+                const devices = [];
+
+                const seen = new Set();
+
+                data.forEach(item => {
+
+                    const key =
+
+                        (item.browser || "") +
+
+                        "|" +
+
+                        (item.operating_system || "") +
+
+                        "|" +
+
+                        (item.device_name || "");
+
+                    if (!seen.has(key)) {
+
+                        seen.add(key);
+
+                        devices.push(item);
+
+                    }
+
                 });
-            } catch (err) {
-                console.error('❌ تعذر الاتصال بـ Supabase:', err);
-                this.showEmptyState('تعذر الاتصال بقاعدة البيانات.');
-                return;
+
+                devices.forEach(device => {
+
+                    this.devicesContainer.appendChild(
+
+                        this.createDeviceCard(device)
+
+                    );
+
+                });
+
             }
-        }
 
-        // جلب الأجهزة وعرضها
-        await this.loadDevices();
-        this.initEventListeners();
-        console.log('✅ صفحة الأجهزة المصرحة مهيأة.');
-    },
+            catch (err) {
 
-    /**
-     * جلب قائمة الأجهزة من جدول auth_devices
-     */
-    loadDevices: async function() {
-        const container = document.getElementById('devicesList');
-        const loadingEl = document.getElementById('loadingState') || container;
-        if (loadingEl) {
-            loadingEl.innerHTML = `<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>`;
-        }
+                console.error(
 
-        try {
-            // الحصول على معرف المستخدم الحالي
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
-            if (!user) throw new Error('لا يوجد مستخدم مسجل الدخول');
+                    "[Registered Devices]",
 
-            const { data, error } = await window.teraSupabase
-                .from('auth_devices')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('last_login_at', { ascending: false });
+                    err
 
-            if (error) throw error;
+                );
 
-            this.devices = data || [];
-            this.renderDevices();
-        } catch (error) {
-            console.error('❌ خطأ في جلب الأجهزة:', error);
-            this.showEmptyState('تعذر تحميل الأجهزة. ' + (error.message || ''));
-        }
-    },
+                showSecurityAlert(
 
-    /**
-     * عرض الأجهزة في القائمة
-     */
-    renderDevices: function() {
-        const container = document.getElementById('devicesList');
-        const emptyState = document.getElementById('emptyState');
-        const deviceCount = document.getElementById('deviceCount');
+                    "تعذر تحميل الأجهزة.",
 
-        if (!container) return;
+                    "error"
 
-        if (deviceCount) deviceCount.textContent = this.devices.length + ' أجهزة';
+                );
 
-        if (this.devices.length === 0) {
-            container.innerHTML = '';
-            if (emptyState) emptyState.style.display = 'block';
-            return;
-        }
-        if (emptyState) emptyState.style.display = 'none';
+            }
 
-        let html = '';
-        this.devices.forEach((device) => {
-            const statusBadge = this.getStatusBadge(device);
-            const iconClass = this.getDeviceIconClass(device.device_type);
-            const name = device.device_name || 'جهاز غير معروف';
-            const browser = device.browser || 'غير معروف';
-            const os = device.operating_system || 'غير معروف';
-            const ip = device.ip_address || '-';
-            const lastActive = device.last_login_at ? this.formatDate(device.last_login_at) : '-';
+            finally {
 
-            html += `
-                <div class="device-card-item" data-id="${device.id}">
-                    <div class="device-icon ${iconClass}">
-                        <i class="fas ${this.getDeviceIcon(device.device_type)}"></i>
-                    </div>
-                    <div class="device-info">
-                        <div class="device-name">${name}</div>
-                        <div class="device-details">
-                            <span class="detail-item"><i class="fas fa-globe"></i> ${browser}</span>
-                            <span class="detail-item"><i class="fas fa-desktop"></i> ${os}</span>
-                            <span class="detail-item"><i class="fas fa-network-wired"></i> ${ip}</span>
-                        </div>
-                        <div class="device-last-active">
-                            <i class="fas fa-clock"></i> آخر نشاط: ${lastActive}
-                        </div>
-                    </div>
-                    <div class="device-status-badge ${statusBadge.class}">
-                        <i class="fas ${statusBadge.icon}"></i>
-                        ${statusBadge.text}
-                    </div>
-                    <div class="device-actions">
-                        ${this.getActionButtons(device)}
-                    </div>
+                this.stopLoading();
+
+            }
+
+        },
+                /*
+        ==========================================================
+        إنشاء بطاقة جهاز
+        ==========================================================
+        */
+
+        createDeviceCard(device) {
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "device-card";
+
+            const browser =
+                device.browser || "غير معروف";
+
+            const os =
+                device.operating_system || "غير معروف";
+
+            const ip =
+                device.ip_address || "-";
+
+            const deviceName =
+                device.device_name || "جهاز غير معروف";
+
+            const loginDate =
+                this.formatDate(device.created_at);
+
+            const isCurrent =
+                navigator.userAgent === browser;
+
+            card.innerHTML = `
+
+                <div class="device-icon">
+
+                    <i class="${this.getDeviceIcon(os)}"></i>
+
                 </div>
+
+                <div class="device-details">
+
+                    <h4>
+
+                        ${deviceName}
+
+                        ${isCurrent
+                            ? '<span class="badge badge-success">الجهاز الحالي</span>'
+                            : ''}
+
+                    </h4>
+
+                    <div class="device-meta">
+
+                        <div>
+
+                            <strong>المتصفح:</strong>
+
+                            ${browser}
+
+                        </div>
+
+                        <div>
+
+                            <strong>النظام:</strong>
+
+                            ${os}
+
+                        </div>
+
+                        <div>
+
+                            <strong>IP:</strong>
+
+                            ${ip}
+
+                        </div>
+
+                        <div>
+
+                            <strong>آخر تسجيل:</strong>
+
+                            ${loginDate}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             `;
-        });
 
-        container.innerHTML = html;
-    },
+            return card;
 
-    /**
-     * عرض حالة فارغة
-     */
-    showEmptyState: function(message) {
-        const container = document.getElementById('devicesList');
-        if (container) {
-            container.innerHTML = `
-                <div class="text-center p-4" style="color:#94a3b8;">
-                    <i class="fas fa-inbox" style="font-size:32px; margin-bottom:8px; display:block;"></i>
-                    ${message}
-                </div>`;
-        }
-    },
+        },
 
-    /**
-     * تنسيق التاريخ
-     */
-    formatDate: function(dateStr) {
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const hh = String(d.getHours()).padStart(2, '0');
-            const min = String(d.getMinutes()).padStart(2, '0');
-            return `${yyyy}/${mm}/${dd} ${hh}:${min}`;
-        } catch {
-            return dateStr;
-        }
-    },
+        /*
+        ==========================================================
+        أيقونة الجهاز
+        ==========================================================
+        */
 
-    /**
-     * الحصول على أيقونة الجهاز
-     */
-    getDeviceIcon: function(type) {
-        const icons = {
-            desktop: 'fa-desktop',
-            mobile: 'fa-mobile-alt',
-            tablet: 'fa-tablet-alt'
-        };
-        return icons[type] || 'fa-question-circle';
-    },
+        getDeviceIcon(os) {
 
-    /**
-     * الحصول على كلاس أيقونة الجهاز
-     */
-    getDeviceIconClass: function(type) {
-        const classes = {
-            desktop: 'desktop',
-            mobile: 'mobile',
-            tablet: 'tablet'
-        };
-        return classes[type] || 'unknown';
-    },
+            const value =
+                (os || "").toLowerCase();
 
-    /**
-     * الحصول على بادج الحالة
-     */
-    getStatusBadge: function(device) {
-        if (device.is_trusted) {
-            return { class: 'trusted', icon: 'fa-shield-check', text: 'موثوق' };
-        } else {
-            return { class: 'unknown', icon: 'fa-exclamation-triangle', text: 'غير موثوق' };
-        }
-    },
+            if (value.includes("windows"))
+                return "fab fa-windows";
 
-    /**
-     * أزرار الإجراءات
-     */
-    getActionButtons: function(device) {
-        let buttons = '';
-        if (!device.is_trusted) {
-            buttons += `
-                <button class="btn-sm btn-sm-primary" data-action="trust" data-id="${device.id}">
-                    <i class="fas fa-shield-alt"></i> وثّق
-                </button>
-            `;
-        }
-        buttons += `
-            <button class="btn-sm btn-sm-danger" data-action="revoke" data-id="${device.id}">
-                <i class="fas fa-times"></i> إلغاء الصلاحية
-            </button>
-        `;
-        return buttons;
-    },
+            if (value.includes("android"))
+                return "fab fa-android";
 
-    /**
-     * تهيئة مستمعات الأحداث
-     */
-    initEventListeners: function() {
-        const container = document.getElementById('devicesList');
-        if (!container) return;
+            if (value.includes("iphone"))
+                return "fab fa-apple";
 
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
+            if (value.includes("ios"))
+                return "fab fa-apple";
 
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
+            if (value.includes("mac"))
+                return "fab fa-apple";
 
-            if (action === 'trust') {
-                this.trustDevice(id);
-            } else if (action === 'revoke') {
-                this.revokeDevice(id);
+            if (value.includes("linux"))
+                return "fab fa-linux";
+
+            return "fas fa-laptop";
+
+        },
+                /*
+        ==========================================================
+        تنسيق التاريخ
+        ==========================================================
+        */
+
+        formatDate(date) {
+
+            if (!date)
+                return "-";
+
+            try {
+
+                return new Date(date)
+                    .toLocaleString(
+                        "ar-SA",
+                        {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    );
+
             }
-        });
-    },
 
-    /**
-     * توثيق جهاز
-     */
-    trustDevice: async function(id) {
-        const device = this.devices.find(d => d.id == id);
-        if (!device) return;
+            catch {
 
-        if (!confirm(`هل أنت متأكد من توثيق الجهاز "${device.device_name}"؟`)) return;
+                return date;
 
-        try {
-            const { error } = await window.teraSupabase
-                .from('auth_devices')
-                .update({ is_trusted: true, updated_at: new Date().toISOString() })
-                .eq('id', id);
+            }
 
-            if (error) throw error;
+        },
 
-            device.is_trusted = true;
-            this.renderDevices();
-            Security.showAlert('✅ تم توثيق الجهاز بنجاح.', 'success');
-        } catch (error) {
-            console.error('❌ خطأ في توثيق الجهاز:', error);
-            Security.showAlert('تعذر توثيق الجهاز.', 'error');
+        /*
+        ==========================================================
+        بدء التحميل
+        ==========================================================
+        */
+
+        setLoading() {
+
+            if (!this.refreshButton)
+                return;
+
+            this.refreshButton.disabled = true;
+
+            this.refreshButton.dataset.originalText =
+                this.refreshButton.innerHTML;
+
+            this.refreshButton.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                جاري تحميل الأجهزة...
+            `;
+
+        },
+
+        /*
+        ==========================================================
+        إنهاء التحميل
+        ==========================================================
+        */
+
+        stopLoading() {
+
+            if (!this.refreshButton)
+                return;
+
+            this.refreshButton.disabled = false;
+
+            if (this.refreshButton.dataset.originalText) {
+
+                this.refreshButton.innerHTML =
+                    this.refreshButton.dataset.originalText;
+
+            }
+
+        },
+
+        /*
+        ==========================================================
+        إعادة تحميل الأجهزة
+        ==========================================================
+        */
+
+        async refresh() {
+
+            await this.loadDevices();
+
+        },
+                /*
+        ==========================================================
+        إعادة تحميل الصفحة
+        ==========================================================
+        */
+
+        async reloadPage() {
+
+            await this.refresh();
+
+        },
+
+        /*
+        ==========================================================
+        تنظيف الموارد
+        ==========================================================
+        */
+
+        destroy() {
+
+            if (this.devicesContainer) {
+
+                this.devicesContainer.innerHTML = "";
+
+            }
+
+            if (this.refreshButton) {
+
+                this.refreshButton.disabled = false;
+
+                if (this.refreshButton.dataset.originalText) {
+
+                    this.refreshButton.innerHTML =
+                        this.refreshButton.dataset.originalText;
+
+                }
+
+            }
+
+            this.currentUser = null;
+            this.currentSession = null;
+            this.supabase = null;
+
         }
-    },
 
-    /**
-     * إلغاء صلاحية جهاز (إزالته من القائمة)
-     */
-    revokeDevice: async function(id) {
-        const device = this.devices.find(d => d.id == id);
-        if (!device) return;
+    };
 
-        if (!confirm(`هل أنت متأكد من إلغاء صلاحية الجهاز "${device.device_name}"؟ سيتم تسجيل الخروج منه.`)) return;
-
-        try {
-            const { error } = await window.teraSupabase
-                .from('auth_devices')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            this.devices = this.devices.filter(d => d.id != id);
-            this.renderDevices();
-            Security.showAlert('✅ تم إلغاء صلاحية الجهاز بنجاح.', 'success');
-        } catch (error) {
-            console.error('❌ خطأ في إلغاء الجهاز:', error);
-            Security.showAlert('تعذر إلغاء صلاحية الجهاز.', 'error');
-        }
-    }
-};
+})();
