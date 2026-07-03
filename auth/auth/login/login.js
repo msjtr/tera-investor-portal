@@ -4,7 +4,9 @@
  * يعتمد على: supabase-client.js, auth.js
  * متوافق مع: login.html (login_identifier, login_password, teraLoginForm)
  * يرسل رمز OTP عبر قالب Magic Link / Email OTP
+ * النسخة المُحدَّثة: تستخدم TeraAuth للتوجيه الموحد، وتحسين معالجة الأخطاء
  */
+
 (function () {
     'use strict';
 
@@ -12,6 +14,7 @@
         const loginForm = document.getElementById('teraLoginForm');
         if (!loginForm) return;
 
+        // عناصر DOM
         const emailInput = document.getElementById('login_identifier');
         const passwordInput = document.getElementById('login_password');
         const submitBtn = document.getElementById('loginSubmitBtn');
@@ -21,38 +24,36 @@
         const loaderOverlay = document.getElementById('creativeLoaderScreen');
         const showPasswordToggle = document.getElementById('show_login_password');
 
+        // تبديل إظهار كلمة المرور
         if (showPasswordToggle && passwordInput) {
             showPasswordToggle.addEventListener('change', function () {
                 passwordInput.type = this.checked ? 'text' : 'password';
             });
         }
 
-        let supabase;
-        if (!window.teraSupabase) {
-            if (typeof waitForSupabase === 'function') {
-                try { await waitForSupabase(); } catch (e) {
-                    showError('تعذر الاتصال بخدمة المصادقة.');
-                    disableForm(true);
-                    return;
-                }
-            } else {
-                try {
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => reject(new Error('timeout')), 10000);
-                        document.addEventListener('supabase:ready', (e) => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-                        document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('error')); }, { once: true });
-                    });
-                } catch (err) {
-                    showError('تعذر الاتصال بقاعدة البيانات.');
-                    disableForm(true);
-                    return;
-                }
-            }
+        // ========== التأكد من وجود TeraAuth ==========
+        if (!window.TeraAuth) {
+            showError('تعذر تحميل نظام المصادقة.');
+            disableForm(true);
+            return;
         }
-        supabase = window.teraSupabase;
+
+        // انتظار تهيئة TeraAuth (إذا لم تكن جاهزة)
+        if (!window.TeraAuth._initialized) {
+            await window.TeraAuth.init();
+        }
+
+        const auth = window.TeraAuth;
+        const supabase = auth._client;
+        if (!supabase) {
+            showError('تعذر الاتصال بخدمة المصادقة.');
+            disableForm(true);
+            return;
+        }
 
         console.log('🔒 [Login] تم تأمين صفحة الدخول');
 
+        // ========== دوال مساعدة ==========
         function disableForm(disabled) {
             if (emailInput) emailInput.disabled = disabled;
             if (passwordInput) passwordInput.disabled = disabled;
@@ -85,9 +86,13 @@
         }
 
         function hideAlert() {
-            if (alertBox) { alertBox.style.display = 'none'; alertBox.className = 'alert-box'; }
+            if (alertBox) {
+                alertBox.style.display = 'none';
+                alertBox.className = 'alert-box';
+            }
         }
 
+        // ========== معالج تقديم النموذج ==========
         loginForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             hideAlert();
@@ -95,21 +100,44 @@
             const email = emailInput?.value.trim() || '';
             const password = passwordInput?.value || '';
 
-            if (!email) { showError('يرجى إدخال البريد الإلكتروني.'); emailInput?.focus(); return; }
-            if (!password) { showError('يرجى إدخال كلمة المرور.'); passwordInput?.focus(); return; }
+            // التحقق من صحة الإدخال
+            if (!email) {
+                showError('يرجى إدخال البريد الإلكتروني.');
+                emailInput?.focus();
+                return;
+            }
+            if (!password) {
+                showError('يرجى إدخال كلمة المرور.');
+                passwordInput?.focus();
+                return;
+            }
+
+            // التحقق من صيغة البريد (اختياري)
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('يرجى إدخال بريد إلكتروني صحيح.');
+                emailInput?.focus();
+                return;
+            }
 
             console.log('📧 البريد:', email);
             disableForm(true);
             showLoader(true, 'جاري إرسال رمز التحقق...');
 
             try {
+                // إرسال رمز OTP عبر البريد
                 const { error } = await supabase.auth.signInWithOtp({
                     email: email,
-                    options: { shouldCreateUser: false }
+                    options: {
+                        shouldCreateUser: false,
+                        // يمكن إضافة تخصيص للقالب هنا إن لزم
+                        // emailRedirectTo: window.location.origin + '/auth/verify-otp.html'
+                    }
                 });
 
                 if (error) throw error;
 
+                // حفظ بيانات الجلسة للتوجيه بعد التحقق
                 localStorage.setItem('tera_verify_type', 'login_otp');
                 localStorage.setItem('pendingVerificationEmail', email);
                 sessionStorage.setItem('tera_login_password', password);
@@ -117,19 +145,32 @@
                 showLoader(false);
                 if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> تم إرسال الرمز';
 
+                // استخدام TeraAuth للتوجيه (مسار نسبي)
                 setTimeout(() => {
-                    window.location.replace('/auth/verify-otp.html');
+                    auth.redirectTo('/auth/verify-otp.html');
                 }, 800);
 
             } catch (error) {
                 console.error('❌ فشل إرسال رمز التحقق:', error);
                 showLoader(false);
-                let msg = 'فشل إرسال رمز التحقق.';
-                if (error.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار.';
-                else if (error.message.includes('Email not found')) msg = 'البريد الإلكتروني غير مسجل.';
-                else msg = error.message;
+                let msg = 'فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى.';
+                if (error.message) {
+                    if (error.message.includes('rate limit')) {
+                        msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار بضع دقائق.';
+                    } else if (error.message.includes('Email not found') || error.message.includes('User not found')) {
+                        msg = 'البريد الإلكتروني غير مسجل. يرجى التسجيل أولاً.';
+                    } else if (error.message.includes('invalid')) {
+                        msg = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+                    } else {
+                        msg = error.message;
+                    }
+                }
                 showError(msg);
+                // إعادة تمكين الحقول
+                disableForm(false);
+                if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
             } finally {
+                // تأكد من إعادة تمكين الحقول في كل الأحوال
                 disableForm(false);
                 if (submitBtn) submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
             }
