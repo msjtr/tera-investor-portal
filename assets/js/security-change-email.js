@@ -1,7 +1,7 @@
 /**
  * security-change-email.js
- * تغيير البريد الإلكتروني – التحقق المزدوج (البريد الحالي + الجديد)
- * مع دعم Edge Function لإرسال OTP مع معالجة CORS وخطة احتياطية
+ * تغيير البريد الإلكتروني – باستخدام Magic Link / OTP من Supabase Auth
+ * بدون Edge Functions أو جداول إضافية
  */
 
 'use strict';
@@ -179,29 +179,6 @@
         return true;
     }
 
-    // ===== التحقق من عدم استخدام البريد في auth_register =====
-    async function checkEmailExists(email) {
-        try {
-            const { data, error } = await supabase
-                .from('auth_register')
-                .select('email')
-                .eq('email', email)
-                .maybeSingle();
-
-            if (error) {
-                console.warn('⚠️ [Change Email] فشل التحقق من البريد في auth_register:', error);
-                if (error.code === 'PGRST202' || error.message.includes('relation') || error.message.includes('not found')) {
-                    return false;
-                }
-                return null;
-            }
-            return !!data;
-        } catch (err) {
-            console.error('خطأ في التحقق من البريد:', err);
-            return null;
-        }
-    }
-
     // ===== إرسال رمز التحقق إلى البريد الحالي =====
     async function sendOldOtp() {
         if (isSendingOldOtp) return;
@@ -221,6 +198,7 @@
         sendOldOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
+            // إرسال OTP إلى البريد الحالي (للمستخدم المسجل)
             const { error } = await supabase.auth.signInWithOtp({
                 email: email,
                 options: { shouldCreateUser: false }
@@ -323,42 +301,7 @@
         }
     }
 
-    // ===== الطريقة الاحتياطية لإرسال OTP للبريد الجديد (عبر signInWithOtp) =====
-    async function sendNewOtpFallback(newEmail) {
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email: newEmail,
-                options: { shouldCreateUser: true }
-            });
-            if (error) {
-                if (error.message && error.message.includes('Signups not allowed')) {
-                    showErrorModal('⚠️ إرسال رمز التحقق إلى البريد الجديد غير متاح حالياً.<br/>يرجى التواصل مع الدعم الفني أو التأكد من أن التسجيل مفعّل في الإعدادات.');
-                    return;
-                }
-                throw error;
-            }
-
-            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد.', 'success');
-            newOtpCode.disabled = false;
-            newOtpCode.value = '';
-            newOtpCode.focus();
-            newOtpIcon.className = 'validation-icon';
-            newOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الجديد';
-            newOtpHint.className = 'format-hint';
-
-            startTimer('new');
-            sendNewOtpBtn.style.display = 'none';
-            timerContainerNew.style.display = 'block';
-
-        } catch (err) {
-            console.error(err);
-            showAlert('فشل إرسال الرمز. حاول مرة أخرى.', 'error');
-            sendNewOtpBtn.style.display = 'block';
-            timerContainerNew.style.display = 'none';
-        }
-    }
-
-    // ===== إرسال رمز التحقق إلى البريد الجديد (عبر Edge Function مع معالجة CORS) =====
+    // ===== إرسال رمز التحقق إلى البريد الجديد =====
     async function sendNewOtp() {
         if (isSendingNewOtp) return;
         if (timerIntervalNew) {
@@ -391,13 +334,31 @@
             return;
         }
 
-        // التحقق من عدم استخدامه مسبقاً
-        const exists = await checkEmailExists(newEmail);
-        if (exists === true) {
-            showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
-            newEmailInput.focus();
-            return;
-        } else if (exists === null) {
+        // التحقق من عدم استخدام البريد مسبقاً (محاولة إرسال OTP مع shouldCreateUser: false)
+        // إذا نجح الإرسال، فهذا يعني أن البريد موجود بالفعل (لأن النظام أرسل OTP لمستخدم موجود)
+        // إذا فشل بـ "User not found"، فهذا يعني أن البريد غير مستخدم ويمكننا المتابعة.
+        try {
+            const { error: checkError } = await supabase.auth.signInWithOtp({
+                email: newEmail,
+                options: { shouldCreateUser: false }
+            });
+
+            if (!checkError) {
+                // البريد موجود بالفعل (تم إرسال OTP لمستخدم موجود)
+                showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
+                newEmailInput.focus();
+                return;
+            }
+
+            // إذا كان الخطأ هو "User not found"، فهذا جيد، نستمر
+            if (!checkError.message || !checkError.message.includes('User not found')) {
+                // خطأ آخر غير متوقع
+                console.error('خطأ في التحقق من البريد:', checkError);
+                showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
+                return;
+            }
+        } catch (err) {
+            console.error('خطأ في التحقق من البريد:', err);
             showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
             return;
         }
@@ -409,27 +370,17 @@
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // محاولة استدعاء Edge Function
-            const { data, error } = await supabase.functions.invoke('send-email-otp', {
-                body: {
-                    newEmail: newEmail,
-                    userId: currentUser.id
-                }
+            // إرسال OTP إلى البريد الجديد (باستخدام shouldCreateUser: true لإنشاء مستخدم مؤقت)
+            const { error } = await supabase.auth.signInWithOtp({
+                email: newEmail,
+                options: { shouldCreateUser: true }
             });
-
             if (error) {
-                console.error('Edge Function error:', error);
-                // إذا كان الخطأ بسبب CORS أو فشل الاتصال، نستخدم طريقة بديلة
-                if (error.message && (error.message.includes('CORS') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-                    console.warn('⚠️ استخدام الطريقة البديلة لإرسال OTP');
-                    await sendNewOtpFallback(newEmail);
+                if (error.message && error.message.includes('Signups not allowed')) {
+                    showErrorModal('⚠️ إرسال رمز التحقق إلى البريد الجديد غير متاح حالياً.<br/>يرجى التواصل مع الدعم الفني.');
                     return;
                 }
                 throw error;
-            }
-
-            if (data && data.error) {
-                throw new Error(data.error);
             }
 
             showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد.', 'success');
@@ -448,8 +399,6 @@
             console.error(err);
             let msg = 'فشل إرسال الرمز. حاول مرة أخرى.';
             if (err.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
-            else if (err.message.includes('CORS')) msg = 'تعذر الاتصال بالخادم. يرجى المحاولة مرة أخرى.';
-            else if (err.message.includes('البريد')) msg = err.message;
             showAlert(msg, 'error');
             sendNewOtpBtn.style.display = 'block';
             timerContainerNew.style.display = 'none';
@@ -467,7 +416,7 @@
         }
     }
 
-    // ===== التحقق من رمز البريد الجديد (من جدول email_change_requests) =====
+    // ===== التحقق من رمز البريد الجديد =====
     async function verifyNewOtp() {
         const otp = newOtpCode.value.trim();
         if (otp.length !== 8) {
@@ -489,28 +438,12 @@
         newOtpHint.className = 'format-hint';
 
         try {
-            const { data, error } = await supabase
-                .from('email_change_requests')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('new_email', newEmail)
-                .eq('otp_code', otp)
-                .eq('verified', false)
-                .gt('expires_at', new Date().toISOString())
-                .maybeSingle();
-
+            const { error } = await supabase.auth.verifyOtp({
+                email: newEmail,
+                token: otp,
+                type: 'email'
+            });
             if (error) throw error;
-
-            if (!data) {
-                throw new Error('رمز التحقق غير صحيح أو منتهي الصلاحية.');
-            }
-
-            const { error: updateError } = await supabase
-                .from('email_change_requests')
-                .update({ verified: true })
-                .eq('id', data.id);
-
-            if (updateError) throw updateError;
 
             newOtpIcon.className = 'validation-icon success';
             newOtpIcon.innerHTML = '✔';
@@ -524,7 +457,7 @@
 
         } catch (err) {
             console.error(err);
-            let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
+            let msg = 'رمز التحقق غير صحيح.';
             if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.';
             else if (err.message.includes('invalid')) msg = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
             newOtpIcon.className = 'validation-icon error';
@@ -594,7 +527,13 @@
             const { error } = await supabase.auth.updateUser({
                 email: newEmail
             });
-            if (error) throw error;
+            if (error) {
+                // إذا كان البريد مستخدمًا، سيعطي خطأ
+                if (error.message && error.message.includes('already been taken')) {
+                    throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
+                }
+                throw error;
+            }
 
             showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
             showSuccessModal();
@@ -605,7 +544,8 @@
         } catch (err) {
             console.error(err);
             let msg = 'حدث خطأ أثناء حفظ البيانات.';
-            if (err.message.includes('email')) msg = 'البريد الإلكتروني غير صالح أو مستخدم مسبقاً.';
+            if (err.message.includes('already been taken')) msg = 'البريد الإلكتروني مستخدم مسبقاً.';
+            else if (err.message.includes('email')) msg = 'البريد الإلكتروني غير صالح.';
             else if (err.message.includes('session')) {
                 msg = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً.';
                 isOldEmailVerified = false;
