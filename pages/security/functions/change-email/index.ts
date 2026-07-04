@@ -51,11 +51,11 @@ serve(async (req: Request) => {
       )
     }
 
-    // 3. توليد رمز عشوائي (8 أرقام)
+    // 3. توليد رمز OTP مكون من 8 أرقام
     const otp = Math.floor(10000000 + Math.random() * 90000000).toString()
     const otpHash = await bcrypt.hash(otp)
 
-    // 4. حذف الطلبات السابقة لنفس المستخدم (غير المكتملة)
+    // 4. حذف الطلبات السابقة غير المكتملة لنفس المستخدم
     await supabase
       .from('email_change_requests')
       .delete()
@@ -81,7 +81,7 @@ serve(async (req: Request) => {
 
     if (insertError) throw insertError
 
-    // 6. إرسال البريد عبر Resend
+    // 6. إرسال البريد عبر خدمة بريد (Resend)
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY غير مضبوط')
@@ -142,51 +142,5 @@ serve(async (req: Request) => {
       JSON.stringify({ error: error.message || 'حدث خطأ أثناء إرسال الرمز' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
-  }
-})
-
-
-// supabase/functions/verify-otp/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
-}
-
-serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: corsHeaders })
-
-  try {
-    const { requestId, otp } = await req.json()
-    if (!requestId || !otp) {
-      return new Response(JSON.stringify({ error: 'بيانات غير مكتملة' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-    const { data, error } = await supabase
-      .from('email_change_requests')
-      .select('otp_hash')
-      .eq('id', requestId)
-      .maybeSingle()
-
-    if (error || !data) {
-      return new Response(JSON.stringify({ error: 'طلب غير موجود' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    const isValid = await bcrypt.compare(otp, data.otp_hash)
-    if (!isValid) {
-      return new Response(JSON.stringify({ error: 'رمز غير صحيح' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-    }
-
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 })
