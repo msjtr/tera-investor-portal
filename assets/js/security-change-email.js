@@ -1,9 +1,9 @@
 /**
  * security-change-email.js
  * تغيير البريد الإلكتروني – مرحلتان:
- * 1. التحقق من البريد الحالي (OTP 8 أرقام)
- * 2. تأكيد البريد الجديد (OTP 8 أرقام)
- * مع حفظ تاريخ ووقت التغيير في جدول auth_register
+ * 1. التحقق من البريد الحالي (OTP عبر Magic Link)
+ * 2. تأكيد البريد الجديد (OTP 8 أرقام عبر Edge Function)
+ * مع تسجيل كامل العملية في جدول email_change_requests
  */
 
 'use strict';
@@ -20,6 +20,7 @@
     let isSaving = false;
     let initialized = false;
     let newEmailValue = '';
+    let requestId = null; // لتخزين معرف طلب التغيير
 
     // ===== عناصر DOM =====
     const currentEmailDisplay = document.getElementById('currentEmailDisplay');
@@ -181,27 +182,7 @@
         return true;
     }
 
-    // ===== التحقق من عدم استخدام البريد في auth_register =====
-    async function checkEmailExists(email) {
-        try {
-            const { data, error } = await supabase
-                .from('auth_register')
-                .select('email')
-                .eq('email', email)
-                .maybeSingle();
-
-            if (error) {
-                console.warn('⚠️ فشل التحقق من البريد في auth_register:', error);
-                return null;
-            }
-            return !!data;
-        } catch (err) {
-            console.error('خطأ في التحقق من البريد:', err);
-            return null;
-        }
-    }
-
-    // ===== إرسال رمز التحقق إلى البريد الحالي (OTP 8 أرقام) =====
+    // ===== إرسال رمز التحقق إلى البريد الحالي (Magic Link / OTP) =====
     async function sendOldOtp() {
         if (isSendingOldOtp) return;
         if (timerIntervalOld) {
@@ -322,7 +303,7 @@
         }
     }
 
-    // ===== إرسال رمز OTP (8 أرقام) إلى البريد الجديد =====
+    // ===== إرسال رمز OTP إلى البريد الجديد عبر Edge Function =====
     async function sendNewOtp() {
         if (isSendingNewOtp) return;
         if (timerIntervalNew) {
@@ -335,15 +316,14 @@
             return;
         }
 
-        const newEmail = newEmailInput.value.trim(); // تأكد من إزالة المسافات
+        const newEmail = newEmailInput.value.trim();
         if (!newEmail) {
             showAlert('يرجى إدخال البريد الإلكتروني الجديد.', 'error');
             newEmailInput.focus();
             return;
         }
 
-        // تحقق صارم من صيغة البريد الإلكتروني
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newEmail)) {
             showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
             newEmailInput.focus();
@@ -356,37 +336,35 @@
             return;
         }
 
-        // التحقق من عدم استخدام البريد مسبقاً
-        const exists = await checkEmailExists(newEmail);
-        if (exists === true) {
-            showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
-            newEmailInput.focus();
-            return;
-        } else if (exists === null) {
-            showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
-            return;
-        }
-
-        newEmailValue = newEmail;
+        // تجهيز البيانات للإرسال إلى Edge Function
+        const ipAddress = ''; // يمكن الحصول عليها من الخادم
+        const userAgent = navigator.userAgent;
 
         isSendingNewOtp = true;
         sendNewOtpBtn.disabled = true;
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // إرسال OTP (8 أرقام) إلى البريد الجديد
-            const { error } = await supabase.auth.signInWithOtp({
-                email: newEmail,
-                options: { shouldCreateUser: true }
-            });
-            if (error) {
-                if (error.message && error.message.includes('Signups not allowed')) {
-                    showErrorModal('⚠️ عذراً، إرسال رمز التحقق إلى البريد الجديد غير متاح حالياً بسبب إعدادات النظام.<br/>يرجى التواصل مع الدعم الفني أو تمكين التسجيل في إعدادات Supabase.');
-                    return;
+            // استدعاء Edge Function
+            const { data, error } = await supabase.functions.invoke('send-email-otp', {
+                body: {
+                    newEmail: newEmail,
+                    userId: currentUser.id,
+                    ipAddress: ipAddress,
+                    userAgent: userAgent
                 }
-                throw error;
+            });
+
+            if (error) {
+                console.error('Edge Function error:', error);
+                throw new Error(error.message || 'فشل الاتصال بالخادم');
             }
 
+            if (data && data.error) {
+                throw new Error(data.error);
+            }
+
+            newEmailValue = newEmail;
             showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد. يرجى إدخال الرمز المكون من 8 أرقام.', 'success');
             newOtpCode.disabled = false;
             newOtpCode.value = '';
@@ -403,6 +381,7 @@
             console.error(err);
             let msg = 'فشل إرسال الرمز. حاول مرة أخرى.';
             if (err.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
+            else if (err.message.includes('مستخدم مسبقاً')) msg = '✖ هذا البريد الإلكتروني مستخدم مسبقاً.';
             showAlert(msg, 'error');
             sendNewOtpBtn.style.display = 'block';
             timerContainerNew.style.display = 'none';
@@ -420,7 +399,7 @@
         }
     }
 
-    // ===== التحقق من رمز البريد الجديد (8 أرقام) =====
+    // ===== التحقق من رمز البريد الجديد =====
     async function verifyNewOtp() {
         const otp = newOtpCode.value.trim();
         if (otp.length !== 8) {
@@ -442,13 +421,63 @@
         newOtpHint.className = 'format-hint';
 
         try {
-            const { error } = await supabase.auth.verifyOtp({
-                email: newEmail,
-                token: otp,
-                type: 'email'
-            });
+            // التحقق من الرمز في قاعدة البيانات (مقارنة Hash)
+            const { data, error } = await supabase
+                .from('email_change_requests')
+                .select('id, otp_hash, expires_at, attempts, max_attempts, status')
+                .eq('user_id', currentUser.id)
+                .eq('new_email', newEmail)
+                .eq('status', 'pending')
+                .gt('expires_at', new Date().toISOString())
+                .maybeSingle();
 
             if (error) throw error;
+
+            if (!data) {
+                throw new Error('رمز التحقق غير صحيح أو منتهي الصلاحية.');
+            }
+
+            // التحقق من عدد المحاولات
+            if (data.attempts >= data.max_attempts) {
+                // تحديث الحالة إلى failed
+                await supabase
+                    .from('email_change_requests')
+                    .update({ status: 'failed' })
+                    .eq('id', data.id);
+                throw new Error('تم تجاوز عدد المحاولات المسموح بها.');
+            }
+
+            // التحقق من المطابقة (سنقوم بمقارنة الرمز عبر Edge Function أو عبر bcrypt في الخادم)
+            // للتبسيط، سنقوم باستدعاء دالة للتحقق (سيتم تنفيذها لاحقاً)
+            // لكننا سنستخدم طريقة مباشرة: سنقوم بجلب الرمز من الجدول ومقارنته (لكننا نخزن Hash)
+            // لذا سنقوم باستدعاء Edge Function للتحقق، أو استخدام دالة SQL.
+            // للتبسيط، سنقوم بإرسال الرمز إلى Edge Function للتحقق.
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
+                body: {
+                    requestId: data.id,
+                    otp: otp
+                }
+            });
+
+            if (verifyError || !verifyData?.success) {
+                // زيادة عدد المحاولات
+                await supabase
+                    .from('email_change_requests')
+                    .update({ attempts: data.attempts + 1 })
+                    .eq('id', data.id);
+                throw new Error(verifyData?.error || 'رمز التحقق غير صحيح.');
+            }
+
+            // رمز صحيح – تحديث الحالة إلى verified
+            const { error: updateError } = await supabase
+                .from('email_change_requests')
+                .update({
+                    status: 'verified',
+                    verified_at: new Date().toISOString()
+                })
+                .eq('id', data.id);
+
+            if (updateError) throw updateError;
 
             newOtpIcon.className = 'validation-icon success';
             newOtpIcon.innerHTML = '✔';
@@ -465,6 +494,7 @@
             let msg = 'رمز التحقق غير صحيح.';
             if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.';
             else if (err.message.includes('invalid')) msg = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+            else if (err.message.includes('المحاولات')) msg = 'تم تجاوز عدد المحاولات المسموح بها. يرجى طلب رمز جديد.';
             newOtpIcon.className = 'validation-icon error';
             newOtpIcon.innerHTML = '✖';
             newOtpMessage.textContent = msg;
@@ -540,17 +570,18 @@
                 throw error;
             }
 
-            // تحديث email_changed_at في جدول auth_register
+            // تحديث البريد في جدول العملاء (auth_register)
             const { error: updateError } = await supabase
                 .from('auth_register')
                 .update({
+                    email: newEmail,
                     email_changed_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 })
                 .eq('user_id', currentUser.id);
 
             if (updateError) {
-                console.warn('⚠️ فشل تحديث email_changed_at:', updateError);
+                console.warn('⚠️ فشل تحديث auth_register:', updateError);
             }
 
             showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
