@@ -11,8 +11,12 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
+  // معالجة طلب OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 200, headers: corsHeaders })
+    return new Response('ok', {
+      status: 200,
+      headers: corsHeaders,
+    })
   }
 
   try {
@@ -44,6 +48,7 @@ serve(async (req: Request) => {
       .select('email')
       .eq('email', newEmail)
       .maybeSingle()
+
     if (existingUser) {
       return new Response(
         JSON.stringify({ error: 'البريد الإلكتروني مستخدم مسبقاً' }),
@@ -51,11 +56,11 @@ serve(async (req: Request) => {
       )
     }
 
-    // 3. توليد رمز OTP مكون من 8 أرقام
+    // 3. توليد OTP مكون من 8 أرقام
     const otp = Math.floor(10000000 + Math.random() * 90000000).toString()
     const otpHash = await bcrypt.hash(otp)
 
-    // 4. حذف الطلبات السابقة غير المكتملة لنفس المستخدم
+    // 4. حذف الطلبات السابقة غير المكتملة
     await supabase
       .from('email_change_requests')
       .delete()
@@ -81,34 +86,34 @@ serve(async (req: Request) => {
 
     if (insertError) throw insertError
 
-    // 6. إرسال البريد عبر خدمة بريد (Resend)
+    // 6. إرسال البريد عبر Resend
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY غير مضبوط')
     }
 
     const emailHtml = `
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head><meta charset="UTF-8"><title>رمز التحقق - تغيير البريد الإلكتروني</title></head>
-    <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f8fafc; padding: 40px 0;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-        <h2 style="color: #0d9488;">تيرا</h2>
-        <h3 style="color: #1e293b;">تغيير البريد الإلكتروني</h3>
-        <p style="color: #334155; line-height: 1.8;">لقد طلبت تغيير بريدك الإلكتروني. استخدم الرمز التالي لإكمال العملية:</p>
-        <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; text-align: center; border: 2px dashed #d1d5db; margin: 24px 0;">
-          <span style="font-size: 40px; font-weight: 800; letter-spacing: 10px; color: #0d9488;">${otp}</span>
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head><meta charset="UTF-8"><title>رمز التحقق - تغيير البريد الإلكتروني</title></head>
+      <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f8fafc; padding: 40px 0;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; padding: 40px 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+          <h2 style="color: #0d9488;">تيرا</h2>
+          <h3 style="color: #1e293b;">تغيير البريد الإلكتروني</h3>
+          <p style="color: #334155; line-height: 1.8;">استخدم الرمز التالي لتأكيد البريد الإلكتروني الجديد:</p>
+          <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; text-align: center; border: 2px dashed #d1d5db; margin: 24px 0;">
+            <span style="font-size: 40px; font-weight: 800; letter-spacing: 10px; color: #0d9488;">${otp}</span>
+          </div>
+          <p style="color: #475569; font-size: 14px;">⏳ هذا الرمز صالح لمدة 5 دقائق. لا تشاركه مع أي شخص.</p>
+          <div style="background-color: #fef2f2; border-right: 4px solid #dc2626; padding: 14px 18px; border-radius: 8px; margin-top: 20px;">
+            <p style="color: #7f1d1d; font-weight: 600;">⚠️ تنبيه أمني</p>
+            <p style="color: #7f1d1d;">إذا لم تطلب هذا التغيير، يرجى تغيير كلمة المرور فوراً والتواصل مع الدعم.</p>
+          </div>
+          <hr style="border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="font-size: 12px; color: #94a3b8; text-align: center;">هذه رسالة تلقائية من منصة تيرا. يرجى عدم الرد عليها.</p>
         </div>
-        <p style="color: #475569; font-size: 14px;">⏳ هذا الرمز صالح لمدة 5 دقائق. لا تشاركه مع أي شخص.</p>
-        <div style="background-color: #fef2f2; border-right: 4px solid #dc2626; padding: 14px 18px; border-radius: 8px; margin-top: 20px;">
-          <p style="color: #7f1d1d; font-weight: 600;">⚠️ تنبيه أمني</p>
-          <p style="color: #7f1d1d;">إذا لم تطلب هذا التغيير، يرجى تغيير كلمة المرور فوراً والتواصل مع الدعم.</p>
-        </div>
-        <hr style="border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-        <p style="font-size: 12px; color: #94a3b8; text-align: center;">هذه رسالة تلقائية من منصة تيرا. يرجى عدم الرد عليها.</p>
-      </div>
-    </body>
-    </html>
+      </body>
+      </html>
     `
 
     const res = await fetch('https://api.resend.com/emails', {
