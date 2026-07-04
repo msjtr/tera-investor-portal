@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكيد البريد الإلكتروني | تيرا</title>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); max-width: 450px; width: 100%; text-align: center; }
+        .icon { font-size: 56px; color: #028090; margin-bottom: 16px; }
+        h1 { font-size: 24px; color: #0A1B3F; margin-bottom: 12px; }
+        p { color: #475569; line-height: 1.7; margin-bottom: 20px; }
+        .loading { display: inline-block; width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #028090; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>جاري تأكيد البريد الإلكتروني...</h1>
+        <p>يرجى الانتظار، جاري التحقق من بريدك الإلكتروني الجديد.</p>
+        <div class="loading"></div>
+    </div>
+
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const type = params.get('type');
+
+            if (!token || !type) {
+                document.querySelector('h1').textContent = '⚠️ رابط غير صالح';
+                document.querySelector('p').textContent = 'الرابط الذي استخدمته غير صحيح أو منتهي الصلاحية.';
+                document.querySelector('.loading').style.display = 'none';
+                return;
+            }
+
+            // تهيئة Supabase
+            const supabaseUrl = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
+            const supabaseAnonKey = 'EYbDPhPpJc3HhN6fUQYBsO0mZPnoZzxlL4jSxKu2gLs'; // استبدل بمفتاحك الفعلي
+            const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+            async function confirmEmail() {
+                try {
+                    const { error } = await supabase.auth.verifyOtp({
+                        token_hash: token,
+                        type: type
+                    });
+
+                    if (error) throw error;
+
+                    document.querySelector('h1').textContent = '✅ تم تأكيد البريد الإلكتروني بنجاح!';
+                    document.querySelector('p').textContent = 'سيتم تحويلك إلى لوحة التحكم خلال 3 ثوانٍ.';
+                    document.querySelector('.loading').style.display = 'none';
+
+                    setTimeout(() => {
+                        window.location.replace('/pages/dashboard/index.html');
+                    }, 3000);
+                } catch (err) {
+                    document.querySelector('h1').textContent = '❌ فشل التأكيد';
+                    document.querySelector('p').textContent = err.message || 'حدث خطأ أثناء تأكيد البريد الإلكتروني. يرجى المحاولة مرة أخرى.';
+                    document.querySelector('.loading').style.display = 'none';
+                }
+            }
+
+            confirmEmail();
+        })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>
