@@ -5,13 +5,13 @@ import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info, x-requested-with',
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Max-Age': '86400',
 }
 
 serve(async (req: Request) => {
-  // معالجة طلب OPTIONS (preflight)
+  // 1. معالجة طلب OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 200,
@@ -32,7 +32,7 @@ serve(async (req: Request) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-    // 1. الحصول على البريد الحالي للمستخدم
+    // 2. جلب البريد الحالي
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId)
     if (userError || !userData?.user) {
       return new Response(
@@ -42,13 +42,12 @@ serve(async (req: Request) => {
     }
     const oldEmail = userData.user.email
 
-    // 2. التحقق من عدم استخدام البريد الجديد
-    const { data: existingUser, error: checkError } = await supabase
+    // 3. التحقق من عدم استخدام البريد الجديد
+    const { data: existingUser } = await supabase
       .from('auth_register')
       .select('email')
       .eq('email', newEmail)
       .maybeSingle()
-
     if (existingUser) {
       return new Response(
         JSON.stringify({ error: 'البريد الإلكتروني مستخدم مسبقاً' }),
@@ -56,18 +55,18 @@ serve(async (req: Request) => {
       )
     }
 
-    // 3. توليد OTP مكون من 8 أرقام
+    // 4. توليد OTP
     const otp = Math.floor(10000000 + Math.random() * 90000000).toString()
     const otpHash = await bcrypt.hash(otp)
 
-    // 4. حذف الطلبات السابقة غير المكتملة
+    // 5. حذف الطلبات السابقة
     await supabase
       .from('email_change_requests')
       .delete()
       .eq('user_id', userId)
       .in('status', ['pending', 'verified'])
 
-    // 5. إدراج طلب جديد
+    // 6. إدراج طلب جديد
     const expiresAt = new Date()
     expiresAt.setMinutes(expiresAt.getMinutes() + 5)
 
@@ -86,7 +85,7 @@ serve(async (req: Request) => {
 
     if (insertError) throw insertError
 
-    // 6. إرسال البريد عبر Resend
+    // 7. إرسال البريد عبر Resend
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY غير مضبوط')
