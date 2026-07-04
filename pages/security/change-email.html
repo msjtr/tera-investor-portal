@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
+        /* =========================================
+           الأنماط الأساسية والخاصة بالصفحة
+           ========================================= */
         * { box-sizing: border-box; }
         body {
             background-color: #f1f5f9;
@@ -29,6 +32,7 @@
             min-height: 100vh;
         }
 
+        /* ===== الهيدر ===== */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
@@ -69,6 +73,7 @@
             border: 2px solid #028090;
         }
 
+        /* ===== عنوان الصفحة ===== */
         .page-subheader {
             background: #0A1B3F;
             padding: 14px 20px;
@@ -109,6 +114,7 @@
         }
         .btn-back:hover { background: #028090; border-color: #028090; }
 
+        /* ===== المحتوى ===== */
         .content-container {
             max-width: 900px;
             width: 100%;
@@ -162,6 +168,7 @@
             border-radius: 20px;
         }
 
+        /* ===== النماذج ===== */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -205,6 +212,7 @@
         .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
         .form-control.readonly { background: #f1f5f9; color: #475569; }
 
+        /* ===== التلميحات والتحقق ===== */
         .format-hint {
             font-size: 12px;
             color: #64748b;
@@ -238,6 +246,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ===== الأزرار ===== */
         .btn-submit {
             background: #028090;
             color: #fff;
@@ -269,6 +278,7 @@
         }
         .btn-submit.btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
 
+        /* ===== التنبيهات ===== */
         .alert-box {
             display: none;
             padding: 12px 16px;
@@ -294,13 +304,15 @@
         .alert-box.error i { color: #dc2626; }
         .alert-box i { font-size: 18px; flex-shrink: 0; }
 
+        /* ===== المؤقت ===== */
         .timer-container {
             font-size: 14px;
             color: #64748b;
             margin-top: 6px;
         }
-        #timerDisplayOld, #timerDisplayNew { color: #028090; font-weight: 800; }
+        #timerDisplayOld { color: #028090; font-weight: 800; }
 
+        /* ===== نوافذ منبثقة ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -393,6 +405,7 @@
         }
         .btn-modal.btn-secondary:hover { background: #cbd5e1; }
 
+        /* ===== التذييل ===== */
         .page-footer {
             text-align: center;
             padding: 18px 16px;
@@ -403,6 +416,7 @@
             margin-top: auto;
         }
 
+        /* ===== استجابة ===== */
         @media (min-width: 768px) {
             .form-grid { grid-template-columns: 1fr 1fr; gap: 24px 30px; }
             .form-group.full-width { grid-column: 1 / -1; }
@@ -431,6 +445,7 @@
             .modal-message { font-size: 14px; }
         }
 
+        /* ===== الوضع المظلم ===== */
         @media (prefers-color-scheme: dark) {
             body { background: #0f172a; }
             .focused-header { background: #1e293b !important; border-bottom-color: #334155 !important; }
@@ -453,7 +468,7 @@
             .modal-message { color: #cbd5e1 !important; }
             .modal-timer .count { color: #22d3ee !important; }
             .timer-container { color: #94a3b8 !important; }
-            #timerDisplayOld, #timerDisplayNew { color: #22d3ee !important; }
+            #timerDisplayOld { color: #22d3ee !important; }
             .btn-modal.btn-secondary { background: #334155; color: #e2e8f0; }
             .btn-modal.btn-secondary:hover { background: #475569; }
             .page-footer { background: #1e293b !important; border-top-color: #334155 !important; color: #64748b !important; }
@@ -464,6 +479,7 @@
 </head>
 <body data-security="change-email">
 
+    <!-- ===== الهيدر ===== -->
     <header class="focused-header no-print">
         <div class="logo">
             <img src="/images/logo.svg" alt="Tera Logo" 
@@ -475,6 +491,7 @@
         </div>
     </header>
 
+    <!-- ===== عنوان الصفحة ===== -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-envelope"></i> تغيير البريد الإلكتروني</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -482,6 +499,7 @@
         </a>
     </div>
 
+    <!-- ===== المحتوى ===== -->
     <main class="content-container">
         <div class="panel-card">
             <div class="panel-header">
@@ -498,13 +516,13 @@
             <form id="changeEmailForm" novalidate>
                 <div class="form-grid">
 
-                    <!-- البريد الحالي -->
+                    <!-- ===== 1. البريد الإلكتروني الحالي (للقراءة فقط) ===== -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الحالي <span class="req">*</span></label>
                         <input type="email" class="form-control readonly" id="currentEmailDisplay" readonly disabled />
                     </div>
 
-                    <!-- التحقق من البريد الحالي -->
+                    <!-- ===== 2. التحقق من البريد الحالي ===== -->
                     <div class="form-group full-width" id="oldEmailVerifyGroup">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendOldOtpBtn" style="height:48px;">
@@ -517,9 +535,7 @@
                         </div>
                         <div style="margin-top:12px;">
                             <label class="form-label">رمز التحقق <span class="req">*</span></label>
-                            <div class="password-wrapper">
-                                <input type="text" class="form-control" id="oldOtpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" disabled />
-                            </div>
+                            <input type="text" class="form-control" id="oldOtpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" disabled />
                             <span class="format-hint" id="oldOtpHint">
                                 <span class="validation-icon" id="oldOtpIcon"></span>
                                 <span id="oldOtpMessage">أدخل رمز التحقق المرسل إلى بريدك الحالي</span>
@@ -527,7 +543,7 @@
                         </div>
                     </div>
 
-                    <!-- البريد الجديد -->
+                    <!-- ===== 3. البريد الإلكتروني الجديد (معطل حتى التحقق من الحالي) ===== -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الجديد <span class="req">*</span></label>
                         <input type="email" class="form-control" id="newEmail" placeholder="أدخل البريد الإلكتروني الجديد" disabled autocomplete="email" />
@@ -537,32 +553,28 @@
                         </span>
                     </div>
 
-                    <!-- التحقق من البريد الجديد -->
+                    <!-- ===== 4. التحقق من البريد الجديد (حذف OTP، استخدام رابط التأكيد) ===== -->
                     <div class="form-group full-width" id="newEmailVerifyGroup" style="display:none;">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendNewOtpBtn" style="height:48px;">
-                                <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد
+                                <i class="fas fa-paper-plane"></i> إرسال رابط التأكيد إلى البريد الإلكتروني الجديد
                             </button>
                             <div class="timer-container" id="timerContainerNew" style="display:none;">
                                 <span>يمكنك إعادة الإرسال بعد </span>
                                 <span id="timerDisplayNew">05:00</span>
                             </div>
                         </div>
-                        <div style="margin-top:12px;">
-                            <label class="form-label">رمز التحقق <span class="req">*</span></label>
-                            <div class="password-wrapper">
-                                <input type="text" class="form-control" id="newOtpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" disabled />
-                            </div>
-                            <span class="format-hint" id="newOtpHint">
-                                <span class="validation-icon" id="newOtpIcon"></span>
-                                <span id="newOtpMessage">أدخل رمز التحقق المرسل إلى بريدك الجديد</span>
-                            </span>
+                        <div style="margin-top:12px; padding:12px 16px; background:#f0fdf4; border-radius:8px; border-right:3px solid #16a34a;">
+                            <p style="margin:0; font-size:14px; color:#166534;">
+                                <i class="fas fa-envelope" style="color:#16a34a;"></i>
+                                سيتم إرسال <strong>رابط تأكيد</strong> إلى البريد الإلكتروني الجديد. يرجى فتح الرابط لإكمال عملية تغيير البريد.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- حفظ التغييرات -->
+                    <!-- ===== 5. زر حفظ التغييرات (معطل حتى التأكيد) ===== -->
                     <div class="form-group full-width" id="saveGroup" style="display:none;">
-                        <button type="button" class="btn-submit" id="saveEmailBtn">
+                        <button type="button" class="btn-submit" id="saveEmailBtn" disabled>
                             <i class="fas fa-save"></i> حفظ التغييرات
                         </button>
                     </div>
@@ -572,7 +584,7 @@
         </div>
     </main>
 
-    <!-- نافذة النجاح -->
+    <!-- ===== نافذة النجاح ===== -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-box">
             <div class="modal-icon"><i class="fas fa-check-circle"></i></div>
@@ -588,7 +600,7 @@
         </div>
     </div>
 
-    <!-- نافذة الأخطاء -->
+    <!-- ===== نافذة الأخطاء ===== -->
     <div class="modal-overlay" id="errorModal">
         <div class="modal-box">
             <div class="modal-icon error"><i class="fas fa-exclamation-circle"></i></div>
@@ -601,10 +613,12 @@
         </div>
     </div>
 
+    <!-- ===== التذييل ===== -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
+    <!-- ===== ربط الملفات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
