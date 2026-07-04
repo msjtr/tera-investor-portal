@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
+        /* جميع الأنماط كما هي – تم تضمينها في الإصدارات السابقة */
         * { box-sizing: border-box; }
         body { background-color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
         .focused-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 6px rgba(0,0,0,0.04); flex-wrap: wrap; gap: 8px; }
@@ -165,7 +166,7 @@
                         </span>
                     </div>
 
-                    <!-- 4. التحقق من البريد الجديد -->
+                    <!-- 4. التحقق من البريد الجديد (OTP عبر Supabase Auth) -->
                     <div class="form-group full-width" id="newEmailVerifyGroup" style="display:none;">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendNewOtpBtn" style="height:48px;">
