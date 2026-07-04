@@ -86,31 +86,50 @@
         if (avatarEl) avatarEl.textContent = fullName.charAt(0).toUpperCase();
     }
 
+    // ===== تحسين showAlert =====
     function showAlert(message, type = 'error') {
-        if (!alertBox) return;
+        if (!alertBox) {
+            // تنبيه مؤقت إذا لم يوجد العنصر
+            alert(message);
+            return;
+        }
         alertBox.className = `alert-box show ${type}`;
         alertIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
         alertMessage.textContent = message;
+        alertBox.style.display = 'flex'; // تأكيد الظهور
+
         clearTimeout(window._alertTimer);
         window._alertTimer = setTimeout(() => {
-            alertBox.classList.remove('show');
             alertBox.style.display = 'none';
+            alertBox.className = 'alert-box';
         }, 7000);
+    }
+
+    function hideAlert() {
+        if (alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert-box';
+        }
     }
 
     function showErrorModal(message) {
         if (!errorModal) return;
         errorMessage.textContent = message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
         errorModal.classList.add('show');
+        errorModal.style.display = 'flex';
     }
 
     function hideErrorModal() {
-        if (errorModal) errorModal.classList.remove('show');
+        if (errorModal) {
+            errorModal.classList.remove('show');
+            errorModal.style.display = 'none';
+        }
     }
 
     function showSuccessModal() {
         if (!successModal) return;
         successModal.classList.add('show');
+        successModal.style.display = 'flex';
         let count = 5;
         countdownDisplay.textContent = count;
         const interval = setInterval(() => {
@@ -221,6 +240,7 @@
             return;
         }
 
+        // التحقق من عدم استخدام البريد مسبقاً
         const exists = await checkEmailExists(newEmail);
         if (exists === true) {
             showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
@@ -538,8 +558,7 @@
         attemptCount = 0;
         newEmailValue = '';
 
-        alertBox.classList.remove('show');
-        alertBox.style.display = 'none';
+        hideAlert();
     }
 
     // ===== تهيئة الصفحة =====
@@ -577,6 +596,7 @@
         currentEmailDisplay.value = currentUser.email || '';
         updateHeaderUI(currentUser);
 
+        // ===== ربط الأحداث =====
         sendOtpBtn.addEventListener('click', sendOtp);
 
         newEmailInput.addEventListener('input', function() {
