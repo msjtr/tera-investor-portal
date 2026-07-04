@@ -17,9 +17,7 @@
     <link rel="stylesheet" href="/assets/css/responsive.css" />
     <link rel="stylesheet" href="/assets/css/security.css" />
 
-    <!-- الأنماط المضمنة للصفحة (نفسها من المحادثة السابقة) -->
     <style>
-        /* جميع الأنماط – تم تضمينها سابقاً في المحادثة، سيتم إعادة نسخها هنا للاختصار */
         * { box-sizing: border-box; }
         body { background-color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
         .focused-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 6px rgba(0,0,0,0.04); flex-wrap: wrap; gap: 8px; }
@@ -136,7 +134,7 @@
                         <input type="email" class="form-control readonly" id="currentEmailDisplay" readonly disabled />
                     </div>
 
-                    <!-- 2. التحقق من البريد الحالي (OTP 8 أرقام) -->
+                    <!-- 2. التحقق من البريد الحالي -->
                     <div class="form-group full-width" id="oldEmailVerifyGroup">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendOldOtpBtn" style="height:48px;">
@@ -167,7 +165,7 @@
                         </span>
                     </div>
 
-                    <!-- 4. التحقق من البريد الجديد (OTP 8 أرقام) -->
+                    <!-- 4. التحقق من البريد الجديد -->
                     <div class="form-group full-width" id="newEmailVerifyGroup" style="display:none;">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendNewOtpBtn" style="height:48px;">
