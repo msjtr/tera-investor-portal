@@ -3,7 +3,6 @@
  * تغيير البريد الإلكتروني – إرسال OTP إلى البريد الحالي فقط
  * بدون إنشاء حساب جديد، فقط تحديث البريد الإلكتروني للمستخدم الحالي
  * مع تسجيل كامل العملية في قاعدة البيانات
- * النسخة المُصححة – مع تحسين معالجة الأخطاء وربط الأحداث
  */
 
 'use strict';
@@ -54,30 +53,28 @@
 
     // ===== دوال مساعدة =====
     async function initSupabase() {
-        try {
-            if (window.SecurityCore && window.SecurityCore.supabase) {
-                supabase = window.SecurityCore.supabase;
-                currentUser = window.SecurityCore.currentUser;
-                return true;
-            }
-            if (window.teraSupabase) {
-                supabase = window.teraSupabase;
+        if (window.SecurityCore && window.SecurityCore.supabase) {
+            supabase = window.SecurityCore.supabase;
+            currentUser = window.SecurityCore.currentUser;
+            return true;
+        }
+        if (window.teraSupabase) {
+            supabase = window.teraSupabase;
+            try {
                 const { data: { user } } = await supabase.auth.getUser();
                 currentUser = user;
                 return true;
-            }
-            if (typeof waitForSupabase === 'function') {
+            } catch (e) { return false; }
+        }
+        if (typeof waitForSupabase === 'function') {
+            try {
                 supabase = await waitForSupabase();
                 const { data: { user } } = await supabase.auth.getUser();
                 currentUser = user;
                 return true;
-            }
-            console.warn('⚠️ لم يتم العثور على Supabase');
-            return false;
-        } catch (e) {
-            console.error('❌ فشل تهيئة Supabase:', e);
-            return false;
+            } catch (e) { return false; }
         }
+        return false;
     }
 
     function updateHeaderUI(user) {
@@ -199,23 +196,18 @@
     async function sendOtp() {
         console.log('🟢 sendOtp تم استدعاؤها');
 
-        // التحقق من التهيئة
         if (!supabase || !currentUser) {
             showAlert('لم يتم تهيئة الاتصال. يرجى تحديث الصفحة.', 'error');
             return;
         }
 
-        if (isSendingOtp) {
-            console.log('⚠️ جاري الإرسال بالفعل');
-            return;
-        }
-
+        if (isSendingOtp) return;
         if (timerInterval) {
             showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'error');
             return;
         }
 
-        const newEmail = newEmailInput.value.trim().toLowerCase();
+        const newEmail = newEmailInput.value.trim();
         if (!newEmail) {
             showAlert('يرجى إدخال البريد الإلكتروني الجديد.', 'error');
             newEmailInput.focus();
@@ -229,20 +221,13 @@
             return;
         }
 
-        // التحقق من عدم استخدام البريد مسبقاً
-        try {
-            const exists = await checkEmailExists(newEmail);
-            if (exists === true) {
-                showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
-                newEmailInput.focus();
-                return;
-            } else if (exists === null) {
-                showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
-                return;
-            }
-        } catch (err) {
-            console.error('❌ خطأ في checkEmailExists:', err);
-            showAlert('حدث خطأ أثناء التحقق من البريد.', 'error');
+        const exists = await checkEmailExists(newEmail);
+        if (exists === true) {
+            showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
+            newEmailInput.focus();
+            return;
+        } else if (exists === null) {
+            showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
             return;
         }
 
@@ -266,7 +251,6 @@
             });
 
             if (error) {
-                console.error('❌ خطأ من Supabase:', error);
                 if (error.status === 429 || error.message.includes('rate limit') || error.message.includes('wait')) {
                     const match = error.message.match(/(\d+)\s*seconds?/);
                     let waitTime = 60;
@@ -282,10 +266,8 @@
                 throw error;
             }
 
-            console.log('✅ تم إرسال OTP بنجاح');
             showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الحالي.', 'success');
-
-            // إظهار حقل الرمز
+            
             otpVerifyGroup.style.display = 'block';
             otpCode.disabled = false;
             otpCode.value = '';
@@ -295,7 +277,6 @@
             otpHint.className = 'format-hint';
             attemptCount = 0;
 
-            // إخفاء زر الإرسال وإظهار المؤقت
             otpSendGroup.style.display = 'none';
             startTimer();
 
@@ -481,6 +462,23 @@
                 console.warn('⚠️ فشل تحديث auth_register:', e);
             }
 
+            try {
+                await supabase
+                    .from('security_logs')
+                    .insert({
+                        user_id: currentUser.id,
+                        action: 'email_change',
+                        old_email: currentUser.email,
+                        new_email: newEmailValue,
+                        ip_address: '',
+                        user_agent: navigator.userAgent,
+                        status: 'success',
+                        created_at: new Date().toISOString()
+                    });
+            } catch (e) {
+                console.warn('⚠️ فشل تسجيل السجل الأمني:', e);
+            }
+
             showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
             showSuccessModal();
 
@@ -549,11 +547,8 @@
         if (initialized) return;
         initialized = true;
 
-        console.log('🚀 تهيئة صفحة تغيير البريد الإلكتروني...');
-
         const success = await initSupabase();
         if (!success || !currentUser) {
-            console.error('❌ فشل تهيئة Supabase أو جلب المستخدم');
             showErrorModal('لم يتم التعرف على جلسة المستخدم أو تعذر الاتصال بالخادم. يرجى تسجيل الدخول مرة أخرى.');
             const retryBtn = document.getElementById('errorRetryBtn');
             if (retryBtn) {
@@ -564,8 +559,6 @@
             }
             return;
         }
-
-        console.log('✅ تم تهيئة Supabase والمستخدم:', currentUser.email);
 
         const retryBtn = document.getElementById('errorRetryBtn');
         if (retryBtn) {
@@ -581,39 +574,25 @@
             };
         }
 
-        if (currentEmailDisplay) {
-            currentEmailDisplay.value = currentUser.email || '';
-        }
+        currentEmailDisplay.value = currentUser.email || '';
         updateHeaderUI(currentUser);
 
-        // ===== ربط الأحداث =====
-        if (newEmailInput) {
-            newEmailInput.addEventListener('input', validateNewEmail);
-        }
+        sendOtpBtn.addEventListener('click', sendOtp);
 
-        if (sendOtpBtn) {
-            console.log('🔗 ربط حدث النقر بزر إرسال الرمز');
-            sendOtpBtn.addEventListener('click', sendOtp);
-        } else {
-            console.error('❌ لم يتم العثور على زر إرسال الرمز (sendOtpBtn)');
-        }
+        newEmailInput.addEventListener('input', function() {
+            validateNewEmail();
+        });
 
-        if (otpCode) {
-            otpCode.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '');
-                if (this.value.length === 8) {
-                    verifyOtp();
-                }
-            });
-        }
+        otpCode.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 8) {
+                verifyOtp();
+            }
+        });
 
-        if (saveEmailBtn) {
-            saveEmailBtn.addEventListener('click', saveEmail);
-        }
+        saveEmailBtn.addEventListener('click', saveEmail);
 
-        if (errorCloseBtn) {
-            errorCloseBtn.addEventListener('click', hideErrorModal);
-        }
+        errorCloseBtn.addEventListener('click', hideErrorModal);
 
         resetForm();
         console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة.');
