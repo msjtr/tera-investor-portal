@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
+        /* =========================================
+           الأنماط الأساسية والخاصة بالصفحة
+           ========================================= */
         * { box-sizing: border-box; }
         body {
             background-color: #f1f5f9;
@@ -28,6 +31,7 @@
             flex-direction: column;
             min-height: 100vh;
         }
+
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
@@ -298,7 +302,7 @@
             color: #64748b;
             margin-top: 6px;
         }
-        #timerDisplayOld { color: #028090; font-weight: 800; }
+        #timerDisplayOld, #timerDisplayNew { color: #028090; font-weight: 800; }
 
         .modal-overlay {
             display: none;
@@ -452,7 +456,7 @@
             .modal-message { color: #cbd5e1 !important; }
             .modal-timer .count { color: #22d3ee !important; }
             .timer-container { color: #94a3b8 !important; }
-            #timerDisplayOld { color: #22d3ee !important; }
+            #timerDisplayOld, #timerDisplayNew { color: #22d3ee !important; }
             .btn-modal.btn-secondary { background: #334155; color: #e2e8f0; }
             .btn-modal.btn-secondary:hover { background: #475569; }
             .page-footer { background: #1e293b !important; border-top-color: #334155 !important; color: #64748b !important; }
@@ -497,13 +501,13 @@
             <form id="changeEmailForm" novalidate>
                 <div class="form-grid">
 
-                    <!-- البريد الإلكتروني الحالي -->
+                    <!-- ===== 1. البريد الإلكتروني الحالي (للقراءة فقط) ===== -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الحالي <span class="req">*</span></label>
                         <input type="email" class="form-control readonly" id="currentEmailDisplay" readonly disabled />
                     </div>
 
-                    <!-- التحقق من البريد الحالي -->
+                    <!-- ===== 2. التحقق من البريد الحالي ===== -->
                     <div class="form-group full-width" id="oldEmailVerifyGroup">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendOldOtpBtn" style="height:48px;">
@@ -524,7 +528,7 @@
                         </div>
                     </div>
 
-                    <!-- البريد الإلكتروني الجديد (معطل حتى التحقق من الحالي) -->
+                    <!-- ===== 3. البريد الإلكتروني الجديد ===== -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الجديد <span class="req">*</span></label>
                         <input type="email" class="form-control" id="newEmail" placeholder="أدخل البريد الإلكتروني الجديد" disabled autocomplete="email" />
@@ -534,23 +538,32 @@
                         </span>
                     </div>
 
-                    <!-- زر إرسال رابط التأكيد إلى البريد الجديد -->
+                    <!-- ===== 4. التحقق من البريد الجديد (OTP) ===== -->
                     <div class="form-group full-width" id="newEmailVerifyGroup" style="display:none;">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendNewOtpBtn" style="height:48px;">
-                                <i class="fas fa-paper-plane"></i> إرسال رابط التأكيد إلى البريد الإلكتروني الجديد
+                                <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد
                             </button>
                             <div class="timer-container" id="timerContainerNew" style="display:none;">
                                 <span>يمكنك إعادة الإرسال بعد </span>
                                 <span id="timerDisplayNew">05:00</span>
                             </div>
                         </div>
-                        <div style="margin-top:12px; padding:12px 16px; background:#f0fdf4; border-radius:8px; border-right:3px solid #16a34a;">
-                            <p style="margin:0; font-size:14px; color:#166534;">
-                                <i class="fas fa-envelope" style="color:#16a34a;"></i>
-                                سيتم إرسال <strong>رابط تأكيد</strong> إلى البريد الإلكتروني الجديد. يرجى فتح الرابط لإكمال عملية تغيير البريد.
-                            </p>
+                        <div style="margin-top:12px;">
+                            <label class="form-label">رمز التحقق <span class="req">*</span></label>
+                            <input type="text" class="form-control" id="newOtpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" disabled />
+                            <span class="format-hint" id="newOtpHint">
+                                <span class="validation-icon" id="newOtpIcon"></span>
+                                <span id="newOtpMessage">أدخل رمز التحقق المرسل إلى بريدك الجديد</span>
+                            </span>
                         </div>
+                    </div>
+
+                    <!-- ===== 5. زر حفظ التغييرات ===== -->
+                    <div class="form-group full-width" id="saveGroup" style="display:none;">
+                        <button type="button" class="btn-submit" id="saveEmailBtn">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
                     </div>
 
                 </div>
@@ -558,7 +571,7 @@
         </div>
     </main>
 
-    <!-- نافذة النجاح -->
+    <!-- ===== نافذة النجاح ===== -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-box">
             <div class="modal-icon"><i class="fas fa-check-circle"></i></div>
@@ -574,7 +587,7 @@
         </div>
     </div>
 
-    <!-- نافذة الأخطاء -->
+    <!-- ===== نافذة الأخطاء ===== -->
     <div class="modal-overlay" id="errorModal">
         <div class="modal-box">
             <div class="modal-icon error"><i class="fas fa-exclamation-circle"></i></div>
@@ -587,10 +600,12 @@
         </div>
     </div>
 
+    <!-- ===== التذييل ===== -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
+    <!-- ===== ربط الملفات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
