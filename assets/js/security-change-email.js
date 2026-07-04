@@ -2,7 +2,8 @@
  * security-change-email.js
  * تغيير البريد الإلكتروني – مرحلتان:
  * 1. التحقق من البريد الحالي (OTP عبر Magic Link)
- * 2. تأكيد البريد الجديد (رابط تأكيد عبر قالب Change email address)
+ * 2. تأكيد البريد الجديد (OTP رقمي عبر signInWithOtp)
+ * مع إصلاح كامل للعناصر غير الموجودة
  */
 
 'use strict';
@@ -11,14 +12,14 @@
     let supabase = null;
     let currentUser = null;
     let isOldEmailVerified = false;
+    let isNewEmailVerified = false;
     let timerIntervalOld = null;
     let timerIntervalNew = null;
     let isSendingOldOtp = false;
+    let isSendingNewOtp = false;
     let isSaving = false;
     let initialized = false;
     let newEmailValue = '';
-    let isNewEmailSent = false;
-    let authSubscription = null;
 
     // ===== عناصر DOM =====
     const currentEmailDisplay = document.getElementById('currentEmailDisplay');
@@ -36,6 +37,10 @@
     const newEmailMessage = document.getElementById('newEmailMessage');
 
     const sendNewOtpBtn = document.getElementById('sendNewOtpBtn');
+    const newOtpCode = document.getElementById('newOtpCode');
+    const newOtpHint = document.getElementById('newOtpHint');
+    const newOtpIcon = document.getElementById('newOtpIcon');
+    const newOtpMessage = document.getElementById('newOtpMessage');
     const timerContainerNew = document.getElementById('timerContainerNew');
     const timerDisplayNew = document.getElementById('timerDisplayNew');
 
@@ -317,11 +322,11 @@
         }
     }
 
-    // ===== إرسال رابط تأكيد البريد الجديد (قالب Change email address) =====
+    // ===== إرسال رمز OTP إلى البريد الجديد =====
     async function sendNewOtp() {
-        if (isSaving) return;
-        if (isNewEmailSent) {
-            showAlert('تم إرسال رابط التأكيد بالفعل. يرجى الانتظار حتى تنتهي المدة.', 'warning');
+        if (isSendingNewOtp) return;
+        if (timerIntervalNew) {
+            showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'error');
             return;
         }
 
@@ -363,69 +368,174 @@
 
         newEmailValue = newEmail;
 
-        isSaving = true;
+        isSendingNewOtp = true;
         sendNewOtpBtn.disabled = true;
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // تحديث البريد مباشرةً – سيرسل Supabase رابط تأكيد باستخدام قالب "Change email address"
-            const { error } = await supabase.auth.updateUser({
-                email: newEmail
+            // إرسال OTP إلى البريد الجديد
+            const { error } = await supabase.auth.signInWithOtp({
+                email: newEmail,
+                options: { shouldCreateUser: true }
             });
-
             if (error) {
-                if (error.message.includes('already been taken')) {
-                    throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
+                if (error.message && error.message.includes('Signups not allowed')) {
+                    showErrorModal('⚠️ عذراً، إرسال رمز التحقق إلى البريد الجديد غير متاح حالياً بسبب إعدادات النظام.<br/>يرجى التواصل مع الدعم الفني أو تمكين التسجيل في إعدادات Supabase.');
+                    return;
                 }
                 throw error;
             }
 
-            isNewEmailSent = true;
-            showAlert('✅ تم إرسال رابط التأكيد إلى بريدك الإلكتروني الجديد. يرجى فتح الرابط لتأكيد التغيير.', 'success');
+            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد. يرجى إدخال الرمز المكون من 8 أرقام.', 'success');
+            // إظهار حقل إدخال OTP
+            if (newOtpCode) {
+                newOtpCode.disabled = false;
+                newOtpCode.value = '';
+                newOtpCode.focus();
+            }
+            if (newOtpIcon) {
+                newOtpIcon.className = 'validation-icon';
+                newOtpIcon.innerHTML = '';
+            }
+            if (newOtpMessage) {
+                newOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الجديد';
+            }
+            if (newOtpHint) {
+                newOtpHint.className = 'format-hint';
+            }
 
-            // إخفاء الزر وإظهار المؤقت
-            sendNewOtpBtn.style.display = 'none';
-            newEmailInput.disabled = true;
-            timerContainerNew.style.display = 'block';
             startTimer('new');
+            if (sendNewOtpBtn) {
+                sendNewOtpBtn.style.display = 'none';
+            }
+            if (timerContainerNew) {
+                timerContainerNew.style.display = 'block';
+            }
 
         } catch (err) {
             console.error(err);
-            let msg = 'فشل إرسال رابط التأكيد. حاول مرة أخرى.';
+            let msg = 'فشل إرسال الرمز. حاول مرة أخرى.';
             if (err.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
-            else if (err.message.includes('already been taken')) msg = 'البريد الإلكتروني مستخدم مسبقاً.';
             showAlert(msg, 'error');
-            sendNewOtpBtn.style.display = 'block';
+            if (sendNewOtpBtn) {
+                sendNewOtpBtn.style.display = 'block';
+            }
+            if (timerContainerNew) {
+                timerContainerNew.style.display = 'none';
+            }
         } finally {
-            isSaving = false;
-            sendNewOtpBtn.disabled = false;
-            sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رابط التأكيد إلى البريد الإلكتروني الجديد';
+            isSendingNewOtp = false;
+            if (sendNewOtpBtn) {
+                sendNewOtpBtn.disabled = false;
+                sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد';
+            }
+            if (timerIntervalNew) {
+                sendNewOtpBtn.style.display = 'none';
+                timerContainerNew.style.display = 'block';
+            } else {
+                sendNewOtpBtn.style.display = 'block';
+                timerContainerNew.style.display = 'none';
+            }
         }
     }
 
-    // ===== مراقبة تغير البريد =====
-    function listenForEmailChange() {
-        if (authSubscription) return;
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'USER_UPDATED' && session?.user) {
-                const updatedUser = session.user;
-                // تحقق إذا كان البريد الجديد يساوي البريد الذي طلبناه
-                if (newEmailValue && updatedUser.email === newEmailValue) {
-                    // تم تحديث البريد بنجاح
-                    showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
-                    showSuccessModal();
-                    // تحديث المستخدم الحالي
-                    currentUser = updatedUser;
-                    updateHeaderUI(currentUser);
-                    // إعادة تعيين النموذج بعد فترة
-                    setTimeout(() => resetForm(), 2000);
+    // ===== التحقق من رمز البريد الجديد =====
+    async function verifyNewOtp() {
+        if (!newOtpCode) return;
+        const otp = newOtpCode.value.trim();
+        if (otp.length !== 8) {
+            if (newOtpIcon) {
+                newOtpIcon.className = 'validation-icon error';
+                newOtpIcon.innerHTML = '✖';
+            }
+            if (newOtpMessage) {
+                newOtpMessage.textContent = 'يرجى إدخال رمز مكون من 8 أرقام.';
+            }
+            if (newOtpHint) {
+                newOtpHint.className = 'format-hint error';
+            }
+            return;
+        }
+
+        const newEmail = newEmailValue || (newEmailInput ? newEmailInput.value.trim() : '');
+        if (!newEmail) {
+            showAlert('البريد الإلكتروني الجديد غير متوفر.', 'error');
+            return;
+        }
+
+        if (newOtpIcon) {
+            newOtpIcon.className = 'validation-icon loading';
+            newOtpIcon.innerHTML = '';
+        }
+        if (newOtpMessage) {
+            newOtpMessage.textContent = 'جارٍ التحقق من الرمز…';
+        }
+        if (newOtpHint) {
+            newOtpHint.className = 'format-hint';
+        }
+
+        try {
+            const { error } = await supabase.auth.verifyOtp({
+                email: newEmail,
+                token: otp,
+                type: 'email'
+            });
+
+            if (error) throw error;
+
+            if (newOtpIcon) {
+                newOtpIcon.className = 'validation-icon success';
+                newOtpIcon.innerHTML = '✔';
+            }
+            if (newOtpMessage) {
+                newOtpMessage.textContent = 'تم التحقق من البريد الإلكتروني الجديد بنجاح.';
+            }
+            if (newOtpHint) {
+                newOtpHint.className = 'format-hint success';
+            }
+            isNewEmailVerified = true;
+            if (newOtpCode) {
+                newOtpCode.disabled = true;
+            }
+
+            if (saveGroup) {
+                saveGroup.style.display = 'block';
+            }
+            showAlert('✅ تم التحقق من البريد الإلكتروني الجديد.', 'success');
+
+        } catch (err) {
+            console.error(err);
+            let msg = 'رمز التحقق غير صحيح.';
+            if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.';
+            else if (err.message.includes('invalid')) msg = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+            if (newOtpIcon) {
+                newOtpIcon.className = 'validation-icon error';
+                newOtpIcon.innerHTML = '✖';
+            }
+            if (newOtpMessage) {
+                newOtpMessage.textContent = msg;
+            }
+            if (newOtpHint) {
+                newOtpHint.className = 'format-hint error';
+            }
+            isNewEmailVerified = false;
+            if (saveGroup) {
+                saveGroup.style.display = 'none';
+            }
+            if (!timerIntervalNew) {
+                if (sendNewOtpBtn) {
+                    sendNewOtpBtn.style.display = 'block';
+                    sendNewOtpBtn.disabled = false;
+                    sendNewOtpBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
+                }
+                if (timerContainerNew) {
+                    timerContainerNew.style.display = 'none';
                 }
             }
-        });
-        authSubscription = subscription;
+        }
     }
 
-    // ===== مؤقت إعادة الإرسال =====
+    // ===== مؤقت =====
     function startTimer(type) {
         const timerDisplay = type === 'old' ? timerDisplayOld : timerDisplayNew;
         const timerContainer = type === 'old' ? timerContainerOld : timerContainerNew;
@@ -434,67 +544,187 @@
 
         if (window[intervalVar]) clearInterval(window[intervalVar]);
         let seconds = 300;
-        timerDisplay.textContent = '05:00';
+        if (timerDisplay) timerDisplay.textContent = '05:00';
         window[intervalVar] = setInterval(() => {
             seconds--;
             const min = Math.floor(seconds / 60);
             const sec = seconds % 60;
-            timerDisplay.textContent = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+            if (timerDisplay) timerDisplay.textContent = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
             if (seconds <= 0) {
                 clearInterval(window[intervalVar]);
                 window[intervalVar] = null;
-                sendBtn.style.display = 'block';
-                timerContainer.style.display = 'none';
-                sendBtn.disabled = false;
-                if (type === 'old') {
-                    sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
-                } else {
-                    sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رابط التأكيد';
-                    isNewEmailSent = false;
+                if (sendBtn) {
+                    sendBtn.style.display = 'block';
+                    sendBtn.disabled = false;
+                    if (type === 'old') {
+                        sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
+                    } else {
+                        sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
+                    }
                 }
+                if (timerContainer) timerContainer.style.display = 'none';
             }
         }, 1000);
     }
 
+    // ===== حفظ التغييرات =====
+    async function saveEmail() {
+        if (isSaving) return;
+        if (!isOldEmailVerified) {
+            showAlert('يرجى التحقق من البريد الإلكتروني الحالي أولاً.', 'error');
+            return;
+        }
+        if (!isNewEmailVerified) {
+            showAlert('يرجى التحقق من البريد الإلكتروني الجديد أولاً.', 'error');
+            return;
+        }
+
+        const newEmail = newEmailValue || (newEmailInput ? newEmailInput.value.trim() : '');
+        if (!newEmail) {
+            showAlert('البريد الإلكتروني الجديد غير متوفر.', 'error');
+            return;
+        }
+
+        isSaving = true;
+        if (saveEmailBtn) {
+            saveEmailBtn.disabled = true;
+            saveEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+        }
+
+        try {
+            const { error } = await supabase.auth.updateUser({
+                email: newEmail
+            });
+            if (error) {
+                if (error.message.includes('already been taken')) {
+                    throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
+                }
+                throw error;
+            }
+
+            // تحديث email_changed_at في auth_register
+            try {
+                await supabase
+                    .from('auth_register')
+                    .update({ email_changed_at: new Date().toISOString() })
+                    .eq('user_id', currentUser.id);
+            } catch (e) {
+                console.warn('⚠️ فشل تحديث email_changed_at:', e);
+            }
+
+            showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
+            showSuccessModal();
+            setTimeout(() => {
+                resetForm();
+            }, 1000);
+
+        } catch (err) {
+            console.error(err);
+            let msg = 'حدث خطأ أثناء حفظ البيانات.';
+            if (err.message.includes('already been taken')) msg = 'البريد الإلكتروني مستخدم مسبقاً.';
+            else if (err.message.includes('email')) msg = 'البريد الإلكتروني غير صالح.';
+            else if (err.message.includes('session')) {
+                msg = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً.';
+                isOldEmailVerified = false;
+                isNewEmailVerified = false;
+                if (saveGroup) saveGroup.style.display = 'none';
+            } else if (err.message.includes('Network')) msg = 'تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.';
+            showErrorModal(msg);
+        } finally {
+            isSaving = false;
+            if (saveEmailBtn) {
+                saveEmailBtn.disabled = false;
+                saveEmailBtn.innerHTML = '<i class="fas fa-save"></i> حفظ التغييرات';
+            }
+        }
+    }
+
     // ===== إعادة تعيين النموذج =====
     function resetForm() {
-        oldOtpCode.value = '';
-        oldOtpCode.disabled = true;
-        isOldEmailVerified = false;
-        oldOtpIcon.className = 'validation-icon';
-        oldOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الحالي';
-        oldOtpHint.className = 'format-hint';
+        if (oldOtpCode) {
+            oldOtpCode.value = '';
+            oldOtpCode.disabled = true;
+        }
+        if (oldOtpIcon) {
+            oldOtpIcon.className = 'validation-icon';
+            oldOtpIcon.innerHTML = '';
+        }
+        if (oldOtpMessage) {
+            oldOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الحالي';
+        }
+        if (oldOtpHint) {
+            oldOtpHint.className = 'format-hint';
+        }
+        if (timerContainerOld) {
+            timerContainerOld.style.display = 'none';
+        }
+        if (sendOldOtpBtn) {
+            sendOldOtpBtn.style.display = 'block';
+            sendOldOtpBtn.disabled = false;
+            sendOldOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الحالي';
+        }
+
+        if (newEmailInput) {
+            newEmailInput.value = '';
+            newEmailInput.disabled = true;
+        }
+        if (newEmailIcon) {
+            newEmailIcon.className = 'validation-icon';
+            newEmailIcon.innerHTML = '';
+        }
+        if (newEmailMessage) {
+            newEmailMessage.textContent = 'يجب التحقق من البريد الحالي أولاً';
+        }
+        if (newEmailHint) {
+            newEmailHint.className = 'format-hint';
+        }
+
+        if (newOtpCode) {
+            newOtpCode.value = '';
+            newOtpCode.disabled = true;
+        }
+        if (newOtpIcon) {
+            newOtpIcon.className = 'validation-icon';
+            newOtpIcon.innerHTML = '';
+        }
+        if (newOtpMessage) {
+            newOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الجديد';
+        }
+        if (newOtpHint) {
+            newOtpHint.className = 'format-hint';
+        }
+        if (sendNewOtpBtn) {
+            sendNewOtpBtn.style.display = 'block';
+            sendNewOtpBtn.disabled = false;
+            sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد';
+        }
+        if (timerContainerNew) {
+            timerContainerNew.style.display = 'none';
+        }
+        if (newEmailVerifyGroup) {
+            newEmailVerifyGroup.style.display = 'none';
+        }
+        if (saveGroup) {
+            saveGroup.style.display = 'none';
+        }
+
         if (timerIntervalOld) {
             clearInterval(timerIntervalOld);
             timerIntervalOld = null;
         }
-        sendOldOtpBtn.style.display = 'block';
-        timerContainerOld.style.display = 'none';
-        sendOldOtpBtn.disabled = false;
-        sendOldOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الحالي';
-
-        newEmailInput.value = '';
-        newEmailInput.disabled = true;
-        newEmailIcon.className = 'validation-icon';
-        newEmailMessage.textContent = 'يجب التحقق من البريد الحالي أولاً';
-        newEmailHint.className = 'format-hint';
-
         if (timerIntervalNew) {
             clearInterval(timerIntervalNew);
             timerIntervalNew = null;
         }
-        sendNewOtpBtn.style.display = 'block';
-        sendNewOtpBtn.disabled = false;
-        sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رابط التأكيد إلى البريد الإلكتروني الجديد';
-        timerContainerNew.style.display = 'none';
-        isNewEmailSent = false;
 
-        newEmailVerifyGroup.style.display = 'none';
-        saveGroup.style.display = 'none';
+        isOldEmailVerified = false;
+        isNewEmailVerified = false;
         newEmailValue = '';
 
-        alertBox.classList.remove('show');
-        alertBox.style.display = 'none';
+        if (alertBox) {
+            alertBox.classList.remove('show');
+            alertBox.style.display = 'none';
+        }
     }
 
     // ===== تهيئة الصفحة =====
@@ -524,39 +754,61 @@
             };
         }
 
-        currentEmailDisplay.value = currentUser.email || '';
+        if (currentEmailDisplay) {
+            currentEmailDisplay.value = currentUser.email || '';
+        }
         updateHeaderUI(currentUser);
 
         // ===== ربط الأحداث =====
-        sendOldOtpBtn.addEventListener('click', sendOldOtp);
+        if (sendOldOtpBtn) {
+            sendOldOtpBtn.addEventListener('click', sendOldOtp);
+        }
 
-        oldOtpCode.addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
-            if (this.value.length === 8) {
-                verifyOldOtp();
-            }
-        });
-
-        newEmailInput.addEventListener('input', function() {
-            if (isOldEmailVerified) {
-                const isValid = validateNewEmail();
-                if (isValid) {
-                    newEmailVerifyGroup.style.display = 'block';
-                } else {
-                    newEmailVerifyGroup.style.display = 'none';
+        if (oldOtpCode) {
+            oldOtpCode.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length === 8) {
+                    verifyOldOtp();
                 }
-            }
-        });
+            });
+        }
 
-        sendNewOtpBtn.addEventListener('click', sendNewOtp);
+        if (newEmailInput) {
+            newEmailInput.addEventListener('input', function() {
+                if (isOldEmailVerified) {
+                    const isValid = validateNewEmail();
+                    if (isValid) {
+                        if (newEmailVerifyGroup) newEmailVerifyGroup.style.display = 'block';
+                    } else {
+                        if (newEmailVerifyGroup) newEmailVerifyGroup.style.display = 'none';
+                    }
+                }
+            });
+        }
 
-        // الاستماع لتغير البريد
-        listenForEmailChange();
+        if (sendNewOtpBtn) {
+            sendNewOtpBtn.addEventListener('click', sendNewOtp);
+        }
 
-        errorCloseBtn.addEventListener('click', hideErrorModal);
+        if (newOtpCode) {
+            newOtpCode.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length === 8) {
+                    verifyNewOtp();
+                }
+            });
+        }
+
+        if (saveEmailBtn) {
+            saveEmailBtn.addEventListener('click', saveEmail);
+        }
+
+        if (errorCloseBtn) {
+            errorCloseBtn.addEventListener('click', hideErrorModal);
+        }
 
         resetForm();
-        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (رابط تأكيد للبريد الجديد).');
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (OTP للبريد الجديد).');
     }
 
     if (document.readyState === 'loading') {
