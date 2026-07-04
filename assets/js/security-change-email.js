@@ -131,8 +131,8 @@
 
     // ===== التحقق من البريد الجديد (Realtime) =====
     function validateNewEmail() {
-        const email = newEmailInput.value.trim();
-        const currentEmail = currentUser?.email || '';
+        const email = newEmailInput.value.trim().toLowerCase();
+        const currentEmail = currentUser?.email?.toLowerCase() || '';
 
         if (!email) {
             newEmailIcon.className = 'validation-icon';
@@ -141,7 +141,7 @@
             return false;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(email)) {
             newEmailIcon.className = 'validation-icon error';
             newEmailIcon.innerHTML = '✖';
@@ -158,7 +158,7 @@
             return false;
         }
 
-        if (email.toLowerCase() === currentEmail.toLowerCase()) {
+        if (email === currentEmail) {
             newEmailIcon.className = 'validation-icon error';
             newEmailIcon.innerHTML = '✖';
             newEmailMessage.textContent = 'البريد الإلكتروني الجديد مطابق للبريد الحالي.';
@@ -176,16 +176,23 @@
     // ===== التحقق من عدم استخدام البريد =====
     async function checkEmailExists(email) {
         try {
+            const normalizedEmail = email.trim().toLowerCase();
+            // التحقق من auth_register
             const { data, error } = await supabase
                 .from('auth_register')
                 .select('email')
-                .eq('email', email)
+                .eq('email', normalizedEmail)
                 .maybeSingle();
             if (error) {
                 console.warn('⚠️ فشل التحقق من البريد في auth_register:', error);
                 return null;
             }
-            return !!data;
+            if (data) return true;
+
+            // التحقق المباشر من Auth (محاولة إرسال OTP لمعرفة إذا كان البريد موجوداً)
+            // بدلاً من ذلك، يمكننا محاولة استدعاء getUserByEmail ولكن غير متاح.
+            // نعتمد على auth_register فقط، أو يمكننا محاولة إرسال OTP ولكن ذلك يسبب مشاكل.
+            return false;
         } catch (err) {
             console.error('خطأ في التحقق من البريد:', err);
             return null;
@@ -200,15 +207,20 @@
             return;
         }
 
-        const newEmail = newEmailInput.value.trim();
+        const newEmail = newEmailInput.value.trim().toLowerCase();
         if (!newEmail) {
             showAlert('يرجى إدخال البريد الإلكتروني الجديد.', 'error');
             newEmailInput.focus();
             return;
         }
 
-        const isValid = validateNewEmail();
-        if (!isValid) return;
+        // التحقق من الصيغة
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(newEmail)) {
+            showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
+            newEmailInput.focus();
+            return;
+        }
 
         // التحقق من عدم استخدام البريد مسبقاً
         const exists = await checkEmailExists(newEmail);
@@ -418,6 +430,13 @@
             return;
         }
 
+        // التحقق النهائي من صيغة البريد
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(newEmailValue)) {
+            showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
+            return;
+        }
+
         isSaving = true;
         saveEmailBtn.disabled = true;
         saveEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
@@ -429,13 +448,16 @@
                 throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
             }
 
-            // تحديث البريد في Auth
+            // تحديث البريد في Auth (مع التأكد من صيغة صحيحة)
             const { error } = await supabase.auth.updateUser({
                 email: newEmailValue
             });
             if (error) {
                 if (error.message.includes('already been taken')) {
                     throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
+                }
+                if (error.message.includes('invalid format')) {
+                    throw new Error('صيغة البريد الإلكتروني غير صحيحة.');
                 }
                 throw error;
             }
@@ -486,6 +508,7 @@
             console.error(err);
             let msg = 'حدث خطأ أثناء حفظ البيانات.';
             if (err.message.includes('already been taken')) msg = 'البريد الإلكتروني مستخدم مسبقاً.';
+            else if (err.message.includes('invalid format')) msg = 'صيغة البريد الإلكتروني غير صحيحة.';
             else if (err.message.includes('email')) msg = 'البريد الإلكتروني غير صالح.';
             else if (err.message.includes('session')) {
                 msg = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً.';
