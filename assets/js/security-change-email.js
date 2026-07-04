@@ -1,7 +1,7 @@
 /**
- * security-change-email.js – النسخة النهائية
- * استخدام Edge Function فقط لإرسال OTP (بدون signInWithOtp للبريد الجديد)
- * لمنع إنشاء حسابات جديدة
+ * security-change-email.js – النسخة النهائية مع دعم Edge Function
+ * في حال فشل Edge Function (CORS/اتصال)، تظهر رسالة واضحة للمستخدم
+ * مع تعطيل الزر لمنع المحاولات الفاشلة
  */
 
 'use strict';
@@ -18,6 +18,7 @@
     let isSaving = false;
     let initialized = false;
     let newEmailValue = '';
+    let edgeFunctionFailed = false; // منع تكرار المحاولات الفاشلة
 
     // ===== عناصر DOM =====
     const currentEmailDisplay = document.getElementById('currentEmailDisplay');
@@ -179,7 +180,7 @@
         return true;
     }
 
-    // ===== إرسال رمز التحقق إلى البريد الحالي (OTP عبر Supabase Auth) =====
+    // ===== إرسال رمز التحقق إلى البريد الحالي =====
     async function sendOldOtp() {
         if (isSendingOldOtp) return;
         if (timerIntervalOld) {
@@ -331,11 +332,17 @@
         }
     }
 
-    // ===== إرسال رمز OTP إلى البريد الجديد عبر Edge Function (بدون إنشاء مستخدم) =====
+    // ===== إرسال رمز OTP إلى البريد الجديد عبر Edge Function (مع رسائل واضحة) =====
     async function sendNewOtp() {
         if (isSendingNewOtp) return;
         if (timerIntervalNew) {
             showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'error');
+            return;
+        }
+
+        // منع المحاولة إذا فشلت سابقاً بسبب CORS
+        if (edgeFunctionFailed) {
+            showErrorModal('⚠️ تعذر الاتصال بخدمة إرسال الرمز. يرجى التواصل مع الدعم الفني لإكمال العملية.');
             return;
         }
 
@@ -364,7 +371,6 @@
             return;
         }
 
-        // التحقق من عدم استخدام البريد مسبقاً
         const exists = await checkEmailExists(newEmail);
         if (exists === true) {
             showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
@@ -393,9 +399,10 @@
 
             if (error) {
                 console.error('Edge Function error:', error);
-                // إذا كان الخطأ بسبب CORS أو فشل الاتصال، نعرض رسالة واضحة
+                // CORS أو فشل الاتصال
                 if (error.message.includes('CORS') || error.message.includes('fetch') || error.message.includes('Failed to send')) {
-                    showErrorModal('⚠️ تعذر الاتصال بخدمة إرسال الرمز. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.');
+                    edgeFunctionFailed = true;
+                    showErrorModal('⚠️ تعذر الاتصال بخدمة إرسال الرمز. يرجى التواصل مع الدعم الفني لإكمال العملية.');
                     sendNewOtpBtn.style.display = 'block';
                     timerContainerNew.style.display = 'none';
                     return;
@@ -486,7 +493,6 @@
                 throw new Error('تم تجاوز عدد المحاولات المسموح بها.');
             }
 
-            // استدعاء Edge Function للتحقق من الرمز (مقارنة Hash)
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
                 body: {
                     requestId: data.id,
@@ -679,6 +685,7 @@
         newEmailVerifyGroup.style.display = 'none';
         saveGroup.style.display = 'none';
         newEmailValue = '';
+        edgeFunctionFailed = false; // إعادة تعيين حالة الفشل
 
         alertBox.classList.remove('show');
         alertBox.style.display = 'none';
@@ -754,7 +761,7 @@
         errorCloseBtn.addEventListener('click', hideErrorModal);
 
         resetForm();
-        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (Edge Function فقط).');
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (مع رسائل واضحة عند فشل Edge Function).');
     }
 
     if (document.readyState === 'loading') {
