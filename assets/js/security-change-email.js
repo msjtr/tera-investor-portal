@@ -1,8 +1,7 @@
 /**
  * security-change-email.js
  * تغيير البريد الإلكتروني – التحقق المزدوج (البريد الحالي + الجديد)
- * مع دعم إرسال OTP للبريد الجديد عبر signInWithOtp (shouldCreateUser: true)
- * ومعالجة خطأ "Signups not allowed"
+ * مع إصلاح مشكلة الاستعلام عن جدول users (غير موجود)
  */
 
 'use strict';
@@ -20,7 +19,7 @@
     let initialized = false;
     let newEmailValue = '';
 
-    // عناصر DOM
+    // عناصر DOM (مثل السابق)
     const currentEmailDisplay = document.getElementById('currentEmailDisplay');
     const sendOldOtpBtn = document.getElementById('sendOldOtpBtn');
     const oldOtpCode = document.getElementById('oldOtpCode');
@@ -173,9 +172,6 @@
             return false;
         }
 
-        // التحقق من عدم استخدامه مسبقاً (فحص أولي)
-        // سيتم التحقق النهائي عند الإرسال
-
         newEmailIcon.className = 'validation-icon success';
         newEmailIcon.innerHTML = '✔';
         newEmailMessage.textContent = '✅ البريد الإلكتروني صالح. يمكنك إرسال رمز التحقق.';
@@ -183,41 +179,35 @@
         return true;
     }
 
-    // ===== التحقق من عدم استخدام البريد =====
+    // ===== التحقق من عدم استخدام البريد (معالجة الجداول) =====
     async function checkEmailExists(email) {
         try {
-            // محاولة البحث في جدول auth_register
+            // محاولة البحث في جدول auth_register فقط
             const { data, error } = await supabase
                 .from('auth_register')
                 .select('email')
                 .eq('email', email)
                 .maybeSingle();
 
-            if (error && !error.message.includes('not found')) {
-                throw error;
+            if (error) {
+                // إذا كان الخطأ 404 (جدول غير موجود) أو أي خطأ آخر، نعتبر البريد غير مستخدم
+                // لكن نعرض تنبيه في وحدة التحكم
+                console.warn('⚠️ [Change Email] فشل التحقق من البريد في auth_register:', error);
+                // إذا كان الخطأ يشير إلى أن الجدول غير موجود، نعتبر البريد غير مستخدم
+                if (error.code === 'PGRST202' || error.message.includes('relation') || error.message.includes('not found')) {
+                    return false; // افتراض أن البريد غير مستخدم
+                }
+                // إذا كان خطأ آخر نعيد null ليتم عرض خطأ للمستخدم
+                return null;
             }
+
             if (data) {
                 return true; // البريد مستخدم
             }
-
-            // محاولة البحث في جدول users (إن وجد)
-            try {
-                const { data: userData, error: userError } = await supabase
-                    .from('users')
-                    .select('email')
-                    .eq('email', email)
-                    .maybeSingle();
-                if (!userError && userData) {
-                    return true;
-                }
-            } catch (e) {
-                // تجاهل
-            }
-
             return false; // البريد غير مستخدم
         } catch (err) {
             console.error('خطأ في التحقق من البريد:', err);
-            return null; // غير معروف
+            return null;
         }
     }
 
@@ -362,7 +352,6 @@
             return;
         }
 
-        // التحقق من الصيغة
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(newEmail)) {
             showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
@@ -394,15 +383,12 @@
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // محاولة إرسال OTP باستخدام shouldCreateUser: true (إذا كان التسجيل مفعلاً)
             const { error } = await supabase.auth.signInWithOtp({
                 email: newEmail,
                 options: { shouldCreateUser: true }
             });
             if (error) {
-                // إذا كان الخطأ "Signups not allowed for otp"
                 if (error.message && error.message.includes('Signups not allowed')) {
-                    // عرض رسالة للمستخدم مع خيار استخدام طريقة بديلة
                     showErrorModal('⚠️ إرسال رمز التحقق إلى البريد الجديد غير متاح حالياً.<br/>يرجى التواصل مع الدعم الفني أو التأكد من أن التسجيل مفعّل في الإعدادات.');
                     sendNewOtpBtn.style.display = 'block';
                     timerContainerNew.style.display = 'none';
