@@ -18,9 +18,7 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* =========================================
-           الأنماط الأساسية والخاصة بالصفحة
-           ========================================= */
+        /* جميع الأنماط تم تضمينها سابقاً – تم حذف التكرار للاختصار */
         * { box-sizing: border-box; }
         body {
             background-color: #f1f5f9;
@@ -31,7 +29,6 @@
             flex-direction: column;
             min-height: 100vh;
         }
-
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
@@ -71,7 +68,6 @@
             font-size: 16px;
             border: 2px solid #028090;
         }
-
         .page-subheader {
             background: #0A1B3F;
             padding: 14px 20px;
@@ -111,7 +107,6 @@
             white-space: nowrap;
         }
         .btn-back:hover { background: #028090; border-color: #028090; }
-
         .content-container {
             max-width: 900px;
             width: 100%;
@@ -164,7 +159,6 @@
             padding: 4px 10px;
             border-radius: 20px;
         }
-
         .form-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -184,7 +178,6 @@
             gap: 4px;
         }
         .form-label .req { color: #dc2626; font-size: 16px; }
-
         .form-control {
             width: 100%;
             padding: 10px 14px;
@@ -207,7 +200,6 @@
         .form-control::placeholder { color: #94a3b8; }
         .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
         .form-control.readonly { background: #f1f5f9; color: #475569; }
-
         .format-hint {
             font-size: 12px;
             color: #64748b;
@@ -220,7 +212,6 @@
         }
         .format-hint.success { color: #16a34a; }
         .format-hint.error { color: #dc2626; }
-
         .validation-icon {
             font-size: 16px;
             display: inline-block;
@@ -240,7 +231,6 @@
             vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
         .btn-submit {
             background: #028090;
             color: #fff;
@@ -271,7 +261,6 @@
             color: #1e293b;
         }
         .btn-submit.btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
-
         .alert-box {
             display: none;
             padding: 12px 16px;
@@ -296,14 +285,12 @@
         }
         .alert-box.error i { color: #dc2626; }
         .alert-box i { font-size: 18px; flex-shrink: 0; }
-
         .timer-container {
             font-size: 14px;
             color: #64748b;
             margin-top: 6px;
         }
         #timerDisplayOld, #timerDisplayNew { color: #028090; font-weight: 800; }
-
         .modal-overlay {
             display: none;
             position: fixed;
@@ -395,7 +382,6 @@
             color: #1e293b;
         }
         .btn-modal.btn-secondary:hover { background: #cbd5e1; }
-
         .page-footer {
             text-align: center;
             padding: 18px 16px;
@@ -405,7 +391,6 @@
             background: #ffffff;
             margin-top: auto;
         }
-
         @media (min-width: 768px) {
             .form-grid { grid-template-columns: 1fr 1fr; gap: 24px 30px; }
             .form-group.full-width { grid-column: 1 / -1; }
@@ -433,7 +418,6 @@
             .modal-title { font-size: 18px; }
             .modal-message { font-size: 14px; }
         }
-
         @media (prefers-color-scheme: dark) {
             body { background: #0f172a; }
             .focused-header { background: #1e293b !important; border-bottom-color: #334155 !important; }
@@ -501,13 +485,13 @@
             <form id="changeEmailForm" novalidate>
                 <div class="form-grid">
 
-                    <!-- ===== 1. البريد الإلكتروني الحالي (للقراءة فقط) ===== -->
+                    <!-- 1. البريد الإلكتروني الحالي -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الحالي <span class="req">*</span></label>
                         <input type="email" class="form-control readonly" id="currentEmailDisplay" readonly disabled />
                     </div>
 
-                    <!-- ===== 2. التحقق من البريد الحالي ===== -->
+                    <!-- 2. التحقق من البريد الحالي -->
                     <div class="form-group full-width" id="oldEmailVerifyGroup">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendOldOtpBtn" style="height:48px;">
@@ -528,7 +512,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== 3. البريد الإلكتروني الجديد ===== -->
+                    <!-- 3. البريد الإلكتروني الجديد -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني الجديد <span class="req">*</span></label>
                         <input type="email" class="form-control" id="newEmail" placeholder="أدخل البريد الإلكتروني الجديد" disabled autocomplete="email" />
@@ -538,7 +522,7 @@
                         </span>
                     </div>
 
-                    <!-- ===== 4. التحقق من البريد الجديد (OTP) ===== -->
+                    <!-- 4. التحقق من البريد الجديد (باستخدام OTP) -->
                     <div class="form-group full-width" id="newEmailVerifyGroup" style="display:none;">
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             <button type="button" class="btn-submit" id="sendNewOtpBtn" style="height:48px;">
@@ -551,7 +535,7 @@
                         </div>
                         <div style="margin-top:12px;">
                             <label class="form-label">رمز التحقق <span class="req">*</span></label>
-                            <input type="text" class="form-control" id="newOtpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" disabled />
+                            <input type="text" class="form-control" id="newOtpCode" placeholder="أدخل الرمز المكون من 6 أرقام" maxlength="6" inputmode="numeric" autocomplete="one-time-code" disabled />
                             <span class="format-hint" id="newOtpHint">
                                 <span class="validation-icon" id="newOtpIcon"></span>
                                 <span id="newOtpMessage">أدخل رمز التحقق المرسل إلى بريدك الجديد</span>
@@ -559,7 +543,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== 5. زر حفظ التغييرات ===== -->
+                    <!-- 5. زر حفظ التغييرات -->
                     <div class="form-group full-width" id="saveGroup" style="display:none;">
                         <button type="button" class="btn-submit" id="saveEmailBtn">
                             <i class="fas fa-save"></i> حفظ التغييرات
@@ -571,7 +555,7 @@
         </div>
     </main>
 
-    <!-- ===== نافذة النجاح ===== -->
+    <!-- نافذة النجاح -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-box">
             <div class="modal-icon"><i class="fas fa-check-circle"></i></div>
@@ -587,7 +571,7 @@
         </div>
     </div>
 
-    <!-- ===== نافذة الأخطاء ===== -->
+    <!-- نافذة الأخطاء -->
     <div class="modal-overlay" id="errorModal">
         <div class="modal-box">
             <div class="modal-icon error"><i class="fas fa-exclamation-circle"></i></div>
@@ -600,12 +584,10 @@
         </div>
     </div>
 
-    <!-- ===== التذييل ===== -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- ===== ربط الملفات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
