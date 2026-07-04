@@ -2,7 +2,7 @@
  * security-change-email.js
  * تغيير البريد الإلكتروني – مرحلتان:
  * 1. التحقق من البريد الحالي (OTP 8 أرقام)
- * 2. تأكيد البريد الجديد (OTP 6 أرقام) – باستخدام قالب Change email address
+ * 2. تأكيد البريد الجديد (OTP 8 أرقام)
  * مع حفظ تاريخ ووقت التغيير في جدول auth_register
  */
 
@@ -322,7 +322,7 @@
         }
     }
 
-    // ===== إرسال رمز OTP (6 أرقام) إلى البريد الجديد =====
+    // ===== إرسال رمز OTP (8 أرقام) إلى البريد الجديد =====
     async function sendNewOtp() {
         if (isSendingNewOtp) return;
         if (timerIntervalNew) {
@@ -335,14 +335,15 @@
             return;
         }
 
-        const newEmail = newEmailInput.value.trim();
+        const newEmail = newEmailInput.value.trim(); // تأكد من إزالة المسافات
         if (!newEmail) {
             showAlert('يرجى إدخال البريد الإلكتروني الجديد.', 'error');
             newEmailInput.focus();
             return;
         }
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // تحقق صارم من صيغة البريد الإلكتروني
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if (!emailRegex.test(newEmail)) {
             showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
             newEmailInput.focus();
@@ -373,8 +374,7 @@
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // إرسال OTP (6 أرقام) إلى البريد الجديد عبر signInWithOtp
-            // سيستخدم هذا القالب "Magic Link or OTP" مع تخصيصه لعملية تغيير البريد
+            // إرسال OTP (8 أرقام) إلى البريد الجديد
             const { error } = await supabase.auth.signInWithOtp({
                 email: newEmail,
                 options: { shouldCreateUser: true }
@@ -387,7 +387,7 @@
                 throw error;
             }
 
-            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد. يرجى إدخال الرمز المكون من 6 أرقام.', 'success');
+            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد. يرجى إدخال الرمز المكون من 8 أرقام.', 'success');
             newOtpCode.disabled = false;
             newOtpCode.value = '';
             newOtpCode.focus();
@@ -420,13 +420,13 @@
         }
     }
 
-    // ===== التحقق من رمز البريد الجديد (6 أرقام) =====
+    // ===== التحقق من رمز البريد الجديد (8 أرقام) =====
     async function verifyNewOtp() {
         const otp = newOtpCode.value.trim();
-        if (otp.length !== 6) {
+        if (otp.length !== 8) {
             newOtpIcon.className = 'validation-icon error';
             newOtpIcon.innerHTML = '✖';
-            newOtpMessage.textContent = 'يرجى إدخال رمز مكون من 6 أرقام.';
+            newOtpMessage.textContent = 'يرجى إدخال رمز مكون من 8 أرقام.';
             newOtpHint.className = 'format-hint error';
             return;
         }
@@ -679,7 +679,7 @@
 
         newOtpCode.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
-            if (this.value.length === 6) {
+            if (this.value.length === 8) {
                 verifyNewOtp();
             }
         });
@@ -689,7 +689,7 @@
         errorCloseBtn.addEventListener('click', hideErrorModal);
 
         resetForm();
-        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (OTP 6 أرقام للبريد الجديد).');
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (OTP 8 أرقام للبريد الجديد).');
     }
 
     if (document.readyState === 'loading') {
