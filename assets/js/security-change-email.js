@@ -4,6 +4,7 @@
  * 1. التحقق من البريد الحالي (OTP عبر Magic Link)
  * 2. تأكيد البريد الجديد (OTP 8 أرقام عبر Edge Function)
  * مع تسجيل كامل العملية في جدول email_change_requests
+ * تحديث البريد في auth.users وجدول العملاء مع الحفاظ على User ID
  */
 
 'use strict';
@@ -20,7 +21,6 @@
     let isSaving = false;
     let initialized = false;
     let newEmailValue = '';
-    let requestId = null; // لتخزين معرف طلب التغيير
 
     // ===== عناصر DOM =====
     const currentEmailDisplay = document.getElementById('currentEmailDisplay');
@@ -336,7 +336,7 @@
             return;
         }
 
-        // تجهيز البيانات للإرسال إلى Edge Function
+        // جلب IP والجهاز
         const ipAddress = ''; // يمكن الحصول عليها من الخادم
         const userAgent = navigator.userAgent;
 
@@ -345,7 +345,6 @@
         sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // استدعاء Edge Function
             const { data, error } = await supabase.functions.invoke('send-email-otp', {
                 body: {
                     newEmail: newEmail,
@@ -421,7 +420,7 @@
         newOtpHint.className = 'format-hint';
 
         try {
-            // التحقق من الرمز في قاعدة البيانات (مقارنة Hash)
+            // استعلام عن طلب التغيير للمستخدم الحالي
             const { data, error } = await supabase
                 .from('email_change_requests')
                 .select('id, otp_hash, expires_at, attempts, max_attempts, status')
@@ -439,7 +438,6 @@
 
             // التحقق من عدد المحاولات
             if (data.attempts >= data.max_attempts) {
-                // تحديث الحالة إلى failed
                 await supabase
                     .from('email_change_requests')
                     .update({ status: 'failed' })
@@ -447,11 +445,7 @@
                 throw new Error('تم تجاوز عدد المحاولات المسموح بها.');
             }
 
-            // التحقق من المطابقة (سنقوم بمقارنة الرمز عبر Edge Function أو عبر bcrypt في الخادم)
-            // للتبسيط، سنقوم باستدعاء دالة للتحقق (سيتم تنفيذها لاحقاً)
-            // لكننا سنستخدم طريقة مباشرة: سنقوم بجلب الرمز من الجدول ومقارنته (لكننا نخزن Hash)
-            // لذا سنقوم باستدعاء Edge Function للتحقق، أو استخدام دالة SQL.
-            // للتبسيط، سنقوم بإرسال الرمز إلى Edge Function للتحقق.
+            // استدعاء Edge Function للتحقق من الرمز (مقارنة Hash)
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-otp', {
                 body: {
                     requestId: data.id,
@@ -469,15 +463,13 @@
             }
 
             // رمز صحيح – تحديث الحالة إلى verified
-            const { error: updateError } = await supabase
+            await supabase
                 .from('email_change_requests')
                 .update({
                     status: 'verified',
                     verified_at: new Date().toISOString()
                 })
                 .eq('id', data.id);
-
-            if (updateError) throw updateError;
 
             newOtpIcon.className = 'validation-icon success';
             newOtpIcon.innerHTML = '✔';
@@ -559,7 +551,7 @@
         saveEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // تحديث البريد في Auth
+            // تحديث البريد في Auth (نفس المستخدم، نفس المعرف)
             const { error } = await supabase.auth.updateUser({
                 email: newEmail
             });
@@ -583,6 +575,13 @@
             if (updateError) {
                 console.warn('⚠️ فشل تحديث auth_register:', updateError);
             }
+
+            // تحديث حالة الطلب إلى "completed" (اختياري)
+            await supabase
+                .from('email_change_requests')
+                .update({ status: 'completed' })
+                .eq('user_id', currentUser.id)
+                .eq('new_email', newEmail);
 
             showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
             showSuccessModal();
@@ -720,7 +719,7 @@
         errorCloseBtn.addEventListener('click', hideErrorModal);
 
         resetForm();
-        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (OTP 8 أرقام للبريد الجديد).');
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (OTP 8 أرقام).');
     }
 
     if (document.readyState === 'loading') {
