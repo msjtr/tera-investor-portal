@@ -1,472 +1,682 @@
 /**
- * security-change-password.js
- * تغيير كلمة المرور عبر OTP (Magic Link / Email OTP)
+ * security-change-email.js
+ * تغيير البريد الإلكتروني – التحقق المزدوج (البريد الحالي + الجديد)
  * متوافق مع security.js و TeraAuth
- * النسخة النهائية – مع منع الإرسال المتكرر ومعالجة خطأ تكرار كلمة المرور
  */
 
 'use strict';
 
-window.SecurityPages = window.SecurityPages || {};
+(function() {
+    // ===== متغيرات عامة =====
+    let supabase = null;
+    let currentUser = null;
+    let isOldEmailVerified = false;
+    let isNewEmailVerified = false;
+    let timerIntervalOld = null;
+    let timerIntervalNew = null;
+    let timerSeconds = 300;
+    let isSendingOldOtp = false;
+    let isSendingNewOtp = false;
+    let isSaving = false;
+    let initialized = false;
+    let newEmailValue = ''; // لتخزين البريد الجديد بعد التحقق
 
-window.SecurityPages['change-password'] = {
+    // ===== عناصر DOM =====
+    const currentEmailDisplay = document.getElementById('currentEmailDisplay');
+    const sendOldOtpBtn = document.getElementById('sendOldOtpBtn');
+    const oldOtpCode = document.getElementById('oldOtpCode');
+    const oldOtpHint = document.getElementById('oldOtpHint');
+    const oldOtpIcon = document.getElementById('oldOtpIcon');
+    const oldOtpMessage = document.getElementById('oldOtpMessage');
+    const timerContainerOld = document.getElementById('timerContainerOld');
+    const timerDisplayOld = document.getElementById('timerDisplayOld');
 
-    _timerInterval: null,
-    _timerSeconds: 300,
-    _otpVerified: false,
-    _isSending: false,
-    _isChanging: false, // لمنع تنفيذ التغيير عدة مرات
+    const newEmailInput = document.getElementById('newEmail');
+    const newEmailHint = document.getElementById('newEmailHint');
+    const newEmailIcon = document.getElementById('newEmailIcon');
+    const newEmailMessage = document.getElementById('newEmailMessage');
 
-    async init() {
-        console.log('🔐 [Change Password] تهيئة الصفحة (عبر OTP)');
+    const sendNewOtpBtn = document.getElementById('sendNewOtpBtn');
+    const newOtpCode = document.getElementById('newOtpCode');
+    const newOtpHint = document.getElementById('newOtpHint');
+    const newOtpIcon = document.getElementById('newOtpIcon');
+    const newOtpMessage = document.getElementById('newOtpMessage');
+    const timerContainerNew = document.getElementById('timerContainerNew');
+    const timerDisplayNew = document.getElementById('timerDisplayNew');
 
-        if (typeof SecurityCore === 'undefined' || !SecurityCore.supabase) {
+    const newEmailVerifyGroup = document.getElementById('newEmailVerifyGroup');
+    const saveGroup = document.getElementById('saveGroup');
+    const saveEmailBtn = document.getElementById('saveEmailBtn');
+
+    const alertBox = document.getElementById('formAlert');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertMessage = document.getElementById('alertMessage');
+
+    const successModal = document.getElementById('successModal');
+    const countdownDisplay = document.getElementById('countdownDisplay');
+    const successGoNow = document.getElementById('successGoNow');
+    const errorModal = document.getElementById('errorModal');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorRetryBtn = document.getElementById('errorRetryBtn');
+    const errorCloseBtn = document.getElementById('errorCloseBtn');
+
+    // ===== دوال مساعدة =====
+    async function initSupabase() {
+        if (window.SecurityCore && window.SecurityCore.supabase) {
+            supabase = window.SecurityCore.supabase;
+            currentUser = window.SecurityCore.currentUser;
+            return true;
+        }
+        if (window.teraSupabase) {
+            supabase = window.teraSupabase;
             try {
-                if (typeof waitForSupabase === 'function') {
-                    const supabase = await waitForSupabase();
-                    if (supabase) {
-                        SecurityCore.supabase = supabase;
-                        const { data: { user } } = await supabase.auth.getUser();
-                        if (user) {
-                            SecurityCore.currentUser = user;
-                            if (typeof updateHeader === 'function') updateHeader(user);
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error('❌ [Change Password] فشل تهيئة SecurityCore:', e);
-                showSecurityAlert('تعذر الاتصال بخدمة المصادقة.', 'error');
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                return true;
+            } catch (e) { return false; }
+        }
+        if (typeof waitForSupabase === 'function') {
+            try {
+                supabase = await waitForSupabase();
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+                return true;
+            } catch (e) { return false; }
+        }
+        return false;
+    }
+
+    function updateHeaderUI(user) {
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (!user) return;
+        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
+        if (nameEl) nameEl.textContent = fullName;
+        if (avatarEl) avatarEl.textContent = fullName.charAt(0).toUpperCase();
+    }
+
+    function showAlert(message, type = 'error') {
+        if (!alertBox) return;
+        alertBox.className = `alert-box show ${type}`;
+        alertIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+        alertMessage.textContent = message;
+        clearTimeout(window._alertTimer);
+        window._alertTimer = setTimeout(() => {
+            alertBox.classList.remove('show');
+            alertBox.style.display = 'none';
+        }, 7000);
+    }
+
+    function showErrorModal(message) {
+        if (!errorModal) return;
+        errorMessage.textContent = message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
+        errorModal.classList.add('show');
+    }
+
+    function hideErrorModal() {
+        if (errorModal) errorModal.classList.remove('show');
+    }
+
+    function showSuccessModal() {
+        if (!successModal) return;
+        successModal.classList.add('show');
+        let count = 5;
+        countdownDisplay.textContent = count;
+        const interval = setInterval(() => {
+            count--;
+            if (count <= 0) {
+                clearInterval(interval);
+                window.location.replace('/pages/dashboard/index.html');
                 return;
             }
-        }
+            countdownDisplay.textContent = count;
+        }, 1000);
+        successGoNow.onclick = function() {
+            clearInterval(interval);
+            window.location.replace('/pages/dashboard/index.html');
+        };
+    }
 
-        const user = await SecurityCore.getUser();
-        if (!user) {
-            window.location.replace('/auth/auth/login/login.html');
-            return;
-        }
+    // ===== التحقق من البريد الإلكتروني الجديد (Realtime) =====
+    function validateNewEmail() {
+        const email = newEmailInput.value.trim();
+        const currentEmail = currentUser?.email || '';
 
-        this.bindEvents();
-
-        const emailInput = document.getElementById('emailForOtp');
-        if (emailInput && user.email) {
-            emailInput.value = user.email;
-        }
-
-        console.log('✅ [Change Password] جاهز.');
-    },
-
-    bindEvents() {
-        const sendBtn = document.getElementById('sendOtpBtn');
-        if (sendBtn) {
-            sendBtn.removeEventListener('click', this.sendOtp);
-            sendBtn.addEventListener('click', this.sendOtp.bind(this));
-        }
-
-        const changeBtn = document.getElementById('changePasswordBtn');
-        if (changeBtn) {
-            changeBtn.removeEventListener('click', this.changePassword);
-            changeBtn.addEventListener('click', this.changePassword.bind(this));
-        }
-
-        const otpInput = document.getElementById('otpCode');
-        if (otpInput) {
-            otpInput.removeEventListener('input', this.autoSubmitOtp);
-            otpInput.addEventListener('input', this.autoSubmitOtp.bind(this));
-        }
-
-        document.querySelectorAll('.password-toggle').forEach(toggle => {
-            toggle.removeEventListener('click', this.togglePasswordVisibility);
-            toggle.addEventListener('click', this.togglePasswordVisibility);
-        });
-
-        const newPassword = document.getElementById('newPassword');
-        if (newPassword) {
-            newPassword.removeEventListener('input', this.validatePasswordStrength);
-            newPassword.addEventListener('input', this.validatePasswordStrength);
-        }
-
-        const confirmPassword = document.getElementById('confirmPassword');
-        if (confirmPassword) {
-            confirmPassword.removeEventListener('input', this.validateConfirmMatch);
-            confirmPassword.addEventListener('input', this.validateConfirmMatch);
-        }
-    },
-
-    togglePasswordVisibility(e) {
-        const button = e.currentTarget;
-        const targetId = button.dataset.target;
-        const input = document.getElementById(targetId);
-        if (!input) return;
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-        const icon = button.querySelector('i');
-        if (icon) icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
-        e.stopPropagation();
-    },
-
-    // ==================== إرسال رمز OTP (مع منع التكرار) ====================
-    async sendOtp() {
-        // منع الإرسال المتكرر
-        if (this._isSending) {
-            showSecurityAlert('جاري إرسال الرمز، يرجى الانتظار.', 'warning');
-            return;
-        }
-
-        const emailInput = document.getElementById('emailForOtp');
-        const email = emailInput?.value?.trim();
         if (!email) {
-            showSecurityAlert('يرجى إدخال البريد الإلكتروني.', 'error');
-            emailInput?.focus();
-            return;
+            newEmailIcon.className = 'validation-icon';
+            newEmailMessage.textContent = 'أدخل البريد الإلكتروني الجديد';
+            newEmailHint.className = 'format-hint';
+            return false;
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showSecurityAlert('البريد الإلكتروني غير صحيح.', 'error');
-            emailInput?.focus();
+
+        // التحقق من الصيغة
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            newEmailIcon.className = 'validation-icon error';
+            newEmailIcon.innerHTML = '✖';
+            newEmailMessage.textContent = 'صيغة البريد الإلكتروني غير صحيحة.';
+            newEmailHint.className = 'format-hint error';
+            return false;
+        }
+
+        // التحقق من عدم وجود مسافات
+        if (/\s/.test(email)) {
+            newEmailIcon.className = 'validation-icon error';
+            newEmailIcon.innerHTML = '✖';
+            newEmailMessage.textContent = 'البريد الإلكتروني لا يجب أن يحتوي على مسافات.';
+            newEmailHint.className = 'format-hint error';
+            return false;
+        }
+
+        // التحقق من عدم مطابقته للبريد الحالي
+        if (email.toLowerCase() === currentEmail.toLowerCase()) {
+            newEmailIcon.className = 'validation-icon error';
+            newEmailIcon.innerHTML = '✖';
+            newEmailMessage.textContent = 'البريد الإلكتروني الجديد مطابق للبريد الحالي.';
+            newEmailHint.className = 'format-hint error';
+            return false;
+        }
+
+        // التحقق من عدم استخدامه مسبقاً (يتم عبر API)
+        // سيتم التحقق عند إرسال OTP للبريد الجديد
+
+        // إذا اجتاز الفحص الأولي
+        newEmailIcon.className = 'validation-icon success';
+        newEmailIcon.innerHTML = '✔';
+        newEmailMessage.textContent = '✅ البريد الإلكتروني صالح. يمكنك إرسال رمز التحقق.';
+        newEmailHint.className = 'format-hint success';
+        return true;
+    }
+
+    // ===== إرسال رمز التحقق إلى البريد الحالي =====
+    async function sendOldOtp() {
+        if (isSendingOldOtp) return;
+        if (timerIntervalOld) {
+            showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'error');
             return;
         }
 
-        this._isSending = true;
-        const btn = document.getElementById('sendOtpBtn');
-        setButtonLoading(btn, 'جاري الإرسال...');
+        const email = currentUser?.email;
+        if (!email) {
+            showAlert('البريد الإلكتروني غير متوفر.', 'error');
+            return;
+        }
+
+        isSendingOldOtp = true;
+        sendOldOtpBtn.disabled = true;
+        sendOldOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            const supabase = SecurityCore.supabase;
             const { error } = await supabase.auth.signInWithOtp({
                 email: email,
                 options: { shouldCreateUser: false }
             });
             if (error) throw error;
 
-            this._otpVerified = false;
-            document.getElementById('otpSection').style.display = 'block';
-            btn.style.display = 'none';
-            document.getElementById('changePasswordBtn').style.display = 'none';
-            document.getElementById('otpCode').value = '';
-            document.getElementById('otpCode').focus();
+            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الحالي.', 'success');
+            oldOtpCode.disabled = false;
+            oldOtpCode.value = '';
+            oldOtpCode.focus();
+            oldOtpIcon.className = 'validation-icon';
+            oldOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الحالي';
+            oldOtpHint.className = 'format-hint';
 
-            this.startTimer();
-            showSecurityAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
+            startTimer('old');
+            sendOldOtpBtn.style.display = 'none';
+            timerContainerOld.style.display = 'block';
 
         } catch (err) {
-            console.error('❌ [Send OTP]', err);
+            console.error(err);
             let msg = 'فشل إرسال الرمز. حاول مرة أخرى.';
-            if (err.message.includes('rate limit')) {
-                msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
-            } else if (err.message.includes('Email not found')) {
-                msg = 'البريد الإلكتروني غير مسجل.';
-            }
-            showSecurityAlert(msg, 'error');
-            btn.style.display = 'block';
+            if (err.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
+            showAlert(msg, 'error');
+            sendOldOtpBtn.style.display = 'block';
+            timerContainerOld.style.display = 'none';
         } finally {
-            restoreButton(btn);
-            this._isSending = false;
-            if (document.getElementById('otpSection').style.display !== 'block') {
-                btn.style.display = 'block';
+            isSendingOldOtp = false;
+            sendOldOtpBtn.disabled = false;
+            sendOldOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الحالي';
+            if (timerIntervalOld) {
+                sendOldOtpBtn.style.display = 'none';
+                timerContainerOld.style.display = 'block';
+            } else {
+                sendOldOtpBtn.style.display = 'block';
+                timerContainerOld.style.display = 'none';
             }
         }
-    },
+    }
 
-    // ==================== مؤقت إعادة الإرسال ====================
-    startTimer() {
-        if (this._timerInterval) {
-            clearInterval(this._timerInterval);
-            this._timerInterval = null;
-        }
-        this._timerSeconds = 300;
-        this._timerInterval = setInterval(() => {
-            this._timerSeconds--;
-            this.updateTimerDisplay();
-            if (this._timerSeconds <= 0) {
-                clearInterval(this._timerInterval);
-                this._timerInterval = null;
-                const sendBtn = document.getElementById('sendOtpBtn');
-                if (sendBtn) {
-                    sendBtn.style.display = 'block';
-                    sendBtn.disabled = false;
-                    sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال الرمز';
-                }
-                document.getElementById('timerDisplay').textContent = '00:00';
-            }
-        }, 1000);
-    },
-
-    updateTimerDisplay() {
-        const min = Math.floor(this._timerSeconds / 60);
-        const sec = this._timerSeconds % 60;
-        document.getElementById('timerDisplay').textContent =
-            String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-    },
-
-    // ==================== الإرسال التلقائي عند اكتمال 8 أرقام ====================
-    async autoSubmitOtp(e) {
-        const input = e.currentTarget;
-        input.value = input.value.replace(/\D/g, '');
-        const otp = input.value.trim();
-        if (otp.length === 8) {
-            await this.verifyOtpAndChangePassword(otp);
-        }
-    },
-
-    // ==================== التحقق من الرمز وتغيير كلمة المرور ====================
-    async verifyOtpAndChangePassword(otp) {
-        if (this._otpVerified) {
-            await this.changePassword();
+    // ===== التحقق من رمز البريد الحالي =====
+    async function verifyOldOtp() {
+        const otp = oldOtpCode.value.trim();
+        if (otp.length !== 8) {
+            oldOtpIcon.className = 'validation-icon error';
+            oldOtpIcon.innerHTML = '✖';
+            oldOtpMessage.textContent = 'يرجى إدخال رمز مكون من 8 أرقام.';
+            oldOtpHint.className = 'format-hint error';
             return;
         }
 
-        const emailInput = document.getElementById('emailForOtp');
-        const email = emailInput?.value?.trim();
+        const email = currentUser?.email;
         if (!email) {
-            showSecurityAlert('يرجى إدخال البريد الإلكتروني.', 'error');
+            showAlert('البريد الإلكتروني غير متوفر.', 'error');
             return;
         }
 
-        const btn = document.getElementById('changePasswordBtn');
-        setButtonLoading(btn, 'جاري التحقق من الرمز...');
+        oldOtpIcon.className = 'validation-icon loading';
+        oldOtpMessage.textContent = 'جارٍ التحقق من الرمز…';
+        oldOtpHint.className = 'format-hint';
 
         try {
-            const supabase = SecurityCore.supabase;
-            const { error: verifyError } = await supabase.auth.verifyOtp({
+            const { error } = await supabase.auth.verifyOtp({
                 email: email,
                 token: otp,
                 type: 'email'
             });
-            if (verifyError) throw verifyError;
+            if (error) throw error;
 
-            this._otpVerified = true;
-            showSecurityAlert('✅ تم التحقق من الرمز بنجاح. جاري تغيير كلمة المرور...', 'success');
+            oldOtpIcon.className = 'validation-icon success';
+            oldOtpIcon.innerHTML = '✔';
+            oldOtpMessage.textContent = 'تم التحقق من ملكية البريد الإلكتروني الحالي بنجاح.';
+            oldOtpHint.className = 'format-hint success';
+            isOldEmailVerified = true;
+            oldOtpCode.disabled = true;
 
-            btn.style.display = 'block';
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-key"></i> تأكيد الرمز وتغيير كلمة المرور';
-            document.getElementById('otpCode').disabled = true;
+            // تفعيل حقل البريد الجديد
+            newEmailInput.disabled = false;
+            newEmailInput.focus();
+            newEmailMessage.textContent = 'أدخل البريد الإلكتروني الجديد';
+            newEmailIcon.className = 'validation-icon';
+            newEmailHint.className = 'format-hint';
 
-            // تنفيذ التغيير فوراً بعد التحقق
-            await this.changePassword();
+            showAlert('✅ تم التحقق من البريد الإلكتروني الحالي.', 'success');
 
         } catch (err) {
-            console.error('❌ [Verify OTP]', err);
-            let msg = 'رمز التحقق غير صحيح أو منتهي الصلاحية.';
-            if (err.message.includes('expired')) {
-                msg = 'انتهت صلاحية الرمز. يرجى طلب رمز جديد.';
-            } else if (err.message.includes('invalid')) {
-                msg = 'الرمز غير صحيح. يرجى المحاولة مرة أخرى.';
-            }
-            showSecurityAlert(msg, 'error');
-            document.getElementById('sendOtpBtn').style.display = 'block';
-            document.getElementById('otpCode').value = '';
-            document.getElementById('otpCode').focus();
-        } finally {
-            restoreButton(btn);
-        }
-    },
-
-    // ==================== تغيير كلمة المرور (بعد التحقق) ====================
-    async changePassword() {
-        // منع التنفيذ المتكرر أثناء التغيير
-        if (this._isChanging) return;
-
-        if (!this._otpVerified) {
-            const otp = document.getElementById('otpCode')?.value?.trim();
-            if (otp && otp.length === 8) {
-                await this.verifyOtpAndChangePassword(otp);
-                return;
-            } else {
-                showSecurityAlert('يرجى إدخال رمز التحقق المكون من 8 أرقام أولاً.', 'error');
-                document.getElementById('otpCode')?.focus();
-                return;
+            console.error(err);
+            let msg = 'رمز التحقق غير صحيح.';
+            if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.';
+            else if (err.message.includes('invalid')) msg = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+            oldOtpIcon.className = 'validation-icon error';
+            oldOtpIcon.innerHTML = '✖';
+            oldOtpMessage.textContent = msg;
+            oldOtpHint.className = 'format-hint error';
+            isOldEmailVerified = false;
+            if (!timerIntervalOld) {
+                sendOldOtpBtn.style.display = 'block';
+                timerContainerOld.style.display = 'none';
+                sendOldOtpBtn.disabled = false;
+                sendOldOtpBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
             }
         }
+    }
 
-        const newPassword = document.getElementById('newPassword')?.value?.trim() || '';
-        const confirmPassword = document.getElementById('confirmPassword')?.value?.trim() || '';
-
-        if (newPassword.length < 8) {
-            showSecurityAlert('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.', 'error');
-            document.getElementById('newPassword')?.focus();
+    // ===== إرسال رمز التحقق إلى البريد الجديد =====
+    async function sendNewOtp() {
+        if (isSendingNewOtp) return;
+        if (timerIntervalNew) {
+            showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'error');
             return;
         }
 
-        if (newPassword !== confirmPassword) {
-            showSecurityAlert('تأكيد كلمة المرور غير مطابق.', 'error');
-            document.getElementById('confirmPassword')?.focus();
+        if (!isOldEmailVerified) {
+            showAlert('يرجى التحقق من البريد الإلكتروني الحالي أولاً.', 'error');
             return;
         }
 
-        this._isChanging = true;
-        const btn = document.getElementById('changePasswordBtn');
-        setButtonLoading(btn, 'جاري تغيير كلمة المرور...');
+        const newEmail = newEmailInput.value.trim();
+        if (!newEmail) {
+            showAlert('يرجى إدخال البريد الإلكتروني الجديد.', 'error');
+            newEmailInput.focus();
+            return;
+        }
+
+        // التحقق من الصيغة
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmail)) {
+            showAlert('صيغة البريد الإلكتروني غير صحيحة.', 'error');
+            newEmailInput.focus();
+            return;
+        }
+
+        // التحقق من عدم مطابقته للبريد الحالي
+        if (newEmail.toLowerCase() === currentUser.email.toLowerCase()) {
+            showAlert('البريد الإلكتروني الجديد مطابق للبريد الحالي.', 'error');
+            newEmailInput.focus();
+            return;
+        }
+
+        // التحقق من عدم استخدامه مسبقاً (عن طريق فحص المستخدمين)
+        try {
+            const { data: existingUsers, error: searchError } = await supabase
+                .from('auth_register')
+                .select('email')
+                .eq('email', newEmail)
+                .maybeSingle();
+
+            if (searchError && !searchError.message.includes('not found')) {
+                throw searchError;
+            }
+            if (existingUsers) {
+                showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
+                newEmailInput.focus();
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
+            return;
+        }
+
+        // تخزين البريد الجديد للمراجعة النهائية
+        newEmailValue = newEmail;
+
+        isSendingNewOtp = true;
+        sendNewOtpBtn.disabled = true;
+        sendNewOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            const supabase = SecurityCore.supabase;
-            const { error: updateError } = await supabase.auth.updateUser({
-                password: newPassword
+            const { error } = await supabase.auth.signInWithOtp({
+                email: newEmail,
+                options: { shouldCreateUser: false }
             });
-            if (updateError) {
-                // معالجة خاصة للخطأ "should be different from the old password"
-                if (updateError.message && updateError.message.includes('should be different from the old password')) {
-                    showSecurityAlert('⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.', 'error');
-                    document.getElementById('newPassword')?.focus();
-                    document.getElementById('newPassword')?.select();
-                    return; // لا نستمر في التنفيذ
-                }
-                throw updateError;
-            }
+            if (error) throw error;
 
-            showSecurityAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
-            this.resetForm();
-            await SecurityCore.refreshUser();
+            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الجديد.', 'success');
+            newOtpCode.disabled = false;
+            newOtpCode.value = '';
+            newOtpCode.focus();
+            newOtpIcon.className = 'validation-icon';
+            newOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الجديد';
+            newOtpHint.className = 'format-hint';
+
+            startTimer('new');
+            sendNewOtpBtn.style.display = 'none';
+            timerContainerNew.style.display = 'block';
 
         } catch (err) {
-            console.error('❌ [Change Password]', err);
-            let msg = 'تعذر تغيير كلمة المرور.';
-            if (err.message) {
-                if (err.message.includes('expired')) {
-                    msg = 'انتهت صلاحية الجلسة. يرجى طلب رمز جديد.';
-                    this._otpVerified = false;
-                    document.getElementById('sendOtpBtn').style.display = 'block';
-                    document.getElementById('otpCode').disabled = false;
-                    document.getElementById('otpCode').value = '';
-                } else if (!err.message.includes('should be different')) {
-                    // تجنب تكرار الرسالة إذا كانت قد ظهرت بالفعل
-                    msg = err.message;
-                }
-            }
-            // إذا لم تكن الرسالة قد ظهرت بالفعل (حالة الخطأ المختلفة عن التكرار)
-            if (!err.message || !err.message.includes('should be different')) {
-                showSecurityAlert(msg, 'error');
-            }
+            console.error(err);
+            let msg = 'فشل إرسال الرمز. حاول مرة أخرى.';
+            if (err.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات. انتظر بضع دقائق.';
+            showAlert(msg, 'error');
+            sendNewOtpBtn.style.display = 'block';
+            timerContainerNew.style.display = 'none';
         } finally {
-            restoreButton(btn);
-            this._isChanging = false;
-        }
-    },
-
-    // ==================== إعادة تعيين النموذج ====================
-    resetForm() {
-        const form = document.getElementById('changePasswordForm');
-        if (form) form.reset();
-
-        document.getElementById('otpCode').value = '';
-        document.getElementById('otpCode').disabled = false;
-        document.getElementById('changePasswordBtn').style.display = 'none';
-        document.getElementById('sendOtpBtn').style.display = 'block';
-        document.getElementById('sendOtpBtn').disabled = false;
-        document.getElementById('otpSection').style.display = 'none';
-        this._otpVerified = false;
-        this._isSending = false;
-        this._isChanging = false;
-
-        if (this._timerInterval) {
-            clearInterval(this._timerInterval);
-            this._timerInterval = null;
-        }
-        document.getElementById('timerDisplay').textContent = '05:00';
-
-        const fill = document.getElementById('strengthFill');
-        if (fill) { fill.style.width = '0%'; fill.style.background = '#e2e8f0'; }
-        const label = document.getElementById('strengthLabel');
-        if (label) { label.textContent = 'ضعيفة'; label.className = 'strength-label'; }
-
-        document.querySelectorAll('#passwordRequirements ul li').forEach(li => {
-            li.className = '';
-            const icon = li.querySelector('i');
-            if (icon) icon.className = 'fas fa-circle';
-        });
-
-        document.getElementById('confirmPasswordHint').textContent = 'أعد كتابة كلمة المرور الجديدة';
-        document.getElementById('confirmPasswordHint').style.color = '#64748b';
-    },
-
-    // ==================== التحقق من قوة كلمة المرور ====================
-    validatePasswordStrength() {
-        const password = document.getElementById('newPassword')?.value || '';
-        const requirements = {
-            length: document.getElementById('req-length'),
-            uppercase: document.getElementById('req-uppercase'),
-            lowercase: document.getElementById('req-lowercase'),
-            number: document.getElementById('req-number'),
-            special: document.getElementById('req-special')
-        };
-
-        const checks = {
-            length: password.length >= 8,
-            uppercase: /[A-Z]/.test(password),
-            lowercase: /[a-z]/.test(password),
-            number: /\d/.test(password),
-            special: /[^A-Za-z0-9]/.test(password)
-        };
-
-        let score = 0;
-        Object.keys(checks).forEach(key => {
-            const el = requirements[key];
-            if (el) {
-                const valid = checks[key];
-                el.className = valid ? 'valid' : 'invalid';
-                const icon = el.querySelector('i');
-                if (icon) icon.className = valid ? 'fas fa-check-circle' : 'fas fa-circle';
-                if (valid) score++;
-            }
-        });
-
-        const fill = document.getElementById('strengthFill');
-        const label = document.getElementById('strengthLabel');
-        if (fill) {
-            const percent = (score / 5) * 100;
-            fill.style.width = percent + '%';
-            if (score <= 1) {
-                fill.style.background = '#dc2626';
-                if (label) { label.textContent = 'ضعيفة جداً'; label.className = 'strength-label weak'; }
-            } else if (score <= 2) {
-                fill.style.background = '#f59e0b';
-                if (label) { label.textContent = 'ضعيفة'; label.className = 'strength-label weak'; }
-            } else if (score <= 3) {
-                fill.style.background = '#fbbf24';
-                if (label) { label.textContent = 'متوسطة'; label.className = 'strength-label medium'; }
-            } else if (score <= 4) {
-                fill.style.background = '#34d399';
-                if (label) { label.textContent = 'قوية'; label.className = 'strength-label strong'; }
+            isSendingNewOtp = false;
+            sendNewOtpBtn.disabled = false;
+            sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد';
+            if (timerIntervalNew) {
+                sendNewOtpBtn.style.display = 'none';
+                timerContainerNew.style.display = 'block';
             } else {
-                fill.style.background = '#10b981';
-                if (label) { label.textContent = 'قوية جداً'; label.className = 'strength-label very-strong'; }
+                sendNewOtpBtn.style.display = 'block';
+                timerContainerNew.style.display = 'none';
             }
         }
-    },
+    }
 
-    validateConfirmMatch() {
-        const newPassword = document.getElementById('newPassword')?.value || '';
-        const confirmPassword = document.getElementById('confirmPassword')?.value || '';
-        const hint = document.getElementById('confirmPasswordHint');
-        if (!hint) return;
-        if (confirmPassword.length === 0) {
-            hint.textContent = 'أعد كتابة كلمة المرور الجديدة';
-            hint.style.color = '#64748b';
+    // ===== التحقق من رمز البريد الجديد =====
+    async function verifyNewOtp() {
+        const otp = newOtpCode.value.trim();
+        if (otp.length !== 8) {
+            newOtpIcon.className = 'validation-icon error';
+            newOtpIcon.innerHTML = '✖';
+            newOtpMessage.textContent = 'يرجى إدخال رمز مكون من 8 أرقام.';
+            newOtpHint.className = 'format-hint error';
             return;
         }
-        if (newPassword === confirmPassword) {
-            hint.textContent = '✅ كلمة المرور متطابقة';
-            hint.style.color = '#16a34a';
-        } else {
-            hint.textContent = '❌ كلمة المرور غير متطابقة';
-            hint.style.color = '#dc2626';
-        }
-    }
-};
 
-// بدء التشغيل التلقائي
-document.addEventListener('DOMContentLoaded', async function() {
-    const page = document.body.dataset.security || document.body.dataset.page || document.body.id || '';
-    if (page === 'change-password') {
-        console.log('🔐 [Change Password] بدء التشغيل التلقائي...');
+        const newEmail = newEmailValue || newEmailInput.value.trim();
+        if (!newEmail) {
+            showAlert('البريد الإلكتروني الجديد غير متوفر.', 'error');
+            return;
+        }
+
+        newOtpIcon.className = 'validation-icon loading';
+        newOtpMessage.textContent = 'جارٍ التحقق من الرمز…';
+        newOtpHint.className = 'format-hint';
+
         try {
-            if (window.SecurityPages && window.SecurityPages['change-password'] && typeof window.SecurityPages['change-password'].init === 'function') {
-                await window.SecurityPages['change-password'].init();
-            } else {
-                console.error('❌ [Change Password] الكائن غير موجود أو init ليس دالة.');
-            }
+            const { error } = await supabase.auth.verifyOtp({
+                email: newEmail,
+                token: otp,
+                type: 'email'
+            });
+            if (error) throw error;
+
+            newOtpIcon.className = 'validation-icon success';
+            newOtpIcon.innerHTML = '✔';
+            newOtpMessage.textContent = 'تم التحقق من البريد الإلكتروني الجديد بنجاح.';
+            newOtpHint.className = 'format-hint success';
+            isNewEmailVerified = true;
+            newOtpCode.disabled = true;
+
+            // تفعيل زر حفظ التغييرات
+            saveGroup.style.display = 'block';
+            showAlert('✅ تم التحقق من البريد الإلكتروني الجديد.', 'success');
+
         } catch (err) {
-            console.error('❌ [Change Password] خطأ في التهيئة:', err);
+            console.error(err);
+            let msg = 'رمز التحقق غير صحيح.';
+            if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.';
+            else if (err.message.includes('invalid')) msg = 'رمز التحقق غير صحيح. حاول مرة أخرى.';
+            newOtpIcon.className = 'validation-icon error';
+            newOtpIcon.innerHTML = '✖';
+            newOtpMessage.textContent = msg;
+            newOtpHint.className = 'format-hint error';
+            isNewEmailVerified = false;
+            saveGroup.style.display = 'none';
+            if (!timerIntervalNew) {
+                sendNewOtpBtn.style.display = 'block';
+                timerContainerNew.style.display = 'none';
+                sendNewOtpBtn.disabled = false;
+                sendNewOtpBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
+            }
         }
     }
-});
+
+    // ===== مؤقت إعادة الإرسال =====
+    function startTimer(type) {
+        const timerDisplay = type === 'old' ? timerDisplayOld : timerDisplayNew;
+        const timerContainer = type === 'old' ? timerContainerOld : timerContainerNew;
+        const sendBtn = type === 'old' ? sendOldOtpBtn : sendNewOtpBtn;
+        const intervalVar = type === 'old' ? 'timerIntervalOld' : 'timerIntervalNew';
+
+        if (window[intervalVar]) clearInterval(window[intervalVar]);
+        let seconds = 300;
+        timerDisplay.textContent = '05:00';
+        window[intervalVar] = setInterval(() => {
+            seconds--;
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            timerDisplay.textContent = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+            if (seconds <= 0) {
+                clearInterval(window[intervalVar]);
+                window[intervalVar] = null;
+                sendBtn.style.display = 'block';
+                timerContainer.style.display = 'none';
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
+            }
+        }, 1000);
+    }
+
+    // ===== حفظ التغييرات (تحديث البريد الإلكتروني) =====
+    async function saveEmail() {
+        if (isSaving) return;
+        if (!isOldEmailVerified) {
+            showAlert('يرجى التحقق من البريد الإلكتروني الحالي أولاً.', 'error');
+            return;
+        }
+        if (!isNewEmailVerified) {
+            showAlert('يرجى التحقق من البريد الإلكتروني الجديد أولاً.', 'error');
+            return;
+        }
+
+        const newEmail = newEmailValue || newEmailInput.value.trim();
+        if (!newEmail) {
+            showAlert('البريد الإلكتروني الجديد غير متوفر.', 'error');
+            return;
+        }
+
+        isSaving = true;
+        saveEmailBtn.disabled = true;
+        saveEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+        try {
+            // تحديث البريد الإلكتروني في Auth
+            const { error } = await supabase.auth.updateUser({
+                email: newEmail
+            });
+            if (error) throw error;
+
+            showAlert('✅ تم تغيير البريد الإلكتروني بنجاح.', 'success');
+            showSuccessModal();
+            setTimeout(() => {
+                resetForm();
+            }, 1000);
+
+        } catch (err) {
+            console.error(err);
+            let msg = 'حدث خطأ أثناء حفظ البيانات.';
+            if (err.message.includes('email')) msg = 'البريد الإلكتروني غير صالح أو مستخدم مسبقاً.';
+            else if (err.message.includes('session')) {
+                msg = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً.';
+                isOldEmailVerified = false;
+                isNewEmailVerified = false;
+                saveGroup.style.display = 'none';
+            } else if (err.message.includes('Network')) msg = 'تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.';
+            showErrorModal(msg);
+        } finally {
+            isSaving = false;
+            saveEmailBtn.disabled = false;
+            saveEmailBtn.innerHTML = '<i class="fas fa-save"></i> حفظ التغييرات';
+        }
+    }
+
+    // ===== إعادة تعيين النموذج =====
+    function resetForm() {
+        // إعادة تعيين حقول البريد الحالي
+        oldOtpCode.value = '';
+        oldOtpCode.disabled = true;
+        isOldEmailVerified = false;
+        oldOtpIcon.className = 'validation-icon';
+        oldOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الحالي';
+        oldOtpHint.className = 'format-hint';
+        if (timerIntervalOld) {
+            clearInterval(timerIntervalOld);
+            timerIntervalOld = null;
+        }
+        sendOldOtpBtn.style.display = 'block';
+        timerContainerOld.style.display = 'none';
+        sendOldOtpBtn.disabled = false;
+        sendOldOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الحالي';
+
+        // إعادة تعيين حقول البريد الجديد
+        newEmailInput.value = '';
+        newEmailInput.disabled = true;
+        newEmailIcon.className = 'validation-icon';
+        newEmailMessage.textContent = 'يجب التحقق من البريد الحالي أولاً';
+        newEmailHint.className = 'format-hint';
+
+        newOtpCode.value = '';
+        newOtpCode.disabled = true;
+        isNewEmailVerified = false;
+        newOtpIcon.className = 'validation-icon';
+        newOtpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الجديد';
+        newOtpHint.className = 'format-hint';
+        if (timerIntervalNew) {
+            clearInterval(timerIntervalNew);
+            timerIntervalNew = null;
+        }
+        sendNewOtpBtn.style.display = 'block';
+        timerContainerNew.style.display = 'none';
+        sendNewOtpBtn.disabled = false;
+        sendNewOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني الجديد';
+
+        newEmailVerifyGroup.style.display = 'none';
+        saveGroup.style.display = 'none';
+        newEmailValue = '';
+
+        alertBox.classList.remove('show');
+        alertBox.style.display = 'none';
+    }
+
+    // ===== تهيئة الصفحة =====
+    async function initPage() {
+        if (initialized) return;
+        initialized = true;
+
+        const success = await initSupabase();
+        if (!success || !currentUser) {
+            showErrorModal('لم يتم التعرف على جلسة المستخدم. يرجى تسجيل الدخول مرة أخرى.');
+            const retryBtn = document.getElementById('errorRetryBtn');
+            if (retryBtn) {
+                retryBtn.textContent = 'تسجيل الدخول';
+                retryBtn.onclick = function() {
+                    window.location.replace('/auth/auth/login/login.html');
+                };
+            }
+            return;
+        }
+
+        // استعادة زر إعادة المحاولة
+        const retryBtn = document.getElementById('errorRetryBtn');
+        if (retryBtn) {
+            retryBtn.textContent = 'إعادة المحاولة';
+            retryBtn.onclick = function() {
+                hideErrorModal();
+                resetForm();
+            };
+        }
+
+        currentEmailDisplay.value = currentUser.email || '';
+        updateHeaderUI(currentUser);
+
+        // ===== ربط الأحداث =====
+        sendOldOtpBtn.addEventListener('click', sendOldOtp);
+
+        oldOtpCode.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 8) {
+                verifyOldOtp();
+            }
+        });
+
+        newEmailInput.addEventListener('input', function() {
+            if (isOldEmailVerified) {
+                const isValid = validateNewEmail();
+                if (isValid) {
+                    // إظهار زر إرسال OTP للبريد الجديد
+                    newEmailVerifyGroup.style.display = 'block';
+                } else {
+                    newEmailVerifyGroup.style.display = 'none';
+                }
+            }
+        });
+
+        sendNewOtpBtn.addEventListener('click', sendNewOtp);
+
+        newOtpCode.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 8) {
+                verifyNewOtp();
+            }
+        });
+
+        saveEmailBtn.addEventListener('click', saveEmail);
+
+        errorCloseBtn.addEventListener('click', hideErrorModal);
+
+        // بدء الحالة
+        resetForm();
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة.');
+    }
+
+    // ===== بدء التشغيل =====
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+        initPage();
+    }
+
+})();
