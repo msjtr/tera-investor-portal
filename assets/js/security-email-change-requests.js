@@ -1,11 +1,10 @@
 /**
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
- * الحالة الأولية للطلب: "جديد" (new)
- * - يمكن للمستخدم تعديل أو إلغاء أو حذف الطلبات ذات الحالة "جديد" فقط
- * - عند بدء مراجعة الطلب من الإدارة، تتغير الحالة إلى "قيد المراجعة" (pending)
- * - الطلبات التي تحت المراجعة أو الموافق عليها أو المنفذة لا يمكن تعديلها
- * - تم تعطيل Edge Function مؤقتاً لحل مشكلة CORS
+ * الحالة الأولية: "جديد" (new)
+ * - يمكن تعديل/إلغاء الطلبات الجديدة والقيد المراجعة
+ * - يمكن حذف الطلبات الجديدة فقط
+ * - تم تعطيل Edge Function نهائياً (استخدام Fallback فقط لتجاوز CORS)
  */
 
 'use strict';
@@ -22,7 +21,6 @@
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
 
-    // نافذة الطلب الجديد
     const newRequestModal = document.getElementById('newRequestModal');
     const closeNewRequestModal = document.getElementById('closeNewRequestModal');
     const cancelRequestBtn = document.getElementById('cancelRequestBtn');
@@ -34,7 +32,6 @@
     const reasonHint = document.getElementById('reasonHint');
     const submitRequestBtn = document.getElementById('submitRequestBtn');
 
-    // نافذة تعديل الطلب
     const editRequestModal = document.getElementById('editRequestModal');
     const closeEditRequestModal = document.getElementById('closeEditRequestModal');
     const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -47,7 +44,6 @@
     const editReasonHint = document.getElementById('editReasonHint');
     const saveEditBtn = document.getElementById('saveEditBtn');
 
-    // نافذة التفاصيل
     const detailModal = document.getElementById('detailModal');
     const closeDetailModal = document.getElementById('closeDetailModal');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -62,7 +58,6 @@
     const detailRejectionReason = document.getElementById('detailRejectionReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
-    // الإحصائيات
     const totalCount = document.getElementById('totalCount');
     const newCount = document.getElementById('newCount');
     const pendingCount = document.getElementById('pendingCount');
@@ -168,13 +163,11 @@
         return status === 'new';
     }
 
-    // ===== التحقق من البريد (استخدام Fallback فقط – تم تعطيل Edge Function) =====
+    // ===== التحقق من البريد (Fallback فقط – تجاوز Edge Function) =====
     async function checkEmailAvailability(email) {
-        // استخدام Fallback مباشرة دون محاولة Edge Function (تجاوز مشكلة CORS)
         return await checkEmailFallback(email);
     }
 
-    // ===== Fallback: التحقق من auth_register =====
     async function checkEmailFallback(email) {
         try {
             const normalizedEmail = email.trim().toLowerCase();
@@ -301,7 +294,6 @@
         });
         tableBody.innerHTML = html;
 
-        // ربط أحداث الأزرار
         document.querySelectorAll('.view-detail').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -335,7 +327,6 @@
         });
     }
 
-    // ===== عرض التفاصيل =====
     function showDetail(request) {
         detailRequestNumber.textContent = request.request_number || '-';
         detailCurrentEmail.textContent = request.current_email || '-';
@@ -351,7 +342,6 @@
         detailModal.style.display = 'flex';
     }
 
-    // ===== فتح نافذة التعديل =====
     function openEditModal(request) {
         editRequestId.value = request.id;
         editCurrentEmail.value = request.current_email;
@@ -364,7 +354,6 @@
         editRequestModal.style.display = 'flex';
     }
 
-    // ===== التحقق من البريد الجديد في نافذة التعديل =====
     async function validateEditEmail() {
         const email = editNewEmail.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -426,7 +415,6 @@
         return true;
     }
 
-    // ===== حفظ التعديلات =====
     async function saveEditRequest(e) {
         e.preventDefault();
 
@@ -476,7 +464,6 @@
         }
     }
 
-    // ===== تأكيد إلغاء الطلب =====
     function confirmCancelRequest(request) {
         if (confirm(`هل أنت متأكد من إلغاء الطلب رقم ${request.request_number}؟`)) {
             cancelRequest(request.id);
@@ -504,7 +491,6 @@
         }
     }
 
-    // ===== تأكيد حذف الطلب =====
     function confirmDeleteRequest(request) {
         if (confirm(`هل أنت متأكد من حذف الطلب رقم ${request.request_number}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
             deleteRequest(request.id);
@@ -529,7 +515,6 @@
         }
     }
 
-    // ===== التحقق من البريد الجديد (لنافذة الإضافة) =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -582,7 +567,6 @@
         return true;
     }
 
-    // ===== تقديم طلب جديد =====
     async function submitNewRequest(e) {
         e.preventDefault();
 
@@ -612,7 +596,7 @@
                     current_email: currentUser.email,
                     new_email: newEmail,
                     reason: reason,
-                    status: 'new'  // ✅ الحالة الأولية: جديد
+                    status: 'new'
                 })
                 .select()
                 .single();
@@ -631,7 +615,6 @@
 
         } catch (err) {
             console.error('فشل إرسال الطلب:', err);
-            // عرض رسالة واضحة للمستخدم
             if (err.message && err.message.includes('check constraint')) {
                 showAlert('⚠️ حدث خطأ في قاعدة البيانات. يرجى التواصل مع الدعم الفني.', 'error');
             } else {
@@ -643,7 +626,6 @@
         }
     }
 
-    // ===== تهيئة الصفحة =====
     async function initPage() {
         if (initialized) return;
         initialized = true;
@@ -658,7 +640,6 @@
 
         await fetchRequests();
 
-        // ربط أحداث نافذة الطلب الجديد
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
             currentEmailDisplayModal.value = currentUser.email || '';
@@ -692,7 +673,6 @@
             validateNewEmail();
         });
 
-        // ربط أحداث نافذة التعديل
         closeEditRequestModal.addEventListener('click', function() {
             editRequestModal.classList.remove('show');
             editRequestModal.style.display = 'none';
@@ -712,7 +692,6 @@
             validateEditEmail();
         });
 
-        // ربط أحداث نافذة التفاصيل
         closeDetailModal.addEventListener('click', function() {
             detailModal.classList.remove('show');
             detailModal.style.display = 'none';
