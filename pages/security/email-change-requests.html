@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* جميع الأنماط السابقة – لم تتغير */
+        /* جميع الأنماط السابقة (تم تضمينها في الردود السابقة) */
         * { box-sizing: border-box; }
         body {
             background-color: #f1f5f9;
@@ -464,6 +464,12 @@
             font-size: 16px;
         }
         .btn-icon:hover { background: rgba(2,128,144,0.08); }
+        .btn-icon.text-danger { color: #dc2626; }
+        .btn-icon.text-danger:hover { background: rgba(220,38,38,0.08); }
+        .btn-icon.text-warning { color: #f59e0b; }
+        .btn-icon.text-warning:hover { background: rgba(245,158,11,0.08); }
+        .btn-icon.text-success { color: #10b981; }
+        .btn-icon.text-success:hover { background: rgba(16,185,129,0.08); }
         .page-header-actions {
             display: flex;
             justify-content: space-between;
@@ -513,7 +519,7 @@
         }
         .table-container table {
             width: 100%;
-            min-width: 700px;
+            min-width: 800px;
             border-collapse: collapse;
             font-size: 14px;
         }
@@ -530,6 +536,11 @@
             padding: 14px 18px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
+        }
+        .table-container td .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         .table-container tbody tr:hover td { background: #f8fafc; }
         .stats-row {
@@ -592,6 +603,12 @@
             .status-badge.cancelled { background: rgba(71,85,105,0.3); color: #94a3b8; }
             .btn-icon { color: #14b8a6; }
             .btn-icon:hover { background: rgba(20,184,166,0.15); }
+            .btn-icon.text-danger { color: #f87171; }
+            .btn-icon.text-danger:hover { background: rgba(248,113,113,0.15); }
+            .btn-icon.text-warning { color: #fbbf24; }
+            .btn-icon.text-warning:hover { background: rgba(251,191,36,0.15); }
+            .btn-icon.text-success { color: #34d399; }
+            .btn-icon.text-success:hover { background: rgba(52,211,153,0.15); }
             .modal-actions .btn-secondary { background: #334155; color: #e2e8f0; }
             .modal-actions .btn-secondary:hover { background: #475569; }
             .btn-primary:hover:not(:disabled) { background: #14b8a6; }
@@ -603,6 +620,7 @@
             .modal-box { padding: 24px 16px; }
             .modal-actions { flex-direction: column; }
             .modal-actions .btn { width: 100%; justify-content: center; }
+            .table-container td .actions { flex-direction: column; align-items: center; gap: 4px; }
         }
     </style>
 </head>
@@ -627,13 +645,11 @@
 
     <main class="content-container">
 
-        <!-- وصف الصفحة -->
         <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
             <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
-            <span style="color:#0A1B3F; font-weight:600;">يمكنكم من خلال هذه الصفحة تقديم طلب لتغيير البريد الإلكتروني المرتبط بحسابكم. سيتم مراجعة الطلب من قبل الإدارة، وعند الموافقة عليه سيتم تحديث البريد الإلكتروني وإشعاركم بذلك.</span>
+            <span style="color:#0A1B3F; font-weight:600;">يمكنكم من خلال هذه الصفحة تقديم طلب لتغيير البريد الإلكتروني. يمكنكم أيضاً تعديل أو إلغاء أو حذف الطلبات غير المعتمدة من الإدارة.</span>
         </div>
 
-        <!-- الإحصائيات -->
         <div class="stats-row" id="statsRow">
             <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">إجمالي الطلبات</div></div>
             <div class="stat-box"><div class="number pending" id="pendingCount">0</div><div class="label">قيد المراجعة</div></div>
@@ -642,13 +658,11 @@
             <div class="stat-box"><div class="number rejected" id="rejectedCount">0</div><div class="label">مرفوضة</div></div>
         </div>
 
-        <!-- تنبيه وجود طلب قائم -->
         <div id="pendingRequestNotice" class="request-notice" style="display:none;">
             <i class="fas fa-clock"></i>
             <span>⚠️ لديكم طلب تغيير بريد إلكتروني قيد المعالجة، ولا يمكن تقديم طلب جديد حتى يتم الانتهاء من الطلب الحالي.</span>
         </div>
 
-        <!-- رأس الجدول مع الزر -->
         <div class="page-header-actions">
             <h2 style="margin:0; font-size:20px; font-weight:800; color:#0A1B3F; display:flex; align-items:center; gap:8px;">
                 <i class="fas fa-list-ul" style="color:#028090;"></i> سجل طلبات تغيير البريد الإلكتروني
@@ -658,7 +672,6 @@
             </button>
         </div>
 
-        <!-- الجدول -->
         <div class="table-container">
             <table>
                 <thead>
@@ -681,7 +694,7 @@
 
     </main>
 
-    <!-- ===== نافذة تقديم الطلب ===== -->
+    <!-- نافذة تقديم طلب جديد -->
     <div class="modal-overlay" id="newRequestModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -713,7 +726,40 @@
         </div>
     </div>
 
-    <!-- ===== نافذة عرض التفاصيل ===== -->
+    <!-- نافذة تعديل الطلب -->
+    <div class="modal-overlay" id="editRequestModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit" style="color:#f59e0b;"></i> تعديل الطلب</h3>
+                <button class="modal-close" id="closeEditRequestModal">&times;</button>
+            </div>
+            <form id="editRequestForm" novalidate>
+                <input type="hidden" id="editRequestId" />
+                <div class="form-group">
+                    <label>البريد الإلكتروني الحالي <span class="req">*</span></label>
+                    <input type="email" class="form-control" id="editCurrentEmail" readonly disabled />
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني الجديد <span class="req">*</span></label>
+                    <input type="email" class="form-control" id="editNewEmail" placeholder="أدخل البريد الإلكتروني الجديد" required />
+                    <div class="form-hint" id="editNewEmailHint"></div>
+                </div>
+                <div class="form-group">
+                    <label>سبب تغيير البريد الإلكتروني <span class="req">*</span></label>
+                    <textarea class="form-control" id="editReason" rows="3" placeholder="اكتب سبب طلب تغيير البريد الإلكتروني..." required></textarea>
+                    <div class="form-hint" id="editReasonHint"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="saveEditBtn">
+                        <i class="fas fa-save"></i> حفظ التعديلات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة عرض التفاصيل -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-box">
             <div class="modal-header">
