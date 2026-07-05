@@ -47,7 +47,13 @@
             headerAvatar.textContent = initial;
         }
 
-        // تحديث البريد الإلكتروني في الحقل المخصص (إن وجد)
+        // ✅ تحديث حقل البريد الإلكتروني الظاهر في النموذج (الإصلاح)
+        const userEmailInput = document.getElementById('userEmail');
+        if (userEmailInput && email) {
+            userEmailInput.value = email;
+        }
+
+        // تحديث البريد الإلكتروني في الحقل المخصص (إن وجد، للتوافق مع إصدارات سابقة)
         const emailDisplay = document.getElementById('currentEmailDisplay');
         if (emailDisplay && email) {
             emailDisplay.value = email;
@@ -150,11 +156,9 @@
     // ===== تهيئة Supabase وجلب المستخدم =====
     async function initSupabase() {
         try {
-            // جلب المستخدم
             const user = await fetchUser();
             if (user) {
                 currentUser = user;
-                // إذا لم يكن supabase معرفاً، نحاول الحصول عليه
                 if (!supabase) {
                     if (window.SecurityCore?.supabase) {
                         supabase = window.SecurityCore.supabase;
@@ -294,11 +298,9 @@
             if (otpMessage) otpMessage.textContent = 'أدخل رمز التحقق المرسل إلى بريدك الحالي';
             if (otpHint) otpHint.className = 'format-hint';
 
-            // إظهار حقل الرمز
             const otpVerifyGroup = document.getElementById('otpVerifyGroup');
             if (otpVerifyGroup) otpVerifyGroup.style.display = 'block';
 
-            // إخفاء زر الإرسال وإظهار المؤقت
             const otpSendGroup = document.getElementById('otpSendGroup');
             if (otpSendGroup) otpSendGroup.style.display = 'none';
 
@@ -409,12 +411,10 @@
                 throw error;
             }
 
-            // رمز صحيح
             if (otpIcon) { otpIcon.className = 'validation-icon success'; otpIcon.innerHTML = '✔'; }
             if (otpMessage) otpMessage.textContent = '✅ تم التحقق من الرمز بنجاح.';
             if (otpHint) otpHint.className = 'format-hint success';
 
-            // تفعيل زر تغيير كلمة المرور
             const changeBtn = document.getElementById('changePasswordBtn');
             if (changeBtn) {
                 changeBtn.disabled = false;
@@ -513,7 +513,6 @@
         }
 
         try {
-            // التحقق من كلمة المرور الحالية
             const { error: verifyError } = await supabase.auth.signInWithPassword({
                 email: currentUser.email,
                 password: currentPassword
@@ -526,7 +525,6 @@
                 throw verifyError;
             }
 
-            // تحديث كلمة المرور
             const { error: updateError } = await supabase.auth.updateUser({
                 password: newPassword
             });
@@ -541,30 +539,25 @@
             showAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
             showSuccessModal();
 
-            // تنظيف النموذج
             if (currentPasswordInput) currentPasswordInput.value = '';
             if (newPasswordInput) newPasswordInput.value = '';
             if (confirmPasswordInput) confirmPasswordInput.value = '';
 
-            // إعادة تعيين قوة كلمة المرور
             const strengthFill = document.getElementById('strengthFill');
             const strengthLabel = document.getElementById('strengthLabel');
             if (strengthFill) { strengthFill.style.width = '0%'; strengthFill.style.background = '#e2e8f0'; }
             if (strengthLabel) { strengthLabel.textContent = 'ضعيفة'; strengthLabel.className = 'strength-label'; }
 
-            // إعادة تعيين متطلبات كلمة المرور
             document.querySelectorAll('#passwordRequirements ul li').forEach(li => {
                 li.className = '';
                 const icon = li.querySelector('i');
                 if (icon) icon.className = 'fas fa-circle';
             });
 
-            // تحديث المستخدم
             if (window.SecurityCore) {
                 await window.SecurityCore.refreshUser();
             }
 
-            // إعادة تعيين زر التغيير
             const saveGroup = document.getElementById('saveGroup');
             if (saveGroup) saveGroup.style.display = 'none';
 
@@ -575,7 +568,6 @@
             else if (err.message.includes('should be different from the old password')) msg = '⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية.';
             else if (err.message.includes('session')) {
                 msg = 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً.';
-                // إعادة توجيه إلى صفحة الدخول
                 setTimeout(() => {
                     window.location.replace('/auth/auth/login/login.html');
                 }, 2000);
@@ -671,7 +663,6 @@
         if (initialized) return;
         initialized = true;
 
-        // محاولة جلب المستخدم والتهيئة
         const success = await initSupabase();
         if (!success || !currentUser) {
             console.error('❌ [Change Password] فشل جلب المستخدم');
@@ -686,14 +677,11 @@
             return;
         }
 
-        // تحديث الهيدر
         updateHeaderUI(currentUser);
 
-        // تعطيل زر تغيير كلمة المرور في البداية
         const changeBtn = document.getElementById('changePasswordBtn');
         if (changeBtn) changeBtn.disabled = true;
 
-        // ===== ربط الأحداث =====
         const sendOtpBtn = document.getElementById('sendOtpBtn');
         if (sendOtpBtn) {
             sendOtpBtn.addEventListener('click', sendOtp);
@@ -713,7 +701,6 @@
             changeBtn.addEventListener('click', changePassword);
         }
 
-        // أزرار إظهار/إخفاء كلمة المرور
         document.querySelectorAll('.password-toggle').forEach(btn => {
             btn.addEventListener('click', function() {
                 const targetId = this.dataset.target;
@@ -726,14 +713,12 @@
             });
         });
 
-        // التحقق الفوري من قوة كلمة المرور
         if (newPasswordInput) {
             newPasswordInput.addEventListener('input', function() {
                 validatePasswordStrength();
             });
         }
 
-        // التحقق من تطابق كلمة المرور
         if (confirmPasswordInput) {
             confirmPasswordInput.addEventListener('input', function() {
                 validateConfirmMatch();
@@ -742,7 +727,6 @@
 
         errorCloseBtn.addEventListener('click', hideErrorModal);
 
-        // بدء المؤقت
         const otpSendGroup = document.getElementById('otpSendGroup');
         if (otpSendGroup) otpSendGroup.style.display = 'block';
 
