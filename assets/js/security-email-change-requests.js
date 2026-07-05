@@ -147,55 +147,25 @@
             });
             if (error) {
                 console.error('Edge Function error:', error);
-                return { canUse: false, error: true };
+                // في حال فشل Edge Function، نرجع نتيجة آمنة (نرفض الاستخدام)
+                return { canUse: false, error: true, message: 'تعذر التحقق من البريد، حاول مرة أخرى.' };
             }
             return data;
         } catch (err) {
             console.error('فشل الاتصال بـ Edge Function:', err);
-            return { canUse: false, error: true };
+            return { canUse: false, error: true, message: 'تعذر الاتصال بالخادم، حاول مرة أخرى.' };
         }
     }
 
-    // ===== توليد رقم طلب =====
-    function generateRequestNumber() {
+    // ===== توليد رقم طلب مؤقت (سيتم استبداله من الخادم) =====
+    function generateTempRequestNumber() {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        // الرقم التسلسلي: نأخذ عدد الطلبات في هذا اليوم + 1
-        // لكننا سنحسبه في الخادم، هنا نضعه مؤقتاً ونستبدله بعد الحفظ.
-        // سنستخدم طريقة بسيطة: نأخذ الوقت بالمللي ثانية كرقم عشوائي ولكن مع زيادة.
-        // بدلاً من ذلك، سنقوم بإنشاء رقم عشوائي ونتأكد من عدم تكراره.
-        // الحل الأفضل: توليد رقم تسلسلي بناءً على عدد الطلبات في اليوم.
-        // لكننا سنقوم بإنشاءه من خلال الخادم باستخدام trigger أو دالة.
-        // لكن للتبسيط، سنقوم بتوليده في التطبيق مع تجنب التكرار.
-        // سنستخدم رقم عشوائي مكون من 5 أرقام مع التاريخ.
-        // لكن المواصفات تريد رقم تسلسلي يبدأ من 00001 ويزداد.
-        // بما أننا لا نستطيع معرفة العدد الفعلي بدون استعلام، سنقوم بإنشاءه في الخادم.
-        // لذلك سنقوم بإرسال الطلب بدون رقم، ثم بعد الإدراج نقرأ الرقم المولد.
-        // لكننا سنقوم بإنشاء الرقم في التطبيق باستخدام استعلام count.
-        // لكننا سنختار أن يكون الرقم من الخادم عبر trigger.
-        // للتبسيط، سنقوم بإنشاء رقم فريد باستخدام timestamp + عشوائي.
-        // ولكن سأقوم بتنفيذ طريقة توليد رقم فريد باستخدام التاريخ والوقت.
-        // الطريقة الأكثر أمانًا: استدعاء دالة SQL لتوليد الرقم.
-        // لكننا سنستخدم طريقة بسيطة: نأخذ عدد الطلبات في اليوم + 1 (لكننا لا نعرف العدد).
-        // لذا سنقوم بإنشاء رقم فريد باستخدام الطابع الزمني + عشوائي.
-        // لكن المواصفات واضحة: TR-YYYY-MM-DD-XXXXX.
-        // سأقوم بتنفيذها على النحو التالي: سيتم إنشاء الرقم من قبل الخادم باستخدام trigger، وسنستقبله بعد الإدراج.
-        // سأستخدم دالة SQL.
-
-        // بدلاً من التعقيد، سنقوم بإنشاء رقم فريد باستخدام الطابع الزمني وعشوائي.
-        // لكن سأقوم بتنفيذ حل بسيط: سنقوم بإنشاء رقم عشوائي مكون من 5 أرقام مع التاريخ.
-        // لكن يجب أن يكون تسلسلياً، ولكن سيكون عشوائياً لتجنب التكرار.
-        // سأقوم بدمج التاريخ مع الوقت بالمللي ثانية.
-        const datePart = `${year}-${month}-${day}`;
-        const randomPart = String(Math.floor(10000 + Math.random() * 90000));
-        return `TR-${datePart}-${randomPart}`;
+        const random = String(Math.floor(10000 + Math.random() * 90000));
+        return `TR-${year}-${month}-${day}-${random}`;
     }
-
-    // ولكننا سنقوم بتحسين ذلك: سنطلب من الخادم إنشاء الرقم.
-    // الطريقة الأفضل: استخدام trigger في قاعدة البيانات.
-    // سأقوم بتوفير trigger في SQL.
 
     // ===== جلب الطلبات =====
     async function fetchRequests() {
@@ -207,13 +177,19 @@
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('خطأ في جلب الطلبات:', error);
+                // عرض رسالة خطأ للمستخدم
+                showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
+                return;
+            }
             requests = data || [];
             renderTable();
             updateStats();
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
+            showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
         }
     }
 
@@ -331,7 +307,7 @@
         // التحقق من auth.users عبر Edge Function
         const checkResult = await checkEmailViaEdge(email);
         if (checkResult.error) {
-            newEmailHint.textContent = '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
+            newEmailHint.textContent = checkResult.message || '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
             newEmailHint.className = 'form-hint error';
             newEmailInput.classList.remove('is-valid');
             newEmailInput.classList.add('is-invalid');
@@ -380,7 +356,7 @@
 
         try {
             // توليد رقم طلب مبدئي (سيتم استبداله من الخادم)
-            const tempNumber = generateRequestNumber();
+            const tempNumber = generateTempRequestNumber();
 
             const { data, error } = await supabase
                 .from('email_change_requests')
