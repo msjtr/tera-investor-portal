@@ -1,10 +1,10 @@
 /**
  * ==========================================================
- * profile-contact-information.js – v3.3 (مرونة مع 403)
+ * profile-contact-information.js – v3.4 (دعم صيغ رقم الجوال)
  * ==========================================================
- * - جلب رقم الجوال: user_metadata → auth_register → user_contact_info → profiles
- * - لا يوقف محاولة أي مصدر نهائياً بسبب 403 (يعيد المحاولة كل تحميل).
- * - الحفظ يُحدّث user_metadata + auth_register + user_contact_info.
+ * - يدعم أرقام الجوال بصيغة "+9665..." أو "9665...".
+ * - يفصل مفتاح الدولة تلقائياً بذكاء.
+ * - الحفظ يُخزّن دائماً بصيغة "+9665..." للتوحيد.
  */
 
 'use strict';
@@ -22,6 +22,26 @@
         '968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
         '20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX' }
     };
+
+    // دالة استخراج مفتاح الدولة والرقم من أي صيغة
+    function parseMobile(fullNumber) {
+        if (!fullNumber) return null;
+        // إزالة أي مسافات أو رموز غير رقمية ما عدا +
+        let cleaned = fullNumber.replace(/[^\d+]/g, '');
+        // إذا كان يحتوي على + نزيلها مؤقتاً
+        if (cleaned.startsWith('+')) {
+            cleaned = cleaned.substring(1);
+        }
+        // البحث عن أطول مفتاح دولة متطابق
+        for (const code of Object.keys(countryPatterns)) {
+            if (cleaned.startsWith(code)) {
+                const number = cleaned.substring(code.length);
+                return { code, number };
+            }
+        }
+        // إذا لم يطابق أي مفتاح، قد يكون الرقم بدون مفتاح (غير متوقع)
+        return null;
+    }
 
     function showAlert(message, type = 'error') {
         const box = document.getElementById('formAlert');
@@ -50,27 +70,25 @@
         document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // ========== الحصول على رقم الجوال من جميع المصادر ==========
     async function getMobileNumber() {
-        // 1. user_metadata (أسرع وأضمن)
+        // 1. user_metadata
         let mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) return mobile;
 
-        // 2. auth_register (لا نوقف المحاولة حتى لو فشل، ربما تصلح الصلاحية لاحقاً)
+        // 2. auth_register
         try {
             const { data, error } = await supabase
                 .from('auth_register')
                 .select('mobile_number')
                 .eq('user_id', currentUser.id)
                 .maybeSingle();
-
             if (!error && data?.mobile_number) {
                 mobile = data.mobile_number;
+                // تأكد من تخزينه بصيغة موحدة في user_metadata للجلسات القادمة
                 await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                 return mobile;
             }
-            // إذا كان الخطأ 403، نعرف أن الصلاحية مفقودة لكن نواصل
-        } catch (e) { /* تجاهل */ }
+        } catch (e) {}
 
         // 3. user_contact_info
         try {
@@ -79,43 +97,43 @@
                 .select('mobile_number')
                 .eq('user_id', currentUser.id)
                 .maybeSingle();
-
             if (!error && data?.mobile_number) {
                 mobile = data.mobile_number;
                 await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                 return mobile;
             }
-        } catch (e) { /* تجاهل */ }
+        } catch (e) {}
 
-        // 4. profiles (لا نوقف المحاولة أيضاً)
+        // 4. profiles
         try {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('mobile_number')
                 .eq('id', currentUser.id)
                 .maybeSingle();
-
             if (!error && data?.mobile_number) {
                 mobile = data.mobile_number;
                 await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                 return mobile;
             }
-        } catch (e) { /* تجاهل */ }
+        } catch (e) {}
 
-        return ''; // لا يوجد
+        return '';
     }
 
     async function populateCurrentData() {
         if (!currentUser) return;
-
         document.getElementById('primaryEmail').value = currentUser.email || '';
 
         const mobile = await getMobileNumber();
         if (mobile) {
-            const match = mobile.match(/^\+(\d+)/);
-            if (match) {
-                document.getElementById('countryCode').value = match[1];
-                document.getElementById('mobileNumber').value = mobile.substring(match[0].length);
+            const parsed = parseMobile(mobile);
+            if (parsed) {
+                document.getElementById('countryCode').value = parsed.code;
+                document.getElementById('mobileNumber').value = parsed.number;
+            } else {
+                // إذا تعذر التحليل، اترك الحقول فارغة
+                console.warn('لم يتم التعرف على صيغة رقم الجوال:', mobile);
             }
         }
     }
@@ -168,6 +186,7 @@
             return;
         }
 
+        // توحيد الصيغة: تخزين الرقم بصيغة "+9665xxxxxxxx"
         const fullMobile = '+' + countryCode + mobileNumber;
         const btn = document.querySelector('.btn-submit');
         btn.disabled = true;
@@ -176,30 +195,28 @@
         try {
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // محاولة تحديث auth_register
+            // تحديث الجداول الأخرى بصيغة موحدة
             try {
                 await supabase.from('auth_register')
                     .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
                     .eq('user_id', currentUser.id);
-            } catch (e) { /* تجاهل */ }
+            } catch (e) {}
 
-            // محاولة تحديث user_contact_info
             try {
                 await supabase.from('user_contact_info').upsert({
                     user_id: currentUser.id,
                     mobile_number: fullMobile,
                     updated_at: new Date().toISOString()
                 });
-            } catch (e) { /* تجاهل */ }
+            } catch (e) {}
 
-            // محاولة تحديث profiles
             try {
                 await supabase.from('profiles').upsert({
                     id: currentUser.id,
                     mobile_number: fullMobile,
                     updated_at: new Date().toISOString()
                 });
-            } catch (e) { /* تجاهل */ }
+            } catch (e) {}
 
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
