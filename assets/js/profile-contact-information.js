@@ -1,12 +1,11 @@
 /**
  * ==========================================================
- * profile-contact-information.js – الإصدار النهائي (بدون profiles)
+ * profile-contact-information.js – إصدار شامل (v2.5)
  * ==========================================================
- * - يعرض البريد من user.email مباشرة.
- * - يعرض رقم الجوال من user_metadata (يُخزّن تلقائياً بعد التسجيل).
- * - لا يتصل بجدول profiles أبداً لتجنب أخطاء 403.
- * - الحفظ يُحدّث user_metadata فقط (رقم الجوال).
- * - باقي بيانات الطوارئ تُحفظ لاحقاً عند توفر profiles.
+ * - يعرض البريد من user.email.
+ * - يعرض رقم الجوال من user_metadata، فإن لم يوجد يحاول profiles.
+ * - لا يظهر أي خطأ للمستخدم.
+ * - الحفظ يُحدّث user_metadata (وربما profiles لاحقاً).
  */
 
 'use strict';
@@ -14,15 +13,16 @@
 (function () {
     let supabase = null;
     let currentUser = null;
+    let profilesAvailable = true; // سنحاول مرة واحدة فقط
 
     const countryPatterns = {
-        '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
-        '971': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
-        '965': { regex: /^[5-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 5-9' },
-        '973': { regex: /^[3-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 3-9' },
-        '974': { regex: /^[3-7]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 3-7' },
-        '968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 7-9' },
-        '20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX', msg: 'يجب أن يبدأ بـ 1 ويتكون من 10 أرقام' }
+        '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
+        '971': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
+        '965': { regex: /^[5-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '973': { regex: /^[3-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '974': { regex: /^[3-7]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX' }
     };
 
     function showAlert(message, type = 'error') {
@@ -48,29 +48,55 @@
             return;
         }
         const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        const avatar = fullName.charAt(0).toUpperCase();
         document.getElementById('headerUserName').textContent = fullName;
-        document.getElementById('headerAvatar').textContent = avatar;
+        document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // عرض البيانات من auth فقط (بدون profiles)
-    function populateCurrentData() {
+    async function populateCurrentData() {
         if (!currentUser) return;
 
-        // البريد الإلكتروني
         document.getElementById('primaryEmail').value = currentUser.email || '';
 
-        // رقم الجوال من user_metadata
-        const mobile = currentUser.user_metadata?.mobile_number || '';
+        // 1. جلب رقم الجوال من user_metadata
+        let mobile = currentUser.user_metadata?.mobile_number || '';
+
+        // 2. إذا لم يوجد، نحاول profiles مرة واحدة (بدون إزعاج)
+        if (!mobile && profilesAvailable) {
+            mobile = await tryLoadMobileFromProfiles();
+        }
+
         if (mobile) {
             const match = mobile.match(/^\+(\d+)/);
             if (match) {
                 document.getElementById('countryCode').value = match[1];
                 document.getElementById('mobileNumber').value = mobile.substring(match[0].length);
             }
+        } else {
+            // رسالة غير مزعجة
+            document.getElementById('mobileNumber').placeholder = 'أدخل رقم الجوال';
         }
-        // باقي الحقول (الطوارئ وغيرها) تبقى فارغة لعدم وجود profiles،
-        // وعند الحفظ سيتم حفظ رقم الجوال فقط في auth.
+    }
+
+    async function tryLoadMobileFromProfiles() {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('mobile_number')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            if (error) {
+                // 403 أو 404: نوقف المحاولات
+                if (error.status === 403 || error.status === 404 || error.code === 'PGRST116') {
+                    profilesAvailable = false;
+                }
+                return '';
+            }
+            return data?.mobile_number || '';
+        } catch {
+            profilesAvailable = false;
+            return '';
+        }
     }
 
     function validateMobileInput(inputId, countrySelectId) {
@@ -116,8 +142,7 @@
             showAlert('رقم الجوال غير صحيح.', 'error');
             return;
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(primaryEmail)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryEmail)) {
             showAlert('البريد الإلكتروني غير صحيح.', 'error');
             return;
         }
@@ -128,11 +153,19 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // تحديث رقم الجوال في user_metadata (المصدر الوحيد الموثوق حالياً)
             const { error } = await supabase.auth.updateUser({
                 data: { mobile_number: fullMobile }
             });
             if (error) throw error;
+
+            // محاولة تحديث profiles إن كانت متاحة
+            if (profilesAvailable) {
+                supabase.from('profiles').upsert({
+                    id: currentUser.id,
+                    mobile_number: fullMobile,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' }).then(() => {}).catch(() => {});
+            }
 
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
@@ -172,7 +205,7 @@
             }
             currentUser = user;
             updateHeader(currentUser);
-            populateCurrentData(); // تعبئة البريد والجوال فوراً من user
+            await populateCurrentData(); // انتظار التحميل
             bindEvents();
             console.log('✅ [Contact Info] جاهز، المستخدم:', user.email);
         } catch (err) {
