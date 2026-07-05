@@ -1,10 +1,10 @@
 /**
  * ==========================================================
- * profile-contact-information.js – إصدار مرن (v3.0)
+ * profile-contact-information.js – إصدار شامل (v3.1)
  * ==========================================================
- * - جلب رقم الجوال من: user_metadata → user_contact_info → profiles.
- * - لا يظهر أي خطأ للمستخدم.
- * - الحفظ يُحدّث user_metadata و user_contact_info.
+ * - جلب رقم الجوال: user_metadata → user_contact_info → profiles
+ * - لا يظهر أي خطأ للمستخدم، حتى لو فشلت المصادر.
+ * - الحفظ يُحدّث user_metadata + user_contact_info.
  */
 
 'use strict';
@@ -12,7 +12,7 @@
 (function () {
     let supabase = null;
     let currentUser = null;
-    let profilesAvailable = true;  // سنوقف محاولات profiles بعد أول فشل
+    let profilesAvailable = true; // يمنع محاولات profiles بعد فشل 403
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
@@ -51,13 +51,13 @@
         document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // ========== جلب رقم الجوال من مصادر متعددة ==========
+    // ========== الحصول على رقم الجوال من جميع المصادر الممكنة ==========
     async function getMobileNumber() {
-        // 1. من user_metadata
+        // 1. user_metadata (أسرع وأضمن)
         let mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) return mobile;
 
-        // 2. من user_contact_info (غالباً بدون RLS معقدة)
+        // 2. جدول user_contact_info (غالباً موجود وسهل الوصول)
         try {
             const { data, error } = await supabase
                 .from('user_contact_info')
@@ -67,13 +67,13 @@
 
             if (!error && data?.mobile_number) {
                 mobile = data.mobile_number;
-                // تحديث user_metadata للمرات القادمة
+                // تحديث user_metadata لتكون متاحة فوراً في المرات القادمة
                 await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                 return mobile;
             }
         } catch (e) { /* تجاهل */ }
 
-        // 3. من profiles (إذا كانت الصلاحية متاحة)
+        // 3. جدول profiles (إذا كان متاحاً)
         if (profilesAvailable) {
             try {
                 const { data, error } = await supabase
@@ -83,7 +83,7 @@
                     .maybeSingle();
 
                 if (error && (error.status === 403 || error.status === 404 || error.code === 'PGRST116')) {
-                    profilesAvailable = false;
+                    profilesAvailable = false; // نوقف المحاولات
                 } else if (data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
@@ -92,14 +92,16 @@
             } catch (e) { /* تجاهل */ }
         }
 
-        return ''; // لم يتم العثور على رقم
+        return ''; // لا يوجد رقم محفوظ بعد
     }
 
     async function populateCurrentData() {
         if (!currentUser) return;
 
+        // البريد الإلكتروني
         document.getElementById('primaryEmail').value = currentUser.email || '';
 
+        // رقم الجوال
         const mobile = await getMobileNumber();
         if (mobile) {
             const match = mobile.match(/^\+(\d+)/);
@@ -108,27 +110,69 @@
                 document.getElementById('mobileNumber').value = mobile.substring(match[0].length);
             }
         }
-        // إن لم يوجد، يبقى فارغاً
+        // باقي الحقول (الطوارئ، اللغة) تبقى فارغة حالياً لحين توفرها في جدول منفصل
     }
 
-    // ... (باقي الدوال: validate, setupBinding, save) ...
+    // ========== التحقق من صحة المدخلات ==========
+    function validateMobileInput(inputId, countrySelectId) {
+        const code = document.getElementById(countrySelectId).value;
+        const mobile = document.getElementById(inputId).value.replace(/\D/g, '');
+        const pattern = countryPatterns[code];
+        return pattern && mobile.length === pattern.length && pattern.regex.test(mobile);
+    }
 
+    function setupCountryMobileBinding(countrySelectId, inputId) {
+        const select = document.getElementById(countrySelectId);
+        const input = document.getElementById(inputId);
+        if (!select || !input) return;
+        const update = () => {
+            const p = countryPatterns[select.value];
+            if (p) {
+                input.placeholder = p.placeholder;
+                input.maxLength = p.length;
+            }
+        };
+        select.addEventListener('change', () => {
+            update();
+            input.value = '';
+        });
+        update();
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    }
+
+    // ========== الحفظ ==========
     async function saveContactInformation(e) {
         e.preventDefault();
-        // ... التحقق من صحة المدخلات ...
+
         const countryCode = document.getElementById('countryCode').value;
         const mobileNumber = document.getElementById('mobileNumber').value.replace(/\D/g, '');
-        const fullMobile = '+' + countryCode + mobileNumber;
+        const primaryEmail = document.getElementById('primaryEmail').value.trim();
 
+        if (!mobileNumber || !primaryEmail) {
+            showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error');
+            return;
+        }
+        if (!validateMobileInput('mobileNumber', 'countryCode')) {
+            showAlert('رقم الجوال غير صحيح.', 'error');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryEmail)) {
+            showAlert('البريد الإلكتروني غير صحيح.', 'error');
+            return;
+        }
+
+        const fullMobile = '+' + countryCode + mobileNumber;
         const btn = document.querySelector('.btn-submit');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // تحديث user_metadata
+            // 1. تحديث user_metadata (دائماً)
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // تحديث user_contact_info (إذا كان الجدول موجوداً)
+            // 2. تحديث user_contact_info (إن وُجد)
             try {
                 await supabase.from('user_contact_info').upsert({
                     user_id: currentUser.id,
@@ -137,7 +181,7 @@
                 });
             } catch (e) { /* تجاهل */ }
 
-            // تحديث profiles (إن أمكن)
+            // 3. تحديث profiles إن أمكن (بدون انتظار)
             if (profilesAvailable) {
                 supabase.from('profiles').upsert({
                     id: currentUser.id,
@@ -158,6 +202,44 @@
         }
     }
 
-    // ... bindEvents, init, إلخ ...
+    function bindEvents() {
+        document.getElementById('contactForm')?.addEventListener('submit', saveContactInformation);
+        setupCountryMobileBinding('countryCode', 'mobileNumber');
+        setupCountryMobileBinding('emergencyCountryCode', 'emergencyMobile');
+        document.getElementById('emergencyName')?.addEventListener('input', function () {
+            this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
+        });
+    }
 
+    async function init() {
+        try {
+            if (typeof window.waitForSupabase === 'function') {
+                supabase = await window.waitForSupabase();
+            } else if (window.TeraAuth?._client) {
+                supabase = window.TeraAuth._client;
+            } else if (window.teraSupabase) {
+                supabase = window.teraSupabase;
+            } else throw new Error('Supabase client not found');
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.replace('/auth/auth/login/login.html');
+                return;
+            }
+            currentUser = user;
+            updateHeader(currentUser);
+            await populateCurrentData();
+            bindEvents();
+            console.log('✅ [Contact Info] جاهز، المستخدم:', user.email);
+        } catch (err) {
+            console.error(err);
+            showAlert('تعذر تحميل الصفحة. يرجى تحديث المتصفح.', 'error');
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
