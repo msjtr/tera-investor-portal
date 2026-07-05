@@ -1,9 +1,9 @@
 /**
  * ==========================================================
- * profile-contact-information.js – إصدار شامل (v3.2)
+ * profile-contact-information.js – v3.3 (مرونة مع 403)
  * ==========================================================
  * - جلب رقم الجوال: user_metadata → auth_register → user_contact_info → profiles
- * - لا يظهر أي خطأ للمستخدم، حتى لو فشلت المصادر.
+ * - لا يوقف محاولة أي مصدر نهائياً بسبب 403 (يعيد المحاولة كل تحميل).
  * - الحفظ يُحدّث user_metadata + auth_register + user_contact_info.
  */
 
@@ -12,8 +12,6 @@
 (function () {
     let supabase = null;
     let currentUser = null;
-    let profilesAvailable = true; // يمنع محاولات profiles بعد فشل 403
-    let authRegisterAvailable = true; // يمنع محاولات auth_register بعد فشل
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
@@ -52,30 +50,27 @@
         document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // ========== الحصول على رقم الجوال من جميع المصادر الممكنة ==========
+    // ========== الحصول على رقم الجوال من جميع المصادر ==========
     async function getMobileNumber() {
         // 1. user_metadata (أسرع وأضمن)
         let mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) return mobile;
 
-        // 2. auth_register (سجل التسجيل)
-        if (authRegisterAvailable) {
-            try {
-                const { data, error } = await supabase
-                    .from('auth_register')
-                    .select('mobile_number')
-                    .eq('user_id', currentUser.id)
-                    .maybeSingle();
+        // 2. auth_register (لا نوقف المحاولة حتى لو فشل، ربما تصلح الصلاحية لاحقاً)
+        try {
+            const { data, error } = await supabase
+                .from('auth_register')
+                .select('mobile_number')
+                .eq('user_id', currentUser.id)
+                .maybeSingle();
 
-                if (error && (error.status === 403 || error.status === 404 || error.code === 'PGRST116')) {
-                    authRegisterAvailable = false;
-                } else if (data?.mobile_number) {
-                    mobile = data.mobile_number;
-                    await supabase.auth.updateUser({ data: { mobile_number: mobile } });
-                    return mobile;
-                }
-            } catch (e) { /* تجاهل */ }
-        }
+            if (!error && data?.mobile_number) {
+                mobile = data.mobile_number;
+                await supabase.auth.updateUser({ data: { mobile_number: mobile } });
+                return mobile;
+            }
+            // إذا كان الخطأ 403، نعرف أن الصلاحية مفقودة لكن نواصل
+        } catch (e) { /* تجاهل */ }
 
         // 3. user_contact_info
         try {
@@ -92,35 +87,29 @@
             }
         } catch (e) { /* تجاهل */ }
 
-        // 4. profiles (إذا كان متاحاً)
-        if (profilesAvailable) {
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('mobile_number')
-                    .eq('id', currentUser.id)
-                    .maybeSingle();
+        // 4. profiles (لا نوقف المحاولة أيضاً)
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('mobile_number')
+                .eq('id', currentUser.id)
+                .maybeSingle();
 
-                if (error && (error.status === 403 || error.status === 404 || error.code === 'PGRST116')) {
-                    profilesAvailable = false;
-                } else if (data?.mobile_number) {
-                    mobile = data.mobile_number;
-                    await supabase.auth.updateUser({ data: { mobile_number: mobile } });
-                    return mobile;
-                }
-            } catch (e) { /* تجاهل */ }
-        }
+            if (!error && data?.mobile_number) {
+                mobile = data.mobile_number;
+                await supabase.auth.updateUser({ data: { mobile_number: mobile } });
+                return mobile;
+            }
+        } catch (e) { /* تجاهل */ }
 
-        return ''; // لا يوجد رقم محفوظ بعد
+        return ''; // لا يوجد
     }
 
     async function populateCurrentData() {
         if (!currentUser) return;
 
-        // البريد الإلكتروني
         document.getElementById('primaryEmail').value = currentUser.email || '';
 
-        // رقم الجوال
         const mobile = await getMobileNumber();
         if (mobile) {
             const match = mobile.match(/^\+(\d+)/);
@@ -131,7 +120,6 @@
         }
     }
 
-    // ========== التحقق من صحة المدخلات ==========
     function validateMobileInput(inputId, countrySelectId) {
         const code = document.getElementById(countrySelectId).value;
         const mobile = document.getElementById(inputId).value.replace(/\D/g, '');
@@ -160,7 +148,6 @@
         });
     }
 
-    // ========== الحفظ ==========
     async function saveContactInformation(e) {
         e.preventDefault();
 
@@ -187,24 +174,16 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // 1. تحديث user_metadata (دائماً)
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // 2. تحديث auth_register إذا كان مسموحاً
-            if (authRegisterAvailable) {
-                try {
-                    const { error } = await supabase
-                        .from('auth_register')
-                        .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
-                        .eq('user_id', currentUser.id);
+            // محاولة تحديث auth_register
+            try {
+                await supabase.from('auth_register')
+                    .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
+                    .eq('user_id', currentUser.id);
+            } catch (e) { /* تجاهل */ }
 
-                    if (error && (error.status === 403 || error.status === 404)) {
-                        authRegisterAvailable = false;
-                    }
-                } catch (e) { /* تجاهل */ }
-            }
-
-            // 3. تحديث user_contact_info
+            // محاولة تحديث user_contact_info
             try {
                 await supabase.from('user_contact_info').upsert({
                     user_id: currentUser.id,
@@ -213,14 +192,14 @@
                 });
             } catch (e) { /* تجاهل */ }
 
-            // 4. تحديث profiles إن أمكن (بدون انتظار)
-            if (profilesAvailable) {
-                supabase.from('profiles').upsert({
+            // محاولة تحديث profiles
+            try {
+                await supabase.from('profiles').upsert({
                     id: currentUser.id,
                     mobile_number: fullMobile,
                     updated_at: new Date().toISOString()
-                }).then(() => {}).catch(() => {});
-            }
+                });
+            } catch (e) { /* تجاهل */ }
 
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
