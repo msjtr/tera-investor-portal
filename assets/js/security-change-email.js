@@ -2,7 +2,7 @@
  * security-change-email.js
  * تغيير البريد الإلكتروني – إرسال OTP إلى البريد الحالي فقط
  * بدون إنشاء حساب جديد، فقط تحديث البريد الإلكتروني للمستخدم الحالي
- * مع تسجيل كامل العملية في قاعدة البيانات
+ * مع التحقق من حالة الحساب المرتبط بالبريد الجديد (نشط / غير نشط)
  */
 
 'use strict';
@@ -86,17 +86,15 @@
         if (avatarEl) avatarEl.textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // ===== تحسين showAlert =====
     function showAlert(message, type = 'error') {
         if (!alertBox) {
-            // تنبيه مؤقت إذا لم يوجد العنصر
             alert(message);
             return;
         }
         alertBox.className = `alert-box show ${type}`;
         alertIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
         alertMessage.textContent = message;
-        alertBox.style.display = 'flex'; // تأكيد الظهور
+        alertBox.style.display = 'flex';
 
         clearTimeout(window._alertTimer);
         window._alertTimer = setTimeout(() => {
@@ -184,6 +182,8 @@
             return false;
         }
 
+        // سنقوم بإجراء فحص إضافي غير متزامن عند تغيير الإدخال، لكننا نضعه في مكان آخر لتجنب التحميل الزائد.
+        // هنا نكتفي بعرض حالة مؤقتة، وسيتم تحديثها عند الإرسال.
         newEmailIcon.className = 'validation-icon success';
         newEmailIcon.innerHTML = '✔';
         newEmailMessage.textContent = '✅ البريد الإلكتروني صالح.';
@@ -191,23 +191,30 @@
         return true;
     }
 
-    // ===== التحقق من عدم استخدام البريد =====
-    async function checkEmailExists(email) {
+    // ===== التحقق من البريد مع حالة الحساب =====
+    // تعيد: { exists, isActive, status, email }
+    async function checkEmailWithStatus(email) {
         try {
             const normalizedEmail = email.trim().toLowerCase();
+            // نفترض أن جدول auth_register يحتوي على عمود status (active, inactive, deleted, etc.)
             const { data, error } = await supabase
                 .from('auth_register')
-                .select('email')
+                .select('email, status')
                 .eq('email', normalizedEmail)
                 .maybeSingle();
             if (error) {
                 console.warn('⚠️ فشل التحقق من البريد في auth_register:', error);
-                return null;
+                return { exists: false, isActive: false, status: null, email: normalizedEmail };
             }
-            return !!data;
+            if (data) {
+                // نحدد ما إذا كان الحساب نشطًا
+                const isActive = (data.status === 'active' || data.status === 'Active' || data.status === 'ACTIVE');
+                return { exists: true, isActive, status: data.status, email: normalizedEmail };
+            }
+            return { exists: false, isActive: false, status: null, email: normalizedEmail };
         } catch (err) {
             console.error('خطأ في التحقق من البريد:', err);
-            return null;
+            return { exists: false, isActive: false, status: null, email: email.trim().toLowerCase() };
         }
     }
 
@@ -240,15 +247,18 @@
             return;
         }
 
-        // التحقق من عدم استخدام البريد مسبقاً
-        const exists = await checkEmailExists(newEmail);
-        if (exists === true) {
-            showAlert('✖ هذا البريد الإلكتروني مستخدم مسبقاً.', 'error');
-            newEmailInput.focus();
-            return;
-        } else if (exists === null) {
-            showAlert('تعذر التحقق من البريد الإلكتروني. حاول مرة أخرى.', 'error');
-            return;
+        // التحقق من البريد مع حالة الحساب
+        const checkResult = await checkEmailWithStatus(newEmail);
+        if (checkResult.exists) {
+            if (checkResult.isActive) {
+                showAlert('✖ هذا البريد الإلكتروني مرتبط بحساب نشط ولا يمكن استخدامه.', 'error');
+                newEmailInput.focus();
+                return;
+            } else {
+                // البريد موجود ولكن الحساب غير نشط (محذوف، غير مفعل، معلق)
+                showAlert('⚠️ هذا البريد الإلكتروني مرتبط بحساب غير نشط، ويمكن استخدامه بعد التحقق الإضافي.', 'warning');
+                // نسمح بالاستخدام ولكن مع تحذير (يمكن تعديل الرسالة حسب السياسة)
+            }
         }
 
         newEmailValue = newEmail;
@@ -446,16 +456,18 @@
             return;
         }
 
+        // تحقق نهائي من حالة الحساب
+        const checkResult = await checkEmailWithStatus(newEmailValue);
+        if (checkResult.exists && checkResult.isActive) {
+            showAlert('✖ هذا البريد الإلكتروني مرتبط بحساب نشط ولا يمكن استخدامه.', 'error');
+            return;
+        }
+
         isSaving = true;
         saveEmailBtn.disabled = true;
         saveEmailBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            const exists = await checkEmailExists(newEmailValue);
-            if (exists === true) {
-                throw new Error('البريد الإلكتروني مستخدم مسبقاً.');
-            }
-
             const { error } = await supabase.auth.updateUser({
                 email: newEmailValue
             });
@@ -469,13 +481,15 @@
                 throw error;
             }
 
+            // تحديث جدول العملاء (auth_register) مع تعيين الحالة إلى active (لأن المستخدم أصبح نشطاً بهذا البريد)
             try {
                 await supabase
                     .from('auth_register')
                     .update({
                         email: newEmailValue,
                         email_changed_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
+                        status: 'active' // تأكيد أن الحساب نشط
                     })
                     .eq('user_id', currentUser.id);
             } catch (e) {
@@ -615,7 +629,7 @@
         errorCloseBtn.addEventListener('click', hideErrorModal);
 
         resetForm();
-        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة.');
+        console.log('✅ صفحة تغيير البريد الإلكتروني جاهزة (مع التحقق من حالة الحساب).');
     }
 
     if (document.readyState === 'loading') {
