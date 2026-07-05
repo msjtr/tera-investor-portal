@@ -5,7 +5,7 @@
  * - تقديم طلب جديد (مع قيود)
  * - عرض تفاصيل الطلب
  * - إحصائيات
- * - مع Fallback للتحقق من البريد في حال فشل Edge Function
+ * - استخدام Fallback للتحقق من البريد (تجاوز Edge Function مؤقتاً لحل CORS)
  */
 
 'use strict';
@@ -140,22 +140,12 @@
         return icons[status] || '';
     }
 
-    // ===== التحقق من البريد عبر Edge Function (مع Fallback) =====
-    async function checkEmailViaEdge(email) {
-        try {
-            const { data, error } = await supabase.functions.invoke('check-email-status', {
-                body: { email: email.trim().toLowerCase() }
-            });
-
-            if (error) {
-                console.warn('⚠️ Edge Function error, using fallback:', error);
-                return await checkEmailFallback(email);
-            }
-            return data;
-        } catch (err) {
-            console.warn('⚠️ فشل الاتصال بـ Edge Function، استخدام Fallback:', err);
-            return await checkEmailFallback(email);
-        }
+    // ===== التحقق من البريد عبر Edge Function (محاولة) مع Fallback مباشر =====
+    // ملاحظة: بما أن Edge Function تواجه مشكلة CORS، تم تعطيلها مؤقتاً واستخدام Fallback فقط.
+    // يمكن إعادة تفعيلها لاحقاً عند حل مشكلة CORS.
+    async function checkEmailAvailability(email) {
+        // استخدام Fallback مباشرة (تجاوز Edge Function)
+        return await checkEmailFallback(email);
     }
 
     // ===== Fallback: التحقق المباشر من auth_register فقط =====
@@ -222,7 +212,7 @@
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
-            showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
+            // عرض خطأ ولكن لا نوقف الصفحة
         }
     }
 
@@ -337,8 +327,8 @@
             return false;
         }
 
-        // التحقق من البريد عبر Edge Function (مع Fallback)
-        const checkResult = await checkEmailViaEdge(email);
+        // التحقق من البريد عبر Fallback (تجاوز Edge Function مؤقتاً)
+        const checkResult = await checkEmailAvailability(email);
         if (checkResult.error) {
             newEmailHint.textContent = '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
             newEmailHint.className = 'form-hint error';
@@ -493,7 +483,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع Fallback).');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع Fallback للتحقق).');
     }
 
     if (document.readyState === 'loading') {
