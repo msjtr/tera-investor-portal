@@ -10,7 +10,6 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
-  // معالجة طلب OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 200,
@@ -27,33 +26,33 @@ serve(async (req: Request) => {
       )
     }
 
-    // إنشاء عميل Supabase مع Service Role Key (متاح فقط في الخادم)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
 
-    // 1. التحقق من auth.users (نظام المصادقة الأساسي)
+    // 1. التحقق من auth.users
     let userExists = false
     let userActive = false
+    let userConfirmed = false
 
     try {
       const { data: users, error: listError } = await supabase.auth.admin.listUsers()
-      if (listError) {
-        console.error('خطأ في listUsers:', listError)
-      } else if (users && users.users) {
+      if (!listError && users?.users) {
         const foundUser = users.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())
         if (foundUser) {
           userExists = true
-          userActive = foundUser.confirmed_at !== null && !foundUser.banned && !foundUser.deleted
+          userConfirmed = foundUser.confirmed_at !== null
+          userActive = userConfirmed && !foundUser.banned && !foundUser.deleted
         }
       }
     } catch (err) {
       console.error('فشل الوصول إلى auth.users:', err)
     }
 
-    // 2. التحقق من auth_register (جدول العملاء)
+    // 2. التحقق من auth_register
     let registerExists = false
     let registerActive = false
+    let registerStatus = null
 
     try {
       const { data, error } = await supabase
@@ -64,31 +63,32 @@ serve(async (req: Request) => {
 
       if (!error && data) {
         registerExists = true
+        registerStatus = data.status
         registerActive = (data.status === 'active' || data.status === 'Active' || data.status === 'ACTIVE')
       }
     } catch (err) {
       console.warn('فشل التحقق من auth_register:', err)
     }
 
-    // 3. قرار استخدام البريد الإلكتروني (سياسة النظام)
-    // إذا كان البريد موجوداً في auth.users، نمنع استخدامه نهائياً (حتى لو كان غير نشط)
-    // هذا بسبب قيد Supabase Auth الذي يمنع وجود بريد مكرر
-    const canUse = !userExists
-
+    // 3. سياسة النظام
+    let canUse = false
     let message = ''
     let suggestion = ''
 
-    if (userExists) {
-      message = '✖ هذا البريد الإلكتروني مرتبط بحساب آخر ولا يمكن استخدامه.'
+    if (userExists && userActive) {
+      canUse = false
+      message = '✖ هذا البريد الإلكتروني مرتبط بحساب نشط ولا يمكن استخدامه.'
       suggestion = 'يرجى استخدام بريد إلكتروني آخر.'
+    } else if (userExists && !userActive) {
+      canUse = true
+      message = '⚠️ هذا البريد الإلكتروني مرتبط بحساب غير نشط. سيتم استبداله بعد التحقق.'
+      suggestion = 'يرجى التأكد من أنك تملك صلاحية الوصول إلى هذا البريد.'
     } else if (registerExists && registerActive) {
-      // البريد موجود في auth_register فقط (نادراً) أو الحالة نشطة
-      // لكن لا يوجد في auth.users، وهذا يعني أن البيانات غير متسقة، يمكن السماح أو المنع حسب السياسة
-      // سنمنع احتياطياً
-      message = '✖ هذا البريد الإلكتروني مرتبط بحساب آخر ولا يمكن استخدامه.'
+      canUse = false
+      message = '✖ هذا البريد الإلكتروني مرتبط بحساب نشط ولا يمكن استخدامه.'
       suggestion = 'يرجى استخدام بريد إلكتروني آخر.'
-      // يمكن تغيير هذا حسب السياسة
     } else {
+      canUse = true
       message = '✅ البريد الإلكتروني متاح للاستخدام.'
     }
 
@@ -96,9 +96,12 @@ serve(async (req: Request) => {
       JSON.stringify({
         exists: userExists || registerExists,
         active: userActive || registerActive,
-        canUse: canUse,
+        canUse,
         userExists,
+        userActive,
+        userConfirmed,
         registerExists,
+        registerStatus,
         message,
         suggestion,
       }),
