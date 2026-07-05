@@ -1,6 +1,6 @@
 /**
  * security-change-password.js
- * تغيير كلمة المرور – مع إصلاح مشكلة التهيئة
+ * تغيير كلمة المرور – مع إصلاح مشكلة جلب البريد الإلكتروني
  * متوافق مع security.js و TeraAuth
  */
 
@@ -33,22 +33,50 @@
     const errorRetryBtn = document.getElementById('errorRetryBtn');
     const errorCloseBtn = document.getElementById('errorCloseBtn');
 
-    // ===== دوال مساعدة =====
-    async function initSupabase() {
-        // 1. محاولة استخدام SecurityCore مع تهيئته أولاً
+    // ===== عرض البريد الإلكتروني في الصفحة =====
+    function displayUserEmail(email) {
+        // تحديث الهيدر
+        const headerName = document.getElementById('headerUserName');
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerName && email) {
+            const name = currentUser?.user_metadata?.full_name || email.split('@')[0] || 'مستخدم';
+            headerName.textContent = name;
+        }
+        if (headerAvatar && email) {
+            const initial = (currentUser?.user_metadata?.full_name || email.split('@')[0] || 'م').charAt(0).toUpperCase();
+            headerAvatar.textContent = initial;
+        }
+
+        // تحديث البريد الإلكتروني في الحقل المخصص (إن وجد)
+        const emailDisplay = document.getElementById('currentEmailDisplay');
+        if (emailDisplay && email) {
+            emailDisplay.value = email;
+        }
+    }
+
+    // ===== جلب المستخدم من مصادر متعددة =====
+    async function fetchUser() {
+        console.log('🔍 [Change Password] محاولة جلب المستخدم...');
+
+        // 1. محاولة استخدام SecurityCore
         if (window.SecurityCore) {
             try {
-                // تهيئة SecurityCore إذا لم تكن مهيأة
                 if (!window.SecurityCore._initialized) {
                     await window.SecurityCore.init();
                 }
-                if (window.SecurityCore.supabase && window.SecurityCore.currentUser) {
-                    supabase = window.SecurityCore.supabase;
-                    currentUser = window.SecurityCore.currentUser;
-                    return true;
+                if (window.SecurityCore.currentUser) {
+                    console.log('✅ [Change Password] تم جلب المستخدم من SecurityCore');
+                    return window.SecurityCore.currentUser;
+                }
+                if (window.SecurityCore.supabase) {
+                    const { data: { user } } = await window.SecurityCore.supabase.auth.getUser();
+                    if (user) {
+                        console.log('✅ [Change Password] تم جلب المستخدم عبر SecurityCore.supabase');
+                        return user;
+                    }
                 }
             } catch (e) {
-                console.warn('⚠️ فشل تهيئة SecurityCore:', e);
+                console.warn('⚠️ [Change Password] فشل SecurityCore:', e);
             }
         }
 
@@ -59,56 +87,96 @@
                     await window.TeraAuth.init();
                 }
                 if (window.TeraAuth._client) {
-                    supabase = window.TeraAuth._client;
                     const user = await window.TeraAuth.getUser();
                     if (user) {
-                        currentUser = user;
-                        return true;
+                        console.log('✅ [Change Password] تم جلب المستخدم من TeraAuth');
+                        return user;
                     }
                 }
             } catch (e) {
-                console.warn('⚠️ فشل TeraAuth:', e);
+                console.warn('⚠️ [Change Password] فشل TeraAuth:', e);
             }
         }
 
         // 3. محاولة استخدام waitForSupabase
         if (typeof waitForSupabase === 'function') {
             try {
-                supabase = await waitForSupabase();
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    currentUser = user;
-                    return true;
+                const client = await waitForSupabase();
+                if (client) {
+                    const { data: { user } } = await client.auth.getUser();
+                    if (user) {
+                        supabase = client;
+                        console.log('✅ [Change Password] تم جلب المستخدم عبر waitForSupabase');
+                        return user;
+                    }
                 }
             } catch (e) {
-                console.warn('⚠️ فشل waitForSupabase:', e);
+                console.warn('⚠️ [Change Password] فشل waitForSupabase:', e);
             }
         }
 
         // 4. محاولة استخدام window.teraSupabase
         if (window.teraSupabase) {
-            supabase = window.teraSupabase;
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user } } = await window.teraSupabase.auth.getUser();
                 if (user) {
-                    currentUser = user;
-                    return true;
+                    supabase = window.teraSupabase;
+                    console.log('✅ [Change Password] تم جلب المستخدم من window.teraSupabase');
+                    return user;
                 }
             } catch (e) {
-                console.warn('⚠️ فشل window.teraSupabase:', e);
+                console.warn('⚠️ [Change Password] فشل window.teraSupabase:', e);
             }
         }
 
-        return false;
+        // 5. محاولة جلب الجلسة من localStorage (كحل أخير)
+        try {
+            const sessionStr = localStorage.getItem('sb-ucmzavrsgkfpypgewpbd-auth-token');
+            if (sessionStr) {
+                const session = JSON.parse(sessionStr);
+                if (session && session.user) {
+                    console.log('✅ [Change Password] تم جلب المستخدم من localStorage');
+                    return session.user;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ [Change Password] فشل جلب الجلسة من localStorage:', e);
+        }
+
+        console.error('❌ [Change Password] فشل جلب المستخدم من جميع المصادر');
+        return null;
+    }
+
+    // ===== تهيئة Supabase وجلب المستخدم =====
+    async function initSupabase() {
+        try {
+            // جلب المستخدم
+            const user = await fetchUser();
+            if (user) {
+                currentUser = user;
+                // إذا لم يكن supabase معرفاً، نحاول الحصول عليه
+                if (!supabase) {
+                    if (window.SecurityCore?.supabase) {
+                        supabase = window.SecurityCore.supabase;
+                    } else if (window.TeraAuth?._client) {
+                        supabase = window.TeraAuth._client;
+                    } else if (window.teraSupabase) {
+                        supabase = window.teraSupabase;
+                    }
+                }
+                displayUserEmail(user.email);
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error('❌ [Change Password] خطأ في التهيئة:', err);
+            return false;
+        }
     }
 
     function updateHeaderUI(user) {
-        const nameEl = document.getElementById('headerUserName');
-        const avatarEl = document.getElementById('headerAvatar');
         if (!user) return;
-        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        if (nameEl) nameEl.textContent = fullName;
-        if (avatarEl) avatarEl.textContent = fullName.charAt(0).toUpperCase();
+        displayUserEmail(user.email);
     }
 
     function showAlert(message, type = 'error') {
@@ -524,87 +592,6 @@
         }
     }
 
-    // ===== تهيئة الصفحة =====
-    async function initPage() {
-        if (initialized) return;
-        initialized = true;
-
-        const success = await initSupabase();
-        if (!success || !currentUser) {
-            showErrorModal('لم يتم التعرف على جلسة المستخدم. يرجى تسجيل الدخول مرة أخرى.');
-            const retryBtn = document.getElementById('errorRetryBtn');
-            if (retryBtn) {
-                retryBtn.textContent = 'تسجيل الدخول';
-                retryBtn.onclick = function() {
-                    window.location.replace('/auth/auth/login/login.html');
-                };
-            }
-            return;
-        }
-
-        // تحديث الهيدر
-        updateHeaderUI(currentUser);
-
-        // تعطيل زر تغيير كلمة المرور في البداية
-        const changeBtn = document.getElementById('changePasswordBtn');
-        if (changeBtn) changeBtn.disabled = true;
-
-        // ===== ربط الأحداث =====
-        const sendOtpBtn = document.getElementById('sendOtpBtn');
-        if (sendOtpBtn) {
-            sendOtpBtn.addEventListener('click', sendOtp);
-        }
-
-        const otpCode = document.getElementById('otpCode');
-        if (otpCode) {
-            otpCode.addEventListener('input', function() {
-                this.value = this.value.replace(/\D/g, '');
-                if (this.value.length === 8) {
-                    verifyOtp();
-                }
-            });
-        }
-
-        if (changeBtn) {
-            changeBtn.addEventListener('click', changePassword);
-        }
-
-        // أزرار إظهار/إخفاء كلمة المرور
-        document.querySelectorAll('.password-toggle').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const targetId = this.dataset.target;
-                const input = document.getElementById(targetId);
-                if (!input) return;
-                const isPassword = input.type === 'password';
-                input.type = isPassword ? 'text' : 'password';
-                const icon = this.querySelector('i');
-                if (icon) icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
-            });
-        });
-
-        // التحقق الفوري من قوة كلمة المرور
-        if (newPasswordInput) {
-            newPasswordInput.addEventListener('input', function() {
-                validatePasswordStrength();
-            });
-        }
-
-        // التحقق من تطابق كلمة المرور
-        if (confirmPasswordInput) {
-            confirmPasswordInput.addEventListener('input', function() {
-                validateConfirmMatch();
-            });
-        }
-
-        errorCloseBtn.addEventListener('click', hideErrorModal);
-
-        // بدء المؤقت
-        const otpSendGroup = document.getElementById('otpSendGroup');
-        if (otpSendGroup) otpSendGroup.style.display = 'block';
-
-        console.log('✅ صفحة تغيير كلمة المرور جاهزة.');
-    }
-
     // ===== فحص قوة كلمة المرور =====
     function validatePasswordStrength() {
         const password = newPasswordInput?.value || '';
@@ -677,6 +664,89 @@
             hint.textContent = '❌ كلمة المرور غير متطابقة';
             hint.style.color = '#dc2626';
         }
+    }
+
+    // ===== تهيئة الصفحة =====
+    async function initPage() {
+        if (initialized) return;
+        initialized = true;
+
+        // محاولة جلب المستخدم والتهيئة
+        const success = await initSupabase();
+        if (!success || !currentUser) {
+            console.error('❌ [Change Password] فشل جلب المستخدم');
+            showErrorModal('لم يتم التعرف على جلسة المستخدم. يرجى تسجيل الدخول مرة أخرى.');
+            const retryBtn = document.getElementById('errorRetryBtn');
+            if (retryBtn) {
+                retryBtn.textContent = 'تسجيل الدخول';
+                retryBtn.onclick = function() {
+                    window.location.replace('/auth/auth/login/login.html');
+                };
+            }
+            return;
+        }
+
+        // تحديث الهيدر
+        updateHeaderUI(currentUser);
+
+        // تعطيل زر تغيير كلمة المرور في البداية
+        const changeBtn = document.getElementById('changePasswordBtn');
+        if (changeBtn) changeBtn.disabled = true;
+
+        // ===== ربط الأحداث =====
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        if (sendOtpBtn) {
+            sendOtpBtn.addEventListener('click', sendOtp);
+        }
+
+        const otpCode = document.getElementById('otpCode');
+        if (otpCode) {
+            otpCode.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length === 8) {
+                    verifyOtp();
+                }
+            });
+        }
+
+        if (changeBtn) {
+            changeBtn.addEventListener('click', changePassword);
+        }
+
+        // أزرار إظهار/إخفاء كلمة المرور
+        document.querySelectorAll('.password-toggle').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.dataset.target;
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                const icon = this.querySelector('i');
+                if (icon) icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+            });
+        });
+
+        // التحقق الفوري من قوة كلمة المرور
+        if (newPasswordInput) {
+            newPasswordInput.addEventListener('input', function() {
+                validatePasswordStrength();
+            });
+        }
+
+        // التحقق من تطابق كلمة المرور
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', function() {
+                validateConfirmMatch();
+            });
+        }
+
+        errorCloseBtn.addEventListener('click', hideErrorModal);
+
+        // بدء المؤقت
+        const otpSendGroup = document.getElementById('otpSendGroup');
+        if (otpSendGroup) otpSendGroup.style.display = 'block';
+
+        console.log('✅ صفحة تغيير كلمة المرور جاهزة. المستخدم:', currentUser.email);
     }
 
     if (document.readyState === 'loading') {
