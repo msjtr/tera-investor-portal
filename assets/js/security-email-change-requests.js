@@ -168,7 +168,7 @@
         return status === 'new';
     }
 
-    // ===== التحقق من البريد (مع Fallback – تم تعطيل Edge Function مؤقتاً) =====
+    // ===== التحقق من البريد (استخدام Fallback فقط – تم تعطيل Edge Function) =====
     async function checkEmailAvailability(email) {
         // استخدام Fallback مباشرة دون محاولة Edge Function (تجاوز مشكلة CORS)
         return await checkEmailFallback(email);
@@ -612,7 +612,7 @@
                     current_email: currentUser.email,
                     new_email: newEmail,
                     reason: reason,
-                    status: 'new'
+                    status: 'new'  // ✅ الحالة الأولية: جديد
                 })
                 .select()
                 .single();
@@ -631,7 +631,12 @@
 
         } catch (err) {
             console.error('فشل إرسال الطلب:', err);
-            showAlert('⚠️ تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+            // عرض رسالة واضحة للمستخدم
+            if (err.message && err.message.includes('check constraint')) {
+                showAlert('⚠️ حدث خطأ في قاعدة البيانات. يرجى التواصل مع الدعم الفني.', 'error');
+            } else {
+                showAlert('⚠️ تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+            }
         } finally {
             submitRequestBtn.disabled = false;
             submitRequestBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
