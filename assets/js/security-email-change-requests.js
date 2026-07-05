@@ -1,7 +1,10 @@
 /**
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
- * مع Fallback للتحقق من البريد (في حال فشل Edge Function)
+ * الحالة الأولية للطلب: "جديد" (new)
+ * - يمكن للمستخدم تعديل أو إلغاء الطلبات ذات الحالة "جديد" أو "قيد المراجعة"
+ * - يمكن للمستخدم حذف الطلبات ذات الحالة "جديد" فقط
+ * - عند بدء مراجعة الطلب من الإدارة، تتغير الحالة إلى "قيد المراجعة" (pending)
  */
 
 'use strict';
@@ -11,13 +14,14 @@
     let currentUser = null;
     let initialized = false;
     let requests = [];
-    let stats = { total: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
+    let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
 
     // ===== عناصر DOM =====
     const addRequestBtn = document.getElementById('addRequestBtn');
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
 
+    // نافذة الطلب الجديد
     const newRequestModal = document.getElementById('newRequestModal');
     const closeNewRequestModal = document.getElementById('closeNewRequestModal');
     const cancelRequestBtn = document.getElementById('cancelRequestBtn');
@@ -29,6 +33,20 @@
     const reasonHint = document.getElementById('reasonHint');
     const submitRequestBtn = document.getElementById('submitRequestBtn');
 
+    // نافذة تعديل الطلب
+    const editRequestModal = document.getElementById('editRequestModal');
+    const closeEditRequestModal = document.getElementById('closeEditRequestModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const editRequestForm = document.getElementById('editRequestForm');
+    const editRequestId = document.getElementById('editRequestId');
+    const editCurrentEmail = document.getElementById('editCurrentEmail');
+    const editNewEmail = document.getElementById('editNewEmail');
+    const editNewEmailHint = document.getElementById('editNewEmailHint');
+    const editReason = document.getElementById('editReason');
+    const editReasonHint = document.getElementById('editReasonHint');
+    const saveEditBtn = document.getElementById('saveEditBtn');
+
+    // نافذة التفاصيل
     const detailModal = document.getElementById('detailModal');
     const closeDetailModal = document.getElementById('closeDetailModal');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -43,6 +61,7 @@
     const detailRejectionReason = document.getElementById('detailRejectionReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
+    // الإحصائيات
     const totalCount = document.getElementById('totalCount');
     const pendingCount = document.getElementById('pendingCount');
     const approvedCount = document.getElementById('approvedCount');
@@ -113,6 +132,7 @@
 
     function getStatusBadge(status) {
         const labels = {
+            'new': 'جديد',
             'pending': 'قيد المراجعة',
             'approved': 'تمت الموافقة',
             'completed': 'تم التنفيذ',
@@ -124,6 +144,7 @@
 
     function getStatusIcon(status) {
         const icons = {
+            'new': '🟢',
             'pending': '🟡',
             'approved': '🔵',
             'completed': '🟢',
@@ -131,6 +152,20 @@
             'cancelled': '⚫'
         };
         return icons[status] || '';
+    }
+
+    // يمكن تعديل أو إلغاء الطلبات ذات الحالة 'new' أو 'pending'
+    function isEditable(status) {
+        return status === 'new' || status === 'pending';
+    }
+
+    function isCancellable(status) {
+        return status === 'new' || status === 'pending';
+    }
+
+    // يمكن حذف الطلبات ذات الحالة 'new' فقط
+    function isDeletable(status) {
+        return status === 'new';
     }
 
     // ===== التحقق من البريد (مع Fallback) =====
@@ -203,13 +238,13 @@
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
-            // عرض رسالة للمستخدم
             showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
         }
     }
 
     function updateStats() {
         stats.total = requests.length;
+        stats.new = requests.filter(r => r.status === 'new').length;
         stats.pending = requests.filter(r => r.status === 'pending').length;
         stats.approved = requests.filter(r => r.status === 'approved').length;
         stats.completed = requests.filter(r => r.status === 'completed').length;
@@ -223,8 +258,9 @@
     }
 
     function checkPendingRequest() {
-        const hasPending = requests.some(r => r.status === 'pending' || r.status === 'approved');
-        if (hasPending) {
+        // إذا كان هناك طلب بحالة جديد أو قيد المراجعة أو موافقة (لم يكتمل بعد)، نمنع الطلبات الجديدة
+        const hasActive = requests.some(r => r.status === 'new' || r.status === 'pending' || r.status === 'approved');
+        if (hasActive) {
             addRequestBtn.disabled = true;
             pendingNotice.style.display = 'flex';
         } else {
@@ -242,6 +278,10 @@
 
         let html = '';
         requests.forEach(req => {
+            const editable = isEditable(req.status);
+            const cancellable = isCancellable(req.status);
+            const deletable = isDeletable(req.status);
+
             html += `
                 <tr>
                     <td><strong>${req.request_number || '-'}</strong></td>
@@ -252,15 +292,27 @@
                     <td>${formatDate(req.updated_at)}</td>
                     <td>${getStatusBadge(req.status)}</td>
                     <td>
-                        <button class="btn-icon view-detail" data-id="${req.id}" title="عرض التفاصيل">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <div class="actions">
+                            <button class="btn-icon view-detail" data-id="${req.id}" title="عرض التفاصيل">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${editable ? `<button class="btn-icon text-warning edit-request" data-id="${req.id}" title="تعديل الطلب">
+                                <i class="fas fa-edit"></i>
+                            </button>` : ''}
+                            ${cancellable ? `<button class="btn-icon text-danger cancel-request" data-id="${req.id}" title="إلغاء الطلب">
+                                <i class="fas fa-times-circle"></i>
+                            </button>` : ''}
+                            ${deletable ? `<button class="btn-icon text-danger delete-request" data-id="${req.id}" title="حذف الطلب">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>` : ''}
+                        </div>
                     </td>
                 </tr>
             `;
         });
         tableBody.innerHTML = html;
 
+        // ربط أحداث الأزرار
         document.querySelectorAll('.view-detail').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -268,8 +320,33 @@
                 if (request) showDetail(request);
             });
         });
+
+        document.querySelectorAll('.edit-request').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const request = requests.find(r => r.id === id);
+                if (request) openEditModal(request);
+            });
+        });
+
+        document.querySelectorAll('.cancel-request').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const request = requests.find(r => r.id === id);
+                if (request) confirmCancelRequest(request);
+            });
+        });
+
+        document.querySelectorAll('.delete-request').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const request = requests.find(r => r.id === id);
+                if (request) confirmDeleteRequest(request);
+            });
+        });
     }
 
+    // ===== عرض التفاصيل =====
     function showDetail(request) {
         detailRequestNumber.textContent = request.request_number || '-';
         detailCurrentEmail.textContent = request.current_email || '-';
@@ -285,7 +362,186 @@
         detailModal.style.display = 'flex';
     }
 
-    // ===== التحقق من البريد الجديد =====
+    // ===== فتح نافذة التعديل =====
+    function openEditModal(request) {
+        editRequestId.value = request.id;
+        editCurrentEmail.value = request.current_email;
+        editNewEmail.value = request.new_email;
+        editReason.value = request.reason || '';
+        editNewEmailHint.textContent = '';
+        editReasonHint.textContent = '';
+        editNewEmail.classList.remove('is-valid', 'is-invalid');
+        editRequestModal.classList.add('show');
+        editRequestModal.style.display = 'flex';
+    }
+
+    // ===== التحقق من البريد الجديد في نافذة التعديل =====
+    async function validateEditEmail() {
+        const email = editNewEmail.value.trim();
+        const currentEmail = currentUser?.email || '';
+        const originalEmail = editCurrentEmail.value.trim();
+
+        if (!email) {
+            editNewEmailHint.textContent = '';
+            editNewEmailHint.className = 'form-hint';
+            editNewEmail.classList.remove('is-invalid', 'is-valid');
+            return false;
+        }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            editNewEmailHint.textContent = '✖ صيغة البريد الإلكتروني غير صحيحة.';
+            editNewEmailHint.className = 'form-hint error';
+            editNewEmail.classList.remove('is-valid');
+            editNewEmail.classList.add('is-invalid');
+            return false;
+        }
+
+        if (email.toLowerCase() === currentEmail.toLowerCase()) {
+            editNewEmailHint.textContent = '✖ البريد الإلكتروني الجديد مطابق للبريد الإلكتروني الحالي.';
+            editNewEmailHint.className = 'form-hint error';
+            editNewEmail.classList.remove('is-valid');
+            editNewEmail.classList.add('is-invalid');
+            return false;
+        }
+
+        // إذا كان البريد الجديد هو نفس البريد القديم في الطلب، نسمح به (لا حاجة للتحقق من التوفر)
+        if (email.toLowerCase() === originalEmail.toLowerCase()) {
+            editNewEmailHint.textContent = '✅ نفس البريد الإلكتروني المطلوب سابقاً.';
+            editNewEmailHint.className = 'form-hint success';
+            editNewEmail.classList.remove('is-invalid');
+            editNewEmail.classList.add('is-valid');
+            return true;
+        }
+
+        const checkResult = await checkEmailAvailability(email);
+        if (checkResult.error) {
+            editNewEmailHint.textContent = '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
+            editNewEmailHint.className = 'form-hint error';
+            editNewEmail.classList.remove('is-valid');
+            editNewEmail.classList.add('is-invalid');
+            return false;
+        }
+
+        if (!checkResult.canUse) {
+            editNewEmailHint.textContent = '✖ هذا البريد الإلكتروني مرتبط بحساب آخر ولا يمكن استخدامه.';
+            editNewEmailHint.className = 'form-hint error';
+            editNewEmail.classList.remove('is-valid');
+            editNewEmail.classList.add('is-invalid');
+            return false;
+        }
+
+        editNewEmailHint.textContent = '✅ البريد الإلكتروني متاح للاستخدام.';
+        editNewEmailHint.className = 'form-hint success';
+        editNewEmail.classList.remove('is-invalid');
+        editNewEmail.classList.add('is-valid');
+        return true;
+    }
+
+    // ===== حفظ التعديلات =====
+    async function saveEditRequest(e) {
+        e.preventDefault();
+
+        const id = editRequestId.value;
+        const newEmail = editNewEmail.value.trim();
+        const reason = editReason.value.trim();
+
+        if (!reason) {
+            editReasonHint.textContent = '✖ يرجى إدخال سبب تغيير البريد الإلكتروني.';
+            editReasonHint.className = 'form-hint error';
+            editReason.classList.add('is-invalid');
+            return;
+        }
+        editReasonHint.textContent = '';
+        editReason.classList.remove('is-invalid');
+
+        const isValid = await validateEditEmail();
+        if (!isValid) return;
+
+        saveEditBtn.disabled = true;
+        saveEditBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+        try {
+            const { error } = await supabase
+                .from('email_change_requests')
+                .update({
+                    new_email: newEmail,
+                    reason: reason,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .eq('user_id', currentUser.id);
+
+            if (error) throw error;
+
+            showAlert('✅ تم تعديل الطلب بنجاح.', 'success');
+            editRequestModal.classList.remove('show');
+            editRequestModal.style.display = 'none';
+            await fetchRequests();
+
+        } catch (err) {
+            console.error('فشل تعديل الطلب:', err);
+            showAlert('⚠️ تعذر تعديل الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+        } finally {
+            saveEditBtn.disabled = false;
+            saveEditBtn.innerHTML = '<i class="fas fa-save"></i> حفظ التعديلات';
+        }
+    }
+
+    // ===== تأكيد إلغاء الطلب =====
+    function confirmCancelRequest(request) {
+        if (confirm(`هل أنت متأكد من إلغاء الطلب رقم ${request.request_number}؟`)) {
+            cancelRequest(request.id);
+        }
+    }
+
+    async function cancelRequest(id) {
+        try {
+            const { error } = await supabase
+                .from('email_change_requests')
+                .update({
+                    status: 'cancelled',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', id)
+                .eq('user_id', currentUser.id);
+
+            if (error) throw error;
+
+            showAlert('✅ تم إلغاء الطلب بنجاح.', 'success');
+            await fetchRequests();
+        } catch (err) {
+            console.error('فشل إلغاء الطلب:', err);
+            showAlert('⚠️ تعذر إلغاء الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+        }
+    }
+
+    // ===== تأكيد حذف الطلب =====
+    function confirmDeleteRequest(request) {
+        if (confirm(`هل أنت متأكد من حذف الطلب رقم ${request.request_number}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+            deleteRequest(request.id);
+        }
+    }
+
+    async function deleteRequest(id) {
+        try {
+            const { error } = await supabase
+                .from('email_change_requests')
+                .delete()
+                .eq('id', id)
+                .eq('user_id', currentUser.id);
+
+            if (error) throw error;
+
+            showAlert('✅ تم حذف الطلب بنجاح.', 'success');
+            await fetchRequests();
+        } catch (err) {
+            console.error('فشل حذف الطلب:', err);
+            showAlert('⚠️ تعذر حذف الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+        }
+    }
+
+    // ===== التحقق من البريد الجديد (لنافذة الإضافة) =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -368,14 +624,14 @@
                     current_email: currentUser.email,
                     new_email: newEmail,
                     reason: reason,
-                    status: 'pending'
+                    status: 'new'  // ✅ الحالة الأولية: جديد
                 })
                 .select()
                 .single();
 
             if (error) throw error;
 
-            showAlert('✅ تم إرسال طلب تغيير البريد الإلكتروني بنجاح، وسيتم إشعاركم بعد مراجعة الطلب.', 'success');
+            showAlert('✅ تم إرسال طلب تغيير البريد الإلكتروني بنجاح، وسيتم مراجعته قريباً.', 'success');
             newRequestModal.classList.remove('show');
             newRequestModal.style.display = 'none';
             newRequestForm.reset();
@@ -409,6 +665,7 @@
 
         await fetchRequests();
 
+        // ربط أحداث نافذة الطلب الجديد
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
             currentEmailDisplayModal.value = currentUser.email || '';
@@ -438,11 +695,31 @@
         });
 
         newRequestForm.addEventListener('submit', submitNewRequest);
-
         newEmailInput.addEventListener('input', function() {
             validateNewEmail();
         });
 
+        // ربط أحداث نافذة التعديل
+        closeEditRequestModal.addEventListener('click', function() {
+            editRequestModal.classList.remove('show');
+            editRequestModal.style.display = 'none';
+        });
+        cancelEditBtn.addEventListener('click', function() {
+            editRequestModal.classList.remove('show');
+            editRequestModal.style.display = 'none';
+        });
+        editRequestModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+                this.style.display = 'none';
+            }
+        });
+        editRequestForm.addEventListener('submit', saveEditRequest);
+        editNewEmail.addEventListener('input', function() {
+            validateEditEmail();
+        });
+
+        // ربط أحداث نافذة التفاصيل
         closeDetailModal.addEventListener('click', function() {
             detailModal.classList.remove('show');
             detailModal.style.display = 'none';
@@ -458,7 +735,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع Fallback للتحقق).');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع حالة "جديد").');
     }
 
     if (document.readyState === 'loading') {
