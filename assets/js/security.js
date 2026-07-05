@@ -4,6 +4,7 @@
  * نظام صفحات الأمان - Enterprise Edition
  * متوافق مع Supabase JS v2 و TeraAuth
  * النسخة المُحدَّثة: إزالة التوجيه التلقائي من SecurityCore.init()
+ * مع إضافة دالة togglePasswordVisibility العامة
  * ============================================================
  */
 
@@ -154,6 +155,30 @@ function restoreButton(button) {
 }
 
 /* ============================================================
+   تبديل إظهار/إخفاء كلمة المرور (دالة عامة)
+============================================================ */
+
+function togglePasswordVisibility(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const button = e.currentTarget || this;
+    const targetId = button.getAttribute('data-target');
+    if (!targetId) return;
+
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+
+    const icon = button.querySelector('i');
+    if (icon) {
+        icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+    }
+}
+
+/* ============================================================
    التحقق من صحة المدخلات
 ============================================================ */
 
@@ -223,7 +248,7 @@ const SecurityCore = {
             const { data: { user }, error } = await this.supabase.auth.getUser();
 
             if (error || !user) {
-                // لا نقوم بالتوجيه، نعيد null فقط
+                // ✅ لا نقوم بالتوجيه، نعيد null فقط
                 console.warn('⚠️ [Security] لا يوجد مستخدم مسجل الدخول');
                 this.currentUser = null;
                 this._initialized = true;
@@ -299,10 +324,225 @@ const SecurityCore = {
 
 /* ============================================================
    صفحات الأمان المختلفة - مع حماية من إعادة التعريف
-   (تم تركها كما هي، لكن يمكن تعديلها لاستخدام SecurityCore.redirectToLogin بدلاً من التوجيه المباشر)
 ============================================================ */
 
-// ... باقي تعريفات الصفحات (نفس الكود السابق، مع استخدام SecurityCore.redirectToLogin عند الحاجة) ...
+/* ----- تغيير كلمة المرور (يتم التعريف في ملف منفصل) ----- */
+if (!window.SecurityPages['change-password']) {
+    window.SecurityPages['change-password'] = {
+        async init() {
+            console.warn('⚠️ [Security] تم تحميل التعريف الافتراضي لـ change-password.');
+            console.warn('⚠️ [Security] يرجى التأكد من تحميل security-change-password.js للحصول على الوظائف الكاملة.');
+            
+            const user = await SecurityCore.init();
+            if (!user) return;
+
+            // ربط أزرار إظهار/إخفاء كلمة المرور
+            document.querySelectorAll('.password-toggle').forEach(btn => {
+                btn.removeEventListener('click', togglePasswordVisibility);
+                btn.addEventListener('click', togglePasswordVisibility);
+            });
+
+            const btn = document.getElementById('changePasswordBtn');
+            if (btn) {
+                btn.addEventListener('click', async function() {
+                    showSecurityAlert('يرجى تحميل ملف security-change-password.js.', 'warning');
+                });
+            }
+        }
+    };
+}
+
+/* ----- تغيير رقم الجوال ----- */
+if (!window.SecurityPages['change-mobile']) {
+    window.SecurityPages['change-mobile'] = {
+        async init() {
+            const user = await SecurityCore.init();
+            if (!user) return;
+
+            const display = document.getElementById('currentMobileDisplay');
+            if (display) {
+                display.textContent = user.user_metadata?.mobile_number || '--';
+            }
+
+            const btn = document.getElementById('changeMobileBtn');
+            if (btn) {
+                btn.addEventListener('click', async function() {
+                    showSecurityAlert('يتم تطوير هذه الخدمة حالياً.', 'warning');
+                });
+            }
+        }
+    };
+}
+
+/* ----- سجل الدخول ----- */
+if (!window.SecurityPages['login-history']) {
+    window.SecurityPages['login-history'] = {
+        async init() {
+            const user = await SecurityCore.init();
+            if (!user) return;
+            await this.load(user.id);
+        },
+
+        async load(userId) {
+            const tableBody = document.getElementById('loginHistoryBody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">جاري تحميل البيانات...</td></tr>';
+
+            try {
+                const { data, error } = await SecurityCore.supabase
+                    .from('auth_login')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!data || !data.length) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد سجلات دخول.</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = '';
+                data.forEach(row => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${formatDate(row.created_at)}</td>
+                            <td>${row.browser || '-'}</td>
+                            <td>${row.operating_system || '-'}</td>
+                            <td>${row.ip_address || '-'}</td>
+                            <td><span class="badge-success">${row.login_status || 'ناجح'}</span></td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                console.error('❌ [Login History]', err);
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#dc2626;">تعذر تحميل البيانات.</td></tr>';
+            }
+        }
+    };
+}
+
+/* ----- الأجهزة المصرح بها ----- */
+if (!window.SecurityPages['registered-devices']) {
+    window.SecurityPages['registered-devices'] = {
+        async init() {
+            const user = await SecurityCore.init();
+            if (!user) return;
+            await this.load(user.id);
+        },
+
+        async load(userId) {
+            const container = document.getElementById('devicesContainer');
+            if (!container) return;
+
+            container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">جاري تحميل الأجهزة...</p>';
+
+            try {
+                const { data, error } = await SecurityCore.supabase
+                    .from('authorized_devices')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('last_used_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!data || !data.length) {
+                    container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">لا توجد أجهزة مسجلة.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach(device => {
+                    container.innerHTML += `
+                        <div class="device-card">
+                            <div class="device-header">
+                                <h4>${device.device_name || 'جهاز غير معروف'}</h4>
+                                <button class="btn-danger" onclick="SecurityPages['registered-devices'].remove('${device.id}')">
+                                    <i class="fas fa-trash-alt"></i> إزالة
+                                </button>
+                            </div>
+                            <p><strong>المتصفح:</strong> ${device.browser || '-'}</p>
+                            <p><strong>النظام:</strong> ${device.operating_system || '-'}</p>
+                            <p><strong>آخر استخدام:</strong> ${formatDate(device.last_used_at)}</p>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error('❌ [Devices]', err);
+                container.innerHTML = '<p style="color:#dc2626;text-align:center;padding:20px;">تعذر تحميل الأجهزة.</p>';
+            }
+        },
+
+        async remove(id) {
+            if (!confirm('هل تريد حذف هذا الجهاز؟')) return;
+
+            try {
+                const { error } = await SecurityCore.supabase
+                    .from('authorized_devices')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showSecurityAlert('✅ تم حذف الجهاز بنجاح.', 'success');
+
+                const user = await SecurityCore.getUser();
+                if (user) this.load(user.id);
+
+            } catch (err) {
+                console.error('❌ [Remove Device]', err);
+                showSecurityAlert('تعذر حذف الجهاز.', 'error');
+            }
+        }
+    };
+}
+
+/* ----- المصادقة الثنائية (2FA) ----- */
+if (!window.SecurityPages['two-factor-authentication']) {
+    window.SecurityPages['two-factor-authentication'] = {
+        async init() {
+            const user = await SecurityCore.init();
+            if (!user) return;
+
+            const toggle = document.getElementById('twoFactorToggle');
+            if (!toggle) return;
+
+            toggle.checked = user.user_metadata?.two_factor_enabled || false;
+
+            toggle.addEventListener('change', this.update.bind(this));
+        },
+
+        async update(e) {
+            const enabled = e.target.checked;
+
+            try {
+                const { error } = await SecurityCore.supabase.auth.updateUser({
+                    data: {
+                        two_factor_enabled: enabled
+                    }
+                });
+
+                if (error) throw error;
+
+                showSecurityAlert(
+                    enabled ? '✅ تم تفعيل المصادقة الثنائية.' : '✅ تم تعطيل المصادقة الثنائية.',
+                    'success'
+                );
+
+                await SecurityCore.refreshUser();
+
+            } catch (err) {
+                console.error('❌ [2FA]', err);
+                e.target.checked = !enabled;
+                showSecurityAlert(err.message || 'تعذر تحديث الإعداد.', 'error');
+            }
+        }
+    };
+}
 
 /* ============================================================
    تشغيل الصفحة الحالية تلقائياً
@@ -346,6 +586,7 @@ window.showSecurityAlert = showSecurityAlert;
 window.updateHeader = updateHeader;
 window.setButtonLoading = setButtonLoading;
 window.restoreButton = restoreButton;
+window.togglePasswordVisibility = togglePasswordVisibility;
 window.isValidSaudiMobile = isValidSaudiMobile;
 window.normalizeMobile = normalizeMobile;
 window.formatDate = formatDate;
