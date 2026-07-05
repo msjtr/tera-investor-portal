@@ -429,7 +429,6 @@
     <div class="auth-layout">
         <div class="auth-container">
             <div class="text-center mb-5">
-                <!-- شعار المنصة (مسار مطلق) مع SVG احتياطي مضمّن -->
                 <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img" 
                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'">
                 <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
@@ -443,7 +442,7 @@
                 <div class="step" id="step-2">2 الإقرارات والاتفاقيات</div>
             </div>
 
-            <!-- صندوق التنبيهات الموحد (يستخدم في register.js) -->
+            <!-- صندوق التنبيهات الموحد -->
             <div class="alert-box" id="formAlert">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
                 <span class="alert-message" id="alertMessage"></span>
@@ -492,6 +491,9 @@
                                         <option value="+971">🇦🇪 الإمارات +971</option>
                                         <option value="+965">🇰🇼 الكويت +965</option>
                                         <option value="+973">🇧🇭 البحرين +973</option>
+                                        <option value="+974">🇶🇦 قطر +974</option>
+                                        <option value="+968">🇴🇲 عُمان +968</option>
+                                        <option value="+20">🇪🇬 مصر +20</option>
                                     </select>
                                 </div>
                             </div>
@@ -543,7 +545,6 @@
                         <div class="agreement-item master-agree-box">
                             <label><input type="checkbox" id="master-global-agree"> <strong>أوافق على جميع الشروط والأحكام.</strong></label>
                         </div>
-                        <!-- يمكن إضافة المزيد من بنود الاتفاقية هنا -->
                     </div>
                 </div>
 
@@ -557,7 +558,7 @@
         </div>
     </div>
 
-    <!-- اللودر الإبداعي (يظهر أثناء معالجة التسجيل) -->
+    <!-- اللودر الإبداعي -->
     <div class="tera-loader-overlay" id="creativeLoaderScreen">
         <div class="loader-content-card">
             <div class="spinning-infinity-ring"></div>
@@ -572,7 +573,7 @@
     <!-- تحميل مكتبة Supabase من CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- ملفات الجافاسكربت (مسارات مطلقة) -->
+    <!-- ملفات الجافاسكربت -->
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/auth/register/register.js"></script>
