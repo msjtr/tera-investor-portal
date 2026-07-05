@@ -3,12 +3,11 @@
  * profile-contact-information.js
  * إدارة صفحة معلومات الاتصال – Enterprise Version 2026
  * ==========================================================
- * - جلب بيانات المستخدم وعرضها.
+ * - جلب بيانات المستخدم وعرضها (من user_metadata أولاً ثم profiles).
  * - تحقق ديناميكي من رقم الجوال حسب الدولة.
- * - تحقق من البريد الإلكتروني الأساسي.
  * - إرسال التحديثات إلى Supabase (profiles).
  * - عرض رسائل تنبيه وتفاعل كامل.
- * - معالجة أخطاء عدم وجود جدول profiles.
+ * - معالجة أخطاء عدم وجود جدول profiles أو صلاحيات القراءة.
  */
 
 'use strict';
@@ -68,7 +67,7 @@
         const primaryEmail = document.getElementById('primaryEmail');
         if (primaryEmail) primaryEmail.value = currentUser.email || '';
 
-        // رقم الجوال الحالي
+        // رقم الجوال الحالي من user_metadata (الأولوية)
         const currentMobile = currentUser.user_metadata?.mobile_number || '';
         if (currentMobile) {
             const countryCodeMatch = currentMobile.match(/^\+(\d+)/);
@@ -82,7 +81,7 @@
             }
         }
 
-        // البيانات الإضافية من profiles (يمكن تحميلها لاحقاً)
+        // تحميل باقي البيانات من profiles (إن وُجدت الصلاحية)
         loadProfileData();
     }
 
@@ -92,23 +91,37 @@
                 .from('profiles')
                 .select('*')
                 .eq('id', currentUser.id)
-                .maybeSingle(); // استخدام maybeSingle بدلاً من single لتجنب الخطأ إذا لم توجد صفوف
+                .maybeSingle();
 
-            // تجاهل إذا كان الجدول غير موجود أو ليس به بيانات
+            // معالجة الأخطاء بهدوء
             if (error) {
-                // PGRST116: لا توجد صفوف (طبيعي)
-                // 404: الجدول غير موجود
+                // تجاهل أخطاء عدم وجود جدول، أو عدم وجود صفوف، أو منع الصلاحية
                 if (error.code === 'PGRST116' || error.status === 404) {
-                    console.log('ℹ️ جدول profiles غير موجود بعد، سيتم إنشاؤه عند الحفظ.');
+                    console.log('ℹ️ جدول profiles غير موجود أو لا يحتوي على بيانات.');
                     return;
                 }
-                throw error;
+                if (error.status === 403) {
+                    console.log('🔒 لا توجد صلاحية لقراءة جدول profiles (403 Forbidden). سيتم تجاهل تحميل البيانات الإضافية.');
+                    return;
+                }
+                // أي خطأ آخر: تجاهله مع تحذير
+                console.warn('⚠️ تعذّر تحميل بيانات profiles:', error);
+                return;
             }
 
             if (!data) return;
 
-            // تعبئة الحقول من profile
             const profile = data;
+            // إذا لم يكن رقم الجوال موجوداً في user_metadata، نأخذه من profiles كحل بديل
+            if (!currentUser.user_metadata?.mobile_number && profile.mobile_number) {
+                const profMobile = profile.mobile_number;
+                const countryCodeMatch = profMobile.match(/^\+(\d+)/);
+                if (countryCodeMatch) {
+                    document.getElementById('countryCode').value = countryCodeMatch[1];
+                    document.getElementById('mobileNumber').value = profMobile.substring(countryCodeMatch[0].length);
+                }
+            }
+
             document.getElementById('backupEmail') && (document.getElementById('backupEmail').value = profile.backup_email || '');
             document.getElementById('emergencyName') && (document.getElementById('emergencyName').value = profile.emergency_contact_name || '');
             document.getElementById('emergencyRelation') && (document.getElementById('emergencyRelation').value = profile.emergency_contact_relation || '');
@@ -121,19 +134,16 @@
             }
             document.getElementById('emergencyEmail') && (document.getElementById('emergencyEmail').value = profile.emergency_contact_email || '');
 
-            // لغة التواصل المفضلة
             const langRadios = document.getElementsByName('preferredLanguage');
             for (const radio of langRadios) {
                 if (radio.value === (profile.preferred_language || 'arabic')) radio.checked = true;
             }
-            // طريقة التواصل
             const methodRadios = document.getElementsByName('preferredMethod');
             for (const radio of methodRadios) {
                 if (radio.value === (profile.preferred_contact_method || 'email')) radio.checked = true;
             }
-
         } catch (err) {
-            console.warn('تحميل بيانات الملف الشخصي:', err);
+            console.warn('فشل تحميل بيانات profiles:', err);
         }
     }
 
@@ -149,7 +159,6 @@
         return true;
     }
 
-    // ========== تحديث Placeholder للجوال ==========
     function setupCountryMobileBinding(countrySelectId, inputId) {
         const countrySelect = document.getElementById(countrySelectId);
         const input = document.getElementById(inputId);
@@ -163,7 +172,7 @@
         };
         countrySelect.addEventListener('change', () => {
             updatePlaceholder();
-            input.value = ''; // مسح القيمة لتجنب الأخطاء
+            input.value = '';
         });
         updatePlaceholder();
         input.addEventListener('input', function () {
@@ -175,7 +184,6 @@
     async function saveContactInformation(e) {
         e.preventDefault();
 
-        // جمع البيانات
         const countryCode = document.getElementById('countryCode').value;
         const mobileNumber = document.getElementById('mobileNumber').value.trim().replace(/\D/g, '');
         const primaryEmail = document.getElementById('primaryEmail').value.trim();
@@ -190,13 +198,11 @@
         const emergencyEmail = document.getElementById('emergencyEmail').value.trim();
         const declarationCheck = document.getElementById('declarationCheck').checked;
 
-        // التحقق من الحقول المطلوبة
         if (!mobileNumber || !primaryEmail || !emergencyName || !emergencyRelation || !emergencyMobile || !declarationCheck) {
             showAlert('يرجى ملء جميع الحقول المطلوبة.', 'error');
             return;
         }
 
-        // التحقق من صحة رقم الجوال
         if (!validateMobileInput('mobileNumber', 'countryCode')) {
             showAlert('رقم الجوال غير صحيح. يرجى مراجعة الدولة وعدد الأرقام.', 'error');
             return;
@@ -206,7 +212,6 @@
             return;
         }
 
-        // التحقق من البريد الإلكتروني
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(primaryEmail)) {
             showAlert('البريد الإلكتروني الأساسي غير صحيح.', 'error');
@@ -231,55 +236,44 @@
         }
 
         try {
-            // 1. تحديث user_metadata في auth (رقم الجوال)
-            const { error: updateAuthError } = await supabase.auth.updateUser({
+            // تحديث رقم الجوال في user_metadata
+            const { error: authError } = await supabase.auth.updateUser({
                 data: { mobile_number: fullMobile }
             });
-            if (updateAuthError) throw updateAuthError;
+            if (authError) throw authError;
 
-            // 2. تحديث جدول profiles (أو upsert)
-            const profileData = {
-                id: currentUser.id,
-                mobile_number: fullMobile,
-                backup_email: backupEmail || null,
-                preferred_language: preferredLanguage,
-                preferred_contact_method: preferredMethod,
-                emergency_contact_name: emergencyName,
-                emergency_contact_relation: emergencyRelation,
-                emergency_contact_mobile: fullEmergencyMobile,
-                emergency_contact_email: emergencyEmail || null,
-                updated_at: new Date().toISOString()
-            };
-
+            // محاولة حفظ باقي البيانات في profiles
             const { error: upsertError } = await supabase
                 .from('profiles')
-                .upsert(profileData, { onConflict: 'id' });
+                .upsert({
+                    id: currentUser.id,
+                    mobile_number: fullMobile,
+                    backup_email: backupEmail || null,
+                    preferred_language: preferredLanguage,
+                    preferred_contact_method: preferredMethod,
+                    emergency_contact_name: emergencyName,
+                    emergency_contact_relation: emergencyRelation,
+                    emergency_contact_mobile: fullEmergencyMobile,
+                    emergency_contact_email: emergencyEmail || null,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' });
 
-            // إذا كان الخطأ بسبب عدم وجود الجدول (404) نكتفي بتحديث auth ونبلغ المستخدم
             if (upsertError) {
                 if (upsertError.status === 404) {
-                    console.warn('⚠️ جدول profiles غير موجود، تم حفظ رقم الجوال فقط في الحساب.');
-                    showAlert('✅ تم حفظ بيانات الاتصال الأساسية (سيتم استكمال الملف الشخصي لاحقاً).', 'success');
+                    console.warn('⚠️ جدول profiles غير موجود، تم حفظ رقم الجوال في الحساب فقط.');
+                    showAlert('✅ تم حفظ بيانات الاتصال الأساسية بنجاح.', 'success');
                 } else {
                     throw upsertError;
                 }
             } else {
-                showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+                showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
             }
 
-            // تحديث الكائن المحلي
             currentUser.user_metadata.mobile_number = fullMobile;
             updateHeader(currentUser);
-
         } catch (err) {
-            console.error('فشل حفظ بيانات الاتصال:', err);
-            let message = 'تعذر حفظ البيانات.';
-            if (err.message.includes('duplicate key') || err.message.includes('unique constraint')) {
-                message = 'رقم الجوال أو البريد الإلكتروني مستخدم بالفعل.';
-            } else if (err.status === 404) {
-                message = 'قاعدة البيانات غير جاهزة، يرجى الاتصال بالدعم.';
-            }
-            showAlert(message, 'error');
+            console.error('فشل الحفظ:', err);
+            showAlert('تعذر حفظ البيانات. تأكد من صلاحيات قاعدة البيانات.', 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -288,19 +282,13 @@
         }
     }
 
-    // ========== ربط الأحداث ==========
     function bindEvents() {
         const form = document.getElementById('contactForm');
-        if (form) {
-            form.addEventListener('submit', saveContactInformation);
-        }
+        if (form) form.addEventListener('submit', saveContactInformation);
 
-        // ربط تغيير الدولة بالـ placeholder للجوال الأساسي
         setupCountryMobileBinding('countryCode', 'mobileNumber');
-        // وللطوارئ
         setupCountryMobileBinding('emergencyCountryCode', 'emergencyMobile');
 
-        // فلترة الاسم العربي
         const emergencyNameInput = document.getElementById('emergencyName');
         if (emergencyNameInput) {
             emergencyNameInput.addEventListener('input', function () {
@@ -309,10 +297,8 @@
         }
     }
 
-    // ========== التهيئة ==========
     async function init() {
         try {
-            // الحصول على Supabase
             if (typeof window.waitForSupabase === 'function') {
                 supabase = await window.waitForSupabase();
             } else if (window.TeraAuth && window.TeraAuth._client) {
@@ -335,7 +321,7 @@
 
             console.log('✅ [Contact Info] جاهز، المستخدم:', user.email);
         } catch (err) {
-            console.error('فشلت تهيئة صفحة معلومات الاتصال:', err);
+            console.error('فشلت التهيئة:', err);
             showAlert('تعذر تحميل الصفحة. يرجى تحديث المتصفح.', 'error');
         }
     }
@@ -345,5 +331,4 @@
     } else {
         init();
     }
-
 })();
