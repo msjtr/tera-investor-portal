@@ -2,9 +2,9 @@
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
  * الحالة الأولية للطلب: "جديد" (new)
- * - يمكن للمستخدم تعديل أو إلغاء الطلبات ذات الحالة "جديد" أو "قيد المراجعة"
- * - يمكن للمستخدم حذف الطلبات ذات الحالة "جديد" فقط
+ * - يمكن للمستخدم تعديل أو إلغاء أو حذف الطلبات ذات الحالة "جديد" فقط
  * - عند بدء مراجعة الطلب من الإدارة، تتغير الحالة إلى "قيد المراجعة" (pending)
+ * - الطلبات التي تحت المراجعة أو الموافق عليها أو المنفذة لا يمكن تعديلها
  */
 
 'use strict';
@@ -16,12 +16,11 @@
     let requests = [];
     let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
 
-    // ===== عناصر DOM =====
+    // ===== عناصر DOM (نفسها) =====
     const addRequestBtn = document.getElementById('addRequestBtn');
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
 
-    // نافذة الطلب الجديد
     const newRequestModal = document.getElementById('newRequestModal');
     const closeNewRequestModal = document.getElementById('closeNewRequestModal');
     const cancelRequestBtn = document.getElementById('cancelRequestBtn');
@@ -33,7 +32,6 @@
     const reasonHint = document.getElementById('reasonHint');
     const submitRequestBtn = document.getElementById('submitRequestBtn');
 
-    // نافذة تعديل الطلب
     const editRequestModal = document.getElementById('editRequestModal');
     const closeEditRequestModal = document.getElementById('closeEditRequestModal');
     const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -46,7 +44,6 @@
     const editReasonHint = document.getElementById('editReasonHint');
     const saveEditBtn = document.getElementById('saveEditBtn');
 
-    // نافذة التفاصيل
     const detailModal = document.getElementById('detailModal');
     const closeDetailModal = document.getElementById('closeDetailModal');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -61,7 +58,6 @@
     const detailRejectionReason = document.getElementById('detailRejectionReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
-    // الإحصائيات
     const totalCount = document.getElementById('totalCount');
     const pendingCount = document.getElementById('pendingCount');
     const approvedCount = document.getElementById('approvedCount');
@@ -154,8 +150,8 @@
         return icons[status] || '';
     }
 
-    // يمكن تعديل أو إلغاء الطلبات ذات الحالة 'new' أو 'pending'
     function isEditable(status) {
+        // يمكن تعديل الطلبات الجديدة والقيد المراجعة (لكن الحذف فقط للجديدة)
         return status === 'new' || status === 'pending';
     }
 
@@ -163,7 +159,6 @@
         return status === 'new' || status === 'pending';
     }
 
-    // يمكن حذف الطلبات ذات الحالة 'new' فقط
     function isDeletable(status) {
         return status === 'new';
     }
