@@ -1,11 +1,7 @@
 /**
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
- * - عرض الطلبات السابقة
- * - تقديم طلب جديد (مع قيود)
- * - عرض تفاصيل الطلب
- * - إحصائيات
- * - استخدام Fallback للتحقق من البريد (تجاوز Edge Function مؤقتاً لحل CORS)
+ * مع Fallback للتحقق من البريد (في حال فشل Edge Function)
  */
 
 'use strict';
@@ -22,7 +18,6 @@
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
 
-    // نافذة الطلب الجديد
     const newRequestModal = document.getElementById('newRequestModal');
     const closeNewRequestModal = document.getElementById('closeNewRequestModal');
     const cancelRequestBtn = document.getElementById('cancelRequestBtn');
@@ -34,7 +29,6 @@
     const reasonHint = document.getElementById('reasonHint');
     const submitRequestBtn = document.getElementById('submitRequestBtn');
 
-    // نافذة التفاصيل
     const detailModal = document.getElementById('detailModal');
     const closeDetailModal = document.getElementById('closeDetailModal');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -49,7 +43,6 @@
     const detailRejectionReason = document.getElementById('detailRejectionReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
-    // الإحصائيات
     const totalCount = document.getElementById('totalCount');
     const pendingCount = document.getElementById('pendingCount');
     const approvedCount = document.getElementById('approvedCount');
@@ -140,15 +133,24 @@
         return icons[status] || '';
     }
 
-    // ===== التحقق من البريد عبر Edge Function (محاولة) مع Fallback مباشر =====
-    // ملاحظة: بما أن Edge Function تواجه مشكلة CORS، تم تعطيلها مؤقتاً واستخدام Fallback فقط.
-    // يمكن إعادة تفعيلها لاحقاً عند حل مشكلة CORS.
+    // ===== التحقق من البريد (مع Fallback) =====
     async function checkEmailAvailability(email) {
-        // استخدام Fallback مباشرة (تجاوز Edge Function)
-        return await checkEmailFallback(email);
+        try {
+            const { data, error } = await supabase.functions.invoke('check-email-status', {
+                body: { email: email.trim().toLowerCase() }
+            });
+            if (error) {
+                console.warn('Edge Function error, using fallback:', error);
+                return await checkEmailFallback(email);
+            }
+            return data;
+        } catch (err) {
+            console.warn('Edge Function failed, using fallback:', err);
+            return await checkEmailFallback(email);
+        }
     }
 
-    // ===== Fallback: التحقق المباشر من auth_register فقط =====
+    // ===== Fallback: التحقق من auth_register =====
     async function checkEmailFallback(email) {
         try {
             const normalizedEmail = email.trim().toLowerCase();
@@ -164,7 +166,6 @@
             }
 
             if (data) {
-                // إذا وجد في auth_register، نمنع الاستخدام (لأنه قد يكون موجوداً في auth.users أيضاً)
                 return {
                     exists: true,
                     active: (data.status === 'active' || data.status === 'Active'),
@@ -185,16 +186,6 @@
         }
     }
 
-    // ===== توليد رقم طلب (مؤقت) =====
-    function generateRequestNumber() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const randomPart = String(Math.floor(10000 + Math.random() * 90000));
-        return `TR-${year}-${month}-${day}-${randomPart}`;
-    }
-
     // ===== جلب الطلبات =====
     async function fetchRequests() {
         if (!supabase || !currentUser) return;
@@ -212,11 +203,11 @@
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
-            // عرض خطأ ولكن لا نوقف الصفحة
+            // عرض رسالة للمستخدم
+            showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
         }
     }
 
-    // ===== تحديث الإحصائيات =====
     function updateStats() {
         stats.total = requests.length;
         stats.pending = requests.filter(r => r.status === 'pending').length;
@@ -231,7 +222,6 @@
         rejectedCount.textContent = stats.rejected;
     }
 
-    // ===== التحقق من وجود طلب قائم =====
     function checkPendingRequest() {
         const hasPending = requests.some(r => r.status === 'pending' || r.status === 'approved');
         if (hasPending) {
@@ -243,7 +233,6 @@
         }
     }
 
-    // ===== عرض الجدول =====
     function renderTable() {
         if (!tableBody) return;
         if (requests.length === 0) {
@@ -272,7 +261,6 @@
         });
         tableBody.innerHTML = html;
 
-        // ربط أحداث عرض التفاصيل
         document.querySelectorAll('.view-detail').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -282,7 +270,6 @@
         });
     }
 
-    // ===== عرض التفاصيل =====
     function showDetail(request) {
         detailRequestNumber.textContent = request.request_number || '-';
         detailCurrentEmail.textContent = request.current_email || '-';
@@ -298,7 +285,7 @@
         detailModal.style.display = 'flex';
     }
 
-    // ===== التحقق من البريد الجديد (فوري) =====
+    // ===== التحقق من البريد الجديد =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -327,7 +314,6 @@
             return false;
         }
 
-        // التحقق من البريد عبر Fallback (تجاوز Edge Function مؤقتاً)
         const checkResult = await checkEmailAvailability(email);
         if (checkResult.error) {
             newEmailHint.textContent = '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
@@ -359,7 +345,6 @@
         const newEmail = newEmailInput.value.trim();
         const reason = reasonInput.value.trim();
 
-        // التحقق من السبب
         if (!reason) {
             reasonHint.textContent = '✖ يرجى إدخال سبب تغيير البريد الإلكتروني.';
             reasonHint.className = 'form-hint error';
@@ -369,22 +354,16 @@
         reasonHint.textContent = '';
         reasonInput.classList.remove('is-invalid');
 
-        // التحقق من البريد
         const isValid = await validateNewEmail();
         if (!isValid) return;
 
-        // تعطيل الزر
         submitRequestBtn.disabled = true;
         submitRequestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // توليد رقم طلب مبدئي (سيتم استبداله من الخادم إذا كان هناك Trigger)
-            const tempNumber = generateRequestNumber();
-
             const { data, error } = await supabase
                 .from('email_change_requests')
                 .insert({
-                    request_number: tempNumber,
                     user_id: currentUser.id,
                     current_email: currentUser.email,
                     new_email: newEmail,
@@ -396,7 +375,6 @@
 
             if (error) throw error;
 
-            // نجاح الإرسال
             showAlert('✅ تم إرسال طلب تغيير البريد الإلكتروني بنجاح، وسيتم إشعاركم بعد مراجعة الطلب.', 'success');
             newRequestModal.classList.remove('show');
             newRequestModal.style.display = 'none';
@@ -405,7 +383,6 @@
             newEmailHint.textContent = '';
             reasonHint.textContent = '';
 
-            // تحديث الجدول والإحصائيات
             await fetchRequests();
 
         } catch (err) {
@@ -430,10 +407,8 @@
 
         updateHeaderUI(currentUser);
 
-        // جلب الطلبات
         await fetchRequests();
 
-        // ربط الأحداث
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
             currentEmailDisplayModal.value = currentUser.email || '';
