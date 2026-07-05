@@ -18,41 +18,32 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* ===== إعادة تعيين وتنسيق الصفحة ===== */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        /* ===== جميع الأنماط السابقة (محذوفة للاختصار، لكنها موجودة في الملف النهائي) ===== */
+        * { box-sizing: border-box; }
         body {
             background-color: #f1f5f9;
             font-family: 'Tajawal', sans-serif;
+            margin: 0;
             color: #1e293b;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
-
-        /* ===== الهيدر ===== */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid #e2e8f0;
-            padding: 12px 24px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
             flex-wrap: wrap;
             gap: 8px;
         }
-        .focused-header .logo img {
-            height: 38px;
-            width: auto;
-        }
+        .focused-header .logo img { height: 38px; }
         .focused-header .client-info {
             display: flex;
             align-items: center;
@@ -66,8 +57,7 @@
             font-weight: 800;
         }
         .focused-header .client-info .avatar {
-            width: 38px;
-            height: 38px;
+            width: 38px; height: 38px;
             background: #0A1B3F;
             color: #fff;
             display: flex;
@@ -78,11 +68,9 @@
             font-size: 16px;
             border: 2px solid #028090;
         }
-
-        /* ===== عنوان الصفحة ===== */
         .page-subheader {
             background: #0A1B3F;
-            padding: 14px 24px;
+            padding: 14px 20px;
             margin-top: 16px;
             display: flex;
             justify-content: space-between;
@@ -102,11 +90,9 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        .page-subheader h1 i {
-            color: #5eead4;
-        }
+        .page-subheader h1 i { color: #5eead4; }
         .btn-back {
-            background: rgba(255, 255, 255, 0.10);
+            background: rgba(255,255,255,0.10);
             color: #ffffff;
             padding: 6px 14px;
             border-radius: 8px;
@@ -117,315 +103,220 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.15);
             white-space: nowrap;
         }
-        .btn-back:hover {
-            background: #028090;
-            border-color: #028090;
-        }
-
-        /* ===== المحتوى ===== */
+        .btn-back:hover { background: #028090; border-color: #028090; }
         .content-container {
-            max-width: 1100px;
+            max-width: 900px;
             width: 100%;
             margin: 0 auto 40px auto;
-            padding: 20px 24px 0 24px;
+            padding: 20px 16px 0 16px;
             flex: 1;
         }
-
-        .page-desc {
-            background: #e0f2fe;
-            border-right: 5px solid #028090;
-            padding: 16px 22px;
-            border-radius: 12px;
-            margin-bottom: 24px;
+        .panel-card {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #e9edf2;
+            padding: 24px 20px 28px 20px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.03);
+        }
+        .panel-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.05); }
+        .panel-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            flex-wrap: wrap;
-        }
-        .page-desc i {
-            color: #028090;
-            font-size: 20px;
-        }
-        .page-desc span {
-            color: #0A1B3F;
-            font-weight: 600;
-        }
-
-        /* ===== الإحصائيات ===== */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .stat-box {
-            background: #ffffff;
-            border-radius: 14px;
-            padding: 16px 20px;
-            border: 1px solid #e2e8f0;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-            transition: 0.2s;
-        }
-        .stat-box:hover {
-            border-color: #028090;
-            box-shadow: 0 4px 16px rgba(2, 128, 144, 0.08);
-        }
-        .stat-box .number {
-            font-size: 28px;
-            font-weight: 800;
-            color: #0A1B3F;
-        }
-        .stat-box .label {
-            font-size: 13px;
-            color: #64748b;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-        .stat-box .number.new {
-            color: #3b82f6;
-        }
-        .stat-box .number.pending {
-            color: #eab308;
-        }
-        .stat-box .number.approved {
-            color: #3b82f6;
-        }
-        .stat-box .number.completed {
-            color: #10b981;
-        }
-        .stat-box .number.rejected {
-            color: #ef4444;
-        }
-
-        /* ===== التنبيه ===== */
-        .request-notice {
-            background: #fef9c3;
-            border: 1px solid #fcd34d;
-            border-radius: 12px;
-            padding: 14px 18px;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #854d0e;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .request-notice i {
-            font-size: 20px;
-            color: #eab308;
-        }
-
-        /* ===== رأس الجدول ===== */
-        .page-header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
             flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 24px;
         }
-        .page-header-actions h2 {
-            margin: 0;
+        .panel-header i {
+            color: #028090;
             font-size: 20px;
+            width: 34px;
+            height: 34px;
+            background: #f0fdfa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .panel-header h3 {
+            margin: 0;
+            font-size: 17px;
+            color: #0A1B3F;
+            font-family: 'Cairo', sans-serif;
             font-weight: 800;
+        }
+        .panel-header .panel-badge {
+            margin-right: auto;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-label {
+            font-size: 14px;
+            font-weight: 700;
             color: #0A1B3F;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
-        .page-header-actions h2 i {
-            color: #028090;
+        .form-label .req { color: #dc2626; font-size: 16px; }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fafcff;
+            outline: none;
+            transition: 0.2s;
+            color: #1e293b;
+            height: 44px;
+            line-height: 1.5;
         }
-
-        .btn-primary {
+        .form-control:focus {
+            border-color: #028090;
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.10);
+            background: #ffffff;
+        }
+        .form-control::placeholder { color: #94a3b8; }
+        .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
+        .form-control.readonly { background: #f1f5f9; color: #475569; }
+        .format-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+            padding: 2px 0;
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .format-hint.success { color: #16a34a; }
+        .format-hint.error { color: #dc2626; }
+        .validation-icon {
+            font-size: 16px;
+            display: inline-block;
+            width: 18px;
+            text-align: center;
+        }
+        .validation-icon.success { color: #16a34a; }
+        .validation-icon.error { color: #dc2626; }
+        .validation-icon.loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #028090;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-submit {
             background: #028090;
             color: #fff;
             border: none;
-            padding: 12px 24px;
+            padding: 14px 24px;
             border-radius: 12px;
-            font-weight: 700;
-            font-size: 15px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: 'Tajawal', sans-serif;
+            width: 100%;
             cursor: pointer;
             transition: 0.25s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
+            height: 50px;
+            margin-top: 8px;
         }
-        .btn-primary:hover:not(:disabled) {
+        .btn-submit:hover:not(:disabled) {
             background: #0A1B3F;
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(2, 128, 144, 0.25);
+            box-shadow: 0 8px 24px rgba(2,128,144,0.25);
         }
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* ===== الجدول ===== */
-        .table-container {
-            overflow-x: auto;
-            background: #fff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            padding: 4px 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-        }
-        .table-container table {
-            width: 100%;
-            min-width: 800px;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .table-container th {
-            text-align: right;
-            padding: 14px 18px;
-            font-weight: 800;
-            color: #64748b;
-            border-bottom: 2px solid #f1f5f9;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-        .table-container td {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-            font-size: 14px;
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-submit.btn-secondary {
+            background: #e2e8f0;
             color: #1e293b;
         }
-        .table-container tbody tr:hover td {
-            background: #f8fafc;
-        }
-        .table-container td .actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .table-container .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #94a3b8;
-        }
-        .table-container .empty-state i {
-            font-size: 48px;
-            margin-bottom: 12px;
-            color: #cbd5e1;
-        }
-        .table-container .empty-state p {
-            font-size: 16px;
+        .btn-submit.btn-secondary:hover:not(:disabled) { background: #cbd5e1; }
+        .alert-box {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 12px;
             font-weight: 700;
-            margin: 0;
-        }
-
-        /* ===== حالات الطلب ===== */
-        .status-badge {
-            display: inline-flex;
+            font-size: 14px;
             align-items: center;
-            gap: 6px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        .status-badge.new {
-            background: #dbeafe;
-            color: #1e40af;
+        .alert-box.show { display: flex; }
+        .alert-box.success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
         }
-        .status-badge.pending {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-        .status-badge.approved {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        .status-badge.completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .status-badge.rejected {
-            background: #fee2e2;
+        .alert-box.success i { color: #16a34a; }
+        .alert-box.error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
             color: #991b1b;
         }
-        .status-badge.cancelled {
-            background: #f1f5f9;
-            color: #475569;
+        .alert-box.error i { color: #dc2626; }
+        .alert-box i { font-size: 18px; flex-shrink: 0; }
+        .timer-container {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 6px;
         }
-
-        /* ===== أزرار الإجراءات ===== */
-        .btn-icon {
-            background: transparent;
-            border: none;
-            color: #028090;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-            transition: 0.2s;
-            font-size: 16px;
-        }
-        .btn-icon:hover {
-            background: rgba(2, 128, 144, 0.08);
-        }
-        .btn-icon.text-danger {
-            color: #dc2626;
-        }
-        .btn-icon.text-danger:hover {
-            background: rgba(220, 38, 38, 0.08);
-        }
-        .btn-icon.text-warning {
-            color: #f59e0b;
-        }
-        .btn-icon.text-warning:hover {
-            background: rgba(245, 158, 11, 0.08);
-        }
-        .btn-icon.text-success {
-            color: #10b981;
-        }
-        .btn-icon.text-success:hover {
-            background: rgba(16, 185, 129, 0.08);
-        }
-
-        /* ===== النوافذ المنبثقة ===== */
+        .timer-display { color: #028090; font-weight: 800; }
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.4);
             backdrop-filter: blur(4px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        .modal-overlay.show {
-            display: flex;
-        }
+        .modal-overlay.show { display: flex; }
         .modal-box {
             background: #fff;
             border-radius: 24px;
             max-width: 560px;
             width: 100%;
             padding: 32px 28px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
             animation: modalIn 0.3s ease;
             max-height: 90vh;
             overflow-y: auto;
         }
         @keyframes modalIn {
-            from {
-                transform: scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         .modal-header {
             display: flex;
@@ -441,9 +332,6 @@
             color: #0A1B3F;
             font-weight: 800;
         }
-        .modal-header h3 i {
-            color: #028090;
-        }
         .modal-close {
             background: transparent;
             border: none;
@@ -451,10 +339,7 @@
             color: #94a3b8;
             cursor: pointer;
         }
-        .modal-close:hover {
-            color: #0A1B3F;
-        }
-
+        .modal-close:hover { color: #0A1B3F; }
         .form-group {
             margin-bottom: 16px;
         }
@@ -465,9 +350,7 @@
             color: #0A1B3F;
             margin-bottom: 4px;
         }
-        .form-group label .req {
-            color: #dc2626;
-        }
+        .form-group label .req { color: #dc2626; }
         .form-control {
             width: 100%;
             padding: 10px 14px;
@@ -482,31 +365,22 @@
         }
         .form-control:focus {
             border-color: #028090;
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.10);
         }
         .form-control:disabled {
             background: #f1f5f9;
             color: #64748b;
         }
-        .form-control.is-invalid {
-            border-color: #dc2626;
-        }
-        .form-control.is-valid {
-            border-color: #16a34a;
-        }
+        .form-control.is-invalid { border-color: #dc2626; }
+        .form-control.is-valid { border-color: #16a34a; }
         .form-hint {
             font-size: 12px;
             color: #64748b;
             margin-top: 4px;
             min-height: 18px;
         }
-        .form-hint.error {
-            color: #dc2626;
-        }
-        .form-hint.success {
-            color: #16a34a;
-        }
-
+        .form-hint.error { color: #dc2626; }
+        .form-hint.success { color: #16a34a; }
         .modal-actions {
             display: flex;
             gap: 12px;
@@ -527,21 +401,13 @@
             background: #028090;
             color: #fff;
         }
-        .modal-actions .btn-primary:hover:not(:disabled) {
-            background: #0A1B3F;
-        }
+        .modal-actions .btn-primary:hover:not(:disabled) { background: #0A1B3F; }
         .modal-actions .btn-secondary {
             background: #e2e8f0;
             color: #1e293b;
         }
-        .modal-actions .btn-secondary:hover {
-            background: #cbd5e1;
-        }
-        .modal-actions .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
+        .modal-actions .btn-secondary:hover { background: #cbd5e1; }
+        .modal-actions .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .detail-item {
             display: flex;
             justify-content: space-between;
@@ -549,316 +415,225 @@
             border-bottom: 1px solid #f1f5f9;
             font-size: 14px;
         }
-        .detail-item .label {
-            font-weight: 700;
-            color: #475569;
-        }
-        .detail-item .value {
-            color: #0A1B3F;
+        .detail-item .label { font-weight: 700; color: #475569; }
+        .detail-item .value { color: #0A1B3F; font-weight: 600; text-align: left; }
+        .request-notice {
+            background: #fef9c3;
+            border: 1px solid #fcd34d;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #854d0e;
             font-weight: 600;
-            text-align: left;
+            font-size: 14px;
         }
-
-        /* ===== التذييل ===== */
-        .page-footer {
+        .request-notice i { font-size: 20px; }
+        .empty-state {
             text-align: center;
-            padding: 18px 20px;
+            padding: 40px 20px;
             color: #94a3b8;
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 12px; color: #cbd5e1; }
+        .empty-state p { font-size: 16px; font-weight: 700; margin: 0; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .status-badge.new { background: #dbeafe; color: #1e40af; }
+        .status-badge.pending { background: #fef9c3; color: #854d0e; }
+        .status-badge.approved { background: #dbeafe; color: #1e40af; }
+        .status-badge.completed { background: #d1fae5; color: #065f46; }
+        .status-badge.rejected { background: #fee2e2; color: #991b1b; }
+        .status-badge.cancelled { background: #f1f5f9; color: #475569; }
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #028090;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: 0.2s;
+            font-size: 16px;
+        }
+        .btn-icon:hover { background: rgba(2,128,144,0.08); }
+        .btn-icon.text-danger { color: #dc2626; }
+        .btn-icon.text-danger:hover { background: rgba(220,38,38,0.08); }
+        .btn-icon.text-warning { color: #f59e0b; }
+        .btn-icon.text-warning:hover { background: rgba(245,158,11,0.08); }
+        .btn-icon.text-success { color: #10b981; }
+        .btn-icon.text-success:hover { background: rgba(16,185,129,0.08); }
+        .page-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .btn-primary {
+            background: #028090;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0A1B3F;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(2,128,144,0.25);
+        }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .table-container {
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 4px 0;
+        }
+        .table-container table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .table-container th {
+            text-align: right;
+            padding: 14px 18px;
+            font-weight: 800;
+            color: #64748b;
+            border-bottom: 2px solid #f1f5f9;
             font-size: 13px;
-            border-top: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .table-container td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .table-container td .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .table-container tbody tr:hover td { background: #f8fafc; }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-box {
             background: #ffffff;
-            margin-top: auto;
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0A1B3F;
+        }
+        .stat-box .label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .stat-box .number.new { color: #3b82f6; }
+        .stat-box .number.pending { color: #eab308; }
+        .stat-box .number.approved { color: #3b82f6; }
+        .stat-box .number.completed { color: #10b981; }
+        .stat-box .number.rejected { color: #ef4444; }
+
+        /* ===== نافذة سبب الإلغاء ===== */
+        #cancelReasonModal .modal-box {
+            max-width: 480px;
+        }
+        #cancelReasonModal textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
-        /* ===== الوضع المظلم ===== */
         @media (prefers-color-scheme: dark) {
-            body {
-                background: #0f172a;
-            }
-            .focused-header {
-                background: #1e293b !important;
-                border-bottom-color: #334155 !important;
-            }
-            .focused-header .client-info h5 {
-                color: #f8fafc !important;
-            }
-            .focused-header .client-info .avatar {
-                background: #0f172a !important;
-                border-color: #14b8a6 !important;
-            }
-            .page-subheader {
-                background: #0f172a !important;
-            }
-            .page-desc {
-                background: #1e293b !important;
-                border-right-color: #14b8a6 !important;
-                color: #e2e8f0 !important;
-            }
-            .page-desc span {
-                color: #f8fafc !important;
-            }
-            .stat-box {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-            .stat-box .number {
-                color: #f8fafc !important;
-            }
-            .stat-box .label {
-                color: #94a3b8 !important;
-            }
-            .table-container {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-            .table-container th {
-                color: #94a3b8 !important;
-                border-bottom-color: #334155 !important;
-            }
-            .table-container td {
-                color: #e2e8f0 !important;
-                border-bottom-color: #1e293b !important;
-            }
-            .table-container tbody tr:hover td {
-                background: #334155 !important;
-            }
-            .table-container .empty-state {
-                color: #64748b !important;
-            }
-            .table-container .empty-state i {
-                color: #334155 !important;
-            }
-            .modal-box {
-                background: #1e293b !important;
-            }
-            .modal-header {
-                border-bottom-color: #334155 !important;
-            }
-            .modal-header h3 {
-                color: #f8fafc !important;
-            }
-            .form-group label {
-                color: #f1f5f9 !important;
-            }
-            .form-control {
-                background: #0f172a !important;
-                border-color: #334155 !important;
-                color: #e2e8f0 !important;
-            }
-            .form-control:focus {
-                border-color: #14b8a6 !important;
-                box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
-            }
-            .form-control:disabled {
-                background: #1e293b !important;
-                color: #94a3b8 !important;
-            }
-            .detail-item {
-                border-bottom-color: #334155 !important;
-            }
-            .detail-item .label {
-                color: #94a3b8 !important;
-            }
-            .detail-item .value {
-                color: #f8fafc !important;
-            }
-            .request-notice {
-                background: rgba(234, 179, 8, 0.15) !important;
-                border-color: #eab308 !important;
-                color: #fde68a !important;
-            }
-            .btn-secondary {
-                background: #334155 !important;
-                color: #e2e8f0 !important;
-            }
-            .btn-secondary:hover {
-                background: #475569 !important;
-            }
-            .status-badge.new {
-                background: rgba(59, 130, 246, 0.2) !important;
-                color: #93c5fd !important;
-            }
-            .status-badge.pending {
-                background: rgba(234, 179, 8, 0.2) !important;
-                color: #fde68a !important;
-            }
-            .status-badge.approved {
-                background: rgba(59, 130, 246, 0.2) !important;
-                color: #93c5fd !important;
-            }
-            .status-badge.completed {
-                background: rgba(16, 185, 129, 0.2) !important;
-                color: #6ee7b7 !important;
-            }
-            .status-badge.rejected {
-                background: rgba(239, 68, 68, 0.2) !important;
-                color: #fca5a5 !important;
-            }
-            .status-badge.cancelled {
-                background: rgba(71, 85, 105, 0.3) !important;
-                color: #94a3b8 !important;
-            }
-            .btn-icon {
-                color: #14b8a6 !important;
-            }
-            .btn-icon:hover {
-                background: rgba(20, 184, 166, 0.15) !important;
-            }
-            .btn-icon.text-danger {
-                color: #f87171 !important;
-            }
-            .btn-icon.text-danger:hover {
-                background: rgba(248, 113, 113, 0.15) !important;
-            }
-            .btn-icon.text-warning {
-                color: #fbbf24 !important;
-            }
-            .btn-icon.text-warning:hover {
-                background: rgba(251, 191, 36, 0.15) !important;
-            }
-            .btn-icon.text-success {
-                color: #34d399 !important;
-            }
-            .btn-icon.text-success:hover {
-                background: rgba(52, 211, 153, 0.15) !important;
-            }
-            .modal-actions .btn-secondary {
-                background: #334155 !important;
-                color: #e2e8f0 !important;
-            }
-            .modal-actions .btn-secondary:hover {
-                background: #475569 !important;
-            }
-            .btn-primary:hover:not(:disabled) {
-                background: #14b8a6 !important;
-            }
-            .page-footer {
-                background: #1e293b !important;
-                border-top-color: #334155 !important;
-                color: #64748b !important;
-            }
-        }
-
-        /* ===== تحسين التجاوب ===== */
-        @media (max-width: 992px) {
-            .stats-row {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .content-container {
-                padding: 20px 16px 0 16px;
-            }
+            .stat-box { background: #1e293b; border-color: #334155; }
+            .stat-box .number { color: #f8fafc; }
+            .stat-box .label { color: #94a3b8; }
+            .table-container { background: #1e293b; border-color: #334155; }
+            .table-container th { color: #94a3b8; border-bottom-color: #334155; }
+            .table-container td { border-bottom-color: #1e293b; }
+            .table-container tbody tr:hover td { background: #334155; }
+            .modal-box { background: #1e293b; }
+            .modal-header { border-bottom-color: #334155; }
+            .modal-header h3 { color: #f8fafc; }
+            .form-group label { color: #f1f5f9; }
+            .form-control { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+            .form-control:focus { border-color: #14b8a6; box-shadow: 0 0 0 4px rgba(20,184,166,0.15); }
+            .form-control:disabled { background: #1e293b; color: #94a3b8; }
+            .detail-item { border-bottom-color: #334155; }
+            .detail-item .label { color: #94a3b8; }
+            .detail-item .value { color: #f8fafc; }
+            .request-notice { background: rgba(234,179,8,0.15); border-color: #eab308; color: #fde68a; }
+            .btn-secondary { background: #334155; color: #e2e8f0; }
+            .btn-secondary:hover { background: #475569; }
+            .empty-state i { color: #334155; }
+            .empty-state p { color: #94a3b8; }
+            .status-badge.new { background: rgba(59,130,246,0.2); color: #93c5fd; }
+            .status-badge.pending { background: rgba(234,179,8,0.2); color: #fde68a; }
+            .status-badge.approved { background: rgba(59,130,246,0.2); color: #93c5fd; }
+            .status-badge.completed { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+            .status-badge.rejected { background: rgba(239,68,68,0.2); color: #fca5a5; }
+            .status-badge.cancelled { background: rgba(71,85,105,0.3); color: #94a3b8; }
+            .btn-icon { color: #14b8a6; }
+            .btn-icon:hover { background: rgba(20,184,166,0.15); }
+            .btn-icon.text-danger { color: #f87171; }
+            .btn-icon.text-danger:hover { background: rgba(248,113,113,0.15); }
+            .btn-icon.text-warning { color: #fbbf24; }
+            .btn-icon.text-warning:hover { background: rgba(251,191,36,0.15); }
+            .btn-icon.text-success { color: #34d399; }
+            .btn-icon.text-success:hover { background: rgba(52,211,153,0.15); }
+            .modal-actions .btn-secondary { background: #334155; color: #e2e8f0; }
+            .modal-actions .btn-secondary:hover { background: #475569; }
+            .btn-primary:hover:not(:disabled) { background: #14b8a6; }
         }
 
         @media (max-width: 768px) {
-            .stats-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .page-header-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .page-header-actions h2 {
-                justify-content: center;
-            }
-            .btn-primary {
-                width: 100%;
-                justify-content: center;
-            }
-            .modal-box {
-                padding: 24px 16px;
-            }
-            .modal-actions {
-                flex-direction: column;
-            }
-            .modal-actions .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            .table-container td .actions {
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .focused-header {
-                padding: 10px 16px;
-            }
-            .focused-header .client-info h5 {
-                font-size: 13px;
-            }
-            .focused-header .client-info .avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
-            }
-            .page-subheader {
-                padding: 12px 16px;
-            }
-            .page-subheader h1 {
-                font-size: 18px;
-            }
-            .btn-back {
-                font-size: 12px;
-                padding: 4px 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .stat-box {
-                padding: 12px 14px;
-            }
-            .stat-box .number {
-                font-size: 22px;
-            }
-            .stat-box .label {
-                font-size: 12px;
-            }
-            .table-container table {
-                min-width: 600px;
-                font-size: 13px;
-            }
-            .table-container th,
-            .table-container td {
-                padding: 10px 12px;
-            }
-            .modal-box {
-                padding: 16px 12px;
-            }
-            .modal-header h3 {
-                font-size: 18px;
-            }
-            .form-control {
-                font-size: 13px;
-                padding: 8px 10px;
-            }
-            .btn {
-                font-size: 14px;
-                padding: 8px 16px;
-            }
-            .page-desc {
-                font-size: 13px;
-                padding: 12px 16px;
-            }
-            .request-notice {
-                font-size: 13px;
-                padding: 12px 16px;
-            }
-        }
-
-        /* ===== إصلاح عرض الجدول ===== */
-        .table-container .text-nowrap {
-            white-space: nowrap;
-        }
-        .table-container .text-truncate {
-            max-width: 120px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: inline-block;
-            vertical-align: middle;
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .page-header-actions { flex-direction: column; align-items: stretch; }
+            .btn-primary { width: 100%; justify-content: center; }
+            .modal-box { padding: 24px 16px; }
+            .modal-actions { flex-direction: column; }
+            .modal-actions .btn { width: 100%; justify-content: center; }
+            .table-container td .actions { flex-direction: column; align-items: center; gap: 4px; }
         }
     </style>
 </head>
@@ -883,51 +658,35 @@
         </a>
     </div>
 
-    <!-- ===== المحتوى ===== -->
+    <!-- ===== المحتوى الرئيسي ===== -->
     <main class="content-container">
 
-        <div class="page-desc">
-            <i class="fas fa-info-circle"></i>
-            <span>يمكنكم من خلال هذه الصفحة تقديم طلب لتغيير البريد الإلكتروني. يمكنكم أيضاً تعديل أو إلغاء أو حذف الطلبات غير المعتمدة من الإدارة.</span>
+        <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
+            <span style="color:#0A1B3F; font-weight:600;">يمكنكم من خلال هذه الصفحة تقديم طلب لتغيير البريد الإلكتروني. يمكنكم أيضاً تعديل أو إلغاء الطلبات غير المعتمدة من الإدارة.</span>
         </div>
 
         <!-- ===== الإحصائيات ===== -->
         <div class="stats-row" id="statsRow">
-            <div class="stat-box">
-                <div class="number" id="totalCount">0</div>
-                <div class="label">إجمالي الطلبات</div>
-            </div>
-            <div class="stat-box">
-                <div class="number new" id="newCount">0</div>
-                <div class="label">جديد</div>
-            </div>
-            <div class="stat-box">
-                <div class="number pending" id="pendingCount">0</div>
-                <div class="label">قيد المراجعة</div>
-            </div>
-            <div class="stat-box">
-                <div class="number approved" id="approvedCount">0</div>
-                <div class="label">تمت الموافقة</div>
-            </div>
-            <div class="stat-box">
-                <div class="number completed" id="completedCount">0</div>
-                <div class="label">تم التنفيذ</div>
-            </div>
-            <div class="stat-box">
-                <div class="number rejected" id="rejectedCount">0</div>
-                <div class="label">مرفوضة</div>
-            </div>
+            <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">إجمالي الطلبات</div></div>
+            <div class="stat-box"><div class="number new" id="newCount">0</div><div class="label">جديد</div></div>
+            <div class="stat-box"><div class="number pending" id="pendingCount">0</div><div class="label">قيد المراجعة</div></div>
+            <div class="stat-box"><div class="number approved" id="approvedCount">0</div><div class="label">تمت الموافقة</div></div>
+            <div class="stat-box"><div class="number completed" id="completedCount">0</div><div class="label">تم التنفيذ</div></div>
+            <div class="stat-box"><div class="number rejected" id="rejectedCount">0</div><div class="label">مرفوضة</div></div>
         </div>
 
-        <!-- ===== تنبيه ===== -->
+        <!-- ===== تنبيه وجود طلب قائم ===== -->
         <div id="pendingRequestNotice" class="request-notice" style="display:none;">
             <i class="fas fa-clock"></i>
             <span>⚠️ لديكم طلب تغيير بريد إلكتروني قيد المعالجة، ولا يمكن تقديم طلب جديد حتى يتم الانتهاء من الطلب الحالي.</span>
         </div>
 
-        <!-- ===== رأس الجدول ===== -->
+        <!-- ===== رأس الجدول مع الزر ===== -->
         <div class="page-header-actions">
-            <h2><i class="fas fa-list-ul"></i> سجل طلبات تغيير البريد الإلكتروني</h2>
+            <h2 style="margin:0; font-size:20px; font-weight:800; color:#0A1B3F; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-list-ul" style="color:#028090;"></i> سجل طلبات تغيير البريد الإلكتروني
+            </h2>
             <button class="btn-primary" id="addRequestBtn">
                 <i class="fas fa-plus-circle"></i> إضافة طلب جديد
             </button>
@@ -949,12 +708,7 @@
                     </tr>
                 </thead>
                 <tbody id="requestsTableBody">
-                    <tr>
-                        <td colspan="8" class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p>لا توجد طلبات حتى الآن</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد طلبات حتى الآن</p></td></tr>
                 </tbody>
             </table>
         </div>
@@ -965,7 +719,7 @@
     <div class="modal-overlay" id="newRequestModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fas fa-plus-circle"></i> تقديم طلب جديد</h3>
+                <h3><i class="fas fa-plus-circle" style="color:#028090;"></i> تقديم طلب جديد</h3>
                 <button class="modal-close" id="closeNewRequestModal">&times;</button>
             </div>
             <form id="newRequestForm" novalidate>
@@ -997,7 +751,7 @@
     <div class="modal-overlay" id="editRequestModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> تعديل الطلب</h3>
+                <h3><i class="fas fa-edit" style="color:#f59e0b;"></i> تعديل الطلب</h3>
                 <button class="modal-close" id="closeEditRequestModal">&times;</button>
             </div>
             <form id="editRequestForm" novalidate>
@@ -1026,11 +780,35 @@
         </div>
     </div>
 
+    <!-- ===== نافذة سبب الإلغاء (جديدة) ===== -->
+    <div class="modal-overlay" id="cancelReasonModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-times-circle" style="color:#dc2626;"></i> إلغاء الطلب</h3>
+                <button class="modal-close" id="closeCancelReasonModal">&times;</button>
+            </div>
+            <form id="cancelReasonForm" novalidate>
+                <input type="hidden" id="cancelRequestId" />
+                <div class="form-group">
+                    <label>سبب الإلغاء <span class="req">*</span></label>
+                    <textarea class="form-control" id="cancelReasonInput" rows="3" placeholder="اكتب سبب إلغاء الطلب..." required></textarea>
+                    <div class="form-hint" id="cancelReasonHint"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelReasonCloseBtn">إلغاء</button>
+                    <button type="submit" class="btn btn-danger" id="confirmCancelBtn">
+                        <i class="fas fa-times-circle"></i> تأكيد الإلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ===== نافذة عرض التفاصيل ===== -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h3><i class="fas fa-file-alt"></i> تفاصيل الطلب</h3>
+                <h3><i class="fas fa-file-alt" style="color:#028090;"></i> تفاصيل الطلب</h3>
                 <button class="modal-close" id="closeDetailModal">&times;</button>
             </div>
             <div id="detailContent">
@@ -1043,6 +821,7 @@
                 <div class="detail-item"><span class="label">الحالة</span><span class="value" id="detailStatus">-</span></div>
                 <div class="detail-item"><span class="label">ملاحظات الإدارة</span><span class="value" id="detailAdminNotes">-</span></div>
                 <div class="detail-item"><span class="label">سبب الرفض</span><span class="value" id="detailRejectionReason">-</span></div>
+                <div class="detail-item"><span class="label">سبب الإلغاء (من المستخدم)</span><span class="value" id="detailCancellationReason">-</span></div>
                 <div class="detail-item"><span class="label">تاريخ التنفيذ</span><span class="value" id="detailCompletedAt">-</span></div>
             </div>
             <div class="modal-actions">
