@@ -1,11 +1,7 @@
 /**
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
- * الحالة الأولية: "جديد" (new)
- * - يمكن تعديل/إلغاء الطلبات الجديدة والقيد المراجعة
- * - تم إزالة زر الحذف نهائياً
- * - عند الإلغاء، يُطلب سبب الإلغاء من المستخدم
- * - في التفاصيل، يظهر سبب الإلغاء مع توضيح أنه من المستخدم
+ * مع دعم الفلتر حسب الحالة
  */
 
 'use strict';
@@ -15,12 +11,16 @@
     let currentUser = null;
     let initialized = false;
     let requests = [];
+    let filteredRequests = [];
+    let currentFilter = 'all';
     let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
 
     // ===== عناصر DOM =====
     const addRequestBtn = document.getElementById('addRequestBtn');
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
+    const statusFilter = document.getElementById('statusFilter');
+    const filterCount = document.getElementById('filterCount');
 
     const newRequestModal = document.getElementById('newRequestModal');
     const closeNewRequestModal = document.getElementById('closeNewRequestModal');
@@ -45,7 +45,6 @@
     const editReasonHint = document.getElementById('editReasonHint');
     const saveEditBtn = document.getElementById('saveEditBtn');
 
-    // نافذة سبب الإلغاء
     const cancelReasonModal = document.getElementById('cancelReasonModal');
     const closeCancelReasonModal = document.getElementById('closeCancelReasonModal');
     const cancelReasonCloseBtn = document.getElementById('cancelReasonCloseBtn');
@@ -223,8 +222,8 @@
 
             if (error) throw error;
             requests = data || [];
-            renderTable();
             updateStats();
+            applyFilter(); // تطبيق الفلتر وعرض النتائج
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
@@ -259,17 +258,54 @@
         }
     }
 
+    // ===== الفلتر =====
+    function applyFilter() {
+        const filterValue = statusFilter ? statusFilter.value : 'all';
+        currentFilter = filterValue;
+
+        if (filterValue === 'all') {
+            filteredRequests = [...requests];
+        } else {
+            filteredRequests = requests.filter(r => r.status === filterValue);
+        }
+
+        renderTable();
+        updateFilterCount();
+    }
+
+    function updateFilterCount() {
+        if (filterCount) {
+            const total = filteredRequests.length;
+            const label = total === 1 ? 'طلب' : 'طلبات';
+            filterCount.textContent = `عرض ${total} ${label}`;
+        }
+    }
+
+    // ===== عرض الجدول =====
     function renderTable() {
         if (!tableBody) return;
-        if (requests.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد طلبات حتى الآن</p></td></tr>`;
+
+        if (filteredRequests.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>${requests.length === 0 ? 'لا توجد طلبات حتى الآن' : 'لا توجد طلبات مطابقة للفلتر'}</p>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
         let html = '';
-        requests.forEach(req => {
+        filteredRequests.forEach(req => {
             const editable = isEditable(req.status);
             const cancellable = isCancellable(req.status);
+
+            // أيقونة إلغاء من المستخدم (إذا كان هناك سبب إلغاء)
+            const userCancelIcon = req.cancellation_reason ? 
+                `<span class="user-cancel-icon" title="تم الإلغاء من قبل المستخدم: ${req.cancellation_reason}"><i class="fas fa-user-times"></i></span>` : 
+                '';
 
             html += `
                 <tr>
@@ -279,7 +315,7 @@
                     <td style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${req.reason || ''}">${req.reason || '-'}</td>
                     <td>${formatDate(req.created_at)}</td>
                     <td>${formatDate(req.updated_at)}</td>
-                    <td>${getStatusBadge(req.status)}</td>
+                    <td>${getStatusBadge(req.status)} ${userCancelIcon}</td>
                     <td>
                         <div class="actions">
                             <button class="btn-icon view-detail" data-id="${req.id}" title="عرض التفاصيل">
@@ -298,10 +334,11 @@
         });
         tableBody.innerHTML = html;
 
+        // ربط أحداث الأزرار
         document.querySelectorAll('.view-detail').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
-                const request = requests.find(r => r.id === id);
+                const request = filteredRequests.find(r => r.id === id);
                 if (request) showDetail(request);
             });
         });
@@ -309,7 +346,7 @@
         document.querySelectorAll('.edit-request').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
-                const request = requests.find(r => r.id === id);
+                const request = filteredRequests.find(r => r.id === id);
                 if (request) openEditModal(request);
             });
         });
@@ -317,12 +354,13 @@
         document.querySelectorAll('.cancel-request').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
-                const request = requests.find(r => r.id === id);
+                const request = filteredRequests.find(r => r.id === id);
                 if (request) openCancelReasonModal(request);
             });
         });
     }
 
+    // ===== عرض التفاصيل =====
     function showDetail(request) {
         detailRequestNumber.textContent = request.request_number || '-';
         detailCurrentEmail.textContent = request.current_email || '-';
@@ -640,6 +678,13 @@
 
         updateHeaderUI(currentUser);
 
+        // ربط أحداث الفلتر
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                applyFilter();
+            });
+        }
+
         await fetchRequests();
 
         // ربط أحداث نافذة الطلب الجديد
@@ -729,7 +774,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع سبب الإلغاء).');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع فلتر).');
     }
 
     if (document.readyState === 'loading') {
