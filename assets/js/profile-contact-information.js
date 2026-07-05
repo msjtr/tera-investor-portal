@@ -1,12 +1,10 @@
 /**
  * ==========================================================
- * profile-contact-information.js
- * إدارة صفحة معلومات الاتصال – Enterprise Version 2026
+ * profile-contact-information.js - v2.3 (معالجة هادئة لـ 403)
  * ==========================================================
- * - جلب بيانات المستخدم وعرضها من user_metadata أولاً.
- * - تحقق ديناميكي من رقم الجوال حسب الدولة.
- * - تجاهل أخطاء صلاحيات profiles (403/404) والاعتماد على auth.
- * - إرسال التحديثات إلى Supabase.
+ * - يكتفي ببيانات auth.user_metadata لعرض رقم الجوال.
+ * - يُحاول تحميل profiles مرة واحدة فقط، فإن فشل (403) يتوقف.
+ * - الحفظ يُرسل إلى auth ويُحاول تحديث profiles بصمت.
  */
 
 'use strict';
@@ -14,6 +12,7 @@
 (function () {
     let supabase = null;
     let currentUser = null;
+    let profilesAvailable = true; // متغير يمنع إعادة المحاولات بعد 403
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
@@ -27,9 +26,9 @@
 
     function showAlert(message, type = 'error') {
         const box = document.getElementById('formAlert');
+        if (!box) return;
         const icon = document.getElementById('alertIcon');
         const msg = document.getElementById('alertMessage');
-        if (!box || !msg) return;
         box.style.display = 'flex';
         box.className = `alert-box show ${type}`;
         if (icon) icon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
@@ -55,15 +54,11 @@
         if (headerAvatar) headerAvatar.textContent = avatar;
     }
 
-    // عرض البيانات من user_metadata مباشرة
+    // عرض بيانات user_metadata مباشرة
     function populateCurrentData() {
         if (!currentUser) return;
+        document.getElementById('primaryEmail').value = currentUser.email || '';
 
-        // البريد الإلكتروني من auth
-        const primaryEmail = document.getElementById('primaryEmail');
-        if (primaryEmail) primaryEmail.value = currentUser.email || '';
-
-        // رقم الجوال من user_metadata (موجود بعد التسجيل أو التحديث)
         const mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) {
             const match = mobile.match(/^\+(\d+)/);
@@ -73,11 +68,15 @@
             }
         }
 
-        // تحميل باقي البيانات من profiles (اختياري وسيتم تجاهل الأخطاء)
-        loadProfileData();
+        // محاولة تحميل profiles إذا كانت متاحة
+        if (profilesAvailable) {
+            loadProfileData();
+        }
     }
 
     async function loadProfileData() {
+        if (!profilesAvailable) return; // لا تحاول إذا فشلت سابقاً
+
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -85,16 +84,19 @@
                 .eq('id', currentUser.id)
                 .maybeSingle();
 
-            // تجاهل أي خطأ بهدوء (403, 404, PGRST116...)
             if (error) {
-                // لا نفعل شيئاً، فقط نعتمد على user_metadata
+                // إذا كان 403 أو 404 نوقف المحاولات المستقبلية
+                if (error.status === 403 || error.status === 404 || error.code === 'PGRST116') {
+                    console.warn('⏭️ تخطي تحميل profiles (الصلاحية أو الجدول غير متوفر).');
+                    profilesAvailable = false; // إيقاف المحاولات اللاحقة
+                }
                 return;
             }
 
             if (!data) return;
 
-            // تحديث رقم الجوال من profiles فقط إذا لم يكن موجوداً في user_metadata
-            if (!currentUser.user_metadata?.mobile_number && data.mobile_number) {
+            // تحديث الحقول من profiles إن وُجدت
+            if (data.mobile_number && !currentUser.user_metadata?.mobile_number) {
                 const match = data.mobile_number.match(/^\+(\d+)/);
                 if (match) {
                     document.getElementById('countryCode').value = match[1];
@@ -102,7 +104,6 @@
                 }
             }
 
-            // الحقول الأخرى
             document.getElementById('backupEmail').value = data.backup_email || '';
             document.getElementById('emergencyName').value = data.emergency_contact_name || '';
             document.getElementById('emergencyRelation').value = data.emergency_contact_relation || '';
@@ -125,7 +126,7 @@
             }
 
         } catch (err) {
-            // تجاهل أخطاء الشبكة أو غيرها
+            // في حالات نادرة: تجاهل بهدوء
         }
     }
 
@@ -207,13 +208,13 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // تحديث رقم الجوال في user_metadata
+            // 1. تحديث رقم الجوال في user_metadata
             const { error: authError } = await supabase.auth.updateUser({
                 data: { mobile_number: fullMobile }
             });
             if (authError) throw authError;
 
-            // محاولة تحديث profiles (اختياري)
+            // 2. محاولة التحديث في profiles (اختياري)
             const { error: upsertError } = await supabase
                 .from('profiles')
                 .upsert({
@@ -229,10 +230,7 @@
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'id' });
 
-            if (upsertError && upsertError.status !== 404) {
-                // خطأ حقيقي غير "الجدول غير موجود"
-                throw upsertError;
-            }
+            if (upsertError && upsertError.status !== 404) throw upsertError;
 
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
@@ -248,18 +246,12 @@
     }
 
     function bindEvents() {
-        const form = document.getElementById('contactForm');
-        if (form) form.addEventListener('submit', saveContactInformation);
-
+        document.getElementById('contactForm')?.addEventListener('submit', saveContactInformation);
         setupCountryMobileBinding('countryCode', 'mobileNumber');
         setupCountryMobileBinding('emergencyCountryCode', 'emergencyMobile');
-
-        const emergencyNameInput = document.getElementById('emergencyName');
-        if (emergencyNameInput) {
-            emergencyNameInput.addEventListener('input', function () {
-                this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
-            });
-        }
+        document.getElementById('emergencyName')?.addEventListener('input', function () {
+            this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
+        });
     }
 
     async function init() {
@@ -270,9 +262,7 @@
                 supabase = window.TeraAuth._client;
             } else if (window.teraSupabase) {
                 supabase = window.teraSupabase;
-            } else {
-                throw new Error('Supabase client not found');
-            }
+            } else throw new Error('Supabase client not found');
 
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
@@ -283,7 +273,6 @@
             updateHeader(currentUser);
             populateCurrentData();
             bindEvents();
-
             console.log('✅ [Contact Info] جاهز، المستخدم:', user.email);
         } catch (err) {
             console.error('فشلت التهيئة:', err);
