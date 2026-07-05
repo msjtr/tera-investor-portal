@@ -5,6 +5,7 @@
  * - تقديم طلب جديد (مع قيود)
  * - عرض تفاصيل الطلب
  * - إحصائيات
+ * - مع Fallback للتحقق من البريد في حال فشل Edge Function
  */
 
 'use strict';
@@ -139,32 +140,69 @@
         return icons[status] || '';
     }
 
-    // ===== التحقق من البريد في auth.users (عبر Edge Function) =====
+    // ===== التحقق من البريد عبر Edge Function (مع Fallback) =====
     async function checkEmailViaEdge(email) {
         try {
             const { data, error } = await supabase.functions.invoke('check-email-status', {
                 body: { email: email.trim().toLowerCase() }
             });
+
             if (error) {
-                console.error('Edge Function error:', error);
-                // في حال فشل Edge Function، نرجع نتيجة آمنة (نرفض الاستخدام)
-                return { canUse: false, error: true, message: 'تعذر التحقق من البريد، حاول مرة أخرى.' };
+                console.warn('⚠️ Edge Function error, using fallback:', error);
+                return await checkEmailFallback(email);
             }
             return data;
         } catch (err) {
-            console.error('فشل الاتصال بـ Edge Function:', err);
-            return { canUse: false, error: true, message: 'تعذر الاتصال بالخادم، حاول مرة أخرى.' };
+            console.warn('⚠️ فشل الاتصال بـ Edge Function، استخدام Fallback:', err);
+            return await checkEmailFallback(email);
         }
     }
 
-    // ===== توليد رقم طلب مؤقت (سيتم استبداله من الخادم) =====
-    function generateTempRequestNumber() {
+    // ===== Fallback: التحقق المباشر من auth_register فقط =====
+    async function checkEmailFallback(email) {
+        try {
+            const normalizedEmail = email.trim().toLowerCase();
+            const { data, error } = await supabase
+                .from('auth_register')
+                .select('status')
+                .eq('email', normalizedEmail)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Fallback error:', error);
+                return { canUse: false, error: true, message: 'تعذر التحقق من البريد' };
+            }
+
+            if (data) {
+                // إذا وجد في auth_register، نمنع الاستخدام (لأنه قد يكون موجوداً في auth.users أيضاً)
+                return {
+                    exists: true,
+                    active: (data.status === 'active' || data.status === 'Active'),
+                    canUse: false,
+                    message: '✖ هذا البريد الإلكتروني مرتبط بحساب آخر ولا يمكن استخدامه.'
+                };
+            }
+
+            return {
+                exists: false,
+                active: false,
+                canUse: true,
+                message: '✅ البريد الإلكتروني متاح للاستخدام.'
+            };
+        } catch (err) {
+            console.error('Fallback error:', err);
+            return { canUse: false, error: true, message: 'تعذر التحقق من البريد' };
+        }
+    }
+
+    // ===== توليد رقم طلب (مؤقت) =====
+    function generateRequestNumber() {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        const random = String(Math.floor(10000 + Math.random() * 90000));
-        return `TR-${year}-${month}-${day}-${random}`;
+        const randomPart = String(Math.floor(10000 + Math.random() * 90000));
+        return `TR-${year}-${month}-${day}-${randomPart}`;
     }
 
     // ===== جلب الطلبات =====
@@ -177,12 +215,7 @@
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('خطأ في جلب الطلبات:', error);
-                // عرض رسالة خطأ للمستخدم
-                showAlert('تعذر تحميل الطلبات. يرجى تحديث الصفحة.', 'error');
-                return;
-            }
+            if (error) throw error;
             requests = data || [];
             renderTable();
             updateStats();
@@ -304,10 +337,10 @@
             return false;
         }
 
-        // التحقق من auth.users عبر Edge Function
+        // التحقق من البريد عبر Edge Function (مع Fallback)
         const checkResult = await checkEmailViaEdge(email);
         if (checkResult.error) {
-            newEmailHint.textContent = checkResult.message || '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
+            newEmailHint.textContent = '⚠️ تعذر التحقق من البريد، حاول مرة أخرى.';
             newEmailHint.className = 'form-hint error';
             newEmailInput.classList.remove('is-valid');
             newEmailInput.classList.add('is-invalid');
@@ -355,8 +388,8 @@
         submitRequestBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
-            // توليد رقم طلب مبدئي (سيتم استبداله من الخادم)
-            const tempNumber = generateTempRequestNumber();
+            // توليد رقم طلب مبدئي (سيتم استبداله من الخادم إذا كان هناك Trigger)
+            const tempNumber = generateRequestNumber();
 
             const { data, error } = await supabase
                 .from('email_change_requests')
@@ -413,7 +446,6 @@
         // ربط الأحداث
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
-            // تعبئة البريد الحالي في النموذج
             currentEmailDisplayModal.value = currentUser.email || '';
             newEmailInput.value = '';
             newEmailInput.classList.remove('is-valid', 'is-invalid');
@@ -433,7 +465,6 @@
             newRequestModal.classList.remove('show');
             newRequestModal.style.display = 'none';
         });
-        // إغلاق عند النقر خارج النافذة
         newRequestModal.addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('show');
@@ -443,12 +474,10 @@
 
         newRequestForm.addEventListener('submit', submitNewRequest);
 
-        // التحقق الفوري من البريد الجديد
         newEmailInput.addEventListener('input', function() {
             validateNewEmail();
         });
 
-        // تفاصيل الطلب
         closeDetailModal.addEventListener('click', function() {
             detailModal.classList.remove('show');
             detailModal.style.display = 'none';
@@ -464,7 +493,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة.');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع Fallback).');
     }
 
     if (document.readyState === 'loading') {
