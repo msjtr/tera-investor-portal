@@ -1,7 +1,12 @@
 /**
  * ==========================================================
- * profile-contact-information.js - v2.4 (تجاهل 403 تماماً)
+ * profile-contact-information.js – الإصدار النهائي (بدون profiles)
  * ==========================================================
+ * - يعرض البريد من user.email مباشرة.
+ * - يعرض رقم الجوال من user_metadata (يُخزّن تلقائياً بعد التسجيل).
+ * - لا يتصل بجدول profiles أبداً لتجنب أخطاء 403.
+ * - الحفظ يُحدّث user_metadata فقط (رقم الجوال).
+ * - باقي بيانات الطوارئ تُحفظ لاحقاً عند توفر profiles.
  */
 
 'use strict';
@@ -9,7 +14,6 @@
 (function () {
     let supabase = null;
     let currentUser = null;
-    let profilesAccessible = true; // سنوقف المحاولات بعد أول 403
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
@@ -28,7 +32,7 @@
         const msg = document.getElementById('alertMessage');
         box.style.display = 'flex';
         box.className = `alert-box show ${type}`;
-        if (icon) icon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+        icon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
         msg.textContent = message;
         clearTimeout(window._alertTimer);
         window._alertTimer = setTimeout(() => {
@@ -49,9 +53,14 @@
         document.getElementById('headerAvatar').textContent = avatar;
     }
 
+    // عرض البيانات من auth فقط (بدون profiles)
     function populateCurrentData() {
         if (!currentUser) return;
+
+        // البريد الإلكتروني
         document.getElementById('primaryEmail').value = currentUser.email || '';
+
+        // رقم الجوال من user_metadata
         const mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) {
             const match = mobile.match(/^\+(\d+)/);
@@ -60,64 +69,8 @@
                 document.getElementById('mobileNumber').value = mobile.substring(match[0].length);
             }
         }
-
-        // محاولة تحميل profiles فقط إذا كانت متاحة
-        if (profilesAccessible) {
-            loadProfileData();
-        }
-    }
-
-    async function loadProfileData() {
-        if (!profilesAccessible) return;
-
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .maybeSingle();
-
-            if (error) {
-                // أي خطأ (خاصة 403 أو 404) يوقف المحاولات
-                if (error.status === 403 || error.status === 404 || error.code === 'PGRST116') {
-                    console.warn('⏭️ تخطي profiles (لا توجد صلاحية أو الجدول غير موجود).');
-                    profilesAccessible = false;
-                }
-                return;
-            }
-
-            if (!data) return;
-
-            // تعبئة الحقول من profiles
-            if (data.mobile_number && !currentUser.user_metadata?.mobile_number) {
-                const match = data.mobile_number.match(/^\+(\d+)/);
-                if (match) {
-                    document.getElementById('countryCode').value = match[1];
-                    document.getElementById('mobileNumber').value = data.mobile_number.substring(match[0].length);
-                }
-            }
-            document.getElementById('backupEmail').value = data.backup_email || '';
-            document.getElementById('emergencyName').value = data.emergency_contact_name || '';
-            document.getElementById('emergencyRelation').value = data.emergency_contact_relation || '';
-            if (data.emergency_contact_mobile) {
-                const m = data.emergency_contact_mobile.match(/^\+(\d+)/);
-                if (m) {
-                    document.getElementById('emergencyCountryCode').value = m[1];
-                    document.getElementById('emergencyMobile').value = data.emergency_contact_mobile.substring(m[0].length);
-                }
-            }
-            document.getElementById('emergencyEmail').value = data.emergency_contact_email || '';
-            const langRadios = document.getElementsByName('preferredLanguage');
-            for (const r of langRadios) {
-                if (r.value === (data.preferred_language || 'arabic')) r.checked = true;
-            }
-            const methodRadios = document.getElementsByName('preferredMethod');
-            for (const r of methodRadios) {
-                if (r.value === (data.preferred_contact_method || 'email')) r.checked = true;
-            }
-        } catch (err) {
-            // تجاهل
-        }
+        // باقي الحقول (الطوارئ وغيرها) تبقى فارغة لعدم وجود profiles،
+        // وعند الحفظ سيتم حفظ رقم الجوال فقط في auth.
     }
 
     function validateMobileInput(inputId, countrySelectId) {
@@ -150,12 +103,47 @@
 
     async function saveContactInformation(e) {
         e.preventDefault();
-        // ... (نفس كود الحفظ السابق دون تغيير)
-        // فقط نضيف محاولة upsert إلى profiles مع تجاهل 403/404
-        // يمكنك استخدام الكود الذي أرسلته سابقاً (النسخة 2.3)
-        // لضيق المساحة سأشير إلى أنه مطابق للنسخة السابقة
-        // لكن مع التحقق من profilesAccessible قبل الاتصال بـ profiles
-        // في حالة عدم وجود صلاحية: نكتفي بتحديث auth
+
+        const countryCode = document.getElementById('countryCode').value;
+        const mobileNumber = document.getElementById('mobileNumber').value.replace(/\D/g, '');
+        const primaryEmail = document.getElementById('primaryEmail').value.trim();
+
+        if (!mobileNumber || !primaryEmail) {
+            showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error');
+            return;
+        }
+        if (!validateMobileInput('mobileNumber', 'countryCode')) {
+            showAlert('رقم الجوال غير صحيح.', 'error');
+            return;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(primaryEmail)) {
+            showAlert('البريد الإلكتروني غير صحيح.', 'error');
+            return;
+        }
+
+        const fullMobile = '+' + countryCode + mobileNumber;
+        const btn = document.querySelector('.btn-submit');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+        try {
+            // تحديث رقم الجوال في user_metadata (المصدر الوحيد الموثوق حالياً)
+            const { error } = await supabase.auth.updateUser({
+                data: { mobile_number: fullMobile }
+            });
+            if (error) throw error;
+
+            showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+            currentUser.user_metadata.mobile_number = fullMobile;
+            updateHeader(currentUser);
+        } catch (err) {
+            console.error(err);
+            showAlert('تعذر حفظ البيانات. حاول مرة أخرى.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> حفظ بيانات الاتصال';
+        }
     }
 
     function bindEvents() {
@@ -168,8 +156,29 @@
     }
 
     async function init() {
-        // نفس init السابق مع تعيين profilesAccessible = true
-        // ...
+        try {
+            if (typeof window.waitForSupabase === 'function') {
+                supabase = await window.waitForSupabase();
+            } else if (window.TeraAuth?._client) {
+                supabase = window.TeraAuth._client;
+            } else if (window.teraSupabase) {
+                supabase = window.teraSupabase;
+            } else throw new Error('Supabase client not found');
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.replace('/auth/auth/login/login.html');
+                return;
+            }
+            currentUser = user;
+            updateHeader(currentUser);
+            populateCurrentData(); // تعبئة البريد والجوال فوراً من user
+            bindEvents();
+            console.log('✅ [Contact Info] جاهز، المستخدم:', user.email);
+        } catch (err) {
+            console.error(err);
+            showAlert('تعذر تحميل الصفحة. يرجى تحديث المتصفح.', 'error');
+        }
     }
 
     if (document.readyState === 'loading') {
