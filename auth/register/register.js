@@ -8,6 +8,7 @@
  * - يخزن نوع التحقق (signup) لتوجيه صحيح بعد التحقق.
  * - متوافق مع verify-otp.js و auth.js.
  * - النسخة المُحدَّثة: استخدام TeraAuth، مسارات نسبية، معالجة أخطاء محسّنة.
+ * - ✅ يدعم الآن جميع دول الخليج + مصر مع تحقق ديناميكي من رقم الجوال.
  */
 
 (function () {
@@ -120,6 +121,34 @@
         } else if (progressBar) {
             progressBar.style.width = '0%';
         }
+    }
+
+    // ========== دوال التحقق من رقم الجوال حسب الدولة ==========
+    function getMobilePattern(countryCode) {
+        // أنماط التحقق لكل دولة: النمط (regex)، رسالة الخطأ
+        const patterns = {
+            '+966': { regex: /^5\d{8}$/,   min: 9,  max: 9,  msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
+            '+971': { regex: /^5\d{8}$/,   min: 9,  max: 9,  msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
+            '+965': { regex: /^[5-9]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 5-9' },
+            '+973': { regex: /^[3-9]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 3-9' },
+            '+974': { regex: /^[3-7]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 3-7' },
+            '+968': { regex: /^[7-9]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 7-9' },
+            '+20':  { regex: /^1[0-2]\d{8}$/, min: 10, max: 10, msg: 'رقم الجوال يجب أن يبدأ بـ 1 ويتكون من 10 أرقام' }
+        };
+        return patterns[countryCode] || patterns['+966'];
+    }
+
+    function validateMobileForCountry(mobile, countryCode) {
+        const pattern = getMobilePattern(countryCode);
+        // تنظيف المدخلات من مسافات أو رموز
+        const cleaned = mobile.replace(/[\s\-\(\)]/g, '');
+        if (cleaned.length < pattern.min || cleaned.length > pattern.max) {
+            return { valid: false, msg: pattern.msg };
+        }
+        if (!pattern.regex.test(cleaned)) {
+            return { valid: false, msg: pattern.msg };
+        }
+        return { valid: true, msg: '' };
     }
 
     // ========== دالة تقديم النموذج الرئيسية ==========
@@ -241,15 +270,48 @@
             });
         }
 
+        // ---- التحقق من الجوال حسب الدولة ----
+        const countrySelect = document.getElementById('country_code_select');
         const mobileInput = document.getElementById('mobile_number');
-        if (mobileInput) {
-            mobileInput.addEventListener('input', function () {
-                const valid = /^5\d{8}$/.test(this.value.trim());
-                updateFieldStatus('mobile', valid, 'رقم جوال غير صحيح (يبدأ بـ 5)');
+
+        // تحديث placeholder حسب الدولة
+        const placeholders = {
+            '+966': '5XXXXXXXX',
+            '+971': '5XXXXXXXX',
+            '+965': 'XXXXXXXX',
+            '+973': 'XXXXXXXX',
+            '+974': 'XXXXXXXX',
+            '+968': 'XXXXXXXX',
+            '+20':  '1XXXXXXXXX'
+        };
+
+        if (countrySelect && mobileInput) {
+            countrySelect.addEventListener('change', function() {
+                mobileInput.placeholder = placeholders[this.value] || 'XXXXXXXXX';
+                mobileInput.value = ''; // مسح الحقل عند تغيير الدولة
+                updateFieldStatus('mobile', false, '');
                 checkStage1Complete();
             });
         }
 
+        if (mobileInput) {
+            mobileInput.addEventListener('input', function () {
+                const countryCode = countrySelect?.value || '+966';
+                const mobile = this.value.trim();
+                
+                if (mobile === '') {
+                    updateFieldStatus('mobile', false, 'رقم الجوال مطلوب');
+                    checkStage1Complete();
+                    return;
+                }
+                
+                const result = validateMobileForCountry(mobile, countryCode);
+                updateFieldStatus('mobile', result.valid, result.msg);
+                checkStage1Complete();
+            });
+        }
+
+        // ---- باقي الحقول ----
         const emailInput = document.getElementById('email');
         if (emailInput) {
             emailInput.addEventListener('input', function () {
