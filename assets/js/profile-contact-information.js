@@ -155,7 +155,7 @@
     }
 
     function isEditable(status) {
-        return status === 'new';
+        return status === 'new' || status === 'pending';
     }
 
     function isCancellable(status) {
@@ -256,14 +256,11 @@
     }
 
     function checkPendingRequest() {
+        // إذا كان هناك طلب بحالة جديد أو قيد المراجعة أو موافقة (لم يكتمل بعد)، نمنع الطلبات الجديدة
         const hasActive = requests.some(r => r.status === 'new' || r.status === 'pending' || r.status === 'approved');
         if (hasActive) {
             addRequestBtn.disabled = true;
             pendingNotice.style.display = 'flex';
-            const noticeSpan = pendingNotice.querySelector('span');
-            if (noticeSpan) {
-                noticeSpan.textContent = '⚠️ لديكم طلب تغيير بريد إلكتروني قيد المعالجة (جديد أو قيد المراجعة أو موافق عليه)، ولا يمكن تقديم طلب جديد حتى يتم الانتهاء من الطلب الحالي.';
-            }
         } else {
             addRequestBtn.disabled = false;
             pendingNotice.style.display = 'none';
@@ -406,6 +403,7 @@
             return false;
         }
 
+        // إذا كان البريد الجديد هو نفس البريد القديم في الطلب، نسمح به (لا حاجة للتحقق من التوفر)
         if (email.toLowerCase() === originalEmail.toLowerCase()) {
             editNewEmailHint.textContent = '✅ نفس البريد الإلكتروني المطلوب سابقاً.';
             editNewEmailHint.className = 'form-hint success';
@@ -624,7 +622,7 @@
                     current_email: currentUser.email,
                     new_email: newEmail,
                     reason: reason,
-                    status: 'new'  // الحالة الأولية: جديد
+                    status: 'new'  // ✅ الحالة الأولية: جديد (وليس قيد المراجعة)
                 })
                 .select()
                 .single();
