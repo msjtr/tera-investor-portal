@@ -3,8 +3,7 @@
  * security.js
  * نظام صفحات الأمان - Enterprise Edition
  * متوافق مع Supabase JS v2 و TeraAuth
- * النسخة المُحدَّثة: إزالة التوجيه التلقائي من SecurityCore.init()
- * مع إضافة دالة togglePasswordVisibility العامة
+ * النسخة النهائية مع دالة togglePasswordVisibility العامة
  * ============================================================
  */
 
@@ -13,7 +12,7 @@
 window.SecurityPages = window.SecurityPages || {};
 
 /* ============================================================
-   انتظار جاهزية Supabase (متوافق مع TeraAuth)
+   انتظار جاهزية Supabase
 ============================================================ */
 
 async function waitForSupabase() {
@@ -35,27 +34,15 @@ async function waitForSupabase() {
     }
 
     return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error('Supabase Timeout'));
-        }, 15000);
-
-        document.addEventListener(
-            'supabase:ready',
-            () => {
-                clearTimeout(timeout);
-                resolve(window.teraSupabase);
-            },
-            { once: true }
-        );
-
-        document.addEventListener(
-            'supabase:error',
-            () => {
-                clearTimeout(timeout);
-                reject(new Error('Supabase Error'));
-            },
-            { once: true }
-        );
+        const timeout = setTimeout(() => reject(new Error('Supabase Timeout')), 15000);
+        document.addEventListener('supabase:ready', () => {
+            clearTimeout(timeout);
+            resolve(window.teraSupabase);
+        }, { once: true });
+        document.addEventListener('supabase:error', () => {
+            clearTimeout(timeout);
+            reject(new Error('Supabase Error'));
+        }, { once: true });
     });
 }
 
@@ -87,23 +74,14 @@ function showSecurityAlert(message, type = 'error') {
 
     const icon = document.getElementById('alertIcon');
     const text = document.getElementById('alertMessage');
-
     box.className = `alert-box show ${type}`;
-
     if (text) text.textContent = message;
-
     if (icon) {
-        if (type === 'success') {
-            icon.className = 'fas fa-check-circle';
-        } else if (type === 'warning') {
-            icon.className = 'fas fa-triangle-exclamation';
-        } else {
-            icon.className = 'fas fa-circle-exclamation';
-        }
+        if (type === 'success') icon.className = 'fas fa-check-circle';
+        else if (type === 'warning') icon.className = 'fas fa-triangle-exclamation';
+        else icon.className = 'fas fa-circle-exclamation';
     }
-
     box.style.display = 'flex';
-
     clearTimeout(window.securityAlertTimer);
     window.securityAlertTimer = setTimeout(() => {
         box.style.display = 'none';
@@ -117,18 +95,10 @@ function showSecurityAlert(message, type = 'error') {
 
 function updateHeader(user) {
     if (!user) return;
-
-    const fullName =
-        user.user_metadata?.full_name ||
-        user.user_metadata?.name ||
-        user.email?.split('@')[0] ||
-        'مستخدم';
-
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'مستخدم';
     const avatar = fullName.trim().charAt(0).toUpperCase();
-
     const headerName = document.getElementById('headerUserName');
     const headerAvatar = document.getElementById('headerAvatar');
-
     if (headerName) headerName.textContent = fullName;
     if (headerAvatar) headerAvatar.textContent = avatar;
 }
@@ -139,7 +109,6 @@ function updateHeader(user) {
 
 function setButtonLoading(button, text = 'جاري التنفيذ...') {
     if (!button) return;
-
     button.disabled = true;
     button.dataset.original = button.innerHTML;
     button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
@@ -147,7 +116,6 @@ function setButtonLoading(button, text = 'جاري التنفيذ...') {
 
 function restoreButton(button) {
     if (!button) return;
-
     button.disabled = false;
     if (button.dataset.original) {
         button.innerHTML = button.dataset.original;
@@ -161,17 +129,13 @@ function restoreButton(button) {
 function togglePasswordVisibility(e) {
     e.preventDefault();
     e.stopPropagation();
-
     const button = e.currentTarget || this;
     const targetId = button.getAttribute('data-target');
     if (!targetId) return;
-
     const input = document.getElementById(targetId);
     if (!input) return;
-
     const isPassword = input.type === 'password';
     input.type = isPassword ? 'text' : 'password';
-
     const icon = button.querySelector('i');
     if (icon) {
         icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
@@ -211,7 +175,7 @@ function formatDate(date) {
 }
 
 /* ============================================================
-   Security Core - مدير الأمان المركزي (تم تعديله لإزالة التوجيه التلقائي)
+   Security Core - مدير الأمان المركزي
 ============================================================ */
 
 const SecurityCore = {
@@ -223,9 +187,7 @@ const SecurityCore = {
         if (this._initialized && this.supabase) {
             return this.currentUser;
         }
-
         try {
-            // محاولة استخدام TeraAuth أولاً
             if (window.TeraAuth) {
                 if (!window.TeraAuth._initialized) {
                     await window.TeraAuth.init();
@@ -241,27 +203,18 @@ const SecurityCore = {
                     }
                 }
             }
-
-            // خطة احتياطية: استخدام waitForSupabase
             this.supabase = await waitForSupabase();
-
             const { data: { user }, error } = await this.supabase.auth.getUser();
-
             if (error || !user) {
-                // ✅ لا نقوم بالتوجيه، نعيد null فقط
                 console.warn('⚠️ [Security] لا يوجد مستخدم مسجل الدخول');
                 this.currentUser = null;
                 this._initialized = true;
                 return null;
             }
-
             this.currentUser = user;
             this._initialized = true;
-
             updateHeader(user);
-
             return user;
-
         } catch (err) {
             console.error('❌ [Security] خطأ في التهيئة:', err);
             this._initialized = true;
@@ -272,7 +225,6 @@ const SecurityCore = {
 
     async getUser() {
         if (this.currentUser) return this.currentUser;
-
         try {
             if (window.TeraAuth && window.TeraAuth._client) {
                 const user = await window.TeraAuth.getUser();
@@ -281,7 +233,6 @@ const SecurityCore = {
                     return user;
                 }
             }
-
             const { data: { user } } = await this.supabase.auth.getUser();
             this.currentUser = user;
             return user;
@@ -301,7 +252,6 @@ const SecurityCore = {
                     return user;
                 }
             }
-
             const { data: { user } } = await this.supabase.auth.getUser();
             this.currentUser = user;
             updateHeader(user);
@@ -312,7 +262,6 @@ const SecurityCore = {
         }
     },
 
-    // دوال التوجيه أصبحت اختيارية، يمكن للصفحة استدعاؤها إذا رغبت
     redirectToLogin() {
         window.location.replace('/auth/auth/login/login.html');
     },
@@ -323,25 +272,18 @@ const SecurityCore = {
 };
 
 /* ============================================================
-   صفحات الأمان المختلفة - مع حماية من إعادة التعريف
+   صفحات الأمان المختلفة
 ============================================================ */
 
-/* ----- تغيير كلمة المرور (يتم التعريف في ملف منفصل) ----- */
 if (!window.SecurityPages['change-password']) {
     window.SecurityPages['change-password'] = {
         async init() {
-            console.warn('⚠️ [Security] تم تحميل التعريف الافتراضي لـ change-password.');
-            console.warn('⚠️ [Security] يرجى التأكد من تحميل security-change-password.js للحصول على الوظائف الكاملة.');
-            
             const user = await SecurityCore.init();
             if (!user) return;
-
-            // ربط أزرار إظهار/إخفاء كلمة المرور
             document.querySelectorAll('.password-toggle').forEach(btn => {
                 btn.removeEventListener('click', togglePasswordVisibility);
                 btn.addEventListener('click', togglePasswordVisibility);
             });
-
             const btn = document.getElementById('changePasswordBtn');
             if (btn) {
                 btn.addEventListener('click', async function() {
@@ -352,18 +294,13 @@ if (!window.SecurityPages['change-password']) {
     };
 }
 
-/* ----- تغيير رقم الجوال ----- */
 if (!window.SecurityPages['change-mobile']) {
     window.SecurityPages['change-mobile'] = {
         async init() {
             const user = await SecurityCore.init();
             if (!user) return;
-
             const display = document.getElementById('currentMobileDisplay');
-            if (display) {
-                display.textContent = user.user_metadata?.mobile_number || '--';
-            }
-
+            if (display) display.textContent = user.user_metadata?.mobile_number || '--';
             const btn = document.getElementById('changeMobileBtn');
             if (btn) {
                 btn.addEventListener('click', async function() {
@@ -374,7 +311,6 @@ if (!window.SecurityPages['change-mobile']) {
     };
 }
 
-/* ----- سجل الدخول ----- */
 if (!window.SecurityPages['login-history']) {
     window.SecurityPages['login-history'] = {
         async init() {
@@ -382,13 +318,10 @@ if (!window.SecurityPages['login-history']) {
             if (!user) return;
             await this.load(user.id);
         },
-
         async load(userId) {
             const tableBody = document.getElementById('loginHistoryBody');
             if (!tableBody) return;
-
             tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">جاري تحميل البيانات...</td></tr>';
-
             try {
                 const { data, error } = await SecurityCore.supabase
                     .from('auth_login')
@@ -396,14 +329,11 @@ if (!window.SecurityPages['login-history']) {
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false })
                     .limit(50);
-
                 if (error) throw error;
-
                 if (!data || !data.length) {
                     tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد سجلات دخول.</td></tr>';
                     return;
                 }
-
                 tableBody.innerHTML = '';
                 data.forEach(row => {
                     tableBody.innerHTML += `
@@ -416,7 +346,6 @@ if (!window.SecurityPages['login-history']) {
                         </tr>
                     `;
                 });
-
             } catch (err) {
                 console.error('❌ [Login History]', err);
                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#dc2626;">تعذر تحميل البيانات.</td></tr>';
@@ -425,7 +354,6 @@ if (!window.SecurityPages['login-history']) {
     };
 }
 
-/* ----- الأجهزة المصرح بها ----- */
 if (!window.SecurityPages['registered-devices']) {
     window.SecurityPages['registered-devices'] = {
         async init() {
@@ -433,27 +361,21 @@ if (!window.SecurityPages['registered-devices']) {
             if (!user) return;
             await this.load(user.id);
         },
-
         async load(userId) {
             const container = document.getElementById('devicesContainer');
             if (!container) return;
-
             container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">جاري تحميل الأجهزة...</p>';
-
             try {
                 const { data, error } = await SecurityCore.supabase
                     .from('authorized_devices')
                     .select('*')
                     .eq('user_id', userId)
                     .order('last_used_at', { ascending: false });
-
                 if (error) throw error;
-
                 if (!data || !data.length) {
                     container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">لا توجد أجهزة مسجلة.</p>';
                     return;
                 }
-
                 container.innerHTML = '';
                 data.forEach(device => {
                     container.innerHTML += `
@@ -470,29 +392,22 @@ if (!window.SecurityPages['registered-devices']) {
                         </div>
                     `;
                 });
-
             } catch (err) {
                 console.error('❌ [Devices]', err);
                 container.innerHTML = '<p style="color:#dc2626;text-align:center;padding:20px;">تعذر تحميل الأجهزة.</p>';
             }
         },
-
         async remove(id) {
             if (!confirm('هل تريد حذف هذا الجهاز؟')) return;
-
             try {
                 const { error } = await SecurityCore.supabase
                     .from('authorized_devices')
                     .delete()
                     .eq('id', id);
-
                 if (error) throw error;
-
                 showSecurityAlert('✅ تم حذف الجهاز بنجاح.', 'success');
-
                 const user = await SecurityCore.getUser();
                 if (user) this.load(user.id);
-
             } catch (err) {
                 console.error('❌ [Remove Device]', err);
                 showSecurityAlert('تعذر حذف الجهاز.', 'error');
@@ -501,40 +416,25 @@ if (!window.SecurityPages['registered-devices']) {
     };
 }
 
-/* ----- المصادقة الثنائية (2FA) ----- */
 if (!window.SecurityPages['two-factor-authentication']) {
     window.SecurityPages['two-factor-authentication'] = {
         async init() {
             const user = await SecurityCore.init();
             if (!user) return;
-
             const toggle = document.getElementById('twoFactorToggle');
             if (!toggle) return;
-
             toggle.checked = user.user_metadata?.two_factor_enabled || false;
-
             toggle.addEventListener('change', this.update.bind(this));
         },
-
         async update(e) {
             const enabled = e.target.checked;
-
             try {
                 const { error } = await SecurityCore.supabase.auth.updateUser({
-                    data: {
-                        two_factor_enabled: enabled
-                    }
+                    data: { two_factor_enabled: enabled }
                 });
-
                 if (error) throw error;
-
-                showSecurityAlert(
-                    enabled ? '✅ تم تفعيل المصادقة الثنائية.' : '✅ تم تعطيل المصادقة الثنائية.',
-                    'success'
-                );
-
+                showSecurityAlert(enabled ? '✅ تم تفعيل المصادقة الثنائية.' : '✅ تم تعطيل المصادقة الثنائية.', 'success');
                 await SecurityCore.refreshUser();
-
             } catch (err) {
                 console.error('❌ [2FA]', err);
                 e.target.checked = !enabled;
@@ -549,25 +449,12 @@ if (!window.SecurityPages['two-factor-authentication']) {
 ============================================================ */
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const page =
-        document.body.dataset.security ||
-        document.body.dataset.page ||
-        document.body.id ||
-        '';
-
+    const page = document.body.dataset.security || document.body.dataset.page || document.body.id || '';
     if (!page) return;
-
-    if (
-        window.SecurityPages &&
-        window.SecurityPages[page] &&
-        typeof window.SecurityPages[page].init === 'function'
-    ) {
+    if (window.SecurityPages && window.SecurityPages[page] && typeof window.SecurityPages[page].init === 'function') {
         console.log('🔐 [Security] تهيئة الصفحة:', page);
-
         try {
-            // تهيئة SecurityCore
             await SecurityCore.init();
-            // إذا كان المستخدم غير موجود، قد ترغب الصفحة في التعامل مع ذلك
             await window.SecurityPages[page].init();
         } catch (err) {
             console.error('❌ [Security] خطأ في تهيئة الصفحة:', err);
