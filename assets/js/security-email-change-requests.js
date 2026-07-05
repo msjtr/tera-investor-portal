@@ -2,9 +2,8 @@
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
  * الحالة الأولية للطلب: "جديد" (new)
- * - يمكن للمستخدم تعديل أو إلغاء أو حذف الطلبات ذات الحالة "جديد" فقط
- * - عند بدء مراجعة الطلب من الإدارة، تتغير الحالة إلى "قيد المراجعة" (pending)
- * - الطلبات التي تحت المراجعة أو الموافق عليها أو المنفذة لا يمكن تعديلها
+ * - يمكن للمستخدم تعديل أو إلغاء الطلبات ذات الحالة "جديد" أو "قيد المراجعة"
+ * - يمكن للمستخدم حذف الطلبات ذات الحالة "جديد" فقط
  */
 
 'use strict';
@@ -16,7 +15,7 @@
     let requests = [];
     let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
 
-    // ===== عناصر DOM (نفسها) =====
+    // ===== عناصر DOM =====
     const addRequestBtn = document.getElementById('addRequestBtn');
     const pendingNotice = document.getElementById('pendingRequestNotice');
     const tableBody = document.getElementById('requestsTableBody');
@@ -151,7 +150,6 @@
     }
 
     function isEditable(status) {
-        // يمكن تعديل الطلبات الجديدة والقيد المراجعة (لكن الحذف فقط للجديدة)
         return status === 'new' || status === 'pending';
     }
 
@@ -253,7 +251,6 @@
     }
 
     function checkPendingRequest() {
-        // إذا كان هناك طلب بحالة جديد أو قيد المراجعة أو موافقة (لم يكتمل بعد)، نمنع الطلبات الجديدة
         const hasActive = requests.some(r => r.status === 'new' || r.status === 'pending' || r.status === 'approved');
         if (hasActive) {
             addRequestBtn.disabled = true;
@@ -307,7 +304,6 @@
         });
         tableBody.innerHTML = html;
 
-        // ربط أحداث الأزرار
         document.querySelectorAll('.view-detail').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -341,7 +337,6 @@
         });
     }
 
-    // ===== عرض التفاصيل =====
     function showDetail(request) {
         detailRequestNumber.textContent = request.request_number || '-';
         detailCurrentEmail.textContent = request.current_email || '-';
@@ -357,7 +352,6 @@
         detailModal.style.display = 'flex';
     }
 
-    // ===== فتح نافذة التعديل =====
     function openEditModal(request) {
         editRequestId.value = request.id;
         editCurrentEmail.value = request.current_email;
@@ -370,7 +364,6 @@
         editRequestModal.style.display = 'flex';
     }
 
-    // ===== التحقق من البريد الجديد في نافذة التعديل =====
     async function validateEditEmail() {
         const email = editNewEmail.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -400,7 +393,6 @@
             return false;
         }
 
-        // إذا كان البريد الجديد هو نفس البريد القديم في الطلب، نسمح به (لا حاجة للتحقق من التوفر)
         if (email.toLowerCase() === originalEmail.toLowerCase()) {
             editNewEmailHint.textContent = '✅ نفس البريد الإلكتروني المطلوب سابقاً.';
             editNewEmailHint.className = 'form-hint success';
@@ -433,10 +425,8 @@
         return true;
     }
 
-    // ===== حفظ التعديلات =====
     async function saveEditRequest(e) {
         e.preventDefault();
-
         const id = editRequestId.value;
         const newEmail = editNewEmail.value.trim();
         const reason = editReason.value.trim();
@@ -473,7 +463,6 @@
             editRequestModal.classList.remove('show');
             editRequestModal.style.display = 'none';
             await fetchRequests();
-
         } catch (err) {
             console.error('فشل تعديل الطلب:', err);
             showAlert('⚠️ تعذر تعديل الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
@@ -483,7 +472,6 @@
         }
     }
 
-    // ===== تأكيد إلغاء الطلب =====
     function confirmCancelRequest(request) {
         if (confirm(`هل أنت متأكد من إلغاء الطلب رقم ${request.request_number}؟`)) {
             cancelRequest(request.id);
@@ -511,7 +499,6 @@
         }
     }
 
-    // ===== تأكيد حذف الطلب =====
     function confirmDeleteRequest(request) {
         if (confirm(`هل أنت متأكد من حذف الطلب رقم ${request.request_number}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
             deleteRequest(request.id);
@@ -536,7 +523,6 @@
         }
     }
 
-    // ===== التحقق من البريد الجديد (لنافذة الإضافة) =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -589,7 +575,6 @@
         return true;
     }
 
-    // ===== تقديم طلب جديد =====
     async function submitNewRequest(e) {
         e.preventDefault();
 
@@ -619,7 +604,7 @@
                     current_email: currentUser.email,
                     new_email: newEmail,
                     reason: reason,
-                    status: 'new'  // ✅ الحالة الأولية: جديد
+                    status: 'new'
                 })
                 .select()
                 .single();
@@ -635,7 +620,6 @@
             reasonHint.textContent = '';
 
             await fetchRequests();
-
         } catch (err) {
             console.error('فشل إرسال الطلب:', err);
             showAlert('⚠️ تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
@@ -645,7 +629,6 @@
         }
     }
 
-    // ===== تهيئة الصفحة =====
     async function initPage() {
         if (initialized) return;
         initialized = true;
@@ -657,10 +640,8 @@
         }
 
         updateHeaderUI(currentUser);
-
         await fetchRequests();
 
-        // ربط أحداث نافذة الطلب الجديد
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
             currentEmailDisplayModal.value = currentUser.email || '';
@@ -694,7 +675,6 @@
             validateNewEmail();
         });
 
-        // ربط أحداث نافذة التعديل
         closeEditRequestModal.addEventListener('click', function() {
             editRequestModal.classList.remove('show');
             editRequestModal.style.display = 'none';
@@ -714,7 +694,6 @@
             validateEditEmail();
         });
 
-        // ربط أحداث نافذة التفاصيل
         closeDetailModal.addEventListener('click', function() {
             detailModal.classList.remove('show');
             detailModal.style.display = 'none';
