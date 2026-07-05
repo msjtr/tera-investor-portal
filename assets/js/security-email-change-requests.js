@@ -3,8 +3,9 @@
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
  * الحالة الأولية: "جديد" (new)
  * - يمكن تعديل/إلغاء الطلبات الجديدة والقيد المراجعة
- * - يمكن حذف الطلبات الجديدة فقط
- * - تم تعطيل Edge Function نهائياً (استخدام Fallback فقط لتجاوز CORS)
+ * - تم إزالة زر الحذف نهائياً
+ * - عند الإلغاء، يُطلب سبب الإلغاء من المستخدم
+ * - في التفاصيل، يظهر سبب الإلغاء مع توضيح أنه من المستخدم
  */
 
 'use strict';
@@ -44,6 +45,16 @@
     const editReasonHint = document.getElementById('editReasonHint');
     const saveEditBtn = document.getElementById('saveEditBtn');
 
+    // نافذة سبب الإلغاء
+    const cancelReasonModal = document.getElementById('cancelReasonModal');
+    const closeCancelReasonModal = document.getElementById('closeCancelReasonModal');
+    const cancelReasonCloseBtn = document.getElementById('cancelReasonCloseBtn');
+    const cancelReasonForm = document.getElementById('cancelReasonForm');
+    const cancelRequestId = document.getElementById('cancelRequestId');
+    const cancelReasonInput = document.getElementById('cancelReasonInput');
+    const cancelReasonHint = document.getElementById('cancelReasonHint');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+
     const detailModal = document.getElementById('detailModal');
     const closeDetailModal = document.getElementById('closeDetailModal');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -56,6 +67,7 @@
     const detailStatus = document.getElementById('detailStatus');
     const detailAdminNotes = document.getElementById('detailAdminNotes');
     const detailRejectionReason = document.getElementById('detailRejectionReason');
+    const detailCancellationReason = document.getElementById('detailCancellationReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
     const totalCount = document.getElementById('totalCount');
@@ -159,11 +171,7 @@
         return status === 'new' || status === 'pending';
     }
 
-    function isDeletable(status) {
-        return status === 'new';
-    }
-
-    // ===== التحقق من البريد (Fallback فقط – تجاوز Edge Function) =====
+    // ===== التحقق من البريد (Fallback فقط) =====
     async function checkEmailAvailability(email) {
         return await checkEmailFallback(email);
     }
@@ -262,7 +270,6 @@
         requests.forEach(req => {
             const editable = isEditable(req.status);
             const cancellable = isCancellable(req.status);
-            const deletable = isDeletable(req.status);
 
             html += `
                 <tr>
@@ -278,14 +285,11 @@
                             <button class="btn-icon view-detail" data-id="${req.id}" title="عرض التفاصيل">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            ${editable ? `<button class="btn-icon text-warning edit-request" data-id="${req.id}" title="تعديل الطلب">
+                            ${editable ? `<button class="btn-icon text-warning edit-request" data-id="${req.id}" title="تعديل الطلب (من قبل المستخدم)">
                                 <i class="fas fa-edit"></i>
                             </button>` : ''}
                             ${cancellable ? `<button class="btn-icon text-danger cancel-request" data-id="${req.id}" title="إلغاء الطلب">
                                 <i class="fas fa-times-circle"></i>
-                            </button>` : ''}
-                            ${deletable ? `<button class="btn-icon text-danger delete-request" data-id="${req.id}" title="حذف الطلب">
-                                <i class="fas fa-trash-alt"></i>
                             </button>` : ''}
                         </div>
                     </td>
@@ -314,15 +318,7 @@
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 const request = requests.find(r => r.id === id);
-                if (request) confirmCancelRequest(request);
-            });
-        });
-
-        document.querySelectorAll('.delete-request').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const request = requests.find(r => r.id === id);
-                if (request) confirmDeleteRequest(request);
+                if (request) openCancelReasonModal(request);
             });
         });
     }
@@ -337,6 +333,7 @@
         detailStatus.innerHTML = getStatusBadge(request.status) + ' ' + getStatusIcon(request.status);
         detailAdminNotes.textContent = request.admin_notes || '-';
         detailRejectionReason.textContent = request.rejection_reason || '-';
+        detailCancellationReason.textContent = request.cancellation_reason || '-';
         detailCompletedAt.textContent = request.completed_at ? formatDate(request.completed_at) : '-';
         detailModal.classList.add('show');
         detailModal.style.display = 'flex';
@@ -464,18 +461,42 @@
         }
     }
 
-    function confirmCancelRequest(request) {
-        if (confirm(`هل أنت متأكد من إلغاء الطلب رقم ${request.request_number}؟`)) {
-            cancelRequest(request.id);
-        }
+    // ===== فتح نافذة سبب الإلغاء =====
+    function openCancelReasonModal(request) {
+        cancelRequestId.value = request.id;
+        cancelReasonInput.value = '';
+        cancelReasonHint.textContent = '';
+        cancelReasonInput.classList.remove('is-invalid');
+        cancelReasonModal.classList.add('show');
+        cancelReasonModal.style.display = 'flex';
+        cancelReasonInput.focus();
     }
 
-    async function cancelRequest(id) {
+    // ===== إلغاء الطلب مع سبب الإلغاء =====
+    async function cancelRequestWithReason(e) {
+        e.preventDefault();
+
+        const id = cancelRequestId.value;
+        const reason = cancelReasonInput.value.trim();
+
+        if (!reason) {
+            cancelReasonHint.textContent = '✖ يرجى إدخال سبب الإلغاء.';
+            cancelReasonHint.className = 'form-hint error';
+            cancelReasonInput.classList.add('is-invalid');
+            return;
+        }
+        cancelReasonHint.textContent = '';
+        cancelReasonInput.classList.remove('is-invalid');
+
+        confirmCancelBtn.disabled = true;
+        confirmCancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإلغاء...';
+
         try {
             const { error } = await supabase
                 .from('email_change_requests')
                 .update({
                     status: 'cancelled',
+                    cancellation_reason: reason,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', id)
@@ -484,37 +505,20 @@
             if (error) throw error;
 
             showAlert('✅ تم إلغاء الطلب بنجاح.', 'success');
+            cancelReasonModal.classList.remove('show');
+            cancelReasonModal.style.display = 'none';
             await fetchRequests();
+
         } catch (err) {
             console.error('فشل إلغاء الطلب:', err);
             showAlert('⚠️ تعذر إلغاء الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
+        } finally {
+            confirmCancelBtn.disabled = false;
+            confirmCancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> تأكيد الإلغاء';
         }
     }
 
-    function confirmDeleteRequest(request) {
-        if (confirm(`هل أنت متأكد من حذف الطلب رقم ${request.request_number}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
-            deleteRequest(request.id);
-        }
-    }
-
-    async function deleteRequest(id) {
-        try {
-            const { error } = await supabase
-                .from('email_change_requests')
-                .delete()
-                .eq('id', id)
-                .eq('user_id', currentUser.id);
-
-            if (error) throw error;
-
-            showAlert('✅ تم حذف الطلب بنجاح.', 'success');
-            await fetchRequests();
-        } catch (err) {
-            console.error('فشل حذف الطلب:', err);
-            showAlert('⚠️ تعذر حذف الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
-        }
-    }
-
+    // ===== التحقق من البريد الجديد (لنافذة الإضافة) =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -567,6 +571,7 @@
         return true;
     }
 
+    // ===== تقديم طلب جديد =====
     async function submitNewRequest(e) {
         e.preventDefault();
 
@@ -615,17 +620,14 @@
 
         } catch (err) {
             console.error('فشل إرسال الطلب:', err);
-            if (err.message && err.message.includes('check constraint')) {
-                showAlert('⚠️ حدث خطأ في قاعدة البيانات. يرجى التواصل مع الدعم الفني.', 'error');
-            } else {
-                showAlert('⚠️ تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
-            }
+            showAlert('⚠️ تعذر إرسال الطلب حالياً، يرجى المحاولة مرة أخرى لاحقاً.', 'error');
         } finally {
             submitRequestBtn.disabled = false;
             submitRequestBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
         }
     }
 
+    // ===== تهيئة الصفحة =====
     async function initPage() {
         if (initialized) return;
         initialized = true;
@@ -640,6 +642,7 @@
 
         await fetchRequests();
 
+        // ربط أحداث نافذة الطلب الجديد
         addRequestBtn.addEventListener('click', function() {
             if (addRequestBtn.disabled) return;
             currentEmailDisplayModal.value = currentUser.email || '';
@@ -673,6 +676,7 @@
             validateNewEmail();
         });
 
+        // ربط أحداث نافذة التعديل
         closeEditRequestModal.addEventListener('click', function() {
             editRequestModal.classList.remove('show');
             editRequestModal.style.display = 'none';
@@ -692,6 +696,24 @@
             validateEditEmail();
         });
 
+        // ربط أحداث نافذة سبب الإلغاء
+        closeCancelReasonModal.addEventListener('click', function() {
+            cancelReasonModal.classList.remove('show');
+            cancelReasonModal.style.display = 'none';
+        });
+        cancelReasonCloseBtn.addEventListener('click', function() {
+            cancelReasonModal.classList.remove('show');
+            cancelReasonModal.style.display = 'none';
+        });
+        cancelReasonModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+                this.style.display = 'none';
+            }
+        });
+        cancelReasonForm.addEventListener('submit', cancelRequestWithReason);
+
+        // ربط أحداث نافذة التفاصيل
         closeDetailModal.addEventListener('click', function() {
             detailModal.classList.remove('show');
             detailModal.style.display = 'none';
@@ -707,7 +729,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع Fallback للتحقق).');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع سبب الإلغاء).');
     }
 
     if (document.readyState === 'loading') {
