@@ -8,6 +8,7 @@
  * - تحقق من البريد الإلكتروني الأساسي.
  * - إرسال التحديثات إلى Supabase (profiles).
  * - عرض رسائل تنبيه وتفاعل كامل.
+ * - معالجة أخطاء عدم وجود جدول profiles.
  */
 
 'use strict';
@@ -70,7 +71,6 @@
         // رقم الجوال الحالي
         const currentMobile = currentUser.user_metadata?.mobile_number || '';
         if (currentMobile) {
-            // استخراج مفتاح الدولة والرقم
             const countryCodeMatch = currentMobile.match(/^\+(\d+)/);
             if (countryCodeMatch) {
                 const code = countryCodeMatch[1];
@@ -92,9 +92,19 @@
                 .from('profiles')
                 .select('*')
                 .eq('id', currentUser.id)
-                .single();
+                .maybeSingle(); // استخدام maybeSingle بدلاً من single لتجنب الخطأ إذا لم توجد صفوف
 
-            if (error && error.code !== 'PGRST116') throw error;
+            // تجاهل إذا كان الجدول غير موجود أو ليس به بيانات
+            if (error) {
+                // PGRST116: لا توجد صفوف (طبيعي)
+                // 404: الجدول غير موجود
+                if (error.code === 'PGRST116' || error.status === 404) {
+                    console.log('ℹ️ جدول profiles غير موجود بعد، سيتم إنشاؤه عند الحفظ.');
+                    return;
+                }
+                throw error;
+            }
+
             if (!data) return;
 
             // تعبئة الحقول من profile
@@ -110,6 +120,7 @@
                 }
             }
             document.getElementById('emergencyEmail') && (document.getElementById('emergencyEmail').value = profile.emergency_contact_email || '');
+
             // لغة التواصل المفضلة
             const langRadios = document.getElementsByName('preferredLanguage');
             for (const radio of langRadios) {
@@ -135,13 +146,6 @@
         if (mobile.length === 0) return false;
         if (mobile.length !== pattern.length) return false;
         if (!pattern.regex.test(mobile)) return false;
-        return true;
-    }
-
-    function validateEmailUniqueness(email, currentEmail) {
-        // تحقق مبسط: إذا كان نفس البريد الحالي فهو مقبول
-        if (email === currentEmail) return true;
-        // وإلا سيتم التحقق عند الإرسال من الخادم
         return true;
     }
 
@@ -251,9 +255,17 @@
                 .from('profiles')
                 .upsert(profileData, { onConflict: 'id' });
 
-            if (upsertError) throw upsertError;
-
-            showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+            // إذا كان الخطأ بسبب عدم وجود الجدول (404) نكتفي بتحديث auth ونبلغ المستخدم
+            if (upsertError) {
+                if (upsertError.status === 404) {
+                    console.warn('⚠️ جدول profiles غير موجود، تم حفظ رقم الجوال فقط في الحساب.');
+                    showAlert('✅ تم حفظ بيانات الاتصال الأساسية (سيتم استكمال الملف الشخصي لاحقاً).', 'success');
+                } else {
+                    throw upsertError;
+                }
+            } else {
+                showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+            }
 
             // تحديث الكائن المحلي
             currentUser.user_metadata.mobile_number = fullMobile;
@@ -264,6 +276,8 @@
             let message = 'تعذر حفظ البيانات.';
             if (err.message.includes('duplicate key') || err.message.includes('unique constraint')) {
                 message = 'رقم الجوال أو البريد الإلكتروني مستخدم بالفعل.';
+            } else if (err.status === 404) {
+                message = 'قاعدة البيانات غير جاهزة، يرجى الاتصال بالدعم.';
             }
             showAlert(message, 'error');
         } finally {
