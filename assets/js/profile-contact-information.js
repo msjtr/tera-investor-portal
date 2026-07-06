@@ -1,10 +1,10 @@
 /**
  * ==========================================================
- * profile-contact-information.js – v6.0 (شامل لكل الحقول)
+ * profile-contact-information.js – v6.1 (دعم profiles القديمة)
  * ==========================================================
- * - يجلب ويعرض جميع بيانات الاتصال: الجوال، الطوارئ، اللغة، إلخ.
+ * - يجلب جميع بيانات الاتصال من user_contact_info أو profiles.
  * - يحفظ كل البيانات في user_contact_info و auth.
- * - يتعامل مع أخطاء 400/403 بهدوء.
+ * - يحافظ على التوافق مع البيانات المخزنة سابقًا.
  */
 
 'use strict';
@@ -124,56 +124,89 @@
         return '';
     }
 
-    // جلب البيانات الإضافية (جهة الطوارئ، اللغة، الطريقة) من user_contact_info
-    async function loadAdditionalData() {
-        if (!contactInfoAvailable) return;
+    // دالة مساعدة لملء الحقول من كائن البيانات (سواء من profiles أو user_contact_info)
+    function fillFieldsFromData(data) {
+        if (!data) return;
 
-        try {
-            const { data, error } = await supabase
-                .from('user_contact_info')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .maybeSingle();
-
-            if (error) {
-                if (error.status === 400) contactInfoAvailable = false;
-                return;
+        if (data.backup_email) {
+            document.getElementById('backupEmail').value = data.backup_email;
+        }
+        if (data.emergency_contact_name) {
+            document.getElementById('emergencyName').value = data.emergency_contact_name;
+        }
+        if (data.emergency_contact_relation) {
+            document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
+        }
+        if (data.emergency_contact_mobile) {
+            const parsed = parseMobile(data.emergency_contact_mobile);
+            if (parsed) {
+                document.getElementById('emergencyCountryCode').value = parsed.code;
+                document.getElementById('emergencyMobile').value = parsed.number;
             }
-
-            if (!data) return;
-
-            // تعبئة الحقول
-            if (data.backup_email) {
-                document.getElementById('backupEmail').value = data.backup_email;
-            }
-            if (data.emergency_contact_name) {
-                document.getElementById('emergencyName').value = data.emergency_contact_name;
-            }
-            if (data.emergency_contact_relation) {
-                document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
-            }
-            if (data.emergency_contact_mobile) {
-                const parsed = parseMobile(data.emergency_contact_mobile);
-                if (parsed) {
-                    document.getElementById('emergencyCountryCode').value = parsed.code;
-                    document.getElementById('emergencyMobile').value = parsed.number;
-                }
-            }
-            if (data.emergency_contact_email) {
-                document.getElementById('emergencyEmail').value = data.emergency_contact_email;
-            }
-            // لغة التواصل
+        }
+        if (data.emergency_contact_email) {
+            document.getElementById('emergencyEmail').value = data.emergency_contact_email;
+        }
+        // لغة التواصل
+        if (data.preferred_language) {
             const langRadios = document.getElementsByName('preferredLanguage');
             for (const r of langRadios) {
-                if (r.value === (data.preferred_language || 'arabic')) r.checked = true;
+                if (r.value === data.preferred_language) r.checked = true;
             }
-            // طريقة التواصل
+        }
+        // طريقة التواصل
+        if (data.preferred_contact_method) {
             const methodRadios = document.getElementsByName('preferredMethod');
             for (const r of methodRadios) {
-                if (r.value === (data.preferred_contact_method || 'email')) r.checked = true;
+                if (r.value === data.preferred_contact_method) r.checked = true;
             }
-        } catch (e) {
-            console.warn('تعذر تحميل البيانات الإضافية:', e);
+        }
+    }
+
+    // جلب البيانات الإضافية: أولاً من profiles (للتوافق مع البيانات القديمة)، ثم user_contact_info
+    async function loadAdditionalData() {
+        let dataFound = false;
+
+        // 1. محاولة الجلب من profiles (للتوافق مع البيانات السابقة)
+        if (profilesAvailable) {
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .maybeSingle();
+
+                if (error) {
+                    if (error.status === 403 || error.status === 404) {
+                        profilesAvailable = false;
+                    }
+                } else if (data) {
+                    fillFieldsFromData(data);
+                    dataFound = true;
+                }
+            } catch (e) {}
+        }
+
+        // 2. محاولة الجلب من user_contact_info (قد يحتوي بيانات أحدث)
+        if (contactInfoAvailable) {
+            try {
+                const { data, error } = await supabase
+                    .from('user_contact_info')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+
+                if (error) {
+                    if (error.status === 400) contactInfoAvailable = false;
+                } else if (data) {
+                    fillFieldsFromData(data);
+                    dataFound = true;
+                }
+            } catch (e) {}
+        }
+
+        if (!dataFound) {
+            console.log('ℹ️ لا توجد بيانات إضافية محفوظة بعد.');
         }
     }
 
@@ -188,7 +221,6 @@
             if (parsed) {
                 document.getElementById('countryCode').value = parsed.code;
                 document.getElementById('mobileNumber').value = parsed.number;
-                // showAlert('✅ تم تحميل بيانات الاتصال بنجاح.', 'success'); // اختياري
             } else {
                 showAlert('⚠️ تنسيق رقم الجوال غير معروف، يرجى إعادة إدخاله.', 'warning');
             }
@@ -196,7 +228,6 @@
             showAlert('⚠️ لم يتم العثور على رقم جوال مسجل. يرجى إدخاله للحفظ.', 'warning');
         }
 
-        // تحميل البيانات الإضافية بعد الأساسية
         await loadAdditionalData();
     }
 
@@ -251,27 +282,21 @@
     async function saveContactInformation(e) {
         e.preventDefault();
 
-        // البيانات الأساسية
         const countryCode = document.getElementById('countryCode').value;
         const mobileNumber = document.getElementById('mobileNumber').value.replace(/\D/g, '');
         const primaryEmail = document.getElementById('primaryEmail').value.trim();
         const backupEmail = document.getElementById('backupEmail').value.trim();
 
-        // بيانات الطوارئ
         const emergencyName = document.getElementById('emergencyName').value.trim();
         const emergencyRelation = document.getElementById('emergencyRelation').value;
         const emergencyCountryCode = document.getElementById('emergencyCountryCode').value;
         const emergencyMobile = document.getElementById('emergencyMobile').value.replace(/\D/g, '');
         const emergencyEmail = document.getElementById('emergencyEmail').value.trim();
 
-        // التفضيلات
         const preferredLanguage = document.querySelector('input[name="preferredLanguage"]:checked')?.value || 'arabic';
         const preferredMethod = document.querySelector('input[name="preferredMethod"]:checked')?.value || 'email';
-
-        // الإقرار
         const declarationCheck = document.getElementById('declarationCheck').checked;
 
-        // التحقق من الحقول المطلوبة
         if (!mobileNumber || !primaryEmail) {
             showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error');
             return;
@@ -307,16 +332,13 @@
 
         const fullMobile = '+' + countryCode + mobileNumber;
         const fullEmergencyMobile = '+' + emergencyCountryCode + emergencyMobile;
-
         const btn = document.querySelector('.btn-submit');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // 1. تحديث user_metadata
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // 2. تحديث auth_register
             if (authRegisterAvailable) {
                 try {
                     const { error } = await supabase.from('auth_register')
@@ -326,33 +348,34 @@
                 } catch (e) {}
             }
 
-            // 3. تحديث/إدراج user_contact_info (كل الحقول)
+            const payload = {
+                user_id: currentUser.id,
+                mobile_number: fullMobile,
+                backup_email: backupEmail || null,
+                preferred_language: preferredLanguage,
+                preferred_contact_method: preferredMethod,
+                emergency_contact_name: emergencyName,
+                emergency_contact_relation: emergencyRelation,
+                emergency_contact_mobile: fullEmergencyMobile,
+                emergency_contact_email: emergencyEmail || null,
+                updated_at: new Date().toISOString()
+            };
+
+            // حفظ في user_contact_info
             if (contactInfoAvailable) {
                 try {
-                    const { error } = await supabase.from('user_contact_info').upsert({
-                        user_id: currentUser.id,
-                        mobile_number: fullMobile,
-                        backup_email: backupEmail || null,
-                        preferred_language: preferredLanguage,
-                        preferred_contact_method: preferredMethod,
-                        emergency_contact_name: emergencyName,
-                        emergency_contact_relation: emergencyRelation,
-                        emergency_contact_mobile: fullEmergencyMobile,
-                        emergency_contact_email: emergencyEmail || null,
-                        updated_at: new Date().toISOString()
-                    });
+                    const { error } = await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
                     if (error && error.status === 400) contactInfoAvailable = false;
                 } catch (e) {}
             }
 
-            // 4. محاولة profiles (إن أمكن)
+            // حفظ في profiles أيضًا (للتوافق)
             if (profilesAvailable) {
                 try {
                     const { error } = await supabase.from('profiles').upsert({
-                        id: currentUser.id,
-                        mobile_number: fullMobile,
-                        updated_at: new Date().toISOString()
-                    });
+                        ...payload,
+                        id: currentUser.id
+                    }, { onConflict: 'id' });
                     if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
                 } catch (e) {}
             }
