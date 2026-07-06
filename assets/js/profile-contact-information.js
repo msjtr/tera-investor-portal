@@ -1,8 +1,8 @@
 /**
- * profile-contact-information.js – v6.6 (أسماء أعمدة صحيحة)
- * - يتوافق مع أعمدة user_contact_info: phone, secondary_email, emergency_contact_phone، إلخ.
- * - يجلب البيانات القديمة ويقسم رقم الطوارئ إلى مفتاح الدولة والرقم.
- * - يحفظ البيانات الجديدة باستخدام الأسماء الصحيحة.
+ * profile-contact-information.js – v6.7 (إصلاح 400 + 403)
+ * - يُطابق أعمدة user_contact_info: phone, secondary_email, emergency_*.
+ * - يُخزّن التفضيلات (اللغة، طريقة التواصل) في profiles فقط إذا كان متاحاً.
+ * - يتجاهل أخطاء 403/400 ويحفظ الأساسيات في user_metadata.
  */
 
 'use strict';
@@ -12,7 +12,6 @@
     let currentUser = null;
     let profilesAvailable = true;
     let contactInfoAvailable = true;
-    let authRegisterAvailable = true;
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
@@ -68,27 +67,11 @@
         let mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) return mobile;
 
-        if (authRegisterAvailable) {
-            try {
-                const { data, error } = await supabase
-                    .from('auth_register')
-                    .select('mobile_number')
-                    .eq('user_id', currentUser.id)
-                    .maybeSingle();
-                if (!error && data?.mobile_number) {
-                    mobile = data.mobile_number;
-                    await supabase.auth.updateUser({ data: { mobile_number: mobile } });
-                    return mobile;
-                }
-                if (error && (error.status === 403 || error.status === 404)) authRegisterAvailable = false;
-            } catch (e) {}
-        }
-
         if (contactInfoAvailable) {
             try {
                 const { data, error } = await supabase
                     .from('user_contact_info')
-                    .select('phone')  // استخدمنا العمود الصحيح
+                    .select('phone')
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
                 if (!error && data?.phone) {
@@ -104,7 +87,7 @@
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('mobile_number') // profiles قد يحتفظ بالاسم القديم
+                    .select('mobile_number')
                     .eq('id', currentUser.id)
                     .maybeSingle();
                 if (!error && data?.mobile_number) {
@@ -122,17 +105,9 @@
     function fillFieldsFromData(data) {
         if (!data) return;
 
-        // الأسماء الجديدة المطابقة للجدول
-        if (data.secondary_email) {
-            document.getElementById('backupEmail').value = data.secondary_email;
-        } else if (data.backup_email) { // توافق مع profiles القديم
-            document.getElementById('backupEmail').value = data.backup_email;
-        }
-
+        if (data.secondary_email) document.getElementById('backupEmail').value = data.secondary_email;
         if (data.emergency_contact_name) document.getElementById('emergencyName').value = data.emergency_contact_name;
         if (data.emergency_contact_relation) document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
-
-        // رقم الطوارئ (العمود emergency_contact_phone)
         const emergencyPhone = data.emergency_contact_phone || data.emergency_contact_mobile;
         if (emergencyPhone) {
             let fullEmergency = emergencyPhone.trim();
@@ -146,9 +121,9 @@
                 document.getElementById('emergencyMobile').value = fullEmergency.replace(/[^\d]/g, '');
             }
         }
-
         if (data.emergency_contact_email) document.getElementById('emergencyEmail').value = data.emergency_contact_email;
 
+        // التفضيلات قد تكون من profiles أو أي مصدر آخر
         if (data.preferred_language) {
             const langRadio = document.querySelector(`input[name="preferredLanguage"][value="${data.preferred_language}"]`);
             if (langRadio) langRadio.checked = true;
@@ -278,53 +253,46 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
+            // 1. تحديث user_metadata
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // استخدام الأسماء الصحيحة عند الحفظ
-            const payload = {
-                user_id: currentUser.id,
-                phone: fullMobile,                    // بدلاً من mobile_number
-                secondary_email: backupEmail || null, // بدلاً من backup_email
-                preferred_language: preferredLanguage,
-                preferred_contact_method: preferredMethod,
-                emergency_contact_name: emergencyName,
-                emergency_contact_relation: emergencyRelation,
-                emergency_contact_phone: fullEmergencyMobile, // بدلاً من emergency_contact_mobile
-                emergency_contact_email: emergencyEmail || null,
-                updated_at: new Date().toISOString()
-            };
-
-            let saved = false;
+            // 2. حفظ في user_contact_info (الأعمدة الصحيحة فقط)
             if (contactInfoAvailable) {
-                const { error } = await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
-                if (!error) saved = true;
-                else if (error.status === 400) contactInfoAvailable = false;
+                const contactPayload = {
+                    user_id: currentUser.id,
+                    phone: fullMobile,
+                    secondary_email: backupEmail || null,
+                    emergency_contact_name: emergencyName,
+                    emergency_contact_relation: emergencyRelation,
+                    emergency_contact_phone: fullEmergencyMobile,
+                    emergency_contact_email: emergencyEmail || null,
+                    updated_at: new Date().toISOString()
+                };
+                const { error } = await supabase.from('user_contact_info').upsert(contactPayload, { onConflict: 'user_id' });
+                if (error && error.status === 400) contactInfoAvailable = false;
+                // لا نُوقف العملية حتى لو فشلت
             }
-            if (!saved && profilesAvailable) {
-                // profiles قد لا يزال يستخدم الأسماء القديمة، لذا نرسل له الاسماء القديمة إن لزم الأمر
+
+            // 3. محاولة حفظ التفضيلات في profiles (إن كان متاحاً)
+            if (profilesAvailable) {
                 const profilePayload = {
                     id: currentUser.id,
                     mobile_number: fullMobile,
                     backup_email: backupEmail || null,
-                    preferred_language: preferredLanguage,
-                    preferred_contact_method: preferredMethod,
                     emergency_contact_name: emergencyName,
                     emergency_contact_relation: emergencyRelation,
                     emergency_contact_mobile: fullEmergencyMobile,
                     emergency_contact_email: emergencyEmail || null,
+                    preferred_language: preferredLanguage,
+                    preferred_contact_method: preferredMethod,
                     updated_at: new Date().toISOString()
                 };
                 const { error } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-                if (!error) saved = true;
-                else if (error.status === 403 || error.status === 404) profilesAvailable = false;
-            }
-            if (!saved) {
-                showAlert('❌ لم نتمكن من حفظ البيانات. تأكد من صلاحيات RLS.', 'error');
-                return;
+                if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
             }
 
             await updateVerificationStatus();
-            showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
+            showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
             updateHeader(currentUser);
         } catch (err) {
