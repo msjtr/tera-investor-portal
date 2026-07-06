@@ -1,6 +1,5 @@
 /**
- * security-change-mobile.js – النسخة المتكاملة (جدول، إحصائيات، فلتر، OTP)
- * يعمل مع صفحة change-mobile.html التي تحتوي على table و stats و filter
+ * security-change-mobile.js – النسخة المتكاملة (فصل الرقم الحالي، تحقق إجباري، مطابقة)
  */
 (function() {
     let supabase, currentUser, requests = [], currentFilter = 'all';
@@ -16,6 +15,21 @@
         '+968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
         '+20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX' }
     };
+
+    // دالة لاستخراج مفتاح الدولة والرقم من رقم كامل (مثل "966597771565" أو "+966597771565")
+    function parseMobile(fullNumber) {
+        if (!fullNumber) return null;
+        let cleaned = fullNumber.replace(/[^\d+]/g, '');
+        if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
+        cleaned = cleaned.substring(1); // إزالة +
+        for (const code of Object.keys(countryPatterns)) {
+            const codeWithoutPlus = code.substring(1);
+            if (cleaned.startsWith(codeWithoutPlus)) {
+                return { code: code, number: cleaned.substring(codeWithoutPlus.length) };
+            }
+        }
+        return null;
+    }
 
     function getStatusLabel(status) {
         const labels = { new: 'جديد', pending: 'قيد المراجعة', approved: 'تمت الموافقة', completed: 'تم التنفيذ', rejected: 'مرفوض', cancelled: 'ملغي' };
@@ -176,12 +190,43 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
+    // ===== تجهيز نافذة الطلب الجديد (فصل الرقم الحالي) =====
+    function prepareNewRequestModal() {
+        // جلب الرقم الحالي من user_metadata
+        const fullMobile = currentUser.user_metadata?.mobile_number || '';
+        const parsed = parseMobile(fullMobile);
+
+        // عرض الرقم الحالي مفصولاً في الحقل المخصص (يمكن أن يكون حقل مخفي أو نص)
+        const currentMobileDisplay = document.getElementById('currentMobileDisplayModal');
+        if (currentMobileDisplay) {
+            if (parsed) {
+                currentMobileDisplay.value = `${parsed.code} ${parsed.number}`;
+            } else {
+                currentMobileDisplay.value = fullMobile || 'غير مسجل';
+            }
+        }
+
+        // ضبط الدولة الافتراضية للجوال الجديد لتكون مطابقة للحالي
+        const newCountryCode = document.getElementById('newCountryCode');
+        if (newCountryCode && parsed) {
+            // التأكد من أن القيمة موجودة في القائمة
+            if ([...newCountryCode.options].some(opt => opt.value === parsed.code)) {
+                newCountryCode.value = parsed.code;
+            }
+        }
+
+        // إعادة تعيين الحقول الأخرى
+        document.getElementById('newMobileNumber').value = '';
+        document.getElementById('confirmNewMobile').value = '';
+        document.getElementById('reasonInput').value = '';
+        resetNewForm();
+    }
+
     function bindEvents() {
         document.getElementById('statusFilter').addEventListener('change', applyFilter);
         document.getElementById('addRequestBtn').addEventListener('click', () => {
-            document.getElementById('currentMobileDisplayModal').value = currentUser.user_metadata?.mobile_number || 'غير مسجل';
+            prepareNewRequestModal(); // فصل الرقم الحالي
             document.getElementById('newRequestModal').classList.add('show');
-            resetNewForm();
         });
         document.getElementById('closeNewRequestModal').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('cancelNewRequestBtn').addEventListener('click', () => closeModal('newRequestModal'));
@@ -201,6 +246,55 @@
                 if (modal) modal.classList.remove('show');
             });
         });
+
+        // أحداث التحقق الفوري من الرقم الجديد وتأكيده
+        document.getElementById('newMobileNumber').addEventListener('input', validateNewMobileInputs);
+        document.getElementById('confirmNewMobile').addEventListener('input', validateNewMobileInputs);
+        document.getElementById('newCountryCode').addEventListener('change', validateNewMobileInputs);
+    }
+
+    // ===== التحقق من صحة الرقم الجديد وتطابقه =====
+    function validateNewMobileInputs() {
+        const code = document.getElementById('newCountryCode').value;
+        const newMobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
+        const confirmMobile = document.getElementById('confirmNewMobile').value.replace(/\D/g, '');
+        const sendBtn = document.getElementById('sendOtpBtnNew');
+        const mobileHint = document.getElementById('newMobileNumber').closest('.form-group')?.querySelector('.form-hint') || document.getElementById('otpHintNew');
+        const confirmHint = document.getElementById('confirmNewMobile').closest('.form-group')?.querySelector('.form-hint') || document.getElementById('otpHintNew');
+
+        // التحقق من صحة الرقم الجديد
+        const pattern = countryPatterns[code];
+        let isValid = true;
+        if (!pattern) isValid = false;
+        else if (newMobile.length !== pattern.length || !pattern.regex.test(newMobile)) {
+            isValid = false;
+            if (mobileHint) { mobileHint.textContent = pattern.msg; mobileHint.className = 'form-hint error'; }
+        } else {
+            if (mobileHint) { mobileHint.textContent = '✅ رقم صالح'; mobileHint.className = 'form-hint success'; }
+        }
+
+        // التحقق من عدم مطابقة الرقم الحالي
+        const currentFullMobile = currentUser.user_metadata?.mobile_number || '';
+        const currentParsed = parseMobile(currentFullMobile);
+        if (currentParsed && newMobile === currentParsed.number && code === currentParsed.code) {
+            isValid = false;
+            if (mobileHint) { mobileHint.textContent = '✖ الرقم الجديد مطابق للرقم الحالي'; mobileHint.className = 'form-hint error'; }
+        }
+
+        // التحقق من تطابق التأكيد
+        if (confirmMobile.length > 0) {
+            if (newMobile !== confirmMobile) {
+                isValid = false;
+                if (confirmHint) { confirmHint.textContent = '✖ الرقم غير متطابق'; confirmHint.className = 'form-hint error'; }
+            } else {
+                if (confirmHint) { confirmHint.textContent = '✅ الرقم متطابق'; confirmHint.className = 'form-hint success'; }
+            }
+        } else {
+            if (confirmHint) { confirmHint.textContent = ''; confirmHint.className = 'form-hint'; }
+        }
+
+        // تعطيل زر الإرسال إذا كانت البيانات غير صحيحة
+        if (sendBtn) sendBtn.disabled = !isValid;
     }
 
     function resetNewForm() {
@@ -210,17 +304,26 @@
         document.getElementById('submitNewRequestBtn').style.display = 'none';
         document.getElementById('otpCodeNew').value = '';
         clearInterval(otpTimer);
+        validateNewMobileInputs(); // تحديث حالة الأزرار
     }
 
     async function sendOtpForNewRequest() {
         const code = document.getElementById('newCountryCode').value;
         const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
-        if (!countryPatterns[code] || mobile.length !== countryPatterns[code].length || !countryPatterns[code].regex.test(mobile)) {
+        const pattern = countryPatterns[code];
+        if (!pattern || mobile.length !== pattern.length || !pattern.regex.test(mobile)) {
             return showAlert('رقم الجوال غير صحيح.');
         }
-        const currentMobile = (currentUser.user_metadata?.mobile_number || '').replace(/^\+966/, '');
-        if (mobile === currentMobile) {
+
+        // التحقق مرة أخرى من عدم المطابقة
+        const currentParsed = parseMobile(currentUser.user_metadata?.mobile_number || '');
+        if (currentParsed && mobile === currentParsed.number && code === currentParsed.code) {
             return showAlert('الرقم الجديد مطابق للحالي.');
+        }
+
+        const confirmMobile = document.getElementById('confirmNewMobile').value.replace(/\D/g, '');
+        if (mobile !== confirmMobile) {
+            return showAlert('رقم التأكيد غير متطابق.');
         }
 
         const { error } = await supabase.auth.signInWithOtp({ email: currentUser.email, options: { shouldCreateUser: false } });
@@ -249,10 +352,22 @@
         e.preventDefault();
         const code = document.getElementById('newCountryCode').value;
         const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
-        const reason = document.getElementById('reasonInput').value;
+        const confirmMobile = document.getElementById('confirmNewMobile').value.replace(/\D/g, '');
+        const reason = document.getElementById('reasonInput').value.trim();
         const otp = document.getElementById('otpCodeNew').value;
 
-        if (!reason) return showAlert('أدخل سبب التغيير');
+        // التحقق من الحقول الإجبارية
+        if (!reason) return showAlert('يرجى إدخال سبب التغيير.');
+        if (mobile !== confirmMobile) return showAlert('رقم التأكيد غير متطابق.');
+        const pattern = countryPatterns[code];
+        if (!pattern || mobile.length !== pattern.length || !pattern.regex.test(mobile)) return showAlert('رقم الجوال غير صحيح.');
+
+        // التحقق من عدم مطابقة الرقم الحالي
+        const currentParsed = parseMobile(currentUser.user_metadata?.mobile_number || '');
+        if (currentParsed && mobile === currentParsed.number && code === currentParsed.code) {
+            return showAlert('الرقم الجديد مطابق للحالي.');
+        }
+
         if (!otpVerified) {
             const { error } = await supabase.auth.verifyOtp({ email: currentUser.email, token: otp, type: 'email' });
             if (error) { otpAttempts++; return showAlert('رمز التحقق غير صحيح'); }
