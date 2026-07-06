@@ -1,459 +1,263 @@
 /**
- * security-change-mobile.js – v1.3 (تجنب إعادة التوجيه غير المقصودة)
- * تغيير رقم الجوال – صفحة مستقلة مع OTP عبر البريد الإلكتروني
+ * security-change-mobile-requests.js
+ * طلبات تغيير رقم الجوال – إحصائيات، جدول، فلتر، طلب جديد مع OTP
  */
-
-'use strict';
-
-(function () {
-    let supabase = null;
-    let currentUser = null;
-    let isSendingOtp = false;
-    let isVerifyingOtp = false;
-    let isUpdatingMobile = false;
-    let timerInterval = null;
-    let passwordVerified = false;
-    let otpVerified = false;
-    let otpAttempts = 0;
+(function() {
+    let supabase, currentUser, requests = [], currentFilter = 'all';
+    let otpTimer = null, otpVerified = false, otpAttempts = 0;
     const MAX_OTP_ATTEMPTS = 5;
 
-    // عناصر DOM
-    const currentMobileDisplay = document.getElementById('currentMobileDisplay');
-    const currentPassword = document.getElementById('currentPassword');
-    const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
-    const passwordHint = document.getElementById('passwordHint');
-
-    const newMobile = document.getElementById('newMobile');
-    const confirmMobile = document.getElementById('confirmMobile');
-    const countryCodeSelect = document.getElementById('countryCodeSelect');
-    const mobileHint = document.getElementById('mobileHint');
-    const confirmHint = document.getElementById('confirmMobileHint');
-
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const timerContainer = document.getElementById('timerContainer');
-    const timerDisplay = document.getElementById('timerDisplay');
-
-    const otpCode = document.getElementById('otpCode');
-    const otpVerifyGroup = document.getElementById('otpVerifyGroup');
-    const otpSendGroup = document.getElementById('otpSendGroup');
-    const otpIcon = document.getElementById('otpIcon');
-    const otpMessage = document.getElementById('otpMessage');
-
-    const saveMobileBtn = document.getElementById('saveMobileBtn');
-    const saveGroup = document.getElementById('saveGroup');
-    const successModal = document.getElementById('successModal');
-    const countdownDisplay = document.getElementById('countdownDisplay');
-    const successGoNow = document.getElementById('successGoNow');
-    const alertBox = document.getElementById('formAlert');
-    const alertIcon = document.getElementById('alertIcon');
-    const alertMessage = document.getElementById('alertMessage');
-
     const countryPatterns = {
-        '+966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
-        '+971': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
-        '+965': { regex: /^[5-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 5-9' },
-        '+973': { regex: /^[3-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 3-9' },
-        '+974': { regex: /^[3-7]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 3-7' },
-        '+968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX', msg: 'يجب أن يتكون من 8 أرقام ويبدأ بـ 7-9' },
-        '+20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX', msg: 'يجب أن يبدأ بـ 1 ويتكون من 10 أرقام' }
+        '+966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
+        '+971': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
+        '+965': { regex: /^[5-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '+973': { regex: /^[3-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '+974': { regex: /^[3-7]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '+968': { regex: /^[7-9]\d{7}$/, length: 8, placeholder: 'XXXXXXXX' },
+        '+20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX' }
     };
 
+    function getStatusLabel(status) {
+        const labels = { new: 'جديد', pending: 'قيد المراجعة', approved: 'تمت الموافقة', completed: 'تم التنفيذ', rejected: 'مرفوض', cancelled: 'ملغي' };
+        return labels[status] || status;
+    }
+
+    function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleString('ar-SA') : '-'; }
+
     function showAlert(message, type = 'error') {
-        if (!alertBox) return;
-        alertBox.style.display = 'flex';
-        alertBox.className = `alert-box show ${type}`;
-        alertIcon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
-        alertMessage.textContent = message;
+        const box = document.getElementById('formAlert');
+        if (!box) return;
+        box.style.display = 'flex'; box.className = `alert-box show ${type}`;
+        document.getElementById('alertIcon').className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+        document.getElementById('alertMessage').textContent = message;
         clearTimeout(window._alertTimer);
-        window._alertTimer = setTimeout(() => {
-            alertBox.style.display = 'none';
-            alertBox.className = 'alert-box';
-        }, 7000);
-    }
-
-    function showSuccessModal() {
-        if (!successModal) return;
-        successModal.classList.add('show');
-        successModal.style.display = 'flex';
-        let count = 5;
-        countdownDisplay.textContent = count;
-        const interval = setInterval(() => {
-            count--;
-            if (count <= 0) {
-                clearInterval(interval);
-                window.location.replace('/pages/dashboard/index.html');
-                return;
-            }
-            countdownDisplay.textContent = count;
-        }, 1000);
-        successGoNow.onclick = () => {
-            clearInterval(interval);
-            window.location.replace('/pages/dashboard/index.html');
-        };
-    }
-
-    function hideSuccessModal() {
-        if (successModal) {
-            successModal.classList.remove('show');
-            successModal.style.display = 'none';
-        }
-    }
-
-    function updateHeader(user) {
-        if (!user) return;
-        const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        const avatar = fullName.charAt(0).toUpperCase();
-        const headerName = document.getElementById('headerUserName');
-        const headerAvatar = document.getElementById('headerAvatar');
-        if (headerName) headerName.textContent = fullName;
-        if (headerAvatar) headerAvatar.textContent = avatar;
-    }
-
-    function loadCurrentMobile() {
-        if (!currentUser || !currentMobileDisplay) return;
-        const mobile = currentUser.user_metadata?.mobile_number || '';
-        currentMobileDisplay.value = mobile || 'غير مسجل';
-    }
-
-    async function verifyPassword() {
-        const password = currentPassword.value.trim();
-        if (!password) {
-            showAlert('يرجى إدخال كلمة المرور الحالية.', 'error');
-            return;
-        }
-
-        verifyPasswordBtn.disabled = true;
-        verifyPasswordBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-
-        try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email: currentUser.email,
-                password: password
-            });
-
-            if (error) {
-                passwordHint.innerHTML = '<span style="color:#dc2626;">✖ كلمة المرور غير صحيحة.</span>';
-                showAlert('كلمة المرور الحالية غير صحيحة.', 'error');
-                return;
-            }
-
-            passwordVerified = true;
-            passwordHint.innerHTML = '<span style="color:#16a34a;">✅ تم التحقق بنجاح</span>';
-            currentPassword.disabled = true;
-            verifyPasswordBtn.style.display = 'none';
-            document.getElementById('stage2Panel').style.display = 'block';
-            document.getElementById('stage2Panel').scrollIntoView({ behavior: 'smooth' });
-            showAlert('✅ تم التحقق من كلمة المرور بنجاح.', 'success');
-        } catch (err) {
-            console.error(err);
-            showAlert('حدث خطأ أثناء التحقق. حاول لاحقاً.', 'error');
-        } finally {
-            verifyPasswordBtn.disabled = false;
-            verifyPasswordBtn.innerHTML = '<i class="fas fa-check-circle"></i> تحقق من كلمة المرور';
-        }
-    }
-
-    async function sendOtp() {
-        if (isSendingOtp) return;
-        if (timerInterval) {
-            showAlert('يرجى الانتظار حتى انتهاء المؤقت.', 'warning');
-            return;
-        }
-        if (!validateNewMobile()) {
-            showAlert('يرجى تصحيح رقم الجوال الجديد أولاً.', 'error');
-            return;
-        }
-
-        isSendingOtp = true;
-        sendOtpBtn.disabled = true;
-        sendOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
-
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email: currentUser.email,
-                options: { shouldCreateUser: false }
-            });
-
-            if (error) {
-                if (error.status === 429 || error.message.includes('rate limit')) {
-                    const match = error.message.match(/(\d+)\s*seconds?/);
-                    const waitTime = match ? parseInt(match[1]) : 60;
-                    showAlert(`⏳ تم تجاوز عدد المحاولات. يرجى الانتظار ${waitTime} ثانية.`, 'error');
-                    sendOtpBtn.disabled = true;
-                    setTimeout(() => {
-                        sendOtpBtn.disabled = false;
-                        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
-                    }, waitTime * 1000 + 1000);
-                    return;
-                }
-                throw error;
-            }
-
-            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
-            otpSendGroup.style.display = 'none';
-            otpVerifyGroup.style.display = 'block';
-            otpCode.focus();
-            startResendTimer();
-        } catch (err) {
-            console.error('فشل إرسال OTP:', err);
-            showAlert('تعذر إرسال رمز التحقق، يرجى المحاولة لاحقاً.', 'error');
-        } finally {
-            isSendingOtp = false;
-            sendOtpBtn.disabled = false;
-            sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
-        }
-    }
-
-    function startResendTimer() {
-        timerContainer.style.display = 'block';
-        let seconds = 300;
-        if (timerInterval) clearInterval(timerInterval);
-        timerDisplay.textContent = '05:00';
-
-        timerInterval = setInterval(() => {
-            seconds--;
-            const min = Math.floor(seconds / 60);
-            const sec = seconds % 60;
-            timerDisplay.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-            if (seconds <= 0) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                timerContainer.style.display = 'none';
-                otpSendGroup.style.display = 'block';
-                sendOtpBtn.innerHTML = '<i class="fas fa-redo-alt"></i> إعادة إرسال رمز التحقق';
-            }
-        }, 1000);
-    }
-
-    async function verifyOtp() {
-        if (isVerifyingOtp) return;
-        const code = otpCode.value.trim();
-        if (code.length !== 8) {
-            otpIcon.className = 'validation-icon error';
-            otpMessage.textContent = 'الرجاء إدخال رمز مكون من 8 أرقام';
-            return;
-        }
-        if (otpAttempts >= MAX_OTP_ATTEMPTS) {
-            showAlert('⚠️ تم تجاوز عدد المحاولات، يرجى طلب رمز جديد.', 'error');
-            otpCode.disabled = true;
-            return;
-        }
-
-        isVerifyingOtp = true;
-        otpIcon.className = 'validation-icon loading';
-        otpMessage.textContent = 'جارٍ التحقق...';
-
-        try {
-            const { error } = await supabase.auth.verifyOtp({
-                email: currentUser.email,
-                token: code,
-                type: 'email'
-            });
-
-            if (error) {
-                otpAttempts++;
-                throw error;
-            }
-
-            otpVerified = true;
-            otpIcon.className = 'validation-icon success';
-            otpMessage.textContent = '✅ تم التحقق بنجاح';
-            otpCode.disabled = true;
-            saveGroup.style.display = 'block';
-            otpVerifyGroup.style.display = 'none';
-            showAlert('✅ تم التحقق من الرمز بنجاح. يمكنك الآن حفظ التغيير.', 'success');
-        } catch (err) {
-            console.error(err);
-            let msg = 'رمز التحقق غير صحيح.';
-            if (err.message.includes('expired')) msg = 'انتهت صلاحية رمز التحقق.';
-            else if (err.message.includes('invalid')) msg = `رمز التحقق غير صحيح. تبقى ${MAX_OTP_ATTEMPTS - otpAttempts} محاولة.`;
-            otpIcon.className = 'validation-icon error';
-            otpMessage.textContent = msg;
-            otpCode.value = '';
-            otpCode.focus();
-        } finally {
-            isVerifyingOtp = false;
-        }
-    }
-
-    function validateNewMobile() {
-        const code = countryCodeSelect?.value || '+966';
-        const mobile = newMobile.value.replace(/\D/g, '');
-        const pattern = countryPatterns[code];
-        if (!pattern) return false;
-        if (mobile.length !== pattern.length || !pattern.regex.test(mobile)) {
-            mobileHint.textContent = pattern.msg;
-            mobileHint.className = 'mobile-hint error';
-            return false;
-        }
-        const currentFullMobile = currentUser.user_metadata?.mobile_number;
-        if (currentFullMobile && currentFullMobile === code + mobile) {
-            mobileHint.textContent = '✖ رقم الجوال الجديد مطابق للرقم الحالي.';
-            mobileHint.className = 'mobile-hint error';
-            return false;
-        }
-        mobileHint.textContent = '✅ رقم الجوال صالح';
-        mobileHint.className = 'mobile-hint success';
-        return true;
-    }
-
-    function validateConfirmMobile() {
-        const newVal = newMobile.value.replace(/\D/g, '');
-        const confirmVal = confirmMobile.value.replace(/\D/g, '');
-        if (!confirmVal) {
-            confirmHint.textContent = 'أعد إدخال رقم الجوال';
-            confirmHint.className = 'mobile-hint';
-            return false;
-        }
-        if (newVal !== confirmVal) {
-            confirmHint.textContent = '✖ رقم الجوال غير متطابق';
-            confirmHint.className = 'mobile-hint error';
-            return false;
-        }
-        confirmHint.textContent = '✅ رقم الجوال متطابق';
-        confirmHint.className = 'mobile-hint success';
-        return true;
-    }
-
-    async function saveMobileChange() {
-        if (isUpdatingMobile) return;
-        if (!passwordVerified) {
-            showAlert('يجب التحقق من كلمة المرور أولاً.', 'error');
-            return;
-        }
-        if (!validateNewMobile() || !validateConfirmMobile()) {
-            showAlert('يرجى التأكد من صحة رقم الجوال الجديد.', 'error');
-            return;
-        }
-        if (!otpVerified) {
-            showAlert('يجب التحقق من رمز OTP أولاً.', 'error');
-            return;
-        }
-
-        const code = countryCodeSelect?.value || '+966';
-        const mobile = newMobile.value.replace(/\D/g, '');
-        const fullMobile = code + mobile;
-
-        isUpdatingMobile = true;
-        saveMobileBtn.disabled = true;
-        saveMobileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-
-        try {
-            await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
-
-            try { await supabase.from('user_contact_info').upsert({ user_id: currentUser.id, phone: fullMobile, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }); } catch (e) {}
-            try { await supabase.from('auth_register').update({ mobile_number: fullMobile, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id); } catch (e) {}
-
-            showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
-            showSuccessModal();
-        } catch (err) {
-            console.error(err);
-            showAlert('تعذر حفظ التغيير. تأكد من صلاحية البيانات.', 'error');
-        } finally {
-            isUpdatingMobile = false;
-            saveMobileBtn.disabled = false;
-            saveMobileBtn.innerHTML = '<i class="fas fa-save"></i> حفظ تغيير رقم الجوال';
-        }
-    }
-
-    function bindEvents() {
-        verifyPasswordBtn?.addEventListener('click', verifyPassword);
-
-        document.querySelectorAll('.password-toggle').forEach(btn => {
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if (input) {
-                    const isPassword = input.type === 'password';
-                    input.type = isPassword ? 'text' : 'password';
-                    this.querySelector('i').className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
-                }
-            });
-        });
-
-        countryCodeSelect?.addEventListener('change', function () {
-            const p = countryPatterns[this.value];
-            if (p) {
-                newMobile.placeholder = p.placeholder;
-                newMobile.maxLength = p.length;
-                newMobile.value = '';
-                confirmMobile.value = '';
-                validateNewMobile();
-                validateConfirmMobile();
-            }
-        });
-
-        newMobile?.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, '');
-            validateNewMobile();
-            validateConfirmMobile();
-        });
-        confirmMobile?.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, '');
-            validateConfirmMobile();
-        });
-
-        sendOtpBtn?.addEventListener('click', sendOtp);
-        otpCode?.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, '');
-            if (this.value.length === 8) verifyOtp();
-        });
-
-        saveMobileBtn?.addEventListener('click', saveMobileChange);
+        window._alertTimer = setTimeout(() => { box.style.display = 'none'; box.className = 'alert-box'; }, 7000);
     }
 
     async function init() {
-        hideSuccessModal();
-
         try {
-            // محاولة الحصول على Supabase من مصادر متعددة
-            if (typeof waitForSupabase === 'function') {
-                supabase = await waitForSupabase();
-            } else if (window.teraSupabase) {
-                supabase = window.teraSupabase;
-            } else if (window.SecurityCore?.supabase) {
-                supabase = window.SecurityCore.supabase;
-            } else {
-                // إذا لم نجد Supabase، نحاول تحميله بشكل مباشر (افتراضي)
-                if (window.supabase) {
-                    supabase = window.supabase;
-                } else {
-                    throw new Error('Supabase client not found');
-                }
-            }
-
-            // الحصول على الجلسة الحالية
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (sessionError || !session) {
-                // لا توجد جلسة صالحة، إعادة توجيه إلى تسجيل الدخول
-                console.warn('⚠️ لا توجد جلسة نشطة');
-                window.location.replace('/auth/auth/login/login.html');
-                return;
-            }
-
-            // تحديث currentUser من الجلسة
-            currentUser = session.user;
-            if (!currentUser) {
-                window.location.replace('/auth/auth/login/login.html');
-                return;
-            }
-
-            updateHeader(currentUser);
-            loadCurrentMobile();
-            if (countryCodeSelect) countryCodeSelect.value = '+966';
+            supabase = window.teraSupabase || await waitForSupabase();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
+            currentUser = user;
+            updateHeader(user);
+            await fetchRequests();
             bindEvents();
-            console.log('✅ [Change Mobile] جاهز، المستخدم:', currentUser.email);
-        } catch (err) {
-            console.error('فشلت التهيئة:', err);
-            showAlert('تعذر تحميل الصفحة. يرجى تحديث المتصفح.', 'error');
-        }
+        } catch (e) { console.error(e); showAlert('تعذر تحميل الصفحة.'); }
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    function updateHeader(user) {
+        const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
+        document.getElementById('headerUserName').textContent = name;
+        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
     }
+
+    async function fetchRequests() {
+        const { data, error } = await supabase.from('mobile_change_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+        if (error) { console.error(error); return; }
+        requests = data || [];
+        updateStats();
+        applyFilter();
+        checkPendingRequest();
+    }
+
+    function updateStats() {
+        const stats = { total:0, new:0, pending:0, approved:0, completed:0, rejected:0, cancelled:0 };
+        requests.forEach(r => { stats.total++; stats[r.status] = (stats[r.status]||0)+1; });
+        document.getElementById('totalCount').textContent = stats.total;
+        document.getElementById('newCount').textContent = stats.new;
+        document.getElementById('pendingCount').textContent = stats.pending;
+        document.getElementById('approvedCount').textContent = stats.approved;
+        document.getElementById('completedCount').textContent = stats.completed;
+        document.getElementById('rejectedCount').textContent = stats.rejected;
+        document.getElementById('cancelledCount').textContent = stats.cancelled;
+    }
+
+    function checkPendingRequest() {
+        const hasActive = requests.some(r => r.status === 'new' || r.status === 'pending');
+        document.getElementById('addRequestBtn').disabled = hasActive;
+        document.getElementById('pendingRequestNotice').style.display = hasActive ? 'flex' : 'none';
+    }
+
+    function applyFilter() {
+        const filter = document.getElementById('statusFilter').value;
+        currentFilter = filter;
+        const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
+        renderTable(filtered);
+        document.getElementById('filterCount').textContent = `عرض ${filtered.length} طلب`;
+    }
+
+    function renderTable(filtered) {
+        const tbody = document.getElementById('requestsTableBody');
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد طلبات</p></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = filtered.map(req => `
+            <tr>
+                <td>${req.request_number || '-'}</td>
+                <td>${req.current_mobile || '-'}</td>
+                <td>${req.new_country_code} ${req.new_mobile}</td>
+                <td>${req.reason || '-'}</td>
+                <td>${formatDate(req.created_at)}</td>
+                <td>${formatDate(req.updated_at)}</td>
+                <td><span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span></td>
+                <td>
+                    <button class="btn-icon view-detail" data-id="${req.id}"><i class="fas fa-eye"></i></button>
+                    ${(req.status==='new'||req.status==='pending') ? `<button class="btn-icon text-warning edit-request" data-id="${req.id}"><i class="fas fa-edit"></i></button><button class="btn-icon text-danger cancel-request" data-id="${req.id}"><i class="fas fa-times-circle"></i></button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+        bindRowEvents();
+    }
+
+    function bindRowEvents() {
+        document.querySelectorAll('.view-detail').forEach(btn => btn.addEventListener('click', () => showDetail(btn.dataset.id)));
+        document.querySelectorAll('.edit-request').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.id)));
+        document.querySelectorAll('.cancel-request').forEach(btn => btn.addEventListener('click', () => openCancelModal(btn.dataset.id)));
+    }
+
+    function showDetail(id) {
+        const req = requests.find(r => r.id === id);
+        if (!req) return;
+        document.getElementById('detailContent').innerHTML = `
+            <div class="detail-item"><span>رقم الطلب:</span> <strong>${req.request_number||'-'}</strong></div>
+            <div class="detail-item"><span>الجوال الحالي:</span> <strong>${req.current_mobile}</strong></div>
+            <div class="detail-item"><span>الجوال الجديد:</span> <strong>${req.new_country_code} ${req.new_mobile}</strong></div>
+            <div class="detail-item"><span>السبب:</span> ${req.reason||'-'}</div>
+            <div class="detail-item"><span>تاريخ التقديم:</span> ${formatDate(req.created_at)}</div>
+            <div class="detail-item"><span>آخر تحديث:</span> ${formatDate(req.updated_at)}</div>
+            <div class="detail-item"><span>الحالة:</span> <span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span></div>
+        `;
+        document.getElementById('detailModal').classList.add('show');
+    }
+
+    function openEditModal(id) {
+        const req = requests.find(r => r.id === id);
+        if (!req) return;
+        document.getElementById('editRequestId').value = req.id;
+        document.getElementById('editCurrentMobile').value = req.current_mobile;
+        document.getElementById('editCountryCode').value = req.new_country_code;
+        document.getElementById('editNewMobile').value = req.new_mobile;
+        document.getElementById('editReason').value = req.reason || '';
+        document.getElementById('editRequestModal').classList.add('show');
+    }
+
+    async function saveEdit(e) {
+        e.preventDefault();
+        const id = document.getElementById('editRequestId').value;
+        const { error } = await supabase.from('mobile_change_requests').update({
+            new_country_code: document.getElementById('editCountryCode').value,
+            new_mobile: document.getElementById('editNewMobile').value,
+            reason: document.getElementById('editReason').value,
+            updated_at: new Date().toISOString()
+        }).eq('id', id);
+        if (!error) { showAlert('تم التعديل', 'success'); closeModal('editRequestModal'); fetchRequests(); }
+        else showAlert('فشل التعديل');
+    }
+
+    function openCancelModal(id) {
+        document.getElementById('cancelRequestId').value = id;
+        document.getElementById('cancelReasonModal').classList.add('show');
+    }
+
+    async function cancelRequest(e) {
+        e.preventDefault();
+        const id = document.getElementById('cancelRequestId').value;
+        const reason = document.getElementById('cancelReasonInput').value;
+        if (!reason) return showAlert('أدخل سبب الإلغاء');
+        const { error } = await supabase.from('mobile_change_requests').update({
+            status: 'cancelled', cancellation_reason: reason, updated_at: new Date().toISOString()
+        }).eq('id', id);
+        if (!error) { showAlert('تم الإلغاء', 'success'); closeModal('cancelReasonModal'); fetchRequests(); }
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function bindEvents() {
+        document.getElementById('statusFilter').addEventListener('change', applyFilter);
+        document.getElementById('addRequestBtn').addEventListener('click', () => {
+            document.getElementById('currentMobileDisplayModal').value = currentUser.user_metadata?.mobile_number || 'غير مسجل';
+            document.getElementById('newRequestModal').classList.add('show');
+            resetNewForm();
+        });
+        document.getElementById('closeNewRequestModal').addEventListener('click', () => closeModal('newRequestModal'));
+        document.getElementById('cancelNewRequestBtn').addEventListener('click', () => closeModal('newRequestModal'));
+        document.getElementById('sendOtpBtnNew').addEventListener('click', sendOtpForNewRequest);
+        document.getElementById('newRequestForm').addEventListener('submit', submitNewRequest);
+        document.getElementById('editRequestForm').addEventListener('submit', saveEdit);
+        document.getElementById('cancelReasonForm').addEventListener('submit', cancelRequest);
+        document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => closeModal(b.closest('.modal-overlay').id)));
+    }
+
+    function resetNewForm() {
+        otpVerified = false; otpAttempts = 0;
+        document.getElementById('otpSectionNew').style.display = 'none';
+        document.getElementById('sendOtpBtnNew').style.display = 'block';
+        document.getElementById('submitNewRequestBtn').style.display = 'none';
+        document.getElementById('otpCodeNew').value = '';
+        clearInterval(otpTimer);
+    }
+
+    async function sendOtpForNewRequest() {
+        // التحقق من صحة الرقم
+        const code = document.getElementById('newCountryCode').value;
+        const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
+        if (!countryPatterns[code] || mobile.length !== countryPatterns[code].length || !countryPatterns[code].regex.test(mobile)) {
+            return showAlert('رقم الجوال غير صحيح.');
+        }
+        if (mobile === (currentUser.user_metadata?.mobile_number||'').replace(/^\+966/, '')) {
+            return showAlert('الرقم الجديد مطابق للحالي.');
+        }
+
+        const { error } = await supabase.auth.signInWithOtp({ email: currentUser.email, options: { shouldCreateUser: false } });
+        if (error) return showAlert('فشل إرسال الرمز');
+        showAlert('تم إرسال الرمز إلى بريدك', 'success');
+        document.getElementById('otpSectionNew').style.display = 'block';
+        document.getElementById('sendOtpBtnNew').style.display = 'none';
+        startOtpTimer();
+    }
+
+    function startOtpTimer() {
+        let sec = 300;
+        const btn = document.getElementById('resendOtpBtnNew');
+        btn.disabled = true;
+        btn.textContent = `إعادة الإرسال (05:00)`;
+        clearInterval(otpTimer);
+        otpTimer = setInterval(() => {
+            sec--;
+            const m = Math.floor(sec/60), s = sec%60;
+            btn.textContent = `إعادة الإرسال (${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')})`;
+            if (sec <= 0) { clearInterval(otpTimer); btn.disabled = false; btn.textContent = 'إعادة الإرسال'; }
+        }, 1000);
+    }
+
+    async function submitNewRequest(e) {
+        e.preventDefault();
+        const code = document.getElementById('newCountryCode').value;
+        const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
+        const reason = document.getElementById('reasonInput').value;
+        const otp = document.getElementById('otpCodeNew').value;
+
+        if (!reason) return showAlert('أدخل سبب التغيير');
+        if (!otpVerified) {
+            const { error } = await supabase.auth.verifyOtp({ email: currentUser.email, token: otp, type: 'email' });
+            if (error) { otpAttempts++; return showAlert('رمز التحقق غير صحيح'); }
+            otpVerified = true;
+        }
+
+        const { error } = await supabase.from('mobile_change_requests').insert({
+            user_id: currentUser.id,
+            current_mobile: currentUser.user_metadata?.mobile_number || '',
+            new_country_code: code,
+            new_mobile: mobile,
+            reason: reason,
+            status: 'new'
+        });
+        if (!error) { showAlert('تم تقديم الطلب', 'success'); closeModal('newRequestModal'); fetchRequests(); }
+        else showAlert('فشل تقديم الطلب');
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();
