@@ -1,8 +1,7 @@
 /**
- * profile-contact-information.js – v6.7 (إصلاح 400 + 403)
- * - يُطابق أعمدة user_contact_info: phone, secondary_email, emergency_*.
- * - يُخزّن التفضيلات (اللغة، طريقة التواصل) في profiles فقط إذا كان متاحاً.
- * - يتجاهل أخطاء 403/400 ويحفظ الأساسيات في user_metadata.
+ * profile-contact-information.js – v6.8 (إزالة محاولة profiles)
+ * - يحفظ فقط في user_contact_info و user_metadata.
+ * - يتجاهل profiles بعد أول 403.
  */
 
 'use strict';
@@ -122,8 +121,6 @@
             }
         }
         if (data.emergency_contact_email) document.getElementById('emergencyEmail').value = data.emergency_contact_email;
-
-        // التفضيلات قد تكون من profiles أو أي مصدر آخر
         if (data.preferred_language) {
             const langRadio = document.querySelector(`input[name="preferredLanguage"][value="${data.preferred_language}"]`);
             if (langRadio) langRadio.checked = true;
@@ -253,51 +250,35 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // 1. تحديث user_metadata
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // 2. حفظ في user_contact_info (الأعمدة الصحيحة فقط)
-            if (contactInfoAvailable) {
-                const contactPayload = {
-                    user_id: currentUser.id,
-                    phone: fullMobile,
-                    secondary_email: backupEmail || null,
-                    emergency_contact_name: emergencyName,
-                    emergency_contact_relation: emergencyRelation,
-                    emergency_contact_phone: fullEmergencyMobile,
-                    emergency_contact_email: emergencyEmail || null,
-                    updated_at: new Date().toISOString()
-                };
-                const { error } = await supabase.from('user_contact_info').upsert(contactPayload, { onConflict: 'user_id' });
-                if (error && error.status === 400) contactInfoAvailable = false;
-                // لا نُوقف العملية حتى لو فشلت
-            }
+            // الحفظ فقط في user_contact_info
+            const contactPayload = {
+                user_id: currentUser.id,
+                phone: fullMobile,
+                secondary_email: backupEmail || null,
+                emergency_contact_name: emergencyName,
+                emergency_contact_relation: emergencyRelation,
+                emergency_contact_phone: fullEmergencyMobile,
+                emergency_contact_email: emergencyEmail || null,
+                updated_at: new Date().toISOString()
+            };
 
-            // 3. محاولة حفظ التفضيلات في profiles (إن كان متاحاً)
-            if (profilesAvailable) {
-                const profilePayload = {
-                    id: currentUser.id,
-                    mobile_number: fullMobile,
-                    backup_email: backupEmail || null,
-                    emergency_contact_name: emergencyName,
-                    emergency_contact_relation: emergencyRelation,
-                    emergency_contact_mobile: fullEmergencyMobile,
-                    emergency_contact_email: emergencyEmail || null,
-                    preferred_language: preferredLanguage,
-                    preferred_contact_method: preferredMethod,
-                    updated_at: new Date().toISOString()
-                };
-                const { error } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-                if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
+            if (contactInfoAvailable) {
+                const { error } = await supabase.from('user_contact_info').upsert(contactPayload, { onConflict: 'user_id' });
+                if (error) {
+                    if (error.status === 400) contactInfoAvailable = false;
+                    else throw error;
+                }
             }
 
             await updateVerificationStatus();
-            showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+            showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
             updateHeader(currentUser);
         } catch (err) {
             console.error(err);
-            showAlert('تعذر حفظ البيانات.', 'error');
+            showAlert('تعذر حفظ البيانات. تأكد من اتصالك وحاول مجدداً.', 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save"></i> حفظ بيانات الاتصال';
