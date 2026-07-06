@@ -1,7 +1,7 @@
 /**
- * profile-contact-information.js – v7.2 (منع تكرار روابط التوجيه)
- * - يتحقق من وجود الرسائل قبل إضافتها.
- * - حقول البريد والجوال للقراءة فقط مع رسائل توجيه.
+ * profile-contact-information.js – v7.3 (رسالة توجيه ثابتة في HTML)
+ * - حقول البريد والجوال للقراءة فقط.
+ * - رسالة التوجيه موجودة في HTML، لا يتم تكرارها.
  * - الحفظ يقتصر على بيانات الطوارئ والتفضيلات.
  */
 
@@ -160,50 +160,14 @@
         }
     }
 
-    function makeFieldsReadonlyWithMessages() {
-        // تعطيل حقول البريد والجوال
+    function disableReadonlyFields() {
+        // تعطيل الحقول الأساسية فقط (الرسالة موجودة مسبقاً في HTML)
         const emailInput = document.getElementById('primaryEmail');
-        if (emailInput) {
-            emailInput.setAttribute('readonly', true);
-            emailInput.disabled = true;
-        }
-
         const countrySelect = document.getElementById('countryCode');
         const mobileInput = document.getElementById('mobileNumber');
+        if (emailInput) { emailInput.setAttribute('readonly', true); emailInput.disabled = true; }
         if (countrySelect) countrySelect.disabled = true;
-        if (mobileInput) {
-            mobileInput.setAttribute('readonly', true);
-            mobileInput.disabled = true;
-        }
-
-        // إضافة رسالة تغيير البريد الإلكتروني (مرة واحدة فقط)
-        if (!document.getElementById('emailChangeMsg')) {
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'emailChangeMsg';
-            msgDiv.className = 'info-change-msg';
-            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.`;
-            const emailContainer = emailInput?.closest('.form-group') || emailInput?.parentNode;
-            if (emailContainer) {
-                emailContainer.parentNode.insertBefore(msgDiv, emailContainer.nextSibling);
-            }
-        }
-
-        // إضافة رسالة تغيير رقم الجوال (مرة واحدة فقط)
-        if (!document.getElementById('mobileChangeMsg')) {
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'mobileChangeMsg';
-            msgDiv.className = 'info-change-msg';
-            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html">قسم الأمان > تغيير رقم الجوال</a>.`;
-            const parentRow = countrySelect?.closest('.row-flex') || countrySelect?.closest('div[style*="grid-template-columns"]');
-            if (parentRow) {
-                parentRow.parentNode.insertBefore(msgDiv, parentRow.nextSibling);
-            } else if (mobileInput) {
-                const mobileContainer = mobileInput.closest('.form-group');
-                if (mobileContainer) {
-                    mobileContainer.parentNode.insertBefore(msgDiv, mobileContainer.nextSibling);
-                }
-            }
-        }
+        if (mobileInput) { mobileInput.setAttribute('readonly', true); mobileInput.disabled = true; }
     }
 
     async function populateCurrentData() {
@@ -224,7 +188,7 @@
         }
 
         await loadAdditionalData();
-        makeFieldsReadonlyWithMessages();
+        disableReadonlyFields(); // فقط تعطيل الحقول بدون إنشاء رسائل
     }
 
     async function updateVerificationAndSubmit() {
@@ -286,7 +250,6 @@
     }
 
     function setupCountryMobileBinding(countrySelectId, inputId) {
-        // حقول الطوارئ فقط هي التي تبقى نشطة
         if (countrySelectId === 'emergencyCountryCode') {
             const select = document.getElementById(countrySelectId);
             const input = document.getElementById(inputId);
