@@ -435,7 +435,7 @@
 
         <main class="main-content">
 
-            <!-- تنبيه الاستكمال -->
+            <!-- تنبيه الاستكمال العام -->
             <div id="profileAlertBanner" style="display:none; background: #fef3c7; border:1px solid #fcd34d; padding:16px 20px; margin-bottom:20px; border-radius:12px; align-items:center; gap:12px; flex-wrap:wrap;">
                 <i class="fas fa-exclamation-triangle" style="color:#d97706; font-size:24px;"></i>
                 <div style="flex:1;">
@@ -443,6 +443,16 @@
                     <p style="margin:4px 0 0; color:#a16207;">يتوجب عليكم استكمال الملف الشخصي قبل الاستفادة من خدمات البوابة. لن تتمكنوا من تقديم الطلبات أو استخدام الخدمات حتى يتم اعتماد بياناتكم.</p>
                 </div>
                 <a href="/pages/profile/personal-information.html" style="background:#d97706; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">استكمال الملف الشخصي</a>
+            </div>
+
+            <!-- تنبيه نقص معلومات الاتصال (يُدار عبر dashboard-core.js) -->
+            <div id="contactInfoAlert" style="display:none; background: #fff7ed; border:1px solid #fed7aa; padding:16px 20px; margin-bottom:16px; border-radius:12px; align-items:center; gap:12px; flex-wrap:wrap;">
+                <i class="fas fa-phone-alt" style="color:#ea580c; font-size:24px;"></i>
+                <div style="flex:1;">
+                    <strong style="color:#9a3412;">رقم الجوال غير مسجل</strong>
+                    <p style="margin:4px 0 0; color:#c2410c;">يجب إضافة رقم الجوال لتتمكن من استكمال الملف الشخصي.</p>
+                </div>
+                <a href="/pages/profile/contact-information.html" style="background:#ea580c; color:#fff; padding:10px 24px; border-radius:8px; text-decoration:none; font-weight:bold; white-space:nowrap;">تسجيل رقم الجوال</a>
             </div>
 
             <!-- لوحة حالة الطلب -->
