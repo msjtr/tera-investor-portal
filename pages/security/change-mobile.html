@@ -18,14 +18,10 @@
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
-
-    <!-- ملف التنسيق الخاص بصفحات الأمان -->
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* =========================================
-           تنسيقات إضافية للصفحة
-           ========================================= */
+        /* ===== تنسيقات مخصصة للصفحة ===== */
         .mobile-hint {
             font-size: 12px;
             color: #64748b;
@@ -34,24 +30,12 @@
             align-items: center;
             gap: 6px;
         }
-        .mobile-hint i {
-            font-size: 14px;
-            color: #94a3b8;
-        }
-        .mobile-hint.success {
-            color: #16a34a;
-        }
-        .mobile-hint.success i {
-            color: #16a34a;
-        }
-        .mobile-hint.error {
-            color: #dc2626;
-        }
-        .mobile-hint.error i {
-            color: #dc2626;
-        }
+        .mobile-hint i { font-size: 14px; color: #94a3b8; }
+        .mobile-hint.success { color: #16a34a; }
+        .mobile-hint.success i { color: #16a34a; }
+        .mobile-hint.error { color: #dc2626; }
+        .mobile-hint.error i { color: #dc2626; }
 
-        /* تنسيق حقل مفتاح الدولة ورقم الجوال في صف واحد */
         .mobile-input-group {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -61,6 +45,62 @@
             margin-bottom: 0;
         }
 
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+        .password-toggle:hover { color: #0A1B3F; }
+
+        /* شريط التقدم */
+        .progress-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 28px;
+            padding: 0;
+            list-style: none;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .progress-steps li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            padding: 8px 16px;
+        }
+        .progress-steps li .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            transition: 0.3s;
+        }
+        .progress-steps li.active .step-num { background: #028090; color: #fff; box-shadow: 0 4px 12px rgba(2,128,144,0.3); }
+        .progress-steps li.completed .step-num { background: #10b981; color: #fff; }
+        .progress-steps .step-line { width: 40px; height: 2px; background: #e2e8f0; flex-shrink: 0; }
+        .progress-steps .step-line.completed { background: #10b981; }
+
+        /* استجابة */
         @media (max-width: 576px) {
             .mobile-input-group {
                 grid-template-columns: 1fr;
@@ -69,24 +109,20 @@
         }
     </style>
 </head>
-<body>
+<body data-security="change-mobile">
 
-    <!-- =========================================
-    الهيدر العلوي
-    ========================================= -->
+    <!-- ===== الهيدر ===== -->
     <header class="focused-header no-print">
         <div class="logo">
-            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
+            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'" />
         </div>
         <div class="client-info">
-            <h5>محمد عبدالله الشمري</h5>
-            <div class="avatar">م</div>
+            <h5 id="headerUserName">مستخدم</h5>
+            <div class="avatar" id="headerAvatar">م</div>
         </div>
     </header>
 
-    <!-- =========================================
-    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
-    ========================================= -->
+    <!-- ===== عنوان الصفحة ===== -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -94,54 +130,23 @@
         </a>
     </div>
 
-    <!-- =========================================
-    المحتوى الرئيسي
-    ========================================= -->
+    <!-- ===== المحتوى ===== -->
     <main class="content-container">
 
-        <div class="page-desc">
-            <i class="fas fa-info-circle"></i>
-            <span><strong>تغيير رقم الجوال بشكل آمن:</strong> يرجى إدخال رقم الجوال الجديد ثم تأكيده. سيتم إرسال رمز تحقق إلى رقم الجوال الجديد لإثبات الملكية.</span>
+        <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
+            <span style="color:#0A1B3F; font-weight:600;">يمكنكم من خلال هذه الصفحة تحديث رقم الجوال المرتبط بحسابكم. سيتم إرسال رمز تحقق إلى بريدكم الإلكتروني المسجل لإتمام العملية.</span>
         </div>
 
-        <!-- =========================================
-        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
-        ========================================= -->
-        <ul class="progress-steps">
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">الأمان</span>
-            </li>
+        <!-- شريط التقدم (اختياري) -->
+        <ul class="progress-steps" id="progressTracker">
+            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">الأمان</span></li>
             <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير كلمة المرور</span>
-            </li>
+            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">كلمة المرور</span></li>
             <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير البريد الإلكتروني</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="active">
-                <span class="step-num">4</span>
-                <span class="step-label">تغيير رقم الجوال</span>
-            </li>
+            <li class="active"><span class="step-num">3</span><span class="step-label">رقم الجوال</span></li>
             <li class="step-line"></li>
-            <li>
-                <span class="step-num">5</span>
-                <span class="step-label">المصادقة الثنائية</span>
-            </li>
-            <li class="step-line"></li>
-            <li>
-                <span class="step-num">6</span>
-                <span class="step-label">الأجهزة المصرحة</span>
-            </li>
-            <li class="step-line"></li>
-            <li>
-                <span class="step-num">7</span>
-                <span class="step-label">سجل الدخول</span>
-            </li>
+            <li><span class="step-num">4</span><span class="step-label">تأكيد</span></li>
         </ul>
 
         <!-- منطقة التنبيه -->
@@ -152,130 +157,141 @@
 
         <form id="changeMobileForm" novalidate>
 
-            <!-- =========================================
-            القسم الرئيسي: تغيير رقم الجوال
-            ========================================= -->
-            <div class="panel-card">
+            <!-- ===== المرحلة 1: عرض البيانات والتحقق من كلمة المرور ===== -->
+            <div class="panel-card" id="stage1Panel">
                 <div class="panel-header">
-                    <i class="fas fa-phone"></i>
-                    <h3>تغيير رقم الجوال</h3>
-                    <span class="panel-badge">أمان</span>
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>التحقق من الهوية</h3>
+                    <span class="panel-badge">المرحلة 1</span>
                 </div>
-
                 <div class="form-grid">
-
-                    <!-- رقم الجوال الحالي -->
+                    <!-- رقم الجوال الحالي (للقراءة فقط) -->
                     <div class="form-group full-width">
-                        <label class="form-label">رقم الجوال الحالي <span class="req">*</span></label>
-                        <div class="mobile-input-group">
-                            <div class="form-group">
-                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">مفتاح الدولة</label>
-                                <select class="form-control" id="currentCountryCode" disabled>
-                                    <option value="966">🇸🇦 +966</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
-                                <input type="tel" class="form-control" id="currentMobile" value="551234567" readonly disabled>
-                            </div>
-                        </div>
-                        <span class="format-hint">رقم الجوال الحالي المسجل في حسابك.</span>
+                        <label class="form-label">رقم الجوال الحالي</label>
+                        <input type="text" class="form-control" id="currentMobileDisplay" readonly disabled style="background:#f1f5f9; color:#475569;" />
+                        <span class="format-hint">رقم الجوال المسجل حالياً في حسابك.</span>
                     </div>
+                    <!-- كلمة المرور الحالية -->
+                    <div class="form-group full-width">
+                        <label class="form-label">كلمة المرور الحالية <span class="req">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="password" class="form-control" id="currentPassword" placeholder="أدخل كلمة المرور الحالية" autocomplete="current-password" />
+                            <button type="button" class="password-toggle" data-target="currentPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span class="format-hint" id="passwordHint"></span>
+                    </div>
+                </div>
+                <button type="button" class="btn-submit" id="verifyPasswordBtn">
+                    <i class="fas fa-check-circle"></i> تحقق من كلمة المرور
+                </button>
+            </div>
 
-                    <!-- مفتاح الدولة للجوال الجديد -->
+            <!-- ===== المرحلة 2: رقم الجوال الجديد و OTP (مخفية بداية) ===== -->
+            <div class="panel-card" id="stage2Panel" style="display:none;">
+                <div class="panel-header">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>تحديث رقم الجوال</h3>
+                    <span class="panel-badge">المرحلة 2</span>
+                </div>
+                <div class="form-grid">
+                    <!-- مفتاح الدولة -->
                     <div class="form-group">
-                        <label class="form-label">الدولة / مفتاح الاتصال <span class="req">*</span></label>
-                        <select class="form-control" id="newCountryCode" required>
-                            <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
-                            <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
-                            <option value="965">🇰🇼 دولة الكويت (+965)</option>
-                            <option value="974">🇶🇦 دولة قطر (+974)</option>
-                            <option value="973">🇧🇭 مملكة البحرين (+973)</option>
-                            <option value="968">🇴🇲 سلطنة عُمان (+968)</option>
-                            <option value="20">🇪🇬 جمهورية مصر العربية (+20)</option>
-                            <option value="other">🇸🇦 أخرى</option>
+                        <label class="form-label">🌍 اختيار الدولة <span class="req">*</span></label>
+                        <select class="form-control" id="countryCodeSelect">
+                            <option value="+966" selected>🇸🇦 السعودية (+966)</option>
+                            <option value="+971">🇦🇪 الإمارات (+971)</option>
+                            <option value="+965">🇰🇼 الكويت (+965)</option>
+                            <option value="+973">🇧🇭 البحرين (+973)</option>
+                            <option value="+974">🇶🇦 قطر (+974)</option>
+                            <option value="+968">🇴🇲 عُمان (+968)</option>
+                            <option value="+20">🇪🇬 مصر (+20)</option>
                         </select>
                     </div>
-
                     <!-- رقم الجوال الجديد -->
                     <div class="form-group">
                         <label class="form-label">رقم الجوال الجديد <span class="req">*</span></label>
-                        <input type="tel" class="form-control" id="newMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                        <span class="mobile-hint" id="newMobileHint">
+                        <input type="tel" class="form-control" id="newMobile" placeholder="5XXXXXXXX" autocomplete="tel-national" inputmode="numeric" />
+                        <span class="mobile-hint" id="mobileHint">
                             <i class="fas fa-info-circle"></i>
-                            أدخل رقم الجوال بدون مفتاح الدولة.
+                            <span>أدخل رقم الجوال بدون مفتاح الدولة</span>
                         </span>
                     </div>
-
-                    <!-- تأكيد رقم الجوال الجديد -->
+                    <!-- تأكيد رقم الجوال -->
                     <div class="form-group full-width">
                         <label class="form-label">تأكيد رقم الجوال الجديد <span class="req">*</span></label>
-                        <input type="tel" class="form-control" id="confirmMobile" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <input type="tel" class="form-control" id="confirmMobile" placeholder="أعد إدخال الرقم" autocomplete="off" inputmode="numeric" />
                         <span class="mobile-hint" id="confirmMobileHint">
                             <i class="fas fa-info-circle"></i>
-                            يجب أن يتطابق مع رقم الجوال الجديد.
+                            <span>يجب أن يتطابق مع رقم الجوال الجديد</span>
                         </span>
                     </div>
 
-                </div><!-- /form-grid -->
-
-                <!-- نصائح أمنية -->
-                <div class="security-tips">
-                    <div class="tip-title">
-                        <i class="fas fa-lightbulb"></i>
-                        نصائح أمنية
+                    <!-- حقل إرسال رمز التحقق (OTP) -->
+                    <div class="form-group full-width" id="otpSendGroup">
+                        <button type="button" class="btn-submit" id="sendOtpBtn">
+                            <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني
+                        </button>
+                        <div class="timer-container" id="timerContainer" style="display:none;">
+                            <span>يمكنك إعادة الإرسال بعد </span>
+                            <span id="timerDisplay" class="timer-display">05:00</span>
+                        </div>
                     </div>
-                    <ul>
-                        <li><i class="fas fa-check"></i> استخدم رقم جوال يمكنك الوصول إليه دائماً.</li>
-                        <li><i class="fas fa-check"></i> تأكد من صحة الرقم الجديد قبل التحديث.</li>
-                        <li><i class="fas fa-check"></i> سيتم إرسال رمز تحقق إلى الرقم الجديد لتأكيد الملكية.</li>
-                        <li><i class="fas fa-check"></i> احتفظ بالرقم القديم لحين تأكيد التغيير.</li>
-                    </ul>
+
+                    <!-- حقل إدخال رمز التحقق -->
+                    <div class="form-group full-width" id="otpVerifyGroup" style="display:none;">
+                        <label class="form-label">رمز التحقق <span class="req">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="text" class="form-control" id="otpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" />
+                        </div>
+                        <span class="format-hint" id="otpHint">
+                            <span class="validation-icon" id="otpIcon"></span>
+                            <span id="otpMessage">أدخل رمز التحقق المرسل إلى بريدك الإلكتروني</span>
+                        </span>
+                    </div>
+
+                    <!-- زر حفظ التغيير النهائي -->
+                    <div class="form-group full-width" id="saveGroup" style="display:none;">
+                        <button type="button" class="btn-submit" id="saveMobileBtn">
+                            <i class="fas fa-save"></i> حفظ تغيير رقم الجوال
+                        </button>
+                    </div>
                 </div>
-
-                <!-- =========================================
-                رسالة التحقق (OTP Notice) – تم التحديث
-                ========================================= -->
-                <div class="otp-notice">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>
-                        <strong>عزيزي الشريك،</strong> سوف يصل لكم رمز تحقق لتغيير رقم الجوال على البريد الإلكتروني المسجل.
-                    </span>
-                </div>
-
-                <button type="submit" class="btn-submit" id="submitBtn">
-                    <i class="fas fa-save"></i> تغيير رقم الجوال
-                </button>
-
-            </div><!-- /panel-card -->
-
+            </div>
         </form>
-
     </main>
 
-    <!-- =========================================
-    التذييل
-    ========================================= -->
+    <!-- ===== نافذة النجاح ===== -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-box">
+            <div class="modal-icon" style="color:#16a34a; font-size:56px; margin-bottom:12px;"><i class="fas fa-check-circle"></i></div>
+            <h2 class="modal-title" style="font-family:'Cairo',sans-serif; font-size:22px; font-weight:800; color:#0A1B3F; margin-bottom:6px;">✅ تم تغيير رقم الجوال بنجاح</h2>
+            <p class="modal-message" style="font-size:15px; color:#475569; line-height:1.7; margin-bottom:16px;">تم تحديث رقم الجوال المرتبط بحسابكم بنجاح.<br />سيتم تحويلكم إلى لوحة التحكم خلال 5 ثوانٍ.</p>
+            <div class="modal-timer" style="display:flex; align-items:center; justify-content:center; gap:16px; margin:12px 0 20px;">
+                <div class="spinner" style="width:28px; height:28px; border:4px solid #e2e8f0; border-top-color:#028090; border-radius:50%; animation:spin 1s linear infinite;"></div>
+                <span class="count" id="countdownDisplay" style="font-size:24px; font-weight:800; color:#028090;">5</span>
+            </div>
+            <div class="modal-actions" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                <button class="btn-modal btn-primary" id="successGoNow" style="padding:10px 24px; border:none; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; background:#028090; color:#fff;">الذهاب الآن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== التذييل ===== -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- =========================================
-    ربط الملفات المشتركة
-    ========================================= -->
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/main.js"></script>
-
-    <!-- =========================================
-    الملف الرئيسي لصفحات الأمان
-    ========================================= -->
+    <!-- ===== ربط الملفات ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/security.js"></script>
-
-    <!-- =========================================
-    الملف المخصص للصفحة
-    ========================================= -->
     <script src="/assets/js/security-change-mobile.js"></script>
 
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </body>
 </html>
