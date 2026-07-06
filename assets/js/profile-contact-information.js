@@ -1,10 +1,8 @@
 /**
- * ==========================================================
- * profile-contact-information.js – v6.1 (دعم profiles القديمة)
- * ==========================================================
- * - يجلب جميع بيانات الاتصال من user_contact_info أو profiles.
- * - يحفظ كل البيانات في user_contact_info و auth.
- * - يحافظ على التوافق مع البيانات المخزنة سابقًا.
+ * profile-contact-information.js – v6.2 (إصلاح جلب بيانات الطوارئ)
+ * - أولاً يجرب user_contact_info، ثم profiles.
+ * - يتعامل مع صيغ أرقام الطوارئ المختلفة.
+ * - يتجاهل أخطاء 403/404.
  */
 
 'use strict';
@@ -124,7 +122,6 @@
         return '';
     }
 
-    // دالة مساعدة لملء الحقول من كائن البيانات (سواء من profiles أو user_contact_info)
     function fillFieldsFromData(data) {
         if (!data) return;
 
@@ -142,19 +139,21 @@
             if (parsed) {
                 document.getElementById('emergencyCountryCode').value = parsed.code;
                 document.getElementById('emergencyMobile').value = parsed.number;
+            } else {
+                // إذا تعذر التقسيم، نضع الرقم كاملاً في حقل الرقم مع تحديد الدولة الافتراضية
+                document.getElementById('emergencyCountryCode').value = '966';
+                document.getElementById('emergencyMobile').value = data.emergency_contact_mobile;
             }
         }
         if (data.emergency_contact_email) {
             document.getElementById('emergencyEmail').value = data.emergency_contact_email;
         }
-        // لغة التواصل
         if (data.preferred_language) {
             const langRadios = document.getElementsByName('preferredLanguage');
             for (const r of langRadios) {
                 if (r.value === data.preferred_language) r.checked = true;
             }
         }
-        // طريقة التواصل
         if (data.preferred_contact_method) {
             const methodRadios = document.getElementsByName('preferredMethod');
             for (const r of methodRadios) {
@@ -163,11 +162,26 @@
         }
     }
 
-    // جلب البيانات الإضافية: أولاً من profiles (للتوافق مع البيانات القديمة)، ثم user_contact_info
     async function loadAdditionalData() {
-        let dataFound = false;
+        // 1. user_contact_info أولاً (لأنه الأحدث عادةً)
+        if (contactInfoAvailable) {
+            try {
+                const { data, error } = await supabase
+                    .from('user_contact_info')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
 
-        // 1. محاولة الجلب من profiles (للتوافق مع البيانات السابقة)
+                if (error) {
+                    if (error.status === 400) contactInfoAvailable = false;
+                } else if (data) {
+                    fillFieldsFromData(data);
+                    return; // وجدنا بيانات، لا داعي للبحث في profiles
+                }
+            } catch (e) {}
+        }
+
+        // 2. profiles (للتوافق مع البيانات القديمة)
         if (profilesAvailable) {
             try {
                 const { data, error } = await supabase
@@ -182,31 +196,8 @@
                     }
                 } else if (data) {
                     fillFieldsFromData(data);
-                    dataFound = true;
                 }
             } catch (e) {}
-        }
-
-        // 2. محاولة الجلب من user_contact_info (قد يحتوي بيانات أحدث)
-        if (contactInfoAvailable) {
-            try {
-                const { data, error } = await supabase
-                    .from('user_contact_info')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .maybeSingle();
-
-                if (error) {
-                    if (error.status === 400) contactInfoAvailable = false;
-                } else if (data) {
-                    fillFieldsFromData(data);
-                    dataFound = true;
-                }
-            } catch (e) {}
-        }
-
-        if (!dataFound) {
-            console.log('ℹ️ لا توجد بيانات إضافية محفوظة بعد.');
         }
     }
 
@@ -286,13 +277,11 @@
         const mobileNumber = document.getElementById('mobileNumber').value.replace(/\D/g, '');
         const primaryEmail = document.getElementById('primaryEmail').value.trim();
         const backupEmail = document.getElementById('backupEmail').value.trim();
-
         const emergencyName = document.getElementById('emergencyName').value.trim();
         const emergencyRelation = document.getElementById('emergencyRelation').value;
         const emergencyCountryCode = document.getElementById('emergencyCountryCode').value;
         const emergencyMobile = document.getElementById('emergencyMobile').value.replace(/\D/g, '');
         const emergencyEmail = document.getElementById('emergencyEmail').value.trim();
-
         const preferredLanguage = document.querySelector('input[name="preferredLanguage"]:checked')?.value || 'arabic';
         const preferredMethod = document.querySelector('input[name="preferredMethod"]:checked')?.value || 'email';
         const declarationCheck = document.getElementById('declarationCheck').checked;
@@ -341,10 +330,9 @@
 
             if (authRegisterAvailable) {
                 try {
-                    const { error } = await supabase.from('auth_register')
+                    await supabase.from('auth_register')
                         .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
                         .eq('user_id', currentUser.id);
-                    if (error && (error.status === 403 || error.status === 404)) authRegisterAvailable = false;
                 } catch (e) {}
             }
 
@@ -361,27 +349,22 @@
                 updated_at: new Date().toISOString()
             };
 
-            // حفظ في user_contact_info
             if (contactInfoAvailable) {
                 try {
-                    const { error } = await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
-                    if (error && error.status === 400) contactInfoAvailable = false;
+                    await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
                 } catch (e) {}
             }
 
-            // حفظ في profiles أيضًا (للتوافق)
             if (profilesAvailable) {
                 try {
-                    const { error } = await supabase.from('profiles').upsert({
+                    await supabase.from('profiles').upsert({
                         ...payload,
                         id: currentUser.id
                     }, { onConflict: 'id' });
-                    if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
                 } catch (e) {}
             }
 
             await updateVerificationStatus();
-
             showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
             updateHeader(currentUser);
