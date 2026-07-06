@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>تغيير رقم الجوال | Tera Investor Portal</title>
+    <title>طلبات تغيير رقم الجوال | تيرا</title>
 
-    <!-- الشعار والأيقونات -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
-    <!-- الخطوط -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- الملفات المشتركة -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
@@ -21,277 +18,173 @@
     <link rel="stylesheet" href="/assets/css/security.css" />
 
     <style>
-        /* ===== تنسيقات مخصصة للصفحة ===== */
-        .mobile-hint {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .mobile-hint i { font-size: 14px; color: #94a3b8; }
-        .mobile-hint.success { color: #16a34a; }
-        .mobile-hint.success i { color: #16a34a; }
-        .mobile-hint.error { color: #dc2626; }
-        .mobile-hint.error i { color: #dc2626; }
-
-        .mobile-input-group {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 12px;
-        }
-        .mobile-input-group .form-group {
-            margin-bottom: 0;
-        }
-
-        .password-wrapper {
-            position: relative;
-        }
-        .password-toggle {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 4px;
-        }
-        .password-toggle:hover { color: #0A1B3F; }
-
-        /* شريط التقدم */
-        .progress-steps {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            margin-bottom: 28px;
-            padding: 0;
-            list-style: none;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .progress-steps li {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            color: #64748b;
-            padding: 8px 16px;
-        }
-        .progress-steps li .step-num {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 800;
-            transition: 0.3s;
-        }
-        .progress-steps li.active .step-num { background: #028090; color: #fff; box-shadow: 0 4px 12px rgba(2,128,144,0.3); }
-        .progress-steps li.completed .step-num { background: #10b981; color: #fff; }
-        .progress-steps .step-line { width: 40px; height: 2px; background: #e2e8f0; flex-shrink: 0; }
-        .progress-steps .step-line.completed { background: #10b981; }
-
-        /* استجابة */
-        @media (max-width: 576px) {
-            .mobile-input-group {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-        }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .stat-box { background: #fff; border-radius: 14px; padding: 16px 20px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .stat-box .number { font-size: 28px; font-weight: 800; color: #0A1B3F; }
+        .stat-box .label { font-size: 13px; color: #64748b; font-weight: 600; }
+        .request-notice { background: #fef9c3; border:1px solid #fcd34d; border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:10px; color:#854d0e; font-weight:600; }
+        .filter-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; padding:12px 16px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; }
+        .filter-bar select { padding:8px 14px; border:1px solid #d1d9e6; border-radius:8px; font-family:inherit; font-size:14px; background:#fff; color:#1e293b; outline:none; cursor:pointer; min-width:150px; }
+        .table-container { overflow-x:auto; background:#fff; border-radius:16px; border:1px solid #e2e8f0; }
+        .table-container table { width:100%; min-width:800px; border-collapse:collapse; }
+        .table-container th { text-align:right; padding:14px 18px; font-weight:800; color:#64748b; border-bottom:2px solid #f1f5f9; font-size:13px; }
+        .table-container td { padding:14px 18px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+        .status-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:700; }
+        .status-badge.new { background:#dbeafe; color:#1e40af; }
+        .status-badge.pending { background:#fef9c3; color:#854d0e; }
+        .status-badge.approved { background:#dbeafe; color:#1e40af; }
+        .status-badge.completed { background:#d1fae5; color:#065f46; }
+        .status-badge.rejected { background:#fee2e2; color:#991b1b; }
+        .status-badge.cancelled { background:#f1f5f9; color:#475569; }
+        .btn-icon { background:transparent; border:none; color:#028090; cursor:pointer; padding:6px; border-radius:6px; transition:0.2s; font-size:16px; }
+        .btn-icon:hover { background:rgba(2,128,144,0.08); }
+        .btn-icon.text-danger { color:#dc2626; }
+        .btn-icon.text-warning { color:#f59e0b; }
+        .empty-state { text-align:center; padding:40px 20px; color:#94a3b8; }
+        .empty-state i { font-size:48px; margin-bottom:12px; color:#cbd5e1; }
+        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+        .modal-overlay.show { display:flex; }
+        .modal-box { background:#fff; border-radius:24px; max-width:560px; width:100%; padding:32px 28px; box-shadow:0 30px 60px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:14px; }
+        .modal-header h3 { margin:0; font-size:20px; color:#0A1B3F; font-weight:800; }
+        .modal-close { background:transparent; border:none; font-size:24px; color:#94a3b8; cursor:pointer; }
+        .form-control { width:100%; padding:10px 14px; border:1px solid #d1d9e6; border-radius:10px; font-family:inherit; font-size:14px; background:#fafcff; outline:none; transition:0.2s; color:#1e293b; }
+        .form-control:focus { border-color:#028090; box-shadow:0 0 0 4px rgba(2,128,144,0.10); }
+        .form-control:disabled { background:#f1f5f9; color:#64748b; }
+        .form-hint { font-size:12px; color:#64748b; margin-top:4px; min-height:18px; }
+        .form-hint.error { color:#dc2626; }
+        .form-hint.success { color:#16a34a; }
+        .btn-primary { background:#028090; color:#fff; border:none; padding:12px 24px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; transition:0.25s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-primary:hover:not(:disabled) { background:#0A1B3F; }
+        .btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
+        .btn-secondary { background:#e2e8f0; color:#1e293b; border:none; padding:10px 20px; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; }
+        .timer-container { font-size:14px; color:#64748b; margin-top:6px; }
+        .timer-display { color:#028090; font-weight:800; }
     </style>
 </head>
-<body data-security="change-mobile">
+<body data-security="change-mobile-requests">
 
-    <!-- ===== الهيدر ===== -->
-    <header class="focused-header no-print">
-        <div class="logo">
-            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'" />
-        </div>
-        <div class="client-info">
-            <h5 id="headerUserName">مستخدم</h5>
-            <div class="avatar" id="headerAvatar">م</div>
-        </div>
-    </header>
+<header class="focused-header no-print">
+    <div class="logo"><img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'"/></div>
+    <div class="client-info"><h5 id="headerUserName">مستخدم</h5><div class="avatar" id="headerAvatar">م</div></div>
+</header>
 
-    <!-- ===== عنوان الصفحة ===== -->
-    <div class="page-subheader no-print">
-        <h1><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</h1>
-        <a href="/pages/dashboard/index.html" class="btn-back">
-            <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
-        </a>
+<div class="page-subheader no-print">
+    <h1><i class="fas fa-mobile-alt"></i> طلبات تغيير رقم الجوال</h1>
+    <a href="/pages/dashboard/index.html" class="btn-back"><i class="fas fa-arrow-left"></i> العودة للوحة التحكم</a>
+</div>
+
+<main class="content-container">
+    <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
+        <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
+        <span style="color:#0A1B3F; font-weight:600;">يمكنكم تقديم طلب لتغيير رقم الجوال. سيتم إرسال رمز تحقق إلى بريدكم الإلكتروني لإتمام الطلب.</span>
     </div>
 
-    <!-- ===== المحتوى ===== -->
-    <main class="content-container">
+    <div class="stats-row" id="statsRow">
+        <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">إجمالي الطلبات</div></div>
+        <div class="stat-box"><div class="number new" id="newCount">0</div><div class="label">جديد</div></div>
+        <div class="stat-box"><div class="number pending" id="pendingCount">0</div><div class="label">قيد المراجعة</div></div>
+        <div class="stat-box"><div class="number approved" id="approvedCount">0</div><div class="label">تمت الموافقة</div></div>
+        <div class="stat-box"><div class="number completed" id="completedCount">0</div><div class="label">تم التنفيذ</div></div>
+        <div class="stat-box"><div class="number rejected" id="rejectedCount">0</div><div class="label">مرفوضة</div></div>
+        <div class="stat-box"><div class="number" id="cancelledCount">0</div><div class="label">ملغاة</div></div>
+    </div>
 
-        <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-            <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
-            <span style="color:#0A1B3F; font-weight:600;">يمكنكم من خلال هذه الصفحة تحديث رقم الجوال المرتبط بحسابكم. سيتم إرسال رمز تحقق إلى بريدكم الإلكتروني المسجل لإتمام العملية.</span>
-        </div>
+    <div id="pendingRequestNotice" class="request-notice" style="display:none;">
+        <i class="fas fa-clock"></i> <span>لديك طلب تغيير قيد المعالجة، لا يمكن تقديم طلب جديد.</span>
+    </div>
 
-        <!-- شريط التقدم (اختياري) -->
-        <ul class="progress-steps" id="progressTracker">
-            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">الأمان</span></li>
-            <li class="step-line completed"></li>
-            <li class="completed"><span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span><span class="step-label">كلمة المرور</span></li>
-            <li class="step-line completed"></li>
-            <li class="active"><span class="step-num">3</span><span class="step-label">رقم الجوال</span></li>
-            <li class="step-line"></li>
-            <li><span class="step-num">4</span><span class="step-label">تأكيد</span></li>
-        </ul>
+    <div class="page-header-actions" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h2 style="margin:0; font-size:20px; font-weight:800; color:#0A1B3F;"><i class="fas fa-list-ul" style="color:#028090;"></i> سجل طلبات تغيير الجوال</h2>
+        <button class="btn-primary" id="addRequestBtn"><i class="fas fa-plus-circle"></i> طلب جديد</button>
+    </div>
 
-        <!-- منطقة التنبيه -->
-        <div class="alert-box" id="formAlert" role="alert">
-            <i class="fas" id="alertIcon"></i>
-            <span id="alertMessage"></span>
-        </div>
+    <div class="filter-bar">
+        <label><i class="fas fa-filter"></i> فلترة:</label>
+        <select id="statusFilter">
+            <option value="all">جميع الطلبات</option>
+            <option value="new">جديد</option>
+            <option value="pending">قيد المراجعة</option>
+            <option value="approved">تمت الموافقة</option>
+            <option value="completed">تم التنفيذ</option>
+            <option value="rejected">مرفوض</option>
+            <option value="cancelled">ملغي</option>
+        </select>
+        <span class="filter-count" id="filterCount">عرض 0 طلب</span>
+    </div>
 
-        <form id="changeMobileForm" novalidate>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>رقم الطلب</th><th>الجوال الحالي</th><th>الجوال الجديد</th><th>سبب التغيير</th><th>تاريخ التقديم</th><th>آخر تحديث</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+            <tbody id="requestsTableBody"></tbody>
+        </table>
+    </div>
+</main>
 
-            <!-- ===== المرحلة 1: عرض البيانات والتحقق من كلمة المرور ===== -->
-            <div class="panel-card" id="stage1Panel">
-                <div class="panel-header">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>التحقق من الهوية</h3>
-                    <span class="panel-badge">المرحلة 1</span>
-                </div>
-                <div class="form-grid">
-                    <!-- رقم الجوال الحالي (للقراءة فقط) -->
-                    <div class="form-group full-width">
-                        <label class="form-label">رقم الجوال الحالي</label>
-                        <input type="text" class="form-control" id="currentMobileDisplay" readonly disabled style="background:#f1f5f9; color:#475569;" />
-                        <span class="format-hint">رقم الجوال المسجل حالياً في حسابك.</span>
-                    </div>
-                    <!-- كلمة المرور الحالية -->
-                    <div class="form-group full-width">
-                        <label class="form-label">كلمة المرور الحالية <span class="req">*</span></label>
-                        <div class="password-wrapper">
-                            <input type="password" class="form-control" id="currentPassword" placeholder="أدخل كلمة المرور الحالية" autocomplete="current-password" />
-                            <button type="button" class="password-toggle" data-target="currentPassword">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                        <span class="format-hint" id="passwordHint"></span>
-                    </div>
-                </div>
-                <button type="button" class="btn-submit" id="verifyPasswordBtn">
-                    <i class="fas fa-check-circle"></i> تحقق من كلمة المرور
-                </button>
+<!-- نافذة طلب جديد -->
+<div class="modal-overlay" id="newRequestModal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>طلب تغيير جديد</h3><button class="modal-close" id="closeNewRequestModal">&times;</button></div>
+        <form id="newRequestForm">
+            <div class="form-group"><label>الجوال الحالي</label><input class="form-control" id="currentMobileDisplayModal" disabled></div>
+            <div class="form-group"><label>الدولة / مفتاح الاتصال <span class="req">*</span></label><select class="form-control" id="newCountryCode"><option value="+966" selected>🇸🇦 السعودية (+966)</option><option value="+971">🇦🇪 الإمارات (+971)</option><option value="+965">🇰🇼 الكويت (+965)</option><option value="+973">🇧🇭 البحرين (+973)</option><option value="+974">🇶🇦 قطر (+974)</option><option value="+968">🇴🇲 عُمان (+968)</option><option value="+20">🇪🇬 مصر (+20)</option></select></div>
+            <div class="form-group"><label>رقم الجوال الجديد <span class="req">*</span></label><input type="tel" class="form-control" id="newMobileNumber" placeholder="5XXXXXXXX" inputmode="numeric"></div>
+            <div class="form-group"><label>تأكيد الرقم <span class="req">*</span></label><input type="tel" class="form-control" id="confirmNewMobile" placeholder="أعد إدخال الرقم"></div>
+            <div class="form-group"><label>سبب التغيير <span class="req">*</span></label><textarea class="form-control" id="reasonInput" rows="2"></textarea></div>
+            <div class="form-group" id="otpSectionNew" style="display:none;">
+                <label>رمز التحقق (OTP) <span class="req">*</span></label>
+                <input type="text" class="form-control" id="otpCodeNew" maxlength="8" inputmode="numeric" placeholder="الرمز المكون من 8 أرقام">
+                <div class="form-hint" id="otpHintNew">أدخل الرمز المرسل إلى بريدك الإلكتروني</div>
+                <button type="button" class="btn-secondary" id="resendOtpBtnNew" style="margin-top:8px;" disabled>إعادة الإرسال (05:00)</button>
             </div>
-
-            <!-- ===== المرحلة 2: رقم الجوال الجديد و OTP (مخفية بداية) ===== -->
-            <div class="panel-card" id="stage2Panel" style="display:none;">
-                <div class="panel-header">
-                    <i class="fas fa-mobile-alt"></i>
-                    <h3>تحديث رقم الجوال</h3>
-                    <span class="panel-badge">المرحلة 2</span>
-                </div>
-                <div class="form-grid">
-                    <!-- مفتاح الدولة -->
-                    <div class="form-group">
-                        <label class="form-label">🌍 اختيار الدولة <span class="req">*</span></label>
-                        <select class="form-control" id="countryCodeSelect">
-                            <option value="+966" selected>🇸🇦 السعودية (+966)</option>
-                            <option value="+971">🇦🇪 الإمارات (+971)</option>
-                            <option value="+965">🇰🇼 الكويت (+965)</option>
-                            <option value="+973">🇧🇭 البحرين (+973)</option>
-                            <option value="+974">🇶🇦 قطر (+974)</option>
-                            <option value="+968">🇴🇲 عُمان (+968)</option>
-                            <option value="+20">🇪🇬 مصر (+20)</option>
-                        </select>
-                    </div>
-                    <!-- رقم الجوال الجديد -->
-                    <div class="form-group">
-                        <label class="form-label">رقم الجوال الجديد <span class="req">*</span></label>
-                        <input type="tel" class="form-control" id="newMobile" placeholder="5XXXXXXXX" autocomplete="tel-national" inputmode="numeric" />
-                        <span class="mobile-hint" id="mobileHint">
-                            <i class="fas fa-info-circle"></i>
-                            <span>أدخل رقم الجوال بدون مفتاح الدولة</span>
-                        </span>
-                    </div>
-                    <!-- تأكيد رقم الجوال -->
-                    <div class="form-group full-width">
-                        <label class="form-label">تأكيد رقم الجوال الجديد <span class="req">*</span></label>
-                        <input type="tel" class="form-control" id="confirmMobile" placeholder="أعد إدخال الرقم" autocomplete="off" inputmode="numeric" />
-                        <span class="mobile-hint" id="confirmMobileHint">
-                            <i class="fas fa-info-circle"></i>
-                            <span>يجب أن يتطابق مع رقم الجوال الجديد</span>
-                        </span>
-                    </div>
-
-                    <!-- حقل إرسال رمز التحقق (OTP) -->
-                    <div class="form-group full-width" id="otpSendGroup">
-                        <button type="button" class="btn-submit" id="sendOtpBtn">
-                            <i class="fas fa-paper-plane"></i> إرسال رمز التحقق إلى البريد الإلكتروني
-                        </button>
-                        <div class="timer-container" id="timerContainer" style="display:none;">
-                            <span>يمكنك إعادة الإرسال بعد </span>
-                            <span id="timerDisplay" class="timer-display">05:00</span>
-                        </div>
-                    </div>
-
-                    <!-- حقل إدخال رمز التحقق -->
-                    <div class="form-group full-width" id="otpVerifyGroup" style="display:none;">
-                        <label class="form-label">رمز التحقق <span class="req">*</span></label>
-                        <div class="password-wrapper">
-                            <input type="text" class="form-control" id="otpCode" placeholder="أدخل الرمز المكون من 8 أرقام" maxlength="8" inputmode="numeric" autocomplete="one-time-code" />
-                        </div>
-                        <span class="format-hint" id="otpHint">
-                            <span class="validation-icon" id="otpIcon"></span>
-                            <span id="otpMessage">أدخل رمز التحقق المرسل إلى بريدك الإلكتروني</span>
-                        </span>
-                    </div>
-
-                    <!-- زر حفظ التغيير النهائي -->
-                    <div class="form-group full-width" id="saveGroup" style="display:none;">
-                        <button type="button" class="btn-submit" id="saveMobileBtn">
-                            <i class="fas fa-save"></i> حفظ تغيير رقم الجوال
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <button type="button" class="btn-primary" id="sendOtpBtnNew" style="width:100%; margin-top:10px;">إرسال رمز التحقق</button>
+            <button type="submit" class="btn-primary" id="submitNewRequestBtn" style="display:none; width:100%; margin-top:10px;">حفظ الطلب</button>
         </form>
-    </main>
-
-    <!-- ===== نافذة النجاح (مخفية دائماً) ===== -->
-    <div class="modal-overlay" id="successModal" style="display:none;">
-        <div class="modal-box">
-            <div class="modal-icon" style="color:#16a34a; font-size:56px; margin-bottom:12px;"><i class="fas fa-check-circle"></i></div>
-            <h2 class="modal-title" style="font-family:'Cairo',sans-serif; font-size:22px; font-weight:800; color:#0A1B3F; margin-bottom:6px;">✅ تم تغيير رقم الجوال بنجاح</h2>
-            <p class="modal-message" style="font-size:15px; color:#475569; line-height:1.7; margin-bottom:16px;">تم تحديث رقم الجوال المرتبط بحسابكم بنجاح.<br />سيتم تحويلكم إلى لوحة التحكم خلال 5 ثوانٍ.</p>
-            <div class="modal-timer" style="display:flex; align-items:center; justify-content:center; gap:16px; margin:12px 0 20px;">
-                <div class="spinner" style="width:28px; height:28px; border:4px solid #e2e8f0; border-top-color:#028090; border-radius:50%; animation:spin 1s linear infinite;"></div>
-                <span class="count" id="countdownDisplay" style="font-size:24px; font-weight:800; color:#028090;">5</span>
-            </div>
-            <div class="modal-actions" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-                <button class="btn-modal btn-primary" id="successGoNow" style="padding:10px 24px; border:none; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; background:#028090; color:#fff;">الذهاب الآن</button>
-            </div>
-        </div>
+        <button class="btn-secondary" id="cancelNewRequestBtn" style="margin-top:8px; width:100%;">إلغاء</button>
     </div>
+</div>
 
-    <!-- ===== التذييل ===== -->
-    <footer class="page-footer no-print">
-        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
-    </footer>
+<!-- نوافذ أخرى (تعديل، إلغاء، تفاصيل) -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>تفاصيل الطلب</h3><button class="modal-close" id="closeDetailModal">&times;</button></div>
+        <div id="detailContent"></div>
+        <button class="btn-secondary" id="closeDetailBtn" style="margin-top:16px; width:100%;">إغلاق</button>
+    </div>
+</div>
 
-    <!-- ===== ربط الملفات ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/assets/js/supabase-client.js"></script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/security.js"></script>
-    <script src="/assets/js/security-change-mobile.js"></script>
+<div class="modal-overlay" id="editRequestModal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>تعديل الطلب</h3><button class="modal-close" id="closeEditRequestModal">&times;</button></div>
+        <form id="editRequestForm">
+            <input type="hidden" id="editRequestId">
+            <div class="form-group"><label>الجوال الحالي</label><input class="form-control" id="editCurrentMobile" disabled></div>
+            <div class="form-group"><label>الدولة</label><select class="form-control" id="editCountryCode"><option value="+966">+966</option></select></div>
+            <div class="form-group"><label>الجوال الجديد</label><input class="form-control" id="editNewMobile"></div>
+            <div class="form-group"><label>السبب</label><textarea class="form-control" id="editReason"></textarea></div>
+            <button type="submit" class="btn-primary" style="width:100%;">حفظ التعديلات</button>
+        </form>
+        <button class="btn-secondary" id="cancelEditBtn" style="width:100%; margin-top:8px;">إلغاء</button>
+    </div>
+</div>
 
-    <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+<div class="modal-overlay" id="cancelReasonModal">
+    <div class="modal-box">
+        <div class="modal-header"><h3>إلغاء الطلب</h3><button class="modal-close" id="closeCancelReasonModal">&times;</button></div>
+        <form id="cancelReasonForm">
+            <input type="hidden" id="cancelRequestId">
+            <div class="form-group"><label>سبب الإلغاء</label><textarea class="form-control" id="cancelReasonInput" required></textarea></div>
+            <button type="submit" class="btn-primary" style="background:#dc2626; width:100%;">تأكيد الإلغاء</button>
+        </form>
+    </div>
+</div>
+
+<footer class="page-footer no-print">© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/supabase-client.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/security.js"></script>
+<script src="/assets/js/security-change-mobile-requests.js"></script>
 </body>
 </html>
