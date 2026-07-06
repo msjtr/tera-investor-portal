@@ -1,6 +1,6 @@
 /**
- * security-registered-devices.js
- * سجل تسجيل الدخول والجلسات – إحصائيات، بحث، فلتر، تفاصيل
+ * security-registered-devices.js – v2 (إصلاح الهيدر وعرض الجلسات)
+ * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -37,16 +37,25 @@
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
             currentUser = user;
-            updateHeader(user);
+            await updateHeader(user);
             await fetchSessions();
             bindEvents();
         } catch (e) { console.error(e); }
     }
 
-    function updateHeader(user) {
-        const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        document.getElementById('headerUserName').textContent = name;
-        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+    async function updateHeader(user) {
+        let name = user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم';
+        // إذا لم نجد الاسم، نحاول جلبه من auth_register
+        if (name === 'مستخدم') {
+            try {
+                const { data } = await supabase.from('auth_register').select('full_name').eq('user_id', user.id).maybeSingle();
+                if (data?.full_name) name = data.full_name;
+            } catch (e) {}
+        }
+        const headerName = document.getElementById('headerUserName');
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerName) headerName.textContent = name;
+        if (headerAvatar) headerAvatar.textContent = name.charAt(0).toUpperCase();
     }
 
     async function fetchSessions() {
@@ -65,15 +74,9 @@
         document.getElementById('totalCount').textContent = sessions.length;
         const activeSessions = sessions.filter(s => s.status === 'active');
         document.getElementById('activeCount').textContent = activeSessions.length;
-        // آخر تسجيل دخول
-        const lastLogin = sessions.reduce((latest, s) => {
-            return s.login_at && new Date(s.login_at) > new Date(latest) ? s.login_at : latest;
-        }, null);
+        const lastLogin = sessions.reduce((latest, s) => s.login_at && new Date(s.login_at) > new Date(latest) ? s.login_at : latest, null);
         document.getElementById('lastLoginTime').textContent = lastLogin ? formatDate(lastLogin) : '-';
-        // آخر تسجيل خروج (من الجلسات المنتهية)
-        const lastLogout = sessions.reduce((latest, s) => {
-            return s.logout_at && new Date(s.logout_at) > new Date(latest) ? s.logout_at : latest;
-        }, null);
+        const lastLogout = sessions.reduce((latest, s) => s.logout_at && new Date(s.logout_at) > new Date(latest) ? s.logout_at : latest, null);
         document.getElementById('lastLogoutTime').textContent = lastLogout ? formatDate(lastLogout) : '-';
     }
 
@@ -85,17 +88,14 @@
         let filtered = sessions;
         if (status !== 'all') filtered = filtered.filter(s => s.status === status);
         if (device !== 'all') filtered = filtered.filter(s => s.device_type === device);
-
         if (search) {
             filtered = filtered.filter(s => {
-                return (
-                    (s.session_number && s.session_number.toLowerCase().includes(search)) ||
-                    (s.ip_address && s.ip_address.includes(search)) ||
-                    (s.device_name && s.device_name.toLowerCase().includes(search)) ||
-                    (s.browser_name && s.browser_name.toLowerCase().includes(search)) ||
-                    (s.country && s.country.toLowerCase().includes(search)) ||
-                    (s.city && s.city.toLowerCase().includes(search))
-                );
+                return (s.session_number && s.session_number.toLowerCase().includes(search)) ||
+                       (s.ip_address && s.ip_address.includes(search)) ||
+                       (s.device_name && s.device_name.toLowerCase().includes(search)) ||
+                       (s.browser_name && s.browser_name.toLowerCase().includes(search)) ||
+                       (s.country && s.country.toLowerCase().includes(search)) ||
+                       (s.city && s.city.toLowerCase().includes(search));
             });
         }
 
@@ -106,7 +106,11 @@
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
         if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:var(--gray-500);"><i class="fas fa-inbox" style="font-size:48px; margin-bottom:12px; color:var(--gray-300); display:block;"></i>لا توجد جلسات مطابقة</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:50px; color:var(--gray-500);">
+                <i class="fas fa-inbox" style="font-size:48px; margin-bottom:12px; color:var(--gray-300); display:block;"></i>
+                <p style="margin:0; font-weight:700;">لا توجد عمليات تسجيل دخول مسجلة بعد.</p>
+                <p style="font-size:13px; margin-top:8px;">سيتم تسجيل الدخول الحالي تلقائياً في السجل.</p>
+            </td></tr>`;
             return;
         }
         tbody.innerHTML = list.map(s => `
@@ -132,16 +136,10 @@
     }
 
     function bindRowEvents() {
-        document.querySelectorAll('.view-detail').forEach(btn => {
-            btn.addEventListener('click', () => showDetail(btn.dataset.id));
-        });
-        document.querySelectorAll('.terminate-session').forEach(btn => {
-            btn.addEventListener('click', () => terminateSession(btn.dataset.id));
-        });
+        document.querySelectorAll('.view-detail').forEach(btn => btn.addEventListener('click', () => showDetail(btn.dataset.id)));
+        document.querySelectorAll('.terminate-session').forEach(btn => btn.addEventListener('click', () => terminateSession(btn.dataset.id)));
         const logoutBtn = document.getElementById('logoutCurrentBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => logoutCurrentSession());
-        }
+        if (logoutBtn) logoutBtn.addEventListener('click', () => logoutCurrentSession());
     }
 
     async function showDetail(id) {
@@ -191,7 +189,6 @@
             </div>
         `;
         document.getElementById('detailContent').innerHTML = html;
-        // إظهار زر إنهاء الجلسة إذا كانت الجلسة نشطة وليست الجلسة الحالية
         const terminateBtn = document.getElementById('terminateSessionBtn');
         if (session.status === 'active' && !session.is_current_session) {
             terminateBtn.style.display = 'inline-flex';
@@ -206,41 +203,23 @@
         if (!confirm('هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
         const { error } = await supabase
             .from('user_login_sessions')
-            .update({
-                status: 'terminated_by_user',
-                logout_reason: 'إنهاء بواسطة المستخدم',
-                logout_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
+            .update({ status: 'terminated_by_user', logout_reason: 'إنهاء بواسطة المستخدم', logout_at: new Date().toISOString(), updated_at: new Date().toISOString() })
             .eq('id', id);
-        if (!error) {
-            alert('تم إنهاء الجلسة بنجاح');
-            fetchSessions();
-            document.getElementById('detailModal').classList.remove('show');
-        } else {
-            alert('فشل إنهاء الجلسة');
-        }
+        if (!error) { alert('تم إنهاء الجلسة بنجاح'); fetchSessions(); document.getElementById('detailModal').classList.remove('show'); }
+        else alert('فشل إنهاء الجلسة');
     }
 
     async function logoutCurrentSession() {
-        // استدعاء تسجيل الخروج من النظام
-        if (window.TeraAuth && typeof window.TeraAuth.logout === 'function') {
-            await window.TeraAuth.logout();
-        } else {
-            window.location.replace('/auth/auth/login/login.html');
-        }
+        if (window.TeraAuth?.logout) await window.TeraAuth.logout();
+        else window.location.replace('/auth/auth/login/login.html');
     }
 
     function bindEvents() {
         document.getElementById('searchInput').addEventListener('input', applyFilters);
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('deviceFilter').addEventListener('change', applyFilters);
-        document.getElementById('closeDetailModal').addEventListener('click', () => {
-            document.getElementById('detailModal').classList.remove('show');
-        });
-        document.getElementById('closeDetailBtn').addEventListener('click', () => {
-            document.getElementById('detailModal').classList.remove('show');
-        });
+        document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
+        document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
