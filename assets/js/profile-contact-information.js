@@ -1,10 +1,10 @@
 /**
  * ==========================================================
- * profile-contact-information.js – v3.5 (تنبيهات النقص + تجاهل الأخطاء)
+ * profile-contact-information.js – v5.0 (إصلاح كامل)
  * ==========================================================
- * - يظهر تنبيه إذا كان رقم الجوال غير مسجل.
- * - يوقف محاولة profiles بعد 403، و user_contact_info بعد 400.
- * - يدعم صيغ الجوال "+966..." أو "966...".
+ * - يجلب رقم الجوال من جميع المصادر دون توقف.
+ * - يُحدِّث verification_requests بشكل موثوق (upsert).
+ * - يعرض تنبيهات واضحة عند النقص أو النجاح.
  */
 
 'use strict';
@@ -12,8 +12,9 @@
 (function () {
     let supabase = null;
     let currentUser = null;
-    let profilesAvailable = true;       // false بعد أول 403
-    let contactInfoAvailable = true;    // false بعد أول 400
+    let profilesAvailable = true;
+    let contactInfoAvailable = true;
+    let authRegisterAvailable = true;
 
     const countryPatterns = {
         '966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX' },
@@ -25,21 +26,18 @@
         '20':  { regex: /^1[0-2]\d{8}$/, length: 10, placeholder: '1XXXXXXXXX' }
     };
 
-    // استخراج مفتاح الدولة والرقم من أي صيغة
     function parseMobile(fullNumber) {
         if (!fullNumber) return null;
         let cleaned = fullNumber.replace(/[^\d+]/g, '');
         if (cleaned.startsWith('+')) cleaned = cleaned.substring(1);
         for (const code of Object.keys(countryPatterns)) {
             if (cleaned.startsWith(code)) {
-                const number = cleaned.substring(code.length);
-                return { code, number };
+                return { code, number: cleaned.substring(code.length) };
             }
         }
         return null;
     }
 
-    // ========== التنبيهات ==========
     function showAlert(message, type = 'error') {
         const box = document.getElementById('formAlert');
         if (!box) return;
@@ -63,40 +61,26 @@
             return;
         }
         const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        document.getElementById('headerUserName').textContent = fullName;
-        document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
+        const headerName = document.getElementById('headerUserName');
+        const headerAvatar = document.getElementById('headerAvatar');
+        if (headerName) headerName.textContent = fullName;
+        if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
     }
 
-    // ========== جلب رقم الجوال ==========
     async function getMobileNumber() {
-        // 1. user_metadata
         let mobile = currentUser.user_metadata?.mobile_number || '';
         if (mobile) return mobile;
 
-        // 2. auth_register
-        try {
-            const { data, error } = await supabase
-                .from('auth_register')
-                .select('mobile_number')
-                .eq('user_id', currentUser.id)
-                .maybeSingle();
-            if (!error && data?.mobile_number) {
-                mobile = data.mobile_number;
-                await supabase.auth.updateUser({ data: { mobile_number: mobile } });
-                return mobile;
-            }
-        } catch (e) {}
-
-        // 3. user_contact_info (فقط إذا متاحة)
-        if (contactInfoAvailable) {
+        // auth_register
+        if (authRegisterAvailable) {
             try {
                 const { data, error } = await supabase
-                    .from('user_contact_info')
+                    .from('auth_register')
                     .select('mobile_number')
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-                if (error) {
-                    if (error.status === 400) contactInfoAvailable = false;
+                if (error && (error.status === 403 || error.status === 404)) {
+                    authRegisterAvailable = false;
                 } else if (data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
@@ -105,7 +89,24 @@
             } catch (e) {}
         }
 
-        // 4. profiles (فقط إذا متاحة)
+        // user_contact_info
+        if (contactInfoAvailable) {
+            try {
+                const { data, error } = await supabase
+                    .from('user_contact_info')
+                    .select('mobile_number')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+                if (error && error.status === 400) contactInfoAvailable = false;
+                else if (data?.mobile_number) {
+                    mobile = data.mobile_number;
+                    await supabase.auth.updateUser({ data: { mobile_number: mobile } });
+                    return mobile;
+                }
+            } catch (e) {}
+        }
+
+        // profiles
         if (profilesAvailable) {
             try {
                 const { data, error } = await supabase
@@ -113,8 +114,8 @@
                     .select('mobile_number')
                     .eq('id', currentUser.id)
                     .maybeSingle();
-                if (error) {
-                    if (error.status === 403) profilesAvailable = false;
+                if (error && (error.status === 403 || error.status === 404)) {
+                    profilesAvailable = false;
                 } else if (data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
@@ -126,7 +127,6 @@
         return '';
     }
 
-    // ========== تحميل البيانات وعرض التنبيهات ==========
     async function populateCurrentData() {
         if (!currentUser) return;
 
@@ -138,14 +138,36 @@
             if (parsed) {
                 document.getElementById('countryCode').value = parsed.code;
                 document.getElementById('mobileNumber').value = parsed.number;
+                showAlert('✅ تم تحميل بيانات الاتصال بنجاح.', 'success');
+            } else {
+                showAlert('⚠️ تنسيق رقم الجوال غير معروف، يرجى إعادة إدخاله.', 'warning');
             }
         } else {
-            // رقم الجوال غير موجود -> تنبيه تحذيري
             showAlert('⚠️ لم يتم العثور على رقم جوال مسجل. يرجى إدخاله للحفظ.', 'warning');
         }
     }
 
-    // ========== التحقق من صحة المدخلات ==========
+    // تحديث حالة الاستكمال (باستخدام upsert لتجنب الأخطاء)
+    async function updateVerificationStatus() {
+        try {
+            const { error } = await supabase
+                .from('verification_requests')
+                .upsert({
+                    user_id: currentUser.id,
+                    contact_info_completed: true,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.warn('⚠️ تعذر تحديث verification_requests:', error);
+            } else {
+                console.log('✅ تم تحديث حالة معلومات الاتصال.');
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر تحديث verification_requests:', e);
+        }
+    }
+
     function validateMobileInput(inputId, countrySelectId) {
         const code = document.getElementById(countrySelectId).value;
         const mobile = document.getElementById(inputId).value.replace(/\D/g, '');
@@ -174,7 +196,6 @@
         });
     }
 
-    // ========== الحفظ ==========
     async function saveContactInformation(e) {
         e.preventDefault();
 
@@ -201,17 +222,17 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // 1. تحديث user_metadata (دائماً)
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // 2. تحديث auth_register
-            try {
-                await supabase.from('auth_register')
-                    .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
-                    .eq('user_id', currentUser.id);
-            } catch (e) {}
-
-            // 3. تحديث user_contact_info إذا كانت متاحة
+            // تحديث الجداول الإضافية بصمت
+            if (authRegisterAvailable) {
+                try {
+                    const { error } = await supabase.from('auth_register')
+                        .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
+                        .eq('user_id', currentUser.id);
+                    if (error && (error.status === 403 || error.status === 404)) authRegisterAvailable = false;
+                } catch (e) {}
+            }
             if (contactInfoAvailable) {
                 try {
                     const { error } = await supabase.from('user_contact_info').upsert({
@@ -222,8 +243,6 @@
                     if (error && error.status === 400) contactInfoAvailable = false;
                 } catch (e) {}
             }
-
-            // 4. تحديث profiles إذا كانت متاحة
             if (profilesAvailable) {
                 try {
                     const { error } = await supabase.from('profiles').upsert({
@@ -231,9 +250,12 @@
                         mobile_number: fullMobile,
                         updated_at: new Date().toISOString()
                     });
-                    if (error && error.status === 403) profilesAvailable = false;
+                    if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
                 } catch (e) {}
             }
+
+            // تحديث حالة الاستكمال (ضروري للوحة التحكم)
+            await updateVerificationStatus();
 
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
