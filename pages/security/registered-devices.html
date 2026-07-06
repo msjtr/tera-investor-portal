@@ -39,7 +39,7 @@
 
         .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 28px; }
         .stat-box { background: #fff; border-radius: var(--radius-md); padding: 18px 16px; border: 1px solid var(--gray-200); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .stat-box .number { font-size: 26px; font-weight: 800; color: var(--gray-900); }
+        .stat-box .number { font-size: 20px; font-weight: 800; color: var(--gray-900); }
         .stat-box .label { font-size: 12px; color: var(--gray-500); font-weight: 600; margin-top: 4px; }
 
         .search-filter-bar {
@@ -54,7 +54,7 @@
         .search-filter-bar input { flex: 1; min-width: 200px; }
 
         .table-container { overflow-x: auto; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); }
-        .table-container table { width: 100%; min-width: 1000px; border-collapse: collapse; font-size: 14px; }
+        .table-container table { width: 100%; min-width: 1100px; border-collapse: collapse; font-size: 14px; }
         .table-container th { text-align: right; padding: 14px 18px; font-weight: 800; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); font-size: 13px; white-space: nowrap; }
         .table-container td { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; color: var(--gray-700); }
         .table-container tbody tr:hover td { background: #f0fdfa; }
@@ -78,7 +78,6 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--gray-100); padding-bottom: 14px; }
         .modal-header h3 { margin: 0; font-size: 19px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; }
         .modal-close { background: transparent; border: none; font-size: 24px; color: var(--gray-500); cursor: pointer; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .detail-section { margin-bottom: 20px; }
         .detail-section h4 { font-size: 15px; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 1px solid var(--gray-100); padding-bottom: 6px; }
         .detail-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
@@ -88,7 +87,6 @@
         .btn-primary { background: var(--primary); color: #fff; border: none; padding: 10px 24px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; }
 
         @media (max-width: 768px) {
-            .detail-grid { grid-template-columns: 1fr; }
             .search-filter-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
