@@ -142,7 +142,21 @@
     <div class="modal-box">
         <div class="modal-header"><h3>طلب تغيير جديد</h3><button class="modal-close" id="closeNewRequestModal">&times;</button></div>
         <form id="newRequestForm">
-            <div class="form-group"><label>الجوال الحالي</label><input class="form-control" id="currentMobileDisplayModal" disabled></div>
+            <!-- حاويات الرقم الحالي المفصولة (سيتم إنشاؤها ديناميكياً إن لم تكن موجودة، لكن إضافتها هنا أفضل) -->
+            <div class="form-group">
+                <label>الجوال الحالي</label>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:600; color:#64748b;">مفتاح الدولة</label>
+                        <input class="form-control" id="currentCountryCodeModal" disabled>
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
+                        <input class="form-control" id="currentMobileNumberModal" disabled>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-group"><label>الدولة / مفتاح الاتصال <span class="req">*</span></label>
                 <select class="form-control" id="newCountryCode">
                     <option value="+966" selected>🇸🇦 السعودية (+966)</option>
@@ -154,14 +168,15 @@
                     <option value="+20">🇪🇬 مصر (+20)</option>
                 </select>
             </div>
-            <div class="form-group"><label>رقم الجوال الجديد <span class="req">*</span></label><input type="tel" class="form-control" id="newMobileNumber" placeholder="5XXXXXXXX" inputmode="numeric"></div>
-            <div class="form-group"><label>تأكيد الرقم <span class="req">*</span></label><input type="tel" class="form-control" id="confirmNewMobile" placeholder="أعد إدخال الرقم"></div>
+            <div class="form-group"><label>رقم الجوال الجديد <span class="req">*</span></label><input type="tel" class="form-control" id="newMobileNumber" placeholder="5XXXXXXXX" inputmode="numeric"><div class="form-hint" id="newMobileHint"></div></div>
+            <div class="form-group"><label>تأكيد الرقم <span class="req">*</span></label><input type="tel" class="form-control" id="confirmNewMobile" placeholder="أعد إدخال الرقم"><div class="form-hint" id="confirmMobileHint"></div></div>
             <div class="form-group"><label>سبب التغيير <span class="req">*</span></label><textarea class="form-control" id="reasonInput" rows="2"></textarea></div>
             <div class="form-group" id="otpSectionNew" style="display:none;">
                 <label>رمز التحقق (OTP) <span class="req">*</span></label>
                 <input type="text" class="form-control" id="otpCodeNew" maxlength="8" inputmode="numeric" placeholder="الرمز المكون من 8 أرقام">
                 <div class="form-hint" id="otpHintNew">أدخل الرمز المرسل إلى بريدك الإلكتروني</div>
-                <button type="button" class="btn-secondary" id="resendOtpBtnNew" style="margin-top:8px;" disabled>إعادة الإرسال (05:00)</button>
+                <button type="button" class="btn-primary" id="verifyOtpBtnNew" style="width:100%; margin-top:8px;">تحقق من الرمز</button>
+                <button type="button" class="btn-secondary" id="resendOtpBtnNew" style="margin-top:8px; width:100%;" disabled>إعادة الإرسال (05:00)</button>
             </div>
             <button type="button" class="btn-primary" id="sendOtpBtnNew" style="width:100%; margin-top:10px;">إرسال رمز التحقق</button>
             <button type="submit" class="btn-primary" id="submitNewRequestBtn" style="display:none; width:100%; margin-top:10px;">حفظ الطلب</button>
