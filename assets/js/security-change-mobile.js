@@ -1,5 +1,5 @@
 /**
- * security-change-mobile.js – النسخة المتكاملة مع فصل الرقم الحالي داخل النافذة
+ * security-change-mobile.js – النسخة النهائية (ظهور زر التحقق والحفظ + إشعارات داخل النافذة)
  * يعمل مع صفحة change-mobile.html التي تحتوي على table و stats و filter
  */
 (function() {
@@ -34,21 +34,17 @@
         window._alertTimer = setTimeout(() => { box.style.display = 'none'; box.className = 'alert-box'; }, 7000);
     }
 
-    // دالة تحليل رقم الجوال إلى كود الدولة والرقم
     function parseMobile(fullNumber) {
         if (!fullNumber) return { code: '+966', number: '' };
         let cleaned = fullNumber.replace(/[^\d+]/g, '');
         if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
-        // إزالة + للبحث
         let digits = cleaned.substring(1);
-        // البحث عن أطول كود دولة متطابق
         for (const code of Object.keys(countryPatterns)) {
-            const prefix = code.substring(1); // إزالة +
+            const prefix = code.substring(1);
             if (digits.startsWith(prefix)) {
                 return { code: code, number: digits.substring(prefix.length) };
             }
         }
-        // إذا لم يطابق، افترض السعودية
         return { code: '+966', number: digits };
     }
 
@@ -61,6 +57,7 @@
             updateHeader(user);
             await fetchRequests();
             bindEvents();
+            ensureDynamicElements(); // إنشاء العناصر الديناميكية مرة واحدة
         } catch (e) { console.error(e); showAlert('تعذر تحميل الصفحة.'); }
     }
 
@@ -194,28 +191,12 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-    // ========== وظائف النافذة الجديدة ==========
-
-    // فتح النافذة مع تهيئة الحقول
-    function openNewRequestModal() {
-        // الحصول على الرقم الحالي وتحليله
-        const currentMobile = currentUser.user_metadata?.mobile_number || '';
-        const parsed = parseMobile(currentMobile);
-
-        // تعبئة حقل مفتاح الدولة الحالي (قراءة فقط) وحقل الرقم الحالي (قراءة فقط)
-        document.getElementById('currentMobileDisplayModal').value = currentMobile; // يمكن أن يظل النص الكامل أو نستخدمه للعرض
-        // لكننا سنستخدم حقلين منفصلين للعرض فقط، بفرض أن HTML يحتوي على:
-        // <input id="currentCountryCode" disabled> و <input id="currentMobileNumber" disabled>
-        // إذا كانت الصفحة لا تحتوي عليهما، سنقوم بإنشائهما ديناميكياً داخل النافذة.
-        const currentCountryInput = document.getElementById('currentCountryCodeModal');
-        const currentNumberInput = document.getElementById('currentMobileNumberModal');
-        if (currentCountryInput && currentNumberInput) {
-            currentCountryInput.value = parsed.code;
-            currentNumberInput.value = parsed.number;
-        } else {
-            // إذا لم تكن موجودة، نقوم بإنشائها داخل الـ modal قبل الحقول الأخرى
+    // ========== إنشاء العناصر الديناميكية (مرة واحدة) ==========
+    function ensureDynamicElements() {
+        // حاوية الرقم الحالي المفصولة
+        if (!document.getElementById('currentMobileRow')) {
             const container = document.querySelector('#newRequestModal .modal-box');
-            if (container && !document.getElementById('currentMobileRow')) {
+            if (container) {
                 const row = document.createElement('div');
                 row.id = 'currentMobileRow';
                 row.style.display = 'grid';
@@ -236,25 +217,55 @@
                 if (firstFormGroup) {
                     firstFormGroup.parentNode.insertBefore(row, firstFormGroup);
                 }
-                // بعد الإدراج، نملأ القيم
-                document.getElementById('currentCountryCodeModal').value = parsed.code;
-                document.getElementById('currentMobileNumberModal').value = parsed.number;
             }
         }
 
-        // إعادة تعيين باقي الحقول
+        // زر تحقق OTP داخل القسم (إن لم يوجد)
+        if (!document.getElementById('verifyOtpBtnNew')) {
+            const otpSection = document.getElementById('otpSectionNew');
+            if (otpSection) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = 'verifyOtpBtnNew';
+                btn.className = 'btn-primary';
+                btn.textContent = 'تحقق من الرمز';
+                btn.style.marginTop = '10px';
+                btn.style.width = '100%';
+                otpSection.appendChild(btn);
+            }
+        }
+    }
+
+    // ========== وظائف النافذة الجديدة ==========
+    function openNewRequestModal() {
+        const currentMobile = currentUser.user_metadata?.mobile_number || '';
+        const parsed = parseMobile(currentMobile);
+
+        // تعبئة الحقول المنفصلة (إن وجدت)
+        const currentCountryInput = document.getElementById('currentCountryCodeModal');
+        const currentNumberInput = document.getElementById('currentMobileNumberModal');
+        if (currentCountryInput) currentCountryInput.value = parsed.code;
+        if (currentNumberInput) currentNumberInput.value = parsed.number;
+
+        // الحقل القديم (للعرض الكامل) يمكن إخفاؤه
+        const oldDisplay = document.getElementById('currentMobileDisplayModal');
+        if (oldDisplay) oldDisplay.value = currentMobile;
+
+        // إعادة تعيين الحقول
         document.getElementById('newCountryCode').value = '+966';
         document.getElementById('newMobileNumber').value = '';
         document.getElementById('confirmNewMobile').value = '';
         document.getElementById('reasonInput').value = '';
         document.getElementById('otpSectionNew').style.display = 'none';
         document.getElementById('sendOtpBtnNew').style.display = 'block';
+        document.getElementById('sendOtpBtnNew').disabled = true;
         document.getElementById('submitNewRequestBtn').style.display = 'none';
         document.getElementById('otpCodeNew').value = '';
 
         // إخفاء رسائل التلميح
         const hints = document.querySelectorAll('#newRequestForm .form-hint');
-        hints.forEach(h => h.textContent = '');
+        hints.forEach(h => { if (h.id !== 'otpHintNew') h.textContent = ''; });
+        document.getElementById('otpHintNew').textContent = 'أدخل الرمز المرسل إلى بريدك الإلكتروني';
 
         otpVerified = false;
         otpAttempts = 0;
@@ -262,19 +273,17 @@
 
         document.getElementById('newRequestModal').classList.add('show');
 
-        // ربط التحقق الفوري
         attachValidationListeners();
+        // التأكد من ظهور زر التحقق من OTP عندما يظهر قسم OTP
+        const verifyBtn = document.getElementById('verifyOtpBtnNew');
+        if (verifyBtn) verifyBtn.style.display = 'none'; // سيظهر لاحقاً
     }
 
-    // التحقق من صحة الرقم الجديد
     function validateNewMobileField() {
         const code = document.getElementById('newCountryCode').value;
         const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
-        const hint = document.getElementById('newMobileHintModal') || document.getElementById('otpHintNew'); // استخدم أي حقل تلميح
-        // لنفترض أن لدينا عنصر تلميح خاص بالرقم الجديد، إن لم يوجد ننشئه
         let mobileHint = document.getElementById('newMobileHint');
         if (!mobileHint) {
-            // ننشئه أسفل حقل الرقم الجديد
             const input = document.getElementById('newMobileNumber');
             mobileHint = document.createElement('div');
             mobileHint.id = 'newMobileHint';
@@ -298,7 +307,6 @@
             mobileHint.className = 'form-hint error';
             return false;
         }
-        // التحقق من عدم مطابقة الرقم الحالي
         const currentFull = (currentUser.user_metadata?.mobile_number || '').replace(/\D/g, '');
         const newFull = (code + mobile).replace(/\D/g, '');
         if (currentFull && newFull === currentFull) {
@@ -338,33 +346,99 @@
     }
 
     function attachValidationListeners() {
-        document.getElementById('newMobileNumber').addEventListener('input', function() {
-            this.value = this.value.replace(/\D/g, '');
+        const newMobileEl = document.getElementById('newMobileNumber');
+        const confirmEl = document.getElementById('confirmNewMobile');
+        const countryEl = document.getElementById('newCountryCode');
+        const sendOtpBtn = document.getElementById('sendOtpBtnNew');
+
+        const update = () => {
             validateNewMobileField();
             validateConfirmField();
-            toggleSendOtpButton();
-        });
-        document.getElementById('confirmNewMobile').addEventListener('input', function() {
+            if (sendOtpBtn) sendOtpBtn.disabled = !(validateNewMobileField() && validateConfirmField());
+        };
+
+        newMobileEl.addEventListener('input', function() {
             this.value = this.value.replace(/\D/g, '');
-            validateConfirmField();
-            toggleSendOtpButton();
+            update();
         });
-        document.getElementById('newCountryCode').addEventListener('change', function() {
-            document.getElementById('newMobileNumber').value = '';
-            document.getElementById('confirmNewMobile').value = '';
-            validateNewMobileField();
-            validateConfirmField();
-            toggleSendOtpButton();
+        confirmEl.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            update();
         });
-        // تشغيل التحقق مرة واحدة
-        validateNewMobileField();
-        validateConfirmField();
-        toggleSendOtpButton();
+        countryEl.addEventListener('change', function() {
+            newMobileEl.value = '';
+            confirmEl.value = '';
+            update();
+        });
+
+        // التحقق التلقائي من OTP عند اكتمال 8 أرقام
+        const otpInput = document.getElementById('otpCodeNew');
+        if (otpInput) {
+            otpInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '');
+                if (this.value.length === 8) {
+                    verifyOtpCode();
+                }
+            });
+        }
+
+        update();
     }
 
-    function toggleSendOtpButton() {
-        const isValid = validateNewMobileField() && validateConfirmField();
-        document.getElementById('sendOtpBtnNew').disabled = !isValid;
+    // دالة التحقق من OTP (تُستدعى تلقائياً أو بالزر)
+    async function verifyOtpCode() {
+        const otp = document.getElementById('otpCodeNew').value;
+        const hint = document.getElementById('otpHintNew');
+        const verifyBtn = document.getElementById('verifyOtpBtnNew');
+        const submitBtn = document.getElementById('submitNewRequestBtn');
+
+        if (otp.length !== 8) {
+            hint.textContent = 'يجب إدخال 8 أرقام';
+            hint.className = 'form-hint error';
+            return;
+        }
+
+        if (otpAttempts >= MAX_OTP_ATTEMPTS) {
+            hint.textContent = 'تجاوزت عدد المحاولات. اطلب رمزاً جديداً.';
+            hint.className = 'form-hint error';
+            return;
+        }
+
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'جاري التحقق...';
+        }
+
+        const { error } = await supabase.auth.verifyOtp({
+            email: currentUser.email,
+            token: otp,
+            type: 'email'
+        });
+
+        if (error) {
+            otpAttempts++;
+            hint.textContent = `رمز التحقق غير صحيح. متبقي ${MAX_OTP_ATTEMPTS - otpAttempts} محاولات`;
+            hint.className = 'form-hint error';
+            if (verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'تحقق من الرمز';
+            }
+            return;
+        }
+
+        // نجاح التحقق
+        otpVerified = true;
+        hint.textContent = '✅ تم التحقق بنجاح';
+        hint.className = 'form-hint success';
+        if (verifyBtn) verifyBtn.style.display = 'none';
+        if (submitBtn) {
+            submitBtn.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+        document.getElementById('otpCodeNew').disabled = true;
+        // إخفاء زر إعادة الإرسال أيضاً
+        const resendBtn = document.getElementById('resendOtpBtnNew');
+        if (resendBtn) resendBtn.style.display = 'none';
     }
 
     async function sendOtpForNewRequest() {
@@ -372,20 +446,38 @@
             return showAlert('يرجى تصحيح رقم الجوال الجديد', 'error');
         }
 
-        const code = document.getElementById('newCountryCode').value;
-        const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
+        const { error } = await supabase.auth.signInWithOtp({
+            email: currentUser.email,
+            options: { shouldCreateUser: false }
+        });
+        if (error) {
+            showAlert('فشل إرسال الرمز', 'error');
+            return;
+        }
 
-        const { error } = await supabase.auth.signInWithOtp({ email: currentUser.email, options: { shouldCreateUser: false } });
-        if (error) return showAlert('فشل إرسال الرمز');
-        showAlert('تم إرسال الرمز إلى بريدك', 'success');
+        // إظهار قسم OTP
         document.getElementById('otpSectionNew').style.display = 'block';
         document.getElementById('sendOtpBtnNew').style.display = 'none';
+        // إظهار زر التحقق من OTP
+        const verifyBtn = document.getElementById('verifyOtpBtnNew');
+        if (verifyBtn) {
+            verifyBtn.style.display = 'block';
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'تحقق من الرمز';
+        }
+        document.getElementById('otpCodeNew').value = '';
+        document.getElementById('otpCodeNew').disabled = false;
+        document.getElementById('otpHintNew').textContent = 'أدخل الرمز المرسل إلى بريدك الإلكتروني';
+        document.getElementById('otpHintNew').className = 'form-hint';
+        otpVerified = false;
+        otpAttempts = 0;
         startOtpTimer();
     }
 
     function startOtpTimer() {
         let sec = 300;
         const btn = document.getElementById('resendOtpBtnNew');
+        btn.style.display = 'block';
         btn.disabled = true;
         btn.textContent = `إعادة الإرسال (05:00)`;
         clearInterval(otpTimer);
@@ -402,13 +494,14 @@
         const code = document.getElementById('newCountryCode').value;
         const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
         const reason = document.getElementById('reasonInput').value;
-        const otp = document.getElementById('otpCodeNew').value;
 
-        if (!reason) return showAlert('أدخل سبب التغيير');
+        if (!reason) {
+            showAlert('أدخل سبب التغيير', 'error');
+            return;
+        }
         if (!otpVerified) {
-            const { error } = await supabase.auth.verifyOtp({ email: currentUser.email, token: otp, type: 'email' });
-            if (error) { otpAttempts++; return showAlert('رمز التحقق غير صحيح'); }
-            otpVerified = true;
+            showAlert('يجب التحقق من رمز OTP أولاً', 'error');
+            return;
         }
 
         const { error } = await supabase.from('mobile_change_requests').insert({
@@ -419,8 +512,13 @@
             reason: reason,
             status: 'new'
         });
-        if (!error) { showAlert('تم تقديم الطلب', 'success'); closeModal('newRequestModal'); fetchRequests(); }
-        else showAlert('فشل تقديم الطلب');
+        if (!error) {
+            showAlert('تم تقديم الطلب', 'success');
+            closeModal('newRequestModal');
+            fetchRequests();
+        } else {
+            showAlert('فشل تقديم الطلب', 'error');
+        }
     }
 
     function bindEvents() {
@@ -429,6 +527,12 @@
         document.getElementById('closeNewRequestModal').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('cancelNewRequestBtn').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('sendOtpBtnNew').addEventListener('click', sendOtpForNewRequest);
+        // زر التحقق من OTP (قد لا يكون موجوداً في البداية، لذا نستخدم التفويض أو نضيفه بعد التأكد)
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'verifyOtpBtnNew') {
+                verifyOtpCode();
+            }
+        });
         document.getElementById('newRequestForm').addEventListener('submit', submitNewRequest);
         document.getElementById('editRequestForm').addEventListener('submit', saveEdit);
         document.getElementById('cancelReasonForm').addEventListener('submit', cancelRequest);
