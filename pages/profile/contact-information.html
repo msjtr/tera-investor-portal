@@ -81,7 +81,7 @@
         .progress-steps .step-line.completed { background: #10b981; }
         .page-footer { text-align: center; padding: 22px 20px; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto; }
 
-        /* ========== صندوق التنبيهات (alert-box) ========== */
+        /* ========== صندوق التنبيهات ========== */
         .alert-box {
             display: none;
             align-items: center;
@@ -91,26 +91,24 @@
             margin-bottom: 20px;
             font-weight: 700;
             font-size: 14px;
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
         }
-        .alert-box.show {
-            display: flex;
+        .alert-box.show { display: flex; }
+        .alert-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+        .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .alert-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+
+        /* رسائل التوجيه */
+        .info-change-msg {
+            font-size: 13px;
+            margin-top: 8px;
+            color: #0c4a6e;
+            background: #e0f2fe;
+            padding: 8px 12px;
+            border-radius: 8px;
         }
-        .alert-box.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border-color: #6ee7b7;
-        }
-        .alert-box.error {
-            background: #fef2f2;
-            color: #b91c1c;
-            border-color: #fca5a5;
-        }
-        .alert-box i {
-            font-size: 18px;
-            flex-shrink: 0;
+        .info-change-msg a {
+            font-weight: bold;
+            color: #028090;
         }
 
         @media (max-width: 820px) {
@@ -183,9 +181,9 @@
             .progress-steps li.completed .step-num { background: #10b981 !important; color: #0f172a !important; }
             .progress-steps .step-line { background: #334155 !important; }
             .progress-steps .step-line.completed { background: #10b981 !important; }
-            /* alert-box dark mode */
             .alert-box { background: rgba(220,38,38,0.15) !important; border-color: #991b1b !important; color: #fca5a5 !important; }
             .alert-box.success { background: rgba(22,101,52,0.15) !important; border-color: #166534 !important; color: #86efac !important; }
+            .info-change-msg { background: #0f172a !important; color: #e2e8f0 !important; }
         }
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -218,10 +216,8 @@
             <span><strong>يرجى إدخال وسائل التواصل الخاصة بك بشكل صحيح</strong> حيث سيتم استخدامها للتحقق من الهوية واستقبال الإشعارات والتحديثات المهمة المتعلقة بحسابك.</span>
         </div>
 
-        <!-- شريط التقدم (ديناميكي) -->
         <ul class="progress-steps" id="progressTracker"></ul>
 
-        <!-- صندوق التنبيهات (مُحدَّث) -->
         <div class="alert-box" id="formAlert" role="alert">
             <i class="fas" id="alertIcon"></i>
             <span id="alertMessage"></span>
@@ -234,18 +230,18 @@
                 <div class="panel-header">
                     <i class="fas fa-phone-alt"></i>
                     <h3>معلومات الاتصال الأساسية</h3>
-                    <span class="panel-badge">مطلوب</span>
+                    <span class="panel-badge">قراءة فقط</span>
                 </div>
 
                 <div class="form-grid">
 
-                    <!-- رقم الجوال -->
+                    <!-- رقم الجوال (قراءة فقط) -->
                     <div class="form-group full-width">
                         <label class="form-label">رقم الجوال <span class="req">*</span></label>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
                             <div>
                                 <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">الدولة / مفتاح الاتصال</label>
-                                <select class="form-control" id="countryCode" required>
+                                <select class="form-control" id="countryCode" disabled>
                                     <option value="966">🇸🇦 المملكة العربية السعودية (+966)</option>
                                     <option value="971">🇦🇪 الإمارات العربية المتحدة (+971)</option>
                                     <option value="965">🇰🇼 دولة الكويت (+965)</option>
@@ -257,23 +253,20 @@
                             </div>
                             <div>
                                 <label class="form-label" style="font-size:12px; font-weight:600; color:#64748b;">رقم الجوال</label>
-                                <input type="tel" class="form-control" id="mobileNumber" placeholder="551234567" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                <span class="format-hint">يتم إدخال الرقم بدون مفتاح الدولة. مثال: 551234567</span>
+                                <input type="tel" class="form-control" id="mobileNumber" readonly disabled>
                             </div>
                         </div>
-                        <div class="input-hint-box">
-                            <p>ملاحظات:</p>
-                            <ul><li>يقبل الأرقام فقط.</li><li>يتم التحقق من عدد الأرقام حسب الدولة المختارة.</li><li>يمنع إدخال الرموز أو الأحرف.</li></ul>
+                        <div class="info-change-msg">
+                            <i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html">قسم الأمان > تغيير رقم الجوال</a>.
                         </div>
                     </div>
 
-                    <!-- البريد الإلكتروني الأساسي -->
+                    <!-- البريد الإلكتروني الأساسي (قراءة فقط) -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني <span class="req">*</span></label>
-                        <input type="email" class="form-control" id="primaryEmail" placeholder="name@example.com" required>
-                        <div class="input-hint-box">
-                            <p>ملاحظات:</p>
-                            <ul><li>يجب أن يكون البريد الإلكتروني فعالاً ويمكن الوصول إليه.</li><li>يمنع استخدام بريد إلكتروني مسجل لحساب آخر.</li><li>يتم التحقق من صحة صيغة البريد الإلكتروني تلقائياً.</li></ul>
+                        <input type="email" class="form-control" id="primaryEmail" readonly disabled>
+                        <div class="info-change-msg">
+                            <i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.
                         </div>
                     </div>
 
@@ -288,7 +281,7 @@
                     <div class="form-group">
                         <label class="form-label">لغة التواصل المفضلة <span class="req">*</span></label>
                         <div class="radio-group">
-                            <label class="radio-label"><input type="radio" name="preferredLanguage" value="arabic" checked required> العربية</label>
+                            <label class="radio-label"><input type="radio" name="preferredLanguage" value="arabic" checked> العربية</label>
                             <label class="radio-label"><input type="radio" name="preferredLanguage" value="english"> English</label>
                         </div>
                     </div>
@@ -297,7 +290,7 @@
                     <div class="form-group">
                         <label class="form-label">طريقة التواصل المفضلة <span class="req">*</span></label>
                         <div class="radio-group">
-                            <label class="radio-label"><input type="radio" name="preferredMethod" value="sms" required> الرسائل النصية (SMS)</label>
+                            <label class="radio-label"><input type="radio" name="preferredMethod" value="sms"> الرسائل النصية (SMS)</label>
                             <label class="radio-label"><input type="radio" name="preferredMethod" value="email" checked> البريد الإلكتروني</label>
                             <label class="radio-label"><input type="radio" name="preferredMethod" value="both"> كلاهما</label>
                         </div>
@@ -321,14 +314,12 @@
 
                 <div class="form-grid">
 
-                    <!-- الاسم الكامل -->
                     <div class="form-group full-width">
                         <label class="form-label">الاسم الكامل <span class="req">*</span></label>
                         <input type="text" class="form-control" id="emergencyName" placeholder="مثال: أحمد بن محمد الفلاحي" required oninput="this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '')">
                         <div class="input-hint-box"><p>ملاحظات:</p><ul><li>يقبل الأحرف العربية فقط.</li><li>يجب إدخال الاسم الحقيقي الكامل.</li></ul></div>
                     </div>
 
-                    <!-- صلة القرابة -->
                     <div class="form-group">
                         <label class="form-label">صلة القرابة أو العلاقة <span class="req">*</span></label>
                         <select class="form-control" id="emergencyRelation" required>
@@ -339,7 +330,6 @@
                         </select>
                     </div>
 
-                    <!-- رقم جوال الطوارئ -->
                     <div class="form-group full-width">
                         <label class="form-label">رقم الجوال <span class="req">*</span></label>
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
@@ -363,7 +353,6 @@
                         </div>
                     </div>
 
-                    <!-- البريد الإلكتروني للطوارئ -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني <span class="optional">اختياري</span></label>
                         <input type="email" class="form-control" id="emergencyEmail" placeholder="emergency@example.com">
