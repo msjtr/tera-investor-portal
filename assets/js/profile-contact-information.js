@@ -1,7 +1,7 @@
 /**
- * profile-contact-information.js – v6.8 (إزالة محاولة profiles)
- * - يحفظ فقط في user_contact_info و user_metadata.
- * - يتجاهل profiles بعد أول 403.
+ * profile-contact-information.js – v6.9 (تقديم الطلب تلقائياً عند الاكتمال)
+ * - يحفظ بيانات الاتصال في user_contact_info و user_metadata.
+ * - يتحقق من اكتمال جميع المراحل ويُرسل الطلب تلقائياً.
  */
 
 'use strict';
@@ -103,7 +103,6 @@
 
     function fillFieldsFromData(data) {
         if (!data) return;
-
         if (data.secondary_email) document.getElementById('backupEmail').value = data.secondary_email;
         if (data.emergency_contact_name) document.getElementById('emergencyName').value = data.emergency_contact_name;
         if (data.emergency_contact_relation) document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
@@ -180,14 +179,67 @@
         await loadAdditionalData();
     }
 
-    async function updateVerificationStatus() {
+    // التحقق من اكتمال جميع المراحل وتقديم الطلب تلقائياً
+    async function updateVerificationAndSubmit() {
         try {
-            await supabase.from('verification_requests').upsert({
+            // 1. الحصول على سجل الطلب الحالي
+            const { data: currentReq } = await supabase
+                .from('verification_requests')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .maybeSingle();
+
+            // 2. المراحل المطلوبة للتقديم
+            const requiredStages = [
+                'personal_info_completed',
+                'contact_info_completed',
+                'national_address_completed',
+                'bank_info_completed',
+                'attachments_completed'
+            ];
+
+            // 3. التحقق من اكتمال جميع المراحل (بافتراض أن المرحلة الحالية اكتملت)
+            let allCompleted = true;
+            for (const key of requiredStages) {
+                if (key === 'contact_info_completed') continue; // نحن نكمل هذه الآن
+                if (!currentReq?.[key]) {
+                    allCompleted = false;
+                    break;
+                }
+            }
+
+            const now = new Date().toISOString();
+            const updatePayload = {
                 user_id: currentUser.id,
                 contact_info_completed: true,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
-        } catch (e) {}
+                updated_at: now
+            };
+
+            // إذا كانت جميع المراحل مكتملة، قدّم الطلب تلقائياً
+            if (allCompleted) {
+                updatePayload.submitted = true;
+                updatePayload.submitted_at = now;
+                // إذا لم يكن الطلب مرفوضاً مسبقاً، نعيده إلى "قيد المراجعة"
+                if (currentReq?.status !== 'rejected') {
+                    updatePayload.status = 'under_review';
+                }
+            }
+
+            const { error } = await supabase
+                .from('verification_requests')
+                .upsert(updatePayload, { onConflict: 'user_id' });
+
+            if (error) {
+                console.warn('⚠️ تعذر تحديث حالة التحقق:', error);
+            } else {
+                console.log('✅ تم تحديث حالة معلومات الاتصال.');
+                if (allCompleted) {
+                    console.log('✅ تم تقديم الطلب تلقائياً بعد اكتمال جميع المراحل.');
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر تحديث verification_requests:', e);
+        }
     }
 
     function validateMobileInput(inputId, countrySelectId) {
@@ -252,7 +304,6 @@
         try {
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // الحفظ فقط في user_contact_info
             const contactPayload = {
                 user_id: currentUser.id,
                 phone: fullMobile,
@@ -272,7 +323,9 @@
                 }
             }
 
-            await updateVerificationStatus();
+            // تحديث حالة الاستكمال وتقديم الطلب تلقائياً عند الاكتمال
+            await updateVerificationAndSubmit();
+
             showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
             currentUser.user_metadata.mobile_number = fullMobile;
             updateHeader(currentUser);
