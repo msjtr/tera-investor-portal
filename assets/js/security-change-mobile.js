@@ -1,7 +1,6 @@
 /**
- * security-change-mobile.js
+ * security-change-mobile.js – v1.1 (إصلاح ظهور نافذة النجاح تلقائياً)
  * تغيير رقم الجوال – صفحة مستقلة مع OTP عبر البريد الإلكتروني
- * Enterprise Version 2026
  */
 
 'use strict';
@@ -26,7 +25,7 @@
 
     const newMobile = document.getElementById('newMobile');
     const confirmMobile = document.getElementById('confirmMobile');
-    const countryCodeSelect = document.getElementById('countryCodeSelect'); // مفتاح الدولة الجديد
+    const countryCodeSelect = document.getElementById('countryCodeSelect');
     const mobileHint = document.getElementById('mobileHint');
     const confirmHint = document.getElementById('confirmMobileHint');
 
@@ -49,7 +48,6 @@
     const alertIcon = document.getElementById('alertIcon');
     const alertMessage = document.getElementById('alertMessage');
 
-    // أنماط أرقام الجوال حسب الدولة
     const countryPatterns = {
         '+966': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
         '+971': { regex: /^5\d{8}$/, length: 9, placeholder: '5XXXXXXXX', msg: 'يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
@@ -95,6 +93,14 @@
         };
     }
 
+    // إخفاء النافذة دائماً عند البدء
+    function hideSuccessModal() {
+        if (successModal) {
+            successModal.classList.remove('show');
+            successModal.style.display = 'none';
+        }
+    }
+
     function updateHeader(user) {
         if (!user) return;
         const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
@@ -105,28 +111,10 @@
         if (headerAvatar) headerAvatar.textContent = avatar;
     }
 
-    function parseMobile(fullNumber) {
-        if (!fullNumber) return null;
-        let cleaned = fullNumber.replace(/[^\d+]/g, '');
-        if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
-        cleaned = cleaned.substring(1);
-        for (const code of Object.keys(countryPatterns)) {
-            if (cleaned.startsWith(code.substring(1))) {
-                return { code: code, number: cleaned.substring(code.length - 1) };
-            }
-        }
-        return null;
-    }
-
-    // عرض رقم الجوال الحالي
     function loadCurrentMobile() {
         if (!currentUser || !currentMobileDisplay) return;
         const mobile = currentUser.user_metadata?.mobile_number || '';
-        if (mobile) {
-            currentMobileDisplay.value = mobile; // سيتم تنسيقه حسب الحاجة (يمكن إظهار مخفي جزئيًا)
-        } else {
-            currentMobileDisplay.value = 'غير مسجل';
-        }
+        currentMobileDisplay.value = mobile || 'غير مسجل';
     }
 
     // ===== التحقق من كلمة المرور =====
@@ -152,21 +140,19 @@
                 return;
             }
 
-            // نجاح التحقق
             passwordVerified = true;
             passwordHint.innerHTML = '<span style="color:#16a34a;">✅ تم التحقق بنجاح</span>';
             currentPassword.disabled = true;
             verifyPasswordBtn.style.display = 'none';
-            // إظهار قسم إدخال الجوال الجديد
-            document.getElementById('stage2Panel')?.style?.display = 'block';
-            document.getElementById('stage2Panel')?.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('stage2Panel').style.display = 'block';
+            document.getElementById('stage2Panel').scrollIntoView({ behavior: 'smooth' });
             showAlert('✅ تم التحقق من كلمة المرور بنجاح.', 'success');
         } catch (err) {
             console.error(err);
             showAlert('حدث خطأ أثناء التحقق. حاول لاحقاً.', 'error');
         } finally {
             verifyPasswordBtn.disabled = false;
-            verifyPasswordBtn.innerHTML = '<i class="fas fa-check-circle"></i> تحقق';
+            verifyPasswordBtn.innerHTML = '<i class="fas fa-check-circle"></i> تحقق من كلمة المرور';
         }
     }
 
@@ -273,7 +259,6 @@
                 throw error;
             }
 
-            // نجاح التحقق
             otpVerified = true;
             otpIcon.className = 'validation-icon success';
             otpMessage.textContent = '✅ تم التحقق بنجاح';
@@ -281,7 +266,6 @@
             saveGroup.style.display = 'block';
             otpVerifyGroup.style.display = 'none';
             showAlert('✅ تم التحقق من الرمز بنجاح. يمكنك الآن حفظ التغيير.', 'success');
-
         } catch (err) {
             console.error(err);
             let msg = 'رمز التحقق غير صحيح.';
@@ -296,31 +280,25 @@
         }
     }
 
-    // ===== التحقق من صحة رقم الجوال الجديد =====
+    // ===== التحقق من صحة الرقم =====
     function validateNewMobile() {
         const code = countryCodeSelect?.value || '+966';
         const mobile = newMobile.value.replace(/\D/g, '');
         const pattern = countryPatterns[code];
         if (!pattern) return false;
-        if (mobile.length !== pattern.length) {
+        if (mobile.length !== pattern.length || !pattern.regex.test(mobile)) {
             mobileHint.textContent = pattern.msg;
-            mobileHint.className = 'format-hint error';
+            mobileHint.className = 'mobile-hint error';
             return false;
         }
-        if (!pattern.regex.test(mobile)) {
-            mobileHint.textContent = pattern.msg;
-            mobileHint.className = 'format-hint error';
-            return false;
-        }
-        // التأكد من أنه مختلف عن الرقم الحالي
         const currentFullMobile = currentUser.user_metadata?.mobile_number;
         if (currentFullMobile && currentFullMobile === code + mobile) {
             mobileHint.textContent = '✖ رقم الجوال الجديد مطابق للرقم الحالي.';
-            mobileHint.className = 'format-hint error';
+            mobileHint.className = 'mobile-hint error';
             return false;
         }
         mobileHint.textContent = '✅ رقم الجوال صالح';
-        mobileHint.className = 'format-hint success';
+        mobileHint.className = 'mobile-hint success';
         return true;
     }
 
@@ -329,22 +307,26 @@
         const confirmVal = confirmMobile.value.replace(/\D/g, '');
         if (!confirmVal) {
             confirmHint.textContent = 'أعد إدخال رقم الجوال';
-            confirmHint.className = 'format-hint';
+            confirmHint.className = 'mobile-hint';
             return false;
         }
         if (newVal !== confirmVal) {
             confirmHint.textContent = '✖ رقم الجوال غير متطابق';
-            confirmHint.className = 'format-hint error';
+            confirmHint.className = 'mobile-hint error';
             return false;
         }
         confirmHint.textContent = '✅ رقم الجوال متطابق';
-        confirmHint.className = 'format-hint success';
+        confirmHint.className = 'mobile-hint success';
         return true;
     }
 
     // ===== حفظ التغيير =====
     async function saveMobileChange() {
         if (isUpdatingMobile) return;
+        if (!passwordVerified) {
+            showAlert('يجب التحقق من كلمة المرور أولاً.', 'error');
+            return;
+        }
         if (!validateNewMobile() || !validateConfirmMobile()) {
             showAlert('يرجى التأكد من صحة رقم الجوال الجديد.', 'error');
             return;
@@ -363,30 +345,13 @@
         saveMobileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            // 1. تحديث رقم الجوال في user_metadata
-            const { error } = await supabase.auth.updateUser({
-                data: { mobile_number: fullMobile }
-            });
-            if (error) throw error;
+            await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
-            // 2. تحديث جدول user_contact_info (الجدول الموحد للاتصال)
-            try {
-                await supabase.from('user_contact_info').upsert({
-                    user_id: currentUser.id,
-                    phone: fullMobile,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
-            } catch (e) {}
-
-            // 3. تحديث auth_register إن وُجد
-            try {
-                await supabase.from('auth_register')
-                    .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
-                    .eq('user_id', currentUser.id);
-            } catch (e) {}
+            try { await supabase.from('user_contact_info').upsert({ user_id: currentUser.id, phone: fullMobile, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }); } catch (e) {}
+            try { await supabase.from('auth_register').update({ mobile_number: fullMobile, updated_at: new Date().toISOString() }).eq('user_id', currentUser.id); } catch (e) {}
 
             showAlert('✅ تم تغيير رقم الجوال بنجاح.', 'success');
-            showSuccessModal();
+            showSuccessModal(); // يظهر فقط بعد الحفظ الناجح
         } catch (err) {
             console.error(err);
             showAlert('تعذر حفظ التغيير. تأكد من صلاحية البيانات.', 'error');
@@ -399,10 +364,8 @@
 
     // ===== ربط الأحداث =====
     function bindEvents() {
-        // زر التحقق من كلمة المرور
         verifyPasswordBtn?.addEventListener('click', verifyPassword);
 
-        // إظهار/إخفاء كلمة المرور
         document.querySelectorAll('.password-toggle').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -416,7 +379,6 @@
             });
         });
 
-        // تغيير placeholder حسب الدولة
         countryCodeSelect?.addEventListener('change', function () {
             const p = countryPatterns[this.value];
             if (p) {
@@ -429,7 +391,6 @@
             }
         });
 
-        // التحقق المباشر من الرقم
         newMobile?.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '');
             validateNewMobile();
@@ -440,21 +401,20 @@
             validateConfirmMobile();
         });
 
-        // OTP
         sendOtpBtn?.addEventListener('click', sendOtp);
         otpCode?.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '');
             if (this.value.length === 8) verifyOtp();
         });
 
-        // حفظ التغيير
         saveMobileBtn?.addEventListener('click', saveMobileChange);
     }
 
     // ===== التهيئة =====
     async function init() {
+        hideSuccessModal(); // إخفاء النافذة فوراً
+
         try {
-            // الحصول على Supabase
             if (window.SecurityCore?.supabase) {
                 supabase = window.SecurityCore.supabase;
                 currentUser = window.SecurityCore.currentUser;
@@ -477,12 +437,7 @@
 
             updateHeader(currentUser);
             loadCurrentMobile();
-
-            // تهيئة مبدئية للدولة الافتراضية
-            if (countryCodeSelect) {
-                countryCodeSelect.value = '+966'; // يمكن تغييره بناءً على رقم المستخدم
-            }
-
+            if (countryCodeSelect) countryCodeSelect.value = '+966';
             bindEvents();
             console.log('✅ [Change Mobile] جاهز، المستخدم:', currentUser.email);
         } catch (err) {
