@@ -1,8 +1,8 @@
 /**
- * profile-contact-information.js – v6.5 (تقسيم رقم الطوارئ بشكل صحيح)
- * - يجلب رقم الطوارئ ويقسمه إلى مفتاح الدولة ورقم الجوال.
- * - الأولوية: user_contact_info ثم profiles.
- * - الحفظ يتم في user_contact_info و profiles.
+ * profile-contact-information.js – v6.6 (أسماء أعمدة صحيحة)
+ * - يتوافق مع أعمدة user_contact_info: phone, secondary_email, emergency_contact_phone، إلخ.
+ * - يجلب البيانات القديمة ويقسم رقم الطوارئ إلى مفتاح الدولة والرقم.
+ * - يحفظ البيانات الجديدة باستخدام الأسماء الصحيحة.
  */
 
 'use strict';
@@ -28,7 +28,7 @@
         if (!fullNumber) return null;
         let cleaned = fullNumber.replace(/[^\d+]/g, '');
         if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
-        cleaned = cleaned.substring(1); // نزيل + للتحليل
+        cleaned = cleaned.substring(1);
         for (const code of Object.keys(countryPatterns)) {
             if (cleaned.startsWith(code)) {
                 return { code, number: cleaned.substring(code.length) };
@@ -88,11 +88,11 @@
             try {
                 const { data, error } = await supabase
                     .from('user_contact_info')
-                    .select('mobile_number')
+                    .select('phone')  // استخدمنا العمود الصحيح
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-                if (!error && data?.mobile_number) {
-                    mobile = data.mobile_number;
+                if (!error && data?.phone) {
+                    mobile = data.phone;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                     return mobile;
                 }
@@ -104,7 +104,7 @@
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('mobile_number')
+                    .select('mobile_number') // profiles قد يحتفظ بالاسم القديم
                     .eq('id', currentUser.id)
                     .maybeSingle();
                 if (!error && data?.mobile_number) {
@@ -122,11 +122,20 @@
     function fillFieldsFromData(data) {
         if (!data) return;
 
-        if (data.backup_email) document.getElementById('backupEmail').value = data.backup_email;
+        // الأسماء الجديدة المطابقة للجدول
+        if (data.secondary_email) {
+            document.getElementById('backupEmail').value = data.secondary_email;
+        } else if (data.backup_email) { // توافق مع profiles القديم
+            document.getElementById('backupEmail').value = data.backup_email;
+        }
+
         if (data.emergency_contact_name) document.getElementById('emergencyName').value = data.emergency_contact_name;
         if (data.emergency_contact_relation) document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
-        if (data.emergency_contact_mobile) {
-            let fullEmergency = data.emergency_contact_mobile.trim();
+
+        // رقم الطوارئ (العمود emergency_contact_phone)
+        const emergencyPhone = data.emergency_contact_phone || data.emergency_contact_mobile;
+        if (emergencyPhone) {
+            let fullEmergency = emergencyPhone.trim();
             if (!fullEmergency.startsWith('+')) fullEmergency = '+' + fullEmergency;
             const parsed = parseMobile(fullEmergency);
             if (parsed) {
@@ -137,7 +146,9 @@
                 document.getElementById('emergencyMobile').value = fullEmergency.replace(/[^\d]/g, '');
             }
         }
+
         if (data.emergency_contact_email) document.getElementById('emergencyEmail').value = data.emergency_contact_email;
+
         if (data.preferred_language) {
             const langRadio = document.querySelector(`input[name="preferredLanguage"][value="${data.preferred_language}"]`);
             if (langRadio) langRadio.checked = true;
@@ -269,15 +280,16 @@
         try {
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
+            // استخدام الأسماء الصحيحة عند الحفظ
             const payload = {
                 user_id: currentUser.id,
-                mobile_number: fullMobile,
-                backup_email: backupEmail || null,
+                phone: fullMobile,                    // بدلاً من mobile_number
+                secondary_email: backupEmail || null, // بدلاً من backup_email
                 preferred_language: preferredLanguage,
                 preferred_contact_method: preferredMethod,
                 emergency_contact_name: emergencyName,
                 emergency_contact_relation: emergencyRelation,
-                emergency_contact_mobile: fullEmergencyMobile,
+                emergency_contact_phone: fullEmergencyMobile, // بدلاً من emergency_contact_mobile
                 emergency_contact_email: emergencyEmail || null,
                 updated_at: new Date().toISOString()
             };
@@ -289,7 +301,20 @@
                 else if (error.status === 400) contactInfoAvailable = false;
             }
             if (!saved && profilesAvailable) {
-                const { error } = await supabase.from('profiles').upsert({ ...payload, id: currentUser.id }, { onConflict: 'id' });
+                // profiles قد لا يزال يستخدم الأسماء القديمة، لذا نرسل له الاسماء القديمة إن لزم الأمر
+                const profilePayload = {
+                    id: currentUser.id,
+                    mobile_number: fullMobile,
+                    backup_email: backupEmail || null,
+                    preferred_language: preferredLanguage,
+                    preferred_contact_method: preferredMethod,
+                    emergency_contact_name: emergencyName,
+                    emergency_contact_relation: emergencyRelation,
+                    emergency_contact_mobile: fullEmergencyMobile,
+                    emergency_contact_email: emergencyEmail || null,
+                    updated_at: new Date().toISOString()
+                };
+                const { error } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
                 if (!error) saved = true;
                 else if (error.status === 403 || error.status === 404) profilesAvailable = false;
             }
