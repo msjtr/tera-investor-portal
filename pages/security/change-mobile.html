@@ -60,12 +60,22 @@
         .btn-secondary { background:#e2e8f0; color:#1e293b; border:none; padding:10px 20px; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; }
         .timer-container { font-size:14px; color:#64748b; margin-top:6px; }
         .timer-display { color:#028090; font-weight:800; }
+
+        /* تنبيهات */
+        .alert-box {
+            display: none; align-items: center; gap: 10px; padding: 12px 16px;
+            border-radius: 10px; margin-bottom: 20px; font-weight: 700; font-size: 14px;
+        }
+        .alert-box.show { display: flex; }
+        .alert-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+        .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .alert-box i { font-size: 18px; flex-shrink: 0; }
     </style>
 </head>
 <body data-security="change-mobile-requests">
 
 <header class="focused-header no-print">
-    <div class="logo"><img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'"/></div>
+    <div class="logo"><img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2240%22%3E%3Crect width=%22120%22 height=%2240%22 rx=%226%22 fill=%22%23028090%22/%3E%3Ctext x=%2260%22 y=%2226%22 font-family=%22Cairo,sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22%23ffffff%22 text-anchor=%22middle%22%3Eتيرا%3C/text%3E%3C/svg%3E'"/></div>
     <div class="client-info"><h5 id="headerUserName">مستخدم</h5><div class="avatar" id="headerAvatar">م</div></div>
 </header>
 
@@ -78,6 +88,12 @@
     <div class="page-desc" style="background:#e0f2fe; border-right:5px solid #028090; padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
         <i class="fas fa-info-circle" style="color:#028090; font-size:20px;"></i>
         <span style="color:#0A1B3F; font-weight:600;">يمكنكم تقديم طلب لتغيير رقم الجوال. سيتم إرسال رمز تحقق إلى بريدكم الإلكتروني لإتمام الطلب.</span>
+    </div>
+
+    <!-- صندوق التنبيهات -->
+    <div class="alert-box" id="formAlert" role="alert">
+        <i class="fas" id="alertIcon"></i>
+        <span id="alertMessage"></span>
     </div>
 
     <div class="stats-row" id="statsRow">
@@ -127,7 +143,17 @@
         <div class="modal-header"><h3>طلب تغيير جديد</h3><button class="modal-close" id="closeNewRequestModal">&times;</button></div>
         <form id="newRequestForm">
             <div class="form-group"><label>الجوال الحالي</label><input class="form-control" id="currentMobileDisplayModal" disabled></div>
-            <div class="form-group"><label>الدولة / مفتاح الاتصال <span class="req">*</span></label><select class="form-control" id="newCountryCode"><option value="+966" selected>🇸🇦 السعودية (+966)</option><option value="+971">🇦🇪 الإمارات (+971)</option><option value="+965">🇰🇼 الكويت (+965)</option><option value="+973">🇧🇭 البحرين (+973)</option><option value="+974">🇶🇦 قطر (+974)</option><option value="+968">🇴🇲 عُمان (+968)</option><option value="+20">🇪🇬 مصر (+20)</option></select></div>
+            <div class="form-group"><label>الدولة / مفتاح الاتصال <span class="req">*</span></label>
+                <select class="form-control" id="newCountryCode">
+                    <option value="+966" selected>🇸🇦 السعودية (+966)</option>
+                    <option value="+971">🇦🇪 الإمارات (+971)</option>
+                    <option value="+965">🇰🇼 الكويت (+965)</option>
+                    <option value="+973">🇧🇭 البحرين (+973)</option>
+                    <option value="+974">🇶🇦 قطر (+974)</option>
+                    <option value="+968">🇴🇲 عُمان (+968)</option>
+                    <option value="+20">🇪🇬 مصر (+20)</option>
+                </select>
+            </div>
             <div class="form-group"><label>رقم الجوال الجديد <span class="req">*</span></label><input type="tel" class="form-control" id="newMobileNumber" placeholder="5XXXXXXXX" inputmode="numeric"></div>
             <div class="form-group"><label>تأكيد الرقم <span class="req">*</span></label><input type="tel" class="form-control" id="confirmNewMobile" placeholder="أعد إدخال الرقم"></div>
             <div class="form-group"><label>سبب التغيير <span class="req">*</span></label><textarea class="form-control" id="reasonInput" rows="2"></textarea></div>
@@ -160,7 +186,17 @@
         <form id="editRequestForm">
             <input type="hidden" id="editRequestId">
             <div class="form-group"><label>الجوال الحالي</label><input class="form-control" id="editCurrentMobile" disabled></div>
-            <div class="form-group"><label>الدولة</label><select class="form-control" id="editCountryCode"><option value="+966">+966</option></select></div>
+            <div class="form-group"><label>الدولة</label>
+                <select class="form-control" id="editCountryCode">
+                    <option value="+966">🇸🇦 السعودية (+966)</option>
+                    <option value="+971">🇦🇪 الإمارات (+971)</option>
+                    <option value="+965">🇰🇼 الكويت (+965)</option>
+                    <option value="+973">🇧🇭 البحرين (+973)</option>
+                    <option value="+974">🇶🇦 قطر (+974)</option>
+                    <option value="+968">🇴🇲 عُمان (+968)</option>
+                    <option value="+20">🇪🇬 مصر (+20)</option>
+                </select>
+            </div>
             <div class="form-group"><label>الجوال الجديد</label><input class="form-control" id="editNewMobile"></div>
             <div class="form-group"><label>السبب</label><textarea class="form-control" id="editReason"></textarea></div>
             <button type="submit" class="btn-primary" style="width:100%;">حفظ التعديلات</button>
