@@ -1,8 +1,8 @@
 /**
- * profile-contact-information.js – v6.2 (إصلاح جلب بيانات الطوارئ)
- * - أولاً يجرب user_contact_info، ثم profiles.
- * - يتعامل مع صيغ أرقام الطوارئ المختلفة.
- * - يتجاهل أخطاء 403/404.
+ * profile-contact-information.js – v6.3 (حفظ مضمون + سياسات RLS)
+ * - الأولوية لـ user_contact_info، وإذا فشل يعتمد على profiles.
+ * - يضمن حفظ البيانات الجديدة دائماً.
+ * - يظهر رسالة واضحة عند نجاح أو فشل الحفظ.
  */
 
 'use strict';
@@ -59,10 +59,8 @@
             return;
         }
         const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'مستخدم';
-        const headerName = document.getElementById('headerUserName');
-        const headerAvatar = document.getElementById('headerAvatar');
-        if (headerName) headerName.textContent = fullName;
-        if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
+        document.getElementById('headerUserName').textContent = fullName;
+        document.getElementById('headerAvatar').textContent = fullName.charAt(0).toUpperCase();
     }
 
     async function getMobileNumber() {
@@ -76,13 +74,12 @@
                     .select('mobile_number')
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-                if (error && (error.status === 403 || error.status === 404)) {
-                    authRegisterAvailable = false;
-                } else if (data?.mobile_number) {
+                if (!error && data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                     return mobile;
                 }
+                if (error && (error.status === 403 || error.status === 404)) authRegisterAvailable = false;
             } catch (e) {}
         }
 
@@ -93,12 +90,12 @@
                     .select('mobile_number')
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-                if (error && error.status === 400) contactInfoAvailable = false;
-                else if (data?.mobile_number) {
+                if (!error && data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                     return mobile;
                 }
+                if (error && error.status === 400) contactInfoAvailable = false;
             } catch (e) {}
         }
 
@@ -109,13 +106,12 @@
                     .select('mobile_number')
                     .eq('id', currentUser.id)
                     .maybeSingle();
-                if (error && (error.status === 403 || error.status === 404)) {
-                    profilesAvailable = false;
-                } else if (data?.mobile_number) {
+                if (!error && data?.mobile_number) {
                     mobile = data.mobile_number;
                     await supabase.auth.updateUser({ data: { mobile_number: mobile } });
                     return mobile;
                 }
+                if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
             } catch (e) {}
         }
 
@@ -125,45 +121,31 @@
     function fillFieldsFromData(data) {
         if (!data) return;
 
-        if (data.backup_email) {
-            document.getElementById('backupEmail').value = data.backup_email;
-        }
-        if (data.emergency_contact_name) {
-            document.getElementById('emergencyName').value = data.emergency_contact_name;
-        }
-        if (data.emergency_contact_relation) {
-            document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
-        }
+        if (data.backup_email) document.getElementById('backupEmail').value = data.backup_email;
+        if (data.emergency_contact_name) document.getElementById('emergencyName').value = data.emergency_contact_name;
+        if (data.emergency_contact_relation) document.getElementById('emergencyRelation').value = data.emergency_contact_relation;
         if (data.emergency_contact_mobile) {
             const parsed = parseMobile(data.emergency_contact_mobile);
             if (parsed) {
                 document.getElementById('emergencyCountryCode').value = parsed.code;
                 document.getElementById('emergencyMobile').value = parsed.number;
             } else {
-                // إذا تعذر التقسيم، نضع الرقم كاملاً في حقل الرقم مع تحديد الدولة الافتراضية
                 document.getElementById('emergencyCountryCode').value = '966';
                 document.getElementById('emergencyMobile').value = data.emergency_contact_mobile;
             }
         }
-        if (data.emergency_contact_email) {
-            document.getElementById('emergencyEmail').value = data.emergency_contact_email;
-        }
+        if (data.emergency_contact_email) document.getElementById('emergencyEmail').value = data.emergency_contact_email;
         if (data.preferred_language) {
-            const langRadios = document.getElementsByName('preferredLanguage');
-            for (const r of langRadios) {
-                if (r.value === data.preferred_language) r.checked = true;
-            }
+            document.querySelector(`input[name="preferredLanguage"][value="${data.preferred_language}"]`).checked = true;
         }
         if (data.preferred_contact_method) {
-            const methodRadios = document.getElementsByName('preferredMethod');
-            for (const r of methodRadios) {
-                if (r.value === data.preferred_contact_method) r.checked = true;
-            }
+            document.querySelector(`input[name="preferredMethod"][value="${data.preferred_contact_method}"]`).checked = true;
         }
     }
 
     async function loadAdditionalData() {
-        // 1. user_contact_info أولاً (لأنه الأحدث عادةً)
+        let found = false;
+
         if (contactInfoAvailable) {
             try {
                 const { data, error } = await supabase
@@ -171,39 +153,29 @@
                     .select('*')
                     .eq('user_id', currentUser.id)
                     .maybeSingle();
-
-                if (error) {
-                    if (error.status === 400) contactInfoAvailable = false;
-                } else if (data) {
+                if (!error && data) {
                     fillFieldsFromData(data);
-                    return; // وجدنا بيانات، لا داعي للبحث في profiles
-                }
+                    found = true;
+                } else if (error && error.status === 400) contactInfoAvailable = false;
             } catch (e) {}
         }
 
-        // 2. profiles (للتوافق مع البيانات القديمة)
-        if (profilesAvailable) {
+        if (!found && profilesAvailable) {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('id', currentUser.id)
                     .maybeSingle();
-
-                if (error) {
-                    if (error.status === 403 || error.status === 404) {
-                        profilesAvailable = false;
-                    }
-                } else if (data) {
+                if (!error && data) {
                     fillFieldsFromData(data);
-                }
+                } else if (error && (error.status === 403 || error.status === 404)) profilesAvailable = false;
             } catch (e) {}
         }
     }
 
     async function populateCurrentData() {
         if (!currentUser) return;
-
         document.getElementById('primaryEmail').value = currentUser.email || '';
 
         const mobile = await getMobileNumber();
@@ -224,22 +196,12 @@
 
     async function updateVerificationStatus() {
         try {
-            const { error } = await supabase
-                .from('verification_requests')
-                .upsert({
-                    user_id: currentUser.id,
-                    contact_info_completed: true,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
-
-            if (error) {
-                console.warn('⚠️ تعذر تحديث verification_requests:', error);
-            } else {
-                console.log('✅ تم تحديث حالة معلومات الاتصال.');
-            }
-        } catch (e) {
-            console.warn('⚠️ تعذر تحديث verification_requests:', e);
-        }
+            await supabase.from('verification_requests').upsert({
+                user_id: currentUser.id,
+                contact_info_completed: true,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+        } catch (e) {}
     }
 
     function validateMobileInput(inputId, countrySelectId) {
@@ -286,38 +248,14 @@
         const preferredMethod = document.querySelector('input[name="preferredMethod"]:checked')?.value || 'email';
         const declarationCheck = document.getElementById('declarationCheck').checked;
 
-        if (!mobileNumber || !primaryEmail) {
-            showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error');
-            return;
-        }
-        if (!emergencyName || !emergencyRelation || !emergencyMobile) {
-            showAlert('يرجى ملء جميع بيانات جهة اتصال الطوارئ.', 'error');
-            return;
-        }
-        if (!declarationCheck) {
-            showAlert('يجب الموافقة على الإقرار.', 'error');
-            return;
-        }
-        if (!validateMobileInput('mobileNumber', 'countryCode')) {
-            showAlert('رقم الجوال غير صحيح.', 'error');
-            return;
-        }
-        if (!validateMobileInput('emergencyMobile', 'emergencyCountryCode')) {
-            showAlert('رقم جوال الطوارئ غير صحيح.', 'error');
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryEmail)) {
-            showAlert('البريد الإلكتروني غير صحيح.', 'error');
-            return;
-        }
-        if (backupEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(backupEmail)) {
-            showAlert('البريد الاحتياطي غير صحيح.', 'error');
-            return;
-        }
-        if (emergencyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emergencyEmail)) {
-            showAlert('بريد الطوارئ غير صحيح.', 'error');
-            return;
-        }
+        if (!mobileNumber || !primaryEmail) { showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error'); return; }
+        if (!emergencyName || !emergencyRelation || !emergencyMobile) { showAlert('يرجى ملء جميع بيانات جهة اتصال الطوارئ.', 'error'); return; }
+        if (!declarationCheck) { showAlert('يجب الموافقة على الإقرار.', 'error'); return; }
+        if (!validateMobileInput('mobileNumber', 'countryCode')) { showAlert('رقم الجوال غير صحيح.', 'error'); return; }
+        if (!validateMobileInput('emergencyMobile', 'emergencyCountryCode')) { showAlert('رقم جوال الطوارئ غير صحيح.', 'error'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryEmail)) { showAlert('البريد الإلكتروني غير صحيح.', 'error'); return; }
+        if (backupEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(backupEmail)) { showAlert('البريد الاحتياطي غير صحيح.', 'error'); return; }
+        if (emergencyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emergencyEmail)) { showAlert('بريد الطوارئ غير صحيح.', 'error'); return; }
 
         const fullMobile = '+' + countryCode + mobileNumber;
         const fullEmergencyMobile = '+' + emergencyCountryCode + emergencyMobile;
@@ -326,16 +264,18 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
+            // 1. تحديث user_metadata (دائماً)
             await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
 
+            // 2. تحديث auth_register
             if (authRegisterAvailable) {
-                try {
-                    await supabase.from('auth_register')
-                        .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
-                        .eq('user_id', currentUser.id);
-                } catch (e) {}
+                await supabase.from('auth_register')
+                    .update({ mobile_number: fullMobile, updated_at: new Date().toISOString() })
+                    .eq('user_id', currentUser.id)
+                    .then(() => {}, () => {});
             }
 
+            // 3. الحمولة الكاملة
             const payload = {
                 user_id: currentUser.id,
                 mobile_number: fullMobile,
@@ -349,19 +289,29 @@
                 updated_at: new Date().toISOString()
             };
 
+            // 4. حفظ في user_contact_info (الأولوية)
+            let saved = false;
             if (contactInfoAvailable) {
-                try {
-                    await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
-                } catch (e) {}
+                const { error } = await supabase.from('user_contact_info').upsert(payload, { onConflict: 'user_id' });
+                if (!error) {
+                    saved = true;
+                } else if (error.status === 400) {
+                    contactInfoAvailable = false;
+                }
             }
 
-            if (profilesAvailable) {
-                try {
-                    await supabase.from('profiles').upsert({
-                        ...payload,
-                        id: currentUser.id
-                    }, { onConflict: 'id' });
-                } catch (e) {}
+            // 5. إذا فشل user_contact_info، نستخدم profiles
+            if (!saved && profilesAvailable) {
+                const { error } = await supabase.from('profiles').upsert({ ...payload, id: currentUser.id }, { onConflict: 'id' });
+                if (!error) {
+                    saved = true;
+                } else if (error.status === 403 || error.status === 404) {
+                    profilesAvailable = false;
+                }
+            }
+
+            if (!saved) {
+                throw new Error('لم نتمكن من حفظ البيانات في أي جدول. تأكد من صلاحيات RLS.');
             }
 
             await updateVerificationStatus();
@@ -370,7 +320,7 @@
             updateHeader(currentUser);
         } catch (err) {
             console.error(err);
-            showAlert('تعذر حفظ البيانات.', 'error');
+            showAlert('تعذر حفظ البيانات. راجع صلاحيات قاعدة البيانات أو حاول لاحقاً.', 'error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save"></i> حفظ بيانات الاتصال';
