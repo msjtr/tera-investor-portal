@@ -1,7 +1,7 @@
 /**
- * profile-contact-information.js – v7.1 (روابط الأمان المباشرة)
- * - حقول البريد والجوال للقراءة فقط.
- * - رسائل توجيهية مع روابط مباشرة لصفحات الأمان.
+ * profile-contact-information.js – v7.2 (منع تكرار روابط التوجيه)
+ * - يتحقق من وجود الرسائل قبل إضافتها.
+ * - حقول البريد والجوال للقراءة فقط مع رسائل توجيه.
  * - الحفظ يقتصر على بيانات الطوارئ والتفضيلات.
  */
 
@@ -161,23 +161,13 @@
     }
 
     function makeFieldsReadonlyWithMessages() {
-        // البريد الإلكتروني
+        // تعطيل حقول البريد والجوال
         const emailInput = document.getElementById('primaryEmail');
         if (emailInput) {
             emailInput.setAttribute('readonly', true);
             emailInput.disabled = true;
-            const emailContainer = emailInput.closest('.form-group') || emailInput.parentNode;
-            const existingMsg = document.getElementById('emailChangeMsg');
-            if (!existingMsg) {
-                const msgDiv = document.createElement('div');
-                msgDiv.id = 'emailChangeMsg';
-                msgDiv.style.cssText = 'font-size:13px; margin-top:8px; color:#0c4a6e; background:#e0f2fe; padding:8px 12px; border-radius:8px;';
-                msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html" style="font-weight:bold; color:#028090;">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.`;
-                emailContainer.parentNode.insertBefore(msgDiv, emailContainer.nextSibling);
-            }
         }
 
-        // مفتاح الدولة ورقم الجوال
         const countrySelect = document.getElementById('countryCode');
         const mobileInput = document.getElementById('mobileNumber');
         if (countrySelect) countrySelect.disabled = true;
@@ -186,13 +176,24 @@
             mobileInput.disabled = true;
         }
 
+        // إضافة رسالة تغيير البريد الإلكتروني (مرة واحدة فقط)
+        if (!document.getElementById('emailChangeMsg')) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'emailChangeMsg';
+            msgDiv.className = 'info-change-msg';
+            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.`;
+            const emailContainer = emailInput?.closest('.form-group') || emailInput?.parentNode;
+            if (emailContainer) {
+                emailContainer.parentNode.insertBefore(msgDiv, emailContainer.nextSibling);
+            }
+        }
+
+        // إضافة رسالة تغيير رقم الجوال (مرة واحدة فقط)
         if (!document.getElementById('mobileChangeMsg')) {
             const msgDiv = document.createElement('div');
             msgDiv.id = 'mobileChangeMsg';
-            msgDiv.style.cssText = 'font-size:13px; margin-top:8px; color:#0c4a6e; background:#e0f2fe; padding:8px 12px; border-radius:8px;';
-            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html" style="font-weight:bold; color:#028090;">قسم الأمان > تغيير رقم الجوال</a>.`;
-
-            // محاولة إدراج الرسالة بعد صف الحقول
+            msgDiv.className = 'info-change-msg';
+            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html">قسم الأمان > تغيير رقم الجوال</a>.`;
             const parentRow = countrySelect?.closest('.row-flex') || countrySelect?.closest('div[style*="grid-template-columns"]');
             if (parentRow) {
                 parentRow.parentNode.insertBefore(msgDiv, parentRow.nextSibling);
@@ -285,25 +286,38 @@
     }
 
     function setupCountryMobileBinding(countrySelectId, inputId) {
-        const select = document.getElementById(countrySelectId);
-        const input = document.getElementById(inputId);
-        if (!select || !input) return;
-        select.disabled = true;
-        input.disabled = true;
+        // حقول الطوارئ فقط هي التي تبقى نشطة
+        if (countrySelectId === 'emergencyCountryCode') {
+            const select = document.getElementById(countrySelectId);
+            const input = document.getElementById(inputId);
+            if (!select || !input) return;
+            const update = () => {
+                const p = countryPatterns[select.value];
+                if (p) {
+                    input.placeholder = p.placeholder;
+                    input.maxLength = p.length;
+                }
+            };
+            select.addEventListener('change', () => {
+                update();
+                input.value = '';
+            });
+            update();
+            input.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '');
+            });
+        }
     }
 
     async function saveContactInformation(e) {
         e.preventDefault();
 
-        const countryCode = document.getElementById('countryCode').value;
-        const mobileNumber = document.getElementById('mobileNumber').value.replace(/\D/g, '');
-        const primaryEmail = document.getElementById('primaryEmail').value.trim();
-        const backupEmail = document.getElementById('backupEmail').value.trim();
         const emergencyName = document.getElementById('emergencyName').value.trim();
         const emergencyRelation = document.getElementById('emergencyRelation').value;
         const emergencyCountryCode = document.getElementById('emergencyCountryCode').value;
         const emergencyMobile = document.getElementById('emergencyMobile').value.replace(/\D/g, '');
         const emergencyEmail = document.getElementById('emergencyEmail').value.trim();
+        const backupEmail = document.getElementById('backupEmail').value.trim();
         const preferredLanguage = document.querySelector('input[name="preferredLanguage"]:checked')?.value || 'arabic';
         const preferredMethod = document.querySelector('input[name="preferredMethod"]:checked')?.value || 'email';
         const declarationCheck = document.getElementById('declarationCheck').checked;
@@ -362,7 +376,6 @@
 
     function bindEvents() {
         document.getElementById('contactForm')?.addEventListener('submit', saveContactInformation);
-        setupCountryMobileBinding('countryCode', 'mobileNumber');
         setupCountryMobileBinding('emergencyCountryCode', 'emergencyMobile');
         document.getElementById('emergencyName')?.addEventListener('input', function () {
             this.value = this.value.replace(/[^\u0600-\u06FF\s]/g, '');
