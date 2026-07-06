@@ -1,5 +1,5 @@
 /**
- * security-change-mobile.js – النسخة النهائية (ظهور زر التحقق والحفظ + إشعارات داخل النافذة)
+ * security-change-mobile.js – النسخة النهائية (ظهور الأزرار والإشعارات داخل النافذة)
  * يعمل مع صفحة change-mobile.html التي تحتوي على table و stats و filter
  */
 (function() {
@@ -58,6 +58,8 @@
             await fetchRequests();
             bindEvents();
             ensureDynamicElements(); // إنشاء العناصر الديناميكية مرة واحدة
+            // إعادة ربط زر التحقق بعد التأكد من وجوده
+            bindVerifyOtpButton();
         } catch (e) { console.error(e); showAlert('تعذر تحميل الصفحة.'); }
     }
 
@@ -231,8 +233,19 @@
                 btn.textContent = 'تحقق من الرمز';
                 btn.style.marginTop = '10px';
                 btn.style.width = '100%';
+                btn.style.display = 'none'; // سيظهر لاحقًا
                 otpSection.appendChild(btn);
             }
+        }
+    }
+
+    // ربط زر التحقق من OTP (يُستدعى بعد التأكد من وجوده)
+    function bindVerifyOtpButton() {
+        const verifyBtn = document.getElementById('verifyOtpBtnNew');
+        if (verifyBtn) {
+            // إزالة المستمعات القديمة إن وجدت
+            verifyBtn.removeEventListener('click', verifyOtpCode);
+            verifyBtn.addEventListener('click', verifyOtpCode);
         }
     }
 
@@ -274,9 +287,10 @@
         document.getElementById('newRequestModal').classList.add('show');
 
         attachValidationListeners();
-        // التأكد من ظهور زر التحقق من OTP عندما يظهر قسم OTP
+        // التأكد من إخفاء زر التحقق من OTP وزر الحفظ
         const verifyBtn = document.getElementById('verifyOtpBtnNew');
-        if (verifyBtn) verifyBtn.style.display = 'none'; // سيظهر لاحقاً
+        if (verifyBtn) verifyBtn.style.display = 'none';
+        document.getElementById('submitNewRequestBtn').style.display = 'none';
     }
 
     function validateNewMobileField() {
@@ -527,12 +541,7 @@
         document.getElementById('closeNewRequestModal').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('cancelNewRequestBtn').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('sendOtpBtnNew').addEventListener('click', sendOtpForNewRequest);
-        // زر التحقق من OTP (قد لا يكون موجوداً في البداية، لذا نستخدم التفويض أو نضيفه بعد التأكد)
-        document.addEventListener('click', function(e) {
-            if (e.target && e.target.id === 'verifyOtpBtnNew') {
-                verifyOtpCode();
-            }
-        });
+        // زر التحقق من OTP مرتبط مسبقاً عبر bindVerifyOtpButton
         document.getElementById('newRequestForm').addEventListener('submit', submitNewRequest);
         document.getElementById('editRequestForm').addEventListener('submit', saveEdit);
         document.getElementById('cancelReasonForm').addEventListener('submit', cancelRequest);
