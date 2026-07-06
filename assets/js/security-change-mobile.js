@@ -1,5 +1,5 @@
 /**
- * security-change-mobile.js – النسخة النهائية (ظهور الأزرار والإشعارات داخل النافذة)
+ * security-change-mobile.js – النسخة النهائية (توليد رقم طلب، تفاصيل كاملة)
  * يعمل مع صفحة change-mobile.html التي تحتوي على table و stats و filter
  */
 (function() {
@@ -23,6 +23,13 @@
     }
 
     function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleString('ar-SA') : '-'; }
+
+    function generateRequestNumber() {
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+        const random = Math.floor(Math.random() * 90000) + 10000; // رقم عشوائي 5 خانات
+        return `TR-${dateStr}-${random}`;
+    }
 
     function showAlert(message, type = 'error') {
         const box = document.getElementById('formAlert');
@@ -57,8 +64,7 @@
             updateHeader(user);
             await fetchRequests();
             bindEvents();
-            ensureDynamicElements(); // إنشاء العناصر الديناميكية مرة واحدة
-            // إعادة ربط زر التحقق بعد التأكد من وجوده
+            ensureDynamicElements();
             bindVerifyOtpButton();
         } catch (e) { console.error(e); showAlert('تعذر تحميل الصفحة.'); }
     }
@@ -140,13 +146,17 @@
         const req = requests.find(r => r.id === id);
         if (!req) return;
         document.getElementById('detailContent').innerHTML = `
-            <div class="detail-item"><span>رقم الطلب:</span> <strong>${req.request_number||'-'}</strong></div>
-            <div class="detail-item"><span>الجوال الحالي:</span> <strong>${req.current_mobile}</strong></div>
-            <div class="detail-item"><span>الجوال الجديد:</span> <strong>${req.new_country_code} ${req.new_mobile}</strong></div>
-            <div class="detail-item"><span>السبب:</span> ${req.reason||'-'}</div>
-            <div class="detail-item"><span>تاريخ التقديم:</span> ${formatDate(req.created_at)}</div>
-            <div class="detail-item"><span>آخر تحديث:</span> ${formatDate(req.updated_at)}</div>
-            <div class="detail-item"><span>الحالة:</span> <span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span></div>
+            <div class="detail-item"><span class="detail-label">رقم الطلب</span><span class="detail-value">${req.request_number || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">الجوال الحالي</span><span class="detail-value">${req.current_mobile || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">الجوال الجديد</span><span class="detail-value">${req.new_country_code} ${req.new_mobile}</span></div>
+            <div class="detail-item"><span class="detail-label">سبب التغيير</span><span class="detail-value">${req.reason || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">تاريخ التقديم</span><span class="detail-value">${formatDate(req.created_at)}</span></div>
+            <div class="detail-item"><span class="detail-label">آخر تحديث</span><span class="detail-value">${formatDate(req.updated_at)}</span></div>
+            <div class="detail-item"><span class="detail-label">الحالة</span><span class="detail-value"><span class="status-badge ${req.status}">${getStatusLabel(req.status)}</span></span></div>
+            <div class="detail-item"><span class="detail-label">ملاحظات الإدارة</span><span class="detail-value">${req.admin_notes || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">سبب الرفض</span><span class="detail-value">${req.rejection_reason || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">سبب الإلغاء</span><span class="detail-value">${req.cancellation_reason || '-'}</span></div>
+            <div class="detail-item"><span class="detail-label">تاريخ التنفيذ</span><span class="detail-value">${req.completed_at ? formatDate(req.completed_at) : '-'}</span></div>
         `;
         document.getElementById('detailModal').classList.add('show');
     }
@@ -193,9 +203,7 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-    // ========== إنشاء العناصر الديناميكية (مرة واحدة) ==========
     function ensureDynamicElements() {
-        // حاوية الرقم الحالي المفصولة
         if (!document.getElementById('currentMobileRow')) {
             const container = document.querySelector('#newRequestModal .modal-box');
             if (container) {
@@ -222,7 +230,6 @@
             }
         }
 
-        // زر تحقق OTP داخل القسم (إن لم يوجد)
         if (!document.getElementById('verifyOtpBtnNew')) {
             const otpSection = document.getElementById('otpSectionNew');
             if (otpSection) {
@@ -233,38 +240,32 @@
                 btn.textContent = 'تحقق من الرمز';
                 btn.style.marginTop = '10px';
                 btn.style.width = '100%';
-                btn.style.display = 'none'; // سيظهر لاحقًا
+                btn.style.display = 'none';
                 otpSection.appendChild(btn);
             }
         }
     }
 
-    // ربط زر التحقق من OTP (يُستدعى بعد التأكد من وجوده)
     function bindVerifyOtpButton() {
         const verifyBtn = document.getElementById('verifyOtpBtnNew');
         if (verifyBtn) {
-            // إزالة المستمعات القديمة إن وجدت
             verifyBtn.removeEventListener('click', verifyOtpCode);
             verifyBtn.addEventListener('click', verifyOtpCode);
         }
     }
 
-    // ========== وظائف النافذة الجديدة ==========
     function openNewRequestModal() {
         const currentMobile = currentUser.user_metadata?.mobile_number || '';
         const parsed = parseMobile(currentMobile);
 
-        // تعبئة الحقول المنفصلة (إن وجدت)
         const currentCountryInput = document.getElementById('currentCountryCodeModal');
         const currentNumberInput = document.getElementById('currentMobileNumberModal');
         if (currentCountryInput) currentCountryInput.value = parsed.code;
         if (currentNumberInput) currentNumberInput.value = parsed.number;
 
-        // الحقل القديم (للعرض الكامل) يمكن إخفاؤه
         const oldDisplay = document.getElementById('currentMobileDisplayModal');
         if (oldDisplay) oldDisplay.value = currentMobile;
 
-        // إعادة تعيين الحقول
         document.getElementById('newCountryCode').value = '+966';
         document.getElementById('newMobileNumber').value = '';
         document.getElementById('confirmNewMobile').value = '';
@@ -275,7 +276,6 @@
         document.getElementById('submitNewRequestBtn').style.display = 'none';
         document.getElementById('otpCodeNew').value = '';
 
-        // إخفاء رسائل التلميح
         const hints = document.querySelectorAll('#newRequestForm .form-hint');
         hints.forEach(h => { if (h.id !== 'otpHintNew') h.textContent = ''; });
         document.getElementById('otpHintNew').textContent = 'أدخل الرمز المرسل إلى بريدك الإلكتروني';
@@ -287,7 +287,6 @@
         document.getElementById('newRequestModal').classList.add('show');
 
         attachValidationListeners();
-        // التأكد من إخفاء زر التحقق من OTP وزر الحفظ
         const verifyBtn = document.getElementById('verifyOtpBtnNew');
         if (verifyBtn) verifyBtn.style.display = 'none';
         document.getElementById('submitNewRequestBtn').style.display = 'none';
@@ -385,7 +384,6 @@
             update();
         });
 
-        // التحقق التلقائي من OTP عند اكتمال 8 أرقام
         const otpInput = document.getElementById('otpCodeNew');
         if (otpInput) {
             otpInput.addEventListener('input', function() {
@@ -399,7 +397,6 @@
         update();
     }
 
-    // دالة التحقق من OTP (تُستدعى تلقائياً أو بالزر)
     async function verifyOtpCode() {
         const otp = document.getElementById('otpCodeNew').value;
         const hint = document.getElementById('otpHintNew');
@@ -440,7 +437,6 @@
             return;
         }
 
-        // نجاح التحقق
         otpVerified = true;
         hint.textContent = '✅ تم التحقق بنجاح';
         hint.className = 'form-hint success';
@@ -450,7 +446,6 @@
             submitBtn.disabled = false;
         }
         document.getElementById('otpCodeNew').disabled = true;
-        // إخفاء زر إعادة الإرسال أيضاً
         const resendBtn = document.getElementById('resendOtpBtnNew');
         if (resendBtn) resendBtn.style.display = 'none';
     }
@@ -469,10 +464,8 @@
             return;
         }
 
-        // إظهار قسم OTP
         document.getElementById('otpSectionNew').style.display = 'block';
         document.getElementById('sendOtpBtnNew').style.display = 'none';
-        // إظهار زر التحقق من OTP
         const verifyBtn = document.getElementById('verifyOtpBtnNew');
         if (verifyBtn) {
             verifyBtn.style.display = 'block';
@@ -520,6 +513,7 @@
 
         const { error } = await supabase.from('mobile_change_requests').insert({
             user_id: currentUser.id,
+            request_number: generateRequestNumber(),
             current_mobile: currentUser.user_metadata?.mobile_number || '',
             new_country_code: code,
             new_mobile: mobile,
@@ -541,7 +535,6 @@
         document.getElementById('closeNewRequestModal').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('cancelNewRequestBtn').addEventListener('click', () => closeModal('newRequestModal'));
         document.getElementById('sendOtpBtnNew').addEventListener('click', sendOtpForNewRequest);
-        // زر التحقق من OTP مرتبط مسبقاً عبر bindVerifyOtpButton
         document.getElementById('newRequestForm').addEventListener('submit', submitNewRequest);
         document.getElementById('editRequestForm').addEventListener('submit', saveEdit);
         document.getElementById('cancelReasonForm').addEventListener('submit', cancelRequest);
