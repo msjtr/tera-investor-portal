@@ -1,5 +1,5 @@
 /**
- * security-change-mobile-requests.js
+ * security-change-mobile.js
  * طلبات تغيير رقم الجوال – إحصائيات، جدول، فلتر، طلب جديد مع OTP
  */
 (function() {
@@ -75,8 +75,10 @@
 
     function checkPendingRequest() {
         const hasActive = requests.some(r => r.status === 'new' || r.status === 'pending');
-        document.getElementById('addRequestBtn').disabled = hasActive;
-        document.getElementById('pendingRequestNotice').style.display = hasActive ? 'flex' : 'none';
+        const btn = document.getElementById('addRequestBtn');
+        const notice = document.getElementById('pendingRequestNotice');
+        if (btn) btn.disabled = hasActive;
+        if (notice) notice.style.display = hasActive ? 'flex' : 'none';
     }
 
     function applyFilter() {
@@ -187,7 +189,19 @@
         document.getElementById('newRequestForm').addEventListener('submit', submitNewRequest);
         document.getElementById('editRequestForm').addEventListener('submit', saveEdit);
         document.getElementById('cancelReasonForm').addEventListener('submit', cancelRequest);
-        document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => closeModal(b.closest('.modal-overlay').id)));
+
+        // أزرار الإغلاق العامة
+        document.querySelectorAll('.modal-close').forEach(b => b.addEventListener('click', () => {
+            const modal = b.closest('.modal-overlay');
+            if (modal) modal.classList.remove('show');
+        }));
+        ['closeDetailModal','closeDetailBtn','closeEditRequestModal','cancelEditBtn','closeCancelReasonModal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', () => {
+                const modal = el.closest('.modal-overlay');
+                if (modal) modal.classList.remove('show');
+            });
+        });
     }
 
     function resetNewForm() {
@@ -200,7 +214,6 @@
     }
 
     async function sendOtpForNewRequest() {
-        // التحقق من صحة الرقم
         const code = document.getElementById('newCountryCode').value;
         const mobile = document.getElementById('newMobileNumber').value.replace(/\D/g, '');
         if (!countryPatterns[code] || mobile.length !== countryPatterns[code].length || !countryPatterns[code].regex.test(mobile)) {
