@@ -1,7 +1,8 @@
 /**
- * profile-contact-information.js – v6.9 (تقديم الطلب تلقائياً عند الاكتمال)
- * - يحفظ بيانات الاتصال في user_contact_info و user_metadata.
- * - يتحقق من اكتمال جميع المراحل ويُرسل الطلب تلقائياً.
+ * profile-contact-information.js – v7.1 (روابط الأمان المباشرة)
+ * - حقول البريد والجوال للقراءة فقط.
+ * - رسائل توجيهية مع روابط مباشرة لصفحات الأمان.
+ * - الحفظ يقتصر على بيانات الطوارئ والتفضيلات.
  */
 
 'use strict';
@@ -159,6 +160,51 @@
         }
     }
 
+    function makeFieldsReadonlyWithMessages() {
+        // البريد الإلكتروني
+        const emailInput = document.getElementById('primaryEmail');
+        if (emailInput) {
+            emailInput.setAttribute('readonly', true);
+            emailInput.disabled = true;
+            const emailContainer = emailInput.closest('.form-group') || emailInput.parentNode;
+            const existingMsg = document.getElementById('emailChangeMsg');
+            if (!existingMsg) {
+                const msgDiv = document.createElement('div');
+                msgDiv.id = 'emailChangeMsg';
+                msgDiv.style.cssText = 'font-size:13px; margin-top:8px; color:#0c4a6e; background:#e0f2fe; padding:8px 12px; border-radius:8px;';
+                msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html" style="font-weight:bold; color:#028090;">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.`;
+                emailContainer.parentNode.insertBefore(msgDiv, emailContainer.nextSibling);
+            }
+        }
+
+        // مفتاح الدولة ورقم الجوال
+        const countrySelect = document.getElementById('countryCode');
+        const mobileInput = document.getElementById('mobileNumber');
+        if (countrySelect) countrySelect.disabled = true;
+        if (mobileInput) {
+            mobileInput.setAttribute('readonly', true);
+            mobileInput.disabled = true;
+        }
+
+        if (!document.getElementById('mobileChangeMsg')) {
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'mobileChangeMsg';
+            msgDiv.style.cssText = 'font-size:13px; margin-top:8px; color:#0c4a6e; background:#e0f2fe; padding:8px 12px; border-radius:8px;';
+            msgDiv.innerHTML = `<i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html" style="font-weight:bold; color:#028090;">قسم الأمان > تغيير رقم الجوال</a>.`;
+
+            // محاولة إدراج الرسالة بعد صف الحقول
+            const parentRow = countrySelect?.closest('.row-flex') || countrySelect?.closest('div[style*="grid-template-columns"]');
+            if (parentRow) {
+                parentRow.parentNode.insertBefore(msgDiv, parentRow.nextSibling);
+            } else if (mobileInput) {
+                const mobileContainer = mobileInput.closest('.form-group');
+                if (mobileContainer) {
+                    mobileContainer.parentNode.insertBefore(msgDiv, mobileContainer.nextSibling);
+                }
+            }
+        }
+    }
+
     async function populateCurrentData() {
         if (!currentUser) return;
         document.getElementById('primaryEmail').value = currentUser.email || '';
@@ -177,19 +223,17 @@
         }
 
         await loadAdditionalData();
+        makeFieldsReadonlyWithMessages();
     }
 
-    // التحقق من اكتمال جميع المراحل وتقديم الطلب تلقائياً
     async function updateVerificationAndSubmit() {
         try {
-            // 1. الحصول على سجل الطلب الحالي
             const { data: currentReq } = await supabase
                 .from('verification_requests')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .maybeSingle();
 
-            // 2. المراحل المطلوبة للتقديم
             const requiredStages = [
                 'personal_info_completed',
                 'contact_info_completed',
@@ -198,10 +242,9 @@
                 'attachments_completed'
             ];
 
-            // 3. التحقق من اكتمال جميع المراحل (بافتراض أن المرحلة الحالية اكتملت)
             let allCompleted = true;
             for (const key of requiredStages) {
-                if (key === 'contact_info_completed') continue; // نحن نكمل هذه الآن
+                if (key === 'contact_info_completed') continue;
                 if (!currentReq?.[key]) {
                     allCompleted = false;
                     break;
@@ -215,11 +258,9 @@
                 updated_at: now
             };
 
-            // إذا كانت جميع المراحل مكتملة، قدّم الطلب تلقائياً
             if (allCompleted) {
                 updatePayload.submitted = true;
                 updatePayload.submitted_at = now;
-                // إذا لم يكن الطلب مرفوضاً مسبقاً، نعيده إلى "قيد المراجعة"
                 if (currentReq?.status !== 'rejected') {
                     updatePayload.status = 'under_review';
                 }
@@ -229,14 +270,8 @@
                 .from('verification_requests')
                 .upsert(updatePayload, { onConflict: 'user_id' });
 
-            if (error) {
-                console.warn('⚠️ تعذر تحديث حالة التحقق:', error);
-            } else {
-                console.log('✅ تم تحديث حالة معلومات الاتصال.');
-                if (allCompleted) {
-                    console.log('✅ تم تقديم الطلب تلقائياً بعد اكتمال جميع المراحل.');
-                }
-            }
+            if (error) console.warn('⚠️ تعذر تحديث حالة التحقق:', error);
+            else console.log('✅ تم تحديث حالة معلومات الاتصال.');
         } catch (e) {
             console.warn('⚠️ تعذر تحديث verification_requests:', e);
         }
@@ -253,21 +288,8 @@
         const select = document.getElementById(countrySelectId);
         const input = document.getElementById(inputId);
         if (!select || !input) return;
-        const update = () => {
-            const p = countryPatterns[select.value];
-            if (p) {
-                input.placeholder = p.placeholder;
-                input.maxLength = p.length;
-            }
-        };
-        select.addEventListener('change', () => {
-            update();
-            input.value = '';
-        });
-        update();
-        input.addEventListener('input', function () {
-            this.value = this.value.replace(/\D/g, '');
-        });
+        select.disabled = true;
+        input.disabled = true;
     }
 
     async function saveContactInformation(e) {
@@ -286,49 +308,49 @@
         const preferredMethod = document.querySelector('input[name="preferredMethod"]:checked')?.value || 'email';
         const declarationCheck = document.getElementById('declarationCheck').checked;
 
-        if (!mobileNumber || !primaryEmail) { showAlert('يرجى ملء رقم الجوال والبريد الإلكتروني.', 'error'); return; }
-        if (!emergencyName || !emergencyRelation || !emergencyMobile) { showAlert('يرجى ملء جميع بيانات جهة اتصال الطوارئ.', 'error'); return; }
-        if (!declarationCheck) { showAlert('يجب الموافقة على الإقرار.', 'error'); return; }
-        if (!validateMobileInput('mobileNumber', 'countryCode')) { showAlert('رقم الجوال غير صحيح.', 'error'); return; }
-        if (!validateMobileInput('emergencyMobile', 'emergencyCountryCode')) { showAlert('رقم جوال الطوارئ غير صحيح.', 'error'); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryEmail)) { showAlert('البريد الإلكتروني غير صحيح.', 'error'); return; }
-        if (backupEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(backupEmail)) { showAlert('البريد الاحتياطي غير صحيح.', 'error'); return; }
-        if (emergencyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emergencyEmail)) { showAlert('بريد الطوارئ غير صحيح.', 'error'); return; }
+        if (!emergencyName || !emergencyRelation || !emergencyMobile) {
+            showAlert('يرجى ملء جميع بيانات جهة اتصال الطوارئ.', 'error');
+            return;
+        }
+        if (!declarationCheck) {
+            showAlert('يجب الموافقة على الإقرار.', 'error');
+            return;
+        }
+        if (!validateMobileInput('emergencyMobile', 'emergencyCountryCode')) {
+            showAlert('رقم جوال الطوارئ غير صحيح.', 'error');
+            return;
+        }
+        if (emergencyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emergencyEmail)) {
+            showAlert('بريد الطوارئ غير صحيح.', 'error');
+            return;
+        }
 
-        const fullMobile = '+' + countryCode + mobileNumber;
         const fullEmergencyMobile = '+' + emergencyCountryCode + emergencyMobile;
         const btn = document.querySelector('.btn-submit');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
         try {
-            await supabase.auth.updateUser({ data: { mobile_number: fullMobile } });
-
             const contactPayload = {
                 user_id: currentUser.id,
-                phone: fullMobile,
-                secondary_email: backupEmail || null,
                 emergency_contact_name: emergencyName,
                 emergency_contact_relation: emergencyRelation,
                 emergency_contact_phone: fullEmergencyMobile,
                 emergency_contact_email: emergencyEmail || null,
+                secondary_email: backupEmail || null,
+                preferred_language: preferredLanguage,
+                preferred_contact_method: preferredMethod,
                 updated_at: new Date().toISOString()
             };
 
             if (contactInfoAvailable) {
                 const { error } = await supabase.from('user_contact_info').upsert(contactPayload, { onConflict: 'user_id' });
-                if (error) {
-                    if (error.status === 400) contactInfoAvailable = false;
-                    else throw error;
-                }
+                if (error && error.status !== 400) throw error;
+                else if (error) contactInfoAvailable = false;
             }
 
-            // تحديث حالة الاستكمال وتقديم الطلب تلقائياً عند الاكتمال
             await updateVerificationAndSubmit();
-
-            showAlert('✅ تم حفظ جميع بيانات الاتصال بنجاح.', 'success');
-            currentUser.user_metadata.mobile_number = fullMobile;
-            updateHeader(currentUser);
+            showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
         } catch (err) {
             console.error(err);
             showAlert('تعذر حفظ البيانات. تأكد من اتصالك وحاول مجدداً.', 'error');
