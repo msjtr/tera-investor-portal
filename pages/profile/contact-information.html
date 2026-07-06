@@ -21,9 +21,7 @@
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
     <style>
-        /* =========================================
-               التنسيقات الأساسية – نفس الهوية البصرية
-               ========================================= */
+        /* ========== التنسيقات الأساسية ========== */
         * { box-sizing: border-box; }
         body { background-color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
         .focused-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
@@ -97,18 +95,43 @@
         .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
         .alert-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
 
-        /* رسائل التوجيه */
-        .info-change-msg {
-            font-size: 13px;
-            margin-top: 8px;
-            color: #0c4a6e;
+        /* ========== رسالة التوجيه العلوية ========== */
+        .guidance-box {
             background: #e0f2fe;
-            padding: 8px 12px;
-            border-radius: 8px;
+            border: 1px solid #bae6fd;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #0c4a6e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .info-change-msg a {
-            font-weight: bold;
+        .guidance-box i {
+            font-size: 22px;
             color: #028090;
+            flex-shrink: 0;
+        }
+        .guidance-box .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-right: auto;
+        }
+        .guidance-box a {
+            background: #028090;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .guidance-box a:hover {
+            background: #0A1B3F;
         }
 
         @media (max-width: 820px) {
@@ -129,6 +152,7 @@
             .progress-steps li .step-num { width: 26px; height: 26px; font-size: 11px; }
             .progress-steps .step-line { width: 20px; }
             .alert-warning-box { padding: 14px 16px; font-size: 13px; margin-top: 20px; margin-bottom: 20px; }
+            .guidance-box { flex-direction: column; align-items: flex-start; }
         }
         @media (max-width: 480px) {
             .page-subheader h1 { font-size: 17px; }
@@ -183,7 +207,9 @@
             .progress-steps .step-line.completed { background: #10b981 !important; }
             .alert-box { background: rgba(220,38,38,0.15) !important; border-color: #991b1b !important; color: #fca5a5 !important; }
             .alert-box.success { background: rgba(22,101,52,0.15) !important; border-color: #166534 !important; color: #86efac !important; }
-            .info-change-msg { background: #0f172a !important; color: #e2e8f0 !important; }
+            .guidance-box { background: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+            .guidance-box a { background: #14b8a6; color: #0f172a; }
+            .guidance-box a:hover { background: #0d9488; }
         }
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -216,8 +242,20 @@
             <span><strong>يرجى إدخال وسائل التواصل الخاصة بك بشكل صحيح</strong> حيث سيتم استخدامها للتحقق من الهوية واستقبال الإشعارات والتحديثات المهمة المتعلقة بحسابك.</span>
         </div>
 
+        <!-- رسالة التوجيه الموحدة (مرة واحدة أعلى النموذج) -->
+        <div class="guidance-box">
+            <i class="fas fa-info-circle"></i>
+            <span>لتغيير بيانات الاتصال الأساسية (رقم الجوال أو البريد الإلكتروني)، يرجى استخدام الروابط التالية:</span>
+            <div class="links">
+                <a href="../security/change-mobile.html"><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</a>
+                <a href="../security/email-change-requests.html"><i class="fas fa-envelope"></i> طلبات تغيير البريد</a>
+            </div>
+        </div>
+
+        <!-- شريط التقدم -->
         <ul class="progress-steps" id="progressTracker"></ul>
 
+        <!-- صندوق التنبيهات -->
         <div class="alert-box" id="formAlert" role="alert">
             <i class="fas" id="alertIcon"></i>
             <span id="alertMessage"></span>
@@ -256,18 +294,12 @@
                                 <input type="tel" class="form-control" id="mobileNumber" readonly disabled>
                             </div>
                         </div>
-                        <div class="info-change-msg">
-                            <i class="fas fa-info-circle"></i> لتغيير رقم الجوال، يرجى التوجه إلى <a href="../security/change-mobile.html">قسم الأمان > تغيير رقم الجوال</a>.
-                        </div>
                     </div>
 
                     <!-- البريد الإلكتروني الأساسي (قراءة فقط) -->
                     <div class="form-group full-width">
                         <label class="form-label">البريد الإلكتروني <span class="req">*</span></label>
                         <input type="email" class="form-control" id="primaryEmail" readonly disabled>
-                        <div class="info-change-msg">
-                            <i class="fas fa-info-circle"></i> لتغيير البريد الإلكتروني، يرجى التوجه إلى <a href="../security/email-change-requests.html">قسم الأمان > طلبات تغيير البريد الإلكتروني</a>.
-                        </div>
                     </div>
 
                     <!-- البريد الإلكتروني الاحتياطي -->
