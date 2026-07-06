@@ -7,7 +7,7 @@
  * - يستمع لتغيرات حالة المصادقة (onAuthStateChange)
  * - يُؤمّن الصفحات ويُحدّث واجهة المستخدم تلقائياً
  * - متوافق مع verify-otp.js وباقي ملفات النظام
- * - النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، توثيق JSDoc
+ * - النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، تسجيل جلسات الدخول
  */
 
 (function () {
@@ -24,13 +24,8 @@
     };
 
     // ========== انتظار Supabase ==========
-    /**
-     * تنتظر حتى يصبح عميل Supabase جاهزاً
-     * @returns {Promise<SupabaseClient>}
-     */
     async function waitForSupabase() {
         if (window.teraSupabase) return window.teraSupabase;
-
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
             document.addEventListener('supabase:ready', (e) => {
@@ -42,6 +37,82 @@
                 reject(new Error('Supabase error'));
             }, { once: true });
         });
+    }
+
+    // ========== توليد رقم الجلسة ==========
+    function generateSessionNumber() {
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+        const random = Math.floor(Math.random() * 900000) + 100000; // 6 أرقام
+        return `SES-${dateStr}-${random}`;
+    }
+
+    // ========== تسجيل جلسة دخول جديدة ==========
+    /**
+     * تسجل دخول المستخدم الحالي في جدول user_login_sessions
+     * @param {SupabaseClient} client - عميل Supabase
+     * @param {import('@supabase/supabase-js').User} user - المستخدم
+     */
+    async function recordLoginSession(client, user) {
+        if (!client || !user) return;
+
+        try {
+            // 1. تعيين الجلسات النشطة السابقة إلى logged_out (أو إنهاء)
+            await client
+                .from('user_login_sessions')
+                .update({
+                    is_current_session: false,
+                    status: 'logged_out',
+                    logout_reason: 'تسجيل الدخول من جهاز آخر',
+                    logout_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id)
+                .eq('status', 'active');
+
+            // 2. إنشاء جلسة جديدة
+            const sessionNumber = generateSessionNumber();
+
+            // معلومات الجهاز والمتصفح
+            const deviceType = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' :
+                               /tablet|iPad/i.test(navigator.userAgent) ? 'tablet' : 'computer';
+            const browserName = (navigator.userAgentData?.brands?.[0]?.brand) ||
+                                (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/?\s*([\d.]+)/i)?.[1]) ||
+                                'غير معروف';
+            const browserVersion = navigator.userAgentData?.brands?.[0]?.version ||
+                                   navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/?\s*([\d.]+)/i)?.[2] ||
+                                   '';
+            const os = navigator.platform || '';
+            const screenRes = `${window.screen.width}x${window.screen.height}`;
+            const lang = navigator.language || '';
+
+            const { error } = await client.from('user_login_sessions').insert({
+                user_id: user.id,
+                session_number: sessionNumber,
+                login_at: new Date().toISOString(),
+                status: 'active',
+                is_current_session: true,
+                device_type: deviceType,
+                device_name: navigator.userAgentData?.platform || '',
+                device_brand: navigator.userAgentData?.brands?.[0]?.brand || '',
+                operating_system: os,
+                os_version: '',
+                browser_name: browserName,
+                browser_version: browserVersion,
+                screen_resolution: screenRes,
+                language: lang,
+                last_activity_at: new Date().toISOString(),
+                // سيتم تحديث IP والموقع الجغرافي لاحقاً بخدمة خارجية (اختياري)
+            });
+
+            if (error) {
+                console.warn('⚠️ [Auth] فشل تسجيل جلسة الدخول:', error.message);
+            } else {
+                console.log('✅ [Auth] تم تسجيل جلسة دخول جديدة:', sessionNumber);
+            }
+        } catch (err) {
+            console.error('❌ [Auth] خطأ في تسجيل الجلسة:', err);
+        }
     }
 
     // ========== كائن TeraAuth العام ==========
@@ -77,6 +148,11 @@
                     document.dispatchEvent(new CustomEvent('auth:stateChanged', {
                         detail: { event, session, user: this._user }
                     }));
+
+                    // عند تسجيل الدخول (SIGNED_IN) نسجل الجلسة
+                    if (event === 'SIGNED_IN' && session?.user) {
+                        recordLoginSession(this._client, session.user);
+                    }
                 }
             );
             this._subscription = subscription;
@@ -86,6 +162,25 @@
             this._session = session;
             this._user = session?.user ?? null;
             this._updateUI();
+
+            // إذا كانت الجلسة موجودة عند تحميل الصفحة، تحقق من وجود جلسة نشطة مسجلة
+            if (this._user) {
+                try {
+                    const { data: activeSessions } = await this._client
+                        .from('user_login_sessions')
+                        .select('id')
+                        .eq('user_id', this._user.id)
+                        .eq('status', 'active')
+                        .eq('is_current_session', true);
+
+                    // إذا لم تكن هناك جلسة نشطة حالية، نسجل واحدة جديدة (مثلاً عند إعادة فتح المتصفح)
+                    if (!activeSessions || activeSessions.length === 0) {
+                        await recordLoginSession(this._client, this._user);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ [Auth] تعذر التحقق من الجلسات النشطة:', e.message);
+                }
+            }
 
             console.log('🔒 [Auth] تم تأمين الواجهة');
         },
@@ -112,6 +207,8 @@
                 this._session = data.session;
                 this._user = data.user;
                 this._updateUI();
+                // تسجيل الجلسة
+                await recordLoginSession(this._client, data.user);
                 return { data, error: null };
             } catch (error) {
                 console.error('❌ [Auth] فشل تسجيل الدخول:', error);
@@ -126,6 +223,22 @@
         logout: async function () {
             if (!this._client) return;
             try {
+                // تحديث الجلسة الحالية في قاعدة البيانات قبل الخروج
+                if (this._user) {
+                    await this._client
+                        .from('user_login_sessions')
+                        .update({
+                            status: 'logged_out',
+                            logout_reason: 'تسجيل خروج بواسطة المستخدم',
+                            logout_at: new Date().toISOString(),
+                            is_current_session: false,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('user_id', this._user.id)
+                        .eq('status', 'active')
+                        .eq('is_current_session', true);
+                }
+
                 await this._client.auth.signOut();
                 this._session = null;
                 this._user = null;
@@ -214,7 +327,6 @@
         _updateUI: function () {
             const user = this._user;
             if (!user) {
-                // إخفاء عناصر المستخدم إذا لم يكن مسجلاً
                 const headerName = document.getElementById('headerUserName');
                 const headerAvatar = document.getElementById('headerAvatar');
                 if (headerName) headerName.textContent = 'زائر';
@@ -233,7 +345,6 @@
 
     // ========== بدء التهيئة تلقائياً ==========
     document.addEventListener('DOMContentLoaded', function () {
-        // لا نُهيئ في صفحات تسجيل الدخول أو الصفحات العامة (اختياري)
         const path = window.location.pathname;
         if (!path.includes('/auth/auth/login/') && !path.includes('/auth/register/')) {
             window.TeraAuth.init();
