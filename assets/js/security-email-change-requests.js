@@ -1,7 +1,7 @@
 /**
  * security-email-change-requests.js
  * إدارة طلبات تغيير البريد الإلكتروني – المستخدم
- * مع دعم الفلتر حسب الحالة
+ * مع دعم الفلتر حسب الحالة + ملخص الملغاة
  */
 
 'use strict';
@@ -13,7 +13,7 @@
     let requests = [];
     let filteredRequests = [];
     let currentFilter = 'all';
-    let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
+    let stats = { total: 0, new: 0, pending: 0, approved: 0, completed: 0, rejected: 0, cancelled: 0 };
 
     // ===== عناصر DOM =====
     const addRequestBtn = document.getElementById('addRequestBtn');
@@ -69,12 +69,14 @@
     const detailCancellationReason = document.getElementById('detailCancellationReason');
     const detailCompletedAt = document.getElementById('detailCompletedAt');
 
+    // عناصر الإحصائيات
     const totalCount = document.getElementById('totalCount');
     const newCount = document.getElementById('newCount');
     const pendingCount = document.getElementById('pendingCount');
     const approvedCount = document.getElementById('approvedCount');
     const completedCount = document.getElementById('completedCount');
     const rejectedCount = document.getElementById('rejectedCount');
+    const cancelledCount = document.getElementById('cancelledCount'); // عنصر عداد الملغاة
 
     // ===== دوال مساعدة =====
     async function initSupabase() {
@@ -223,7 +225,7 @@
             if (error) throw error;
             requests = data || [];
             updateStats();
-            applyFilter(); // تطبيق الفلتر وعرض النتائج
+            applyFilter();
             checkPendingRequest();
         } catch (err) {
             console.error('فشل جلب الطلبات:', err);
@@ -237,14 +239,17 @@
         stats.pending = requests.filter(r => r.status === 'pending').length;
         stats.approved = requests.filter(r => r.status === 'approved').length;
         stats.completed = requests.filter(r => r.status === 'completed').length;
-        stats.rejected = requests.filter(r => r.status === 'rejected' || r.status === 'cancelled').length;
+        stats.rejected = requests.filter(r => r.status === 'rejected').length;
+        stats.cancelled = requests.filter(r => r.status === 'cancelled').length;
 
+        // تحديث عناصر DOM
         totalCount.textContent = stats.total;
         newCount.textContent = stats.new;
         pendingCount.textContent = stats.pending;
         approvedCount.textContent = stats.approved;
         completedCount.textContent = stats.completed;
         rejectedCount.textContent = stats.rejected;
+        if (cancelledCount) cancelledCount.textContent = stats.cancelled;
     }
 
     function checkPendingRequest() {
@@ -265,6 +270,12 @@
 
         if (filterValue === 'all') {
             filteredRequests = [...requests];
+        } else if (filterValue === 'cancelled') {
+            // دعم فلترة الملغاة
+            filteredRequests = requests.filter(r => r.status === 'cancelled');
+        } else if (filterValue === 'rejected') {
+            // فصل المرفوض عن الملغي
+            filteredRequests = requests.filter(r => r.status === 'rejected');
         } else {
             filteredRequests = requests.filter(r => r.status === filterValue);
         }
@@ -302,7 +313,6 @@
             const editable = isEditable(req.status);
             const cancellable = isCancellable(req.status);
 
-            // أيقونة إلغاء من المستخدم (إذا كان هناك سبب إلغاء)
             const userCancelIcon = req.cancellation_reason ? 
                 `<span class="user-cancel-icon" title="تم الإلغاء من قبل المستخدم: ${req.cancellation_reason}"><i class="fas fa-user-times"></i></span>` : 
                 '';
@@ -499,7 +509,6 @@
         }
     }
 
-    // ===== فتح نافذة سبب الإلغاء =====
     function openCancelReasonModal(request) {
         cancelRequestId.value = request.id;
         cancelReasonInput.value = '';
@@ -510,7 +519,6 @@
         cancelReasonInput.focus();
     }
 
-    // ===== إلغاء الطلب مع سبب الإلغاء =====
     async function cancelRequestWithReason(e) {
         e.preventDefault();
 
@@ -556,7 +564,6 @@
         }
     }
 
-    // ===== التحقق من البريد الجديد (لنافذة الإضافة) =====
     async function validateNewEmail() {
         const email = newEmailInput.value.trim();
         const currentEmail = currentUser?.email || '';
@@ -609,7 +616,6 @@
         return true;
     }
 
-    // ===== تقديم طلب جديد =====
     async function submitNewRequest(e) {
         e.preventDefault();
 
@@ -774,7 +780,7 @@
             }
         });
 
-        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع فلتر).');
+        console.log('✅ صفحة طلبات تغيير البريد الإلكتروني جاهزة (مع فلتر + ملغي).');
     }
 
     if (document.readyState === 'loading') {
