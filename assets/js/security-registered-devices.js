@@ -1,12 +1,10 @@
 /**
  * security-registered-devices.js – v6 (مركز أمان متكامل + خرائط قوقل)
  * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
- * يدير مراقبة الموقع الجغرافي بشكل مستمر ويوقف الخدمة عند فقدان الإذن
  */
 (function() {
     let supabase, currentUser, sessions = [], trustedDevices = [];
     let idleTimer, idleWarningTimer;
-    let locationWatchId = null;
     const IDLE_TIME = 5 * 60 * 1000;
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
@@ -92,15 +90,23 @@
             .eq('user_id', currentUser.id)
             .eq('is_trusted', true);
         trustedDevices = data || [];
-        document.getElementById('trustedDevicesCount').textContent = trustedDevices.length;
+        const el = document.getElementById('trustedDevicesCount');
+        if (el) el.textContent = trustedDevices.length;
     }
 
     function updateStats() {
-        document.getElementById('totalCount').textContent = sessions.length;
+        const totalEl = document.getElementById('totalCount');
+        const activeEl = document.getElementById('activeCount');
+        const lastLoginEl = document.getElementById('lastLoginTime');
+        const lastLogoutEl = document.getElementById('lastLogoutTime');
+
+        if (totalEl) totalEl.textContent = sessions.length;
         const activeSessions = sessions.filter(s => s.status === 'active');
-        document.getElementById('activeCount').textContent = activeSessions.length;
+        if (activeEl) activeEl.textContent = activeSessions.length;
         const lastLogin = sessions.reduce((latest, s) => s.login_at && new Date(s.login_at) > new Date(latest) ? s.login_at : latest, null);
-        document.getElementById('lastLoginTime').textContent = lastLogin ? formatDate(lastLogin) : '-';
+        if (lastLoginEl) lastLoginEl.textContent = lastLogin ? formatDate(lastLogin) : '-';
+        const lastLogout = sessions.reduce((latest, s) => s.logout_at && new Date(s.logout_at) > new Date(latest) ? s.logout_at : latest, null);
+        if (lastLogoutEl) lastLogoutEl.textContent = lastLogout ? formatDate(lastLogout) : '-';
     }
 
     function applyFilters() {
@@ -115,6 +121,7 @@
             filtered = filtered.filter(s => {
                 return (s.session_number && s.session_number.toLowerCase().includes(search)) ||
                        (s.ip_address && s.ip_address.includes(search)) ||
+                       (s.isp && s.isp.toLowerCase().includes(search)) ||
                        (s.device_name && s.device_name.toLowerCase().includes(search)) ||
                        (s.browser_name && s.browser_name.toLowerCase().includes(search)) ||
                        (s.country && s.country.toLowerCase().includes(search)) ||
@@ -149,7 +156,7 @@
                 <td>${s.device_type || '-'}</td>
                 <td>${s.browser_name || '-'}</td>
                 <td>${s.city ? s.city + (s.country ? ', ' + s.country : '') : s.country || '-'}<br>${mapsLink}</td>
-                <td>${s.ip_address || '-'}<br><small>${s.isp || ''}</small></td>
+                <td>${s.ip_address || '-'}<br><small>${s.isp || '-'}</small></td>
                 <td><span class="risk-badge ${getRiskClass(s.risk_level)}">${getRiskLabel(s.risk_level)}</span></td>
                 <td><span class="status-badge ${getStatusClass(s.status)}">${getStatusLabel(s.status)}</span></td>
                 <td>
@@ -239,14 +246,20 @@
 
     async function logoutAllOtherSessions() {
         if (!confirm('سيتم إنهاء جميع الجلسات الأخرى وتسجيل خروجك من الأجهزة الأخرى. هل تريد المتابعة؟')) return;
-        await supabase
+        const { error } = await supabase
             .from('user_login_sessions')
-            .update({ status: 'terminated_by_user', logout_reason: 'إنهاء بواسطة المستخدم (جماعي)', logout_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+            .update({
+                status: 'terminated_by_user',
+                logout_reason: 'إنهاء بواسطة المستخدم (جماعي)',
+                logout_at: new Date().toISOString(),
+                is_current_session: false,
+                updated_at: new Date().toISOString()
+            })
             .eq('user_id', currentUser.id)
             .eq('status', 'active')
-            .eq('is_current_session', false);
-        alert('تم إنهاء جميع الجلسات الأخرى بنجاح.');
-        fetchSessions();
+            .neq('is_current_session', true);
+        if (error) { alert('فشل إنهاء الجلسات الأخرى.'); console.error(error); }
+        else { alert('تم إنهاء جميع الجلسات الأخرى بنجاح.'); await fetchSessions(); }
     }
 
     async function logoutCurrentSession() {
@@ -254,74 +267,41 @@
         else window.location.replace('/auth/auth/login/login.html');
     }
 
-    // ========== مراقبة الموقع المستمرة ==========
-    function startContinuousLocationWatch() {
-        if (!navigator.geolocation) return;
-        if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
-
-        locationWatchId = navigator.geolocation.watchPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    await supabase
-                        .from('user_login_sessions')
-                        .update({ latitude, longitude, last_activity_at: new Date().toISOString() })
-                        .eq('user_id', currentUser.id).eq('status', 'active').eq('is_current_session', true);
-                } catch (e) {}
+    async function refreshCurrentLocation() {
+        if (!navigator.geolocation) { alert('متصفحك لا يدعم تحديد الموقع.'); return; }
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const { error } = await supabase
+                    .from('user_login_sessions')
+                    .update({ latitude, longitude, last_activity_at: new Date().toISOString() })
+                    .eq('user_id', currentUser.id).eq('status', 'active').eq('is_current_session', true);
+                if (error) alert('تعذر تحديث الموقع.');
+                else { alert('تم تحديث موقعك الحالي.'); await fetchSessions(); }
             },
-            (error) => {
-                if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
-                    stopContinuousLocationWatch();
-                    showLocationDeniedMessage();
-                }
-            },
-            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+            (err) => { alert('لم نتمكن من الحصول على موقعك.'); },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
     }
 
-    function stopContinuousLocationWatch() {
-        if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; }
-    }
-
-    function showLocationDeniedMessage() {
-        document.body.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#f1f5f9; font-family:'Tajawal',sans-serif;">
-                <div style="background:#fff; padding:40px; border-radius:16px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.1); max-width:500px;">
-                    <i class="fas fa-map-marker-alt" style="font-size:64px; color:#dc2626; margin-bottom:20px;"></i>
-                    <h2 style="color:#0A1B3F; margin-bottom:12px;">تم إيقاف الخدمة</h2>
-                    <p style="color:#475569; margin-bottom:24px;">نظرًا لعدم اتباع سياسة المنصة ورفض مشاركة الموقع الجغرافي، لا يمكنك متابعة استخدام الخدمة.</p>
-                    <button onclick="location.reload()" style="background:#028090; color:#fff; border:none; padding:12px 32px; border-radius:8px; font-weight:700; cursor:pointer;">إعادة المحاولة</button>
-                </div>
-            </div>
-        `;
-    }
-
-    window.startContinuousLocationWatch = startContinuousLocationWatch;
-    window.stopContinuousLocationWatch = stopContinuousLocationWatch;
-
-    // ========== فحص VPN/Proxy وتنبيهات ==========
     function checkVPNAndAlerts() {
         const currentSession = sessions.find(s => s.is_current_session && s.status === 'active');
         if (currentSession) {
             const vpnAlert = document.getElementById('vpnAlert');
             const vpnMsg = document.getElementById('vpnAlertMessage');
             if (currentSession.vpn_detected) {
-                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف استخدام VPN. بعض الخدمات قد تكون محدودة.'; }
+                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف استخدام VPN.'; }
             } else if (currentSession.proxy_detected || currentSession.tor_detected) {
-                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف Proxy/Tor. يرجى تعطيله للمتابعة.'; }
+                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف Proxy/Tor.'; }
             }
         }
     }
 
-    // ========== مؤقت الخمول ==========
     function initIdleTimer() {
         function resetIdle() {
-            clearTimeout(idleTimer);
-            clearInterval(idleWarningTimer);
-            closeIdleWarning();
+            clearTimeout(idleTimer); clearInterval(idleWarningTimer); closeIdleWarning();
             idleTimer = setTimeout(showIdleWarning, IDLE_TIME);
         }
-
         function showIdleWarning() {
             const modal = document.createElement('div');
             modal.id = 'idleWarningModal';
@@ -329,8 +309,8 @@
             modal.innerHTML = `
                 <div class="modal-box" style="max-width:420px; text-align:center;">
                     <i class="fas fa-clock" style="font-size:48px; color:var(--warning); margin-bottom:12px;"></i>
-                    <h4 style="margin:0 0 8px; color:var(--gray-900);">انتهت صلاحية الجلسة بسبب عدم النشاط</h4>
-                    <p style="margin-bottom:16px; color:var(--gray-700);">سيتم تسجيل خروجك تلقائياً خلال <strong id="countdownDisplay">60</strong> ثانية.</p>
+                    <h4 style="margin:0 0 8px;">انتهت صلاحية الجلسة بسبب عدم النشاط</h4>
+                    <p style="margin-bottom:16px;">سيتم تسجيل خروجك تلقائياً خلال <strong id="countdownDisplay">60</strong> ثانية.</p>
                     <div style="display:flex; gap:12px; justify-content:center;">
                         <button id="extendSessionBtn" class="btn-primary">تمديد الجلسة</button>
                         <button id="forceLogoutBtn" class="btn-danger">تسجيل الخروج</button>
@@ -338,38 +318,18 @@
                 </div>
             `;
             document.body.appendChild(modal);
-
             let count = 60;
             const countdownEl = document.getElementById('countdownDisplay');
             idleWarningTimer = setInterval(() => {
                 count--;
                 if (countdownEl) countdownEl.textContent = count;
-                if (count <= 0) {
-                    clearInterval(idleWarningTimer);
-                    closeIdleWarning();
-                    logoutCurrentSession();
-                }
+                if (count <= 0) { clearInterval(idleWarningTimer); closeIdleWarning(); logoutCurrentSession(); }
             }, 1000);
-
-            document.getElementById('extendSessionBtn').addEventListener('click', () => {
-                resetIdle();
-            });
-            document.getElementById('forceLogoutBtn').addEventListener('click', () => {
-                clearInterval(idleWarningTimer);
-                closeIdleWarning();
-                logoutCurrentSession();
-            });
+            document.getElementById('extendSessionBtn').addEventListener('click', () => resetIdle());
+            document.getElementById('forceLogoutBtn').addEventListener('click', () => { clearInterval(idleWarningTimer); closeIdleWarning(); logoutCurrentSession(); });
         }
-
-        function closeIdleWarning() {
-            const modal = document.getElementById('idleWarningModal');
-            if (modal) modal.remove();
-        }
-
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
-            document.addEventListener(evt, resetIdle);
-        });
-
+        function closeIdleWarning() { const m = document.getElementById('idleWarningModal'); if (m) m.remove(); }
+        ['mousemove','keydown','click','scroll','touchstart'].forEach(evt => document.addEventListener(evt, resetIdle));
         resetIdle();
     }
 
@@ -380,10 +340,7 @@
         document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('logoutAllSessionsBtn').addEventListener('click', logoutAllOtherSessions);
-        document.getElementById('refreshLocationBtn').addEventListener('click', () => {
-            if (window.refreshGeoInfo) window.refreshGeoInfo();
-            else if (window.requestPreciseLocation) window.requestPreciseLocation();
-        });
+        document.getElementById('refreshLocationBtn').addEventListener('click', refreshCurrentLocation);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
