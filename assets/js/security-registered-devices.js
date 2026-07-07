@@ -1,18 +1,19 @@
 /**
- * security-registered-devices.js – v5 (JSONP + GPS اختياري)
- * يستخدم JSONP مع ipapi.co لجلب معلومات الموقع والشبكة
+ * security-registered-devices.js – v6 (متوافق مع قاعدة البيانات المحدثة)
+ * يعرض سجل الجلسات مع الحقول الجديدة (risk_level, proxy_detected, login_method...)
  */
 (function() {
     let supabase, currentUser, sessions = [];
-    let idleTimer, idleWarningTimer, idleCountdown = 60;
-    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
-    const WARNING_TIME = 60 * 1000;  // 60 ثانية تنازلية
+    let idleTimer, idleWarningTimer;
+    let locationWatchId = null;
+    const IDLE_TIME = 5 * 60 * 1000;
 
     function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(status) {
         const labels = {
             active: 'نشطة', logged_out: 'تم تسجيل الخروج', timeout: 'انتهت بسبب عدم النشاط',
-            terminated_by_system: 'أنهيت بواسطة النظام', terminated_by_user: 'أنهيت بواسطة المستخدم'
+            terminated_by_system: 'أنهيت بواسطة النظام', terminated_by_user: 'أنهيت بواسطة المستخدم',
+            failed: 'فشل'
         };
         return labels[status] || status;
     }
@@ -20,6 +21,7 @@
         if (status === 'active') return 'status-active';
         if (status === 'logged_out') return 'status-logged_out';
         if (status === 'timeout') return 'status-timeout';
+        if (status === 'failed') return 'status-failed';
         return 'status-terminated';
     }
     function getDuration(start, end) {
@@ -43,7 +45,7 @@
             await fetchSessions();
             bindEvents();
             initIdleTimer();
-            initLocationPrompt();
+            startContinuousLocationWatch();
         } catch (e) { console.error(e); }
     }
 
@@ -109,10 +111,9 @@
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
         if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:50px; color:var(--gray-500);">
+            tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:50px; color:var(--gray-500);">
                 <i class="fas fa-inbox" style="font-size:48px; margin-bottom:12px; color:var(--gray-300); display:block;"></i>
-                <p style="margin:0; font-weight:700;">لا توجد عمليات تسجيل دخول مسجلة بعد.</p>
-                <p style="font-size:13px; margin-top:8px;">سيتم تسجيل الدخول الحالي تلقائياً في السجل.</p>
+                <p style="margin:0; font-weight:700;">لا توجد جلسات مسجلة.</p>
             </td></tr>`;
             return;
         }
@@ -128,6 +129,7 @@
                 <td>${s.browser_name || '-'}</td>
                 <td>${s.city ? s.city + (s.country ? ', ' + s.country : '') : s.country || '-'}</td>
                 <td>${s.ip_address || '-'}</td>
+                <td><span class="risk-badge risk-${s.risk_level || 'low'}">${s.risk_level || 'منخفض'}</span></td>
                 <td>
                     <button class="btn-icon view-detail" data-id="${s.id}"><i class="fas fa-eye"></i></button>
                     ${s.status === 'active' && s.is_current_session ? `<button class="btn-icon text-danger" id="logoutCurrentBtn" data-id="${s.id}" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>` : ''}
@@ -151,6 +153,7 @@
         const html = `
             <div class="detail-section"><h4>معلومات الجلسة</h4>
                 <div class="detail-item"><span class="label">رقم الجلسة</span><span class="value">${session.session_number || '-'}</span></div>
+                <div class="detail-item"><span class="label">طريقة الدخول</span><span class="value">${session.login_method || '-'}</span></div>
                 <div class="detail-item"><span class="label">وقت الدخول</span><span class="value">${formatDate(session.login_at)}</span></div>
                 <div class="detail-item"><span class="label">وقت الخروج</span><span class="value">${session.logout_at ? formatDate(session.logout_at) : '-'}</span></div>
                 <div class="detail-item"><span class="label">مدة الجلسة</span><span class="value">${getDuration(session.login_at, session.logout_at)}</span></div>
@@ -162,25 +165,20 @@
                 <div class="detail-item"><span class="label">اسم الجهاز</span><span class="value">${session.device_name || '-'}</span></div>
                 <div class="detail-item"><span class="label">الشركة المصنعة</span><span class="value">${session.device_brand || '-'}</span></div>
                 <div class="detail-item"><span class="label">نظام التشغيل</span><span class="value">${session.operating_system || '-'}</span></div>
-                <div class="detail-item"><span class="label">إصدار النظام</span><span class="value">${session.os_version || '-'}</span></div>
                 <div class="detail-item"><span class="label">المتصفح</span><span class="value">${session.browser_name || '-'}</span></div>
-                <div class="detail-item"><span class="label">إصدار المتصفح</span><span class="value">${session.browser_version || '-'}</span></div>
                 <div class="detail-item"><span class="label">دقة الشاشة</span><span class="value">${session.screen_resolution || '-'}</span></div>
-                <div class="detail-item"><span class="label">لغة الجهاز</span><span class="value">${session.language || '-'}</span></div>
             </div>
             <div class="detail-section"><h4>معلومات الشبكة</h4>
                 <div class="detail-item"><span class="label">عنوان IP</span><span class="value">${session.ip_address || '-'}</span></div>
                 <div class="detail-item"><span class="label">مزود الخدمة (ISP)</span><span class="value">${session.isp || '-'}</span></div>
                 <div class="detail-item"><span class="label">نوع الاتصال</span><span class="value">${session.connection_type || '-'}</span></div>
-                <div class="detail-item"><span class="label">VPN/Proxy</span><span class="value">${session.vpn_detected ? 'تم الاكتشاف' : 'لا يوجد'}</span></div>
+                <div class="detail-item"><span class="label">VPN/Proxy</span><span class="value">${session.proxy_detected || session.vpn_detected ? 'تم الاكتشاف' : 'لا يوجد'}</span></div>
+                <div class="detail-item"><span class="label">Tor</span><span class="value">${session.tor_detected ? 'تم الاكتشاف' : 'لا يوجد'}</span></div>
             </div>
             <div class="detail-section"><h4>معلومات الموقع</h4>
                 <div class="detail-item"><span class="label">الدولة</span><span class="value">${session.country || '-'}</span></div>
                 <div class="detail-item"><span class="label">المنطقة</span><span class="value">${session.region || '-'}</span></div>
                 <div class="detail-item"><span class="label">المدينة</span><span class="value">${session.city || '-'}</span></div>
-                <div class="detail-item"><span class="label">الحي</span><span class="value">${session.district || '-'}</span></div>
-                <div class="detail-item"><span class="label">الرمز البريدي</span><span class="value">${session.postal_code || '-'}</span></div>
-                <div class="detail-item"><span class="label">المنطقة الزمنية</span><span class="value">${session.timezone || '-'}</span></div>
                 <div class="detail-item"><span class="label">خط العرض</span><span class="value">${session.latitude || '-'}</span></div>
                 <div class="detail-item"><span class="label">خط الطول</span><span class="value">${session.longitude || '-'}</span></div>
             </div>
@@ -188,7 +186,8 @@
                 <div class="detail-item"><span class="label">الجلسة الحالية</span><span class="value">${session.is_current_session ? '✅ نعم' : '❌ لا'}</span></div>
                 <div class="detail-item"><span class="label">جهاز موثوق</span><span class="value">${session.is_trusted_device ? 'نعم' : 'لا'}</span></div>
                 <div class="detail-item"><span class="label">بصمة الجهاز</span><span class="value">${session.fingerprint || '-'}</span></div>
-                <div class="detail-item"><span class="label">آخر نشاط</span><span class="value">${session.last_activity_at ? formatDate(session.last_activity_at) : '-'}</span></div>
+                <div class="detail-item"><span class="label">مستوى الخطورة</span><span class="value"><span class="risk-badge risk-${session.risk_level || 'low'}">${session.risk_level || 'منخفض'}</span></span></div>
+                <div class="detail-item"><span class="label">يحتاج مراجعة</span><span class="value">${session.requires_security_review ? 'نعم' : 'لا'}</span></div>
             </div>
         `;
         document.getElementById('detailContent').innerHTML = html;
@@ -206,7 +205,13 @@
         if (!confirm('هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
         const { error } = await supabase
             .from('user_login_sessions')
-            .update({ status: 'terminated_by_user', logout_reason: 'إنهاء بواسطة المستخدم', logout_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+            .update({
+                status: 'terminated_by_user',
+                logout_reason: 'إنهاء بواسطة المستخدم',
+                logout_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                logout_type: 'manual'
+            })
             .eq('id', id);
         if (!error) { alert('تم إنهاء الجلسة بنجاح'); fetchSessions(); document.getElementById('detailModal').classList.remove('show'); }
         else alert('فشل إنهاء الجلسة');
@@ -217,7 +222,51 @@
         else window.location.replace('/auth/auth/login/login.html');
     }
 
-    // ========== مؤقت الخمول ==========
+    // مراقبة الموقع المستمرة (كما سابقاً)
+    function startContinuousLocationWatch() {
+        if (!navigator.geolocation) return;
+        if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
+        locationWatchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                try {
+                    await supabase
+                        .from('user_login_sessions')
+                        .update({ latitude, longitude, last_activity_at: new Date().toISOString() })
+                        .eq('user_id', currentUser.id).eq('status', 'active').eq('is_current_session', true);
+                } catch (e) {}
+            },
+            (error) => {
+                if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
+                    stopContinuousLocationWatch();
+                    showLocationDeniedMessage();
+                }
+            },
+            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+        );
+    }
+
+    function stopContinuousLocationWatch() {
+        if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; }
+    }
+
+    function showLocationDeniedMessage() {
+        document.body.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#f1f5f9; font-family:'Tajawal',sans-serif;">
+                <div style="background:#fff; padding:40px; border-radius:16px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.1); max-width:500px;">
+                    <i class="fas fa-map-marker-alt" style="font-size:64px; color:#dc2626; margin-bottom:20px;"></i>
+                    <h2 style="color:#0A1B3F; margin-bottom:12px;">تم إيقاف الخدمة</h2>
+                    <p style="color:#475569; margin-bottom:24px;">نظرًا لعدم اتباع سياسة المنصة ورفض مشاركة الموقع الجغرافي، لا يمكنك متابعة استخدام الخدمة. تحديد الموقع إجباري للامتثال لمتطلبات الأمان والتحقق.</p>
+                    <button onclick="location.reload()" style="background:#028090; color:#fff; border:none; padding:12px 32px; border-radius:8px; font-weight:700; cursor:pointer;">إعادة المحاولة</button>
+                </div>
+            </div>
+        `;
+    }
+
+    window.startContinuousLocationWatch = startContinuousLocationWatch;
+    window.stopContinuousLocationWatch = stopContinuousLocationWatch;
+
+    // مؤقت الخمول
     function initIdleTimer() {
         function resetIdle() {
             clearTimeout(idleTimer);
@@ -242,7 +291,6 @@
                 </div>
             `;
             document.body.appendChild(modal);
-
             let count = 60;
             const countdownEl = document.getElementById('countdownDisplay');
             idleWarningTimer = setInterval(() => {
@@ -254,10 +302,7 @@
                     logoutCurrentSession();
                 }
             }, 1000);
-
-            document.getElementById('extendSessionBtn').addEventListener('click', () => {
-                resetIdle();
-            });
+            document.getElementById('extendSessionBtn').addEventListener('click', resetIdle);
             document.getElementById('forceLogoutBtn').addEventListener('click', () => {
                 clearInterval(idleWarningTimer);
                 closeIdleWarning();
@@ -273,89 +318,7 @@
         ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
             document.addEventListener(evt, resetIdle);
         });
-
         resetIdle();
-    }
-
-    // ========== جلب الموقع عبر JSONP (بدون CORS) ==========
-    function refreshGeoInfo() {
-        const callbackName = 'geoCallback_' + Math.random().toString(36).substr(2, 9);
-        window[callbackName] = async function(data) {
-            document.body.removeChild(script);
-            delete window[callbackName];
-            await supabase.from('user_login_sessions')
-                .update({
-                    ip_address: data.ip,
-                    country: data.country_name,
-                    region: data.region,
-                    city: data.city,
-                    postal_code: data.postal,
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    timezone: data.timezone,
-                    isp: data.org
-                })
-                .eq('user_id', currentUser.id)
-                .eq('status', 'active')
-                .eq('is_current_session', true);
-            alert('تم تحديث معلومات الموقع بنجاح.');
-            fetchSessions();
-        };
-        const script = document.createElement('script');
-        script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
-        script.onerror = () => {
-            alert('تعذر الاتصال بخدمة الموقع.');
-            document.body.removeChild(script);
-            delete window[callbackName];
-        };
-        document.body.appendChild(script);
-    }
-    window.refreshGeoInfo = refreshGeoInfo;
-
-    // ========== GPS دقيق (اختياري) ==========
-    window.requestPreciseLocation = async function() {
-        if (!navigator.geolocation) {
-            alert('متصفحك لا يدعم GPS.');
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                await supabase
-                    .from('user_login_sessions')
-                    .update({ latitude, longitude })
-                    .eq('user_id', currentUser.id)
-                    .eq('status', 'active')
-                    .eq('is_current_session', true);
-                alert('تم تحديث الموقع الدقيق بنجاح.');
-                fetchSessions();
-            },
-            () => {
-                alert('يرجى تفعيل خدمة الموقع.');
-            }
-        );
-    };
-
-    // ========== تنبيه إذا الموقع غير متوفر ==========
-    function initLocationPrompt() {
-        const active = sessions.find(s => s.is_current_session && s.status === 'active');
-        if (active && !active.country) {
-            const bar = document.querySelector('.search-filter-bar');
-            if (bar && !document.getElementById('locationPrompt')) {
-                const prompt = document.createElement('div');
-                prompt.id = 'locationPrompt';
-                prompt.style.cssText = 'margin-top:12px; padding:10px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; color:#9a3412; font-size:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;';
-                prompt.innerHTML = `
-                    <span><i class="fas fa-map-marker-alt"></i> لم يتم تحديد موقعك بعد. قد تكون بعض التفاصيل غير دقيقة.</span>
-                    <button id="enableLocationBtn" class="btn-primary" style="padding:6px 14px; font-size:13px;">تفعيل تحديد الموقع</button>
-                `;
-                bar.parentNode.insertBefore(prompt, bar.nextSibling);
-                document.getElementById('enableLocationBtn').addEventListener('click', () => {
-                    refreshGeoInfo();
-                    prompt.remove();
-                });
-            }
-        }
     }
 
     function bindEvents() {
