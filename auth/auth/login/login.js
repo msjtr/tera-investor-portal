@@ -7,6 +7,7 @@
     'use strict';
 
     const DASHBOARD_URL = '/pages/dashboard/index.html';
+    const VERIFY_OTP_URL = '/auth/verify-otp.html';
 
     // عناصر DOM
     const form = document.getElementById('teraLoginForm');
@@ -69,7 +70,21 @@
             if (error) {
                 let msg = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
                 if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
                 showAlert(msg, 'error');
+                return;
+            }
+
+            const user = data.user;
+
+            // ✅ فحص تأكيد البريد الإلكتروني
+            if (!user.email_confirmed_at) {
+                localStorage.setItem('pendingVerificationEmail', email);
+                localStorage.setItem('tera_verify_type', 'signup');
+                showAlert('يجب تأكيد بريدك الإلكتروني. جاري تحويلك إلى صفحة التحقق...', 'success');
+                setTimeout(() => {
+                    window.location.replace(VERIFY_OTP_URL);
+                }, 1500);
                 return;
             }
 
