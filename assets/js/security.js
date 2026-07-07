@@ -3,7 +3,6 @@
  * security.js
  * نظام صفحات الأمان - Enterprise Edition
  * متوافق مع Supabase JS v2 و TeraAuth
- * النسخة النهائية مع دالة togglePasswordVisibility العامة
  * ============================================================
  */
 
