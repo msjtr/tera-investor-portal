@@ -1,9 +1,7 @@
 /**
- * security-registered-devices.js – v6 (مركز أمان متكامل)
- * - جلسات مع تقييم مخاطر، VPN، موقع إجباري
- * - مراقبة مستمرة للموقع
- * - أجهزة موثوقة
- * - إجراءات جماعية
+ * security-registered-devices.js – v6 (مركز أمان متكامل + خرائط قوقل)
+ * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
+ * يدير مراقبة الموقع الجغرافي بشكل مستمر ويوقف الخدمة عند فقدان الإذن
  */
 (function() {
     let supabase, currentUser, sessions = [], trustedDevices = [];
@@ -13,7 +11,10 @@
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(s) {
-        const labels = { active: 'نشطة', logged_out: 'تم تسجيل الخروج', timeout: 'انتهت بسبب عدم النشاط', terminated_by_system: 'أنهيت بواسطة النظام', terminated_by_user: 'أنهيت بواسطة المستخدم' };
+        const labels = {
+            active: 'نشطة', logged_out: 'تم تسجيل الخروج', timeout: 'انتهت بسبب عدم النشاط',
+            terminated_by_system: 'أنهيت بواسطة النظام', terminated_by_user: 'أنهيت بواسطة المستخدم'
+        };
         return labels[s] || s;
     }
     function getStatusClass(s) {
@@ -54,7 +55,6 @@
             await fetchTrustedDevices();
             bindEvents();
             initIdleTimer();
-            startContinuousLocationWatch();
             checkVPNAndAlerts();
         } catch (e) { console.error(e); }
     }
@@ -121,6 +121,7 @@
                        (s.city && s.city.toLowerCase().includes(search));
             });
         }
+
         renderTable(filtered);
         document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
     }
@@ -134,14 +135,21 @@
             </td></tr>`;
             return;
         }
-        tbody.innerHTML = list.map(s => `
+        tbody.innerHTML = list.map(s => {
+            let mapsLink = '';
+            if (s.latitude && s.longitude) {
+                mapsLink = `<a href="https://www.google.com/maps?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل"><i class="fas fa-map-marker-alt"></i> عرض</a>`;
+            } else {
+                mapsLink = '-';
+            }
+            return `
             <tr>
                 <td>${s.session_number || '-'}</td>
                 <td>${formatDate(s.login_at)}</td>
                 <td>${s.device_type || '-'}</td>
                 <td>${s.browser_name || '-'}</td>
-                <td>${s.city ? s.city + (s.country ? ', ' + s.country : '') : s.country || '-'}</td>
-                <td>${s.ip_address || '-'}</td>
+                <td>${s.city ? s.city + (s.country ? ', ' + s.country : '') : s.country || '-'}<br>${mapsLink}</td>
+                <td>${s.ip_address || '-'}<br><small>${s.isp || ''}</small></td>
                 <td><span class="risk-badge ${getRiskClass(s.risk_level)}">${getRiskLabel(s.risk_level)}</span></td>
                 <td><span class="status-badge ${getStatusClass(s.status)}">${getStatusLabel(s.status)}</span></td>
                 <td>
@@ -149,8 +157,8 @@
                     ${s.status === 'active' && s.is_current_session ? `<button class="btn-icon text-danger" id="logoutCurrentBtn" data-id="${s.id}" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>` : ''}
                     ${s.status === 'active' && !s.is_current_session ? `<button class="btn-icon text-danger terminate-session" data-id="${s.id}" title="إنهاء هذه الجلسة"><i class="fas fa-times-circle"></i></button>` : ''}
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
         bindRowEvents();
     }
 
@@ -164,6 +172,10 @@
     async function showDetail(id) {
         const session = sessions.find(s => s.id === id);
         if (!session) return;
+        let mapsLink = '';
+        if (session.latitude && session.longitude) {
+            mapsLink = `<a href="https://www.google.com/maps?q=${session.latitude},${session.longitude}" target="_blank" class="btn-primary" style="padding:6px 14px; margin-top:8px; display:inline-block;"><i class="fas fa-map-marker-alt"></i> فتح في خرائط قوقل</a>`;
+        }
         const html = `
             <div class="detail-section"><h4>معلومات الجلسة</h4>
                 <div class="detail-item"><span class="label">رقم الجلسة</span><span class="value">${session.session_number || '-'}</span></div>
@@ -171,7 +183,6 @@
                 <div class="detail-item"><span class="label">وقت الخروج</span><span class="value">${session.logout_at ? formatDate(session.logout_at) : '-'}</span></div>
                 <div class="detail-item"><span class="label">مدة الجلسة</span><span class="value">${getDuration(session.login_at, session.logout_at)}</span></div>
                 <div class="detail-item"><span class="label">طريقة الدخول</span><span class="value">${session.login_method || 'كلمة مرور'}</span></div>
-                <div class="detail-item"><span class="label">سبب الخروج</span><span class="value">${session.logout_reason || '-'}</span></div>
                 <div class="detail-item"><span class="label">الحالة</span><span class="value"><span class="status-badge ${getStatusClass(session.status)}">${getStatusLabel(session.status)}</span></span></div>
             </div>
             <div class="detail-section"><h4>معلومات الجهاز</h4>
@@ -185,7 +196,7 @@
             </div>
             <div class="detail-section"><h4>معلومات الشبكة</h4>
                 <div class="detail-item"><span class="label">عنوان IP</span><span class="value">${session.ip_address || '-'}</span></div>
-                <div class="detail-item"><span class="label">مزود الخدمة</span><span class="value">${session.isp || '-'}</span></div>
+                <div class="detail-item"><span class="label">مزود الخدمة (ISP)</span><span class="value">${session.isp || '-'}</span></div>
                 <div class="detail-item"><span class="label">VPN</span><span class="value">${session.vpn_detected ? '✅ نعم' : '❌ لا'}</span></div>
                 <div class="detail-item"><span class="label">Proxy</span><span class="value">${session.proxy_detected ? '✅ نعم' : '❌ لا'}</span></div>
                 <div class="detail-item"><span class="label">Tor</span><span class="value">${session.tor_detected ? '✅ نعم' : '❌ لا'}</span></div>
@@ -196,6 +207,7 @@
                 <div class="detail-item"><span class="label">المنطقة الزمنية</span><span class="value">${session.timezone || '-'}</span></div>
                 <div class="detail-item"><span class="label">خط العرض</span><span class="value">${session.latitude || '-'}</span></div>
                 <div class="detail-item"><span class="label">خط الطول</span><span class="value">${session.longitude || '-'}</span></div>
+                <div class="detail-item"><span class="label"></span><span class="value">${mapsLink}</span></div>
             </div>
             <div class="detail-section"><h4>معلومات الأمان</h4>
                 <div class="detail-item"><span class="label">الجلسة الحالية</span><span class="value">${session.is_current_session ? '✅ نعم' : '❌ لا'}</span></div>
@@ -301,15 +313,63 @@
         }
     }
 
-    // ========== مؤقت الخمول (مختصر) ==========
+    // ========== مؤقت الخمول ==========
     function initIdleTimer() {
         function resetIdle() {
-            clearTimeout(idleTimer); clearInterval(idleWarningTimer); closeIdleWarning();
+            clearTimeout(idleTimer);
+            clearInterval(idleWarningTimer);
+            closeIdleWarning();
             idleTimer = setTimeout(showIdleWarning, IDLE_TIME);
         }
-        function showIdleWarning() { /* ... نفس كود النافذة السابق ... */ }
-        function closeIdleWarning() { const m = document.getElementById('idleWarningModal'); if (m) m.remove(); }
-        ['mousemove','keydown','click','scroll','touchstart'].forEach(e => document.addEventListener(e, resetIdle));
+
+        function showIdleWarning() {
+            const modal = document.createElement('div');
+            modal.id = 'idleWarningModal';
+            modal.className = 'modal-overlay show';
+            modal.innerHTML = `
+                <div class="modal-box" style="max-width:420px; text-align:center;">
+                    <i class="fas fa-clock" style="font-size:48px; color:var(--warning); margin-bottom:12px;"></i>
+                    <h4 style="margin:0 0 8px; color:var(--gray-900);">انتهت صلاحية الجلسة بسبب عدم النشاط</h4>
+                    <p style="margin-bottom:16px; color:var(--gray-700);">سيتم تسجيل خروجك تلقائياً خلال <strong id="countdownDisplay">60</strong> ثانية.</p>
+                    <div style="display:flex; gap:12px; justify-content:center;">
+                        <button id="extendSessionBtn" class="btn-primary">تمديد الجلسة</button>
+                        <button id="forceLogoutBtn" class="btn-danger">تسجيل الخروج</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            let count = 60;
+            const countdownEl = document.getElementById('countdownDisplay');
+            idleWarningTimer = setInterval(() => {
+                count--;
+                if (countdownEl) countdownEl.textContent = count;
+                if (count <= 0) {
+                    clearInterval(idleWarningTimer);
+                    closeIdleWarning();
+                    logoutCurrentSession();
+                }
+            }, 1000);
+
+            document.getElementById('extendSessionBtn').addEventListener('click', () => {
+                resetIdle();
+            });
+            document.getElementById('forceLogoutBtn').addEventListener('click', () => {
+                clearInterval(idleWarningTimer);
+                closeIdleWarning();
+                logoutCurrentSession();
+            });
+        }
+
+        function closeIdleWarning() {
+            const modal = document.getElementById('idleWarningModal');
+            if (modal) modal.remove();
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetIdle);
+        });
+
         resetIdle();
     }
 
