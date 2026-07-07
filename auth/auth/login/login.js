@@ -60,18 +60,17 @@
         try {
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
-                let msg = 'بيانات الدخول غير صحيحة.';
+                let msg = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
                 if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
                 showAlert(msg, 'error');
                 return;
             }
 
             const user = data.user;
 
-            // ✅ فحص تأكيد البريد – حتى لو لم تكن الخاصية مفعّلة في Supabase
+            // ✅ فحص تأكيد البريد – يُطبق على الجميع
             if (!user.email_confirmed_at) {
-                // إرسال رمز تحقق جديد تلقائيًا
+                // إرسال رمز تحقق OTP إلى البريد الإلكتروني
                 try {
                     await supabaseClient.auth.signInWithOtp({
                         email: email,
@@ -90,6 +89,7 @@
                 return;
             }
 
+            // البريد مؤكد – الدخول إلى لوحة التحكم
             showAlert('تم تسجيل الدخول بنجاح، جاري توجيهك...', 'success');
             window.location.replace(DASHBOARD_URL);
         } catch (err) {
