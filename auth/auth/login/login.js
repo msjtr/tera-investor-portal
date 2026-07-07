@@ -1,6 +1,7 @@
 /**
  * login.js – مدير تسجيل الدخول الخفيف
  * لا يحتوي على GPS أو تتبع أو جلسات – فقط مصادقة
+ * المسار: auth/auth/login/login.js
  */
 (function() {
     'use strict';
