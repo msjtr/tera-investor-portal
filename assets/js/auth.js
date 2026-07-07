@@ -1,9 +1,10 @@
 /**
  * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v4)
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v4.1)
  * ==========================================================
  * - JSONP لجلب IP والموقع (بدون CORS)
- * - GPS إجباري مع إيقاف الخدمة عند الرفض
+ * - GPS إجباري عند تحميل الصفحات المحمية (init)
+ * - GPS اختياري عند تسجيل الدخول بعد OTP (login)
  * - تتبع الموقع طوال الجلسة
  * - تسجيل الجلسات في user_login_sessions
  * - لا يُحمَّل في صفحة الدخول (يوجد login.js منفصل)
@@ -194,14 +195,22 @@
     }
 
     // ========== تسجيل جلسة جديدة ==========
-    async function createSession(client, user) {
-        // 1. GPS إجباري
+    async function createSession(client, user, requireGps = true) {
+        // 1. GPS (إجباري أو اختياري حسب السياق)
         let gps = null;
-        try {
-            gps = await requestLocation();
-        } catch (e) {
-            showDeniedMessage();
-            throw new Error('LOCATION_DENIED');
+        if (requireGps) {
+            try {
+                gps = await requestLocation();
+            } catch (e) {
+                showDeniedMessage();
+                throw new Error('LOCATION_DENIED');
+            }
+        } else {
+            try {
+                gps = await requestLocation();
+            } catch (e) {
+                console.warn('⚠️ GPS غير متاح – متابعة تسجيل الجلسة بدونه.');
+            }
         }
 
         // 2. معلومات الموقع (JSONP)
@@ -286,9 +295,9 @@
                 .eq('is_current_session', true);
 
             if (!activeSessions || activeSessions.length === 0) {
-                // إنشاء جلسة جديدة
+                // إنشاء جلسة جديدة (GPS إجباري هنا)
                 try {
-                    await createSession(this._client, user);
+                    await createSession(this._client, user, true);
                 } catch (e) {
                     // إذا فشل GPS، تم عرض رسالة الإيقاف
                     return;
@@ -309,7 +318,8 @@
                 this._session = data.session;
                 this._user = data.user;
                 this.updateUI();
-                await createSession(this._client, data.user);
+                // GPS اختياري هنا لأن المستخدم قد أكمل OTP بالفعل
+                await createSession(this._client, data.user, false);
                 return { data, error: null };
             } catch (error) {
                 console.error('❌ [Auth] فشل تسجيل الدخول:', error);
