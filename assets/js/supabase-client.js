@@ -1,9 +1,14 @@
 /**
  * ==========================================================
  * Tera Investor Portal
- * Supabase Client – v2.1 (منع تعارض waitForSupabase)
+ * Supabase Client Initialization
+ * المسار: assets/js/supabase-client.js
  * ==========================================================
+ * ينشئ عميل Supabase ويخزنه في window.teraSupabase
+ * يطلق حدث supabase:ready عند الجاهزية
+ * لا يحتوي على waitForSupabase (موجودة في security.js)
  */
+
 (function () {
     'use strict';
 
@@ -17,13 +22,14 @@
     const SUPABASE_KEY = 'sb_publishable_QYc4AcGWtJGxalINA_UGZw_fjfVbGqg';
 
     /**
-     * انتظار تحميل مكتبة Supabase من CDN
+     * انتظار تحميل مكتبة Supabase من CDN (إن لم تكن محملة بعد)
      */
     function waitForLibrary(timeout = 10000) {
         return new Promise((resolve, reject) => {
             if (window.supabase && typeof window.supabase.createClient === 'function') {
                 return resolve();
             }
+
             const start = Date.now();
             const timer = setInterval(() => {
                 if (window.supabase && typeof window.supabase.createClient === 'function') {
@@ -33,18 +39,19 @@
                 }
                 if (Date.now() - start > timeout) {
                     clearInterval(timer);
-                    reject(new Error('Supabase JS Library timeout.'));
+                    reject(new Error('Supabase JS Library timeout'));
                 }
             }, 100);
         });
     }
 
     /**
-     * إنشاء العميل وإطلاق الحدث
+     * إنشاء العميل وتخزينه عالمياً
      */
     async function initSupabase() {
         try {
             await waitForLibrary();
+
             const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
                 auth: {
                     autoRefreshToken: true,
@@ -57,11 +64,12 @@
             window.teraSupabase = client;
             console.log('✅ [supabase-client] تم إنشاء العميل بنجاح.');
 
+            // إطلاق حدث الجاهزية لتستخدمه الملفات الأخرى
             document.dispatchEvent(
                 new CustomEvent('supabase:ready', { detail: { client } })
             );
         } catch (error) {
-            console.error('❌ [supabase-client]', error);
+            console.error('❌ [supabase-client] فشل إنشاء العميل:', error);
             document.dispatchEvent(
                 new CustomEvent('supabase:error', { detail: error })
             );
