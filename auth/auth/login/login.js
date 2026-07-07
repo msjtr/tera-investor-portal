@@ -1,6 +1,5 @@
 /**
- * login.js – مدير تسجيل الدخول مع التحقق من البريد الإلكتروني
- * لا يحتوي على GPS أو تتبع – فقط مصادقة
+ * login.js – مدير تسجيل الدخول مع التحقق الإجباري من البريد (OTP)
  * المسار: auth/auth/login/login.js
  */
 (function() {
@@ -9,7 +8,6 @@
     const DASHBOARD_URL = '/pages/dashboard/index.html';
     const VERIFY_OTP_URL = '/auth/verify-otp.html';
 
-    // عناصر DOM
     const form = document.getElementById('teraLoginForm');
     const emailInput = document.getElementById('login_identifier');
     const passwordInput = document.getElementById('login_password');
@@ -22,7 +20,6 @@
 
     let supabaseClient = null;
 
-    // انتظار Supabase
     async function getClient() {
         if (window.teraSupabase) return window.teraSupabase;
         return new Promise((resolve) => {
@@ -43,13 +40,8 @@
         }, 8000);
     }
 
-    function showLoader() {
-        if (loader) loader.style.display = 'flex';
-    }
-
-    function hideLoader() {
-        if (loader) loader.style.display = 'none';
-    }
+    function showLoader() { if (loader) loader.style.display = 'flex'; }
+    function hideLoader() { if (loader) loader.style.display = 'none'; }
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -68,7 +60,7 @@
         try {
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
-                let msg = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
+                let msg = 'بيانات الدخول غير صحيحة.';
                 if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
                 else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
                 showAlert(msg, 'error');
@@ -77,8 +69,18 @@
 
             const user = data.user;
 
-            // ✅ فحص تأكيد البريد الإلكتروني
+            // ✅ فحص تأكيد البريد – حتى لو لم تكن الخاصية مفعّلة في Supabase
             if (!user.email_confirmed_at) {
+                // إرسال رمز تحقق جديد تلقائيًا
+                try {
+                    await supabaseClient.auth.signInWithOtp({
+                        email: email,
+                        options: { shouldCreateUser: false }
+                    });
+                } catch (otpError) {
+                    console.warn('تعذر إرسال رمز التحقق:', otpError);
+                }
+
                 localStorage.setItem('pendingVerificationEmail', email);
                 localStorage.setItem('tera_verify_type', 'signup');
                 showAlert('يجب تأكيد بريدك الإلكتروني. جاري تحويلك إلى صفحة التحقق...', 'success');
@@ -88,7 +90,6 @@
                 return;
             }
 
-            // نجاح – توجيه إلى لوحة التحكم
             showAlert('تم تسجيل الدخول بنجاح، جاري توجيهك...', 'success');
             window.location.replace(DASHBOARD_URL);
         } catch (err) {
@@ -102,19 +103,13 @@
     }
 
     async function init() {
-        try {
-            supabaseClient = await getClient();
-        } catch (e) {
-            showAlert('تعذر الاتصال بالخادم. حاول تحديث الصفحة.', 'error');
-            return;
+        try { supabaseClient = await getClient(); } catch (e) {
+            showAlert('تعذر الاتصال بالخادم.', 'error'); return;
         }
-
-        // ربط الأحداث
         form.addEventListener('submit', handleLogin);
         showPasswordCheck.addEventListener('change', function() {
             passwordInput.type = this.checked ? 'text' : 'password';
         });
-
         console.log('✅ صفحة الدخول جاهزة.');
     }
 
