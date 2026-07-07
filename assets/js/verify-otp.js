@@ -1,9 +1,9 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام)
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) - نسخة آمنة
  * يعتمد على TeraAuth (auth.js) لتنفيذ عمليات المصادقة والتوجيه
  * يدعم: signup, recovery, personal_info, contact_info, national_address,
  *       bank_info, attachments, change_mobile, login_otp, email_change
- * النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، متوافقة مع النظام الجديد
+ * تم إصلاح ثغرة رابط العودة الأمني
  */
 
 (function () {
@@ -50,9 +50,6 @@
             return;
         }
 
-        // ========== تحديث اسم المستخدم في الهيدر ==========
-        await auth.getUser();
-
         // ========== قراءة السياق ==========
         const pendingEmail = localStorage.getItem('pendingVerificationEmail');
         let verifyType = localStorage.getItem('tera_verify_type') || 'signup';
@@ -79,15 +76,21 @@
             if (submitBtn) submitBtn.disabled = true;
         }
 
-        // ========== تخصيص رابط العودة ==========
+        // ========== تخصيص رابط العودة (تم إصلاح الثغرة الأمنية) ==========
+        // الحالات التي لا تملك جلسة مفتوحة بعد يجب أن تعود إلى صفحة الدخول
+        // وليس إلى لوحة التحكم، لمنع تجاوز المصادقة.
         const backRoutes = {
-            'login_otp': { url: '/pages/dashboard/index.html', text: 'العودة' },
+            'login_otp': { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' },
+            'signup': { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' },
+            'recovery': { url: '/auth/forgot-password.html', text: 'العودة' },
+            'email_change': { url: '/pages/security/change-email.html', text: 'العودة' },
+            'change_mobile': { url: '/pages/security/change-mobile.html', text: 'العودة' },
+            // هذه الحالات تمتلك جلسة عادةً، لذا يمكنها العودة إلى لوحة التحكم
             'personal_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
             'contact_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
             'national_address': { url: '/pages/dashboard/index.html', text: 'العودة' },
             'bank_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
-            'attachments': { url: '/pages/dashboard/index.html', text: 'العودة' },
-            'change_mobile': { url: '/pages/dashboard/index.html', text: 'العودة' }
+            'attachments': { url: '/pages/dashboard/index.html', text: 'العودة' }
         };
         const defaultBack = { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' };
         const backConfig = backRoutes[verifyType] || defaultBack;
