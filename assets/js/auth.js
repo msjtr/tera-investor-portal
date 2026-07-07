@@ -1,10 +1,14 @@
 /**
- * auth.js – مدير المصادقة المركزي (Enterprise v2)
- * - يسجل جلسات الدخول تلقائياً مع تفاصيل الجهاز، الموقع، ISP
+ * ==========================================================
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v4)
+ * ==========================================================
+ * - JSONP لجلب IP والموقع (بدون CORS)
  * - GPS إجباري مع إيقاف الخدمة عند الرفض
  * - تتبع الموقع طوال الجلسة
- * - يستخدم Edge Function ipinfo (مع fallback تلقائي)
+ * - تسجيل الجلسات في user_login_sessions
+ * - لا يُحمَّل في صفحة الدخول (يوجد login.js منفصل)
  */
+
 (function () {
     'use strict';
 
@@ -54,7 +58,12 @@
             result.operating_system = `Windows ${RegExp.$1}`;
         } else if (/Mac OS X (\d+[._]\d+)/.test(ua)) {
             result.operating_system = `macOS ${RegExp.$1}`;
+        } else if (/Android (\d+\.\d+)/.test(ua)) {
+            result.operating_system = `Android ${RegExp.$1}`;
+        } else if (/iPhone|iPad|iPod.* OS (\d+[._]\d+)/.test(ua)) {
+            result.operating_system = `iOS ${RegExp.$1}`;
         }
+
         if (/Edg\/(\d+\.\d+)/.test(ua)) {
             result.browser_name = 'Edge';
             result.browser_version = RegExp.$1;
@@ -72,14 +81,15 @@
         return result;
     }
 
-    // ========== جلب IP ومعلومات الموقع (Edge Function أو fallback) ==========
-    async function fetchGeoInfo(client) {
-        // 1. محاولة استخدام Edge Function ipinfo
-        if (client && client.functions) {
-            try {
-                const { data, error } = await client.functions.invoke('ipinfo', { body: {} });
-                if (!error && data && data.ip) {
-                    return {
+    // ========== جلب IP والموقع عبر JSONP (بدون CORS) ==========
+    function fetchGeoInfo() {
+        return new Promise((resolve) => {
+            const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
+            window[callbackName] = function(data) {
+                document.body.removeChild(script);
+                delete window[callbackName];
+                if (data && data.ip) {
+                    resolve({
                         ip_address: data.ip,
                         country: data.country_name,
                         country_code: data.country,
@@ -90,33 +100,11 @@
                         longitude: data.longitude,
                         timezone: data.timezone,
                         isp: data.org,
-                        asn: data.asn,
-                    };
+                        asn: null,
+                    });
+                } else {
+                    resolve(null);
                 }
-            } catch (e) {
-                console.warn('⚠️ Edge Function ipinfo فشلت، استخدام fallback...');
-            }
-        }
-
-        // 2. Fallback: استخدام ipapi.co/jsonp (بدون CORS)
-        return new Promise((resolve) => {
-            const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
-            window[callbackName] = function(data) {
-                document.body.removeChild(script);
-                delete window[callbackName];
-                resolve({
-                    ip_address: data.ip,
-                    country: data.country_name,
-                    country_code: data.country,
-                    region: data.region,
-                    city: data.city,
-                    postal_code: data.postal,
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    timezone: data.timezone,
-                    isp: data.org,
-                    asn: null,
-                });
             };
             const script = document.createElement('script');
             script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
@@ -132,12 +120,17 @@
     // ========== طلب الموقع الجغرافي (GPS) ==========
     function requestLocation() {
         return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
+            if (!navigator.geolocation) {
+                return reject(new Error('Geolocation not supported'));
+            }
             const timeout = setTimeout(() => reject(new Error('Location timeout')), 10000);
             navigator.geolocation.getCurrentPosition(
                 pos => {
                     clearTimeout(timeout);
-                    resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+                    resolve({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    });
                 },
                 err => {
                     clearTimeout(timeout);
@@ -151,12 +144,12 @@
     // ========== إيقاف الخدمة (رسالة رفض GPS) ==========
     function showDeniedMessage() {
         document.body.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#f1f5f9; font-family:Tajawal,sans-serif;">
-                <div style="background:#fff; padding:40px; border-radius:16px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.1); max-width:500px;">
-                    <i class="fas fa-map-marker-alt" style="font-size:64px; color:#dc2626; margin-bottom:20px;"></i>
-                    <h2 style="color:#0A1B3F;">تم إيقاف الخدمة</h2>
-                    <p style="color:#475569; margin-bottom:24px;">نظرًا لعدم اتباع سياسة المنصة ورفض مشاركة الموقع الجغرافي، لا يمكنك متابعة استخدام الخدمة.</p>
-                    <button onclick="location.reload()" style="background:#028090; color:#fff; border:none; padding:12px 32px; border-radius:8px; font-weight:700;">إعادة المحاولة</button>
+            <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;">
+                <div style="background:#fff;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.1);max-width:500px;width:90%;">
+                    <i class="fas fa-map-marker-alt" style="font-size:64px;color:#dc2626;margin-bottom:20px;"></i>
+                    <h2 style="color:#0A1B3F;font-size:24px;margin-bottom:12px;">تم إيقاف الخدمة</h2>
+                    <p style="color:#475569;font-size:15px;line-height:1.6;margin-bottom:24px;">نظرًا لعدم اتباع سياسة المنصة ورفض مشاركة الموقع الجغرافي، لا يمكنك متابعة استخدام الخدمة. تحديد الموقع إجباري للامتثال لمتطلبات الأمان والتحقق.</p>
+                    <button onclick="location.reload()" style="background:#028090;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;">إعادة المحاولة</button>
                 </div>
             </div>
         `;
@@ -179,7 +172,9 @@
                         .eq('user_id', userId)
                         .eq('status', 'active')
                         .eq('is_current_session', true);
-                } catch (e) {}
+                } catch (e) {
+                    // تجاهل أخطاء التحديث الصامتة
+                }
             },
             (err) => {
                 if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
@@ -200,7 +195,7 @@
 
     // ========== تسجيل جلسة جديدة ==========
     async function createSession(client, user) {
-        // 1. GPS
+        // 1. GPS إجباري
         let gps = null;
         try {
             gps = await requestLocation();
@@ -209,10 +204,10 @@
             throw new Error('LOCATION_DENIED');
         }
 
-        // 2. Geo info
-        const geo = await fetchGeoInfo(client);
+        // 2. معلومات الموقع (JSONP)
+        const geo = await fetchGeoInfo();
 
-        // 3. Device info
+        // 3. معلومات الجهاز
         const device = parseUserAgent();
 
         // 4. إنهاء الجلسات النشطة السابقة
@@ -267,12 +262,12 @@
                 this._client = await getSupabase();
                 supabaseClient = this._client;
             } catch (e) {
-                console.error('Supabase غير متوفر');
+                console.error('❌ Supabase غير متوفر');
                 return;
             }
 
-            const { data: { user } } = await this._client.auth.getUser();
-            if (!user) {
+            const { data: { user }, error } = await this._client.auth.getUser();
+            if (error || !user) {
                 this.redirectTo(ROUTES.LOGIN);
                 return;
             }
@@ -290,7 +285,7 @@
                 .eq('is_current_session', true);
 
             if (!activeSessions || activeSessions.length === 0) {
-                // إنشاء جلسة جديدة إذا لم توجد
+                // إنشاء جلسة جديدة
                 try {
                     await createSession(this._client, user);
                 } catch (e) {
@@ -316,10 +311,12 @@
 
         logout: async function () {
             if (!this._client || !this._user) return;
+
+            // إنهاء الجلسة الحالية
             await this._client.from('user_login_sessions')
                 .update({
                     status: 'logged_out',
-                    logout_reason: 'تسجيل خروج',
+                    logout_reason: 'تسجيل خروج بواسطة المستخدم',
                     logout_at: new Date().toISOString(),
                     is_current_session: false,
                     updated_at: new Date().toISOString()
@@ -331,29 +328,35 @@
             stopLocationTracking();
             await this._client.auth.signOut();
             this._user = null;
+            this._session = null;
             this.redirectTo(ROUTES.LOGIN);
         },
 
-        redirectTo: (url) => { window.location.replace(url); },
+        redirectTo: function (url) {
+            window.location.replace(url);
+        },
 
         updateUI: function () {
             const user = this._user;
+            const headerName = document.getElementById('headerUserName');
+            const headerAvatar = document.getElementById('headerAvatar');
+
             if (!user) {
-                const hName = document.getElementById('headerUserName');
-                const hAvatar = document.getElementById('headerAvatar');
-                if (hName) hName.textContent = 'زائر';
-                if (hAvatar) hAvatar.textContent = 'ز';
+                if (headerName) headerName.textContent = 'زائر';
+                if (headerAvatar) headerAvatar.textContent = 'ز';
                 return;
             }
-            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-            document.getElementById('headerUserName').textContent = name;
-            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+
+            const fullName = user.user_metadata?.full_name || user.email || 'مستخدم';
+            if (headerName) headerName.textContent = fullName;
+            if (headerAvatar) headerAvatar.textContent = fullName.charAt(0).toUpperCase();
         }
     };
 
-    // التهيئة التلقائية عند تحميل الصفحة (باستثناء صفحات الدخول)
+    // ========== التهيئة التلقائية ==========
     document.addEventListener('DOMContentLoaded', () => {
         const path = window.location.pathname;
+        // لا تُشغّل في صفحات الدخول أو التسجيل
         if (!path.includes('/auth/auth/login/') && !path.includes('/auth/register/')) {
             window.TeraAuth.init();
         }
