@@ -15,8 +15,15 @@ const Dashboard = {
 
         this._sessionStart = new Date();
 
-        if (window.TeraAuth && !window.TeraAuth.isLoggedIn()) {
-            window.TeraAuth.redirectTo('/auth/auth/login/login.html');
+        // التحقق من الجلسة باستخدام getUser بدلاً من isLoggedIn
+        if (window.TeraAuth) {
+            const user = await window.TeraAuth.getUser();
+            if (!user) {
+                window.TeraAuth.redirectTo('/auth/auth/login/login.html');
+                return;
+            }
+        } else {
+            window.location.replace('/auth/auth/login/login.html');
             return;
         }
 
