@@ -1,10 +1,9 @@
 /**
- * security-registered-devices.js – v2 (إصلاح الهيدر وعرض الجلسات)
+ * security-registered-devices.js – v3 (موقع دقيق، تفاصيل كاملة)
  * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
  */
 (function() {
     let supabase, currentUser, sessions = [];
-    let currentFilter = { status: 'all', device: 'all', search: '' };
 
     function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(status) {
@@ -212,6 +211,30 @@
         if (window.TeraAuth?.logout) await window.TeraAuth.logout();
         else window.location.replace('/auth/auth/login/login.html');
     }
+
+    // ========== تحديد الموقع الدقيق (GPS) – اختياري ==========
+    window.requestPreciseLocation = async function() {
+        if (!navigator.geolocation) {
+            alert('متصفحك لا يدعم تحديد الموقع الجغرافي.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                await supabase
+                    .from('user_login_sessions')
+                    .update({ latitude, longitude })
+                    .eq('user_id', currentUser.id)
+                    .eq('status', 'active')
+                    .eq('is_current_session', true);
+                alert('تم تحديث موقعك الدقيق بنجاح.');
+                fetchSessions();
+            },
+            (error) => {
+                alert('لم نتمكن من الحصول على موقعك الدقيق. تأكد من تفعيل خدمة الموقع.');
+            }
+        );
+    };
 
     function bindEvents() {
         document.getElementById('searchInput').addEventListener('input', applyFilters);
