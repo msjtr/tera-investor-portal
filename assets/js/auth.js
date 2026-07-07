@@ -6,6 +6,7 @@
  * - يسجل جلسات الدخول في user_login_sessions مع تفاصيل الجهاز والموقع
  * - عند الخروج يُنهي جميع الجلسات النشطة للمستخدم
  * - يُراقب VPN/Proxy (تنبيه بسيط)
+ * - يستخدم ipwhois.app لجلب معلومات الموقع
  */
 
 (function () {
@@ -88,22 +89,22 @@
 
     async function fetchGeoInfo() {
         try {
-            const response = await fetch('https://ipapi.co/json/');
+            const response = await fetch('https://ipwhois.app/json/');
             if (!response.ok) return null;
             const data = await response.json();
             return {
                 ip_address: data.ip || null,
-                country: data.country_name || null,
+                country: data.country || null,
                 region: data.region || null,
                 city: data.city || null,
                 postal_code: data.postal || null,
                 latitude: data.latitude || null,
                 longitude: data.longitude || null,
                 timezone: data.timezone || null,
-                isp: data.org || null,
+                isp: data.isp || null,
             };
         } catch (e) {
-            console.warn('⚠️ تعذر جلب معلومات الموقع عبر ipapi.co');
+            console.warn('⚠️ تعذر جلب معلومات الموقع عبر ipwhois.app');
             return null;
         }
     }
