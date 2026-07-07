@@ -1,6 +1,7 @@
 /**
  * dashboard-core.js – وظائف لوحة التحكم (حالة الطلب، الإحصائيات، الرسم البياني، المؤقت)
  * يعتمد على: supabase-client.js, auth.js, chart.js
+ * تم التحديث: استخدام waitForSupabase الموحدة + تحديث last_activity_at للجلسة
  */
 const Dashboard = {
     chartInstance: null,
@@ -54,6 +55,11 @@ const Dashboard = {
     },
 
     _waitForSupabase: function() {
+        // استخدام الدالة الموحدة إن وجدت
+        if (window.waitForSupabase) {
+            return window.waitForSupabase();
+        }
+        // fallback
         return new Promise((resolve, reject) => {
             if (window.teraSupabase) return resolve(window.teraSupabase);
             const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
@@ -95,7 +101,24 @@ const Dashboard = {
         setInterval(() => {
             update();
             this.updateCurrentDateTime();
+            // تحديث نشاط الجلسة في user_login_sessions لمنع مؤقت الخمول من إنهائها
+            this._updateSessionActivity();
         }, 60000);
+    },
+
+    _updateSessionActivity: async function() {
+        try {
+            if (window.TeraAuth && window.TeraAuth._client && window.TeraAuth._user) {
+                await window.TeraAuth._client
+                    .from('user_login_sessions')
+                    .update({ last_activity_at: new Date().toISOString() })
+                    .eq('user_id', window.TeraAuth._user.id)
+                    .eq('status', 'active')
+                    .eq('is_current_session', true);
+            }
+        } catch (e) {
+            // تجاهل أخطاء التحديث الصامتة
+        }
     },
 
     updateCurrentDateTime: function() {
