@@ -1,6 +1,6 @@
 /**
- * security-registered-devices.js – v4 (موقع، VPN، خمول، مؤقت تنازلي)
- * يستخدم ipwhois.app لجلب معلومات الموقع والشبكة
+ * security-registered-devices.js – v5 (JSONP + GPS اختياري)
+ * يستخدم JSONP مع ipapi.co لجلب معلومات الموقع والشبكة
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -277,10 +277,69 @@
         resetIdle();
     }
 
-    // ========== طلب إذن الموقع ==========
+    // ========== جلب الموقع عبر JSONP (بدون CORS) ==========
+    function refreshGeoInfo() {
+        const callbackName = 'geoCallback_' + Math.random().toString(36).substr(2, 9);
+        window[callbackName] = async function(data) {
+            document.body.removeChild(script);
+            delete window[callbackName];
+            await supabase.from('user_login_sessions')
+                .update({
+                    ip_address: data.ip,
+                    country: data.country_name,
+                    region: data.region,
+                    city: data.city,
+                    postal_code: data.postal,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                    timezone: data.timezone,
+                    isp: data.org
+                })
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .eq('is_current_session', true);
+            alert('تم تحديث معلومات الموقع بنجاح.');
+            fetchSessions();
+        };
+        const script = document.createElement('script');
+        script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
+        script.onerror = () => {
+            alert('تعذر الاتصال بخدمة الموقع.');
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
+        document.body.appendChild(script);
+    }
+    window.refreshGeoInfo = refreshGeoInfo;
+
+    // ========== GPS دقيق (اختياري) ==========
+    window.requestPreciseLocation = async function() {
+        if (!navigator.geolocation) {
+            alert('متصفحك لا يدعم GPS.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                await supabase
+                    .from('user_login_sessions')
+                    .update({ latitude, longitude })
+                    .eq('user_id', currentUser.id)
+                    .eq('status', 'active')
+                    .eq('is_current_session', true);
+                alert('تم تحديث الموقع الدقيق بنجاح.');
+                fetchSessions();
+            },
+            () => {
+                alert('يرجى تفعيل خدمة الموقع.');
+            }
+        );
+    };
+
+    // ========== تنبيه إذا الموقع غير متوفر ==========
     function initLocationPrompt() {
-        const activeSession = sessions.find(s => s.is_current_session && s.status === 'active');
-        if (activeSession && !activeSession.country) {
+        const active = sessions.find(s => s.is_current_session && s.status === 'active');
+        if (active && !active.country) {
             const bar = document.querySelector('.search-filter-bar');
             if (bar && !document.getElementById('locationPrompt')) {
                 const prompt = document.createElement('div');
@@ -298,56 +357,6 @@
             }
         }
     }
-
-    window.refreshGeoInfo = async function() {
-        try {
-            const response = await fetch('https://ipwhois.app/json/');
-            const data = await response.json();
-            await supabase
-                .from('user_login_sessions')
-                .update({
-                    ip_address: data.ip,
-                    country: data.country,
-                    region: data.region,
-                    city: data.city,
-                    postal_code: data.postal,
-                    latitude: data.latitude,
-                    longitude: data.longitude,
-                    timezone: data.timezone,
-                    isp: data.isp
-                })
-                .eq('user_id', currentUser.id)
-                .eq('status', 'active')
-                .eq('is_current_session', true);
-            alert('تم تحديث معلومات الموقع بنجاح.');
-            fetchSessions();
-        } catch (e) {
-            alert('تعذر الاتصال بخدمة تحديد الموقع.');
-        }
-    };
-
-    window.requestPreciseLocation = async function() {
-        if (!navigator.geolocation) {
-            alert('متصفحك لا يدعم تحديد الموقع الجغرافي.');
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                await supabase
-                    .from('user_login_sessions')
-                    .update({ latitude, longitude })
-                    .eq('user_id', currentUser.id)
-                    .eq('status', 'active')
-                    .eq('is_current_session', true);
-                alert('تم تحديث موقعك الدقيق بنجاح.');
-                fetchSessions();
-            },
-            (error) => {
-                alert('لم نتمكن من الحصول على موقعك الدقيق. تأكد من تفعيل خدمة الموقع.');
-            }
-        );
-    };
 
     function bindEvents() {
         document.getElementById('searchInput').addEventListener('input', applyFilters);
