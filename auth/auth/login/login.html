@@ -2,434 +2,84 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تيرا | تسجيل الدخول إلى المحفظة الاستثمارية</title>
-
-    <!-- أيقونة الموقع (مسار مطلق) -->
+    <title>تسجيل الدخول | تيرا</title>
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- ملفات التنسيق الأساسية (مسارات مطلقة) -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
-    <!-- ملف التنسيق الخاص بصفحة الدخول (نفس المجلد) -->
     <link rel="stylesheet" href="/auth/auth/login/login.css">
-
     <style>
-        /* أنماط إضافية لتجاوز أي تعارضات وتحسين المظهر */
-        .auth-layout {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e6f7f5 100%);
-            padding: 20px;
-        }
-        .auth-container {
-            width: 100%;
-            max-width: 480px;
-            background: #ffffff;
-            border-radius: 28px;
-            box-shadow: 0 20px 60px rgba(2, 128, 144, 0.12);
-            padding: 40px 32px 32px;
-            border: 1px solid rgba(2, 128, 144, 0.08);
-            transition: all 0.3s ease;
-        }
-        .auth-container:hover {
-            box-shadow: 0 30px 80px rgba(2, 128, 144, 0.16);
-        }
-        .auth-card-header {
-            margin-bottom: 32px;
-        }
-        .brand-logo-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .brand-logo-box img {
-            height: 52px;
-            width: auto;
-        }
-        .portal-title {
-            font-family: 'Cairo', sans-serif;
-            font-size: 24px;
-            font-weight: 800;
-            color: #0A1B3F;
-            margin: 0 0 4px;
-            text-align: center;
-        }
-        .page-subtitle {
-            font-size: 18px;
-            font-weight: 700;
-            color: #028090;
-            margin: 0 0 8px;
-            text-align: center;
-        }
-        .welcome-text {
-            font-size: 14px;
-            color: #64748b;
-            text-align: center;
-            margin: 0;
-            line-height: 1.6;
-        }
-        .form-field-group {
-            margin-bottom: 20px;
-        }
-        .field-label {
-            display: block;
-            font-weight: 700;
-            font-size: 14px;
-            color: #1e293b;
-            margin-bottom: 6px;
-        }
-        .field-label-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-        .required {
-            color: #dc2626;
-            margin-right: 2px;
-        }
-        .forgot-pass-link {
-            font-size: 13px;
-            color: #028090;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .forgot-pass-link:hover {
-            color: #0A1B3F;
-            text-decoration: underline;
-        }
-        .input-wrapper {
-            position: relative;
-        }
-        .form-input-control {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: 'Tajawal', sans-serif;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background: #f8fafc;
-            color: #0A1B3F;
-        }
-        .form-input-control:focus {
-            border-color: #028090;
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
-            background: #ffffff;
-            outline: none;
-        }
-        .form-input-control:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .checkbox-options-container {
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .checkbox-toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            color: #475569;
-            cursor: pointer;
-        }
-        .checkbox-toggle-label input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #028090;
-            cursor: pointer;
-        }
-        .remember-me-box {
-            margin: 8px 0 20px;
-        }
-        .form-actions-block {
-            margin-top: 8px;
-        }
-        .btn-submit-login {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #028090 0%, #0d9488 100%);
-            color: #fff;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 800;
-            font-family: 'Tajawal', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 16px rgba(2, 128, 144, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .btn-submit-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(2, 128, 144, 0.35);
-            background: linear-gradient(135deg, #0d9488 0%, #0A1B3F 100%);
-        }
-        .btn-submit-login:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .btn-submit-login i {
-            font-size: 18px;
-        }
-        .bottom-routing-footer-links {
-            margin-top: 28px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 20px;
-        }
-        .bottom-routing-footer-links p {
-            margin: 8px 0;
-            font-size: 14px;
-            color: #475569;
-        }
-        .routing-link {
-            color: #028090;
-            font-weight: 700;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .routing-link:hover {
-            color: #0A1B3F;
-            text-decoration: underline;
-        }
-        .routing-link-secondary {
-            color: #64748b;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .routing-link-secondary:hover {
-            color: #0A1B3F;
-        }
-        .error-feedback-msg {
-            color: #dc2626;
-            font-size: 13px;
-            min-height: 20px;
-            margin-top: 4px;
-        }
-        .alert-box {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            font-weight: 700;
-            font-size: 14px;
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
-        }
-        .alert-box.show {
-            display: flex;
-        }
-        .alert-box.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border-color: #6ee7b7;
-        }
-        .alert-box.error {
-            background: #fef2f2;
-            color: #b91c1c;
-            border-color: #fca5a5;
-        }
-        .alert-icon {
-            flex-shrink: 0;
-        }
-        .alert-message {
-            flex: 1;
-        }
-        .tera-loader-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 27, 63, 0.7);
-            backdrop-filter: blur(6px);
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .tera-loader-overlay .loader-content-card {
-            background: #fff;
-            border-radius: 24px;
-            padding: 40px 48px;
-            min-width: 280px;
-            text-align: center;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-        }
-        .spinning-infinity-ring {
-            width: 56px;
-            height: 56px;
-            border: 5px solid #e2e8f0;
-            border-top-color: #028090;
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-            margin: 0 auto 16px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .loader-primary-heading {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0A1B3F;
-            margin: 0 0 8px;
-        }
-        .creative-motivational-text {
-            font-size: 14px;
-            color: #64748b;
-            margin: 0 0 16px;
-        }
-        .loading-progress-track {
-            width: 100%;
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fill-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #028090, #0d9488);
-            border-radius: 4px;
-            transition: width 0.4s ease;
-        }
-
-        /* استجابة للشاشات الصغيرة */
-        @media (max-width: 576px) {
-            .auth-container {
-                padding: 24px 16px;
-                border-radius: 20px;
-            }
-            .portal-title {
-                font-size: 20px;
-            }
-            .page-subtitle {
-                font-size: 16px;
-            }
-            .form-input-control {
-                padding: 12px 14px;
-                font-size: 14px;
-            }
-            .btn-submit-login {
-                padding: 14px;
-                font-size: 15px;
-            }
-            .brand-logo-box img {
-                height: 40px;
-            }
-            .tera-loader-overlay .loader-content-card {
-                padding: 28px 20px;
-                min-width: 200px;
-            }
-        }
+        .auth-layout { min-height:100vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #f0f9ff, #e6f7f5); padding:20px; }
+        .auth-container { max-width:480px; width:100%; background:#fff; border-radius:28px; padding:40px 32px 32px; box-shadow:0 20px 60px rgba(2,128,144,0.12); }
+        .brand-logo-box { text-align:center; margin-bottom:20px; }
+        .brand-logo-box img { height:52px; }
+        .portal-title { font-family:'Cairo',sans-serif; font-size:24px; font-weight:800; color:#0A1B3F; text-align:center; margin:0 0 4px; }
+        .page-subtitle { font-size:18px; font-weight:700; color:#028090; text-align:center; margin:0 0 8px; }
+        .welcome-text { font-size:14px; color:#64748b; text-align:center; margin:0 0 32px; }
+        .form-field-group { margin-bottom:20px; }
+        .field-label { display:block; font-weight:700; font-size:14px; color:#1e293b; margin-bottom:6px; }
+        .field-label-flex { display:flex; justify-content:space-between; }
+        .form-input-control { width:100%; padding:14px 16px; border:2px solid #e2e8f0; border-radius:12px; font-size:15px; font-family:inherit; transition: border-color 0.3s; background:#f8fafc; }
+        .form-input-control:focus { border-color:#028090; box-shadow:0 0 0 4px rgba(2,128,144,0.10); outline:none; background:#fff; }
+        .forgot-pass-link { font-size:13px; color:#028090; font-weight:600; text-decoration:none; }
+        .checkbox-toggle-label { display:flex; align-items:center; gap:6px; font-size:14px; color:#475569; cursor:pointer; margin-top:8px; }
+        .btn-submit-login { width:100%; padding:16px; background:linear-gradient(135deg, #028090, #0d9488); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; transition:all 0.3s; }
+        .btn-submit-login:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 28px rgba(2,128,144,0.35); }
+        .btn-submit-login:disabled { opacity:0.65; cursor:not-allowed; transform:none; }
+        .bottom-routing-footer-links { margin-top:28px; border-top:1px solid #e2e8f0; padding-top:20px; text-align:center; font-size:14px; color:#475569; }
+        .routing-link { color:#028090; font-weight:700; text-decoration:none; }
+        .alert-box { display:none; align-items:center; gap:10px; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-weight:700; font-size:14px; }
+        .alert-box.show { display:flex; }
+        .alert-box.success { background:#ecfdf5; color:#065f46; border:1px solid #6ee7b7; }
+        .alert-box.error { background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; }
+        .tera-loader-overlay { display:none; position:fixed; inset:0; background:rgba(10,27,63,0.7); backdrop-filter:blur(6px); z-index:9999; flex-direction:column; align-items:center; justify-content:center; }
+        .spinning-infinity-ring { width:56px; height:56px; border:5px solid #e2e8f0; border-top-color:#028090; border-radius:50%; animation:spin 0.9s linear infinite; margin-bottom:16px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="auth-layout">
-        <div class="auth-container" id="loginCardBlock">
-            <div class="auth-card-header text-center">
-                <div class="brand-logo-box">
-                    <!-- صورة الشعار مع SVG احتياطي مضمّن لتجنب أخطاء الاتصال -->
-                    <img src="/images/logo.svg" alt="تيرا" 
-                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'">
-                </div>
-                <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
-                <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
-                <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
+        <div class="auth-container">
+            <div class="brand-logo-box">
+                <img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2240%22%3E%3Crect width=%22120%22 height=%2240%22 rx=%226%22 fill=%22%23028090%22/%3E%3Ctext x=%2260%22 y=%2226%22 font-family=%22Cairo,sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22%23ffffff%22 text-anchor=%22middle%22%3Eتيرا%3C/text%3E%3C/svg%3E'">
             </div>
-
-            <!-- صندوق التنبيهات الموحد (يستخدم في login.js) -->
+            <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
+            <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
+            <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
             <div class="alert-box" id="formAlert">
                 <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span class="alert-message" id="alertMessage"></span>
+                <span id="alertMessage"></span>
             </div>
-
             <form id="teraLoginForm" novalidate>
                 <div class="form-field-group">
-                    <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
-                    <div class="input-wrapper">
-                        <input type="email" id="login_identifier" class="form-input-control" 
-                               placeholder="أدخل بريدك الإلكتروني" 
-                               autocomplete="username" required>
-                    </div>
-                    <div class="error-feedback-msg" id="identifier-error"></div>
+                    <label class="field-label">البريد الإلكتروني <span style="color:#dc2626">*</span></label>
+                    <input type="email" id="login_identifier" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
                 </div>
-
                 <div class="form-field-group">
                     <div class="field-label-flex">
-                        <label class="field-label">كلمة المرور <span class="required">*</span></label>
+                        <label class="field-label">كلمة المرور <span style="color:#dc2626">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
-                    <div class="input-wrapper">
-                        <input type="password" id="login_password" class="form-input-control" 
-                               placeholder="أدخل كلمة المرور" 
-                               autocomplete="current-password" required>
-                    </div>
-                    <div class="checkbox-options-container">
-                        <label class="checkbox-toggle-label">
-                            <input type="checkbox" id="show_login_password" class="show-password-btn"> إظهار كلمة المرور
-                        </label>
-                    </div>
-                    <div class="error-feedback-msg" id="password-error"></div>
+                    <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
+                    <label class="checkbox-toggle-label"><input type="checkbox" id="show_login_password"> إظهار كلمة المرور</label>
                 </div>
-
-                <div class="form-field-group remember-me-box">
-                    <label class="checkbox-toggle-label">
-                        <input type="checkbox" id="remember_me"> تذكرني على هذا الجهاز
-                    </label>
-                </div>
-
-                <div class="form-actions-block">
-                    <button type="submit" class="btn-submit-login" id="loginSubmitBtn">
-                        <i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن
-                    </button>
-                </div>
+                <button type="submit" class="btn-submit-login" id="loginSubmitBtn"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</button>
             </form>
-
-            <div class="bottom-routing-footer-links text-center">
+            <div class="bottom-routing-footer-links">
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
-                <p><a href="/index.html" class="routing-link-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
+                <p><a href="/index.html" style="color:#64748b;"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
-
-        <!-- اللودر الإبداعي -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen">
-            <div class="loader-content-card">
-                <div class="spinning-infinity-ring"></div>
-                <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
-                <p class="creative-motivational-text" id="creativeQuoteText">جاري مصادقة بياناتك الاستثمارية...</p>
-                <div class="loading-progress-track">
-                    <div class="progress-fill-bar" id="progressFillBar"></div>
-                </div>
-            </div>
+            <div class="spinning-infinity-ring"></div>
+            <p style="color:#fff; font-weight:700;">جاري تسجيل الدخول...</p>
         </div>
     </div>
-
-    <!-- ملفات JavaScript (خالية من auth.js الكامل) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/auth/auth/login/login.js"></script>
