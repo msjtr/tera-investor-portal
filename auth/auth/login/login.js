@@ -1,5 +1,5 @@
 /**
- * login.js – مدير تسجيل الدخول مع التحقق الإجباري من البريد (OTP)
+ * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع
  * المسار: auth/auth/login/login.js
  */
 (function() {
@@ -54,11 +54,12 @@
         }
 
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
         showLoader();
 
         try {
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            // 1. التحقق من صحة كلمة المرور أولاً
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 let msg = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
                 if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
@@ -66,32 +67,22 @@
                 return;
             }
 
-            const user = data.user;
+            // 2. كلمة المرور صحيحة – إرسال رمز OTP إجباري للجميع
+            await supabaseClient.auth.signInWithOtp({
+                email: email,
+                options: { shouldCreateUser: false }
+            });
 
-            // ✅ فحص تأكيد البريد – يُطبق على الجميع
-            if (!user.email_confirmed_at) {
-                // إرسال رمز تحقق OTP إلى البريد الإلكتروني
-                try {
-                    await supabaseClient.auth.signInWithOtp({
-                        email: email,
-                        options: { shouldCreateUser: false }
-                    });
-                } catch (otpError) {
-                    console.warn('تعذر إرسال رمز التحقق:', otpError);
-                }
+            // 3. تخزين البيانات المؤقتة للتحقق في verify-otp.js
+            localStorage.setItem('pendingVerificationEmail', email);
+            localStorage.setItem('tera_verify_type', 'login_otp');
+            sessionStorage.setItem('tera_login_password', password); // تخزين مؤقت لكلمة المرور
 
-                localStorage.setItem('pendingVerificationEmail', email);
-                localStorage.setItem('tera_verify_type', 'signup');
-                showAlert('يجب تأكيد بريدك الإلكتروني. جاري تحويلك إلى صفحة التحقق...', 'success');
-                setTimeout(() => {
-                    window.location.replace(VERIFY_OTP_URL);
-                }, 1500);
-                return;
-            }
+            showAlert('تم إرسال رمز تحقق إلى بريدك الإلكتروني. أكمل المصادقة...', 'success');
+            setTimeout(() => {
+                window.location.replace(VERIFY_OTP_URL);
+            }, 1500);
 
-            // البريد مؤكد – الدخول إلى لوحة التحكم
-            showAlert('تم تسجيل الدخول بنجاح، جاري توجيهك...', 'success');
-            window.location.replace(DASHBOARD_URL);
         } catch (err) {
             console.error(err);
             showAlert('حدث خطأ غير متوقع. حاول لاحقاً.', 'error');
@@ -110,7 +101,7 @@
         showPasswordCheck.addEventListener('change', function() {
             passwordInput.type = this.checked ? 'text' : 'password';
         });
-        console.log('✅ صفحة الدخول جاهزة.');
+        console.log('✅ صفحة الدخول جاهزة (OTP إجباري للجميع).');
     }
 
     if (document.readyState === 'loading') {
