@@ -1,9 +1,11 @@
 /**
- * security-registered-devices.js – v3 (موقع دقيق، تفاصيل كاملة)
- * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
+ * security-registered-devices.js – v4 (موقع، VPN، خمول، مؤقت تنازلي)
  */
 (function() {
     let supabase, currentUser, sessions = [];
+    let idleTimer, idleWarningTimer, idleCountdown = 60;
+    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
+    const WARNING_TIME = 60 * 1000;  // 60 ثانية تنازلية
 
     function formatDate(dateStr) { return dateStr ? new Date(dateStr).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(status) {
@@ -39,6 +41,8 @@
             await updateHeader(user);
             await fetchSessions();
             bindEvents();
+            initIdleTimer();
+            initLocationPrompt();
         } catch (e) { console.error(e); }
     }
 
@@ -212,7 +216,118 @@
         else window.location.replace('/auth/auth/login/login.html');
     }
 
-    // ========== تحديد الموقع الدقيق (GPS) – اختياري ==========
+    // ========== مؤقت الخمول ==========
+    function initIdleTimer() {
+        function resetIdle() {
+            clearTimeout(idleTimer);
+            clearInterval(idleWarningTimer);
+            closeIdleWarning();
+            idleTimer = setTimeout(showIdleWarning, IDLE_TIME);
+        }
+
+        function showIdleWarning() {
+            // إنشاء نافذة تحذيرية (يمكن استخدام مودال موجود)
+            const modal = document.createElement('div');
+            modal.id = 'idleWarningModal';
+            modal.className = 'modal-overlay show';
+            modal.innerHTML = `
+                <div class="modal-box" style="max-width:420px; text-align:center;">
+                    <i class="fas fa-clock" style="font-size:48px; color:var(--warning); margin-bottom:12px;"></i>
+                    <h4 style="margin:0 0 8px; color:var(--gray-900);">انتهت صلاحية الجلسة بسبب عدم النشاط</h4>
+                    <p style="margin-bottom:16px; color:var(--gray-700);">سيتم تسجيل خروجك تلقائياً خلال <strong id="countdownDisplay">60</strong> ثانية.</p>
+                    <div style="display:flex; gap:12px; justify-content:center;">
+                        <button id="extendSessionBtn" class="btn-primary">تمديد الجلسة</button>
+                        <button id="forceLogoutBtn" class="btn-danger">تسجيل الخروج</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            let count = 60;
+            const countdownEl = document.getElementById('countdownDisplay');
+            idleWarningTimer = setInterval(() => {
+                count--;
+                if (countdownEl) countdownEl.textContent = count;
+                if (count <= 0) {
+                    clearInterval(idleWarningTimer);
+                    closeIdleWarning();
+                    logoutCurrentSession();
+                }
+            }, 1000);
+
+            document.getElementById('extendSessionBtn').addEventListener('click', () => {
+                resetIdle();
+            });
+            document.getElementById('forceLogoutBtn').addEventListener('click', () => {
+                clearInterval(idleWarningTimer);
+                closeIdleWarning();
+                logoutCurrentSession();
+            });
+        }
+
+        function closeIdleWarning() {
+            const modal = document.getElementById('idleWarningModal');
+            if (modal) modal.remove();
+        }
+
+        // أحداث تعيد ضبط المؤقت
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetIdle);
+        });
+
+        resetIdle();
+    }
+
+    // ========== طلب إذن الموقع ==========
+    function initLocationPrompt() {
+        // إذا كانت معلومات الموقع فارغة، نعرض رسالة توجيهية
+        const activeSession = sessions.find(s => s.is_current_session && s.status === 'active');
+        if (activeSession && !activeSession.country) {
+            const bar = document.querySelector('.search-filter-bar');
+            if (bar && !document.getElementById('locationPrompt')) {
+                const prompt = document.createElement('div');
+                prompt.id = 'locationPrompt';
+                prompt.style.cssText = 'margin-top:12px; padding:10px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; color:#9a3412; font-size:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;';
+                prompt.innerHTML = `
+                    <span><i class="fas fa-map-marker-alt"></i> لم يتم تحديد موقعك بعد. قد تكون بعض التفاصيل غير دقيقة.</span>
+                    <button id="enableLocationBtn" class="btn-primary" style="padding:6px 14px; font-size:13px;">تفعيل تحديد الموقع</button>
+                `;
+                bar.parentNode.insertBefore(prompt, bar.nextSibling);
+                document.getElementById('enableLocationBtn').addEventListener('click', () => {
+                    refreshGeoInfo();
+                    prompt.remove();
+                });
+            }
+        }
+    }
+
+    window.refreshGeoInfo = async function() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            await supabase
+                .from('user_login_sessions')
+                .update({
+                    ip_address: data.ip,
+                    country: data.country_name,
+                    region: data.region,
+                    city: data.city,
+                    postal_code: data.postal,
+                    latitude: data.latitude,
+                    longitude: data.longitude,
+                    timezone: data.timezone,
+                    isp: data.org
+                })
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .eq('is_current_session', true);
+            alert('تم تحديث معلومات الموقع بنجاح.');
+            fetchSessions();
+        } catch (e) {
+            alert('تعذر الاتصال بخدمة تحديد الموقع.');
+        }
+    };
+
     window.requestPreciseLocation = async function() {
         if (!navigator.geolocation) {
             alert('متصفحك لا يدعم تحديد الموقع الجغرافي.');
