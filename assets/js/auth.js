@@ -252,6 +252,7 @@
     window.TeraAuth = {
         _client: null,
         _user: null,
+        _session: null,
         _initialized: false,
 
         init: async function () {
@@ -298,6 +299,22 @@
             }
 
             console.log('🔒 TeraAuth جاهز');
+        },
+
+        login: async function (email, password) {
+            if (!this._client) throw new Error('Supabase غير متوفر');
+            try {
+                const { data, error } = await this._client.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                this._session = data.session;
+                this._user = data.user;
+                this.updateUI();
+                await createSession(this._client, data.user);
+                return { data, error: null };
+            } catch (error) {
+                console.error('❌ [Auth] فشل تسجيل الدخول:', error);
+                return { data: null, error };
+            }
         },
 
         getUser: async function () {
