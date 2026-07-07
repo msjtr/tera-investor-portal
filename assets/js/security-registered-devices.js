@@ -1,5 +1,6 @@
 /**
  * security-registered-devices.js – v4 (موقع، VPN، خمول، مؤقت تنازلي)
+ * يستخدم ipwhois.app لجلب معلومات الموقع والشبكة
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -226,7 +227,6 @@
         }
 
         function showIdleWarning() {
-            // إنشاء نافذة تحذيرية (يمكن استخدام مودال موجود)
             const modal = document.createElement('div');
             modal.id = 'idleWarningModal';
             modal.className = 'modal-overlay show';
@@ -270,7 +270,6 @@
             if (modal) modal.remove();
         }
 
-        // أحداث تعيد ضبط المؤقت
         ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
             document.addEventListener(evt, resetIdle);
         });
@@ -280,7 +279,6 @@
 
     // ========== طلب إذن الموقع ==========
     function initLocationPrompt() {
-        // إذا كانت معلومات الموقع فارغة، نعرض رسالة توجيهية
         const activeSession = sessions.find(s => s.is_current_session && s.status === 'active');
         if (activeSession && !activeSession.country) {
             const bar = document.querySelector('.search-filter-bar');
@@ -303,20 +301,20 @@
 
     window.refreshGeoInfo = async function() {
         try {
-            const response = await fetch('https://ipapi.co/json/');
+            const response = await fetch('https://ipwhois.app/json/');
             const data = await response.json();
             await supabase
                 .from('user_login_sessions')
                 .update({
                     ip_address: data.ip,
-                    country: data.country_name,
+                    country: data.country,
                     region: data.region,
                     city: data.city,
                     postal_code: data.postal,
                     latitude: data.latitude,
                     longitude: data.longitude,
                     timezone: data.timezone,
-                    isp: data.org
+                    isp: data.isp
                 })
                 .eq('user_id', currentUser.id)
                 .eq('status', 'active')
