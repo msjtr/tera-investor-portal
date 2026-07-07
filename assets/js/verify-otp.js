@@ -3,7 +3,7 @@
  * يعتمد على TeraAuth (auth.js) لتنفيذ عمليات المصادقة والتوجيه
  * يدعم: signup, recovery, personal_info, contact_info, national_address,
  *       bank_info, attachments, change_mobile, login_otp, email_change
- * النسخة المُحدَّثة: استخدام TeraAuth للتوحيد، مسارات ديناميكية، معالجة أخطاء أفضل
+ * النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، متوافقة مع النظام الجديد
  */
 
 (function () {
@@ -91,8 +91,8 @@
         };
         const defaultBack = { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' };
         const backConfig = backRoutes[verifyType] || defaultBack;
-        backLink.href = backConfig.url;
-        backLinkText.textContent = backConfig.text;
+        if (backLink) backLink.href = backConfig.url;
+        if (backLinkText) backLinkText.textContent = backConfig.text;
 
         // ========== مؤقت إعادة الإرسال ==========
         let timerSeconds = 300;
