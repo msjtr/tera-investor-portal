@@ -1,7 +1,14 @@
 /**
+ * ==========================================================
  * assets/js/auth.js – مدير المصادقة المركزي (Enterprise)
- * يستخدم JSONP مع ipapi.co لجلب معلومات الموقع والشبكة
+ * ==========================================================
+ * - يعتمد على window.teraSupabase من supabase-client.js
+ * - يسجل جلسات الدخول مع تفاصيل الجهاز والموقع (GPS إجباري)
+ * - يطلب إذن الموقع الجغرافي بشكل إلزامي عند الدخول
+ * - يمنع الوصول في حال رفض تحديد الموقع
+ * - يستمر بتتبع الموقع طوال الجلسة (عبر security-registered-devices.js)
  */
+
 (function () {
     'use strict';
 
@@ -38,11 +45,9 @@
             screen_resolution: `${window.screen.width}x${window.screen.height}`,
             language: navigator.language || ''
         };
-
         if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) {
             result.device_type = /iPad|tablet/i.test(ua) ? 'tablet' : 'mobile';
         }
-
         if (/Windows NT (\d+\.\d+)/.test(ua)) {
             result.operating_system = `Windows ${RegExp.$1}`;
         } else if (/Mac OS X (\d+[._]\d+[._]?\d*)/.test(ua)) {
@@ -54,7 +59,6 @@
         } else {
             result.operating_system = navigator.platform || '';
         }
-
         if (navigator.userAgentData?.brands) {
             const brand = navigator.userAgentData.brands.find(b => b.brand !== 'Not;A=Brand' && b.brand !== 'Chromium');
             if (brand) {
@@ -68,7 +72,6 @@
             else if (/Chrome\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Chrome'; result.browser_version = RegExp.$1; }
             else if (/Safari\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Safari'; result.browser_version = RegExp.$1; }
         }
-
         if (navigator.userAgentData?.platform) {
             result.device_name = navigator.userAgentData.platform;
         } else if (/Windows/.test(ua)) {
@@ -76,12 +79,54 @@
         } else if (/Macintosh/.test(ua)) {
             result.device_name = 'Mac';
         }
-
         return result;
     }
 
-    // دالة جلب الموقع عبر JSONP (تتجنب CORS)
-    function fetchGeoInfoJSONP() {
+    // ========== طلب الموقع الجغرافي الإجباري ==========
+    function requestLocationPermission() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                return reject(new Error('متصفحك لا يدعم تحديد الموقع.'));
+            }
+            // مهلة 10 ثوانٍ للحصول على الموقع
+            const timeout = setTimeout(() => {
+                reject(new Error('انتهت مهلة تحديد الموقع.'));
+            }, 10000);
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    clearTimeout(timeout);
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    clearTimeout(timeout);
+                    reject(error);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+
+    // ========== عرض رسالة الرفض ==========
+    function showLocationDeniedMessage() {
+        // إزالة أي محتوى سابق
+        document.body.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:#f1f5f9; font-family:'Tajawal',sans-serif;">
+                <div style="background:#fff; padding:40px; border-radius:16px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.1); max-width:500px;">
+                    <i class="fas fa-map-marker-alt" style="font-size:64px; color:#dc2626; margin-bottom:20px;"></i>
+                    <h2 style="color:#0A1B3F; margin-bottom:12px;">تم إيقاف الخدمة</h2>
+                    <p style="color:#475569; margin-bottom:24px;">نظرًا لعدم اتباع سياسة المنصة ورفض مشاركة الموقع الجغرافي، لا يمكنك متابعة استخدام الخدمة. تحديد الموقع إجباري للامتثال لمتطلبات الأمان والتحقق.</p>
+                    <button onclick="location.reload()" style="background:#028090; color:#fff; border:none; padding:12px 32px; border-radius:8px; font-weight:700; cursor:pointer;">إعادة المحاولة</button>
+                </div>
+            </div>
+        `;
+    }
+
+    // دالة جلب معلومات IP والموقع (اختياري، نستخدم GPS الأساسي)
+    async function fetchGeoInfoJSONP() {
         return new Promise((resolve) => {
             const callbackName = 'geoCallback_' + Math.random().toString(36).substr(2, 9);
             window[callbackName] = function(data) {
@@ -93,8 +138,6 @@
                     region: data.region || null,
                     city: data.city || null,
                     postal_code: data.postal || null,
-                    latitude: data.latitude || null,
-                    longitude: data.longitude || null,
                     timezone: data.timezone || null,
                     isp: data.org || null,
                 });
@@ -113,12 +156,18 @@
     async function recordLoginSession(client, user) {
         if (!client || !user) return;
 
-        const geoInfo = await fetchGeoInfoJSONP();
-
+        // محاولة جلب GPS الأساسي
+        let gpsCoords = null;
         try {
-            // إنهاء جميع الجلسات النشطة السابقة
-            await client
-                .from('user_login_sessions')
+            gpsCoords = await requestLocationPermission();
+        } catch (e) {
+            // إذا فشل GPS، نستخدم IP فقط لكن لن نوقف الجلسة هنا (السياسة العامة تمنع الدخول أصلاً)
+            console.warn('⚠️ تعذر الحصول على موقع GPS:', e.message);
+        }
+
+        const geoInfo = await fetchGeoInfoJSONP();
+        try {
+            await client.from('user_login_sessions')
                 .update({
                     is_current_session: false,
                     status: 'logged_out',
@@ -132,7 +181,7 @@
             const deviceInfo = parseUserAgent();
             const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
 
-            const { error } = await client.from('user_login_sessions').insert({
+            const sessionData = {
                 user_id: user.id,
                 session_number: sessionNumber,
                 login_at: new Date().toISOString(),
@@ -140,14 +189,14 @@
                 is_current_session: true,
                 last_activity_at: new Date().toISOString(),
                 ...deviceInfo,
-                ...(geoInfo || {})
-            });
+                ...(geoInfo || {}),
+                // إضافة إحداثيات GPS إذا توفرت
+                ...(gpsCoords || {})
+            };
 
-            if (error) {
-                console.warn('⚠️ [Auth] فشل تسجيل جلسة الدخول:', error.message);
-            } else {
-                console.log('✅ [Auth] تم تسجيل جلسة دخول جديدة:', sessionNumber);
-            }
+            const { error } = await client.from('user_login_sessions').insert(sessionData);
+            if (error) console.warn('⚠️ [Auth] فشل تسجيل جلسة الدخول:', error.message);
+            else console.log('✅ [Auth] تم تسجيل جلسة دخول جديدة:', sessionNumber);
         } catch (err) {
             console.error('❌ [Auth] خطأ في تسجيل الجلسة:', err);
         }
@@ -182,7 +231,8 @@
                     }));
 
                     if (event === 'SIGNED_IN' && session?.user) {
-                        recordLoginSession(this._client, session.user);
+                        // بعد تسجيل الدخول مباشرة، نطلب الموقع
+                        this.enforceLocationPolicy();
                     }
                 }
             );
@@ -194,23 +244,41 @@
             this._updateUI();
 
             if (this._user) {
-                try {
-                    const { data: activeSessions } = await this._client
-                        .from('user_login_sessions')
-                        .select('id')
-                        .eq('user_id', this._user.id)
-                        .eq('status', 'active')
-                        .eq('is_current_session', true);
-
-                    if (!activeSessions || activeSessions.length === 0) {
-                        await recordLoginSession(this._client, this._user);
-                    }
-                } catch (e) {
-                    console.warn('⚠️ [Auth] تعذر التحقق من الجلسات النشطة:', e.message);
-                }
+                // إذا كان هناك مستخدم، تأكد من سياسة الموقع
+                await this.enforceLocationPolicy();
             }
 
             console.log('🔒 [Auth] تم تأمين الواجهة');
+        },
+
+        // دالة تطبيق سياسة الموقع الإجباري
+        enforceLocationPolicy: async function () {
+            try {
+                // نطلب الموقع، إذا نجح نتابع ونسجل الجلسة (أو نحدثها)
+                const coords = await requestLocationPermission();
+                // حفظ الإحداثيات في الجلسة الحالية
+                if (this._user && this._client) {
+                    await this._client.from('user_login_sessions')
+                        .update({
+                            latitude: coords.latitude,
+                            longitude: coords.longitude,
+                            last_activity_at: new Date().toISOString()
+                        })
+                        .eq('user_id', this._user.id)
+                        .eq('status', 'active')
+                        .eq('is_current_session', true);
+                }
+                // استدعاء دالة بدء المراقبة المستمرة (موجودة في security-registered-devices.js)
+                if (window.startContinuousLocationWatch) {
+                    window.startContinuousLocationWatch();
+                }
+            } catch (error) {
+                // المستخدم رفض أو حدث خطأ
+                console.error('❌ [Auth] رفض تحديد الموقع:', error.message);
+                showLocationDeniedMessage();
+                // منع أي تفاعل آخر - سيتم إيقاف الخدمة
+                throw new Error('LOCATION_PERMISSION_DENIED');
+            }
         },
 
         isLoggedIn: function () {
@@ -225,6 +293,7 @@
                 this._session = data.session;
                 this._user = data.user;
                 this._updateUI();
+                // تسجيل الجلسة بعد الحصول على الموقع
                 await recordLoginSession(this._client, data.user);
                 return { data, error: null };
             } catch (error) {
@@ -236,7 +305,6 @@
         logout: async function () {
             if (!this._client) return;
             try {
-                // إنهاء جميع الجلسات النشطة للمستخدم
                 if (this._user) {
                     await this._client
                         .from('user_login_sessions')
@@ -250,7 +318,10 @@
                         .eq('user_id', this._user.id)
                         .eq('status', 'active');
                 }
-
+                // إيقاف مراقبة الموقع
+                if (window.stopContinuousLocationWatch) {
+                    window.stopContinuousLocationWatch();
+                }
                 await this._client.auth.signOut();
                 this._session = null;
                 this._user = null;
