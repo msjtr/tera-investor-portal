@@ -1,74 +1,49 @@
 /**
- * security-registered-devices.js – v6 (مركز أمان متكامل + خرائط قوقل)
- * يعرض سجل تسجيل الدخول والجلسات مع إحصائيات، بحث، فلترة، وتفاصيل كاملة
+ * security-registered-devices.js – v7 (مركز أمان متكامل)
+ * - عرض جميع الجلسات، إحصائيات، بحث، فلترة
+ * - تفاصيل كاملة (جلسة، جهاز، شبكة، موقع، أمان)
+ * - رابط خرائط قوقل
+ * - أزرار: تسجيل الخروج، إنهاء الجلسات الأخرى، تحديث الموقع
  */
 (function() {
-    let supabase, currentUser, sessions = [], trustedDevices = [];
+    let supabase, currentUser, sessions = [];
     let idleTimer, idleWarningTimer;
-    const IDLE_TIME = 5 * 60 * 1000;
+    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
-    function getStatusLabel(s) {
-        const labels = {
-            active: 'نشطة', logged_out: 'تم تسجيل الخروج', timeout: 'انتهت بسبب عدم النشاط',
-            terminated_by_system: 'أنهيت بواسطة النظام', terminated_by_user: 'أنهيت بواسطة المستخدم'
-        };
-        return labels[s] || s;
-    }
-    function getStatusClass(s) {
-        if (s === 'active') return 'status-active';
-        if (s === 'logged_out') return 'status-logged_out';
-        if (s === 'timeout') return 'status-timeout';
-        return 'status-terminated';
-    }
     function getDuration(start, end) {
         if (!start) return '-';
-        const endTime = end ? new Date(end) : new Date();
-        const diff = Math.floor((endTime - new Date(start)) / 1000);
+        const e = end ? new Date(end) : new Date();
+        const diff = Math.floor((e - new Date(start)) / 1000);
         if (diff < 0) return '-';
-        const h = Math.floor(diff / 3600);
-        const m = Math.floor((diff % 3600) / 60);
-        const s = diff % 60;
+        const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
         return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
-    function getRiskLabel(level) {
-        if (level === 'high') return '🔴 مرتفع';
-        if (level === 'medium') return '🟡 متوسط';
-        return '🟢 منخفض';
+    function getStatusLabel(s) {
+        const l = { active:'نشطة', logged_out:'تم تسجيل الخروج', timeout:'انتهت بسبب عدم النشاط', terminated_by_system:'أنهيت بواسطة النظام', terminated_by_user:'أنهيت بواسطة المستخدم' };
+        return l[s] || s;
     }
-    function getRiskClass(level) {
-        if (level === 'high') return 'risk-high';
-        if (level === 'medium') return 'risk-medium';
-        return 'risk-low';
+    function getRiskLabel(l) {
+        if (l==='high') return '🔴 مرتفع';
+        if (l==='medium') return '🟡 متوسط';
+        return '🟢 منخفض';
     }
 
     async function init() {
-        try {
-            supabase = window.teraSupabase || await waitForSupabase();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
-            currentUser = user;
-            await updateHeader(user);
-            await fetchSessions();
-            await fetchTrustedDevices();
-            bindEvents();
-            initIdleTimer();
-            checkVPNAndAlerts();
-        } catch (e) { console.error(e); }
+        supabase = window.teraSupabase || await waitForSupabase();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
+        currentUser = user;
+        await updateHeader(user);
+        await fetchSessions();
+        bindEvents();
+        initIdleTimer();
     }
 
     async function updateHeader(user) {
-        let name = user.user_metadata?.full_name || user.user_metadata?.name || 'مستخدم';
-        if (name === 'مستخدم') {
-            try {
-                const { data } = await supabase.from('auth_register').select('full_name').eq('user_id', user.id).maybeSingle();
-                if (data?.full_name) name = data.full_name;
-            } catch (e) {}
-        }
-        const hName = document.getElementById('headerUserName');
-        const hAvatar = document.getElementById('headerAvatar');
-        if (hName) hName.textContent = name;
-        if (hAvatar) hAvatar.textContent = name.charAt(0).toUpperCase();
+        let name = user.user_metadata?.full_name || user.email || 'مستخدم';
+        document.getElementById('headerUserName').textContent = name;
+        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
     }
 
     async function fetchSessions() {
@@ -83,52 +58,23 @@
         applyFilters();
     }
 
-    async function fetchTrustedDevices() {
-        const { data } = await supabase
-            .from('auth_devices')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .eq('is_trusted', true);
-        trustedDevices = data || [];
-        const el = document.getElementById('trustedDevicesCount');
-        if (el) el.textContent = trustedDevices.length;
-    }
-
     function updateStats() {
-        const totalEl = document.getElementById('totalCount');
-        const activeEl = document.getElementById('activeCount');
-        const lastLoginEl = document.getElementById('lastLoginTime');
-        const lastLogoutEl = document.getElementById('lastLogoutTime');
-
-        if (totalEl) totalEl.textContent = sessions.length;
-        const activeSessions = sessions.filter(s => s.status === 'active');
-        if (activeEl) activeEl.textContent = activeSessions.length;
-        const lastLogin = sessions.reduce((latest, s) => s.login_at && new Date(s.login_at) > new Date(latest) ? s.login_at : latest, null);
-        if (lastLoginEl) lastLoginEl.textContent = lastLogin ? formatDate(lastLogin) : '-';
-        const lastLogout = sessions.reduce((latest, s) => s.logout_at && new Date(s.logout_at) > new Date(latest) ? s.logout_at : latest, null);
-        if (lastLogoutEl) lastLogoutEl.textContent = lastLogout ? formatDate(lastLogout) : '-';
+        document.getElementById('totalCount').textContent = sessions.length;
+        document.getElementById('activeCount').textContent = sessions.filter(s=>s.status==='active').length;
+        const last = sessions.reduce((a,b)=> b.login_at > a ? b.login_at : a, '');
+        document.getElementById('lastLoginTime').textContent = last ? formatDate(last) : '-';
     }
 
     function applyFilters() {
-        const status = document.getElementById('statusFilter').value;
-        const device = document.getElementById('deviceFilter').value;
-        const search = document.getElementById('searchInput').value.trim().toLowerCase();
-
+        const st = document.getElementById('statusFilter').value;
+        const dev = document.getElementById('deviceFilter').value;
+        const q = document.getElementById('searchInput').value.trim().toLowerCase();
         let filtered = sessions;
-        if (status !== 'all') filtered = filtered.filter(s => s.status === status);
-        if (device !== 'all') filtered = filtered.filter(s => s.device_type === device);
-        if (search) {
-            filtered = filtered.filter(s => {
-                return (s.session_number && s.session_number.toLowerCase().includes(search)) ||
-                       (s.ip_address && s.ip_address.includes(search)) ||
-                       (s.isp && s.isp.toLowerCase().includes(search)) ||
-                       (s.device_name && s.device_name.toLowerCase().includes(search)) ||
-                       (s.browser_name && s.browser_name.toLowerCase().includes(search)) ||
-                       (s.country && s.country.toLowerCase().includes(search)) ||
-                       (s.city && s.city.toLowerCase().includes(search));
-            });
+        if (st !== 'all') filtered = filtered.filter(s => s.status === st);
+        if (dev !== 'all') filtered = filtered.filter(s => s.device_type === dev);
+        if (q) {
+            filtered = filtered.filter(s => (s.session_number||'').includes(q) || (s.ip_address||'').includes(q) || (s.isp||'').toLowerCase().includes(q) || (s.browser_name||'').toLowerCase().includes(q) || (s.city||'').includes(q) || (s.country||'').includes(q));
         }
-
         renderTable(filtered);
         document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
     }
@@ -136,211 +82,122 @@
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
         if (!list.length) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:50px; color:var(--gray-500);">
-                <i class="fas fa-inbox" style="font-size:48px; margin-bottom:12px; color:var(--gray-300); display:block;"></i>
-                <p style="margin:0; font-weight:700;">لا توجد عمليات تسجيل دخول مسجلة بعد.</p>
-            </td></tr>`;
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
             return;
         }
         tbody.innerHTML = list.map(s => {
-            let mapsLink = '';
+            let map = '';
             if (s.latitude && s.longitude) {
-                mapsLink = `<a href="https://www.google.com/maps?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل"><i class="fas fa-map-marker-alt"></i> عرض</a>`;
-            } else {
-                mapsLink = '-';
+                map = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank"><i class="fas fa-map-marker-alt"></i></a>`;
             }
-            return `
-            <tr>
-                <td>${s.session_number || '-'}</td>
+            return `<tr>
+                <td>${s.session_number||'-'}</td>
                 <td>${formatDate(s.login_at)}</td>
-                <td>${s.device_type || '-'}</td>
-                <td>${s.browser_name || '-'}</td>
-                <td>${s.city ? s.city + (s.country ? ', ' + s.country : '') : s.country || '-'}<br>${mapsLink}</td>
-                <td>${s.ip_address || '-'}<br><small>${s.isp || '-'}</small></td>
-                <td><span class="risk-badge ${getRiskClass(s.risk_level)}">${getRiskLabel(s.risk_level)}</span></td>
-                <td><span class="status-badge ${getStatusClass(s.status)}">${getStatusLabel(s.status)}</span></td>
+                <td>${s.device_type||'-'}</td>
+                <td>${s.browser_name||'-'}</td>
+                <td>${s.city||''}${s.country?', '+s.country:''} ${map}</td>
+                <td>${s.ip_address||'-'}<br><small>${s.isp||''}</small></td>
+                <td><span class="risk-badge risk-${s.risk_level||'low'}">${getRiskLabel(s.risk_level)}</span></td>
+                <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
                 <td>
                     <button class="btn-icon view-detail" data-id="${s.id}"><i class="fas fa-eye"></i></button>
-                    ${s.status === 'active' && s.is_current_session ? `<button class="btn-icon text-danger" id="logoutCurrentBtn" data-id="${s.id}" title="تسجيل الخروج"><i class="fas fa-sign-out-alt"></i></button>` : ''}
-                    ${s.status === 'active' && !s.is_current_session ? `<button class="btn-icon text-danger terminate-session" data-id="${s.id}" title="إنهاء هذه الجلسة"><i class="fas fa-times-circle"></i></button>` : ''}
+                    ${s.status==='active'&&s.is_current_session?`<button class="btn-icon text-danger logout-curr"><i class="fas fa-sign-out-alt"></i></button>`:''}
+                    ${s.status==='active'&&!s.is_current_session?`<button class="btn-icon text-danger terminate-sess" data-id="${s.id}"><i class="fas fa-times-circle"></i></button>`:''}
                 </td>
             </tr>`;
         }).join('');
-        bindRowEvents();
-    }
-
-    function bindRowEvents() {
-        document.querySelectorAll('.view-detail').forEach(btn => btn.addEventListener('click', () => showDetail(btn.dataset.id)));
-        document.querySelectorAll('.terminate-session').forEach(btn => btn.addEventListener('click', () => terminateSession(btn.dataset.id)));
-        const logoutBtn = document.getElementById('logoutCurrentBtn');
-        if (logoutBtn) logoutBtn.addEventListener('click', () => logoutCurrentSession());
+        // ربط الأحداث
+        document.querySelectorAll('.view-detail').forEach(b => b.addEventListener('click', ()=>showDetail(b.dataset.id)));
+        document.querySelectorAll('.terminate-sess').forEach(b => b.addEventListener('click', ()=>terminateSession(b.dataset.id)));
+        const lc = document.querySelector('.logout-curr');
+        if (lc) lc.addEventListener('click', logoutCurrent);
     }
 
     async function showDetail(id) {
-        const session = sessions.find(s => s.id === id);
-        if (!session) return;
-        let mapsLink = '';
-        if (session.latitude && session.longitude) {
-            mapsLink = `<a href="https://www.google.com/maps?q=${session.latitude},${session.longitude}" target="_blank" class="btn-primary" style="padding:6px 14px; margin-top:8px; display:inline-block;"><i class="fas fa-map-marker-alt"></i> فتح في خرائط قوقل</a>`;
-        }
+        const s = sessions.find(x=>x.id===id); if(!s)return;
+        let map='';
+        if(s.latitude&&s.longitude) map=`<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank" class="btn-primary" style="display:inline-block;margin-top:8px;">فتح في الخرائط</a>`;
         const html = `
             <div class="detail-section"><h4>معلومات الجلسة</h4>
-                <div class="detail-item"><span class="label">رقم الجلسة</span><span class="value">${session.session_number || '-'}</span></div>
-                <div class="detail-item"><span class="label">وقت الدخول</span><span class="value">${formatDate(session.login_at)}</span></div>
-                <div class="detail-item"><span class="label">وقت الخروج</span><span class="value">${session.logout_at ? formatDate(session.logout_at) : '-'}</span></div>
-                <div class="detail-item"><span class="label">مدة الجلسة</span><span class="value">${getDuration(session.login_at, session.logout_at)}</span></div>
-                <div class="detail-item"><span class="label">طريقة الدخول</span><span class="value">${session.login_method || 'كلمة مرور'}</span></div>
-                <div class="detail-item"><span class="label">الحالة</span><span class="value"><span class="status-badge ${getStatusClass(session.status)}">${getStatusLabel(session.status)}</span></span></div>
+                <div class="detail-item"><span class="label">رقم الجلسة</span><span class="value">${s.session_number||'-'}</span></div>
+                <div class="detail-item"><span class="label">وقت الدخول</span><span class="value">${formatDate(s.login_at)}</span></div>
+                <div class="detail-item"><span class="label">وقت الخروج</span><span class="value">${s.logout_at?formatDate(s.logout_at):'-'}</span></div>
+                <div class="detail-item"><span class="label">مدة الجلسة</span><span class="value">${getDuration(s.login_at,s.logout_at)}</span></div>
+                <div class="detail-item"><span class="label">الحالة</span><span class="value">${getStatusLabel(s.status)}</span></div>
             </div>
-            <div class="detail-section"><h4>معلومات الجهاز</h4>
-                <div class="detail-item"><span class="label">نوع الجهاز</span><span class="value">${session.device_type || '-'}</span></div>
-                <div class="detail-item"><span class="label">اسم الجهاز</span><span class="value">${session.device_name || '-'}</span></div>
-                <div class="detail-item"><span class="label">نظام التشغيل</span><span class="value">${session.operating_system || '-'}</span></div>
-                <div class="detail-item"><span class="label">المتصفح</span><span class="value">${session.browser_name || '-'} ${session.browser_version || ''}</span></div>
-                <div class="detail-item"><span class="label">دقة الشاشة</span><span class="value">${session.screen_resolution || '-'}</span></div>
-                <div class="detail-item"><span class="label">لغة الجهاز</span><span class="value">${session.language || '-'}</span></div>
-                <div class="detail-item"><span class="label">بصمة الجهاز</span><span class="value">${session.fingerprint || '-'}</span></div>
+            <div class="detail-section"><h4>الجهاز</h4>
+                <div class="detail-item"><span class="label">نوع الجهاز</span><span class="value">${s.device_type||'-'}</span></div>
+                <div class="detail-item"><span class="label">نظام التشغيل</span><span class="value">${s.operating_system||'-'}</span></div>
+                <div class="detail-item"><span class="label">المتصفح</span><span class="value">${s.browser_name||'-'} ${s.browser_version||''}</span></div>
+                <div class="detail-item"><span class="label">دقة الشاشة</span><span class="value">${s.screen_resolution||'-'}</span></div>
             </div>
-            <div class="detail-section"><h4>معلومات الشبكة</h4>
-                <div class="detail-item"><span class="label">عنوان IP</span><span class="value">${session.ip_address || '-'}</span></div>
-                <div class="detail-item"><span class="label">مزود الخدمة (ISP)</span><span class="value">${session.isp || '-'}</span></div>
-                <div class="detail-item"><span class="label">VPN</span><span class="value">${session.vpn_detected ? '✅ نعم' : '❌ لا'}</span></div>
-                <div class="detail-item"><span class="label">Proxy</span><span class="value">${session.proxy_detected ? '✅ نعم' : '❌ لا'}</span></div>
-                <div class="detail-item"><span class="label">Tor</span><span class="value">${session.tor_detected ? '✅ نعم' : '❌ لا'}</span></div>
+            <div class="detail-section"><h4>الشبكة</h4>
+                <div class="detail-item"><span class="label">IP</span><span class="value">${s.ip_address||'-'}</span></div>
+                <div class="detail-item"><span class="label">ISP</span><span class="value">${s.isp||'-'}</span></div>
             </div>
-            <div class="detail-section"><h4>معلومات الموقع</h4>
-                <div class="detail-item"><span class="label">الدولة</span><span class="value">${session.country || '-'} ${session.country_flag || ''}</span></div>
-                <div class="detail-item"><span class="label">المدينة</span><span class="value">${session.city || '-'}</span></div>
-                <div class="detail-item"><span class="label">المنطقة الزمنية</span><span class="value">${session.timezone || '-'}</span></div>
-                <div class="detail-item"><span class="label">خط العرض</span><span class="value">${session.latitude || '-'}</span></div>
-                <div class="detail-item"><span class="label">خط الطول</span><span class="value">${session.longitude || '-'}</span></div>
-                <div class="detail-item"><span class="label"></span><span class="value">${mapsLink}</span></div>
-            </div>
-            <div class="detail-section"><h4>معلومات الأمان</h4>
-                <div class="detail-item"><span class="label">الجلسة الحالية</span><span class="value">${session.is_current_session ? '✅ نعم' : '❌ لا'}</span></div>
-                <div class="detail-item"><span class="label">مستوى الخطورة</span><span class="value"><span class="risk-badge ${getRiskClass(session.risk_level)}">${getRiskLabel(session.risk_level)}</span></span></div>
-                <div class="detail-item"><span class="label">يحتاج مراجعة</span><span class="value">${session.requires_security_review ? '✅ نعم' : '❌ لا'}</span></div>
-                <div class="detail-item"><span class="label">ملاحظات</span><span class="value">${session.security_notes || '-'}</span></div>
+            <div class="detail-section"><h4>الموقع</h4>
+                <div class="detail-item"><span class="label">الدولة</span><span class="value">${s.country||'-'}</span></div>
+                <div class="detail-item"><span class="label">المدينة</span><span class="value">${s.city||'-'}</span></div>
+                <div class="detail-item"><span class="label">الإحداثيات</span><span class="value">${s.latitude||'-'}, ${s.longitude||'-'} ${map}</span></div>
             </div>
         `;
         document.getElementById('detailContent').innerHTML = html;
-        const terminateBtn = document.getElementById('terminateSessionBtn');
-        if (session.status === 'active' && !session.is_current_session) {
-            terminateBtn.style.display = 'inline-flex';
-            terminateBtn.onclick = () => terminateSession(session.id);
-        } else {
-            terminateBtn.style.display = 'none';
-        }
         document.getElementById('detailModal').classList.add('show');
+        document.getElementById('terminateSessionBtn').style.display = (s.status==='active'&&!s.is_current_session)?'inline-flex':'none';
+        document.getElementById('terminateSessionBtn').onclick = ()=>terminateSession(s.id);
     }
 
     async function terminateSession(id) {
-        if (!confirm('هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
-        const { error } = await supabase
-            .from('user_login_sessions')
-            .update({ status: 'terminated_by_user', logout_reason: 'إنهاء بواسطة المستخدم', logout_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-            .eq('id', id);
-        if (!error) { alert('تم إنهاء الجلسة بنجاح'); fetchSessions(); document.getElementById('detailModal').classList.remove('show'); }
-        else alert('فشل إنهاء الجلسة');
+        if(!confirm('إنهاء هذه الجلسة؟'))return;
+        await supabase.from('user_login_sessions').update({status:'terminated_by_user',logout_reason:'إنهاء بواسطة المستخدم',logout_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);
+        alert('تم إنهاء الجلسة');
+        fetchSessions();
+        document.getElementById('detailModal').classList.remove('show');
     }
 
-    async function logoutAllOtherSessions() {
-        if (!confirm('سيتم إنهاء جميع الجلسات الأخرى وتسجيل خروجك من الأجهزة الأخرى. هل تريد المتابعة؟')) return;
-        const { error } = await supabase
-            .from('user_login_sessions')
-            .update({
-                status: 'terminated_by_user',
-                logout_reason: 'إنهاء بواسطة المستخدم (جماعي)',
-                logout_at: new Date().toISOString(),
-                is_current_session: false,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', currentUser.id)
-            .eq('status', 'active')
-            .neq('is_current_session', true);
-        if (error) { alert('فشل إنهاء الجلسات الأخرى.'); console.error(error); }
-        else { alert('تم إنهاء جميع الجلسات الأخرى بنجاح.'); await fetchSessions(); }
+    async function logoutAll() {
+        if(!confirm('تسجيل الخروج من جميع الأجهزة الأخرى؟'))return;
+        await supabase.from('user_login_sessions').update({status:'terminated_by_user',logout_reason:'إنهاء جماعي',logout_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('user_id',currentUser.id).eq('status','active').neq('is_current_session',true);
+        alert('تم إنهاء الجلسات الأخرى');
+        fetchSessions();
     }
 
-    async function logoutCurrentSession() {
-        if (window.TeraAuth?.logout) await window.TeraAuth.logout();
-        else window.location.replace('/auth/auth/login/login.html');
+    function logoutCurrent() {
+        window.TeraAuth.logout();
     }
 
-    async function refreshCurrentLocation() {
-        if (!navigator.geolocation) { alert('متصفحك لا يدعم تحديد الموقع.'); return; }
-        navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-                const { latitude, longitude } = pos.coords;
-                const { error } = await supabase
-                    .from('user_login_sessions')
-                    .update({ latitude, longitude, last_activity_at: new Date().toISOString() })
-                    .eq('user_id', currentUser.id).eq('status', 'active').eq('is_current_session', true);
-                if (error) alert('تعذر تحديث الموقع.');
-                else { alert('تم تحديث موقعك الحالي.'); await fetchSessions(); }
-            },
-            (err) => { alert('لم نتمكن من الحصول على موقعك.'); },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-    }
-
-    function checkVPNAndAlerts() {
-        const currentSession = sessions.find(s => s.is_current_session && s.status === 'active');
-        if (currentSession) {
-            const vpnAlert = document.getElementById('vpnAlert');
-            const vpnMsg = document.getElementById('vpnAlertMessage');
-            if (currentSession.vpn_detected) {
-                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف استخدام VPN.'; }
-            } else if (currentSession.proxy_detected || currentSession.tor_detected) {
-                if (vpnAlert) { vpnAlert.classList.add('show'); vpnMsg.textContent = '⚠️ تم اكتشاف Proxy/Tor.'; }
-            }
-        }
+    function refreshLocation() {
+        if(!navigator.geolocation){alert('متصفحك لا يدعم GPS');return;}
+        navigator.geolocation.getCurrentPosition(async pos=>{
+            await supabase.from('user_login_sessions').update({latitude:pos.coords.latitude,longitude:pos.coords.longitude,last_activity_at:new Date().toISOString()}).eq('user_id',currentUser.id).eq('status','active').eq('is_current_session',true);
+            alert('تم تحديث الموقع');
+            fetchSessions();
+        },()=>alert('فشل تحديد الموقع'),{enableHighAccuracy:true,timeout:10000});
     }
 
     function initIdleTimer() {
-        function resetIdle() {
-            clearTimeout(idleTimer); clearInterval(idleWarningTimer); closeIdleWarning();
-            idleTimer = setTimeout(showIdleWarning, IDLE_TIME);
+        function reset(){clearTimeout(idleTimer);clearInterval(idleWarningTimer);closeWarning();idleTimer=setTimeout(showWarning,IDLE_TIME);}
+        function showWarning(){
+            const m=document.createElement('div');m.id='idleWarningModal';m.className='modal-overlay show';
+            m.innerHTML=`<div class="modal-box" style="max-width:400px;text-align:center;"><i class="fas fa-clock" style="font-size:48px;color:#f59e0b;"></i><h4>انتهت الجلسة بسبب عدم النشاط</h4><p>سيتم تسجيل الخروج خلال <strong id="cd">60</strong> ثانية</p><button class="btn-primary" id="extendBtn">تمديد</button><button class="btn-danger" id="logoutNowBtn">خروج الآن</button></div>`;
+            document.body.appendChild(m);
+            let c=60;idleWarningTimer=setInterval(()=>{c--;document.getElementById('cd').textContent=c;if(c<=0){clearInterval(idleWarningTimer);closeWarning();logoutCurrent();}},1000);
+            document.getElementById('extendBtn').onclick=reset;
+            document.getElementById('logoutNowBtn').onclick=()=>{clearInterval(idleWarningTimer);closeWarning();logoutCurrent();};
         }
-        function showIdleWarning() {
-            const modal = document.createElement('div');
-            modal.id = 'idleWarningModal';
-            modal.className = 'modal-overlay show';
-            modal.innerHTML = `
-                <div class="modal-box" style="max-width:420px; text-align:center;">
-                    <i class="fas fa-clock" style="font-size:48px; color:var(--warning); margin-bottom:12px;"></i>
-                    <h4 style="margin:0 0 8px;">انتهت صلاحية الجلسة بسبب عدم النشاط</h4>
-                    <p style="margin-bottom:16px;">سيتم تسجيل خروجك تلقائياً خلال <strong id="countdownDisplay">60</strong> ثانية.</p>
-                    <div style="display:flex; gap:12px; justify-content:center;">
-                        <button id="extendSessionBtn" class="btn-primary">تمديد الجلسة</button>
-                        <button id="forceLogoutBtn" class="btn-danger">تسجيل الخروج</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            let count = 60;
-            const countdownEl = document.getElementById('countdownDisplay');
-            idleWarningTimer = setInterval(() => {
-                count--;
-                if (countdownEl) countdownEl.textContent = count;
-                if (count <= 0) { clearInterval(idleWarningTimer); closeIdleWarning(); logoutCurrentSession(); }
-            }, 1000);
-            document.getElementById('extendSessionBtn').addEventListener('click', () => resetIdle());
-            document.getElementById('forceLogoutBtn').addEventListener('click', () => { clearInterval(idleWarningTimer); closeIdleWarning(); logoutCurrentSession(); });
-        }
-        function closeIdleWarning() { const m = document.getElementById('idleWarningModal'); if (m) m.remove(); }
-        ['mousemove','keydown','click','scroll','touchstart'].forEach(evt => document.addEventListener(evt, resetIdle));
-        resetIdle();
+        function closeWarning(){const m=document.getElementById('idleWarningModal');if(m)m.remove();}
+        ['mousemove','keydown','click','scroll','touchstart'].forEach(e=>document.addEventListener(e,reset));
+        reset();
     }
 
-    function bindEvents() {
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('statusFilter').addEventListener('change', applyFilters);
-        document.getElementById('deviceFilter').addEventListener('change', applyFilters);
-        document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        document.getElementById('logoutAllSessionsBtn').addEventListener('click', logoutAllOtherSessions);
-        document.getElementById('refreshLocationBtn').addEventListener('click', refreshCurrentLocation);
+    function bindEvents(){
+        document.getElementById('searchInput').addEventListener('input',applyFilters);
+        document.getElementById('statusFilter').addEventListener('change',applyFilters);
+        document.getElementById('deviceFilter').addEventListener('change',applyFilters);
+        document.getElementById('closeDetailModal').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
+        document.getElementById('closeDetailBtn').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
+        document.getElementById('logoutAllSessionsBtn').addEventListener('click',logoutAll);
+        document.getElementById('refreshLocationBtn').addEventListener('click',refreshLocation);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
