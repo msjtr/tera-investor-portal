@@ -1,14 +1,7 @@
 /**
- * ==========================================================
  * assets/js/auth.js – مدير المصادقة المركزي (Enterprise)
- * ==========================================================
- * - يعتمد على window.teraSupabase من supabase-client.js
- * - يسجل جلسات الدخول في user_login_sessions مع تفاصيل الجهاز والموقع
- * - عند الخروج يُنهي جميع الجلسات النشطة للمستخدم
- * - يُراقب VPN/Proxy (تنبيه بسيط)
- * - يستخدم ipwhois.app لجلب معلومات الموقع
+ * يستخدم JSONP مع ipapi.co لجلب معلومات الموقع والشبكة
  */
-
 (function () {
     'use strict';
 
@@ -87,32 +80,40 @@
         return result;
     }
 
-    async function fetchGeoInfo() {
-        try {
-            const response = await fetch('https://ipwhois.app/json/');
-            if (!response.ok) return null;
-            const data = await response.json();
-            return {
-                ip_address: data.ip || null,
-                country: data.country || null,
-                region: data.region || null,
-                city: data.city || null,
-                postal_code: data.postal || null,
-                latitude: data.latitude || null,
-                longitude: data.longitude || null,
-                timezone: data.timezone || null,
-                isp: data.isp || null,
+    // دالة جلب الموقع عبر JSONP (تتجنب CORS)
+    function fetchGeoInfoJSONP() {
+        return new Promise((resolve) => {
+            const callbackName = 'geoCallback_' + Math.random().toString(36).substr(2, 9);
+            window[callbackName] = function(data) {
+                document.body.removeChild(script);
+                delete window[callbackName];
+                resolve({
+                    ip_address: data.ip || null,
+                    country: data.country_name || null,
+                    region: data.region || null,
+                    city: data.city || null,
+                    postal_code: data.postal || null,
+                    latitude: data.latitude || null,
+                    longitude: data.longitude || null,
+                    timezone: data.timezone || null,
+                    isp: data.org || null,
+                });
             };
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب معلومات الموقع عبر ipwhois.app');
-            return null;
-        }
+            const script = document.createElement('script');
+            script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
+            script.onerror = () => {
+                document.body.removeChild(script);
+                delete window[callbackName];
+                resolve(null);
+            };
+            document.body.appendChild(script);
+        });
     }
 
     async function recordLoginSession(client, user) {
         if (!client || !user) return;
 
-        const geoInfo = await fetchGeoInfo().catch(() => null);
+        const geoInfo = await fetchGeoInfoJSONP();
 
         try {
             // إنهاء جميع الجلسات النشطة السابقة
