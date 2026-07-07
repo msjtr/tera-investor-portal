@@ -3,32 +3,24 @@
  * assets/js/auth.js – مدير المصادقة المركزي (Enterprise)
  * ==========================================================
  * - يعتمد على window.teraSupabase من supabase-client.js
- * - يوفر كائن TeraAuth مع دوال: login, logout, getUser, ...
- * - يستمع لتغيرات حالة المصادقة (onAuthStateChange)
- * - يُؤمّن الصفحات ويُحدّث واجهة المستخدم تلقائياً
- * - متوافق مع verify-otp.js وباقي ملفات النظام
- * - النسخة المُحدَّثة: مسارات ديناميكية، معالجة أخطاء محسّنة، تسجيل جلسات الدخول
+ * - يسجل جلسات الدخول في user_login_sessions مع تفاصيل الجهاز والموقع
+ * - عند الخروج يُنهي جميع الجلسات النشطة للمستخدم
+ * - يُراقب VPN/Proxy (تنبيه بسيط)
  */
 
 (function () {
     'use strict';
 
-    // ========== ثوابت المسارات ==========
     const ROUTES = {
         LOGIN: '/auth/auth/login/login.html',
         DASHBOARD: '/pages/dashboard/index.html',
-        RESET_PASSWORD: '/auth/reset-password.html',
-        CHANGE_MOBILE: '/pages/security/change-mobile.html',
-        VERIFY_OTP: '/auth/verify-otp.html',
-        HOME: '/'
     };
 
-    // ========== انتظار Supabase ==========
     async function waitForSupabase() {
         if (window.teraSupabase) return window.teraSupabase;
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
-            document.addEventListener('supabase:ready', (e) => {
+            document.addEventListener('supabase:ready', e => {
                 clearTimeout(timeout);
                 resolve(e.detail.client);
             }, { once: true });
@@ -39,25 +31,90 @@
         });
     }
 
-    // ========== توليد رقم الجلسة ==========
-    function generateSessionNumber() {
-        const now = new Date();
-        const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
-        const random = Math.floor(Math.random() * 900000) + 100000; // 6 أرقام
-        return `SES-${dateStr}-${random}`;
+    function parseUserAgent() {
+        const ua = navigator.userAgent;
+        const result = {
+            device_type: 'computer',
+            device_name: '',
+            device_brand: '',
+            operating_system: '',
+            os_version: '',
+            browser_name: '',
+            browser_version: '',
+            screen_resolution: `${window.screen.width}x${window.screen.height}`,
+            language: navigator.language || ''
+        };
+
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) {
+            result.device_type = /iPad|tablet/i.test(ua) ? 'tablet' : 'mobile';
+        }
+
+        if (/Windows NT (\d+\.\d+)/.test(ua)) {
+            result.operating_system = `Windows ${RegExp.$1}`;
+        } else if (/Mac OS X (\d+[._]\d+[._]?\d*)/.test(ua)) {
+            result.operating_system = `macOS ${RegExp.$1.replace(/_/g, '.')}`;
+        } else if (/Android (\d+\.\d+)/.test(ua)) {
+            result.operating_system = `Android ${RegExp.$1}`;
+        } else if (/iPhone|iPad|iPod.* OS (\d+[._]\d+[._]?\d*)/.test(ua)) {
+            result.operating_system = `iOS ${RegExp.$1.replace(/_/g, '.')}`;
+        } else {
+            result.operating_system = navigator.platform || '';
+        }
+
+        if (navigator.userAgentData?.brands) {
+            const brand = navigator.userAgentData.brands.find(b => b.brand !== 'Not;A=Brand' && b.brand !== 'Chromium');
+            if (brand) {
+                result.browser_name = brand.brand;
+                result.browser_version = brand.version;
+            }
+        }
+        if (!result.browser_name) {
+            if (/Edg\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Edge'; result.browser_version = RegExp.$1; }
+            else if (/Firefox\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Firefox'; result.browser_version = RegExp.$1; }
+            else if (/Chrome\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Chrome'; result.browser_version = RegExp.$1; }
+            else if (/Safari\/(\d+\.\d+)/.test(ua)) { result.browser_name = 'Safari'; result.browser_version = RegExp.$1; }
+        }
+
+        if (navigator.userAgentData?.platform) {
+            result.device_name = navigator.userAgentData.platform;
+        } else if (/Windows/.test(ua)) {
+            result.device_name = 'Windows PC';
+        } else if (/Macintosh/.test(ua)) {
+            result.device_name = 'Mac';
+        }
+
+        return result;
     }
 
-    // ========== تسجيل جلسة دخول جديدة ==========
-    /**
-     * تسجل دخول المستخدم الحالي في جدول user_login_sessions
-     * @param {SupabaseClient} client - عميل Supabase
-     * @param {import('@supabase/supabase-js').User} user - المستخدم
-     */
+    async function fetchGeoInfo() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            if (!response.ok) return null;
+            const data = await response.json();
+            return {
+                ip_address: data.ip || null,
+                country: data.country_name || null,
+                region: data.region || null,
+                city: data.city || null,
+                postal_code: data.postal || null,
+                latitude: data.latitude || null,
+                longitude: data.longitude || null,
+                timezone: data.timezone || null,
+                isp: data.org || null,
+            };
+        } catch (e) {
+            console.warn('⚠️ تعذر جلب معلومات الموقع عبر ipapi.co');
+            return null;
+        }
+    }
+
     async function recordLoginSession(client, user) {
         if (!client || !user) return;
 
+        const geoInfo = await fetchGeoInfo().catch(() => null);
+
         try {
-            // 1. تعيين الجلسات النشطة السابقة إلى logged_out (أو إنهاء)
+            // إنهاء جميع الجلسات النشطة السابقة
             await client
                 .from('user_login_sessions')
                 .update({
@@ -70,21 +127,8 @@
                 .eq('user_id', user.id)
                 .eq('status', 'active');
 
-            // 2. إنشاء جلسة جديدة
-            const sessionNumber = generateSessionNumber();
-
-            // معلومات الجهاز والمتصفح
-            const deviceType = /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' :
-                               /tablet|iPad/i.test(navigator.userAgent) ? 'tablet' : 'computer';
-            const browserName = (navigator.userAgentData?.brands?.[0]?.brand) ||
-                                (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/?\s*([\d.]+)/i)?.[1]) ||
-                                'غير معروف';
-            const browserVersion = navigator.userAgentData?.brands?.[0]?.version ||
-                                   navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/?\s*([\d.]+)/i)?.[2] ||
-                                   '';
-            const os = navigator.platform || '';
-            const screenRes = `${window.screen.width}x${window.screen.height}`;
-            const lang = navigator.language || '';
+            const deviceInfo = parseUserAgent();
+            const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
 
             const { error } = await client.from('user_login_sessions').insert({
                 user_id: user.id,
@@ -92,17 +136,9 @@
                 login_at: new Date().toISOString(),
                 status: 'active',
                 is_current_session: true,
-                device_type: deviceType,
-                device_name: navigator.userAgentData?.platform || '',
-                device_brand: navigator.userAgentData?.brands?.[0]?.brand || '',
-                operating_system: os,
-                os_version: '',
-                browser_name: browserName,
-                browser_version: browserVersion,
-                screen_resolution: screenRes,
-                language: lang,
                 last_activity_at: new Date().toISOString(),
-                // سيتم تحديث IP والموقع الجغرافي لاحقاً بخدمة خارجية (اختياري)
+                ...deviceInfo,
+                ...(geoInfo || {})
             });
 
             if (error) {
@@ -115,7 +151,6 @@
         }
     }
 
-    // ========== كائن TeraAuth العام ==========
     window.TeraAuth = {
         _client: null,
         _session: null,
@@ -123,10 +158,6 @@
         _initialized: false,
         _subscription: null,
 
-        /**
-         * تهيئة المدير
-         * @returns {Promise<void>}
-         */
         init: async function () {
             if (this._initialized) return;
             this._initialized = true;
@@ -138,7 +169,6 @@
                 return;
             }
 
-            // استمع لتغيرات المصادقة
             const { data: { subscription } } = this._client.auth.onAuthStateChange(
                 (event, session) => {
                     console.log(`🔁 [Auth] تغير حالة المصادقة: ${event}`);
@@ -149,7 +179,6 @@
                         detail: { event, session, user: this._user }
                     }));
 
-                    // عند تسجيل الدخول (SIGNED_IN) نسجل الجلسة
                     if (event === 'SIGNED_IN' && session?.user) {
                         recordLoginSession(this._client, session.user);
                     }
@@ -157,13 +186,11 @@
             );
             this._subscription = subscription;
 
-            // جلب الجلسة الحالية
             const { data: { session } } = await this._client.auth.getSession();
             this._session = session;
             this._user = session?.user ?? null;
             this._updateUI();
 
-            // إذا كانت الجلسة موجودة عند تحميل الصفحة، تحقق من وجود جلسة نشطة مسجلة
             if (this._user) {
                 try {
                     const { data: activeSessions } = await this._client
@@ -173,7 +200,6 @@
                         .eq('status', 'active')
                         .eq('is_current_session', true);
 
-                    // إذا لم تكن هناك جلسة نشطة حالية، نسجل واحدة جديدة (مثلاً عند إعادة فتح المتصفح)
                     if (!activeSessions || activeSessions.length === 0) {
                         await recordLoginSession(this._client, this._user);
                     }
@@ -185,20 +211,10 @@
             console.log('🔒 [Auth] تم تأمين الواجهة');
         },
 
-        /**
-         * هل المستخدم مسجل الدخول؟
-         * @returns {boolean}
-         */
         isLoggedIn: function () {
             return !!this._session;
         },
 
-        /**
-         * تسجيل الدخول بالبريد وكلمة المرور
-         * @param {string} email
-         * @param {string} password
-         * @returns {Promise<{data: any, error: any}>}
-         */
         login: async function (email, password) {
             if (!this._client) throw new Error('Supabase غير متوفر');
             try {
@@ -207,7 +223,6 @@
                 this._session = data.session;
                 this._user = data.user;
                 this._updateUI();
-                // تسجيل الجلسة
                 await recordLoginSession(this._client, data.user);
                 return { data, error: null };
             } catch (error) {
@@ -216,14 +231,10 @@
             }
         },
 
-        /**
-         * تسجيل الخروج
-         * @returns {Promise<void>}
-         */
         logout: async function () {
             if (!this._client) return;
             try {
-                // تحديث الجلسة الحالية في قاعدة البيانات قبل الخروج
+                // إنهاء جميع الجلسات النشطة للمستخدم
                 if (this._user) {
                     await this._client
                         .from('user_login_sessions')
@@ -235,8 +246,7 @@
                             updated_at: new Date().toISOString()
                         })
                         .eq('user_id', this._user.id)
-                        .eq('status', 'active')
-                        .eq('is_current_session', true);
+                        .eq('status', 'active');
                 }
 
                 await this._client.auth.signOut();
@@ -249,18 +259,10 @@
             }
         },
 
-        /**
-         * إعادة توجيه إلى صفحة
-         * @param {string} url
-         */
         redirectTo: function (url) {
             window.location.replace(url);
         },
 
-        /**
-         * جلب المستخدم الحالي (من الخادم)
-         * @returns {Promise<import('@supabase/supabase-js').User|null>}
-         */
         getUser: async function () {
             if (!this._client) return null;
             try {
@@ -274,10 +276,6 @@
             }
         },
 
-        /**
-         * جلب الجلسة الحالية
-         * @returns {Promise<import('@supabase/supabase-js').Session|null>}
-         */
         getSession: async function () {
             if (!this._client) return null;
             try {
@@ -290,11 +288,6 @@
             }
         },
 
-        /**
-         * تحديث بيانات المستخدم الوصفية (metadata)
-         * @param {Object} metadata
-         * @returns {Promise<{data: any, error: any}>}
-         */
         updateUserMetadata: async function (metadata) {
             if (!this._client) throw new Error('Supabase غير متوفر');
             try {
@@ -309,21 +302,12 @@
             }
         },
 
-        /**
-         * التحقق من صلاحية المستخدم (دور معين)
-         * @param {string} role
-         * @returns {boolean}
-         */
         hasRole: function (role) {
             if (!this._user) return false;
             const userRole = this._user.user_metadata?.role || 'user';
             return userRole === role;
         },
 
-        /**
-         * تحديث واجهة المستخدم (اسم العميل، الصورة الرمزية)
-         * @private
-         */
         _updateUI: function () {
             const user = this._user;
             if (!user) {
@@ -343,7 +327,6 @@
         }
     };
 
-    // ========== بدء التهيئة تلقائياً ==========
     document.addEventListener('DOMContentLoaded', function () {
         const path = window.location.pathname;
         if (!path.includes('/auth/auth/login/') && !path.includes('/auth/register/')) {
