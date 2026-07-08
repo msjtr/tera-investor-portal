@@ -2,30 +2,26 @@
  * ============================================================
  * register.js - إدارة نموذج تسجيل الشريك (النسخة المؤسسية - Enterprise)
  * ============================================================
- * - يعتمد على TeraAuth (auth.js) لإدارة المصادقة والتوجيه.
+ * - يعتمد على waitForSupabase الموحدة.
  * - يمرر البيانات بشكل يتوافق مع هيكل الجداول الجديد (auth_register).
- * - يستخدم المسارات النسبية (Relative Paths) للتوجيه.
+ * - يستخدم المسارات المطلقة للتوجيه.
  * - يخزن نوع التحقق (signup) لتوجيه صحيح بعد التحقق.
  * - متوافق مع verify-otp.js و auth.js.
- * - النسخة المُحدَّثة: استخدام TeraAuth، مسارات نسبية، معالجة أخطاء محسّنة.
- * - ✅ يدعم الآن جميع دول الخليج + مصر مع تحقق ديناميكي من رقم الجوال.
+ * - يدعم جميع دول الخليج + مصر مع تحقق ديناميكي من رقم الجوال.
  */
 
 (function () {
     'use strict';
 
-    // ========== ثوابت ==========
     const ROUTES = {
-        VERIFY_OTP: '../../auth/verify-otp.html',
-        LOGIN: '../../auth/auth/login/login.html',
-        DASHBOARD: '../../pages/dashboard/index.html'
+        VERIFY_OTP: '/auth/verify-otp.html',
+        LOGIN: '/auth/auth/login/login.html',
+        DASHBOARD: '/pages/dashboard/index.html'
     };
 
-    // ========== متغيرات الحالة ==========
     let supabaseClient = null;
     let currentStage = 1;
 
-    // ========== دوال مساعدة ==========
     function updateFieldStatus(fieldId, isValid, errorMsg) {
         const icon = document.getElementById(fieldId + '-status');
         const errorDiv = document.getElementById(fieldId + '-error');
@@ -89,21 +85,11 @@
             alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
         }
         alertMessage.textContent = message;
-
-        // إخفاء تلقائي بعد 8 ثوانٍ
         clearTimeout(window._alertTimer);
         window._alertTimer = setTimeout(() => {
             alertBox.style.display = 'none';
             alertBox.className = 'alert-box';
         }, 8000);
-    }
-
-    function hideAlert() {
-        const alertBox = document.getElementById('formAlert');
-        if (alertBox) {
-            alertBox.style.display = 'none';
-            alertBox.className = 'alert-box';
-        }
     }
 
     function showLoader(show, text = 'جاري إنشاء الحساب...') {
@@ -113,7 +99,6 @@
 
         if (!loader) return;
         loader.style.display = show ? 'flex' : 'none';
-
         if (quoteEl && show) quoteEl.textContent = text;
         if (progressBar && show) {
             progressBar.style.width = '0%';
@@ -123,12 +108,10 @@
         }
     }
 
-    // ========== دوال التحقق من رقم الجوال حسب الدولة ==========
     function getMobilePattern(countryCode) {
-        // أنماط التحقق لكل دولة: النمط (regex)، رسالة الخطأ
         const patterns = {
-            '+966': { regex: /^5\d{8}$/,   min: 9,  max: 9,  msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
-            '+971': { regex: /^5\d{8}$/,   min: 9,  max: 9,  msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
+            '+966': { regex: /^5\d{8}$/, min: 9, max: 9, msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
+            '+971': { regex: /^5\d{8}$/, min: 9, max: 9, msg: 'رقم الجوال يجب أن يبدأ بـ 5 ويتكون من 9 أرقام' },
             '+965': { regex: /^[5-9]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 5-9' },
             '+973': { regex: /^[3-9]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 3-9' },
             '+974': { regex: /^[3-7]\d{7}$/, min: 8, max: 8, msg: 'رقم الجوال يجب أن يتكون من 8 أرقام ويبدأ بـ 3-7' },
@@ -140,7 +123,6 @@
 
     function validateMobileForCountry(mobile, countryCode) {
         const pattern = getMobilePattern(countryCode);
-        // تنظيف المدخلات من مسافات أو رموز
         const cleaned = mobile.replace(/[\s\-\(\)]/g, '');
         if (cleaned.length < pattern.min || cleaned.length > pattern.max) {
             return { valid: false, msg: pattern.msg };
@@ -151,15 +133,12 @@
         return { valid: true, msg: '' };
     }
 
-    // ========== دالة تقديم النموذج الرئيسية ==========
-    window.submitForm = async function () {
-        // التأكد من وجود عميل Supabase
+    async function submitForm() {
         if (!supabaseClient) {
             showAlert('❌ الاتصال بقاعدة البيانات غير جاهز.', 'error');
             return;
         }
 
-        // جلب البيانات من النموذج
         const fullname = document.getElementById('fullname_ar')?.value?.trim() || '';
         const countryCode = document.getElementById('country_code_select')?.value || '+966';
         const mobile = document.getElementById('mobile_number')?.value?.trim() || '';
@@ -167,13 +146,11 @@
         const username = document.getElementById('username')?.value?.trim() || '';
         const password = document.getElementById('password')?.value || '';
 
-        // التحقق من الحقول المطلوبة
         if (!fullname || !mobile || !email || !username || !password) {
             showAlert('يرجى ملء جميع الحقول.', 'error');
             return;
         }
 
-        // تعطيل الزر ومنع التقديم المتكرر
         const submitBtn = document.getElementById('action-submit-btn');
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -181,11 +158,9 @@
         }
 
         const fullPhoneNumber = countryCode + mobile;
-        hideAlert();
         showLoader(true, 'جاري إنشاء حسابك الاستثماري...');
 
         try {
-            // إنشاء المستخدم في Supabase Auth
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
@@ -201,64 +176,47 @@
             });
 
             if (error) throw error;
-
-            if (!data.user) {
-                throw new Error('لم يتم إنشاء المستخدم في Auth');
-            }
+            if (!data.user) throw new Error('لم يتم إنشاء المستخدم في Auth');
 
             console.log('✅ [Register] تم إنشاء المستخدم:', data.user.id);
 
-            // تخزين البريد ونوع العملية للتحقق في صفحة verify-otp
             localStorage.setItem('pendingVerificationEmail', email);
             localStorage.setItem('tera_verify_type', 'signup');
 
             showLoader(false);
             showAlert('✅ تم إنشاء الحساب بنجاح. جاري توجيهك للتحقق...', 'success');
 
-            // إعادة تعيين الزر
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'إنشاء حساب شريك';
             }
 
-            // التوجيه إلى صفحة التحقق (مسار نسبي)
             setTimeout(() => {
                 window.location.replace(ROUTES.VERIFY_OTP);
             }, 1500);
 
         } catch (error) {
             console.error('❌ [Register] فشل إنشاء الحساب:', error);
-
             let msg = 'حدث خطأ أثناء إنشاء الحساب.';
-            if (error.message) {
-                if (error.message.includes('User already registered')) {
-                    msg = 'البريد الإلكتروني مسجل بالفعل. يرجى تسجيل الدخول.';
-                } else if (error.message.includes('rate limit')) {
-                    msg = 'تم تجاوز عدد المحاولات. يرجى الانتظار بضع دقائق.';
-                } else if (error.message.includes('password')) {
-                    msg = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.';
-                } else {
-                    msg = error.message;
-                }
-            }
+            if (error.message.includes('User already registered')) msg = 'البريد الإلكتروني مسجل بالفعل.';
+            else if (error.message.includes('rate limit')) msg = 'تم تجاوز عدد المحاولات.';
+            else if (error.message.includes('password')) msg = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.';
+            else msg = error.message;
 
             showAlert('⚠️ ' + msg, 'error');
             showLoader(false);
 
-            // إعادة تمكين الزر
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'إنشاء حساب شريك';
             }
         }
-    };
+    }
 
-    // ========== تهيئة التطبيق ==========
     async function startApp(client) {
         supabaseClient = client;
         console.log('🚀 [Register] التطبيق جاهز للعمل.');
 
-        // ---- مراقبة الحقول ----
         const fullnameInput = document.getElementById('fullname_ar');
         if (fullnameInput) {
             fullnameInput.addEventListener('input', function () {
@@ -270,25 +228,17 @@
             });
         }
 
-        // ---- التحقق من الجوال حسب الدولة ----
         const countrySelect = document.getElementById('country_code_select');
         const mobileInput = document.getElementById('mobile_number');
-
-        // تحديث placeholder حسب الدولة
         const placeholders = {
-            '+966': '5XXXXXXXX',
-            '+971': '5XXXXXXXX',
-            '+965': 'XXXXXXXX',
-            '+973': 'XXXXXXXX',
-            '+974': 'XXXXXXXX',
-            '+968': 'XXXXXXXX',
-            '+20':  '1XXXXXXXXX'
+            '+966': '5XXXXXXXX', '+971': '5XXXXXXXX', '+965': 'XXXXXXXX',
+            '+973': 'XXXXXXXX', '+974': 'XXXXXXXX', '+968': 'XXXXXXXX', '+20': '1XXXXXXXXX'
         };
 
         if (countrySelect && mobileInput) {
             countrySelect.addEventListener('change', function() {
                 mobileInput.placeholder = placeholders[this.value] || 'XXXXXXXXX';
-                mobileInput.value = ''; // مسح الحقل عند تغيير الدولة
+                mobileInput.value = '';
                 updateFieldStatus('mobile', false, '');
                 checkStage1Complete();
             });
@@ -298,20 +248,17 @@
             mobileInput.addEventListener('input', function () {
                 const countryCode = countrySelect?.value || '+966';
                 const mobile = this.value.trim();
-                
                 if (mobile === '') {
                     updateFieldStatus('mobile', false, 'رقم الجوال مطلوب');
                     checkStage1Complete();
                     return;
                 }
-                
                 const result = validateMobileForCountry(mobile, countryCode);
                 updateFieldStatus('mobile', result.valid, result.msg);
                 checkStage1Complete();
             });
         }
 
-        // ---- باقي الحقول ----
         const emailInput = document.getElementById('email');
         if (emailInput) {
             emailInput.addEventListener('input', function () {
@@ -340,7 +287,6 @@
             });
         }
 
-        // ---- إظهار/إخفاء كلمة المرور ----
         const showPasswordCheck = document.getElementById('show-password');
         if (showPasswordCheck && passwordInput) {
             showPasswordCheck.addEventListener('change', function () {
@@ -348,7 +294,6 @@
             });
         }
 
-        // ---- الموافقة على الشروط ----
         const agreeCheck = document.getElementById('master-global-agree');
         const submitBtn = document.getElementById('action-submit-btn');
         if (agreeCheck && submitBtn) {
@@ -357,60 +302,34 @@
             });
         }
 
-        // ---- أزرار التنقل ----
         const prevBtn = document.getElementById('action-prev-btn');
         const nextBtn = document.getElementById('action-next-btn');
 
-        if (prevBtn) {
-            prevBtn.addEventListener('click', function () {
-                goToStage(1);
-            });
-        }
-
-        if (nextBtn) {
-            nextBtn.addEventListener('click', function () {
-                goToStage(2);
-            });
-        }
-
+        if (prevBtn) prevBtn.addEventListener('click', () => goToStage(1));
+        if (nextBtn) nextBtn.addEventListener('click', () => goToStage(2));
         if (submitBtn) {
-            // إزالة المستمع القديم إذا وجد
-            submitBtn.removeEventListener('click', window.submitForm);
-            submitBtn.addEventListener('click', window.submitForm);
+            submitBtn.removeEventListener('click', submitForm);
+            submitBtn.addEventListener('click', submitForm);
         }
 
-        // ---- تهيئة المرحلة الأولى ----
         goToStage(1);
         checkStage1Complete();
     }
 
-    // ========== آلية التشغيل ==========
     (async function init() {
-        // محاولة الحصول على عميل Supabase عبر TeraAuth
-        if (window.TeraAuth) {
-            // انتظار تهيئة TeraAuth
-            if (!window.TeraAuth._initialized) {
-                try {
-                    await window.TeraAuth.init();
-                } catch (err) {
-                    console.warn('⚠️ [Register] فشل تهيئة TeraAuth:', err);
-                }
+        try {
+            if (window.teraSupabase) {
+                startApp(window.teraSupabase);
+                return;
             }
-            const client = window.TeraAuth._client;
-            if (client) {
+
+            if (typeof window.waitForSupabase === 'function') {
+                const client = await window.waitForSupabase();
                 startApp(client);
                 return;
             }
-        }
 
-        // خطة احتياطية: الانتظار لحدث supabase:ready
-        if (window.teraSupabase) {
-            startApp(window.teraSupabase);
-            return;
-        }
-
-        // الانتظار للحدث
-        try {
+            // انتظار الحدث كحل أخير
             const client = await new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
                 document.addEventListener('supabase:ready', (e) => {
