@@ -1,7 +1,7 @@
 /**
  * dashboard-core.js – وظائف لوحة التحكم (حالة الطلب، الإحصائيات، الرسم البياني، المؤقت)
  * يعتمد على: supabase-client.js, auth.js, chart.js
- * تم التحديث: استخدام waitForSupabase الموحدة + تحديث last_activity_at للجلسة
+ * تم التحديث: استخدام waitForSupabase الموحدة + تحديث last_activity_at + فحص التأكيد
  */
 const Dashboard = {
     chartInstance: null,
@@ -16,11 +16,19 @@ const Dashboard = {
 
         this._sessionStart = new Date();
 
-        // التحقق من الجلسة باستخدام getUser بدلاً من isLoggedIn
+        // التحقق من الجلسة باستخدام TeraAuth
         if (window.TeraAuth) {
             const user = await window.TeraAuth.getUser();
             if (!user) {
                 window.TeraAuth.redirectTo('/auth/auth/login/login.html');
+                return;
+            }
+
+            // فحص تأكيد البريد كطبقة أمان إضافية
+            if (!user.email_confirmed_at) {
+                localStorage.setItem('pendingVerificationEmail', user.email);
+                localStorage.setItem('tera_verify_type', 'signup');
+                window.TeraAuth.redirectTo('/auth/verify-otp.html');
                 return;
             }
         } else {
@@ -55,11 +63,11 @@ const Dashboard = {
     },
 
     _waitForSupabase: function() {
-        // استخدام الدالة الموحدة إن وجدت
+        // استخدام الدالة العامة من supabase-client.js
         if (window.waitForSupabase) {
             return window.waitForSupabase();
         }
-        // fallback
+        // fallback للتوافق مع الإصدارات القديمة
         return new Promise((resolve, reject) => {
             if (window.teraSupabase) return resolve(window.teraSupabase);
             const timeout = setTimeout(() => reject(new Error('Timeout')), 10000);
@@ -101,7 +109,7 @@ const Dashboard = {
         setInterval(() => {
             update();
             this.updateCurrentDateTime();
-            // تحديث نشاط الجلسة في user_login_sessions لمنع مؤقت الخمول من إنهائها
+            // تحديث نشاط الجلسة في قاعدة البيانات لمنع مؤقت الخمول
             this._updateSessionActivity();
         }, 60000);
     },
