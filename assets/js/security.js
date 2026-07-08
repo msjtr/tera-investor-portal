@@ -1,9 +1,11 @@
 /**
  * ============================================================
- * security.js
- * نظام صفحات الأمان - Enterprise Edition
- * متوافق مع Supabase JS v2 و TeraAuth
+ * security.js – نظام صفحات الأمان (Enterprise Edition)
  * ============================================================
+ * - متوافق مع auth.js, supabase-client.js
+ * - يستخدم waitForSupabase العامة من supabase-client.js
+ * - يحتوي على دوال مساعدة (تنبيهات، هيدر، تحقق)
+ * - صفحات أمان اختيارية (login-history, devices)
  */
 
 'use strict';
@@ -11,47 +13,13 @@
 window.SecurityPages = window.SecurityPages || {};
 
 /* ============================================================
-   انتظار جاهزية Supabase
-============================================================ */
-
-async function waitForSupabase() {
-    if (window.TeraAuth) {
-        if (!window.TeraAuth._initialized) {
-            try {
-                await window.TeraAuth.init();
-            } catch (e) {
-                console.warn('⚠️ [Security] فشل تهيئة TeraAuth:', e);
-            }
-        }
-        if (window.TeraAuth._client) {
-            return window.TeraAuth._client;
-        }
-    }
-
-    if (window.teraSupabase) {
-        return window.teraSupabase;
-    }
-
-    return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Supabase Timeout')), 15000);
-        document.addEventListener('supabase:ready', () => {
-            clearTimeout(timeout);
-            resolve(window.teraSupabase);
-        }, { once: true });
-        document.addEventListener('supabase:error', () => {
-            clearTimeout(timeout);
-            reject(new Error('Supabase Error'));
-        }, { once: true });
-    });
-}
-
-/* ============================================================
-   رسائل التنبيه
+   رسائل التنبيه (محسَّنة)
 ============================================================ */
 
 function showSecurityAlert(message, type = 'error') {
     const box = document.getElementById('formAlert');
     if (!box) {
+        // إنشاء عنصر مؤقت إذا لم يوجد formAlert
         const tempAlert = document.createElement('div');
         tempAlert.style.cssText = `
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -122,7 +90,7 @@ function restoreButton(button) {
 }
 
 /* ============================================================
-   تبديل إظهار/إخفاء كلمة المرور (دالة عامة)
+   تبديل إظهار/إخفاء كلمة المرور
 ============================================================ */
 
 function togglePasswordVisibility(e) {
@@ -165,16 +133,13 @@ function normalizeMobile(mobile) {
 function formatDate(date) {
     if (!date) return '-';
     return new Date(date).toLocaleString('ar-SA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
     });
 }
 
 /* ============================================================
-   Security Core - مدير الأمان المركزي
+   Security Core – مدير الأمان المركزي (مُحدث)
 ============================================================ */
 
 const SecurityCore = {
@@ -187,22 +152,8 @@ const SecurityCore = {
             return this.currentUser;
         }
         try {
-            if (window.TeraAuth) {
-                if (!window.TeraAuth._initialized) {
-                    await window.TeraAuth.init();
-                }
-                if (window.TeraAuth._client) {
-                    this.supabase = window.TeraAuth._client;
-                    const user = await window.TeraAuth.getUser();
-                    if (user) {
-                        this.currentUser = user;
-                        this._initialized = true;
-                        updateHeader(user);
-                        return user;
-                    }
-                }
-            }
-            this.supabase = await waitForSupabase();
+            // الاعتماد على waitForSupabase العامة (من supabase-client.js)
+            this.supabase = await window.waitForSupabase();
             const { data: { user }, error } = await this.supabase.auth.getUser();
             if (error || !user) {
                 console.warn('⚠️ [Security] لا يوجد مستخدم مسجل الدخول');
@@ -225,39 +176,12 @@ const SecurityCore = {
     async getUser() {
         if (this.currentUser) return this.currentUser;
         try {
-            if (window.TeraAuth && window.TeraAuth._client) {
-                const user = await window.TeraAuth.getUser();
-                if (user) {
-                    this.currentUser = user;
-                    return user;
-                }
-            }
             const { data: { user } } = await this.supabase.auth.getUser();
             this.currentUser = user;
             return user;
         } catch (err) {
             console.error('❌ [Security] فشل جلب المستخدم:', err);
             return null;
-        }
-    },
-
-    async refreshUser() {
-        try {
-            if (window.TeraAuth && window.TeraAuth._client) {
-                const user = await window.TeraAuth.getUser();
-                if (user) {
-                    this.currentUser = user;
-                    updateHeader(user);
-                    return user;
-                }
-            }
-            const { data: { user } } = await this.supabase.auth.getUser();
-            this.currentUser = user;
-            updateHeader(user);
-            return user;
-        } catch (err) {
-            console.warn('⚠️ [Security] فشل تحديث المستخدم:', err);
-            return this.currentUser;
         }
     },
 
@@ -271,45 +195,10 @@ const SecurityCore = {
 };
 
 /* ============================================================
-   صفحات الأمان المختلفة
+   صفحات الأمان الاختيارية (باستخدام الجداول الجديدة)
 ============================================================ */
 
-if (!window.SecurityPages['change-password']) {
-    window.SecurityPages['change-password'] = {
-        async init() {
-            const user = await SecurityCore.init();
-            if (!user) return;
-            document.querySelectorAll('.password-toggle').forEach(btn => {
-                btn.removeEventListener('click', togglePasswordVisibility);
-                btn.addEventListener('click', togglePasswordVisibility);
-            });
-            const btn = document.getElementById('changePasswordBtn');
-            if (btn) {
-                btn.addEventListener('click', async function() {
-                    showSecurityAlert('يرجى تحميل ملف security-change-password.js.', 'warning');
-                });
-            }
-        }
-    };
-}
-
-if (!window.SecurityPages['change-mobile']) {
-    window.SecurityPages['change-mobile'] = {
-        async init() {
-            const user = await SecurityCore.init();
-            if (!user) return;
-            const display = document.getElementById('currentMobileDisplay');
-            if (display) display.textContent = user.user_metadata?.mobile_number || '--';
-            const btn = document.getElementById('changeMobileBtn');
-            if (btn) {
-                btn.addEventListener('click', async function() {
-                    showSecurityAlert('يتم تطوير هذه الخدمة حالياً.', 'warning');
-                });
-            }
-        }
-    };
-}
-
+// --- سجل الدخول (يستخدم user_login_sessions) ---
 if (!window.SecurityPages['login-history']) {
     window.SecurityPages['login-history'] = {
         async init() {
@@ -320,39 +209,38 @@ if (!window.SecurityPages['login-history']) {
         async load(userId) {
             const tableBody = document.getElementById('loginHistoryBody');
             if (!tableBody) return;
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">جاري تحميل البيانات...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5">جاري تحميل البيانات...</td></tr>';
             try {
                 const { data, error } = await SecurityCore.supabase
-                    .from('auth_login')
-                    .select('*')
+                    .from('user_login_sessions')
+                    .select('session_number, login_at, device_type, browser_name, ip_address, status')
                     .eq('user_id', userId)
-                    .order('created_at', { ascending: false })
+                    .order('login_at', { ascending: false })
                     .limit(50);
                 if (error) throw error;
                 if (!data || !data.length) {
-                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#94a3b8;">لا توجد سجلات دخول.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="5">لا توجد سجلات دخول.</td></tr>';
                     return;
                 }
-                tableBody.innerHTML = '';
-                data.forEach(row => {
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td>${formatDate(row.created_at)}</td>
-                            <td>${row.browser || '-'}</td>
-                            <td>${row.operating_system || '-'}</td>
-                            <td>${row.ip_address || '-'}</td>
-                            <td><span class="badge-success">${row.login_status || 'ناجح'}</span></td>
-                        </tr>
-                    `;
-                });
+                tableBody.innerHTML = data.map(row => `
+                    <tr>
+                        <td>${row.session_number || '-'}</td>
+                        <td>${formatDate(row.login_at)}</td>
+                        <td>${row.device_type || '-'}</td>
+                        <td>${row.browser_name || '-'}</td>
+                        <td>${row.ip_address || '-'}</td>
+                        <td><span class="status-badge status-${row.status}">${row.status === 'active' ? 'نشطة' : 'منتهية'}</span></td>
+                    </tr>
+                `).join('');
             } catch (err) {
                 console.error('❌ [Login History]', err);
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#dc2626;">تعذر تحميل البيانات.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5">تعذر تحميل البيانات.</td></tr>';
             }
         }
     };
 }
 
+// --- الأجهزة المسجلة (يستخدم user_login_sessions) ---
 if (!window.SecurityPages['registered-devices']) {
     window.SecurityPages['registered-devices'] = {
         async init() {
@@ -363,58 +251,35 @@ if (!window.SecurityPages['registered-devices']) {
         async load(userId) {
             const container = document.getElementById('devicesContainer');
             if (!container) return;
-            container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">جاري تحميل الأجهزة...</p>';
+            container.innerHTML = '<p>جاري تحميل الأجهزة...</p>';
             try {
                 const { data, error } = await SecurityCore.supabase
-                    .from('authorized_devices')
-                    .select('*')
+                    .from('user_login_sessions')
+                    .select('id, device_type, operating_system, browser_name, browser_version, login_at, status')
                     .eq('user_id', userId)
-                    .order('last_used_at', { ascending: false });
+                    .order('login_at', { ascending: false });
                 if (error) throw error;
                 if (!data || !data.length) {
-                    container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:20px;">لا توجد أجهزة مسجلة.</p>';
+                    container.innerHTML = '<p>لا توجد أجهزة مسجلة.</p>';
                     return;
                 }
-                container.innerHTML = '';
-                data.forEach(device => {
-                    container.innerHTML += `
-                        <div class="device-card">
-                            <div class="device-header">
-                                <h4>${device.device_name || 'جهاز غير معروف'}</h4>
-                                <button class="btn-danger" onclick="SecurityPages['registered-devices'].remove('${device.id}')">
-                                    <i class="fas fa-trash-alt"></i> إزالة
-                                </button>
-                            </div>
-                            <p><strong>المتصفح:</strong> ${device.browser || '-'}</p>
-                            <p><strong>النظام:</strong> ${device.operating_system || '-'}</p>
-                            <p><strong>آخر استخدام:</strong> ${formatDate(device.last_used_at)}</p>
-                        </div>
-                    `;
-                });
+                container.innerHTML = data.map(d => `
+                    <div class="device-card">
+                        <h4>${d.device_type || 'جهاز غير معروف'} - ${d.operating_system || ''}</h4>
+                        <p>المتصفح: ${d.browser_name || '-'} ${d.browser_version || ''}</p>
+                        <p>آخر دخول: ${formatDate(d.login_at)}</p>
+                        <p>الحالة: ${d.status === 'active' ? 'نشطة' : 'منتهية'}</p>
+                    </div>
+                `).join('');
             } catch (err) {
                 console.error('❌ [Devices]', err);
-                container.innerHTML = '<p style="color:#dc2626;text-align:center;padding:20px;">تعذر تحميل الأجهزة.</p>';
-            }
-        },
-        async remove(id) {
-            if (!confirm('هل تريد حذف هذا الجهاز؟')) return;
-            try {
-                const { error } = await SecurityCore.supabase
-                    .from('authorized_devices')
-                    .delete()
-                    .eq('id', id);
-                if (error) throw error;
-                showSecurityAlert('✅ تم حذف الجهاز بنجاح.', 'success');
-                const user = await SecurityCore.getUser();
-                if (user) this.load(user.id);
-            } catch (err) {
-                console.error('❌ [Remove Device]', err);
-                showSecurityAlert('تعذر حذف الجهاز.', 'error');
+                container.innerHTML = '<p>تعذر تحميل الأجهزة.</p>';
             }
         }
     };
 }
 
+// --- المصادقة الثنائية (تبقى كما هي) ---
 if (!window.SecurityPages['two-factor-authentication']) {
     window.SecurityPages['two-factor-authentication'] = {
         async init() {
@@ -433,7 +298,6 @@ if (!window.SecurityPages['two-factor-authentication']) {
                 });
                 if (error) throw error;
                 showSecurityAlert(enabled ? '✅ تم تفعيل المصادقة الثنائية.' : '✅ تم تعطيل المصادقة الثنائية.', 'success');
-                await SecurityCore.refreshUser();
             } catch (err) {
                 console.error('❌ [2FA]', err);
                 e.target.checked = !enabled;
@@ -450,7 +314,7 @@ if (!window.SecurityPages['two-factor-authentication']) {
 document.addEventListener('DOMContentLoaded', async () => {
     const page = document.body.dataset.security || document.body.dataset.page || document.body.id || '';
     if (!page) return;
-    if (window.SecurityPages && window.SecurityPages[page] && typeof window.SecurityPages[page].init === 'function') {
+    if (window.SecurityPages[page] && typeof window.SecurityPages[page].init === 'function') {
         console.log('🔐 [Security] تهيئة الصفحة:', page);
         try {
             await SecurityCore.init();
@@ -467,7 +331,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 ============================================================ */
 
 window.SecurityCore = SecurityCore;
-window.waitForSupabase = waitForSupabase;
 window.showSecurityAlert = showSecurityAlert;
 window.updateHeader = updateHeader;
 window.setButtonLoading = setButtonLoading;
