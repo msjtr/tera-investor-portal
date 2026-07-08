@@ -1,6 +1,9 @@
 /**
- * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع (إصدار مُحسَّن)
+ * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع
  * المسار: auth/auth/login/login.js
+ * - يستخدم waitForSupabase الموحدة
+ * - يتحقق من كلمة المرور ثم يرسل OTP
+ * - لا ينشئ جلسة كاملة قبل إدخال OTP
  */
 (function() {
     'use strict';
@@ -8,8 +11,7 @@
     const DASHBOARD_URL = '/pages/dashboard/index.html';
     const VERIFY_OTP_URL = '/auth/verify-otp.html';
 
-    // انتظار تحميل DOM بالكامل
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', async function() {
         console.log('✅ login.js: DOM جاهز.');
 
         const form = document.getElementById('teraLoginForm');
@@ -22,7 +24,6 @@
         const alertMessage = document.getElementById('alertMessage');
         const loader = document.getElementById('creativeLoaderScreen');
 
-        // فحص وجود العناصر الأساسية
         if (!form || !emailInput || !passwordInput || !submitBtn) {
             console.error('❌ login.js: أحد العناصر الأساسية غير موجود.');
             return;
@@ -30,18 +31,20 @@
 
         let supabaseClient = null;
 
-        async function getClient() {
-            console.log('⏳ انتظار Supabase client...');
-            if (window.teraSupabase) {
-                console.log('✅ Supabase client موجود مسبقاً.');
-                return window.teraSupabase;
+        // الحصول على العميل باستخدام الدالة العامة
+        try {
+            if (typeof window.waitForSupabase === 'function') {
+                supabaseClient = await window.waitForSupabase();
+            } else if (window.teraSupabase) {
+                supabaseClient = window.teraSupabase;
+            } else {
+                throw new Error('عميل Supabase غير متوفر');
             }
-            return new Promise((resolve) => {
-                document.addEventListener('supabase:ready', e => {
-                    console.log('✅ Supabase client جاهز (حدث supabase:ready).');
-                    resolve(e.detail.client);
-                }, { once: true });
-            });
+            console.log('✅ login.js: العميل جاهز.');
+        } catch (e) {
+            console.error('❌ فشل الحصول على عميل Supabase:', e);
+            showAlert('تعذر الاتصال بالخادم. حاول تحديث الصفحة.', 'error');
+            return;
         }
 
         function showAlert(msg, type = 'error') {
@@ -62,8 +65,6 @@
 
         async function handleLogin(e) {
             e.preventDefault();
-            console.log('🔘 زر الدخول تم الضغط عليه.');
-
             const email = emailInput.value.trim();
             const password = passwordInput.value;
 
@@ -72,40 +73,37 @@
                 return;
             }
 
-            if (!supabaseClient) {
-                showAlert('النظام غير جاهز بعد. يرجى الانتظار قليلاً.', 'error');
-                return;
-            }
-
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
             showLoader();
 
             try {
-                // 1. التحقق من صحة كلمة المرور
-                console.log('🔐 محاولة signInWithPassword...');
-                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                // 1. التحقق من صحة كلمة المرور (مع تجنب إنشاء جلسة دائمة)
+                const { error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password,
+                    options: { shouldCreateUser: false }
+                });
+
                 if (error) {
-                    console.error('❌ فشل المصادقة:', error);
-                    let msg = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
+                    let msg = 'بيانات الدخول غير صحيحة.';
                     if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                    else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
                     showAlert(msg, 'error');
                     return;
                 }
 
-                console.log('✅ كلمة المرور صحيحة. إرسال OTP...');
-                // 2. إرسال OTP إجباري
+                // 2. إرسال OTP إجباري (الرمز سيُرسل للبريد)
                 await supabaseClient.auth.signInWithOtp({
                     email: email,
                     options: { shouldCreateUser: false }
                 });
 
-                // 3. تخزين البيانات المؤقتة
+                // 3. تخزين بيانات الجلسة المؤقتة لاستخدامها في verify-otp.js
                 localStorage.setItem('pendingVerificationEmail', email);
                 localStorage.setItem('tera_verify_type', 'login_otp');
                 sessionStorage.setItem('tera_login_password', password);
 
-                console.log('📧 OTP أُرسل. تحويل إلى صفحة التحقق.');
                 showAlert('تم إرسال رمز تحقق إلى بريدك الإلكتروني. جاري توجيهك...', 'success');
                 setTimeout(() => {
                     window.location.replace(VERIFY_OTP_URL);
@@ -121,30 +119,12 @@
             }
         }
 
-        async function init() {
-            try {
-                supabaseClient = await getClient();
-                if (!supabaseClient) {
-                    showAlert('تعذر الاتصال بالخادم. حاول تحديث الصفحة.', 'error');
-                    return;
-                }
-                console.log('✅ login.js: العميل جاهز.');
-            } catch (e) {
-                console.error(e);
-                showAlert('تعذر الاتصال بالخادم.', 'error');
-                return;
-            }
+        // ربط الأحداث
+        form.addEventListener('submit', handleLogin);
+        showPasswordCheck.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
 
-            form.addEventListener('submit', handleLogin);
-            console.log('👂 مستمع الحدث submit مُضاف.');
-
-            showPasswordCheck.addEventListener('change', function() {
-                passwordInput.type = this.checked ? 'text' : 'password';
-            });
-
-            console.log('✅ login.js: جاهز تماماً.');
-        }
-
-        init();
+        console.log('✅ login.js: جاهز تماماً.');
     });
 })();
