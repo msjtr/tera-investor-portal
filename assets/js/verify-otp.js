@@ -1,9 +1,9 @@
 /**
- * verify-otp.js – تأكيد الرمز OTP (8 أرقام) - نسخة آمنة
- * يعتمد على TeraAuth (auth.js) لتنفيذ عمليات المصادقة والتوجيه
+ * verify-otp.js – تأكيد الرمز OTP (8 أرقام) – نسخة محدثة ومتوافقة مع النظام المتقدم
+ * يعتمد على TeraAuth (auth.js v5) لتنفيذ عمليات المصادقة والتوجيه
  * يدعم: signup, recovery, personal_info, contact_info, national_address,
  *       bank_info, attachments, change_mobile, login_otp, email_change
- * تم إصلاح ثغرة رابط العودة الأمني
+ * تم إصلاح ثغرة رابط العودة الأمني، وتحسين معالجة الجلسة
  */
 
 (function () {
@@ -77,15 +77,12 @@
         }
 
         // ========== تخصيص رابط العودة (تم إصلاح الثغرة الأمنية) ==========
-        // الحالات التي لا تملك جلسة مفتوحة بعد يجب أن تعود إلى صفحة الدخول
-        // وليس إلى لوحة التحكم، لمنع تجاوز المصادقة.
         const backRoutes = {
             'login_otp': { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' },
             'signup': { url: '/auth/auth/login/login.html', text: 'العودة لتسجيل الدخول' },
             'recovery': { url: '/auth/forgot-password.html', text: 'العودة' },
             'email_change': { url: '/pages/security/change-email.html', text: 'العودة' },
             'change_mobile': { url: '/pages/security/change-mobile.html', text: 'العودة' },
-            // هذه الحالات تمتلك جلسة عادةً، لذا يمكنها العودة إلى لوحة التحكم
             'personal_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
             'contact_info': { url: '/pages/dashboard/index.html', text: 'العودة' },
             'national_address': { url: '/pages/dashboard/index.html', text: 'العودة' },
@@ -106,7 +103,6 @@
             timerContainer.style.display = 'block';
             timerSeconds = 300;
             updateTimerDisplay();
-
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(function () {
                 timerSeconds--;
@@ -169,12 +165,11 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
             try {
-                let otpType;
+                let otpType = 'email';
                 if (verifyType === 'signup') otpType = 'signup';
                 else if (verifyType === 'recovery') otpType = 'recovery';
                 else if (verifyType === 'email_change') otpType = 'email_change';
                 else if (verifyType === 'change_mobile') otpType = 'sms';
-                else otpType = 'email';
 
                 let verifyParams = { token: otpValue, type: otpType };
                 if (verifyType === 'change_mobile') {
@@ -202,11 +197,12 @@
                         const password = sessionStorage.getItem('tera_login_password');
                         const email = pendingEmail;
                         if (password && email) {
-                            const { error } = await auth.login(email, password);
-                            if (!error) {
+                            try {
+                                await auth.login(email, password);
                                 sessionStorage.removeItem('tera_login_password');
                                 auth.redirectTo('/pages/dashboard/index.html');
-                            } else {
+                            } catch (loginError) {
+                                console.error('فشل تسجيل الدخول بعد OTP:', loginError);
                                 showAlert('فشل تسجيل الدخول. حاول مرة أخرى.', 'error');
                                 auth.redirectTo('/auth/auth/login/login.html');
                             }
