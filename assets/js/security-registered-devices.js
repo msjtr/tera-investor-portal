@@ -1,9 +1,10 @@
 /**
- * security-registered-devices.js – v7 (مركز أمان متكامل)
+ * security-registered-devices.js – v8 (مركز أمان متكامل + VPN/Proxy)
  * - عرض جميع الجلسات، إحصائيات، بحث، فلترة
- * - تفاصيل كاملة (جلسة، جهاز، شبكة، موقع، أمان)
+ * - تفاصيل كاملة (جلسة، جهاز، شبكة، موقع، أمان) مع دعم VPN/Proxy
  * - رابط خرائط قوقل
- * - أزرار: تسجيل الخروج، إنهاء الجلسات الأخرى، تحديث الموقع
+ * - أزرار: تسجيل الخروج، إنهاء الجلسات الأخرى
+ * - تمت إزالة تحديث الموقع (refreshLocation)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -30,7 +31,7 @@
     }
 
     async function init() {
-        supabase = window.teraSupabase || await waitForSupabase();
+        supabase = window.teraSupabase || await window.waitForSupabase();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
         currentUser = user;
@@ -73,7 +74,7 @@
         if (st !== 'all') filtered = filtered.filter(s => s.status === st);
         if (dev !== 'all') filtered = filtered.filter(s => s.device_type === dev);
         if (q) {
-            filtered = filtered.filter(s => (s.session_number||'').includes(q) || (s.ip_address||'').includes(q) || (s.isp||'').toLowerCase().includes(q) || (s.browser_name||'').toLowerCase().includes(q) || (s.city||'').includes(q) || (s.country||'').includes(q));
+            filtered = filtered.filter(s => (s.session_number||'').includes(q) || (s.ip_address||'').includes(q) || (s.isp||'').toLowerCase().includes(q) || (s.browser_name||'').toLowerCase().includes(q) || (s.country||'').includes(q) || (s.city||'').includes(q) || (s.district||'').includes(q));
         }
         renderTable(filtered);
         document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
@@ -82,22 +83,34 @@
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
         if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
             return;
         }
         tbody.innerHTML = list.map(s => {
             let map = '';
             if (s.latitude && s.longitude) {
-                map = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank"><i class="fas fa-map-marker-alt"></i></a>`;
+                map = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل"><i class="fas fa-map-marker-alt"></i></a>`;
             }
+            // حالة VPN/Proxy
+            const vpnDetected = s.proxy_detected || s.tor_detected || s.hosting_detected;
+            const vpnStatus = vpnDetected
+                ? '<span style="color:#dc2626;font-weight:700;">⚠️ VPN/Proxy</span>'
+                : '<span style="color:#10b981;">آمن</span>';
+            // الموقع: الدولة، المدينة، الحي
+            const locationParts = [];
+            if (s.country) locationParts.push(s.country);
+            if (s.city) locationParts.push(s.city);
+            if (s.district) locationParts.push(s.district);
+            const locationStr = locationParts.length > 0 ? locationParts.join('، ') : '-';
+
             return `<tr>
                 <td>${s.session_number||'-'}</td>
                 <td>${formatDate(s.login_at)}</td>
                 <td>${s.device_type||'-'}</td>
                 <td>${s.browser_name||'-'}</td>
-                <td>${s.city||''}${s.country?', '+s.country:''} ${map}</td>
                 <td>${s.ip_address||'-'}<br><small>${s.isp||''}</small></td>
-                <td><span class="risk-badge risk-${s.risk_level||'low'}">${getRiskLabel(s.risk_level)}</span></td>
+                <td>${locationStr} ${map}</td>
+                <td>${vpnStatus}</td>
                 <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
                 <td>
                     <button class="btn-icon view-detail" data-id="${s.id}"><i class="fas fa-eye"></i></button>
@@ -131,13 +144,13 @@
                 <div class="detail-item"><span class="label">المتصفح</span><span class="value">${s.browser_name||'-'} ${s.browser_version||''}</span></div>
                 <div class="detail-item"><span class="label">دقة الشاشة</span><span class="value">${s.screen_resolution||'-'}</span></div>
             </div>
-            <div class="detail-section"><h4>الشبكة</h4>
+            <div class="detail-section"><h4>الشبكة والموقع</h4>
                 <div class="detail-item"><span class="label">IP</span><span class="value">${s.ip_address||'-'}</span></div>
                 <div class="detail-item"><span class="label">ISP</span><span class="value">${s.isp||'-'}</span></div>
-            </div>
-            <div class="detail-section"><h4>الموقع</h4>
+                <div class="detail-item"><span class="label">VPN/Proxy</span><span class="value">${(s.proxy_detected||s.tor_detected||s.hosting_detected)?'⚠️ نعم':'لا'}</span></div>
                 <div class="detail-item"><span class="label">الدولة</span><span class="value">${s.country||'-'}</span></div>
                 <div class="detail-item"><span class="label">المدينة</span><span class="value">${s.city||'-'}</span></div>
+                <div class="detail-item"><span class="label">الحي</span><span class="value">${s.district||'-'}</span></div>
                 <div class="detail-item"><span class="label">الإحداثيات</span><span class="value">${s.latitude||'-'}, ${s.longitude||'-'} ${map}</span></div>
             </div>
         `;
@@ -166,15 +179,6 @@
         window.TeraAuth.logout();
     }
 
-    function refreshLocation() {
-        if(!navigator.geolocation){alert('متصفحك لا يدعم GPS');return;}
-        navigator.geolocation.getCurrentPosition(async pos=>{
-            await supabase.from('user_login_sessions').update({latitude:pos.coords.latitude,longitude:pos.coords.longitude,last_activity_at:new Date().toISOString()}).eq('user_id',currentUser.id).eq('status','active').eq('is_current_session',true);
-            alert('تم تحديث الموقع');
-            fetchSessions();
-        },()=>alert('فشل تحديد الموقع'),{enableHighAccuracy:true,timeout:10000});
-    }
-
     function initIdleTimer() {
         function reset(){clearTimeout(idleTimer);clearInterval(idleWarningTimer);closeWarning();idleTimer=setTimeout(showWarning,IDLE_TIME);}
         function showWarning(){
@@ -197,7 +201,7 @@
         document.getElementById('closeDetailModal').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('closeDetailBtn').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('logoutAllSessionsBtn').addEventListener('click',logoutAll);
-        document.getElementById('refreshLocationBtn').addEventListener('click',refreshLocation);
+        // تم إزالة زر تحديث الموقع
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
