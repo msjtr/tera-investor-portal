@@ -6,7 +6,7 @@
  * ==========================================================
  * ينشئ عميل Supabase ويخزنه في window.teraSupabase
  * يطلق حدث supabase:ready عند الجاهزية
- * لا يحتوي على waitForSupabase (موجودة في security.js)
+ * يتضمن waitForSupabase للتوافق (لكن يفضل استخدام security.js)
  */
 
 (function () {
@@ -78,4 +78,38 @@
 
     // بدء التهيئة فوراً
     initSupabase();
+
+    // ========== دالة انتظار العميل (اختيارية، موجودة أيضاً في security.js) ==========
+    // تُستخدم كخطة بديلة في حال لم تُحمّل security.js في بعض الصفحات
+    window.waitForSupabase = function (timeout = 10000) {
+        return new Promise((resolve, reject) => {
+            if (window.teraSupabase) {
+                resolve(window.teraSupabase);
+                return;
+            }
+
+            const timer = setTimeout(() => {
+                reject(new Error('Supabase initialization timeout.'));
+            }, timeout);
+
+            document.addEventListener(
+                'supabase:ready',
+                function (event) {
+                    clearTimeout(timer);
+                    resolve(event.detail.client);
+                },
+                { once: true }
+            );
+
+            document.addEventListener(
+                'supabase:error',
+                function (event) {
+                    clearTimeout(timer);
+                    reject(event.detail);
+                },
+                { once: true }
+            );
+        });
+    };
+
 })();
