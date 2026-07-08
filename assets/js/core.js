@@ -4,13 +4,8 @@
  * ============================================================
  * الموقع: /assets/js/core.js
  * التحديثات:
- * 1. إزالة تهيئة Supabase المكررة (المنوطة بـ supabase-client.js).
- * 2. الاعتماد على العميل المركزي window.teraSupabase (عند الحاجة فقط).
- * 3. الحفاظ على تحويل جميع الأحداث إلى Event Delegation للصفحات الديناميكية.
- * 4. قفل (Flag) يمنع تكرار تكدس الأحداث في الذاكرة.
- * 5. حفظ حالة القائمة (مفتوحة/مغلقة) في localStorage.
- * 6. تحديث هندسة الأزرار باستخدام preventDefault و return لرفع كفاءة المعالجة.
- * ============================================================
+ * - استخدام showSecurityAlert بدلاً من TeraApp.showNotification
+ * - تحسين التوافق مع النظام الحالي
  */
 
 (function() {
@@ -109,11 +104,9 @@
 
                 // منع فتح القائمة الفرعية إذا كانت القائمة الرئيسية مطوية (سطح مكتب)
                 if (window.innerWidth > 991 && sidebarEl && sidebarEl.classList.contains('collapsed')) {
-                    // تنبيه اختياري
-                    if (window.TeraApp && typeof window.TeraApp.showNotification === 'function') {
-                        window.TeraApp.showNotification('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات', 'info');
-                    } else {
-                        alert('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات');
+                    // تنبيه باستخدام showSecurityAlert إذا كانت موجودة، وإلا تجاهل
+                    if (typeof window.showSecurityAlert === 'function') {
+                        window.showSecurityAlert('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات', 'info');
                     }
                     return;
                 }
