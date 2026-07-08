@@ -1,12 +1,15 @@
 /**
  * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise)
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5)
  * ==========================================================
  * - يعتمد على window.teraSupabase من supabase-client.js
  * - يوفر كائن TeraAuth مع دوال: login, logout, getUser, ...
  * - يستمع لتغيرات حالة المصادقة (onAuthStateChange)
  * - يُؤمّن الصفحات ويُحدّث واجهة المستخدم تلقائياً
  * - يسجل جلسات الدخول في user_login_sessions مع تفاصيل الجهاز والموقع
+ * - يكتشف VPN/Proxy ويمنع الدخول
+ * - ينهي جميع الجلسات الأخرى تلقائياً عند تسجيل الدخول
+ * - يراقب تغير الموقع الجغرافي وينهي الجلسة إذا تغير بشكل كبير
  * - متوافق مع verify-otp.js وباقي ملفات النظام
  */
 
@@ -51,28 +54,26 @@
             browser_name: '',
             browser_version: '',
             screen_resolution: `${window.screen.width}x${window.screen.height}`,
-            language: navigator.language || ''
+            language: navigator.language || '',
+            user_agent: ua,
+            platform: navigator.platform || ''
         };
 
-        // نوع الجهاز
         if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) {
             result.device_type = /iPad|tablet/i.test(ua) ? 'tablet' : 'mobile';
         }
-
-        // نظام التشغيل
         if (/Windows NT (\d+\.\d+)/.test(ua)) {
             result.operating_system = `Windows ${RegExp.$1}`;
-        } else if (/Mac OS X (\d+[._]\d+[._]?\d*)/.test(ua)) {
-            result.operating_system = `macOS ${RegExp.$1.replace(/_/g, '.')}`;
+        } else if (/Mac OS X (\d+[._]\d+)/.test(ua)) {
+            result.operating_system = `macOS ${RegExp.$1}`;
         } else if (/Android (\d+\.\d+)/.test(ua)) {
             result.operating_system = `Android ${RegExp.$1}`;
-        } else if (/iPhone|iPad|iPod.* OS (\d+[._]\d+[._]?\d*)/.test(ua)) {
-            result.operating_system = `iOS ${RegExp.$1.replace(/_/g, '.')}`;
+        } else if (/iPhone|iPad|iPod.* OS (\d+[._]\d+)/.test(ua)) {
+            result.operating_system = `iOS ${RegExp.$1}`;
         } else {
             result.operating_system = navigator.platform || '';
         }
 
-        // المتصفح
         if (navigator.userAgentData?.brands) {
             const brand = navigator.userAgentData.brands.find(b => b.brand !== 'Not;A=Brand' && b.brand !== 'Chromium');
             if (brand) {
@@ -96,7 +97,6 @@
             }
         }
 
-        // اسم الجهاز
         if (navigator.userAgentData?.platform) {
             result.device_name = navigator.userAgentData.platform;
         } else if (/Windows/.test(ua)) {
@@ -108,27 +108,158 @@
         return result;
     }
 
-    // ========== جلب معلومات الموقع (بدون إذن GPS) ==========
-    async function fetchGeoInfo() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            if (!response.ok) return null;
-            const data = await response.json();
-            return {
-                ip_address: data.ip || null,
-                country: data.country_name || null,
-                region: data.region || null,
-                city: data.city || null,
-                postal_code: data.postal || null,
-                latitude: data.latitude || null,
-                longitude: data.longitude || null,
-                timezone: data.timezone || null,
-                isp: data.org || null,
-                district: null
+    // ========== جلب معلومات الموقع الدقيقة (JSONP - بدون CORS) ==========
+    function fetchDetailedGeoInfo() {
+        return new Promise((resolve) => {
+            const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
+            window[callbackName] = function(data) {
+                document.body.removeChild(script);
+                delete window[callbackName];
+                if (data && data.ip) {
+                    resolve({
+                        ip_address: data.ip,
+                        country: data.country_name,
+                        country_code: data.country,
+                        region: data.region,
+                        city: data.city,
+                        district: data.district || null,
+                        postal_code: data.postal,
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        timezone: data.timezone,
+                        isp: data.org,
+                        asn: data.asn,
+                        isp_organization: data.org,
+                        hosting_detected: data.hosting || false,
+                        proxy_detected: data.proxy || false,
+                        tor_detected: data.tor || false,
+                        network: data.network || null,
+                    });
+                } else {
+                    resolve(null);
+                }
             };
-        } catch (e) {
-            console.warn('⚠️ تعذر جلب معلومات الموقع عبر ipapi.co:', e);
-            return null;
+            const script = document.createElement('script');
+            script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
+            script.onerror = () => {
+                document.body.removeChild(script);
+                delete window[callbackName];
+                resolve(null);
+            };
+            document.body.appendChild(script);
+        });
+    }
+
+    // ========== طلب الموقع الجغرافي (GPS) ==========
+    function requestLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                return reject(new Error('Geolocation not supported'));
+            }
+            const timeout = setTimeout(() => reject(new Error('Location timeout')), 10000);
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    clearTimeout(timeout);
+                    resolve({
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    });
+                },
+                err => {
+                    clearTimeout(timeout);
+                    reject(err);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+
+    // ========== إيقاف الخدمة (رسالة رفض GPS أو VPN) ==========
+    function showDeniedMessage(reason = 'رفض مشاركة الموقع الجغرافي') {
+        document.body.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;">
+                <div style="background:#fff;padding:40px;border-radius:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.1);max-width:500px;width:90%;">
+                    <i class="fas fa-shield-alt" style="font-size:64px;color:#dc2626;margin-bottom:20px;"></i>
+                    <h2 style="color:#0A1B3F;font-size:24px;margin-bottom:12px;">تم إيقاف الخدمة</h2>
+                    <p style="color:#475569;font-size:15px;line-height:1.6;margin-bottom:24px;">${reason}</p>
+                    <button onclick="location.reload()" style="background:#028090;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;">إعادة المحاولة</button>
+                </div>
+            </div>`;
+    }
+
+    // ========== إنهاء جميع الجلسات الأخرى تلقائياً ==========
+    async function terminateOtherSessions(client, user, currentSessionNumber) {
+        const { data: sessions } = await client.from('user_login_sessions')
+            .select('id, session_number')
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .neq('session_number', currentSessionNumber);
+
+        if (sessions && sessions.length > 0) {
+            await client.from('user_login_sessions')
+                .update({
+                    status: 'terminated_by_system',
+                    logout_reason: 'تم إنهاء الجلسة تلقائياً بسبب تسجيل الدخول من جهاز آخر',
+                    logout_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .in('id', sessions.map(s => s.id));
+            return sessions.length;
+        }
+        return 0;
+    }
+
+    // ========== تتبع الموقع المستمر وإنهاء الجلسة عند التغير ==========
+    function startLocationTracking(client, userId) {
+        if (!navigator.geolocation) return;
+        if (window._locationWatchId) navigator.geolocation.clearWatch(window._locationWatchId);
+
+        let lastKnownPosition = null;
+
+        window._locationWatchId = navigator.geolocation.watchPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                if (lastKnownPosition) {
+                    const distance = Math.sqrt(
+                        Math.pow(latitude - lastKnownPosition.latitude, 2) +
+                        Math.pow(longitude - lastKnownPosition.longitude, 2)
+                    );
+                    if (distance > 0.5) {
+                        await client.from('user_login_sessions')
+                            .update({
+                                status: 'terminated_by_system',
+                                logout_reason: 'تم اكتشاف تغير كبير في الموقع الجغرافي',
+                                logout_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('user_id', userId)
+                            .eq('status', 'active');
+                        stopLocationTracking();
+                        showDeniedMessage('تم إنهاء الجلسة بسبب تغير الموقع الجغرافي بشكل مريب.');
+                        return;
+                    }
+                }
+                lastKnownPosition = { latitude, longitude };
+                await client.from('user_login_sessions')
+                    .update({ latitude, longitude, last_activity_at: new Date().toISOString() })
+                    .eq('user_id', userId)
+                    .eq('status', 'active')
+                    .eq('is_current_session', true);
+            },
+            (err) => {
+                if (err.code === err.PERMISSION_DENIED || err.code === err.POSITION_UNAVAILABLE) {
+                    stopLocationTracking();
+                    showDeniedMessage('تم فقدان إشارة الموقع الجغرافي.');
+                }
+            },
+            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+        );
+    }
+
+    function stopLocationTracking() {
+        if (window._locationWatchId) {
+            navigator.geolocation.clearWatch(window._locationWatchId);
+            window._locationWatchId = null;
         }
     }
 
@@ -138,8 +269,7 @@
 
         try {
             // 1. إنهاء الجلسات النشطة السابقة
-            await client
-                .from('user_login_sessions')
+            await client.from('user_login_sessions')
                 .update({
                     is_current_session: false,
                     status: 'logged_out',
@@ -153,13 +283,27 @@
             // 2. معلومات الجهاز والمتصفح
             const deviceInfo = parseUserAgent();
 
-            // 3. معلومات الموقع (IP، مدينة، إلخ)
-            const geoInfo = await fetchGeoInfo();
+            // 3. معلومات الموقع الدقيقة (JSONP)
+            const geoInfo = await fetchDetailedGeoInfo();
 
             // 4. توليد رقم الجلسة
             const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
 
-            // 5. بناء كائن الجلسة
+            // 5. إنهاء الجلسات الأخرى تلقائياً
+            const terminatedCount = await terminateOtherSessions(client, user, sessionNumber);
+            if (terminatedCount > 0) {
+                setTimeout(() => {
+                    alert(`تم إنهاء ${terminatedCount} جلسة نشطة أخرى تلقائياً لأن الحساب لا يسمح بأكثر من جلسة في نفس الوقت.`);
+                }, 500);
+            }
+
+            // 6. التحقق من VPN/Proxy
+            if (geoInfo && (geoInfo.proxy_detected || geoInfo.tor_detected || geoInfo.hosting_detected)) {
+                showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy أو شبكة مشبوهة. يرجى تعطيلها والمحاولة مرة أخرى.');
+                throw new Error('VPN_PROXY_DETECTED');
+            }
+
+            // 7. بناء كائن الجلسة
             const sessionData = {
                 user_id: user.id,
                 session_number: sessionNumber,
@@ -167,11 +311,13 @@
                 status: 'active',
                 is_current_session: true,
                 last_activity_at: new Date().toISOString(),
+                login_method: 'password',
+                login_status: 'success',
                 ...deviceInfo,
                 ...(geoInfo || {})
             };
 
-            // 6. إدراج الجلسة الجديدة
+            // 8. إدراج الجلسة الجديدة
             const { error } = await client.from('user_login_sessions').insert(sessionData);
 
             if (error) {
@@ -236,6 +382,9 @@
 
                     if (!activeSessions || activeSessions.length === 0) {
                         await recordLoginSession(this._client, this._user);
+                    } else {
+                        // تتبع الموقع للجلسة الحالية
+                        startLocationTracking(this._client, this._user.id);
                     }
                 } catch (e) {
                     console.warn('⚠️ [Auth] تعذر التحقق من الجلسات النشطة:', e.message);
@@ -279,10 +428,10 @@
                             updated_at: new Date().toISOString()
                         })
                         .eq('user_id', this._user.id)
-                        .eq('status', 'active')
-                        .eq('is_current_session', true);
+                        .eq('status', 'active');
                 }
 
+                stopLocationTracking();
                 await this._client.auth.signOut();
                 this._session = null;
                 this._user = null;
