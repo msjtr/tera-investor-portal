@@ -3,37 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>تيرا | بوابة المستثمر وإدارة المحافظ الرقمية</title>
     <meta name="description" content="منصة تيرا للاستثمار الرقمي - بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء.">
 
-    <!-- أيقونة الموقع -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
     <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.svg">
 
-    <!-- خط Tajawal -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
 
-    <!-- أيقونات Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ملفات التنسيق الأساسية (المسارات المطلقة) -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
 
     <style>
-        /* أنماط الصفحة الرئيسية (خاصة بها فقط) */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        :root {
+            --primary: #028090;
+            --primary-dark: #0A1B3F;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-800: #1e293b;
+            --gray-900: #0A1B3F;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 20px 60px rgba(10, 37, 64, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: 'Tajawal', sans-serif;
             background: linear-gradient(135deg, #f4f7fa 0%, #eef2f7 100%);
             min-height: 100vh;
-            color: #0A2540;
+            color: var(--gray-900);
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
+
         .hero-section {
             flex-grow: 1;
             display: flex;
@@ -41,42 +61,51 @@
             justify-content: center;
             padding: 60px 20px;
         }
+
         .hero-card {
             width: 100%;
             max-width: 900px;
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(12px);
-            border-radius: 24px;
-            padding: 65px;
+            border-radius: var(--radius-xl);
+            padding: 60px;
             text-align: center;
-            box-shadow: 0 25px 60px rgba(10, 37, 64, 0.05);
+            box-shadow: var(--shadow-lg);
             border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.3s ease;
         }
+
         .brand-logo {
             margin-bottom: 35px;
             display: flex;
             justify-content: center;
         }
+
         .brand-logo img {
             width: 160px;
             height: auto;
             object-fit: contain;
         }
+
         .main-title {
+            font-family: 'Cairo', sans-serif;
             font-size: 36px;
-            color: #0A2540;
+            color: var(--gray-900);
             margin-bottom: 20px;
             font-weight: 800;
+            line-height: 1.3;
         }
+
         .main-subtitle {
             font-size: 18px;
-            color: #475569;
+            color: var(--gray-600);
             margin-bottom: 50px;
             line-height: 1.8;
             max-width: 750px;
             margin-left: auto;
             margin-right: auto;
         }
+
         .auth-actions {
             display: flex;
             justify-content: center;
@@ -84,6 +113,7 @@
             flex-wrap: wrap;
             margin-bottom: 50px;
         }
+
         .btn-action {
             display: inline-flex;
             align-items: center;
@@ -91,87 +121,254 @@
             gap: 10px;
             text-decoration: none;
             padding: 18px 50px;
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             font-weight: 700;
             font-size: 17px;
             transition: all 0.3s ease;
             min-width: 200px;
+            font-family: 'Tajawal', sans-serif;
         }
+
         .btn-login {
-            background: linear-gradient(135deg, #0A2540 0%, #028090 100%);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
             color: #ffffff;
             box-shadow: 0 4px 15px rgba(2, 128, 144, 0.25);
         }
+
         .btn-login:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(2, 128, 144, 0.35);
         }
+
         .btn-register {
             background: #f8fafc;
-            color: #0A2540;
-            border: 2px solid #e2e8f0;
+            color: var(--primary-dark);
+            border: 2px solid var(--gray-200);
         }
+
         .btn-register:hover {
-            background: #e2e8f0;
+            background: var(--gray-200);
             transform: translateY(-3px);
         }
+
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 25px;
             margin-top: 20px;
         }
+
         .feature-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
             padding: 25px;
             text-align: right;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-md);
         }
+
         .feature-card h3 {
             margin-bottom: 10px;
-            color: #0A2540;
+            color: var(--gray-900);
             font-size: 18px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
         }
+
+        .feature-card h3 i {
+            color: var(--primary);
+            margin-left: 8px;
+            font-size: 20px;
+        }
+
         .feature-card p {
-            color: #64748b;
+            color: var(--gray-500);
             line-height: 1.6;
             font-size: 14px;
         }
-        @media (max-width: 576px) {
-            .hero-card { padding: 35px 20px; }
-            .main-title { font-size: 26px; }
-            .main-subtitle { font-size: 16px; }
-            .btn-action { padding: 14px 30px; font-size: 15px; min-width: 160px; }
-            .brand-logo img { width: 120px; }
+
+        .btn-action i {
+            font-size: 18px;
         }
-        .auth-actions .btn-action i { font-size: 18px; }
+
+        /* ========== تجاوب ========== */
+        @media (max-width: 1024px) {
+            .hero-card {
+                padding: 45px 40px;
+                max-width: 700px;
+            }
+            .main-title {
+                font-size: 30px;
+            }
+            .main-subtitle {
+                font-size: 16px;
+                margin-bottom: 40px;
+            }
+            .btn-action {
+                padding: 16px 40px;
+                font-size: 16px;
+                min-width: 180px;
+            }
+            .features-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 40px 16px;
+            }
+            .hero-card {
+                padding: 35px 25px;
+                border-radius: 20px;
+                max-width: 100%;
+            }
+            .brand-logo img {
+                width: 130px;
+            }
+            .brand-logo {
+                margin-bottom: 25px;
+            }
+            .main-title {
+                font-size: 26px;
+                margin-bottom: 15px;
+            }
+            .main-subtitle {
+                font-size: 15px;
+                margin-bottom: 35px;
+                max-width: 100%;
+            }
+            .auth-actions {
+                gap: 15px;
+                margin-bottom: 35px;
+            }
+            .btn-action {
+                padding: 14px 30px;
+                font-size: 15px;
+                min-width: 150px;
+            }
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .feature-card {
+                padding: 20px;
+            }
+            .feature-card h3 {
+                font-size: 16px;
+            }
+            .feature-card p {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-section {
+                padding: 20px 12px;
+            }
+            .hero-card {
+                padding: 25px 16px;
+                border-radius: 16px;
+            }
+            .brand-logo img {
+                width: 100px;
+            }
+            .brand-logo {
+                margin-bottom: 20px;
+            }
+            .main-title {
+                font-size: 22px;
+            }
+            .main-subtitle {
+                font-size: 14px;
+                margin-bottom: 28px;
+            }
+            .auth-actions {
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 28px;
+            }
+            .btn-action {
+                width: 100%;
+                min-width: unset;
+                padding: 14px 20px;
+                font-size: 14px;
+            }
+            .btn-action i {
+                font-size: 16px;
+            }
+            .features-grid {
+                gap: 12px;
+            }
+            .feature-card {
+                padding: 16px;
+                text-align: center;
+            }
+            .feature-card h3 {
+                font-size: 15px;
+                justify-content: center;
+            }
+        }
+
+        /* ========== الوضع الداكن ========== */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: var(--gray-800);
+                color: #e2e8f0;
+            }
+            .hero-card {
+                background: rgba(30, 41, 59, 0.96);
+                border-color: rgba(51, 65, 85, 0.8);
+            }
+            .main-title {
+                color: #f8fafc;
+            }
+            .main-subtitle {
+                color: #94a3b8;
+            }
+            .btn-register {
+                background: var(--gray-800);
+                color: #e2e8f0;
+                border-color: var(--gray-600);
+            }
+            .btn-register:hover {
+                background: var(--gray-600);
+            }
+            .feature-card {
+                background: var(--gray-800);
+                border-color: var(--gray-600);
+            }
+            .feature-card h3 {
+                color: #f8fafc;
+            }
+            .feature-card p {
+                color: #94a3b8;
+            }
+        }
     </style>
 </head>
 <body>
 
     <main class="hero-section">
         <div class="hero-card">
-            <!-- الشعار -->
             <div class="brand-logo">
-                <img src="/images/logo.svg" alt="تيرا - بوابة المستثمر">
+                <img src="/images/logo.svg" alt="تيرا - بوابة المستثمر"
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2240%22%3E%3Crect width=%22120%22 height=%2240%22 rx=%226%22 fill=%22%23028090%22/%3E%3Ctext x=%2260%22 y=%2226%22 font-family=%22Cairo,sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22%23ffffff%22 text-anchor=%22middle%22%3Eتيرا%3C/text%3E%3C/svg%3E'">
             </div>
 
-            <!-- العنوان الرئيسي -->
             <h1 class="main-title">منصة تيرا للاستثمار الرقمي</h1>
             <p class="main-subtitle">
                 بوابتك الموثوقة لإدارة الثروات والمحافظ الاستثمارية بذكاء. تابع نمو أصولك، استكشف فرصاً استثنائية، واطلع على تقاريرك المالية بكل شفافية وأمان.
             </p>
 
-            <!-- أزرار الدخول والتسجيل -->
             <div class="auth-actions">
-                <!-- تم تصحيح المسار إلى صفحة الدخول الفعلية -->
                 <a href="/auth/auth/login/login.html" class="btn-action btn-login">
                     <i class="fa-solid fa-lock"></i> تسجيل الدخول
                 </a>
@@ -180,25 +377,23 @@
                 </a>
             </div>
 
-            <!-- بطاقات الميزات -->
             <div class="features-grid">
                 <div class="feature-card">
-                    <h3><i class="fas fa-chart-line" style="color: #028090; margin-left: 8px;"></i> استثمارات واعدة</h3>
+                    <h3><i class="fas fa-chart-line"></i> استثمارات واعدة</h3>
                     <p>فرص استثمارية مدروسة وموثقة تضمن لك عوائد مجزية ومستدامة.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><i class="fas fa-wallet" style="color: #028090; margin-left: 8px;"></i> إدارة المحفظة</h3>
+                    <h3><i class="fas fa-wallet"></i> إدارة المحفظة</h3>
                     <p>لوحة تحكم ذكية تتيح لك مراقبة الأصول والأرباح لحظة بلحظة.</p>
                 </div>
                 <div class="feature-card">
-                    <h3><i class="fas fa-file-invoice" style="color: #028090; margin-left: 8px;"></i> تقارير شفافية</h3>
+                    <h3><i class="fas fa-file-invoice"></i> تقارير شفافية</h3>
                     <p>كشوفات حساب تفصيلية وتقارير أداء دورية معتمدة بكل سهولة.</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- السكريبتات الأساسية (خفيفة – لا تحتوي على تتبع أو GPS) -->
     <script src="/assets/js/supabase-client.js"></script>
 </body>
 </html>
