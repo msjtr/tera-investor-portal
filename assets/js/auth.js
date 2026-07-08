@@ -1,6 +1,6 @@
 /**
  * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5)
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.1)
  * ==========================================================
  * - جلب دقيق للموقع (ipapi.co/jsonp مع حقول إضافية)
  * - اكتشاف VPN/Proxy ومنع الدخول
@@ -8,6 +8,7 @@
  * - مراقبة الموقع وإنهاء الجلسة إذا تغير بشكل كبير
  * - GPS إجباري عند init، اختياري عند login
  * - تتبع الجلسات وتسجيلها في user_login_sessions
+ * - تم إصلاح خطأ العمود 'network' غير الموجود في الجدول
  */
 
 (function () {
@@ -64,7 +65,7 @@
         return result;
     }
 
-    // ========== جلب معلومات الموقع الدقيقة (JSONP) ==========
+    // ========== جلب معلومات الموقع الدقيقة (JSONP) – تم إصلاحها ==========
     function fetchDetailedGeoInfo() {
         return new Promise((resolve) => {
             const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
@@ -72,6 +73,7 @@
                 document.body.removeChild(script);
                 delete window[callbackName];
                 if (data && data.ip) {
+                    // نُعيد فقط الحقول الموجودة فعلاً في جدول user_login_sessions
                     resolve({
                         ip_address: data.ip,
                         country: data.country_name,
@@ -89,7 +91,7 @@
                         hosting_detected: data.hosting || false,
                         proxy_detected: data.proxy || false,
                         tor_detected: data.tor || false,
-                        network: data.network || null,
+                        // تمت إزالة network لأنه غير موجود بالجدول
                     });
                 } else {
                     resolve(null);
