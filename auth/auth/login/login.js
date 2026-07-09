@@ -1,9 +1,5 @@
 /**
  * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع
- * المسار: auth/auth/login/login.js
- * - يستخدم waitForSupabase الموحدة
- * - يتحقق من كلمة المرور ثم يرسل OTP
- * - لا ينشئ جلسة كاملة قبل إدخال OTP
  */
 (function() {
     'use strict';
@@ -12,8 +8,6 @@
     const VERIFY_OTP_URL = '/auth/verify-otp.html';
 
     window.addEventListener('DOMContentLoaded', async function() {
-        console.log('✅ login.js: DOM جاهز.');
-
         const form = document.getElementById('teraLoginForm');
         const emailInput = document.getElementById('login_identifier');
         const passwordInput = document.getElementById('login_password');
@@ -24,14 +18,10 @@
         const alertMessage = document.getElementById('alertMessage');
         const loader = document.getElementById('creativeLoaderScreen');
 
-        if (!form || !emailInput || !passwordInput || !submitBtn) {
-            console.error('❌ login.js: أحد العناصر الأساسية غير موجود.');
-            return;
-        }
+        if (!form || !emailInput || !passwordInput || !submitBtn) return;
 
         let supabaseClient = null;
 
-        // الحصول على العميل باستخدام الدالة العامة
         try {
             if (typeof window.waitForSupabase === 'function') {
                 supabaseClient = await window.waitForSupabase();
@@ -40,9 +30,7 @@
             } else {
                 throw new Error('عميل Supabase غير متوفر');
             }
-            console.log('✅ login.js: العميل جاهز.');
         } catch (e) {
-            console.error('❌ فشل الحصول على عميل Supabase:', e);
             showAlert('تعذر الاتصال بالخادم. حاول تحديث الصفحة.', 'error');
             return;
         }
@@ -78,7 +66,6 @@
             showLoader();
 
             try {
-                // 1. التحقق من صحة كلمة المرور (مع تجنب إنشاء جلسة دائمة)
                 const { error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password,
@@ -93,13 +80,11 @@
                     return;
                 }
 
-                // 2. إرسال OTP إجباري (الرمز سيُرسل للبريد)
                 await supabaseClient.auth.signInWithOtp({
                     email: email,
                     options: { shouldCreateUser: false }
                 });
 
-                // 3. تخزين بيانات الجلسة المؤقتة لاستخدامها في verify-otp.js
                 localStorage.setItem('pendingVerificationEmail', email);
                 localStorage.setItem('tera_verify_type', 'login_otp');
                 sessionStorage.setItem('tera_login_password', password);
@@ -110,7 +95,7 @@
                 }, 1000);
 
             } catch (err) {
-                console.error('💥 خطأ غير متوقع:', err);
+                console.error(err);
                 showAlert('حدث خطأ. يرجى المحاولة لاحقاً.', 'error');
             } finally {
                 submitBtn.disabled = false;
@@ -119,12 +104,9 @@
             }
         }
 
-        // ربط الأحداث
         form.addEventListener('submit', handleLogin);
         showPasswordCheck.addEventListener('change', function() {
             passwordInput.type = this.checked ? 'text' : 'password';
         });
-
-        console.log('✅ login.js: جاهز تماماً.');
     });
 })();
