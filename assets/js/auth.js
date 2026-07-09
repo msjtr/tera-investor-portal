@@ -1,13 +1,13 @@
 /**
  * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.1)
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.2)
  * ==========================================================
  * - JSONP لجلب IP والموقع (بدون CORS)
+ * - Reverse Geocoding لتحسين دقة الدولة والمدينة والحي
  * - GPS إجباري عند تحميل الصفحات المحمية (init)
  * - GPS اختياري عند تسجيل الدخول بعد OTP (login)
  * - تتبع الموقع طوال الجلسة
  * - تسجيل الجلسات في user_login_sessions
- * - لا يُحمَّل في صفحة الدخول (يوجد login.js منفصل)
  */
 
 (function () {
@@ -64,16 +64,43 @@
         return result;
     }
 
-    // ========== جلب معلومات الموقع الدقيقة (JSONP) – تم إصلاحها ==========
+    // ========== تحسين الموقع عبر Reverse Geocoding ==========
+    async function reverseGeocode(latitude, longitude) {
+        try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=ar`;
+            const response = await fetch(url);
+            if (!response.ok) return null;
+            const data = await response.json();
+            
+            if (data && data.address) {
+                const addr = data.address;
+                return {
+                    country: addr.country || null,
+                    country_code: addr.country_code ? addr.country_code.toUpperCase() : null,
+                    city: addr.city || addr.town || addr.village || addr.state_district || null,
+                    district: addr.suburb || addr.city_district || addr.district || null,
+                    region: addr.state || addr.region || null,
+                    postal_code: addr.postcode || null,
+                };
+            }
+            return null;
+        } catch (e) {
+            console.warn('⚠️ فشل Reverse Geocoding:', e);
+            return null;
+        }
+    }
+
+    // ========== جلب معلومات الموقع الدقيقة (JSONP + Reverse Geocoding) ==========
     function fetchDetailedGeoInfo() {
         return new Promise((resolve) => {
             const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
-            window[callbackName] = function(data) {
+            window[callbackName] = async function(data) {
                 document.body.removeChild(script);
                 delete window[callbackName];
+                
                 if (data && data.ip) {
-                    // نُعيد فقط الحقول الموجودة فعلاً في جدول user_login_sessions
-                    resolve({
+                    // البيانات الأساسية من IP
+                    const geoInfo = {
                         ip_address: data.ip,
                         country: data.country_name,
                         country_code: data.country,
@@ -90,8 +117,23 @@
                         hosting_detected: data.hosting || false,
                         proxy_detected: data.proxy || false,
                         tor_detected: data.tor || false,
-                        // تمت إزالة network لأنه غير موجود بالجدول
-                    });
+                    };
+
+                    // ✅ إذا كانت الإحداثيات موجودة لكن الدولة/المدينة غير دقيقة، نستخدم Reverse Geocoding
+                    if (data.latitude && data.longitude) {
+                        const improvedLocation = await reverseGeocode(data.latitude, data.longitude);
+                        if (improvedLocation) {
+                            // نأخذ المعلومات الأكثر دقة (إذا كانت فارغة من IPApi، أو نستبدلها بالمعلومات الأحدث)
+                            geoInfo.country = improvedLocation.country || geoInfo.country;
+                            geoInfo.country_code = improvedLocation.country_code || geoInfo.country_code;
+                            geoInfo.city = improvedLocation.city || geoInfo.city;
+                            geoInfo.district = improvedLocation.district || geoInfo.district;
+                            geoInfo.region = improvedLocation.region || geoInfo.region;
+                            geoInfo.postal_code = improvedLocation.postal_code || geoInfo.postal_code;
+                        }
+                    }
+
+                    resolve(geoInfo);
                 } else {
                     resolve(null);
                 }
@@ -116,7 +158,7 @@
         });
     }
 
-    // ========== إيقاف الخدمة (رسالة رفض GPS أو VPN) ==========
+    // ========== إيقاف الخدمة ==========
     function showDeniedMessage(reason = 'رفض مشاركة الموقع الجغرافي') {
         document.body.innerHTML = `
             <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;">
@@ -129,7 +171,7 @@
             </div>`;
     }
 
-    // ========== إنهاء جميع الجلسات الأخرى تلقائياً ==========
+    // ========== إنهاء جميع الجلسات الأخرى ==========
     async function terminateOtherSessions(client, user, currentSessionNumber) {
         const { data: sessions } = await client.from('user_login_sessions')
             .select('id, session_number')
@@ -151,7 +193,7 @@
         return 0;
     }
 
-    // ========== مراقبة تغير الموقع وإنهاء الجلسة ==========
+    // ========== مراقبة تغير الموقع ==========
     function startLocationTracking(client, userId) {
         if (!navigator.geolocation) return;
         if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
@@ -206,24 +248,22 @@
         if (requireGps) {
             try { gps = await requestLocation(); } catch (e) { showDeniedMessage(); throw new Error('LOCATION_DENIED'); }
         } else {
-            try { gps = await requestLocation(); } catch (e) { console.warn('⚠️ GPS غير متاح – متابعة تسجيل الجلسة بدونه.'); }
+            try { gps = await requestLocation(); } catch (e) { console.warn('⚠️ GPS غير متاح.'); }
         }
 
         const geo = await fetchDetailedGeoInfo();
         const device = parseUserAgent();
         const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
 
-        // إنهاء الجلسات الأخرى تلقائياً
         const terminatedCount = await terminateOtherSessions(client, user, sessionNumber);
         if (terminatedCount > 0) {
             setTimeout(() => {
-                alert(`تم إنهاء ${terminatedCount} جلسة نشطة أخرى تلقائياً لأن الحساب لا يسمح بأكثر من جلسة في نفس الوقت.`);
+                alert(`تم إنهاء ${terminatedCount} جلسة نشطة أخرى تلقائياً.`);
             }, 500);
         }
 
-        // التحقق من VPN/Proxy
         if (geo && (geo.proxy_detected || geo.tor_detected || geo.hosting_detected)) {
-            showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy أو شبكة مشبوهة. يرجى تعطيلها والمحاولة مرة أخرى.');
+            showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy. يرجى تعطيلها.');
             throw new Error('VPN_PROXY_DETECTED');
         }
 
@@ -255,7 +295,7 @@
         init: async function () {
             if (this._initialized) return;
             this._initialized = true;
-            try { this._client = await getSupabase(); } catch (e) { console.error('❌ Supabase غير متوفر'); return; }
+            try { this._client = await getSupabase(); } catch (e) { return; }
 
             const { data: { user }, error } = await this._client.auth.getUser();
             if (error || !user) { this.redirectTo(ROUTES.LOGIN); return; }
@@ -288,10 +328,7 @@
                 this.updateUI();
                 await createSession(this._client, data.user, false);
                 return { data, error: null };
-            } catch (error) {
-                console.error('❌ [Auth] فشل تسجيل الدخول:', error);
-                return { data: null, error };
-            }
+            } catch (error) { return { data: null, error }; }
         },
 
         getUser: async function () {
