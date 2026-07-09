@@ -24,50 +24,48 @@
     let locationWatchId = null;
     let lastKnownPosition = null;
 
-    // ========== انتظار Supabase ==========
     async function getSupabase() {
         if (window.teraSupabase) return window.teraSupabase;
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
-            document.addEventListener('supabase:ready', e => {
-                clearTimeout(timeout);
-                resolve(e.detail.client);
-            }, { once: true });
-            document.addEventListener('supabase:error', () => {
-                clearTimeout(timeout);
-                reject(new Error('Supabase error'));
-            }, { once: true });
+            document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
         });
     }
 
-    // ========== تحليل User Agent ==========
     function parseUserAgent() {
         const ua = navigator.userAgent;
-        const result = {
-            device_type: 'computer', device_name: '',
-            operating_system: navigator.platform || '',
-            browser_name: '', browser_version: '',
+        return {
+            device_type: /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? (/iPad|tablet/i.test(ua) ? 'tablet' : 'mobile') : 'computer',
+            device_name: navigator.userAgentData?.platform || (navigator.platform || ''),
+            operating_system: (() => {
+                if (/Windows NT (\d+\.\d+)/.test(ua)) return `Windows ${RegExp.$1}`;
+                if (/Mac OS X (\d+[._]\d+)/.test(ua)) return `macOS ${RegExp.$1}`;
+                return navigator.platform || '';
+            })(),
+            browser_name: (() => {
+                if (/Edg\//.test(ua)) return 'Edge';
+                if (/Firefox\//.test(ua)) return 'Firefox';
+                if (/Chrome\//.test(ua)) return 'Chrome';
+                if (/Safari\//.test(ua)) return 'Safari';
+                return '';
+            })(),
+            browser_version: (() => {
+                const match = ua.match(/(?:Edg|Firefox|Chrome|Safari)\/(\d+\.\d+)/);
+                return match ? match[1] : '';
+            })(),
             screen_resolution: `${window.screen.width}x${window.screen.height}`,
-            language: navigator.language || '', user_agent: ua,
+            language: navigator.language || '',
+            user_agent: ua,
         };
-        if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) result.device_type = /iPad|tablet/i.test(ua) ? 'tablet' : 'mobile';
-        if (/Windows NT (\d+\.\d+)/.test(ua)) result.operating_system = `Windows ${RegExp.$1}`;
-        else if (/Mac OS X (\d+[._]\d+)/.test(ua)) result.operating_system = `macOS ${RegExp.$1}`;
-        if (/Edg\//.test(ua)) { result.browser_name = 'Edge'; result.browser_version = ua.match(/Edg\/(\d+\.\d+)/)[1]; }
-        else if (/Firefox\//.test(ua)) { result.browser_name = 'Firefox'; result.browser_version = ua.match(/Firefox\/(\d+\.\d+)/)[1]; }
-        else if (/Chrome\//.test(ua)) { result.browser_name = 'Chrome'; result.browser_version = ua.match(/Chrome\/(\d+\.\d+)/)[1]; }
-        else if (/Safari\//.test(ua)) { result.browser_name = 'Safari'; result.browser_version = ua.match(/Safari\/(\d+\.\d+)/)[1]; }
-        return result;
     }
 
-    // ========== Reverse Geocoding ==========
     async function reverseGeocode(latitude, longitude) {
         try {
             const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json&accept-language=ar`;
             const response = await fetch(url);
             if (!response.ok) return null;
             const data = await response.json();
-            if (data && data.display_name) {
+            if (data?.display_name) {
                 return {
                     country: data.country || null,
                     country_code: data.country_code?.toUpperCase() || null,
@@ -81,23 +79,19 @@
         } catch (e) { return null; }
     }
 
-    // ========== جلب معلومات الموقع ==========
     function fetchDetailedGeoInfo() {
         return new Promise((resolve) => {
-            const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
-            window[callbackName] = async function(data) {
+            const cb = 'geo_' + Math.random().toString(36).substr(2, 9);
+            window[cb] = async function(data) {
                 document.body.removeChild(script);
-                delete window[callbackName];
-                if (data && data.ip) {
+                delete window[cb];
+                if (data?.ip) {
                     const geoInfo = {
-                        ip_address: data.ip, country: data.country_name,
-                        country_code: data.country, region: data.region,
-                        city: data.city, district: data.district || null,
-                        postal_code: data.postal, latitude: data.latitude,
-                        longitude: data.longitude, timezone: data.timezone,
-                        isp: data.org, asn: data.asn, isp_organization: data.org,
-                        hosting_detected: data.hosting || false,
-                        proxy_detected: data.proxy || false,
+                        ip_address: data.ip, country: data.country_name, country_code: data.country,
+                        region: data.region, city: data.city, district: data.district || null,
+                        postal_code: data.postal, latitude: data.latitude, longitude: data.longitude,
+                        timezone: data.timezone, isp: data.org, asn: data.asn, isp_organization: data.org,
+                        hosting_detected: data.hosting || false, proxy_detected: data.proxy || false,
                         tor_detected: data.tor || false,
                     };
                     if (data.latitude && data.longitude) {
@@ -115,38 +109,27 @@
                 } else resolve(null);
             };
             const script = document.createElement('script');
-            script.src = `https://ipapi.co/jsonp/?callback=${callbackName}`;
-            script.onerror = () => { document.body.removeChild(script); delete window[callbackName]; resolve(null); };
+            script.src = `https://ipapi.co/jsonp/?callback=${cb}`;
+            script.onerror = () => { document.body.removeChild(script); delete window[cb]; resolve(null); };
             document.body.appendChild(script);
         });
     }
 
-    // ========== طلب GPS ==========
     function requestLocation() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
-            const timeout = setTimeout(() => reject(new Error('Location timeout')), 10000);
             navigator.geolocation.getCurrentPosition(
-                pos => { clearTimeout(timeout); resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); },
-                err => { clearTimeout(timeout); reject(err); },
+                pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                err => reject(err),
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         });
     }
 
-    // ========== إيقاف الخدمة (لحالات VPN فقط وليس لرفض GPS) ==========
-    function showDeniedMessage(reason = 'تم اكتشاف نشاط مشبوه') {
-        document.body.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;">
-                <div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:500px;width:90%;">
-                    <i class="fas fa-shield-alt" style="font-size:64px;color:#dc2626;"></i>
-                    <h2>تم إيقاف الخدمة</h2><p>${reason}</p>
-                    <button onclick="location.reload()" style="background:#028090;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;">إعادة المحاولة</button>
-                </div>
-            </div>`;
+    function showDeniedMessage(reason) {
+        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;"><div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:500px;"><h2>تم إيقاف الخدمة</h2><p>${reason}</p><button onclick="location.reload()">إعادة المحاولة</button></div></div>`;
     }
 
-    // ========== إنهاء الجلسات الأخرى ==========
     async function terminateOtherSessions(client, user, currentSessionNumber) {
         const { data: sessions } = await client.from('user_login_sessions')
             .select('id').eq('user_id', user.id).eq('status', 'active').neq('session_number', currentSessionNumber);
@@ -155,26 +138,43 @@
                 status: 'terminated_by_system', logout_reason: 'تسجيل الدخول من جهاز آخر',
                 logout_at: new Date().toISOString(), updated_at: new Date().toISOString()
             }).in('id', sessions.map(s => s.id));
-            return sessions.length;
         }
-        return 0;
     }
 
-    // ========== تتبع الموقع ==========
-    function startLocationTracking(client, userId) { /* ... كما هي ... */ }
-    function stopLocationTracking() { /* ... كما هي ... */ }
+    function startLocationTracking(client, userId) {
+        if (!navigator.geolocation) return;
+        if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
+        locationWatchId = navigator.geolocation.watchPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                if (lastKnownPosition) {
+                    const distance = Math.sqrt(Math.pow(latitude - lastKnownPosition.latitude, 2) + Math.pow(longitude - lastKnownPosition.longitude, 2));
+                    if (distance > 0.5) {
+                        await client.from('user_login_sessions').update({
+                            status: 'terminated_by_system', logout_reason: 'تغير الموقع',
+                            logout_at: new Date().toISOString()
+                        }).eq('user_id', userId).eq('status', 'active');
+                        stopLocationTracking();
+                        showDeniedMessage('تم إنهاء الجلسة بسبب تغير الموقع.');
+                        return;
+                    }
+                }
+                lastKnownPosition = { latitude, longitude };
+                await client.from('user_login_sessions').update({
+                    latitude, longitude, last_activity_at: new Date().toISOString()
+                }).eq('user_id', userId).eq('status', 'active').eq('is_current_session', true);
+            },
+            (err) => { if (err.code === 1) { stopLocationTracking(); showDeniedMessage('فقدان إشارة الموقع.'); } },
+            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+        );
+    }
 
-    // ========== تسجيل جلسة جديدة (GPS اختياري لتجنب الحلقة) ==========
+    function stopLocationTracking() { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } }
+
+    // ✅ دالة createSession المُحسَّنة (تُرجع الجلسة المنشأة)
     async function createSession(client, user, requireGps = true) {
         let gps = null;
-        if (requireGps) {
-            try { gps = await requestLocation(); } catch (e) {
-                console.warn('⚠️ فشل GPS الإجباري. متابعة بدونه.');
-                // لا نوقف الخدمة، نكمل بدون GPS
-            }
-        } else {
-            try { gps = await requestLocation(); } catch (e) { /* لا شيء */ }
-        }
+        try { gps = await requestLocation(); } catch (e) { if (requireGps) console.warn('⚠️ GPS غير متاح.'); }
 
         const geo = await fetchDetailedGeoInfo();
         const device = parseUserAgent();
@@ -182,21 +182,30 @@
 
         await terminateOtherSessions(client, user, sessionNumber);
 
-        // VPN/Proxy فقط هو الذي يوقف الخدمة
-        if (geo && (geo.proxy_detected || geo.tor_detected || geo.hosting_detected)) {
-            showDeniedMessage('تم اكتشاف VPN/Proxy. يرجى تعطيلها.');
-            throw new Error('VPN_PROXY_DETECTED');
+        if (geo?.proxy_detected || geo?.tor_detected || geo?.hosting_detected) {
+            showDeniedMessage('تم اكتشاف VPN/Proxy.');
+            return null;
         }
 
-        const { error } = await client.from('user_login_sessions').insert({
-            user_id: user.id, session_number: sessionNumber,
-            login_at: new Date().toISOString(), status: 'active',
-            is_current_session: true, last_activity_at: new Date().toISOString(),
-            login_method: 'password', login_status: 'success',
-            ...device, ...(geo || {}), ...(gps || {}),
-        });
+        const { data, error } = await client.from('user_login_sessions')
+            .insert({
+                user_id: user.id, session_number: sessionNumber,
+                login_at: new Date().toISOString(), status: 'active',
+                is_current_session: true, last_activity_at: new Date().toISOString(),
+                login_method: 'password', login_status: 'success',
+                ...device, ...(geo || {}), ...(gps || {}),
+            })
+            .select('*')
+            .single();
 
-        if (!error) { console.log('✅ جلسة:', sessionNumber); startLocationTracking(client, user.id); }
+        if (error) {
+            console.error('❌ فشل تسجيل الجلسة:', error.message);
+            return null;
+        }
+
+        console.log('✅ جلسة جديدة:', sessionNumber);
+        startLocationTracking(client, user.id);
+        return data;
     }
 
     // ========== TeraAuth ==========
@@ -214,23 +223,25 @@
             this._user = user;
             this.updateUI();
 
-            // تنظيف الجلسات الوهمية
+            // تنظيف الجلسات السابقة
             await this._client.from('user_login_sessions')
                 .update({ status: 'terminated_by_system', logout_reason: 'تنظيف تلقائي', logout_at: new Date().toISOString(), is_current_session: false })
                 .eq('user_id', user.id).eq('status', 'active');
 
-            // إنشاء جلسة جديدة (GPS إجباري لكن مع fallback)
+            // إنشاء جلسة جديدة
             await createSession(this._client, user, true);
         },
 
         login: async function (email, password) {
-            if (!this._client) throw new Error('Supabase غير متوفر');
-            const { data, error } = await this._client.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            this._user = data.user;
-            this.updateUI();
-            await createSession(this._client, data.user, false);
-            return { data, error: null };
+            if (!this._client) return { data: null, error: new Error('Supabase غير متوفر') };
+            try {
+                const { data, error } = await this._client.auth.signInWithPassword({ email, password });
+                if (error) return { data: null, error };
+                this._user = data.user;
+                this.updateUI();
+                const session = await createSession(this._client, data.user, false);
+                return { data: { ...data, session }, error: null };
+            } catch (error) { return { data: null, error }; }
         },
 
         getUser: async function () {
