@@ -1,5 +1,9 @@
 /**
- * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع
+ * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع (إصدار محدث)
+ * المسار: auth/auth/login/login.js
+ * - يتحقق من كلمة المرور ثم يرسل OTP
+ * - يخزن البيانات المؤقتة للتحقق في verify-otp.js
+ * - لا ينشئ جلسة كاملة قبل إدخال OTP
  */
 (function() {
     'use strict';
@@ -8,6 +12,8 @@
     const VERIFY_OTP_URL = '/auth/verify-otp.html';
 
     window.addEventListener('DOMContentLoaded', async function() {
+        console.log('✅ login.js: DOM جاهز.');
+
         const form = document.getElementById('teraLoginForm');
         const emailInput = document.getElementById('login_identifier');
         const passwordInput = document.getElementById('login_password');
@@ -18,19 +24,28 @@
         const alertMessage = document.getElementById('alertMessage');
         const loader = document.getElementById('creativeLoaderScreen');
 
-        if (!form || !emailInput || !passwordInput || !submitBtn) return;
+        // فحص وجود العناصر الأساسية
+        if (!form || !emailInput || !passwordInput || !submitBtn) {
+            console.error('❌ login.js: أحد العناصر الأساسية غير موجود.');
+            return;
+        }
 
         let supabaseClient = null;
 
+        // الحصول على العميل باستخدام الدالة الموحدة
         try {
             if (typeof window.waitForSupabase === 'function') {
                 supabaseClient = await window.waitForSupabase();
             } else if (window.teraSupabase) {
                 supabaseClient = window.teraSupabase;
             } else {
-                throw new Error('عميل Supabase غير متوفر');
+                supabaseClient = await new Promise((resolve) => {
+                    document.addEventListener('supabase:ready', e => resolve(e.detail.client), { once: true });
+                });
             }
+            console.log('✅ login.js: العميل جاهز.');
         } catch (e) {
+            console.error('❌ فشل الحصول على عميل Supabase:', e);
             showAlert('تعذر الاتصال بالخادم. حاول تحديث الصفحة.', 'error');
             return;
         }
@@ -53,6 +68,8 @@
 
         async function handleLogin(e) {
             e.preventDefault();
+            console.log('🔘 زر الدخول تم الضغط عليه.');
+
             const email = emailInput.value.trim();
             const password = passwordInput.value;
 
@@ -66,36 +83,47 @@
             showLoader();
 
             try {
-                const { error } = await supabaseClient.auth.signInWithPassword({
-                    email,
-                    password,
-                    options: { shouldCreateUser: false }
+                // 1. التحقق من صحة كلمة المرور (سينشئ جلسة مؤقتة)
+                console.log('🔐 محاولة signInWithPassword...');
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
                 });
 
                 if (error) {
+                    console.error('❌ فشل المصادقة:', error);
                     let msg = 'بيانات الدخول غير صحيحة.';
-                    if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                    else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
+                    if (error.message.includes('Invalid login credentials')) {
+                        msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                    } else if (error.message.includes('Email not confirmed')) {
+                        msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
+                    }
                     showAlert(msg, 'error');
                     return;
                 }
 
+                console.log('✅ كلمة المرور صحيحة. إرسال OTP...');
+
+                // 2. إرسال OTP إجباري (الرمز سيُرسل للبريد)
                 await supabaseClient.auth.signInWithOtp({
                     email: email,
                     options: { shouldCreateUser: false }
                 });
 
+                // 3. تخزين بيانات الجلسة المؤقتة لاستخدامها في verify-otp.js
                 localStorage.setItem('pendingVerificationEmail', email);
                 localStorage.setItem('tera_verify_type', 'login_otp');
+                // تخزين كلمة المرور بشكل مؤقت في sessionStorage (وليس localStorage)
                 sessionStorage.setItem('tera_login_password', password);
 
+                console.log('📧 OTP أُرسل. تحويل إلى صفحة التحقق.');
                 showAlert('تم إرسال رمز تحقق إلى بريدك الإلكتروني. جاري توجيهك...', 'success');
                 setTimeout(() => {
                     window.location.replace(VERIFY_OTP_URL);
                 }, 1000);
 
             } catch (err) {
-                console.error(err);
+                console.error('💥 خطأ غير متوقع:', err);
                 showAlert('حدث خطأ. يرجى المحاولة لاحقاً.', 'error');
             } finally {
                 submitBtn.disabled = false;
@@ -104,9 +132,14 @@
             }
         }
 
+        // ربط الأحداث
         form.addEventListener('submit', handleLogin);
+        console.log('👂 مستمع الحدث submit مُضاف.');
+
         showPasswordCheck.addEventListener('change', function() {
             passwordInput.type = this.checked ? 'text' : 'password';
         });
+
+        console.log('✅ login.js: جاهز تماماً.');
     });
 })();
