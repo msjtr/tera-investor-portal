@@ -1,13 +1,10 @@
 /**
- * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.2)
- * ==========================================================
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.3)
  * - JSONP لجلب IP والموقع (بدون CORS)
- * - Reverse Geocoding لتحسين دقة الدولة والمدينة والحي
- * - GPS إجباري عند تحميل الصفحات المحمية (init)
- * - GPS اختياري عند تسجيل الدخول بعد OTP (login)
- * - تتبع الموقع طوال الجلسة
- * - تسجيل الجلسات في user_login_sessions
+ * - تمت إزالة Reverse Geocoding لتجنب البيانات الخاطئة
+ * - تم إصلاح مشكلة الجلسة النشطة الوهمية
+ * - GPS إجباري عند init، اختياري عند login
+ * - تتبع الجلسات وتسجيلها في user_login_sessions
  */
 
 (function () {
@@ -64,43 +61,16 @@
         return result;
     }
 
-    // ========== تحسين الموقع عبر Reverse Geocoding ==========
-    async function reverseGeocode(latitude, longitude) {
-        try {
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=ar`;
-            const response = await fetch(url);
-            if (!response.ok) return null;
-            const data = await response.json();
-            
-            if (data && data.address) {
-                const addr = data.address;
-                return {
-                    country: addr.country || null,
-                    country_code: addr.country_code ? addr.country_code.toUpperCase() : null,
-                    city: addr.city || addr.town || addr.village || addr.state_district || null,
-                    district: addr.suburb || addr.city_district || addr.district || null,
-                    region: addr.state || addr.region || null,
-                    postal_code: addr.postcode || null,
-                };
-            }
-            return null;
-        } catch (e) {
-            console.warn('⚠️ فشل Reverse Geocoding:', e);
-            return null;
-        }
-    }
-
-    // ========== جلب معلومات الموقع الدقيقة (JSONP + Reverse Geocoding) ==========
+    // ========== جلب معلومات الموقع الدقيقة (JSONP) ==========
     function fetchDetailedGeoInfo() {
         return new Promise((resolve) => {
             const callbackName = 'geo_' + Math.random().toString(36).substr(2, 9);
-            window[callbackName] = async function(data) {
+            window[callbackName] = function(data) {
                 document.body.removeChild(script);
                 delete window[callbackName];
-                
                 if (data && data.ip) {
-                    // البيانات الأساسية من IP
-                    const geoInfo = {
+                    // نُعيد الحقول الموجودة فعلاً في جدول user_login_sessions
+                    resolve({
                         ip_address: data.ip,
                         country: data.country_name,
                         country_code: data.country,
@@ -117,23 +87,7 @@
                         hosting_detected: data.hosting || false,
                         proxy_detected: data.proxy || false,
                         tor_detected: data.tor || false,
-                    };
-
-                    // ✅ إذا كانت الإحداثيات موجودة لكن الدولة/المدينة غير دقيقة، نستخدم Reverse Geocoding
-                    if (data.latitude && data.longitude) {
-                        const improvedLocation = await reverseGeocode(data.latitude, data.longitude);
-                        if (improvedLocation) {
-                            // نأخذ المعلومات الأكثر دقة (إذا كانت فارغة من IPApi، أو نستبدلها بالمعلومات الأحدث)
-                            geoInfo.country = improvedLocation.country || geoInfo.country;
-                            geoInfo.country_code = improvedLocation.country_code || geoInfo.country_code;
-                            geoInfo.city = improvedLocation.city || geoInfo.city;
-                            geoInfo.district = improvedLocation.district || geoInfo.district;
-                            geoInfo.region = improvedLocation.region || geoInfo.region;
-                            geoInfo.postal_code = improvedLocation.postal_code || geoInfo.postal_code;
-                        }
-                    }
-
-                    resolve(geoInfo);
+                    });
                 } else {
                     resolve(null);
                 }
@@ -171,7 +125,7 @@
             </div>`;
     }
 
-    // ========== إنهاء جميع الجلسات الأخرى ==========
+    // ========== إنهاء جميع الجلسات الأخرى تلقائياً ==========
     async function terminateOtherSessions(client, user, currentSessionNumber) {
         const { data: sessions } = await client.from('user_login_sessions')
             .select('id, session_number')
@@ -193,7 +147,7 @@
         return 0;
     }
 
-    // ========== مراقبة تغير الموقع ==========
+    // ========== مراقبة تغير الموقع وإنهاء الجلسة ==========
     function startLocationTracking(client, userId) {
         if (!navigator.geolocation) return;
         if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
@@ -255,6 +209,7 @@
         const device = parseUserAgent();
         const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
 
+        // 1. إنهاء الجلسات الأخرى تلقائياً
         const terminatedCount = await terminateOtherSessions(client, user, sessionNumber);
         if (terminatedCount > 0) {
             setTimeout(() => {
@@ -262,11 +217,13 @@
             }, 500);
         }
 
+        // 2. التحقق من VPN/Proxy
         if (geo && (geo.proxy_detected || geo.tor_detected || geo.hosting_detected)) {
             showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy. يرجى تعطيلها.');
             throw new Error('VPN_PROXY_DETECTED');
         }
 
+        // 3. إدراج الجلسة الجديدة
         const { error } = await client.from('user_login_sessions').insert({
             user_id: user.id,
             session_number: sessionNumber,
@@ -295,7 +252,7 @@
         init: async function () {
             if (this._initialized) return;
             this._initialized = true;
-            try { this._client = await getSupabase(); } catch (e) { return; }
+            try { this._client = await getSupabase(); } catch (e) { console.error('❌ Supabase غير متوفر'); return; }
 
             const { data: { user }, error } = await this._client.auth.getUser();
             if (error || !user) { this.redirectTo(ROUTES.LOGIN); return; }
@@ -304,18 +261,26 @@
             this._user = user;
             this.updateUI();
 
-            const { data: activeSessions } = await this._client
+            // ✅ إصلاح مشكلة "الجلسة النشطة الوهمية"
+            // إذا كانت هناك جلسة قديمة موسومة كـ "نشطة" ولكنها ليست هذه الجلسة، ننهيها فوراً
+            const { data: zombieSessions } = await this._client
                 .from('user_login_sessions')
                 .select('id')
                 .eq('user_id', user.id)
-                .eq('status', 'active')
-                .eq('is_current_session', true);
-
-            if (!activeSessions || activeSessions.length === 0) {
-                try { await createSession(this._client, user, true); } catch (e) { return; }
-            } else {
-                startLocationTracking(this._client, user.id);
+                .eq('status', 'active');
+            
+            if (zombieSessions && zombieSessions.length > 1) {
+                // إنهاء جميع الجلسات النشطة ما عدا الأحدث (إذا وُجدت)
+                const { error: cleanupError } = await this._client
+                    .from('user_login_sessions')
+                    .update({ status: 'terminated_by_system', logout_reason: 'تنظيف تلقائي للجلسات الوهمية', logout_at: new Date().toISOString(), is_current_session: false })
+                    .eq('user_id', user.id)
+                    .eq('status', 'active');
+                if (!cleanupError) console.log('🧹 تم تنظيف الجلسات الوهمية.');
             }
+
+            // إنشاء جلسة جديدة (لأننا أنهينا كل الجلسات السابقة)
+            try { await createSession(this._client, user, true); } catch (e) { return; }
         },
 
         login: async function (email, password) {
@@ -328,7 +293,10 @@
                 this.updateUI();
                 await createSession(this._client, data.user, false);
                 return { data, error: null };
-            } catch (error) { return { data: null, error }; }
+            } catch (error) {
+                console.error('❌ [Auth] فشل تسجيل الدخول:', error);
+                return { data: null, error };
+            }
         },
 
         getUser: async function () {
