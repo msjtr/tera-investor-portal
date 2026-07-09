@@ -4,12 +4,11 @@
  * - تفاصيل كاملة (جلسة، جهاز، شبكة، موقع، أمان) مع دعم VPN/Proxy
  * - رابط خرائط قوقل
  * - أزرار: تسجيل الخروج، إنهاء الجلسات الأخرى
- * - تمت إزالة تحديث الموقع (refreshLocation)
  */
 (function() {
     let supabase, currentUser, sessions = [];
     let idleTimer, idleWarningTimer;
-    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
+    const IDLE_TIME = 5 * 60 * 1000;
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getDuration(start, end) {
@@ -91,12 +90,10 @@
             if (s.latitude && s.longitude) {
                 map = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل"><i class="fas fa-map-marker-alt"></i></a>`;
             }
-            // حالة VPN/Proxy
             const vpnDetected = s.proxy_detected || s.tor_detected || s.hosting_detected;
             const vpnStatus = vpnDetected
                 ? '<span style="color:#dc2626;font-weight:700;">⚠️ VPN/Proxy</span>'
                 : '<span style="color:#10b981;">آمن</span>';
-            // الموقع: الدولة، المدينة، الحي
             const locationParts = [];
             if (s.country) locationParts.push(s.country);
             if (s.city) locationParts.push(s.city);
@@ -119,7 +116,6 @@
                 </td>
             </tr>`;
         }).join('');
-        // ربط الأحداث
         document.querySelectorAll('.view-detail').forEach(b => b.addEventListener('click', ()=>showDetail(b.dataset.id)));
         document.querySelectorAll('.terminate-sess').forEach(b => b.addEventListener('click', ()=>terminateSession(b.dataset.id)));
         const lc = document.querySelector('.logout-curr');
@@ -201,7 +197,6 @@
         document.getElementById('closeDetailModal').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('closeDetailBtn').addEventListener('click',()=>document.getElementById('detailModal').classList.remove('show'));
         document.getElementById('logoutAllSessionsBtn').addEventListener('click',logoutAll);
-        // تم إزالة زر تحديث الموقع
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
