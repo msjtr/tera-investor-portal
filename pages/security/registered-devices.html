@@ -28,376 +28,90 @@
             --gray-100: #f1f5f9;
             --gray-200: #e2e8f0;
             --gray-300: #d1d9e6;
-            --gray-400: #94a3b8;
             --gray-500: #64748b;
-            --gray-600: #475569;
             --gray-700: #334155;
-            --gray-800: #1e293b;
             --gray-900: #0A1B3F;
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-xl: 24px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        /* ========== الإحصائيات ========== */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 14px;
-            margin-bottom: 28px;
-        }
-        .stat-box {
-            background: #fff;
-            border-radius: var(--radius-md);
-            padding: 18px 16px;
-            border: 1px solid var(--gray-200);
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.2s;
-        }
-        .stat-box:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        .stat-box .number {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--gray-900);
-        }
-        .stat-box .label {
-            font-size: 12px;
-            color: var(--gray-500);
-            font-weight: 600;
-            margin-top: 4px;
-        }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 28px; }
+        .stat-box { background: #fff; border-radius: var(--radius-md); padding: 18px 16px; border: 1px solid var(--gray-200); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .stat-box .number { font-size: 20px; font-weight: 800; color: var(--gray-900); }
+        .stat-box .label { font-size: 12px; color: var(--gray-500); font-weight: 600; margin-top: 4px; }
 
-        /* ========== أزرار الإجراءات ========== */
         .actions-bar {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-bottom: 20px;
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
         }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s, transform 0.2s;
+        .actions-bar .btn-primary, .actions-bar .btn-danger {
+            padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px;
+            cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px;
         }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .btn-danger:hover {
-            background: #b91c1c;
-            transform: translateY(-2px);
-        }
+        .actions-bar .btn-primary { background: var(--primary); color: #fff; }
+        .actions-bar .btn-danger { background: var(--danger); color: #fff; }
 
-        /* ========== شريط البحث والفلتر ========== */
         .search-filter-bar {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 14px 18px;
-            background: var(--gray-50);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--gray-200);
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
+            padding: 14px 18px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200);
         }
-        .search-filter-bar input,
-        .search-filter-bar select {
-            padding: 10px 14px;
-            border: 1px solid var(--gray-300);
-            border-radius: var(--radius-sm);
-            font-family: inherit;
-            font-size: 14px;
-            background: #fff;
-            color: var(--gray-700);
-            outline: none;
-            transition: border-color 0.2s;
+        .search-filter-bar input, .search-filter-bar select {
+            padding: 8px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+            background: #fff; color: var(--gray-700); outline: none; transition: border-color 0.2s;
         }
-        .search-filter-bar input:focus,
-        .search-filter-bar select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(2, 128, 144, 0.1);
-        }
-        .search-filter-bar input {
-            flex: 1;
-            min-width: 200px;
-        }
-        .search-filter-bar .filter-count {
-            font-size: 13px;
-            color: var(--gray-500);
-            font-weight: 600;
-            margin-right: auto;
-        }
+        .search-filter-bar input:focus, .search-filter-bar select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2,128,144,0.1); }
+        .search-filter-bar input { flex: 1; min-width: 200px; }
 
-        /* ========== الجدول ========== */
-        .table-container {
-            overflow-x: auto;
-            background: #fff;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--gray-200);
-            -webkit-overflow-scrolling: touch;
-        }
-        .table-container table {
-            width: 100%;
-            min-width: 1000px;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .table-container th {
-            text-align: right;
-            padding: 14px 18px;
-            font-weight: 800;
-            color: var(--gray-500);
-            border-bottom: 2px solid var(--gray-200);
-            font-size: 13px;
-            white-space: nowrap;
-            background: var(--gray-50);
-        }
-        .table-container td {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--gray-100);
-            vertical-align: middle;
-            color: var(--gray-700);
-        }
-        .table-container tbody tr:hover td {
-            background: #f0fdfa;
-        }
+        .table-container { overflow-x: auto; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); }
+        .table-container table { width: 100%; min-width: 1300px; border-collapse: collapse; font-size: 14px; }
+        .table-container th { text-align: right; padding: 14px 18px; font-weight: 800; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); font-size: 13px; white-space: nowrap; }
+        .table-container td { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; color: var(--gray-700); }
+        .table-container tbody tr:hover td { background: #f0fdfa; }
 
-        /* ========== الشارات ========== */
         .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
         }
         .status-active { background: #d1fae5; color: #065f46; }
-        .status-logged_out { background: var(--gray-100); color: var(--gray-700); }
+        .status-logged_out { background: #f1f5f9; color: #475569; }
         .status-timeout { background: #ffedd5; color: #9a3412; }
         .status-terminated { background: #fee2e2; color: #991b1b; }
 
-        .risk-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+        .risk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
         .risk-low { background: #d1fae5; color: #065f46; }
         .risk-medium { background: #fef9c3; color: #854d0e; }
         .risk-high { background: #fee2e2; color: #991b1b; }
 
-        /* ========== أزرار الإجراءات داخل الجدول ========== */
-        .btn-icon {
-            background: transparent;
-            border: none;
-            color: var(--primary);
-            cursor: pointer;
-            padding: 8px;
-            border-radius: var(--radius-sm);
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-        .btn-icon:hover { background: rgba(2, 128, 144, 0.08); }
+        .btn-icon { background: transparent; border: none; color: var(--primary); cursor: pointer; padding: 8px; border-radius: var(--radius-sm); font-size: 16px; }
+        .btn-icon:hover { background: rgba(2,128,144,0.08); }
         .btn-icon.text-danger { color: var(--danger); }
-        .btn-icon.text-danger:hover { background: rgba(220, 38, 38, 0.08); }
+        .btn-icon.text-danger:hover { background: rgba(220,38,38,0.08); }
 
-        /* ========== المودال ========== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(6px);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.show { display: flex; }
-        .modal-box {
-            background: #fff;
-            border-radius: var(--radius-xl);
-            max-width: 750px;
-            width: 100%;
-            padding: 32px 28px;
-            box-shadow: var(--shadow-lg);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--gray-100);
-            padding-bottom: 14px;
-        }
-        .modal-header h3 {
-            margin: 0;
-            font-size: 19px;
-            color: var(--gray-900);
-            font-weight: 800;
-            font-family: 'Cairo', sans-serif;
-        }
-        .modal-close {
-            background: transparent;
-            border: none;
-            font-size: 24px;
-            color: var(--gray-500);
-            cursor: pointer;
-        }
+        .modal-box { background: #fff; border-radius: var(--radius-xl); max-width: 750px; width: 100%; padding: 32px 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--gray-100); padding-bottom: 14px; }
+        .modal-header h3 { margin: 0; font-size: 19px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; }
+        .modal-close { background: transparent; border: none; font-size: 24px; color: var(--gray-500); cursor: pointer; }
         .detail-section { margin-bottom: 20px; }
-        .detail-section h4 {
-            font-size: 15px;
-            color: var(--primary-dark);
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--gray-100);
-            padding-bottom: 6px;
-        }
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 14px;
-            flex-wrap: wrap;
-        }
-        .detail-item .label {
-            color: var(--gray-500);
-            font-weight: 600;
-            min-width: 140px;
-        }
-        .detail-item .value {
-            color: var(--gray-900);
-            font-weight: 600;
-            text-align: left;
-        }
-        .btn-secondary {
-            background: var(--gray-200);
-            color: var(--gray-700);
-            border: none;
-            padding: 10px 20px;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-secondary:hover { background: var(--gray-300); }
+        .detail-section h4 { font-size: 15px; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 1px solid var(--gray-100); padding-bottom: 6px; }
+        .detail-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+        .detail-item .label { color: var(--gray-500); font-weight: 600; min-width: 140px; }
+        .detail-item .value { color: var(--gray-900); font-weight: 600; }
+        .btn-secondary { background: var(--gray-200); color: var(--gray-700); border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
 
-        /* ========== التنبيهات ========== */
         .alert-box {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 14px;
+            display: none; align-items: center; gap: 10px; padding: 12px 16px;
+            border-radius: 10px; margin-bottom: 20px; font-weight: 700; font-size: 14px;
         }
         .alert-box.show { display: flex; }
         .alert-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
         .alert-box i { font-size: 18px; flex-shrink: 0; }
 
-        /* ========== تجاوب ========== */
-        @media (max-width: 1024px) {
-            .table-container table { min-width: 800px; }
-            .table-container th, .table-container td { padding: 10px 14px; font-size: 13px; }
-            .modal-box { max-width: 90%; padding: 24px 20px; }
-        }
-
         @media (max-width: 768px) {
-            .stats-row { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-            .stat-box { padding: 14px 12px; }
-            .stat-box .number { font-size: 18px; }
-            .stat-box .label { font-size: 11px; }
-
+            .search-filter-bar { flex-direction: column; align-items: stretch; }
+            .table-container table { min-width: 1000px; }
             .actions-bar { flex-direction: column; }
-            .actions-bar .btn-primary, .actions-bar .btn-danger { width: 100%; justify-content: center; }
-
-            .search-filter-bar { flex-direction: column; align-items: stretch; gap: 10px; }
-            .search-filter-bar input, .search-filter-bar select { width: 100%; min-width: unset; }
-            .search-filter-bar .filter-count { margin-right: 0; text-align: center; }
-
-            .table-container table { min-width: 700px; font-size: 13px; }
-            .table-container th, .table-container td { padding: 8px 10px; }
-
-            .modal-box { padding: 20px 16px; }
-            .detail-item .label { min-width: 100px; }
-        }
-
-        @media (max-width: 480px) {
-            .page-desc { font-size: 13px; padding: 12px 14px; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .stat-box { padding: 10px 8px; }
-            .stat-box .number { font-size: 16px; }
-            .stat-box .label { font-size: 10px; }
-
-            .table-container table { min-width: 550px; font-size: 12px; }
-            .table-container th, .table-container td { padding: 6px 8px; }
-            .status-badge { font-size: 10px; padding: 3px 10px; }
-            .btn-icon { font-size: 14px; padding: 6px; }
-
-            .modal-box { padding: 16px 12px; border-radius: var(--radius-lg); }
-            .modal-header h3 { font-size: 17px; }
-            .detail-item { font-size: 12px; }
-            .detail-item .label { min-width: 80px; }
-        }
-
-        /* ========== الوضع الداكن ========== */
-        @media (prefers-color-scheme: dark) {
-            body { background: var(--gray-800); color: #e2e8f0; }
-            .stat-box { background: var(--gray-800); border-color: var(--gray-700); }
-            .stat-box .number { color: #f8fafc; }
-            .stat-box .label { color: var(--gray-400); }
-            .table-container { background: var(--gray-800); border-color: var(--gray-700); }
-            .table-container th { color: var(--gray-400); border-color: var(--gray-700); background: var(--gray-700); }
-            .table-container td { color: #e2e8f0; border-color: var(--gray-700); }
-            .table-container tbody tr:hover td { background: var(--gray-700); }
-            .search-filter-bar { background: var(--gray-800); border-color: var(--gray-700); }
-            .search-filter-bar input, .search-filter-bar select { background: var(--gray-700); color: #e2e8f0; border-color: var(--gray-600); }
-            .modal-box { background: var(--gray-800); }
-            .modal-header h3 { color: #f8fafc; }
-            .detail-item .value { color: #e2e8f0; }
-            .detail-section h4 { color: var(--primary-light); border-color: var(--gray-700); }
-            .page-footer { background: var(--gray-800); border-color: var(--gray-700); }
         }
     </style>
 </head>
@@ -467,9 +181,9 @@
                     <th>وقت الدخول</th>
                     <th>الجهاز</th>
                     <th>المتصفح</th>
-                    <th>الموقع / الخريطة</th>
                     <th>IP / ISP</th>
-                    <th>مخاطر</th>
+                    <th>الموقع</th>
+                    <th>VPN/Proxy</th>
                     <th>الحالة</th>
                     <th>إجراءات</th>
                 </tr>
