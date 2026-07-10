@@ -1,10 +1,10 @@
 /**
  * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v5.6)
+ * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v6.0)
  * ==========================================================
  * - JSONP لجلب IP والموقع (بدون CORS)
  * - Reverse Geocoding عبر LocationIQ
- * - GPS إجباري عند init (مع fallback اختياري لتجنب الحلقة)
+ * - GPS إجباري عند init، اختياري عند login
  * - تنظيف تلقائي للجلسات الوهمية
  * - تتبع الجلسات وتسجيلها في user_login_sessions
  */
@@ -29,6 +29,7 @@
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
             document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
+            document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('Supabase error')); }, { once: true });
         });
     }
 
@@ -127,7 +128,7 @@
     }
 
     function showDeniedMessage(reason) {
-        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;"><div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:500px;"><h2>تم إيقاف الخدمة</h2><p>${reason}</p><button onclick="location.reload()">إعادة المحاولة</button></div></div>`;
+        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;"><div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:500px;width:90%;"><i class="fas fa-shield-alt" style="font-size:64px;color:#dc2626;"></i><h2>تم إيقاف الخدمة</h2><p style="color:#475569;line-height:1.6;">${reason}</p><button onclick="location.reload()" style="background:#028090;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;cursor:pointer;">إعادة المحاولة</button></div></div>`;
     }
 
     async function terminateOtherSessions(client, user, currentSessionNumber) {
@@ -155,7 +156,7 @@
                             logout_at: new Date().toISOString()
                         }).eq('user_id', userId).eq('status', 'active');
                         stopLocationTracking();
-                        showDeniedMessage('تم إنهاء الجلسة بسبب تغير الموقع.');
+                        showDeniedMessage('تم إنهاء الجلسة بسبب تغير الموقع الجغرافي بشكل مريب.');
                         return;
                     }
                 }
@@ -164,14 +165,13 @@
                     latitude, longitude, last_activity_at: new Date().toISOString()
                 }).eq('user_id', userId).eq('status', 'active').eq('is_current_session', true);
             },
-            (err) => { if (err.code === 1) { stopLocationTracking(); showDeniedMessage('فقدان إشارة الموقع.'); } },
+            (err) => { if (err.code === 1) { stopLocationTracking(); showDeniedMessage('تم فقدان إشارة الموقع الجغرافي.'); } },
             { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
         );
     }
 
     function stopLocationTracking() { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } }
 
-    // ✅ دالة createSession المُحسَّنة (تُرجع الجلسة المنشأة)
     async function createSession(client, user, requireGps = true) {
         let gps = null;
         try { gps = await requestLocation(); } catch (e) { if (requireGps) console.warn('⚠️ GPS غير متاح.'); }
@@ -183,7 +183,7 @@
         await terminateOtherSessions(client, user, sessionNumber);
 
         if (geo?.proxy_detected || geo?.tor_detected || geo?.hosting_detected) {
-            showDeniedMessage('تم اكتشاف VPN/Proxy.');
+            showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy أو شبكة مشبوهة. يرجى تعطيلها والمحاولة مرة أخرى.');
             return null;
         }
 
@@ -198,17 +198,13 @@
             .select('*')
             .single();
 
-        if (error) {
-            console.error('❌ فشل تسجيل الجلسة:', error.message);
-            return null;
-        }
+        if (error) { console.error('❌ فشل تسجيل الجلسة:', error.message); return null; }
 
         console.log('✅ جلسة جديدة:', sessionNumber);
         startLocationTracking(client, user.id);
         return data;
     }
 
-    // ========== TeraAuth ==========
     window.TeraAuth = {
         _client: null, _user: null, _initialized: false,
 
@@ -223,12 +219,10 @@
             this._user = user;
             this.updateUI();
 
-            // تنظيف الجلسات السابقة
             await this._client.from('user_login_sessions')
                 .update({ status: 'terminated_by_system', logout_reason: 'تنظيف تلقائي', logout_at: new Date().toISOString(), is_current_session: false })
                 .eq('user_id', user.id).eq('status', 'active');
 
-            // إنشاء جلسة جديدة
             await createSession(this._client, user, true);
         },
 
@@ -255,7 +249,7 @@
         logout: async function () {
             if (!this._client || !this._user) return;
             await this._client.from('user_login_sessions').update({
-                status: 'logged_out', logout_reason: 'تسجيل خروج',
+                status: 'logged_out', logout_reason: 'تسجيل خروج بواسطة المستخدم',
                 logout_at: new Date().toISOString(), is_current_session: false
             }).eq('user_id', this._user.id).eq('status', 'active');
             stopLocationTracking();
