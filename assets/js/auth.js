@@ -1,279 +1,135 @@
 /**
- * ==========================================================
- * assets/js/auth.js – مدير المصادقة المركزي (Enterprise v6.0)
- * ==========================================================
- * - JSONP لجلب IP والموقع (بدون CORS)
- * - Reverse Geocoding عبر LocationIQ
- * - GPS إجباري عند init، اختياري عند login
- * - تنظيف تلقائي للجلسات الوهمية
- * - تتبع الجلسات وتسجيلها في user_login_sessions
+ * auth.js – v2 (إدارة المصادقة المركزية)
+ * مهام: تسجيل الدخول، التسجيل، استعادة كلمة المرور، تحديث الجلسة
  */
+(function() {
+    // الاعتماد على supabase-client.js لتوفير Supabase
+    let supabase;
 
-(function () {
-    'use strict';
-
-    const ROUTES = {
-        LOGIN: '/auth/auth/login/login.html',
-        DASHBOARD: '/pages/dashboard/index.html',
-    };
-
-    const LOCATIONIQ_API_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
-
-    let supabaseClient = null;
-    let currentUser = null;
-    let locationWatchId = null;
-    let lastKnownPosition = null;
-
+    // انتظار Supabase أو استخدام المخزن
     async function getSupabase() {
-        if (window.teraSupabase) return window.teraSupabase;
-        return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Supabase timeout')), 15000);
-            document.addEventListener('supabase:ready', e => { clearTimeout(timeout); resolve(e.detail.client); }, { once: true });
-            document.addEventListener('supabase:error', () => { clearTimeout(timeout); reject(new Error('Supabase error')); }, { once: true });
-        });
+        if (supabase) return supabase;
+        supabase = window.teraSupabase || await window.waitForSupabase?.();
+        return supabase;
     }
 
-    function parseUserAgent() {
-        const ua = navigator.userAgent;
-        return {
-            device_type: /Mobi|Android|iPhone|iPad|iPod/i.test(ua) ? (/iPad|tablet/i.test(ua) ? 'tablet' : 'mobile') : 'computer',
-            device_name: navigator.userAgentData?.platform || (navigator.platform || ''),
-            operating_system: (() => {
-                if (/Windows NT (\d+\.\d+)/.test(ua)) return `Windows ${RegExp.$1}`;
-                if (/Mac OS X (\d+[._]\d+)/.test(ua)) return `macOS ${RegExp.$1}`;
-                return navigator.platform || '';
-            })(),
-            browser_name: (() => {
-                if (/Edg\//.test(ua)) return 'Edge';
-                if (/Firefox\//.test(ua)) return 'Firefox';
-                if (/Chrome\//.test(ua)) return 'Chrome';
-                if (/Safari\//.test(ua)) return 'Safari';
-                return '';
-            })(),
-            browser_version: (() => {
-                const match = ua.match(/(?:Edg|Firefox|Chrome|Safari)\/(\d+\.\d+)/);
-                return match ? match[1] : '';
-            })(),
-            screen_resolution: `${window.screen.width}x${window.screen.height}`,
-            language: navigator.language || '',
-            user_agent: ua,
-        };
+    // دالة مساعدة للتحقق من قوة كلمة المرور
+    function validatePassword(password) {
+        const minLength = 8;
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        if (password.length < minLength) return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+        if (!hasUpper || !hasLower) return 'كلمة المرور يجب أن تحتوي على أحرف كبيرة وصغيرة';
+        if (!hasNumber) return 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل';
+        if (!hasSpecial) return 'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل';
+        return null;
     }
 
-    async function reverseGeocode(latitude, longitude) {
-        try {
-            const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_API_KEY}&lat=${latitude}&lon=${longitude}&format=json&accept-language=ar`;
-            const response = await fetch(url);
-            if (!response.ok) return null;
-            const data = await response.json();
-            if (data?.display_name) {
-                return {
-                    country: data.country || null,
-                    country_code: data.country_code?.toUpperCase() || null,
-                    city: data.city || null,
-                    district: data.neighbourhood || data.suburb || data.district || null,
-                    region: data.state || data.province || null,
-                    postal_code: data.postcode || null,
-                };
-            }
-            return null;
-        } catch (e) { return null; }
-    }
-
-    function fetchDetailedGeoInfo() {
-        return new Promise((resolve) => {
-            const cb = 'geo_' + Math.random().toString(36).substr(2, 9);
-            window[cb] = async function(data) {
-                document.body.removeChild(script);
-                delete window[cb];
-                if (data?.ip) {
-                    const geoInfo = {
-                        ip_address: data.ip, country: data.country_name, country_code: data.country,
-                        region: data.region, city: data.city, district: data.district || null,
-                        postal_code: data.postal, latitude: data.latitude, longitude: data.longitude,
-                        timezone: data.timezone, isp: data.org, asn: data.asn, isp_organization: data.org,
-                        hosting_detected: data.hosting || false, proxy_detected: data.proxy || false,
-                        tor_detected: data.tor || false,
-                    };
-                    if (data.latitude && data.longitude) {
-                        const improved = await reverseGeocode(data.latitude, data.longitude);
-                        if (improved) {
-                            geoInfo.country = improved.country || geoInfo.country;
-                            geoInfo.country_code = improved.country_code || geoInfo.country_code;
-                            geoInfo.city = improved.city || geoInfo.city;
-                            geoInfo.district = improved.district || geoInfo.district;
-                            geoInfo.region = improved.region || geoInfo.region;
-                            geoInfo.postal_code = improved.postal_code || geoInfo.postal_code;
-                        }
-                    }
-                    resolve(geoInfo);
-                } else resolve(null);
-            };
-            const script = document.createElement('script');
-            script.src = `https://ipapi.co/jsonp/?callback=${cb}`;
-            script.onerror = () => { document.body.removeChild(script); delete window[cb]; resolve(null); };
-            document.body.appendChild(script);
-        });
-    }
-
-    function requestLocation() {
-        return new Promise((resolve, reject) => {
-            if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
-            navigator.geolocation.getCurrentPosition(
-                pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                err => reject(err),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        });
-    }
-
-    function showDeniedMessage(reason) {
-        document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f1f5f9;font-family:Tajawal,sans-serif;"><div style="background:#fff;padding:40px;border-radius:16px;text-align:center;max-width:500px;width:90%;"><i class="fas fa-shield-alt" style="font-size:64px;color:#dc2626;"></i><h2>تم إيقاف الخدمة</h2><p style="color:#475569;line-height:1.6;">${reason}</p><button onclick="location.reload()" style="background:#028090;color:#fff;border:none;padding:12px 32px;border-radius:8px;font-weight:700;cursor:pointer;">إعادة المحاولة</button></div></div>`;
-    }
-
-    async function terminateOtherSessions(client, user, currentSessionNumber) {
-        const { data: sessions } = await client.from('user_login_sessions')
-            .select('id').eq('user_id', user.id).eq('status', 'active').neq('session_number', currentSessionNumber);
-        if (sessions?.length) {
-            await client.from('user_login_sessions').update({
-                status: 'terminated_by_system', logout_reason: 'تسجيل الدخول من جهاز آخر',
-                logout_at: new Date().toISOString(), updated_at: new Date().toISOString()
-            }).in('id', sessions.map(s => s.id));
-        }
-    }
-
-    function startLocationTracking(client, userId) {
-        if (!navigator.geolocation) return;
-        if (locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
-        locationWatchId = navigator.geolocation.watchPosition(
-            async (pos) => {
-                const { latitude, longitude } = pos.coords;
-                if (lastKnownPosition) {
-                    const distance = Math.sqrt(Math.pow(latitude - lastKnownPosition.latitude, 2) + Math.pow(longitude - lastKnownPosition.longitude, 2));
-                    if (distance > 0.5) {
-                        await client.from('user_login_sessions').update({
-                            status: 'terminated_by_system', logout_reason: 'تغير الموقع',
-                            logout_at: new Date().toISOString()
-                        }).eq('user_id', userId).eq('status', 'active');
-                        stopLocationTracking();
-                        showDeniedMessage('تم إنهاء الجلسة بسبب تغير الموقع الجغرافي بشكل مريب.');
-                        return;
-                    }
-                }
-                lastKnownPosition = { latitude, longitude };
-                await client.from('user_login_sessions').update({
-                    latitude, longitude, last_activity_at: new Date().toISOString()
-                }).eq('user_id', userId).eq('status', 'active').eq('is_current_session', true);
-            },
-            (err) => { if (err.code === 1) { stopLocationTracking(); showDeniedMessage('تم فقدان إشارة الموقع الجغرافي.'); } },
-            { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
-        );
-    }
-
-    function stopLocationTracking() { if (locationWatchId) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } }
-
-    async function createSession(client, user, requireGps = true) {
-        let gps = null;
-        try { gps = await requestLocation(); } catch (e) { if (requireGps) console.warn('⚠️ GPS غير متاح.'); }
-
-        const geo = await fetchDetailedGeoInfo();
-        const device = parseUserAgent();
-        const sessionNumber = `SES-${new Date().toISOString().slice(0,10)}-${Math.floor(Math.random()*900000)+100000}`;
-
-        await terminateOtherSessions(client, user, sessionNumber);
-
-        if (geo?.proxy_detected || geo?.tor_detected || geo?.hosting_detected) {
-            showDeniedMessage('تم اكتشاف استخدام VPN أو Proxy أو شبكة مشبوهة. يرجى تعطيلها والمحاولة مرة أخرى.');
-            return null;
-        }
-
-        const { data, error } = await client.from('user_login_sessions')
-            .insert({
-                user_id: user.id, session_number: sessionNumber,
-                login_at: new Date().toISOString(), status: 'active',
-                is_current_session: true, last_activity_at: new Date().toISOString(),
-                login_method: 'password', login_status: 'success',
-                ...device, ...(geo || {}), ...(gps || {}),
-            })
-            .select('*')
-            .single();
-
-        if (error) { console.error('❌ فشل تسجيل الجلسة:', error.message); return null; }
-
-        console.log('✅ جلسة جديدة:', sessionNumber);
-        startLocationTracking(client, user.id);
+    // تسجيل الدخول
+    async function login(email, password) {
+        const sb = await getSupabase();
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
         return data;
     }
 
-    window.TeraAuth = {
-        _client: null, _user: null, _initialized: false,
+    // تسجيل الدخول بواسطة OTP (إرسال رمز)
+    async function sendOTP(email) {
+        const sb = await getSupabase();
+        const { data, error } = await sb.auth.signInWithOtp({ email });
+        if (error) throw error;
+        return data;
+    }
 
-        init: async function () {
-            if (this._initialized) return;
-            this._initialized = true;
-            try { this._client = await getSupabase(); } catch (e) { return; }
+    // تسجيل حساب جديد
+    async function register(email, password, metadata = {}) {
+        const sb = await getSupabase();
+        const passwordError = validatePassword(password);
+        if (passwordError) throw new Error(passwordError);
 
-            const { data: { user } } = await this._client.auth.getUser();
-            if (!user) { this.redirectTo(ROUTES.LOGIN); return; }
+        const { data, error } = await sb.auth.signUp({
+            email,
+            password,
+            options: { data: metadata }
+        });
+        if (error) throw error;
+        return data;
+    }
 
-            this._user = user;
-            this.updateUI();
+    // تأكيد البريد الإلكتروني (بعد التسجيل)
+    async function confirmEmail(email, token) {
+        const sb = await getSupabase();
+        const { error } = await sb.auth.verifyOtp({
+            email,
+            token,
+            type: 'signup'
+        });
+        if (error) throw error;
+    }
 
-            await this._client.from('user_login_sessions')
-                .update({ status: 'terminated_by_system', logout_reason: 'تنظيف تلقائي', logout_at: new Date().toISOString(), is_current_session: false })
-                .eq('user_id', user.id).eq('status', 'active');
+    // استعادة كلمة المرور (إرسال رابط)
+    async function resetPassword(email) {
+        const sb = await getSupabase();
+        const { error } = await sb.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+    }
 
-            await createSession(this._client, user, true);
-        },
+    // تحديث كلمة المرور بعد استلام رابط الاستعادة
+    async function updatePassword(newPassword) {
+        const sb = await getSupabase();
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) throw new Error(passwordError);
 
-        login: async function (email, password) {
-            if (!this._client) return { data: null, error: new Error('Supabase غير متوفر') };
-            try {
-                const { data, error } = await this._client.auth.signInWithPassword({ email, password });
-                if (error) return { data: null, error };
-                this._user = data.user;
-                this.updateUI();
-                const session = await createSession(this._client, data.user, false);
-                return { data: { ...data, session }, error: null };
-            } catch (error) { return { data: null, error }; }
-        },
+        const { error } = await sb.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+    }
 
-        getUser: async function () {
-            if (!this._client) return null;
-            const { data: { user } } = await this._client.auth.getUser();
-            this._user = user;
-            this.updateUI();
-            return user;
-        },
+    // تسجيل الخروج (محلياً فقط، لاحظ أن security.js يدير الجلسات)
+    async function logout() {
+        const sb = await getSupabase();
+        const { error } = await sb.auth.signOut();
+        if (error) throw error;
+    }
 
-        logout: async function () {
-            if (!this._client || !this._user) return;
-            await this._client.from('user_login_sessions').update({
-                status: 'logged_out', logout_reason: 'تسجيل خروج بواسطة المستخدم',
-                logout_at: new Date().toISOString(), is_current_session: false
-            }).eq('user_id', this._user.id).eq('status', 'active');
-            stopLocationTracking();
-            await this._client.auth.signOut();
-            this._user = null;
-            this.redirectTo(ROUTES.LOGIN);
-        },
+    // الحصول على جلسة المستخدم الحالية
+    async function getSession() {
+        const sb = await getSupabase();
+        const { data: { session } } = await sb.auth.getSession();
+        return session;
+    }
 
-        redirectTo: function (url) { window.location.replace(url); },
+    // الحصول على بيانات المستخدم
+    async function getUser() {
+        const sb = await getSupabase();
+        const { data: { user } } = await sb.auth.getUser();
+        return user;
+    }
 
-        updateUI: function () {
-            const user = this._user;
-            const hName = document.getElementById('headerUserName');
-            const hAvatar = document.getElementById('headerAvatar');
-            if (!user) { if (hName) hName.textContent = 'زائر'; if (hAvatar) hAvatar.textContent = 'ز'; return; }
-            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-            if (hName) hName.textContent = name;
-            if (hAvatar) hAvatar.textContent = name.charAt(0).toUpperCase();
-        }
+    // الاستماع لتغيرات حالة المصادقة
+    function onAuthStateChange(callback) {
+        getSupabase().then(sb => {
+            sb.auth.onAuthStateChange((event, session) => {
+                callback(event, session);
+            });
+        });
+    }
+
+    // تعريض الدوال
+    window.Auth = {
+        login,
+        sendOTP,
+        register,
+        confirmEmail,
+        resetPassword,
+        updatePassword,
+        logout,
+        getSession,
+        getUser,
+        onAuthStateChange,
+        validatePassword
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!location.pathname.includes('/auth/auth/login/') && !location.pathname.includes('/auth/register/')) {
-            window.TeraAuth.init();
-        }
-    });
+    console.log('auth.js: نظام المصادقة جاهز');
 })();
