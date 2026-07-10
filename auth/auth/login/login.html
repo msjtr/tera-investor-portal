@@ -232,16 +232,16 @@
             display: flex;
         }
 
-        .alert-box.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
         .alert-box.error {
             background: #fef2f2;
             color: #b91c1c;
             border: 1px solid #fca5a5;
+        }
+
+        .alert-box.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
         }
 
         .tera-loader-overlay {
@@ -254,6 +254,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+        }
+
+        .tera-loader-overlay.active {
+            display: flex;
         }
 
         .spinning-infinity-ring {
@@ -270,102 +274,31 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ========== تجاوب ========== */
+        /* تجاوب */
         @media (max-width: 768px) {
-            .auth-container {
-                max-width: 100%;
-                padding: 32px 24px 24px;
-                border-radius: 20px;
-            }
-
-            .portal-title {
-                font-size: 20px;
-            }
-
-            .page-subtitle {
-                font-size: 16px;
-            }
-
-            .welcome-text {
-                font-size: 13px;
-                margin-bottom: 24px;
-            }
-
-            .form-input-control {
-                font-size: 14px;
-                padding: 12px 14px;
-            }
-
-            .btn-submit-login {
-                padding: 14px;
-                font-size: 15px;
-            }
+            .auth-container { max-width: 100%; padding: 32px 24px 24px; border-radius: 20px; }
+            .portal-title { font-size: 20px; }
+            .page-subtitle { font-size: 16px; }
+            .welcome-text { font-size: 13px; margin-bottom: 24px; }
+            .form-input-control { font-size: 14px; padding: 12px 14px; }
+            .btn-submit-login { padding: 14px; font-size: 15px; }
         }
 
         @media (max-width: 480px) {
-            .auth-layout {
-                padding: 10px;
-            }
-
-            .auth-container {
-                padding: 24px 16px 20px;
-                border-radius: 16px;
-            }
-
-            .brand-logo-box img {
-                height: 40px;
-            }
-
-            .portal-title {
-                font-size: 18px;
-            }
-
-            .page-subtitle {
-                font-size: 14px;
-            }
-
-            .welcome-text {
-                font-size: 12px;
-                margin-bottom: 20px;
-            }
-
-            .form-field-group {
-                margin-bottom: 16px;
-            }
-
-            .field-label {
-                font-size: 13px;
-            }
-
-            .form-input-control {
-                font-size: 13px;
-                padding: 10px 12px;
-            }
-
-            .btn-submit-login {
-                font-size: 14px;
-                padding: 12px;
-                border-radius: var(--radius-md);
-            }
-
-            .bottom-routing-footer-links {
-                font-size: 13px;
-                margin-top: 20px;
-                padding-top: 16px;
-            }
-
-            .forgot-pass-link {
-                font-size: 12px;
-            }
-
-            .checkbox-toggle-label {
-                font-size: 13px;
-            }
-
-            .spinning-infinity-ring {
-                width: 44px;
-                height: 44px;
-            }
+            .auth-layout { padding: 10px; }
+            .auth-container { padding: 24px 16px 20px; border-radius: 16px; }
+            .brand-logo-box img { height: 40px; }
+            .portal-title { font-size: 18px; }
+            .page-subtitle { font-size: 14px; }
+            .welcome-text { font-size: 12px; margin-bottom: 20px; }
+            .form-field-group { margin-bottom: 16px; }
+            .field-label { font-size: 13px; }
+            .form-input-control { font-size: 13px; padding: 10px 12px; }
+            .btn-submit-login { font-size: 14px; padding: 12px; border-radius: var(--radius-md); }
+            .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 16px; }
+            .forgot-pass-link { font-size: 12px; }
+            .checkbox-toggle-label { font-size: 13px; }
+            .spinning-infinity-ring { width: 44px; height: 44px; }
         }
     </style>
 </head>
@@ -378,40 +311,46 @@
             <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
             <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
             <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
+            
             <div class="alert-box" id="loginError">
-                <span class="alert-icon"><i class="fas fa-exclamation-circle"></i></span>
                 <span id="loginErrorMessage"></span>
             </div>
+            
             <form id="loginForm" novalidate>
                 <div class="form-field-group">
-                    <label class="field-label">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
+                    <label class="field-label" for="email">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
                     <input type="email" id="email" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
                 </div>
                 <div class="form-field-group">
                     <div class="field-label-flex">
-                        <label class="field-label">كلمة المرور <span style="color:var(--danger)">*</span></label>
+                        <label class="field-label" for="password">كلمة المرور <span style="color:var(--danger)">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
-                    <label class="checkbox-toggle-label"><input type="checkbox" id="togglePassword"> إظهار كلمة المرور</label>
+                    <label class="checkbox-toggle-label" for="togglePassword">
+                        <input type="checkbox" id="togglePassword"> إظهار كلمة المرور
+                    </label>
                 </div>
                 <div class="form-field-group">
-                    <label class="checkbox-toggle-label">
+                    <label class="checkbox-toggle-label" for="rememberMe">
                         <input type="checkbox" id="rememberMe"> تذكرني على هذا الجهاز
                     </label>
                 </div>
                 <button type="submit" class="btn-submit-login" id="loginBtn"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</button>
             </form>
+            
             <div class="bottom-routing-footer-links">
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
                 <p><a href="/index.html" style="color: var(--gray-500);"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
+        
         <div class="tera-loader-overlay" id="creativeLoaderScreen">
             <div class="spinning-infinity-ring"></div>
             <p style="color:#fff; font-weight:700;">جاري تسجيل الدخول...</p>
         </div>
     </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
