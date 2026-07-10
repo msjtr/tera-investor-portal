@@ -378,24 +378,29 @@
             <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
             <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
             <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
-            <div class="alert-box" id="formAlert">
-                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span id="alertMessage"></span>
+            <div class="alert-box" id="loginError">
+                <span class="alert-icon"><i class="fas fa-exclamation-circle"></i></span>
+                <span id="loginErrorMessage"></span>
             </div>
-            <form id="teraLoginForm" novalidate>
+            <form id="loginForm" novalidate>
                 <div class="form-field-group">
                     <label class="field-label">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
-                    <input type="email" id="login_identifier" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
+                    <input type="email" id="email" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
                 </div>
                 <div class="form-field-group">
                     <div class="field-label-flex">
                         <label class="field-label">كلمة المرور <span style="color:var(--danger)">*</span></label>
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
-                    <input type="password" id="login_password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
-                    <label class="checkbox-toggle-label"><input type="checkbox" id="show_login_password"> إظهار كلمة المرور</label>
+                    <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
+                    <label class="checkbox-toggle-label"><input type="checkbox" id="togglePassword"> إظهار كلمة المرور</label>
                 </div>
-                <button type="submit" class="btn-submit-login" id="loginSubmitBtn"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</button>
+                <div class="form-field-group">
+                    <label class="checkbox-toggle-label">
+                        <input type="checkbox" id="rememberMe"> تذكرني على هذا الجهاز
+                    </label>
+                </div>
+                <button type="submit" class="btn-submit-login" id="loginBtn"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</button>
             </form>
             <div class="bottom-routing-footer-links">
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
@@ -409,6 +414,8 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/security.js"></script>
     <script src="/auth/auth/login/login.js"></script>
 </body>
 </html>
