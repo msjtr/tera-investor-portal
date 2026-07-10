@@ -64,7 +64,7 @@
         .search-filter-bar input { flex: 1; min-width: 200px; }
 
         .table-container { overflow-x: auto; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); }
-        .table-container table { width: 100%; min-width: 1300px; border-collapse: collapse; font-size: 14px; }
+        .table-container table { width: 100%; min-width: 1500px; border-collapse: collapse; font-size: 14px; }
         .table-container th { text-align: right; padding: 14px 18px; font-weight: 800; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); font-size: 13px; white-space: nowrap; }
         .table-container td { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; color: var(--gray-700); }
         .table-container tbody tr:hover td { background: #f0fdfa; }
@@ -108,6 +108,13 @@
         .alert-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
         .alert-box i { font-size: 18px; flex-shrink: 0; }
 
+        .btn-terminate {
+            background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+            padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-terminate:hover { background: #fecaca; }
+
         @media (max-width: 768px) {
             .search-filter-bar { flex-direction: column; align-items: stretch; }
             .table-container table { min-width: 1000px; }
@@ -131,6 +138,12 @@
     <div class="page-desc" style="background:#e0f2fe; border-right:5px solid var(--primary); padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
         <i class="fas fa-info-circle" style="color:var(--primary); font-size:20px;"></i>
         <span style="color:var(--gray-900); font-weight:600;">يرجى العلم أن الموقع الجغرافي يتم تتبعه طوال فترة استخدام المنصة للامتثال لمتطلبات الأمان والتحقق.</span>
+    </div>
+
+    <!-- تحذير الخمول (يظهر تلقائياً قبل 30 ثانية من إنهاء الجلسة) -->
+    <div class="alert-box warning" id="idleWarning" role="alert">
+        <i class="fas fa-clock"></i>
+        <span>أنت غير نشط منذ فترة. سيتم إنهاء جلستك تلقائياً خلال 30 ثانية إذا لم يكن هناك أي نشاط.</span>
     </div>
 
     <div class="alert-box warning" id="vpnAlert" role="alert">
@@ -179,11 +192,14 @@
                 <tr>
                     <th>رقم الجلسة</th>
                     <th>وقت الدخول</th>
+                    <th>المدة</th>
                     <th>الجهاز</th>
                     <th>المتصفح</th>
-                    <th>IP / ISP</th>
+                    <th>عنوان IP</th>
+                    <th>مزود الخدمة</th>
                     <th>الموقع</th>
                     <th>VPN/Proxy</th>
+                    <th>الخريطة</th>
                     <th>الحالة</th>
                     <th>إجراءات</th>
                 </tr>
