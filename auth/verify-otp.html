@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>التحقق من الرمز | تيرا</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -10,14 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="../assets/css/core.css">
-    <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/auth.css">
 
-    <link rel="icon" type="image/svg+xml" href="../images/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 
     <style>
-        /* نفس الأنماط السابقة ولكن مع بعض التحسينات الطفيفة */
         :root {
             --tera-teal: #028090;
             --tera-navy: #0A1B3F;
@@ -200,28 +199,34 @@
             color: #b91c1c;
             border: 1px solid #fca5a5;
         }
+
+        /* حاوية حقول OTP */
+        .otp-fields-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
         .otp-input {
-            width: 100%;
-            padding: 16px 18px;
+            width: 52px;
+            height: 60px;
             text-align: center;
-            letter-spacing: 10px;
             font-weight: 800;
             font-size: 24px;
-            direction: ltr;
             border: 2px solid #d1d9e6;
             border-radius: 14px;
             background: #ffffff;
             transition: 0.25s;
             caret-color: var(--tera-teal);
             font-family: 'Tajawal', sans-serif;
-            margin-bottom: 8px;
+            outline: none;
         }
         .otp-input:focus {
             border-color: var(--tera-teal);
             box-shadow: 0 0 0 4px rgba(2,128,144,0.10);
             background: #f0fdfa;
-            outline: none;
         }
+
         .error-feedback-msg {
             color: #dc2626;
             font-size: 13px;
@@ -263,7 +268,7 @@
             font-weight: 600;
             margin-bottom: 20px;
         }
-        #timerDisplay {
+        #otpTimer {
             color: var(--tera-teal);
             font-weight: 800;
             direction: ltr;
@@ -283,12 +288,13 @@
             background: rgba(2,128,144,0.04);
             text-decoration: none;
             margin-top: 8px;
+            border: none;
         }
         .resend-link:hover {
             background: rgba(2,128,144,0.1);
             color: #0A1B3F;
         }
-        .resend-link.disabled {
+        .resend-link:disabled {
             color: #94a3b8;
             pointer-events: none;
             cursor: not-allowed;
@@ -369,7 +375,7 @@
             .instruction-wrapper { padding: 12px; margin-bottom: 20px; }
             #instructionMainText { font-size: 14px; }
             #instructionEmailText { font-size: 14px; padding: 4px 8px; }
-            .otp-input { font-size: 20px; letter-spacing: 8px; padding: 14px 12px; }
+            .otp-input { width: 44px; height: 52px; font-size: 20px; }
             .btn-submit-login { padding: 13px 18px; font-size: 15px; margin-bottom: 24px; }
             .timer-container { font-size: 14px; margin-bottom: 16px; }
             .resend-link { font-size: 14px; padding: 6px 12px; }
@@ -393,7 +399,7 @@
     <!-- Header -->
     <header class="focused-header no-print">
         <div class="logo">
-            <img src="../images/logo.svg" alt="تيرا" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'">
+            <img src="/images/logo.svg" alt="تيرا" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'">
         </div>
         <div class="header-client-info">
             <h5 id="headerUserName">مستخدم</h5>
@@ -420,33 +426,39 @@
             </div>
 
             <div class="instruction-wrapper">
-                <p id="instructionMainText">أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني</p>
+                <p id="instructionMainText">أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني</p>
                 <span id="instructionEmailText">example@domain.com</span>
             </div>
 
-            <div id="formAlert" class="alert-box">
-                <span id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span id="alertMessage"></span>
-            </div>
+            <!-- رسائل الخطأ والنجاح -->
+            <div id="otpError" class="alert-box error"></div>
+            <div id="otpSuccess" class="alert-box success"></div>
 
             <form id="otpForm" novalidate>
-                <input type="text" id="otp" class="otp-input" maxlength="8"
-                       placeholder="00000000" autocomplete="one-time-code" inputmode="numeric" required>
+                <!-- 6 حقول OTP -->
+                <div class="otp-fields-container" id="otpFieldsContainer">
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code" required>
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                </div>
                 <div class="error-feedback-msg" id="otp-error"></div>
-                <button type="submit" id="submitBtn" class="btn-submit-login">
+                <button type="button" id="verifyOtpBtn" class="btn-submit-login" disabled>
                     <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
                 </button>
             </form>
 
             <div class="timer-container" id="timerContainer">
                 <span>يمكنك إعادة الإرسال بعد </span>
-                <span id="timerDisplay">05:00</span>
+                <span id="otpTimer">01:00</span>
             </div>
 
             <div class="text-center">
-                <span id="resendCode" class="resend-link disabled">
+                <button id="resendOtpBtn" class="resend-link" disabled>
                     <i class="fas fa-redo-alt"></i> إعادة إرسال الرمز
-                </span>
+                </button>
             </div>
         </div>
     </main>
@@ -458,8 +470,23 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../assets/js/supabase-client.js"></script>
-    <script src="../assets/js/auth.js"></script>
-    <script src="../assets/js/verify-otp.js"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/verify-otp.js"></script>
+
+    <!-- تعبئة البريد الإلكتروني وعنوان العودة تلقائياً -->
+    <script>
+        (function() {
+            const email = sessionStorage.getItem('otpEmail');
+            if (email) {
+                document.getElementById('instructionEmailText').textContent = email;
+            }
+            // زر العودة
+            const backLink = document.getElementById('backLink');
+            if (backLink) {
+                backLink.href = document.referrer || '/auth/auth/login/login.html';
+            }
+        })();
+    </script>
 </body>
 </html>
