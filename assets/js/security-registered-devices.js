@@ -6,12 +6,10 @@
     let idleTimer, idleWarningTimer;
     const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
 
-    // تنسيق التاريخ بالعربية
     function formatDate(d) { 
         return d ? new Date(d).toLocaleString('ar-SA') : '-'; 
     }
     
-    // حساب مدة الجلسة
     function getDuration(start, end) {
         if (!start) return '-';
         const e = end ? new Date(end) : new Date();
@@ -21,7 +19,6 @@
         return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
     
-    // ترجمة حالة الجلسة
     function getStatusLabel(s) {
         const l = { 
             active:'نشطة', 
@@ -33,7 +30,6 @@
         return l[s] || s;
     }
 
-    // تهيئة الصفحة
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase();
         const { data: { user } } = await supabase.auth.getUser();
@@ -48,14 +44,12 @@
         initIdleTimer();
     }
 
-    // تحديث بيانات المستخدم في الهيدر
     async function updateHeader(user) {
         let name = user.user_metadata?.full_name || user.email || 'مستخدم';
         document.getElementById('headerUserName').textContent = name;
         document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
     }
 
-    // جلب جميع جلسات المستخدم
     async function fetchSessions() {
         const { data, error } = await supabase
             .from('user_login_sessions')
@@ -72,15 +66,16 @@
         applyFilters();
     }
 
-    // تحديث الإحصائيات
     function updateStats() {
         document.getElementById('totalCount').textContent = sessions.length;
         document.getElementById('activeCount').textContent = sessions.filter(s => s.status === 'active').length;
+        // الأجهزة الموثوقة: إن وجد عمود is_trusted، وإلا 0
+        const trusted = sessions.filter(s => s.is_trusted === true).length;
+        document.getElementById('trustedDevicesCount').textContent = trusted;
         const last = sessions.reduce((a, b) => b.login_at > a ? b.login_at : a, '');
         document.getElementById('lastLoginTime').textContent = last ? formatDate(last) : '-';
     }
 
-    // تطبيق الفلاتر والبحث
     function applyFilters() {
         const st = document.getElementById('statusFilter').value;
         const dev = document.getElementById('deviceFilter').value;
@@ -105,34 +100,38 @@
         document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
     }
 
-    // عرض جدول الجلسات
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
         if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
             return;
         }
         
         tbody.innerHTML = list.map(s => {
-            // رابط الخريطة (الإصلاح هنا)
+            // رابط الخريطة
             let mapLink = '-';
             if (s.latitude && s.longitude) {
-                mapLink = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل">🗺️ عرض الموقع</a>`;
+                mapLink = `<a href="https://maps.google.com/?q=${s.latitude},${s.longitude}" target="_blank" title="فتح في خرائط قوقل">🗺️ عرض</a>`;
             }
             
-            // بناء صف الجدول
+            // حالة VPN/Proxy (مؤقتاً —، يمكن ربطها بحقل من قاعدة البيانات)
+            let vpnProxy = '—';
+            if (s.is_vpn) vpnProxy = '✅ VPN';
+            else if (s.is_proxy) vpnProxy = '⚠️ Proxy';
+            
             return `
                 <tr>
                     <td>${s.session_number || '-'}</td>
                     <td>${formatDate(s.login_at)}</td>
                     <td>${getDuration(s.login_at, s.logout_at)}</td>
-                    <td>${s.ip_address || '-'}</td>
-                    <td>${s.isp || '-'}</td>
-                    <td>${s.country || '-'} - ${s.city || '-'}</td>
                     <td>${s.device_type || '-'}</td>
                     <td>${s.browser_name || '-'}</td>
-                    <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
+                    <td>${s.ip_address || '-'}</td>
+                    <td>${s.isp || '-'}</td>
+                    <td>${s.country || ''} ${s.city ? ' - ' + s.city : ''}</td>
+                    <td>${vpnProxy}</td>
                     <td>${mapLink}</td>
+                    <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
                     <td>
                         ${s.status === 'active' ? 
                             `<button class="btn-terminate" onclick="window.terminateSession('${s.id}')" title="إنهاء الجلسة">⏹️ إنهاء</button>` 
@@ -144,19 +143,42 @@
         }).join('');
     }
 
-    // ربط الأحداث (الفلاتر، الأزرار)
     function bindEvents() {
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('deviceFilter').addEventListener('change', applyFilters);
         document.getElementById('searchInput').addEventListener('input', applyFilters);
         
+        // أزرار الإجراءات الرئيسية (مكانيك الحدث سيتم إضافته هنا)
+        document.getElementById('logoutAllSessionsBtn').addEventListener('click', async () => {
+            if (!confirm('هل أنت متأكد من تسجيل الخروج من جميع الأجهزة الأخرى؟')) return;
+            // إنهاء جميع الجلسات النشطة ما عدا الحالية
+            const { error } = await supabase
+                .from('user_login_sessions')
+                .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .neq('id', sessions.find(s => s.status === 'active')?.id); // استثناء الجلسة الحالية (أول نشطة)
+            if (error) {
+                alert('حدث خطأ أثناء إنهاء الجلسات');
+                console.error(error);
+            } else {
+                await fetchSessions();
+                alert('تم إنهاء جميع الجلسات الأخرى بنجاح.');
+            }
+        });
+
+        document.getElementById('refreshLocationBtn').addEventListener('click', () => {
+            // يمكن طلب تحديث الموقع عبر واجهة المتصفح أو إعادة تحميل الصفحة
+            alert('سيتم تحديث موقعك الجغرافي عند إعادة تحميل الصفحة أو تسجيل الدخول مجدداً.');
+            window.location.reload();
+        });
+
         // إعادة تعيين مؤقت الخمول عند أي نشاط
         ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => {
             document.addEventListener(ev, resetIdleTimer);
         });
     }
 
-    // إنهاء جلسة معينة (دالة عامة تُستدعى من الأزرار)
     window.terminateSession = async function(sessionId) {
         if (!confirm('هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
         
@@ -172,11 +194,10 @@
             return;
         }
         
-        // تحديث القائمة
         await fetchSessions();
     };
 
-    // --- نظام كشف الخمول وإنهاء الجلسة ---
+    // --- نظام كشف الخمول ---
     function initIdleTimer() {
         resetIdleTimer();
     }
@@ -185,19 +206,14 @@
         clearTimeout(idleTimer);
         clearTimeout(idleWarningTimer);
         
-        // إخفاء تحذير الخمول إن وجد
         const warning = document.getElementById('idleWarning');
-        if (warning) warning.style.display = 'none';
+        if (warning) warning.classList.remove('show');
         
-        // تحذير قبل 30 ثانية من انتهاء المهلة
         idleWarningTimer = setTimeout(() => {
-            const warn = document.getElementById('idleWarning');
-            if (warn) warn.style.display = 'block';
+            if (warning) warning.classList.add('show');
         }, IDLE_TIME - 30000);
         
-        // إنهاء الجلسة تلقائياً بعد المدة المحددة
         idleTimer = setTimeout(async () => {
-            // إنهاء جميع جلسات المستخدم النشطة (أو الجلسة الحالية فقط حسب التصميم)
             const { error } = await supabase
                 .from('user_login_sessions')
                 .update({ status: 'timeout', logout_at: new Date().toISOString() })
@@ -205,12 +221,10 @@
                 .eq('status', 'active');
                 
             if (!error) {
-                // إعادة التوجيه لصفحة تسجيل الخروج
                 window.location.href = '/auth/auth/login/login.html?reason=timeout';
             }
         }, IDLE_TIME);
     }
 
-    // بدء التطبيق
     init();
 })();
