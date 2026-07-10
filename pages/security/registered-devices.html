@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>مركز الأمان وسجل الجلسات | تيرا</title>
+    <title>سجل الجلسات والأجهزة | تيرا</title>
 
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
+    <!-- خطوط وأيقونات -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- أوراق الأنماط الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
@@ -37,171 +42,350 @@
             --radius-xl: 24px;
         }
 
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 28px; }
-        .stat-box { background: #fff; border-radius: var(--radius-md); padding: 18px 16px; border: 1px solid var(--gray-200); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .stat-box .number { font-size: 20px; font-weight: 800; color: var(--gray-900); }
-        .stat-box .label { font-size: 12px; color: var(--gray-500); font-weight: 600; margin-top: 4px; }
-
-        .actions-bar {
-            display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
+        /* ========== الإحصائيات ========== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
         }
-        .actions-bar .btn-primary, .actions-bar .btn-danger {
-            padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; font-size: 14px;
-            cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px;
+        .stat-box {
+            background: #fff;
+            border-radius: var(--radius-md);
+            padding: 20px 16px;
+            border: 1px solid var(--gray-200);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
         }
-        .actions-bar .btn-primary { background: var(--primary); color: #fff; }
-        .actions-bar .btn-danger { background: var(--danger); color: #fff; }
+        .stat-box:hover { transform: translateY(-2px); }
+        .stat-box .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.2;
+        }
+        .stat-box .label {
+            font-size: 13px;
+            color: var(--gray-500);
+            font-weight: 600;
+            margin-top: 6px;
+        }
 
+        /* ========== شريط الفلترة ========== */
         .search-filter-bar {
-            display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;
-            padding: 14px 18px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 14px 18px;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
-        .search-filter-bar input, .search-filter-bar select {
-            padding: 8px 14px; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
-            background: #fff; color: var(--gray-700); outline: none; transition: border-color 0.2s;
+        .search-filter-bar input,
+        .search-filter-bar select {
+            padding: 10px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--gray-50);
+            color: var(--gray-700);
+            outline: none;
+            transition: all 0.2s;
         }
-        .search-filter-bar input:focus, .search-filter-bar select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2,128,144,0.1); }
-        .search-filter-bar input { flex: 1; min-width: 200px; }
+        .search-filter-bar input:focus,
+        .search-filter-bar select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2,128,144,0.1);
+            background: #fff;
+        }
+        .search-filter-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+        #filterCount {
+            font-weight: 600;
+            color: var(--gray-500);
+            white-space: nowrap;
+            font-size: 14px;
+        }
 
-        .table-container { overflow-x: auto; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); }
-        .table-container table { width: 100%; min-width: 1500px; border-collapse: collapse; font-size: 14px; }
-        .table-container th { text-align: right; padding: 14px 18px; font-weight: 800; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); font-size: 13px; white-space: nowrap; }
-        .table-container td { padding: 14px 18px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; color: var(--gray-700); }
+        /* ========== الجدول ========== */
+        .table-container {
+            overflow-x: auto;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .table-container table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .table-container th {
+            text-align: right;
+            padding: 14px 18px;
+            font-weight: 800;
+            color: var(--gray-500);
+            border-bottom: 2px solid var(--gray-200);
+            font-size: 13px;
+            white-space: nowrap;
+            background: var(--gray-50);
+        }
+        .table-container td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: middle;
+            color: var(--gray-700);
+        }
+        .table-container tbody tr:last-child td { border-bottom: none; }
         .table-container tbody tr:hover td { background: #f0fdfa; }
 
+        /* ========== شارات الحالة ========== */
         .status-badge {
-            display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
         }
         .status-active { background: #d1fae5; color: #065f46; }
         .status-logged_out { background: #f1f5f9; color: #475569; }
         .status-timeout { background: #ffedd5; color: #9a3412; }
-        .status-terminated { background: #fee2e2; color: #991b1b; }
+        .status-terminated_by_user { background: #fee2e2; color: #991b1b; }
+        .status-terminated_by_system { background: #fee2e2; color: #7f1d1d; }
 
-        .risk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
-        .risk-low { background: #d1fae5; color: #065f46; }
-        .risk-medium { background: #fef9c3; color: #854d0e; }
-        .risk-high { background: #fee2e2; color: #991b1b; }
+        /* ========== أزرار الإجراءات ========== */
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            margin: 2px;
+        }
+        .btn-action i { font-size: 13px; }
+        .btn-action:hover { background: #016f7a; transform: translateY(-1px); }
+        .btn-action.danger { background: var(--danger); }
+        .btn-action.danger:hover { background: #b91c1c; }
 
-        .btn-icon { background: transparent; border: none; color: var(--primary); cursor: pointer; padding: 8px; border-radius: var(--radius-sm); font-size: 16px; }
-        .btn-icon:hover { background: rgba(2,128,144,0.08); }
-        .btn-icon.text-danger { color: var(--danger); }
-        .btn-icon.text-danger:hover { background: rgba(220,38,38,0.08); }
-
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        /* ========== المودال ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10,27,63,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
         .modal-overlay.show { display: flex; }
-        .modal-box { background: #fff; border-radius: var(--radius-xl); max-width: 750px; width: 100%; padding: 32px 28px; box-shadow: 0 30px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--gray-100); padding-bottom: 14px; }
-        .modal-header h3 { margin: 0; font-size: 19px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; }
-        .modal-close { background: transparent; border: none; font-size: 24px; color: var(--gray-500); cursor: pointer; }
-        .detail-section { margin-bottom: 20px; }
-        .detail-section h4 { font-size: 15px; color: var(--primary-dark); margin-bottom: 10px; border-bottom: 1px solid var(--gray-100); padding-bottom: 6px; }
-        .detail-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
-        .detail-item .label { color: var(--gray-500); font-weight: 600; min-width: 140px; }
-        .detail-item .value { color: var(--gray-900); font-weight: 600; }
-        .btn-secondary { background: var(--gray-200); color: var(--gray-700); border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
 
+        .modal-box {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            max-width: 920px;
+            width: 100%;
+            padding: 28px 24px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+            max-height: 90vh;
+            overflow-y: auto;
+            direction: rtl;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--gray-100);
+            padding-bottom: 16px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--gray-900);
+            font-weight: 800;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-header h3 i { color: var(--primary); }
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 26px;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 5px;
+        }
+        .modal-close:hover { color: var(--danger); }
+
+        /* مجموعات التفاصيل */
+        .detail-group {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin-bottom: 18px;
+            border: 1px solid var(--gray-200);
+        }
+        .detail-group h4 {
+            font-size: 15px;
+            color: var(--primary-dark);
+            margin: 0 0 14px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--gray-300);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-group h4 i { color: var(--primary); font-size: 17px; width: 20px; text-align: center; }
+        .detail-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: var(--gray-500);
+            min-width: 160px;
+            font-size: 13px;
+        }
+        .detail-value {
+            color: var(--gray-900);
+            font-weight: 600;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        /* أزرار المودال */
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-secondary:hover { background: var(--gray-300); }
+
+        /* ========== تنبيهات ========== */
         .alert-box {
-            display: none; align-items: center; gap: 10px; padding: 12px 16px;
-            border-radius: 10px; margin-bottom: 20px; font-weight: 700; font-size: 14px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 14px;
         }
         .alert-box.show { display: flex; }
-        .alert-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
-        .alert-box i { font-size: 18px; flex-shrink: 0; }
-
-        .btn-terminate {
-            background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
-            padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
-            cursor: pointer; transition: background 0.2s;
+        .alert-box.warning {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fcd34d;
         }
-        .btn-terminate:hover { background: #fecaca; }
+        .alert-box i { font-size: 20px; flex-shrink: 0; }
 
+        /* ========== تجاوب ========== */
         @media (max-width: 768px) {
             .search-filter-bar { flex-direction: column; align-items: stretch; }
-            .table-container table { min-width: 1000px; }
-            .actions-bar { flex-direction: column; }
+            .modal-box { max-width: 95vw; padding: 20px; }
+            .detail-label { min-width: 120px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body data-security="registered-devices">
 
+<!-- Header -->
 <header class="focused-header no-print">
-    <div class="logo"><img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'"/></div>
-    <div class="client-info"><h5 id="headerUserName">مستخدم</h5><div class="avatar" id="headerAvatar">م</div></div>
+    <div class="logo">
+        <img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'"/>
+    </div>
+    <div class="client-info">
+        <h5 id="headerUserName">مستخدم</h5>
+        <div class="avatar" id="headerAvatar">م</div>
+    </div>
 </header>
 
+<!-- عنوان الصفحة -->
 <div class="page-subheader no-print">
-    <h1><i class="fas fa-shield-alt"></i> مركز الأمان وسجل الجلسات</h1>
+    <h1><i class="fas fa-shield-alt"></i> سجل الجلسات والأجهزة</h1>
     <a href="/pages/dashboard/index.html" class="btn-back"><i class="fas fa-arrow-left"></i> العودة للوحة التحكم</a>
 </div>
 
 <main class="content-container">
+    <!-- وصف -->
     <div class="page-desc" style="background:#e0f2fe; border-right:5px solid var(--primary); padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
         <i class="fas fa-info-circle" style="color:var(--primary); font-size:20px;"></i>
-        <span style="color:var(--gray-900); font-weight:600;">يرجى العلم أن الموقع الجغرافي يتم تتبعه طوال فترة استخدام المنصة للامتثال لمتطلبات الأمان والتحقق.</span>
+        <span style="color:var(--gray-900); font-weight:600;">سجل احترافي لجميع الجلسات. اضغط "عرض" للاطلاع على تقرير شامل عن الجهاز والجلسة، مع بيانات موقعية دقيقة.</span>
     </div>
 
-    <!-- تحذير الخمول (يظهر تلقائياً قبل 30 ثانية من إنهاء الجلسة) -->
+    <!-- تحذير الخمول -->
     <div class="alert-box warning" id="idleWarning" role="alert">
         <i class="fas fa-clock"></i>
-        <span>أنت غير نشط منذ فترة. سيتم إنهاء جلستك تلقائياً خلال 30 ثانية إذا لم يكن هناك أي نشاط.</span>
+        <span>أنت غير نشط منذ فترة. سيتم إنهاء جلستك تلقائياً خلال 30 ثانية.</span>
     </div>
 
-    <div class="alert-box warning" id="vpnAlert" role="alert">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span id="vpnAlertMessage">تنبيه أمني</span>
-    </div>
-
+    <!-- إحصائيات -->
     <div class="stats-row">
-        <div class="stat-box"><div class="number" id="totalCount">0</div><div class="label">إجمالي عمليات الدخول</div></div>
-        <div class="stat-box"><div class="number" id="activeCount">0</div><div class="label">الجلسات النشطة</div></div>
-        <div class="stat-box"><div class="number" id="trustedDevicesCount">0</div><div class="label">أجهزة موثوقة</div></div>
-        <div class="stat-box"><div class="number" id="lastLoginTime">-</div><div class="label">آخر تسجيل دخول</div></div>
+        <div class="stat-box">
+            <div class="number" id="totalCount">0</div>
+            <div class="label">إجمالي الجلسات</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" id="activeCount">0</div>
+            <div class="label">الجلسات النشطة</div>
+        </div>
     </div>
 
-    <div class="actions-bar">
-        <button class="btn-danger" id="logoutAllSessionsBtn">
-            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج من جميع الأجهزة الأخرى
-        </button>
-        <button class="btn-primary" id="refreshLocationBtn">
-            <i class="fas fa-map-marker-alt"></i> تحديث موقعي الحالي
-        </button>
-    </div>
-
+    <!-- فلترة -->
     <div class="search-filter-bar">
-        <input type="text" id="searchInput" placeholder="بحث (رقم الجلسة، IP، جهاز، متصفح...)">
+        <input type="text" id="searchInput" placeholder="بحث برقم الجلسة أو التاريخ...">
         <select id="statusFilter">
             <option value="all">جميع الجلسات</option>
             <option value="active">النشطة</option>
-            <option value="logged_out">المنتهية (تسجيل خروج)</option>
-            <option value="timeout">منتهية بسبب عدم النشاط</option>
+            <option value="logged_out">منتهية (تسجيل خروج)</option>
+            <option value="timeout">انتهت بسبب الخمول</option>
+            <option value="terminated_by_user">أنهيت بواسطتك</option>
             <option value="terminated_by_system">أنهيت بواسطة النظام</option>
-            <option value="terminated_by_user">أنهيت بواسطة المستخدم</option>
         </select>
-        <select id="deviceFilter">
-            <option value="all">جميع الأجهزة</option>
-            <option value="computer">كمبيوتر</option>
-            <option value="mobile">جوال</option>
-            <option value="tablet">لوحي</option>
-        </select>
-        <span class="filter-count" id="filterCount">عرض 0 جلسة</span>
+        <span id="filterCount">عرض 0 جلسة</span>
     </div>
 
+    <!-- جدول الجلسات -->
     <div class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>رقم الجلسة</th>
-                    <th>وقت الدخول</th>
-                    <th>المدة</th>
-                    <th>الجهاز</th>
-                    <th>المتصفح</th>
-                    <th>عنوان IP</th>
-                    <th>مزود الخدمة</th>
-                    <th>الموقع</th>
-                    <th>VPN/Proxy</th>
-                    <th>الخريطة</th>
+                    <th>تاريخ الدخول</th>
                     <th>الحالة</th>
-                    <th>إجراءات</th>
+                    <th>عرض التفاصيل</th>
+                    <th>تسجيل خروج</th>
                 </tr>
             </thead>
             <tbody id="sessionsTableBody"></tbody>
@@ -209,22 +393,24 @@
     </div>
 </main>
 
+<!-- مودال التفاصيل -->
 <div class="modal-overlay" id="detailModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3><i class="fas fa-info-circle" style="color:var(--primary);"></i> تفاصيل الجلسة</h3>
+            <h3><i class="fas fa-info-circle"></i> التقرير الكامل للجلسة</h3>
             <button class="modal-close" id="closeDetailModal">&times;</button>
         </div>
         <div id="detailContent"></div>
-        <div style="margin-top:20px; display:flex; gap:12px; justify-content: flex-end;">
+        <div style="margin-top:24px; display:flex; gap:12px; justify-content: flex-end;">
             <button class="btn-secondary" id="closeDetailBtn">إغلاق</button>
-            <button class="btn-danger" id="terminateSessionBtn" style="display:none;">إنهاء هذه الجلسة</button>
         </div>
     </div>
 </div>
 
+<!-- Footer -->
 <footer class="page-footer no-print">© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</footer>
 
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/js/supabase-client.js"></script>
 <script src="/assets/js/auth.js"></script>
