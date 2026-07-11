@@ -11,7 +11,7 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // إخفاء شاشة التحميل مبدئيًا، وتظهر فقط عند فحص الجلسة
+    // إخفاء شاشة التحميل مبدئيًا
     if (loaderScreen) loaderScreen.style.display = 'none';
 
     function showError(message) {
