@@ -1,6 +1,6 @@
 /**
- * verify-otp.js – v6 (مع تكامل LocationIQ لتسجيل الجلسات التفصيلية)
- * يدعم رمز 8 أرقام، مؤقت 5 دقائق، ويُسجل الجلسة مع بيانات الموقع
+ * verify-otp.js – v7 (متوافق مع بنية user_login_sessions الحالية)
+ * يستخدم postal_code, district, neighbourhood, province, state, display_name
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -20,9 +20,7 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
-        if (!sessionStorage.getItem('otpEmail')) {
-            console.warn('البريد الإلكتروني غير متوفر');
-        }
+        if (!sessionStorage.getItem('otpEmail')) console.warn('البريد الإلكتروني غير متوفر');
         bindEvents();
         startCountdown();
     }
@@ -42,34 +40,23 @@
                 e.preventDefault();
                 const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
                 if (digits.length === OTP_LENGTH) {
-                    for (let i = 0; i < OTP_LENGTH; i++) {
-                        if (otpInputs[i]) otpInputs[i].value = digits[i] || '';
-                    }
+                    for (let i = 0; i < OTP_LENGTH; i++) if (otpInputs[i]) otpInputs[i].value = digits[i] || '';
                     otpInputs[OTP_LENGTH - 1].focus();
                     checkComplete();
                 }
             });
         });
-
         if (verifyBtn) verifyBtn.addEventListener('click', handleVerify);
         if (resendBtn) resendBtn.addEventListener('click', handleResend);
     }
 
-    function getOtpCode() {
-        let code = '';
-        otpInputs.forEach(input => code += input.value);
-        return code;
-    }
-
-    function checkComplete() {
-        if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH;
-    }
+    function getOtpCode() { let code = ''; otpInputs.forEach(i => code += i.value); return code; }
+    function checkComplete() { if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH; }
 
     function showError(msg) {
         if (errorMsg) { errorMsg.textContent = msg; errorMsg.style.display = 'block'; }
         if (successMsg) successMsg.style.display = 'none';
     }
-
     function clearMessages() {
         if (errorMsg) errorMsg.style.display = 'none';
         if (successMsg) successMsg.style.display = 'none';
@@ -91,19 +78,14 @@
     }
 
     async function getPublicIP() {
-        try {
-            const res = await fetch('https://api.ipify.org?format=json');
-            const data = await res.json();
-            return data.ip;
-        } catch (e) { return null; }
+        try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); return d.ip; } catch (e) { return null; }
     }
 
-    // جلب بيانات الموقع الأساسية من ipapi.co (مجاني 1000 طلب/يوم)
     async function fetchBasicGeo() {
         try {
-            const res = await fetch('https://ipapi.co/json/');
-            if (!res.ok) throw new Error('فشل ipapi');
-            const d = await res.json();
+            const r = await fetch('https://ipapi.co/json/');
+            if (!r.ok) throw new Error('ipapi');
+            const d = await r.json();
             return {
                 ip: d.ip,
                 city: d.city,
@@ -113,32 +95,24 @@
                 lat: d.latitude,
                 lon: d.longitude
             };
-        } catch (e) {
-            console.warn('فشل جلب البيانات الأساسية للموقع:', e);
-            return {};
-        }
+        } catch (e) { return {}; }
     }
 
-    // جلب تفاصيل أكثر من LocationIQ (الحي، المحافظة، الرمز البريدي)
     async function fetchLocationIQ(lat, lon) {
         if (!lat || !lon) return {};
         const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
         try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('LocationIQ failed');
-            const data = await res.json();
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('LocationIQ');
+            const data = await r.json();
             return {
                 neighbourhood: data.neighbourhood || data.suburb || data.village || '',
                 province: data.province || '',
                 state: data.state || '',
-                postcode: data.postcode || '',
-                display_name: data.display_name || '',
-                district: data.district || data.county || ''
+                postal_code: data.postcode || '',   // سنخزنه في postal_code الموجود
+                display_name: data.display_name || ''
             };
-        } catch (e) {
-            console.warn('فشل جلب بيانات LocationIQ:', e);
-            return {};
-        }
+        } catch (e) { return {}; }
     }
 
     async function createSessionRecord(userId) {
@@ -147,12 +121,8 @@
             const ip = await getPublicIP();
             const { deviceType, browserName, userAgent } = getDeviceInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
-
-            // البيانات الأساسية من ipapi.co
             const geo = await fetchBasicGeo();
-
-            // بيانات أكثر تفصيلاً من LocationIQ
-            const locationDetails = await fetchLocationIQ(geo.lat, geo.lon);
+            const loc = await fetchLocationIQ(geo.lat, geo.lon);
 
             const record = {
                 user_id: userId,
@@ -166,11 +136,13 @@
                 isp: geo.isp || null,
                 country: geo.country || null,
                 country_code: geo.country_code || null,
-                city: locationDetails.city || geo.city || null,
-                district: locationDetails.neighbourhood || locationDetails.district || null,
-                province: locationDetails.province || null,
-                state: locationDetails.state || null,
-                postcode: locationDetails.postcode || null,
+                city: loc.city || geo.city || null,
+                district: loc.neighbourhood || null,
+                neighbourhood: loc.neighbourhood || null,
+                province: loc.province || null,
+                state: loc.state || null,
+                postal_code: loc.postal_code || null,
+                display_name: loc.display_name || null,
                 latitude: geo.lat || null,
                 longitude: geo.lon || null,
                 is_current_session: true
@@ -178,78 +150,45 @@
 
             const { error } = await supabase.from('user_login_sessions').insert(record);
             if (error) console.error('فشل تسجيل الجلسة:', error);
-            else console.log('✅ تم تسجيل الجلسة بنجاح');
-        } catch (e) {
-            console.error('خطأ في إنشاء سجل الجلسة:', e);
-        }
+            else console.log('✅ تم تسجيل الجلسة');
+        } catch (e) { console.error('خطأ في تسجيل الجلسة:', e); }
     }
 
     async function handleVerify() {
         const code = getOtpCode();
-        if (code.length !== OTP_LENGTH) {
-            showError('يرجى إدخال رمز التحقق كاملاً');
-            return;
-        }
-
+        if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
         clearMessages();
-        if (verifyBtn) {
-            verifyBtn.disabled = true;
-            verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-        }
-
+        if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
         const email = sessionStorage.getItem('otpEmail');
 
         try {
             const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
-            if (!sb) throw new Error('خدمة المصادقة غير متوفرة');
-
-            const { data, error } = await sb.auth.verifyOtp({
-                email,
-                token: code,
-                type: 'email'
-            });
-
+            if (!sb) throw new Error('الخدمة غير متوفرة');
+            const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
             if (error) throw error;
 
             if (data?.session) {
-                const userId = data.session.user.id;
-                await createSessionRecord(userId);
-
+                await createSessionRecord(data.session.user.id);
                 sessionStorage.removeItem('otpEmail');
-                if (successMsg) {
-                    successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
-                    successMsg.style.display = 'block';
-                }
-                setTimeout(() => {
-                    window.location.href = '/pages/dashboard/index.html';
-                }, 1500);
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
+                setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 1500);
             } else {
-                if (successMsg) {
-                    successMsg.textContent = 'تم التحقق بنجاح';
-                    successMsg.style.display = 'block';
-                }
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
                 if (window.onOtpVerified) window.onOtpVerified(code);
                 else setTimeout(() => window.location.href = '/pages/dashboard/index.html', 1000);
             }
         } catch (error) {
-            console.error('خطأ في التحقق:', error);
+            console.error(error);
             showError(getArabicErrorMessage(error.message));
-            if (verifyBtn) {
-                verifyBtn.disabled = false;
-                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
-            }
+            if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
         }
     }
-
-    // ... (باقي الدوال كما هي: handleResend, startCountdown, resetCountdown, updateTimerDisplay, getArabicErrorMessage)
 
     async function handleResend() {
         const email = sessionStorage.getItem('otpEmail');
         if (!email) { showError('البريد الإلكتروني غير متوفر'); return; }
-
         clearMessages();
         if (resendBtn) { resendBtn.disabled = true; resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
-
         try {
             const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
             if (!sb) throw new Error('الخدمة غير متوفرة');
@@ -257,12 +196,8 @@
             if (error) throw error;
             if (successMsg) { successMsg.textContent = 'تم إرسال رمز جديد'; successMsg.style.display = 'block'; }
             resetCountdown();
-        } catch (e) {
-            console.error(e);
-            showError('فشل إعادة الإرسال');
-        } finally {
-            if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; }
-        }
+        } catch (e) { showError('فشل إعادة الإرسال'); }
+        finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
     }
 
     function startCountdown() {
@@ -279,16 +214,13 @@
             }
         }, 1000);
     }
-
     function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
-
     function updateTimerDisplay(seconds) {
         if (timerSpan) {
             const m = Math.floor(seconds / 60), s = seconds % 60;
             timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
     }
-
     function getArabicErrorMessage(msg) {
         const map = {
             'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
