@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v13 (متوافق مع الوحدات)
+ * security-registered-devices.js – v13 (متوافق مع الوحدات + إصلاح عرض الموقع الجغرافي)
  * يستخدم UIHelpers, SessionManager, LocationServices عند توفرها
  * يحتفظ بوظائف احتياطية لضمان العمل في جميع الحالات
  */
@@ -174,15 +174,29 @@
         if (!detailContent || !modal) return;
         modal.classList.add('show');
 
+        // ---- تعديل هام لاستدعاء LocationIQ عندما تكون التفاصيل النصية ناقصة ----
         let extraLocation = null;
-        if (session.latitude && session.longitude && (!session.city || !session.country)) {
+        const hasMissingTextData = !session.country || !session.city || !session.neighbourhood || !session.postal_code;
+        if (session.latitude && session.longitude && hasMissingTextData) {
             if (window.LocationServices?.fetchLocationIQ) {
-                extraLocation = await window.LocationServices.fetchLocationIQ(session.latitude, session.longitude);
+                detailContent.innerHTML = '<p style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل تفاصيل الموقع...</p>';
+                try {
+                    console.log('🔄 جلب تفاصيل الموقع من LocationIQ...');
+                    extraLocation = await window.LocationServices.fetchLocationIQ(session.latitude, session.longitude);
+                    if (extraLocation && Object.keys(extraLocation).length > 0) {
+                        console.log('✅ تم جلب تفاصيل الموقع:', extraLocation);
+                    } else {
+                        console.warn('⚠️ LocationIQ أعاد كائنًا فارغًا');
+                    }
+                } catch (err) {
+                    console.error('❌ فشل LocationIQ:', err);
+                }
             }
         }
 
         function getLocationRows() {
             const rows = [];
+            // الدمج بين البيانات المخزنة والمسترجعة (الأولوية للمخزنة)
             const country = session.country || extraLocation?.country;
             const country_code = session.country_code || extraLocation?.country_code;
             const city = session.city || extraLocation?.city;
@@ -207,6 +221,7 @@
             return rows;
         }
 
+        // (باقي المجموعات كما هي)
         const groups = [
             {
                 title: 'هوية الجهاز', icon: 'fa-id-card',
