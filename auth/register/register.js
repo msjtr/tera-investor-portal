@@ -1,80 +1,135 @@
 /**
- * login.js – مدير تسجيل الدخول مع مصادقة OTP إجبارية للجميع
- * المسار: auth/auth/login/login.js
+ * register.js – صفحة إنشاء حساب جديد
+ * يعتمد على Auth.register من auth.js
  */
 (function() {
-    'use strict';
+    const form = document.getElementById('registerForm');
+    const fullNameInput = document.getElementById('fullName');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const registerBtn = document.getElementById('registerBtn');
+    const errorMsg = document.getElementById('registerError');
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    const DASHBOARD_URL = '/pages/dashboard/index.html';
-    const VERIFY_OTP_URL = '/auth/verify-otp.html';
+    if (loaderScreen) loaderScreen.style.display = 'none';
 
-    window.addEventListener('DOMContentLoaded', async function() {
-        const form = document.getElementById('teraLoginForm');
-        const emailInput = document.getElementById('login_identifier');
-        const passwordInput = document.getElementById('login_password');
-        const showPasswordCheck = document.getElementById('show_login_password');
-        const submitBtn = document.getElementById('loginSubmitBtn');
-        const alertBox = document.getElementById('formAlert');
-        const alertIcon = document.getElementById('alertIcon');
-        const alertMessage = document.getElementById('alertMessage');
-        const loader = document.getElementById('creativeLoaderScreen');
+    function showError(message) {
+        if (errorMsg) {
+            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            errorMsg.style.display = 'block';
+        }
+    }
 
-        if (!form || !emailInput || !passwordInput || !submitBtn) return;
+    function clearError() {
+        if (errorMsg) errorMsg.style.display = 'none';
+    }
 
-        let supabaseClient = null;
+    // إظهار/إخفاء كلمة المرور
+    function setupPasswordToggle(toggleCheckbox, passwordField) {
+        if (toggleCheckbox && passwordField) {
+            toggleCheckbox.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-eye');
+                    icon.classList.toggle('fa-eye-slash');
+                }
+            });
+        }
+    }
+
+    setupPasswordToggle(togglePassword, passwordInput);
+    setupPasswordToggle(toggleConfirmPassword, confirmPasswordInput);
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    async function handleRegister(e) {
+        if (e) e.preventDefault();
+        clearError();
+
+        const fullName = fullNameInput?.value.trim();
+        const email = emailInput?.value.trim();
+        const password = passwordInput?.value;
+        const confirmPassword = confirmPasswordInput?.value;
+
+        // التحقق من الحقول
+        if (!fullName || !email || !password || !confirmPassword) {
+            showError('يرجى تعبئة جميع الحقول المطلوبة');
+            return;
+        }
+        if (!isValidEmail(email)) {
+            showError('يرجى إدخال بريد إلكتروني صحيح');
+            return;
+        }
+        if (password !== confirmPassword) {
+            showError('كلمة المرور وتأكيدها غير متطابقين');
+            return;
+        }
+
+        if (!window.Auth) {
+            showError('خدمة المصادقة غير متاحة مؤقتاً، حاول لاحقاً.');
+            return;
+        }
+
+        if (registerBtn) {
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
+        }
 
         try {
-            if (typeof window.waitForSupabase === 'function') supabaseClient = await window.waitForSupabase();
-            else if (window.teraSupabase) supabaseClient = window.teraSupabase;
-            else supabaseClient = await new Promise((resolve) => { document.addEventListener('supabase:ready', e => resolve(e.detail.client), { once: true }); });
-        } catch (e) { showAlert('تعذر الاتصال بالخادم.', 'error'); return; }
-
-        function showAlert(msg, type = 'error') {
-            if (!alertBox) return;
-            alertBox.style.display = 'flex';
-            alertBox.className = `alert-box show ${type}`;
-            alertIcon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
-            alertMessage.textContent = msg;
-            clearTimeout(window._alertTimer);
-            window._alertTimer = setTimeout(() => { alertBox.style.display = 'none'; alertBox.className = 'alert-box'; }, 8000);
+            // استخدام Auth.register مع metadata (الاسم الكامل)
+            await window.Auth.register(email, password, { full_name: fullName });
+            
+            // نجاح التسجيل - توجيه إلى صفحة التحقق أو الدخول
+            sessionStorage.setItem('otpEmail', email);
+            window.location.href = '/auth/verify-otp.html';
+            
+        } catch (error) {
+            console.error('خطأ في التسجيل:', error);
+            let message = 'حدث خطأ أثناء إنشاء الحساب';
+            if (error.message?.includes('already registered')) {
+                message = 'البريد الإلكتروني مسجل بالفعل';
+            } else if (error.message?.includes('كلمة المرور')) {
+                message = error.message; // رسالة التحقق من كلمة المرور
+            } else if (error.message?.includes('Too many requests')) {
+                message = 'محاولات كثيرة، يرجى المحاولة لاحقاً';
+            }
+            showError(message);
+        } finally {
+            if (registerBtn) {
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب جديد';
+            }
         }
+    }
 
-        function showLoader() { if (loader) loader.style.display = 'flex'; }
-        function hideLoader() { if (loader) loader.style.display = 'none'; }
+    if (form) form.addEventListener('submit', handleRegister);
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleRegister(e);
+        });
+    }
 
-        async function handleLogin(e) {
-            e.preventDefault();
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-
-            if (!email || !password) { showAlert('يرجى إدخال البريد الإلكتروني وكلمة المرور.'); return; }
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
-            showLoader();
-
-            try {
-                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) {
-                    let msg = 'بيانات الدخول غير صحيحة.';
-                    if (error.message.includes('Invalid login credentials')) msg = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-                    else if (error.message.includes('Email not confirmed')) msg = 'يجب تأكيد البريد الإلكتروني أولاً.';
-                    showAlert(msg, 'error');
+    // فحص الجلسة السابقة (إذا كان المستخدم مسجل دخوله بالفعل)
+    async function checkExistingSession() {
+        try {
+            if (window.Auth) {
+                const user = await window.Auth.getUser();
+                if (user) {
+                    window.location.href = '/pages/dashboard/index.html';
                     return;
                 }
-
-                await supabaseClient.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-                localStorage.setItem('pendingVerificationEmail', email);
-                localStorage.setItem('tera_verify_type', 'login_otp');
-                sessionStorage.setItem('tera_login_password', password);
-
-                showAlert('تم إرسال رمز تحقق إلى بريدك الإلكتروني. جاري توجيهك...', 'success');
-                setTimeout(() => { window.location.replace(VERIFY_OTP_URL); }, 1000);
-            } catch (err) { showAlert('حدث خطأ. يرجى المحاولة لاحقاً.'); }
-            finally { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن'; hideLoader(); }
+            }
+        } catch (e) {
+            // لا توجد جلسة صالحة، البقاء في صفحة التسجيل
         }
+    }
 
-        form.addEventListener('submit', handleLogin);
-        showPasswordCheck.addEventListener('change', function() { passwordInput.type = this.checked ? 'text' : 'password'; });
-    });
+    checkExistingSession();
 })();
