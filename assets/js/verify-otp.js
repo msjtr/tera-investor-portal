@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v11 (تشخيص + احتياط عند فشل LocationIQ)
+ * verify-otp.js – v12 (ضمان جلب الموقع مع تشخيص كامل)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -115,7 +115,7 @@
             const r = await fetch('https://ipapi.co/json/');
             if (!r.ok) throw new Error('ipapi failed');
             const d = await r.json();
-            console.log('📍 ipapi.co response:', d);
+            console.log('📍 ipapi.co:', d);
             return {
                 ip: d.ip,
                 city: d.city,
@@ -136,15 +136,11 @@
     async function fetchLocationIQ(lat, lon) {
         if (!lat || !lon) return {};
         const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
-        console.log('🔍 Calling LocationIQ:', url);
         try {
             const r = await fetch(url);
-            if (!r.ok) {
-                console.error('❌ LocationIQ HTTP Error:', r.status);
-                return {};
-            }
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data = await r.json();
-            console.log('📍 LocationIQ response:', data);
+            console.log('📍 LocationIQ:', data);
             return {
                 neighbourhood: data.neighbourhood || data.suburb || data.village || '',
                 province: data.province || '',
@@ -155,7 +151,7 @@
                 district: data.county || data.district || ''
             };
         } catch (e) {
-            console.error('❌ LocationIQ failed:', e);
+            console.warn('⚠️ LocationIQ failed:', e);
             return {};
         }
     }
@@ -169,13 +165,13 @@
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(geo.lat, geo.lon);
 
-            // دمج: نفضل LocationIQ ثم ipapi
+            // الدمج: نفضل LocationIQ ثم ipapi
             const finalCity = loc.city || geo.city || null;
             const finalCountry = geo.country || null;
             const finalLat = geo.lat || null;
             const finalLon = geo.lon || null;
 
-            console.log('📦 Final location for session:', { finalCity, finalCountry, finalLat, finalLon });
+            console.log('📦 بيانات الموقع النهائية:', { finalCity, finalCountry, finalLat, finalLon, geo, loc });
 
             const record = {
                 user_id: userId,
@@ -227,11 +223,12 @@
             const { error } = await supabase.from('user_login_sessions').insert(record);
             if (error) {
                 console.error('❌ فشل تسجيل الجلسة:', error);
+                // عرض الخطأ للمستخدم (اختياري)
             } else {
                 console.log('✅ تم تسجيل الجلسة بنجاح');
             }
         } catch (e) {
-            console.error('❌ خطأ غير متوقع في createSessionRecord:', e);
+            console.error('❌ خطأ غير متوقع:', e);
         }
     }
 
