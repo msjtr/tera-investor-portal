@@ -8,6 +8,16 @@
 
     // ========== التهيئة عند تحميل الصفحة ==========
     async function init() {
+        // لا تقم بتهيئة الحماية في صفحات المصادقة (تسجيل الدخول، التسجيل، التحقق)
+        const authPages = ['/auth/', '/login', '/register', '/verify-otp'];
+        const currentPath = window.location.pathname;
+        const isAuthPage = authPages.some(page => currentPath.includes(page));
+
+        if (isAuthPage) {
+            console.log('🟢 [Main] صفحة مصادقة، تخطي الحماية.');
+            return;
+        }
+
         // إذا كانت الصفحة محمية (تحتوي على قائمة جانبية)
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
@@ -64,12 +74,11 @@
         };
 
         update();
-        setInterval(update, 30000); // تحديث كل 30 ثانية
+        setInterval(update, 30000);
     }
 
     // ========== أحداث عامة ==========
     function initGlobalClickEvents() {
-        // أي عنصر له data-action يمكن التعامل معه مركزياً
         document.body.addEventListener('click', function(e) {
             const actionBtn = e.target.closest('[data-action]');
             if (!actionBtn) return;
