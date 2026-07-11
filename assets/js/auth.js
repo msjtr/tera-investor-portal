@@ -1,8 +1,8 @@
 /**
- * auth.js – v6 (نظام المصادقة المركزي مع دعم GPS)
+ * auth.js – v7 (نظام المصادقة المركزي مع دعم GPS)
  * يعتمد على supabase-client.js لتوفير Supabase
  * يوفر: login, sendOTP, verifyOTP, loginWithPasswordAndOTP, register, resetPassword,
- *        updatePassword, logout, getSession, getUser, onAuthStateChange, requireAuth,
+ *        updatePassword, logout, getSession, getUser, isSessionValid, onAuthStateChange, requireAuth,
  *        getCurrentPosition, watchLocationPermission
  */
 (function() {
@@ -108,6 +108,21 @@
         return user;
     }
 
+    /**
+     * فحص سريع وآمن لصلاحية الجلسة (بدون إعادة توجيه أو تنظيف)
+     * @returns {boolean} true إذا كانت الجلسة صالحة
+     */
+    async function isSessionValid() {
+        const sb = await getSupabase();
+        if (!sb) return false;
+        try {
+            const { data: { user }, error } = await sb.auth.getUser();
+            return !error && !!user;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function onAuthStateChange(callback) {
         getSupabase().then(sb => {
             if (!sb) return;
@@ -124,8 +139,10 @@
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
+                // جلسة غير صالحة - نسجل الخروج وننظف جزئياً
                 await sb.auth.signOut();
                 localStorage.removeItem('rememberMe');
+                // لا نمسح sessionStorage هنا لنحافظ على otpEmail إن وجد
                 window.location.replace(redirectUrl);
                 return null;
             }
@@ -174,6 +191,7 @@
         logout,
         getSession,
         getUser,
+        isSessionValid,
         onAuthStateChange,
         requireAuth,
         validatePassword,
@@ -181,5 +199,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v6 جاهز');
+    console.log('auth.js v7 جاهز');
 })();
