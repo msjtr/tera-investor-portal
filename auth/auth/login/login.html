@@ -28,16 +28,13 @@
             --radius-lg: 16px;
             --radius-xl: 24px;
         }
-
         * { box-sizing: border-box; }
-
         body {
             font-family: 'Tajawal', sans-serif;
             background: #f1f5f9;
             margin: 0;
             color: #1e293b;
         }
-
         .auth-layout {
             min-height: 100vh;
             display: flex;
@@ -46,7 +43,6 @@
             background: linear-gradient(135deg, #f0f9ff, #e6f7f5);
             padding: 20px;
         }
-
         .auth-container {
             max-width: 480px;
             width: 100%;
@@ -54,67 +50,15 @@
             border-radius: var(--radius-xl);
             padding: 40px 32px 32px;
             box-shadow: 0 20px 60px rgba(2, 128, 144, 0.12);
-            transition: all 0.3s ease;
         }
-
-        .auth-container:hover {
-            box-shadow: 0 30px 80px rgba(2, 128, 144, 0.16);
-        }
-
-        .brand-logo-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .brand-logo-box img {
-            height: 52px;
-            width: auto;
-        }
-
-        .portal-title {
-            font-family: 'Cairo', sans-serif;
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--gray-900);
-            text-align: center;
-            margin: 0 0 4px;
-        }
-
-        .page-subtitle {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
-            text-align: center;
-            margin: 0 0 8px;
-        }
-
-        .welcome-text {
-            font-size: 14px;
-            color: var(--gray-500);
-            text-align: center;
-            margin: 0 0 32px;
-            line-height: 1.6;
-        }
-
-        .form-field-group {
-            margin-bottom: 20px;
-        }
-
-        .field-label {
-            display: block;
-            font-weight: 700;
-            font-size: 14px;
-            color: #1e293b;
-            margin-bottom: 6px;
-        }
-
-        .field-label-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
+        .brand-logo-box { text-align: center; margin-bottom: 20px; }
+        .brand-logo-box img { height: 52px; width: auto; }
+        .portal-title { font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 800; color: var(--gray-900); text-align: center; margin: 0 0 4px; }
+        .page-subtitle { font-size: 18px; font-weight: 700; color: var(--primary); text-align: center; margin: 0 0 8px; }
+        .welcome-text { font-size: 14px; color: var(--gray-500); text-align: center; margin: 0 0 32px; line-height: 1.6; }
+        .form-field-group { margin-bottom: 20px; }
+        .field-label { display: block; font-weight: 700; font-size: 14px; color: #1e293b; margin-bottom: 6px; }
+        .field-label-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .form-input-control {
             width: 100%;
             padding: 14px 16px;
@@ -126,14 +70,12 @@
             background: var(--gray-50);
             color: var(--gray-900);
         }
-
         .form-input-control:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
             background: #fff;
             outline: none;
         }
-
         .forgot-pass-link {
             font-size: 13px;
             color: var(--primary);
@@ -141,12 +83,7 @@
             text-decoration: none;
             white-space: nowrap;
         }
-
-        .forgot-pass-link:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
-        }
-
+        .forgot-pass-link:hover { color: var(--primary-dark); text-decoration: underline; }
         .checkbox-toggle-label {
             display: flex;
             align-items: center;
@@ -156,14 +93,7 @@
             cursor: pointer;
             margin-top: 8px;
         }
-
-        .checkbox-toggle-label input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
+        .checkbox-toggle-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
         .btn-submit-login {
             width: 100%;
             padding: 16px;
@@ -181,18 +111,8 @@
             justify-content: center;
             gap: 8px;
         }
-
-        .btn-submit-login:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(2, 128, 144, 0.35);
-        }
-
-        .btn-submit-login:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-            transform: none;
-        }
-
+        .btn-submit-login:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(2, 128, 144, 0.35); }
+        .btn-submit-login:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
         .bottom-routing-footer-links {
             margin-top: 28px;
             border-top: 1px solid var(--gray-200);
@@ -201,22 +121,9 @@
             font-size: 14px;
             color: var(--gray-500);
         }
-
-        .bottom-routing-footer-links p {
-            margin: 8px 0;
-        }
-
-        .routing-link {
-            color: var(--primary);
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .routing-link:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
-        }
-
+        .bottom-routing-footer-links p { margin: 8px 0; }
+        .routing-link { color: var(--primary); font-weight: 700; text-decoration: none; }
+        .routing-link:hover { color: var(--primary-dark); text-decoration: underline; }
         .alert-box {
             display: none;
             align-items: center;
@@ -227,23 +134,8 @@
             font-weight: 700;
             font-size: 14px;
         }
-
-        .alert-box.show {
-            display: flex;
-        }
-
-        .alert-box.error {
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
-        }
-
-        .alert-box.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
+        .alert-box.show { display: flex; }
+        .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
         .tera-loader-overlay {
             display: none;
             position: fixed;
@@ -255,11 +147,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        .tera-loader-overlay.active {
-            display: flex;
-        }
-
         .spinning-infinity-ring {
             width: 56px;
             height: 56px;
@@ -269,21 +156,15 @@
             animation: spin 0.9s linear infinite;
             margin-bottom: 16px;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* تجاوب */
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
-            .auth-container { max-width: 100%; padding: 32px 24px 24px; border-radius: 20px; }
+            .auth-container { padding: 32px 24px 24px; }
             .portal-title { font-size: 20px; }
             .page-subtitle { font-size: 16px; }
             .welcome-text { font-size: 13px; margin-bottom: 24px; }
             .form-input-control { font-size: 14px; padding: 12px 14px; }
             .btn-submit-login { padding: 14px; font-size: 15px; }
         }
-
         @media (max-width: 480px) {
             .auth-layout { padding: 10px; }
             .auth-container { padding: 24px 16px 20px; border-radius: 16px; }
@@ -294,10 +175,9 @@
             .form-field-group { margin-bottom: 16px; }
             .field-label { font-size: 13px; }
             .form-input-control { font-size: 13px; padding: 10px 12px; }
-            .btn-submit-login { font-size: 14px; padding: 12px; border-radius: var(--radius-md); }
+            .btn-submit-login { font-size: 14px; padding: 12px; }
             .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 16px; }
             .forgot-pass-link { font-size: 12px; }
-            .checkbox-toggle-label { font-size: 13px; }
             .spinning-infinity-ring { width: 44px; height: 44px; }
         }
     </style>
@@ -306,16 +186,14 @@
     <div class="auth-layout">
         <div class="auth-container">
             <div class="brand-logo-box">
-                <img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2240%22%3E%3Crect width=%22120%22 height=%2240%22 rx=%226%22 fill=%22%23028090%22/%3E%3Ctext x=%2260%22 y=%2226%22 font-family=%22Cairo,sans-serif%22 font-size=%2220%22 font-weight=%22bold%22 fill=%22%23ffffff%22 text-anchor=%22middle%22%3Eتيرا%3C/text%3E%3C/svg%3E'">
+                <img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'">
             </div>
             <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
-            <h3 class="page-subtitle">تسجيل الدخول الموحد</h3>
-            <p class="welcome-text">مرحباً بك مجدداً. سجل دخولك للوصول إلى محفظتك الاستثمارية الذكية.</p>
-            
+            <h3 class="page-subtitle">تسجيل الدخول الآمن</h3>
+            <p class="welcome-text">أدخل بريدك الإلكتروني وكلمة المرور، ثم سنرسل لك رمز تحقق للدخول.</p>
             <div class="alert-box" id="loginError">
                 <span id="loginErrorMessage"></span>
             </div>
-            
             <form id="loginForm" novalidate>
                 <div class="form-field-group">
                     <label class="field-label" for="email">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
@@ -327,30 +205,20 @@
                         <a href="/auth/forgot-password.html" class="forgot-pass-link">نسيت كلمة المرور؟</a>
                     </div>
                     <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
-                    <label class="checkbox-toggle-label" for="togglePassword">
-                        <input type="checkbox" id="togglePassword"> إظهار كلمة المرور
-                    </label>
+                    <label class="checkbox-toggle-label"><input type="checkbox" id="togglePassword"> إظهار كلمة المرور</label>
                 </div>
-                <div class="form-field-group">
-                    <label class="checkbox-toggle-label" for="rememberMe">
-                        <input type="checkbox" id="rememberMe"> تذكرني على هذا الجهاز
-                    </label>
-                </div>
-                <button type="submit" class="btn-submit-login" id="loginBtn"><i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن</button>
+                <button type="submit" class="btn-submit-login" id="loginBtn"><i class="fas fa-paper-plane"></i> إرسال رمز التحقق</button>
             </form>
-            
             <div class="bottom-routing-footer-links">
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
                 <p><a href="/index.html" style="color: var(--gray-500);"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
-        
         <div class="tera-loader-overlay" id="creativeLoaderScreen">
             <div class="spinning-infinity-ring"></div>
-            <p style="color:#fff; font-weight:700;">جاري تسجيل الدخول...</p>
+            <p style="color:#fff; font-weight:700;">جاري التحقق...</p>
         </div>
     </div>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
