@@ -1,10 +1,9 @@
 /**
- * verify-otp.js – v7 (متوافق مع بنية user_login_sessions الحالية)
- * يستخدم postal_code, district, neighbourhood, province, state, display_name
+ * verify-otp.js – v8 (يجمع تفاصيل جهاز كاملة وبيانات الموقع)
  */
 (function() {
     const OTP_LENGTH = 8;
-    const RESEND_TIMEOUT = 300; // 5 دقائق
+    const RESEND_TIMEOUT = 300;
     const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
 
     let supabase;
@@ -20,7 +19,6 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
-        if (!sessionStorage.getItem('otpEmail')) console.warn('البريد الإلكتروني غير متوفر');
         bindEvents();
         startCountdown();
     }
@@ -62,19 +60,69 @@
         if (successMsg) successMsg.style.display = 'none';
     }
 
-    function getDeviceInfo() {
+    // ───── معلومات الجهاز والمتصفح ─────
+    function getDeviceAndBrowserInfo() {
         const ua = navigator.userAgent;
+        let os = 'Unknown', osVersion = '';
+        if (/Windows NT 10/.test(ua)) { os = 'Windows'; osVersion = '10'; }
+        else if (/Windows NT 6.3/.test(ua)) { os = 'Windows'; osVersion = '8.1'; }
+        else if (/Mac OS X/.test(ua)) { os = 'macOS'; let m = ua.match(/Mac OS X (\d+[._]\d+)/); if(m) osVersion = m[1].replace('_', '.'); }
+        else if (/Android/.test(ua)) { os = 'Android'; let m = ua.match(/Android (\d+\.?\d*)/); if(m) osVersion = m[1]; }
+        else if (/iPhone|iPad/.test(ua)) { os = 'iOS'; let m = ua.match(/OS (\d+[._]\d+)/); if(m) osVersion = m[1].replace('_', '.'); }
+        else if (/Linux/.test(ua)) os = 'Linux';
+
+        let browserName = 'Unknown', browserVersion = '';
+        if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) { browserName = 'Chrome'; let m = ua.match(/Chrome\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Firefox/i.test(ua)) { browserName = 'Firefox'; let m = ua.match(/Firefox\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) { browserName = 'Safari'; let m = ua.match(/Version\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Edg/i.test(ua)) { browserName = 'Edge'; let m = ua.match(/Edg\/(\d+)/); if(m) browserVersion = m[1]; }
+
         let deviceType = 'computer';
         if (/Mobi|Android|iPhone/i.test(ua)) deviceType = 'mobile';
         else if (/iPad|Tablet/i.test(ua)) deviceType = 'tablet';
 
-        let browserName = 'Unknown';
-        if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browserName = 'Chrome';
-        else if (/Firefox/i.test(ua)) browserName = 'Firefox';
-        else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browserName = 'Safari';
-        else if (/Edg/i.test(ua)) browserName = 'Edge';
+        const screenWidth = window.screen.width;
+        const screenHeight = window.screen.height;
+        const colorDepth = window.screen.colorDepth || '';
+        const pixelRatio = window.devicePixelRatio || 1;
+        const language = navigator.language || '';
+        const cpuCores = navigator.hardwareConcurrency || '';
+        const deviceMemory = navigator.deviceMemory || '';
 
-        return { deviceType, browserName, userAgent: ua };
+        const touchSupported = !!('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        const cookiesEnabled = navigator.cookieEnabled;
+        const localStorage = typeof Storage !== 'undefined' && !!window.localStorage;
+        const sessionStorage = typeof Storage !== 'undefined' && !!window.sessionStorage;
+        const indexedDB = !!window.indexedDB;
+        const webglSupported = (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch(e){ return false; } })();
+
+        // بصمة بسيطة (hash من userAgent + screen + time)
+        const fingerprint = btoa(ua + screenWidth + screenHeight + language).substring(0, 32);
+
+        return {
+            device_type: deviceType,
+            browser_name: browserName,
+            browser_version: browserVersion,
+            browser_engine: '', // يمكن تحسينه لاحقاً
+            user_agent: ua,
+            operating_system: os,
+            os_version: osVersion,
+            platform: navigator.platform || '',
+            language: language,
+            screen_resolution: `${screenWidth}x${screenHeight}`,
+            color_depth: colorDepth,
+            pixel_ratio: pixelRatio,
+            cpu_cores: cpuCores,
+            device_memory: deviceMemory,
+            touch_supported: touchSupported,
+            cookies_enabled: cookiesEnabled,
+            local_storage: localStorage,
+            session_storage: sessionStorage,
+            indexed_db: indexedDB,
+            webgl_supported: webglSupported,
+            fingerprint: fingerprint,
+            network_type: navigator.connection?.effectiveType || ''
+        };
     }
 
     async function getPublicIP() {
@@ -93,7 +141,9 @@
                 country_code: d.country_code,
                 isp: d.org,
                 lat: d.latitude,
-                lon: d.longitude
+                lon: d.longitude,
+                proxy: d.proxy || false,
+                hosting: d.hosting || false
             };
         } catch (e) { return {}; }
     }
@@ -109,8 +159,10 @@
                 neighbourhood: data.neighbourhood || data.suburb || data.village || '',
                 province: data.province || '',
                 state: data.state || '',
-                postal_code: data.postcode || '',   // سنخزنه في postal_code الموجود
-                display_name: data.display_name || ''
+                postal_code: data.postcode || '',
+                display_name: data.display_name || '',
+                city: data.city || '',
+                district: data.county || data.district || ''
             };
         } catch (e) { return {}; }
     }
@@ -119,7 +171,7 @@
         if (!supabase) return;
         try {
             const ip = await getPublicIP();
-            const { deviceType, browserName, userAgent } = getDeviceInfo();
+            const deviceInfo = getDeviceAndBrowserInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(geo.lat, geo.lon);
@@ -130,14 +182,11 @@
                 login_at: new Date().toISOString(),
                 status: 'active',
                 ip_address: geo.ip || ip || 'غير معروف',
-                device_type: deviceType,
-                browser_name: browserName,
-                user_agent: userAgent,
                 isp: geo.isp || null,
                 country: geo.country || null,
                 country_code: geo.country_code || null,
                 city: loc.city || geo.city || null,
-                district: loc.neighbourhood || null,
+                district: loc.neighbourhood || loc.district || null,
                 neighbourhood: loc.neighbourhood || null,
                 province: loc.province || null,
                 state: loc.state || null,
@@ -145,6 +194,30 @@
                 display_name: loc.display_name || null,
                 latitude: geo.lat || null,
                 longitude: geo.lon || null,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+                vpn_detected: geo.proxy || false,
+                proxy_detected: geo.proxy || false,
+                hosting_detected: geo.hosting || false,
+                device_type: deviceInfo.device_type,
+                browser_name: deviceInfo.browser_name,
+                browser_version: deviceInfo.browser_version,
+                browser_engine: deviceInfo.browser_engine,
+                user_agent: deviceInfo.user_agent,
+                operating_system: deviceInfo.operating_system,
+                os_version: deviceInfo.os_version,
+                platform: deviceInfo.platform,
+                language: deviceInfo.language,
+                screen_resolution: deviceInfo.screen_resolution,
+                cpu_architecture: deviceInfo.cpu_cores || null,
+                device_memory: deviceInfo.device_memory || null,
+                fingerprint: deviceInfo.fingerprint,
+                touch_supported: deviceInfo.touch_supported,
+                cookies_enabled: deviceInfo.cookies_enabled,
+                local_storage: deviceInfo.local_storage,
+                session_storage: deviceInfo.session_storage,
+                indexed_db: deviceInfo.indexed_db,
+                webgl_supported: deviceInfo.webgl_supported,
+                network_type: deviceInfo.network_type || null,
                 is_current_session: true
             };
 
@@ -154,6 +227,10 @@
         } catch (e) { console.error('خطأ في تسجيل الجلسة:', e); }
     }
 
+    // ... (دوال التحقق والإعادة والعد التنازلي كما هي دون تغيير)
+    // يمكنك نسخ الدوال المتبقية من الكود السابق (handleVerify, handleResend, startCountdown...)
+
+    // اختصارًا، سأضيف الدوال المفقودة هنا:
     async function handleVerify() {
         const code = getOtpCode();
         if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
