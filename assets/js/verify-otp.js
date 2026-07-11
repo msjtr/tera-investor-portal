@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v10 (متوافق مع الأعمدة الفعلية للجدول)
+ * verify-otp.js – v11 (تشخيص + احتياط عند فشل LocationIQ)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -113,19 +113,38 @@
     async function fetchBasicGeo() {
         try {
             const r = await fetch('https://ipapi.co/json/');
-            if (!r.ok) throw new Error('ipapi');
+            if (!r.ok) throw new Error('ipapi failed');
             const d = await r.json();
-            return { ip: d.ip, city: d.city, country: d.country_name, country_code: d.country_code, isp: d.org, lat: d.latitude, lon: d.longitude, proxy: d.proxy || false, hosting: d.hosting || false };
-        } catch (e) { return {}; }
+            console.log('📍 ipapi.co response:', d);
+            return {
+                ip: d.ip,
+                city: d.city,
+                country: d.country_name,
+                country_code: d.country_code,
+                isp: d.org,
+                lat: d.latitude,
+                lon: d.longitude,
+                proxy: d.proxy || false,
+                hosting: d.hosting || false
+            };
+        } catch (e) {
+            console.warn('⚠️ ipapi.co failed:', e);
+            return {};
+        }
     }
 
     async function fetchLocationIQ(lat, lon) {
         if (!lat || !lon) return {};
         const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
+        console.log('🔍 Calling LocationIQ:', url);
         try {
             const r = await fetch(url);
-            if (!r.ok) throw new Error('LocationIQ');
+            if (!r.ok) {
+                console.error('❌ LocationIQ HTTP Error:', r.status);
+                return {};
+            }
             const data = await r.json();
+            console.log('📍 LocationIQ response:', data);
             return {
                 neighbourhood: data.neighbourhood || data.suburb || data.village || '',
                 province: data.province || '',
@@ -135,7 +154,10 @@
                 city: data.city || '',
                 district: data.county || data.district || ''
             };
-        } catch (e) { return {}; }
+        } catch (e) {
+            console.error('❌ LocationIQ failed:', e);
+            return {};
+        }
     }
 
     async function createSessionRecord(userId) {
@@ -147,6 +169,14 @@
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(geo.lat, geo.lon);
 
+            // دمج: نفضل LocationIQ ثم ipapi
+            const finalCity = loc.city || geo.city || null;
+            const finalCountry = geo.country || null;
+            const finalLat = geo.lat || null;
+            const finalLon = geo.lon || null;
+
+            console.log('📦 Final location for session:', { finalCity, finalCountry, finalLat, finalLon });
+
             const record = {
                 user_id: userId,
                 session_number: sessionNumber,
@@ -154,17 +184,17 @@
                 status: 'active',
                 ip_address: geo.ip || ip || 'غير معروف',
                 isp: geo.isp || null,
-                country: geo.country || null,
+                country: finalCountry,
                 country_code: geo.country_code || null,
-                city: loc.city || geo.city || null,
+                city: finalCity,
                 district: loc.neighbourhood || loc.district || null,
                 neighbourhood: loc.neighbourhood || null,
                 province: loc.province || null,
                 state: loc.state || null,
                 postal_code: loc.postal_code || null,
                 display_name: loc.display_name || null,
-                latitude: geo.lat || null,
-                longitude: geo.lon || null,
+                latitude: finalLat,
+                longitude: finalLon,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
                 vpn_detected: geo.proxy || false,
                 proxy_detected: geo.proxy || false,
@@ -181,7 +211,7 @@
                 screen_resolution: d.screen_resolution,
                 pixel_ratio: d.pixel_ratio,
                 color_depth: d.color_depth,
-                cpu_architecture: d.cpu_cores || null,   // استخدام عمود cpu_architecture الموجود
+                cpu_architecture: d.cpu_cores || null,
                 device_memory: d.device_memory,
                 touch_supported: d.touch_supported,
                 cookies_enabled: d.cookies_enabled,
@@ -195,9 +225,14 @@
             };
 
             const { error } = await supabase.from('user_login_sessions').insert(record);
-            if (error) console.error('❌ فشل تسجيل الجلسة:', error);
-            else console.log('✅ تم تسجيل الجلسة');
-        } catch (e) { console.error('خطأ في تسجيل الجلسة:', e); }
+            if (error) {
+                console.error('❌ فشل تسجيل الجلسة:', error);
+            } else {
+                console.log('✅ تم تسجيل الجلسة بنجاح');
+            }
+        } catch (e) {
+            console.error('❌ خطأ غير متوقع في createSessionRecord:', e);
+        }
     }
 
     async function handleVerify() {
