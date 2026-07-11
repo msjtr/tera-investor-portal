@@ -1,6 +1,6 @@
 /**
- * login.js – صفحة تسجيل الدخول (محسّن)
- * يعتمد على Auth.loginWithPasswordAndOTP من auth.js
+ * login.js – صفحة تسجيل الدخول (مستقر بالكامل)
+ * يعتمد على Auth.loginWithPasswordAndOTP و Auth.getUser
  */
 (function() {
     const form = document.getElementById('loginForm');
@@ -11,10 +11,8 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // إخفاء شاشة التحميل أولاً، ثم إظهارها مؤقتاً أثناء فحص الجلسة
-    if (loaderScreen) {
-        loaderScreen.style.display = 'flex';
-    }
+    // إخفاء شاشة التحميل مبدئيًا، وتظهر فقط عند فحص الجلسة
+    if (loaderScreen) loaderScreen.style.display = 'none';
 
     function showError(message) {
         if (errorMsg) {
@@ -99,38 +97,42 @@
         });
     }
 
-    // فحص الجلسة السابقة باستخدام الدوال المركزية
+    // فحص الجلسة مرة واحدة فقط مع آلية آمنة
     async function checkExistingSession() {
         try {
-            // الانتظار حتى يصبح Auth متاحاً
+            // انتظر قليلاً لتحميل auth.js إذا تأخر
             if (!window.Auth) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 600));
             }
             if (window.Auth) {
                 const user = await window.Auth.getUser();
                 if (user) {
-                    // جلسة صالحة، انتقل للوحة التحكم
-                    window.location.href = '/pages/dashboard/index.html';
+                    // الجلسة صالحة، انتقل للوحة التحكم
+                    window.location.replace('/pages/dashboard/index.html');
                     return;
                 }
             } else {
-                // خطة بديلة في حال عدم وجود Auth
+                // fallback: استخدم Supabase مباشرة
                 const sb = window.teraSupabase || await window.waitForSupabase?.();
                 if (sb) {
                     const { data: { user } } = await sb.auth.getUser();
                     if (user) {
-                        window.location.href = '/pages/dashboard/index.html';
+                        window.location.replace('/pages/dashboard/index.html');
                         return;
                     }
                 }
             }
         } catch (e) {
-            // تجاهل الأخطاء، ابق في صفحة الدخول
+            // أي خطأ، ابق في صفحة الدخول
         } finally {
-            // إخفاء شاشة التحميل بعد الفحص
+            // تأكد من إخفاء شاشة التحميل بعد الفحص
             if (loaderScreen) loaderScreen.style.display = 'none';
         }
     }
 
-    checkExistingSession();
+    // بدء الفحص بعد تحميل الصفحة بوقت قصير جدًا
+    window.addEventListener('load', () => {
+        setTimeout(checkExistingSession, 100);
+    });
+
 })();
