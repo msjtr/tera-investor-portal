@@ -65,7 +65,6 @@
             device_type: deviceInfo.device_type,
             browser_name: deviceInfo.browser_name,
             browser_version: deviceInfo.browser_version,
-            browser_engine: deviceInfo.browser_engine,
             user_agent: deviceInfo.user_agent,
             operating_system: deviceInfo.operating_system,
             os_version: deviceInfo.os_version,
