@@ -1,6 +1,6 @@
 /**
- * dashboard.js – لوحة التحكم (متوافق مع auth.js و supabase-client.js)
- * يستبدل dashboard-core.js ويوفر عرض حالة الطلب والملف الشخصي
+ * dashboard.js – لوحة التحكم (كافة العناصر: حالة الطلب، مراحل الاستكمال، شريط التقدم)
+ * متوافق مع auth.js و supabase-client.js
  */
 (function() {
     let supabase;
@@ -8,13 +8,14 @@
     let requestData = null;
     let sessionStart = new Date();
 
+    // ---------- دوال مساعدة ----------
     async function getSupabase() {
         if (supabase) return supabase;
         supabase = window.teraSupabase || await window.waitForSupabase?.();
         return supabase;
     }
 
-    function formatDate(iso) {
+    function formatDateTime(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
@@ -26,19 +27,16 @@
     }
 
     function getStatusLabel(status) {
-        const map = {
-            draft: 'مسودة',
-            pending_information: 'بانتظار استكمال البيانات',
-            under_review: 'قيد المراجعة',
-            needs_revision: 'يحتاج تعديل',
-            has_notes: 'توجد ملاحظات',
-            approved: 'معتمد',
-            rejected: 'مرفوض',
-            suspended: 'موقوف'
+        const labels = {
+            draft: 'مسودة', pending_information: 'بانتظار استكمال البيانات',
+            under_review: 'قيد المراجعة', needs_revision: 'يحتاج تعديل',
+            has_notes: 'توجد ملاحظات', approved: 'معتمد',
+            rejected: 'مرفوض', suspended: 'موقوف'
         };
-        return map[status] || status;
+        return labels[status] || status;
     }
 
+    // ---------- تحميل رحلة العميل (الملف الشخصي / حالة الطلب) ----------
     async function loadCustomerJourney() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -52,93 +50,156 @@
 
             requestData = req;
 
-            // التنبيه العلوي (استكمال الملف الشخصي)
+            // التنبيهات العلوية
             const banner = document.getElementById('profileAlertBanner');
             if (banner) {
                 banner.style.display = (!req || !req.submitted) ? 'flex' : 'none';
             }
 
-            // تنبيه الجوال
             const contactAlert = document.getElementById('contactInfoAlert');
             if (contactAlert) {
                 contactAlert.style.display = (!req || !req.contact_info_completed) ? 'flex' : 'none';
             }
 
-            // قسم حالة الطلب
             const panel = document.getElementById('requestStatusPanel');
             if (!panel) return;
 
+            // --- الحالة 1: لم يقدم بعد (أو مسودة) ---
             if (!req || !req.submitted) {
-                // عرض مراحل الاستكمال
                 const stages = [
                     { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
                     { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone', link: '/pages/profile/contact-information.html' },
-                    { key: 'national_address_completed', label: 'العنوان الوطني', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
+                    { key: 'national_address_completed', label: 'العنوان الوطني الموثق', icon: 'fa-map-marker-alt', link: '/pages/profile/national-address.html' },
                     { key: 'bank_info_completed', label: 'المعلومات البنكية', icon: 'fa-university', link: '/pages/profile/bank-information.html' },
-                    { key: 'attachments_completed', label: 'المرفقات والوثائق', icon: 'fa-paperclip', link: '/pages/profile/attachments.html' }
+                    { key: 'attachments_completed', label: 'المرفقات والوثائق', icon: 'fa-paperclip', link: '/pages/profile/attachments.html' },
+                    { key: 'agreed', label: 'الإقرار', icon: 'fa-check', link: null },
+                    { key: 'submitted', label: 'المراجعة النهائية', icon: 'fa-paper-plane', link: null }
                 ];
 
+                const allCompleted = stages.every(s => req?.[s.key] === true);
+
                 let html = `<div class="panel-card">
-                    <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>استكمال الملف الشخصي</h3></div>
+                    <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div>
                     <div style="display:flex; flex-wrap:wrap; gap:12px; padding:8px 0;">`;
 
-                stages.forEach(s => {
-                    const done = req?.[s.key] === true;
+                stages.forEach(stage => {
+                    const done = req?.[stage.key] === true;
+                    const linkOpen = stage.link ? `<a href="${stage.link}" style="text-decoration:none; color:inherit; display:block;">` : '';
+                    const linkClose = stage.link ? `</a>` : '';
                     html += `
-                    <div style="flex:1 1 140px; background:${done?'#f0fdf4':'#f8fafc'}; border:1px solid ${done?'#bbf7d0':'#e2e8f0'}; border-radius:10px; padding:12px; text-align:center;">
-                        <a href="${s.link}" style="text-decoration:none; color:inherit; display:block;">
-                            <i class="fas ${s.icon}" style="color:${done?'#10b981':'#94a3b8'}; font-size:24px; margin-bottom:6px; display:block;"></i>
-                            <span style="font-weight:700; font-size:14px; color:${done?'#166534':'#334155'};">${s.label}</span>
-                            <div style="font-size:12px; margin-top:4px; color:${done?'#10b981':'#64748b'};">${done?'✔ مكتمل':'⏳ مطلوب'}</div>
-                        </a>
+                    <div style="flex: 1 1 140px; background:${done ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${done ? '#bbf7d0' : '#e2e8f0'}; border-radius:10px; padding:12px; text-align:center; transition: transform 0.2s; ${stage.link ? 'cursor:pointer;' : ''}">
+                        ${linkOpen}
+                        <i class="fas ${stage.icon}" style="color:${done ? '#10b981' : '#94a3b8'}; font-size:24px; margin-bottom:6px; display:block;"></i>
+                        <span style="font-weight:700; font-size:14px; color:${done ? '#166534' : '#334155'};">${stage.label}</span>
+                        <div style="font-size:12px; margin-top:4px; color:${done ? '#10b981' : '#64748b'};">
+                            ${done ? '✔ تم الإكمال' : '⏳ بانتظار الإكمال'}
+                        </div>
+                        ${linkClose}
                     </div>`;
                 });
 
-                html += `</div>
-                    <div style="margin-top:12px; text-align:center;">
-                        <a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a>
-                    </div>
-                </div>`;
-                panel.innerHTML = html;
-
-            } else {
-                // الطلب مقدم - عرض حالة المراجعة
-                const iconMap = {
-                    under_review: 'fa-search',
-                    approved: 'fa-check-circle',
-                    rejected: 'fa-times-circle',
-                    needs_revision: 'fa-edit',
-                    pending_information: 'fa-info-circle'
-                };
-                const statusIcon = iconMap[req.status] || 'fa-clock';
-
-                let html = `<div class="panel-card">
-                    <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الطلب</h3></div>
-                    <div style="text-align:center; padding:20px 0;">
-                        <i class="fas ${statusIcon}" style="font-size:48px; color:${req.status==='approved'?'#10b981':'#f59e0b'};"></i>
-                        <div style="font-size:20px; font-weight:800; margin-top:12px; color:#0A1B3F;">${getStatusLabel(req.status)}</div>
-                    </div>
-                    <div style="background:#f8fafc; border-radius:12px; padding:16px; margin-top:16px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:#64748b;">تاريخ التقديم:</span><strong>${formatDate(req.submitted_at)}</strong></div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:#64748b;">آخر تحديث:</span><strong>${formatDate(req.updated_at)}</strong></div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="color:#64748b;">المدة:</span><strong>${getElapsedDays(req.submitted_at)}</strong></div>
-                        ${req.notes ? `<div style="margin-top:12px; background:#fff7ed; padding:10px; border-radius:8px; color:#9a3412;"><i class="fas fa-sticky-note"></i> ${req.notes}</div>` : ''}
-                    </div>`;
-
-                if (req.status === 'needs_revision' || req.status === 'pending_information') {
-                    html += `<div style="margin-top:16px; text-align:center;">
-                        <a href="/pages/profile/personal-information.html" class="btn-table-link">تعديل البيانات</a>
-                    </div>`;
+                html += `</div>`;
+                if (!allCompleted) {
+                    html += `<div style="margin-top:12px; text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a></div>`;
+                } else {
+                    html += `<div class="alert-item-box alert-success" style="margin-top:12px;"><i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وسيتم تحويله للمراجعة.</div>`;
                 }
-
                 html += `</div>`;
                 panel.innerHTML = html;
+                return;
             }
+
+            // --- الحالة 2: الطلب مقدم (تحت المراجعة أو أي حالة أخرى) ---
+            const statusIcons = {
+                'under_review': 'fa-search',
+                'approved': 'fa-check-circle',
+                'rejected': 'fa-times-circle',
+                'needs_revision': 'fa-edit',
+                'pending_information': 'fa-info-circle',
+                'draft': 'fa-file-alt'
+            };
+            const statusIcon = statusIcons[req.status] || 'fa-clock';
+            const statusClass = req.status ? `status-${req.status}` : 'status-draft';
+
+            let html = `<div class="request-status-card ${statusClass}" style="display:block;">
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; border-bottom:2px solid var(--gray-100); padding-bottom:16px;">
+                    <div class="request-status-icon" style="width:48px; height:48px; background:#e0f2fe; color:var(--primary); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3 style="margin:0; font-size:18px; color:var(--gray-900);">حالة الطلب</h3>
+                </div>
+
+                <div style="text-align:center; padding:20px 0;">
+                    <i class="fas ${statusIcon} status-icon-large" style="font-size:48px; color:${req.status==='approved'?'#10b981':'#f59e0b'};"></i>
+                    <div class="status-badge-large" style="font-size:20px; font-weight:800; color:var(--gray-900); margin-top:12px;">${getStatusLabel(req.status)}</div>
+                </div>
+
+                <div class="request-details-list" style="background:#f8fafc; border-radius:12px; padding:16px; margin-top:16px;">
+                    <div class="request-detail-item" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <i class="fas fa-calendar-plus" style="color:var(--primary);"></i>
+                        <strong>تاريخ التقديم:</strong>
+                        <span>${formatDateTime(req.submitted_at)}</span>
+                    </div>
+                    <div class="request-detail-item" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <i class="fas fa-history" style="color:var(--primary);"></i>
+                        <strong>آخر تحديث:</strong>
+                        <span>${formatDateTime(req.updated_at)}</span>
+                    </div>
+                    <div class="request-detail-item" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <i class="fas fa-hourglass-half" style="color:var(--primary);"></i>
+                        <strong>المدة المنقضية:</strong>
+                        <span>${getElapsedDays(req.submitted_at)}</span>
+                    </div>
+                    <div class="request-detail-item" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <i class="fas fa-chart-line" style="color:var(--primary);"></i>
+                        <strong>نسبة الإنجاز:</strong>
+                        <span>${req.progress || 0}%</span>
+                    </div>
+                    <div class="progress-section" style="margin-top:8px; width:100%;">
+                        <div class="progress-bar-outer" style="background:#e2e8f0; border-radius:10px; height:8px; overflow:hidden;">
+                            <div class="progress-bar-inner" style="width:${req.progress || 0}%; background:var(--primary); height:100%; border-radius:10px;"></div>
+                        </div>
+                    </div>
+                    ${req.notes ? `<div class="request-detail-item" style="display:flex; justify-content:space-between; margin-top:10px;">
+                        <i class="fas fa-sticky-note" style="color:var(--primary);"></i>
+                        <strong>ملاحظات:</strong>
+                        <span>${req.notes}</span>
+                    </div>` : ''}
+                </div>`;
+
+            // المراحل الناقصة إذا كانت الحالة تتطلب استكمال
+            if (req.status === 'needs_revision' || req.status === 'pending_information') {
+                const stagesToCheck = [
+                    { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
+                    { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
+                    { key: 'national_address_completed', label: 'العنوان الوطني الموثق', link: '/pages/profile/national-address.html' },
+                    { key: 'bank_info_completed', label: 'المعلومات البنكية', link: '/pages/profile/bank-information.html' },
+                    { key: 'attachments_completed', label: 'المرفقات والوثائق', link: '/pages/profile/attachments.html' }
+                ];
+                const pendingStages = stagesToCheck.filter(s => !req[s.key]);
+                if (pendingStages.length > 0) {
+                    html += `<div class="alert-warning-box" style="margin-top:16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:12px 16px;">
+                        <i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>
+                        <div style="margin-top:8px;">
+                            <strong style="color:#9a3412;">تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:
+                            <ul style="margin:8px 0 0 16px; color:#78350f;">`;
+                    pendingStages.forEach(s => { html += `<li><a href="${s.link}" style="color:#b45309;">${s.label}</a></li>`; });
+                    html += `</ul></div></div>`;
+                }
+                html += `<div style="margin-top:16px; text-align:center;">
+                    <a href="/pages/profile/personal-information.html" class="btn-table-link">تعديل البيانات</a>
+                </div>`;
+            }
+
+            html += `</div>`;
+            panel.innerHTML = html;
+
         } catch (e) {
             console.warn('تعذر تحميل حالة الطلب:', e);
         }
     }
 
+    // ---------- باقي مكونات لوحة التحكم ----------
     async function loadUserInfo() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -177,9 +238,8 @@
         });
     }
 
-    // المؤقت والتاريخ
     function startTimers() {
-        setInterval(() => {
+        const update = () => {
             const now = new Date();
             const elDate = document.getElementById('currentDate');
             const elTime = document.getElementById('currentTime');
@@ -192,10 +252,13 @@
                 const m = mins%60;
                 elSess.textContent = h>0 ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`;
             }
-        }, 30000);
+        };
+        update();
+        setInterval(update, 30000);
     }
 
     async function init() {
+        // الحماية باستخدام Auth الموحد
         const user = await window.Auth?.requireAuth();
         if (!user) return;
 
