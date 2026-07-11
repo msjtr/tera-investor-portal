@@ -1,5 +1,9 @@
 /**
- * auth.js – v6 (مع دوال إجبارية لتتبع الموقع الجغرافي)
+ * auth.js – v6 (نظام المصادقة المركزي مع دعم GPS)
+ * يعتمد على supabase-client.js لتوفير Supabase
+ * يوفر: login, sendOTP, verifyOTP, loginWithPasswordAndOTP, register, resetPassword,
+ *        updatePassword, logout, getSession, getUser, onAuthStateChange, requireAuth,
+ *        getCurrentPosition, watchLocationPermission
  */
 (function() {
     let supabase;
