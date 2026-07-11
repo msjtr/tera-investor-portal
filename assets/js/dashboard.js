@@ -1,9 +1,14 @@
 /**
- * dashboard.js – لوحة التحكم المتكاملة
+ * dashboard.js – لوحة التحكم المتكاملة (محسّنة)
  * يعتمد على auth.js و supabase-client.js
+ * - حماية أقوى
+ * - طلب إذن الموقع الجغرافي (GPS)
+ * - تحديث النشاط last_activity_at
+ * - معالجة أفضل للأخطاء
+ * - جلب بيانات حقيقية للمخطط
  */
 (function() {
-    let supabase;
+    let supabase, currentUser;
     let chartInstance = null;
     let requestData = null;
     let sessionStart = new Date();
@@ -12,6 +17,19 @@
         if (supabase) return supabase;
         supabase = window.teraSupabase || await window.waitForSupabase?.();
         return supabase;
+    }
+
+    // دالة مركزية للحصول على المستخدم الحالي
+    async function getCurrentUser() {
+        if (!supabase) return null;
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error) throw error;
+            return user;
+        } catch (e) {
+            console.error('فشل جلب المستخدم:', e);
+            return null;
+        }
     }
 
     function formatDateTime(iso) {
@@ -39,17 +57,54 @@
         return labels[status] || status;
     }
 
-    // تحميل رحلة العميل
-    async function loadCustomerJourney() {
+    // طلب إذن الموقع الجغرافي (GPS) وتنبيه في حال الرفض
+    async function requestGeoLocation() {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            if (!window.Auth?.getCurrentPosition) return;
+            const pos = await window.Auth.getCurrentPosition();
+            sessionStorage.setItem('userLat', pos.latitude);
+            sessionStorage.setItem('userLon', pos.longitude);
+            console.log('📍 GPS مسموح:', pos);
+            return pos;
+        } catch (err) {
+            console.warn('⚠️ رفض الموقع الجغرافي:', err.message);
+            // إظهار تنبيه في لوحة التحكم
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'profile-alert';
+            alertDiv.style.background = '#fee2e2';
+            alertDiv.innerHTML = `<i class="fas fa-map-marker-alt" style="color:#dc2626;"></i>
+                <div class="alert-text"><strong>الموقع الجغرافي معطل!</strong><p>يجب تفعيل الموقع لأسباب أمنية. الرجاء تعديل إعدادات متصفحك.</p></div>`;
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) mainContent.prepend(alertDiv);
+            return null;
+        }
+    }
 
-            const { data: req } = await supabase
+    // تحديث نشاط الجلسة في قاعدة البيانات لمنع الخمول
+    async function updateLastActivity() {
+        if (!supabase || !currentUser) return;
+        try {
+            await supabase.from('user_login_sessions')
+                .update({ last_activity_at: new Date().toISOString() })
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active')
+                .eq('is_current_session', true);
+        } catch (e) { /* تجاهل الأخطاء الصامتة */ }
+    }
+
+    // تحميل رحلة العميل
+    async function loadCustomerJourney(user) {
+        try {
+            const { data: req, error: reqError } = await supabase
                 .from('verification_requests')
                 .select('*')
                 .eq('user_id', user.id)
                 .maybeSingle();
+
+            if (reqError) {
+                console.error('فشل تحميل طلب التحقق:', reqError);
+                return;
+            }
 
             requestData = req;
 
@@ -159,41 +214,102 @@
         }
     }
 
-    async function loadUserInfo() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            let name = user.user_metadata?.full_name || 'مستخدم';
-            const h2 = document.querySelector('.welcome-banner h2');
-            if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
-            document.getElementById('headerUserName').textContent = name;
-            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-        } catch (e) {}
+    async function loadUserInfo(user) {
+        if (!user) return;
+        let name = user.user_metadata?.full_name || 'مستخدم';
+        const h2 = document.querySelector('.welcome-banner h2');
+        if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
+        document.getElementById('headerUserName').textContent = name;
+        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
     }
 
-    async function loadStats() {
+    async function loadStats(user) {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const { data } = await supabase.from('user_portfolio')
+            const { data, error } = await supabase.from('user_portfolio')
                 .select('total_value, active_contracts, available_balance')
-                .eq('user_id', user.id).maybeSingle();
-            if (data) {
-                document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = (data.total_value||0).toLocaleString() + ' ر.س';
-                document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = (data.active_contracts||0) + ' عقود نشطة';
-                document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = (data.available_balance||0).toLocaleString() + ' ر.س';
+                .eq('user_id', user.id)
+                .maybeSingle();
+            if (error) {
+                console.error('فشل تحميل الإحصائيات:', error);
+                return;
             }
-        } catch (e) {}
+            if (data) {
+                document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = (data.total_value || 0).toLocaleString() + ' ر.س';
+                document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = (data.active_contracts || 0) + ' عقود نشطة';
+                document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = (data.available_balance || 0).toLocaleString() + ' ر.س';
+            }
+        } catch (e) {
+            console.warn('تعذر تحميل الإحصائيات:', e);
+        }
     }
 
-    async function loadChartData() {
+    async function loadChartData(user) {
         const ctx = document.getElementById('mainChart');
         if (!ctx || typeof Chart === 'undefined') return;
+
+        let labels = [], values = [];
+
+        try {
+            const { data, error } = await supabase
+                .from('portfolio_history')
+                .select('month, value')
+                .eq('user_id', user.id)
+                .order('month', { ascending: true });
+
+            if (error) {
+                console.error('فشل جلب بيانات المخطط:', error);
+            } else if (data && data.length > 0) {
+                labels = data.map(r => r.month);
+                values = data.map(r => r.value);
+            }
+        } catch (e) {
+            console.warn('تعذر تحميل المخطط:', e);
+        }
+
+        // إذا لم توجد بيانات، أنشئ مخططاً فارغاً
+        if (labels.length === 0) {
+            labels = ['لا توجد بيانات'];
+            values = [0];
+        }
+
         if (chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'قيمة المحفظة', data: [], borderColor: '#028090' }] },
-            options: { responsive: true, maintainAspectRatio: false }
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'قيمة المحفظة (ر.س)',
+                    data: values,
+                    borderColor: '#028090',
+                    backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#028090',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { font: { family: 'Tajawal', size: 12 }, color: '#334155', padding: 20 } },
+                    tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' ر.س' } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b', callback: v => v.toLocaleString() + ' ر.س' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b' }
+                    }
+                }
+            }
         });
     }
 
@@ -203,32 +319,49 @@
             const elDate = document.getElementById('currentDate');
             const elTime = document.getElementById('currentTime');
             const elSess = document.getElementById('sessionTimer');
-            if (elDate) elDate.textContent = now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
-            if (elTime) elTime.textContent = now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+            if (elDate) elDate.textContent = now.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+            if (elTime) elTime.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
             if (elSess) {
-                const mins = Math.floor((now - sessionStart)/60000);
-                const h = Math.floor(mins/60);
-                const m = mins%60;
-                elSess.textContent = h>0 ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`;
+                const mins = Math.floor((now - sessionStart) / 60000);
+                const h = Math.floor(mins / 60);
+                const m = mins % 60;
+                elSess.textContent = h > 0 ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`;
             }
+            // تحديث نشاط الجلسة كل دقيقة
+            updateLastActivity();
         };
         update();
-        setInterval(update, 30000);
+        setInterval(update, 60000); // كل دقيقة بدلاً من 30 ثانية لتقليل الاستدعاءات
     }
 
     async function init() {
-        const user = await window.Auth?.requireAuth();
+        // التحقق من وجود Auth
+        if (!window.Auth) {
+            console.error('نظام المصادقة غير متوفر');
+            window.location.replace('/auth/auth/login/login.html');
+            return;
+        }
+
+        const user = await window.Auth.requireAuth();
         if (!user) return;
 
+        currentUser = user;
+
         supabase = await getSupabase();
-        if (!supabase) return;
+        if (!supabase) {
+            console.error('Supabase غير متوفر');
+            return;
+        }
 
         document.getElementById('loadingOverlay')?.classList.add('active');
 
-        await loadCustomerJourney();
-        await loadUserInfo();
-        await loadStats();
-        await loadChartData();
+        // طلب إذن الموقع الجغرافي (اختياري ولكن يظهر تنبيه عند الرفض)
+        requestGeoLocation();
+
+        await loadCustomerJourney(user);
+        await loadUserInfo(user);
+        await loadStats(user);
+        await loadChartData(user);
         startTimers();
 
         document.getElementById('loadingOverlay')?.classList.remove('active');
