@@ -1,11 +1,9 @@
 /**
  * main.js – إدارة واجهة المستخدم (متوافق مع Auth الموحد)
- * يستخدم window.Auth (auth.js) لتسجيل الخروج
  */
 (function() {
     'use strict';
 
-    // الحصول على اسم الصفحة الحالية من الرابط
     function getCurrentPage() {
         const path = window.location.pathname.toLowerCase();
         if (path.includes('dashboard')) return 'dashboard';
@@ -18,7 +16,6 @@
         return 'dashboard';
     }
 
-    // زر العودة للوحة التحكم
     function initBackToDashboard() {
         if (window._backBtnInitialized) return;
         window._backBtnInitialized = true;
@@ -33,17 +30,14 @@
         });
     }
 
-    // تنبيه بسيط (يمكن تطويره)
     function showToast(message, type) {
         if (typeof window.showSecurityAlert === 'function') {
             window.showSecurityAlert(message, type);
             return;
         }
         console.log(`[Toast: ${type}] ${message}`);
-        // يمكن إضافة عنصر مؤقت في الصفحة
     }
 
-    // تعليم العنصر النشط في القائمة الجانبية
     function setActiveNavItem() {
         const currentPath = window.location.pathname.toLowerCase();
         const navLinks = document.querySelectorAll('.nav-list a[href], .sidebar-menu a[href]');
@@ -71,7 +65,6 @@
         document.body.setAttribute('data-current-page', page);
     }
 
-    // معالجة الأحداث العامة (تسجيل الخروج بشكل أساسي)
     function initUiEvents() {
         if (window._uiEventsInitialized) return;
         window._uiEventsInitialized = true;
@@ -85,12 +78,9 @@
                 logoutBtn.disabled = true;
 
                 try {
-                    // استخدام Auth الموحد (window.Auth)
                     if (window.Auth && typeof window.Auth.logout === 'function') {
                         await window.Auth.logout();
-                        // Auth.logout تقوم بتسجيل الخروج وتنظيف التخزين ثم إعادة التوجيه
                     } else {
-                        // احتياطي إذا لم يوجد Auth
                         console.warn('⚠️ Auth غير متوفر، خروج احتياطي.');
                         localStorage.clear();
                         sessionStorage.clear();
@@ -107,7 +97,6 @@
         });
     }
 
-    // التهيئة الرئيسية
     function initMain() {
         console.log('🚀 [Main] تهيئة واجهة المستخدم...');
         initBackToDashboard();
@@ -115,11 +104,9 @@
         updateDashboardStyling();
         setActiveNavItem();
 
-        // إذا كانت هناك دوال إضافية في الصفحة
         if (typeof window.initInvestments === 'function') window.initInvestments();
     }
 
-    // تحديث الواجهة عند التنقل (SPA)
     function handlePageChange() {
         updateDashboardStyling();
         setActiveNavItem();
@@ -127,14 +114,12 @@
     }
     window.addEventListener('popstate', handlePageChange);
 
-    // بدء التشغيل
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMain);
     } else {
         initMain();
     }
 
-    // تعريض الدوال العامة
     window.TeraMain = {
         initMain,
         getCurrentPage,
