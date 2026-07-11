@@ -1,5 +1,7 @@
 /**
- * modules/session-manager.js - إدارة جلسات المستخدم في قاعدة البيانات
+ * modules/session-manager.js - إدارة جلسات المستخدم (محسّن)
+ * - إنهاء آمن مع رسائل خطأ
+ * - دالة لإنهاء جميع الجلسات الأخرى عند إنشاء جلسة جديدة (اختياري)
  */
 (function() {
     async function getSupabase() {
@@ -17,14 +19,45 @@
         return data || [];
     }
 
+    /**
+     * إنهاء جلسة محددة
+     * @returns {object} { success: boolean, error?: string }
+     */
     async function terminateSession(sessionId, userId) {
         const sb = await getSupabase();
-        if (!sb) return false;
+        if (!sb) return { success: false, error: 'Supabase غير متوفر' };
         const { error } = await sb.from('user_login_sessions')
             .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
             .eq('id', sessionId)
             .eq('user_id', userId);
-        return !error;
+        if (error) {
+            console.error('فشل إنهاء الجلسة:', error);
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    }
+
+    /**
+     * إنهاء جميع الجلسات النشطة للمستخدم ما عدا الجلسة المحددة (أو كلها إذا omitId=null)
+     * @param {string} userId
+     * @param {string?} omitSessionId - جلسة نستثنيها من الإنهاء (مثلاً الجلسة الحالية)
+     */
+    async function deactivateOtherSessions(userId, omitSessionId = null) {
+        const sb = await getSupabase();
+        if (!sb) return false;
+        let query = sb.from('user_login_sessions')
+            .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
+            .eq('user_id', userId)
+            .eq('status', 'active');
+        if (omitSessionId) {
+            query = query.neq('id', omitSessionId);
+        }
+        const { error } = await query;
+        if (error) {
+            console.error('فشل إنهاء الجلسات الأخرى:', error);
+            return false;
+        }
+        return true;
     }
 
     async function createSessionRecord(userId, extraData = {}) {
@@ -88,9 +121,14 @@
 
         const { error } = await sb.from('user_login_sessions').insert(record);
         if (error) { console.error('❌ فشل تسجيل الجلسة:', error); return false; }
-        console.log('✅ تم تسجيل الجلسة');
+        console.log('✅ تم تسجيل الجلسة بنجاح');
         return true;
     }
 
-    window.SessionManager = { fetchSessions, terminateSession, createSessionRecord };
+    window.SessionManager = {
+        fetchSessions,
+        terminateSession,
+        deactivateOtherSessions,   // ← الجديد
+        createSessionRecord
+    };
 })();
