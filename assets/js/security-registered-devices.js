@@ -1,214 +1,314 @@
 /**
- * security-registered-devices.js – v10 (تقرير كامل مع موقع جغرافي من السجلات المخزنة)
- * يعرض الجلسات المخزنة بتفاصيل كاملة: الجهاز، الشبكة، الموقع الجغرافي.
- * البيانات تأتي مباشرة من جدول user_login_sessions بعد أن يتم تخزينها عبر verify-otp.js.
+ * verify-otp.js – v12 (ضمان جلب الموقع مع تشخيص كامل)
  */
 (function() {
-    let supabase, currentUser, sessions = [];
-    let idleTimer, idleWarningTimer;
-    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
+    const OTP_LENGTH = 8;
+    const RESEND_TIMEOUT = 300;
+    const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
 
-    function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
-    function getStatusLabel(s) {
-        const l = { active:'نشطة', logged_out:'تم تسجيل الخروج', timeout:'انتهت بسبب عدم النشاط', terminated_by_system:'أنهيت بواسطة النظام', terminated_by_user:'أنهيت بواسطة المستخدم' };
-        return l[s] || s;
-    }
+    let supabase;
+
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+    const resendBtn = document.getElementById('resendOtpBtn');
+    const errorMsg = document.getElementById('otpError');
+    const timerSpan = document.getElementById('otpTimer');
+    const successMsg = document.getElementById('otpSuccess');
+
+    let countdownInterval;
 
     async function init() {
-        supabase = window.teraSupabase || await window.waitForSupabase();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
-        currentUser = user;
-        await updateHeader(user);
-        await fetchSessions();
+        supabase = window.teraSupabase || await window.waitForSupabase?.();
         bindEvents();
-        initIdleTimer();
+        startCountdown();
     }
-
-    async function updateHeader(user) {
-        const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-        document.getElementById('headerUserName').textContent = name;
-        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-    }
-
-    async function fetchSessions() {
-        const { data, error } = await supabase.from('user_login_sessions')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('login_at', { ascending: false });
-        if (error) { console.error(error); return; }
-        sessions = data || [];
-        updateStats();
-        applyFilters();
-    }
-
-    function updateStats() {
-        document.getElementById('totalCount').textContent = sessions.length;
-        document.getElementById('activeCount').textContent = sessions.filter(s => s.status === 'active').length;
-    }
-
-    function applyFilters() {
-        const st = document.getElementById('statusFilter').value;
-        const q = document.getElementById('searchInput').value.trim().toLowerCase();
-        let filtered = sessions;
-        if (st !== 'all') filtered = filtered.filter(s => s.status === st);
-        if (q) filtered = filtered.filter(s =>
-            (s.session_number || '').includes(q) ||
-            (s.ip_address || '').includes(q) ||
-            (s.browser_name || '').toLowerCase().includes(q) ||
-            (s.country || '').includes(q) ||
-            (s.city || '').includes(q) ||
-            (s.district || '').includes(q)
-        );
-        renderTable(filtered);
-        document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
-    }
-
-    function renderTable(list) {
-        const tbody = document.getElementById('sessionsTableBody');
-        if (!list.length) { tbody.innerHTML = '<tr><td colspan="5">لا توجد جلسات</td></tr>'; return; }
-        tbody.innerHTML = list.map(s => `
-            <tr>
-                <td>${s.session_number || '-'}</td>
-                <td>${formatDate(s.login_at)}</td>
-                <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
-                <td><button class="btn-action" onclick="window.showSessionDetail('${s.id}')"><i class="fas fa-eye"></i> عرض</button></td>
-                <td>${s.status === 'active' ? `<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>` : '-'}</td>
-            </tr>
-        `).join('');
-    }
-
-    window.terminateSession = async function(sessionId) {
-        if (!confirm('إنهاء هذه الجلسة؟')) return;
-        await supabase.from('user_login_sessions')
-            .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
-            .eq('id', sessionId)
-            .eq('user_id', currentUser.id);
-        await fetchSessions();
-    };
-
-    // عرض التقرير الكامل (بدون استدعاء خارجي – البيانات من الجدول)
-    window.showSessionDetail = function(sessionId) {
-        const session = sessions.find(s => s.id === sessionId);
-        if (!session) return;
-
-        const detailContent = document.getElementById('detailContent');
-        document.getElementById('detailModal').classList.add('show');
-
-        // تجهيز صفوف الموقع الجغرافي من السجل المخزن
-        function getLocationRows() {
-            const rows = [];
-            if (session.country) rows.push(['الدولة', session.country]);
-            if (session.country_code) rows.push(['الرمز الدولي', session.country_code]);
-            if (session.city) rows.push(['المدينة', session.city]);
-            if (session.district || session.neighbourhood) rows.push(['الحي', session.neighbourhood || session.district]);
-            if (session.province || session.state) rows.push(['المنطقة/المحافظة', session.province || session.state]);
-            if (session.postal_code) rows.push(['الرمز البريدي', session.postal_code]);
-            if (session.latitude && session.longitude) {
-                rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
-                rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank">🗺️ عرض</a>`]);
-            }
-            if (rows.length === 0) rows.push(['الموقع', 'غير متوفر']);
-            return rows;
-        }
-
-        const groups = [
-            {
-                title: 'هوية الجهاز', icon: 'fa-id-card',
-                rows: [
-                    ['الرقم التعريفي للجلسة', session.id],
-                    ['نوع الجهاز', session.device_type || '—'],
-                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''}` : '—'],
-                    ['المنصة', session.platform || '—'],
-                    ['المعالج (عدد النوى)', session.cpu_architecture || '—'],
-                    ['الذاكرة (GB)', session.device_memory || '—']
-                ]
-            },
-            {
-                title: 'بيانات المتصفح', icon: 'fa-chrome',
-                rows: [
-                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''}` : '—'],
-                    ['المحرك', session.browser_engine || '—'],
-                    ['وكيل المستخدم', session.user_agent || '—'],
-                    ['اللغة', session.language || '—'],
-                    ['المنطقة الزمنية', session.timezone || '—']
-                ]
-            },
-            {
-                title: 'الشاشة والإمكانيات', icon: 'fa-desktop',
-                rows: [
-                    ['دقة الشاشة', session.screen_resolution || '—'],
-                    ['نسبة البكسل', session.pixel_ratio || '—'],
-                    ['اللمس', session.touch_supported ? 'نعم' : 'لا'],
-                    ['الكوكيز', session.cookies_enabled ? 'نعم' : 'لا'],
-                    ['تخزين محلي', session.local_storage ? 'نعم' : 'لا'],
-                    ['تخزين الجلسة', session.session_storage ? 'نعم' : 'لا'],
-                    ['IndexedDB', session.indexed_db ? 'نعم' : 'لا'],
-                    ['WebGL', session.webgl_supported ? 'نعم' : 'لا']
-                ]
-            },
-            {
-                title: 'بيانات الشبكة', icon: 'fa-network-wired',
-                rows: [
-                    ['IP العام', session.ip_address || '—'],
-                    ['مزود الخدمة', session.isp || '—'],
-                    ['نوع الشبكة', session.network_type || '—'],
-                    ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
-                    ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
-                    ['Tor', session.tor_detected ? 'نعم' : 'لا'],
-                    ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا']
-                ]
-            },
-            {
-                title: 'الموقع الجغرافي', icon: 'fa-map-marker-alt',
-                rows: getLocationRows()
-            },
-            {
-                title: 'معلومات الجلسة', icon: 'fa-clock',
-                rows: [
-                    ['رقم الجلسة', session.session_number],
-                    ['وقت الدخول', formatDate(session.login_at)],
-                    ['وقت الخروج', session.logout_at ? formatDate(session.logout_at) : 'مازالت نشطة']
-                ]
-            }
-        ];
-
-        let html = '';
-        groups.forEach(group => {
-            const hasData = group.rows.some(row => row[1] && row[1] !== '—');
-            if (!hasData) return;
-            html += `<div class="detail-group"><h4><i class="fas ${group.icon}"></i> ${group.title}</h4>`;
-            group.rows.forEach(row => {
-                html += `<div class="detail-row"><span class="detail-label">${row[0]}:</span><span class="detail-value">${row[1]}</span></div>`;
-            });
-            html += `</div>`;
-        });
-
-        detailContent.innerHTML = html || '<p>لا توجد تفاصيل</p>';
-    };
 
     function bindEvents() {
-        document.getElementById('statusFilter').addEventListener('change', applyFilters);
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => document.addEventListener(ev, resetIdleTimer));
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = value;
+                if (value && index < otpInputs.length - 1) otpInputs[index + 1].focus();
+                checkComplete();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus();
+            });
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+                if (digits.length === OTP_LENGTH) {
+                    for (let i = 0; i < OTP_LENGTH; i++) if (otpInputs[i]) otpInputs[i].value = digits[i] || '';
+                    otpInputs[OTP_LENGTH - 1].focus();
+                    checkComplete();
+                }
+            });
+        });
+        if (verifyBtn) verifyBtn.addEventListener('click', handleVerify);
+        if (resendBtn) resendBtn.addEventListener('click', handleResend);
     }
 
-    function initIdleTimer() { resetIdleTimer(); }
-    function resetIdleTimer() {
-        clearTimeout(idleTimer); clearTimeout(idleWarningTimer);
-        const w = document.getElementById('idleWarning');
-        if (w) w.style.display = 'none';
-        idleWarningTimer = setTimeout(() => { if (w) w.style.display = 'flex'; }, IDLE_TIME - 30000);
-        idleTimer = setTimeout(async () => {
-            await supabase.from('user_login_sessions')
-                .update({ status: 'timeout', logout_at: new Date().toISOString() })
-                .eq('user_id', currentUser.id)
-                .eq('status', 'active');
-            window.location.href = '/auth/auth/login/login.html?reason=timeout';
-        }, IDLE_TIME);
+    function getOtpCode() { let code = ''; otpInputs.forEach(i => code += i.value); return code; }
+    function checkComplete() { if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH; }
+
+    function showError(msg) {
+        if (errorMsg) { errorMsg.textContent = msg; errorMsg.style.display = 'block'; }
+        if (successMsg) successMsg.style.display = 'none';
+    }
+    function clearMessages() {
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (successMsg) successMsg.style.display = 'none';
     }
 
-    init();
+    function getDeviceAndBrowserInfo() {
+        const ua = navigator.userAgent;
+        let os = 'Unknown', osVersion = '';
+        if (/Windows NT 10/.test(ua)) { os = 'Windows'; osVersion = '10'; }
+        else if (/Windows NT 6.3/.test(ua)) { os = 'Windows'; osVersion = '8.1'; }
+        else if (/Mac OS X/.test(ua)) { os = 'macOS'; let m = ua.match(/Mac OS X (\d+[._]\d+)/); if(m) osVersion = m[1].replace('_', '.'); }
+        else if (/Android/.test(ua)) { os = 'Android'; let m = ua.match(/Android (\d+\.?\d*)/); if(m) osVersion = m[1]; }
+        else if (/iPhone|iPad/.test(ua)) { os = 'iOS'; let m = ua.match(/OS (\d+[._]\d+)/); if(m) osVersion = m[1].replace('_', '.'); }
+        else if (/Linux/.test(ua)) os = 'Linux';
+
+        let browserName = 'Unknown', browserVersion = '';
+        if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) { browserName = 'Chrome'; let m = ua.match(/Chrome\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Firefox/i.test(ua)) { browserName = 'Firefox'; let m = ua.match(/Firefox\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) { browserName = 'Safari'; let m = ua.match(/Version\/(\d+)/); if(m) browserVersion = m[1]; }
+        else if (/Edg/i.test(ua)) { browserName = 'Edge'; let m = ua.match(/Edg\/(\d+)/); if(m) browserVersion = m[1]; }
+
+        let deviceType = 'computer';
+        if (/Mobi|Android|iPhone/i.test(ua)) deviceType = 'mobile';
+        else if (/iPad|Tablet/i.test(ua)) deviceType = 'tablet';
+
+        return {
+            device_type: deviceType,
+            browser_name: browserName,
+            browser_version: browserVersion,
+            browser_engine: '',
+            user_agent: ua,
+            operating_system: os,
+            os_version: osVersion,
+            platform: navigator.platform || '',
+            language: navigator.language || '',
+            screen_resolution: `${window.screen.width}x${window.screen.height}`,
+            color_depth: window.screen.colorDepth || '',
+            pixel_ratio: window.devicePixelRatio || 1,
+            cpu_cores: navigator.hardwareConcurrency || '',
+            device_memory: navigator.deviceMemory || '',
+            touch_supported: !!('ontouchstart' in window || navigator.maxTouchPoints > 0),
+            cookies_enabled: navigator.cookieEnabled,
+            local_storage: typeof Storage !== 'undefined' && !!window.localStorage,
+            session_storage: typeof Storage !== 'undefined' && !!window.sessionStorage,
+            indexed_db: !!window.indexedDB,
+            webgl_supported: (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch(e){ return false; } })(),
+            fingerprint: btoa(ua + window.screen.width + window.screen.height + navigator.language).substring(0, 32),
+            network_type: navigator.connection?.effectiveType || ''
+        };
+    }
+
+    async function getPublicIP() {
+        try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); return d.ip; } catch (e) { return null; }
+    }
+
+    async function fetchBasicGeo() {
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            if (!r.ok) throw new Error('ipapi failed');
+            const d = await r.json();
+            console.log('📍 ipapi.co:', d);
+            return {
+                ip: d.ip,
+                city: d.city,
+                country: d.country_name,
+                country_code: d.country_code,
+                isp: d.org,
+                lat: d.latitude,
+                lon: d.longitude,
+                proxy: d.proxy || false,
+                hosting: d.hosting || false
+            };
+        } catch (e) {
+            console.warn('⚠️ ipapi.co failed:', e);
+            return {};
+        }
+    }
+
+    async function fetchLocationIQ(lat, lon) {
+        if (!lat || !lon) return {};
+        const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
+        try {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            console.log('📍 LocationIQ:', data);
+            return {
+                neighbourhood: data.neighbourhood || data.suburb || data.village || '',
+                province: data.province || '',
+                state: data.state || '',
+                postal_code: data.postcode || '',
+                display_name: data.display_name || '',
+                city: data.city || '',
+                district: data.county || data.district || ''
+            };
+        } catch (e) {
+            console.warn('⚠️ LocationIQ failed:', e);
+            return {};
+        }
+    }
+
+    async function createSessionRecord(userId) {
+        if (!supabase) return;
+        try {
+            const ip = await getPublicIP();
+            const d = getDeviceAndBrowserInfo();
+            const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
+            const geo = await fetchBasicGeo();
+            const loc = await fetchLocationIQ(geo.lat, geo.lon);
+
+            // الدمج: نفضل LocationIQ ثم ipapi
+            const finalCity = loc.city || geo.city || null;
+            const finalCountry = geo.country || null;
+            const finalLat = geo.lat || null;
+            const finalLon = geo.lon || null;
+
+            console.log('📦 بيانات الموقع النهائية:', { finalCity, finalCountry, finalLat, finalLon, geo, loc });
+
+            const record = {
+                user_id: userId,
+                session_number: sessionNumber,
+                login_at: new Date().toISOString(),
+                status: 'active',
+                ip_address: geo.ip || ip || 'غير معروف',
+                isp: geo.isp || null,
+                country: finalCountry,
+                country_code: geo.country_code || null,
+                city: finalCity,
+                district: loc.neighbourhood || loc.district || null,
+                neighbourhood: loc.neighbourhood || null,
+                province: loc.province || null,
+                state: loc.state || null,
+                postal_code: loc.postal_code || null,
+                display_name: loc.display_name || null,
+                latitude: finalLat,
+                longitude: finalLon,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+                vpn_detected: geo.proxy || false,
+                proxy_detected: geo.proxy || false,
+                hosting_detected: geo.hosting || false,
+                device_type: d.device_type,
+                browser_name: d.browser_name,
+                browser_version: d.browser_version,
+                browser_engine: d.browser_engine,
+                user_agent: d.user_agent,
+                operating_system: d.operating_system,
+                os_version: d.os_version,
+                platform: d.platform,
+                language: d.language,
+                screen_resolution: d.screen_resolution,
+                pixel_ratio: d.pixel_ratio,
+                color_depth: d.color_depth,
+                cpu_architecture: d.cpu_cores || null,
+                device_memory: d.device_memory,
+                touch_supported: d.touch_supported,
+                cookies_enabled: d.cookies_enabled,
+                local_storage: d.local_storage,
+                session_storage: d.session_storage,
+                indexed_db: d.indexed_db,
+                webgl_supported: d.webgl_supported,
+                fingerprint: d.fingerprint,
+                network_type: d.network_type || null,
+                is_current_session: true
+            };
+
+            const { error } = await supabase.from('user_login_sessions').insert(record);
+            if (error) {
+                console.error('❌ فشل تسجيل الجلسة:', error);
+                // عرض الخطأ للمستخدم (اختياري)
+            } else {
+                console.log('✅ تم تسجيل الجلسة بنجاح');
+            }
+        } catch (e) {
+            console.error('❌ خطأ غير متوقع:', e);
+        }
+    }
+
+    async function handleVerify() {
+        const code = getOtpCode();
+        if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
+        clearMessages();
+        if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
+        const email = sessionStorage.getItem('otpEmail');
+
+        try {
+            const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
+            if (!sb) throw new Error('الخدمة غير متوفرة');
+            const { data, error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
+            if (error) throw error;
+
+            if (data?.session) {
+                await createSessionRecord(data.session.user.id);
+                sessionStorage.removeItem('otpEmail');
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
+                setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 1500);
+            } else {
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
+                if (window.onOtpVerified) window.onOtpVerified(code);
+                else setTimeout(() => window.location.href = '/pages/dashboard/index.html', 1000);
+            }
+        } catch (error) {
+            console.error(error);
+            showError(getArabicErrorMessage(error.message));
+            if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
+        }
+    }
+
+    async function handleResend() {
+        const email = sessionStorage.getItem('otpEmail');
+        if (!email) { showError('البريد الإلكتروني غير متوفر'); return; }
+        clearMessages();
+        if (resendBtn) { resendBtn.disabled = true; resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
+        try {
+            const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
+            if (!sb) throw new Error('الخدمة غير متوفرة');
+            const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+            if (error) throw error;
+            if (successMsg) { successMsg.textContent = 'تم إرسال رمز جديد'; successMsg.style.display = 'block'; }
+            resetCountdown();
+        } catch (e) { showError('فشل إعادة الإرسال'); }
+        finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
+    }
+
+    function startCountdown() {
+        let seconds = RESEND_TIMEOUT;
+        updateTimerDisplay(seconds);
+        if (resendBtn) resendBtn.disabled = true;
+        countdownInterval = setInterval(() => {
+            seconds--;
+            updateTimerDisplay(seconds);
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; }
+                if (timerSpan) timerSpan.textContent = '';
+            }
+        }, 1000);
+    }
+    function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
+    function updateTimerDisplay(seconds) {
+        if (timerSpan) {
+            const m = Math.floor(seconds / 60), s = seconds % 60;
+            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+    function getArabicErrorMessage(msg) {
+        const map = {
+            'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
+            'Invalid OTP': 'رمز التحقق غير صحيح',
+            'Email not confirmed': 'البريد الإلكتروني غير مفعل',
+            'User not found': 'المستخدم غير موجود'
+        };
+        return map[msg] || msg || 'حدث خطأ غير معروف';
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();
