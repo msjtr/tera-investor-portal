@@ -1,5 +1,8 @@
 /**
- * verify-otp.js – v15 (محسّن: GPS، Auth.verifyOTP، بصمة أقوى، سجل تدقيق)
+ * verify-otp.js – v17 (خدمات موقع متعددة: ip-api.com ← ipapi.co ← GPS فقط)
+ * - يعطي أولوية للخدمات ذات الحدود الأعلى
+ * - يضمن تخزين الدولة والمدينة على الأقل
+ * - يعالج فشل الخدمات بشكل متتابع
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -110,7 +113,8 @@
         };
     }
 
-    async function fetchBasicGeo() {
+    // ----- خدمات الموقع المتعددة (تسلسلية) -----
+    async function tryIPAPIcom() {
         try {
             const r = await fetch('https://ip-api.com/json/?fields=status,message,country,countryCode,city,lat,lon,isp,org,proxy,hosting,query');
             if (!r.ok) throw new Error('ip-api failed');
@@ -130,8 +134,44 @@
             };
         } catch (e) {
             console.warn('⚠️ ip-api.com failed:', e);
-            return {};
+            return null;
         }
+    }
+
+    async function tryIPAPIco() {
+        try {
+            const r = await fetch('https://ipapi.co/json/');
+            if (!r.ok) throw new Error('ipapi.co failed');
+            const d = await r.json();
+            console.log('📍 ipapi.co:', d);
+            return {
+                ip: d.ip,
+                city: d.city,
+                country: d.country_name,
+                country_code: d.country_code,
+                isp: d.org,
+                lat: d.latitude,
+                lon: d.longitude,
+                proxy: d.proxy || false,
+                hosting: d.hosting || false
+            };
+        } catch (e) {
+            console.warn('⚠️ ipapi.co failed:', e);
+            return null;
+        }
+    }
+
+    async function fetchBasicGeo() {
+        // المحاولة الأولى: ip-api.com
+        let result = await tryIPAPIcom();
+        if (result) return result;
+
+        // المحاولة الثانية: ipapi.co
+        result = await tryIPAPIco();
+        if (result) return result;
+
+        // فشل كلاهما
+        return {};
     }
 
     async function fetchLocationIQ(lat, lon) {
@@ -157,12 +197,13 @@
         }
     }
 
-    async function createSessionRecord(userId, email) {
+    async function createSessionRecord(userId, email, otpCode) {
         if (!supabase) return;
         try {
             const d = getDeviceAndBrowserInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
 
+            // محاولة GPS
             let gpsCoords = null;
             try {
                 if (window.Auth?.getCurrentPosition) {
@@ -176,6 +217,7 @@
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(gpsCoords?.latitude || geo.lat, gpsCoords?.longitude || geo.lon);
 
+            // تجميع البيانات
             const finalCity = loc.city || geo.city || null;
             const finalCountry = geo.country || null;
             const finalLat = gpsCoords?.latitude || geo.lat || null;
@@ -237,11 +279,12 @@
                 console.log('✅ تم تسجيل الجلسة بنجاح');
             }
 
+            // تسجيل تدقيق OTP
             try {
                 await supabase.from('auth_otp_logs').insert({
                     user_id: userId,
                     email: email,
-                    token: code,
+                    token: otpCode,
                     status: 'success',
                     ip_address: geo.ip || 'unknown',
                     created_at: new Date().toISOString()
@@ -264,7 +307,7 @@
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                await createSessionRecord(data.session.user.id, email);
+                await createSessionRecord(data.session.user.id, email, code);
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
                 setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
