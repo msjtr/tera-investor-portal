@@ -6,13 +6,12 @@
 
     async function tryIPAPIcom() {
         try {
-            const r = await fetch('https://ip-api.com/json/?fields=status,message,country,countryCode,city,lat,lon,isp,org,proxy,hosting,query');
+            const r = await fetch('https://ip-api.com/json/?fields=query,country,countryCode,city,lat,lon,isp,org,proxy,hosting');
             if (!r.ok) throw new Error('ip-api failed');
             const d = await r.json();
-            if (d.status !== 'success') throw new Error(d.message || 'ip-api error');
-            console.log('📍 ip-api.com:', d);
-            return { ip: d.query, city: d.city, country: d.country, country_code: d.countryCode, isp: d.isp || d.org, lat: d.lat, lon: d.lon, proxy: d.proxy || false, hosting: d.hosting || false };
-        } catch (e) { console.warn('⚠️ ip-api.com failed:', e); return null; }
+            if (d.query) return { ip: d.query, country: d.country, country_code: d.countryCode, city: d.city, isp: d.isp || d.org, lat: d.lat, lon: d.lon, proxy: d.proxy || false, hosting: d.hosting || false };
+        } catch (e) { console.warn('ip-api.com failed'); }
+        return null;
     }
 
     async function tryIPAPIco() {
@@ -20,17 +19,16 @@
             const r = await fetch('https://ipapi.co/json/');
             if (!r.ok) throw new Error('ipapi.co failed');
             const d = await r.json();
-            console.log('📍 ipapi.co:', d);
-            return { ip: d.ip, city: d.city, country: d.country_name, country_code: d.country_code, isp: d.org, lat: d.latitude, lon: d.longitude, proxy: d.proxy || false, hosting: d.hosting || false };
-        } catch (e) { console.warn('⚠️ ipapi.co failed:', e); return null; }
+            if (d.ip) return { ip: d.ip, country: d.country_name, country_code: d.country_code, city: d.city, isp: d.org, lat: d.latitude, lon: d.longitude, proxy: d.proxy || false, hosting: d.hosting || false };
+        } catch (e) { console.warn('ipapi.co failed'); }
+        return null;
     }
 
     async function fetchBasicGeo() {
-        let result = await tryIPAPIcom();
-        if (result) return result;
-        result = await tryIPAPIco();
-        if (result) return result;
-        return {};
+        let res = await tryIPAPIcom();
+        if (res) return res;
+        res = await tryIPAPIco();
+        return res || { ip: null, country: null, city: null, isp: null, lat: null, lon: null, proxy: false, hosting: false };
     }
 
     async function fetchLocationIQ(lat, lon) {
@@ -38,9 +36,8 @@
         const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
         try {
             const r = await fetch(url);
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            if (!r.ok) throw new Error('LocationIQ failed');
             const data = await r.json();
-            console.log('📍 LocationIQ:', data);
             return {
                 neighbourhood: data.neighbourhood || data.suburb || data.village || '',
                 province: data.province || '',
@@ -50,15 +47,13 @@
                 city: data.city || '',
                 district: data.county || data.district || ''
             };
-        } catch (e) { console.warn('⚠️ LocationIQ failed:', e); return {}; }
+        } catch (e) { console.warn('LocationIQ failed'); return {}; }
     }
 
     async function getGPSCoords() {
         try {
-            if (window.Auth?.getCurrentPosition) {
-                return await window.Auth.getCurrentPosition();
-            }
-        } catch (e) { console.warn('⚠️ GPS غير متاح:', e.message); }
+            if (window.Auth?.getCurrentPosition) return await window.Auth.getCurrentPosition();
+        } catch (e) { console.warn('GPS failed'); }
         return null;
     }
 
