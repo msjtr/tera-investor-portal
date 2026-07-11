@@ -1,5 +1,6 @@
 /**
  * login.js – تدفق آمن: تحقق من كلمة المرور -> إرسال OTP -> صفحة التحقق
+ * يعتمد على Auth.loginWithPasswordAndOTP من auth.js
  */
 (function() {
     let supabase;
@@ -69,31 +70,10 @@
         }
 
         try {
-            const sb = await getSupabase();
-            if (!sb) throw new Error('الخدمة غير متوفرة');
+            // استخدام الدالة المركزية من auth.js
+            await window.Auth.loginWithPasswordAndOTP(email, password);
 
-            // الخطوة 1: التحقق من صحة البريد وكلمة المرور
-            const { error: signInError } = await sb.auth.signInWithPassword({ email, password });
-            if (signInError) {
-                // البيانات غير صحيحة
-                throw signInError;
-            }
-
-            // البيانات صحيحة - نسجل الخروج فوراً لإلغاء الجلسة المؤقتة
-            await sb.auth.signOut();
-
-            // الخطوة 2: إرسال رمز تحقق OTP إلى البريد
-            const { error: otpError } = await sb.auth.signInWithOtp({
-                email: email,
-                options: {
-                    shouldCreateUser: false // المستخدم موجود مسبقاً
-                }
-            });
-            if (otpError) throw otpError;
-
-            // تخزين البريد لصفحة التحقق
-            sessionStorage.setItem('otpEmail', email);
-            // التوجيه إلى صفحة إدخال رمز التحقق
+            // تم إرسال OTP بنجاح -> توجيه إلى صفحة التحقق
             window.location.href = '/auth/verify-otp.html';
 
         } catch (error) {
