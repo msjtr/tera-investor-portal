@@ -105,18 +105,15 @@
         try {
             // الانتظار حتى يصبح Auth متاحاً (إذا لم يكن)
             if (!window.Auth) {
-                // محاولة انتظار قصيرة
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
             if (window.Auth) {
                 const user = await window.Auth.getUser();
                 if (user) {
-                    // جلسة صالحة، انتقل للوحة التحكم
                     window.location.href = '/pages/dashboard/index.html';
                     return;
                 }
             } else {
-                // fallback للمباشرة إذا لم يوجد Auth
                 const sb = window.teraSupabase || await window.waitForSupabase?.();
                 if (sb) {
                     const { data: { user } } = await sb.auth.getUser();
@@ -127,9 +124,7 @@
                 }
             }
         } catch (e) {
-            // تجاهل الأخطاء، ابق في صفحة الدخول
         } finally {
-            // إخفاء شاشة التحميل بعد الفحص
             if (loaderScreen) loaderScreen.style.display = 'none';
         }
     }
