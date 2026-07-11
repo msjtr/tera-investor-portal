@@ -1,7 +1,10 @@
 /**
- * security-registered-devices.js – v10 (تقرير كامل مع موقع جغرافي من السجلات المخزنة)
- * يعرض الجلسات المخزنة بتفاصيل كاملة: الجهاز، الشبكة، الموقع الجغرافي.
- * البيانات تأتي مباشرة من جدول user_login_sessions بعد أن يتم تخزينها عبر verify-otp.js.
+ * security-registered-devices.js – v11 (محسن)
+ * - يستخدم Auth.requireAuth لتوحيد فحص الجلسة
+ * - معالجة أخطاء fetchSessions
+ * - التحقق من وجود عناصر DOM قبل ربط الأحداث
+ * - إنهاء جلسة Supabase إذا تم إنهاء الجلسة الحالية
+ * - تحسين عرض الموقع الجغرافي (هروب آمن للروابط)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -15,10 +18,17 @@
     }
 
     async function init() {
-        supabase = window.teraSupabase || await window.waitForSupabase();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { window.location.replace('/auth/auth/login/login.html'); return; }
+        // استخدام نظام المصادقة الموحد لفحص الجلسة
+        if (!window.Auth) {
+            window.location.replace('/auth/auth/login/login.html');
+            return;
+        }
+        const user = await window.Auth.requireAuth();
+        if (!user) return;
+
         currentUser = user;
+        supabase = window.teraSupabase || await window.waitForSupabase();
+
         await updateHeader(user);
         await fetchSessions();
         bindEvents();
@@ -27,46 +37,69 @@
 
     async function updateHeader(user) {
         const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-        document.getElementById('headerUserName').textContent = name;
-        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (nameEl) nameEl.textContent = name;
+        if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
     }
 
     async function fetchSessions() {
-        const { data, error } = await supabase.from('user_login_sessions')
+        const { data, error } = await supabase
+            .from('user_login_sessions')
             .select('*')
             .eq('user_id', currentUser.id)
             .order('login_at', { ascending: false });
-        if (error) { console.error(error); return; }
+
+        if (error) {
+            console.error('فشل جلب الجلسات:', error);
+            const tbody = document.getElementById('sessionsTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">تعذر تحميل الجلسات. حاول مجدداً لاحقاً.</td></tr>';
+            return;
+        }
+
         sessions = data || [];
         updateStats();
         applyFilters();
     }
 
     function updateStats() {
-        document.getElementById('totalCount').textContent = sessions.length;
-        document.getElementById('activeCount').textContent = sessions.filter(s => s.status === 'active').length;
+        const totalEl = document.getElementById('totalCount');
+        const activeEl = document.getElementById('activeCount');
+        if (totalEl) totalEl.textContent = sessions.length;
+        if (activeEl) activeEl.textContent = sessions.filter(s => s.status === 'active').length;
     }
 
     function applyFilters() {
-        const st = document.getElementById('statusFilter').value;
-        const q = document.getElementById('searchInput').value.trim().toLowerCase();
+        const statusEl = document.getElementById('statusFilter');
+        const searchEl = document.getElementById('searchInput');
+        const st = statusEl ? statusEl.value : 'all';
+        const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
         let filtered = sessions;
         if (st !== 'all') filtered = filtered.filter(s => s.status === st);
-        if (q) filtered = filtered.filter(s =>
-            (s.session_number || '').includes(q) ||
-            (s.ip_address || '').includes(q) ||
-            (s.browser_name || '').toLowerCase().includes(q) ||
-            (s.country || '').includes(q) ||
-            (s.city || '').includes(q) ||
-            (s.district || '').includes(q)
-        );
+        if (q) {
+            filtered = filtered.filter(s =>
+                (s.session_number || '').includes(q) ||
+                (s.ip_address || '').includes(q) ||
+                (s.browser_name || '').toLowerCase().includes(q) ||
+                (s.country || '').includes(q) ||
+                (s.city || '').includes(q) ||
+                (s.district || '').includes(q)
+            );
+        }
         renderTable(filtered);
-        document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
+
+        const filterCountEl = document.getElementById('filterCount');
+        if (filterCountEl) filterCountEl.textContent = `عرض ${filtered.length} جلسة`;
     }
 
     function renderTable(list) {
         const tbody = document.getElementById('sessionsTableBody');
-        if (!list.length) { tbody.innerHTML = '<tr><td colspan="5">لا توجد جلسات</td></tr>'; return; }
+        if (!tbody) return;
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
+            return;
+        }
         tbody.innerHTML = list.map(s => `
             <tr>
                 <td>${s.session_number || '-'}</td>
@@ -80,10 +113,29 @@
 
     window.terminateSession = async function(sessionId) {
         if (!confirm('إنهاء هذه الجلسة؟')) return;
-        await supabase.from('user_login_sessions')
+
+        // التحقق مما إذا كانت هذه الجلسة الحالية (بناءً على is_current_session = true)
+        const sessionToTerminate = sessions.find(s => s.id === sessionId);
+        const isCurrent = sessionToTerminate && sessionToTerminate.is_current_session;
+
+        const { error } = await supabase
+            .from('user_login_sessions')
             .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
             .eq('id', sessionId)
             .eq('user_id', currentUser.id);
+
+        if (error) {
+            console.error('فشل إنهاء الجلسة:', error);
+            alert('حدث خطأ أثناء إنهاء الجلسة.');
+            return;
+        }
+
+        // إذا كانت الجلسة الحالية، نسجل الخروج من Supabase فعلياً
+        if (isCurrent && window.Auth?.logout) {
+            await window.Auth.logout();
+            return; // Auth.logout ستقوم بالتوجيه
+        }
+
         await fetchSessions();
     };
 
@@ -93,7 +145,9 @@
         if (!session) return;
 
         const detailContent = document.getElementById('detailContent');
-        document.getElementById('detailModal').classList.add('show');
+        const modal = document.getElementById('detailModal');
+        if (!detailContent || !modal) return;
+        modal.classList.add('show');
 
         // تجهيز صفوف الموقع الجغرافي من السجل المخزن
         function getLocationRows() {
@@ -106,7 +160,10 @@
             if (session.postal_code) rows.push(['الرمز البريدي', session.postal_code]);
             if (session.latitude && session.longitude) {
                 rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
-                rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank">🗺️ عرض</a>`]);
+                // هروب آمن للرابط (رغم أن القيم رقمية)
+                const lat = encodeURIComponent(session.latitude);
+                const lon = encodeURIComponent(session.longitude);
+                rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" rel="noopener">🗺️ عرض</a>`]);
             }
             if (rows.length === 0) rows.push(['الموقع', 'غير متوفر']);
             return rows;
@@ -188,25 +245,57 @@
     };
 
     function bindEvents() {
-        document.getElementById('statusFilter').addEventListener('change', applyFilters);
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
-        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => document.addEventListener(ev, resetIdleTimer));
+        const statusEl = document.getElementById('statusFilter');
+        const searchEl = document.getElementById('searchInput');
+        const closeModalBtn = document.getElementById('closeDetailModal');
+        const closeDetailBtn = document.getElementById('closeDetailBtn');
+        const modal = document.getElementById('detailModal');
+
+        if (statusEl) statusEl.addEventListener('change', applyFilters);
+        if (searchEl) searchEl.addEventListener('input', applyFilters);
+        if (closeModalBtn && modal) {
+            closeModalBtn.addEventListener('click', () => modal.classList.remove('show'));
+        }
+        if (closeDetailBtn && modal) {
+            closeDetailBtn.addEventListener('click', () => modal.classList.remove('show'));
+        }
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('show');
+            });
+        }
+
+        // أحداث الخمول
+        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => {
+            document.addEventListener(ev, resetIdleTimer);
+        });
     }
 
     function initIdleTimer() { resetIdleTimer(); }
+
     function resetIdleTimer() {
-        clearTimeout(idleTimer); clearTimeout(idleWarningTimer);
+        clearTimeout(idleTimer);
+        clearTimeout(idleWarningTimer);
         const w = document.getElementById('idleWarning');
         if (w) w.style.display = 'none';
-        idleWarningTimer = setTimeout(() => { if (w) w.style.display = 'flex'; }, IDLE_TIME - 30000);
+
+        idleWarningTimer = setTimeout(() => {
+            if (w) w.style.display = 'flex';
+        }, IDLE_TIME - 30000);
+
         idleTimer = setTimeout(async () => {
+            // تحديث الجلسات المنتهية بسبب الخمول
             await supabase.from('user_login_sessions')
                 .update({ status: 'timeout', logout_at: new Date().toISOString() })
                 .eq('user_id', currentUser.id)
                 .eq('status', 'active');
-            window.location.href = '/auth/auth/login/login.html?reason=timeout';
+
+            // تسجيل الخروج
+            if (window.Auth?.logout) {
+                await window.Auth.logout();
+            } else {
+                window.location.href = '/auth/auth/login/login.html?reason=timeout';
+            }
         }, IDLE_TIME);
     }
 
