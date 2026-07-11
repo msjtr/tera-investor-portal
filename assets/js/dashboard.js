@@ -1,11 +1,6 @@
 /**
  * dashboard.js – لوحة التحكم المتكاملة (محسّنة)
  * يعتمد على auth.js و supabase-client.js
- * - حماية أقوى
- * - طلب إذن الموقع الجغرافي (GPS)
- * - تحديث النشاط last_activity_at
- * - معالجة أفضل للأخطاء
- * - جلب بيانات حقيقية للمخطط
  */
 (function() {
     let supabase, currentUser;
@@ -19,7 +14,6 @@
         return supabase;
     }
 
-    // دالة مركزية للحصول على المستخدم الحالي
     async function getCurrentUser() {
         if (!supabase) return null;
         try {
@@ -57,7 +51,6 @@
         return labels[status] || status;
     }
 
-    // طلب إذن الموقع الجغرافي (GPS) وتنبيه في حال الرفض
     async function requestGeoLocation() {
         try {
             if (!window.Auth?.getCurrentPosition) return;
@@ -68,7 +61,6 @@
             return pos;
         } catch (err) {
             console.warn('⚠️ رفض الموقع الجغرافي:', err.message);
-            // إظهار تنبيه في لوحة التحكم
             const alertDiv = document.createElement('div');
             alertDiv.className = 'profile-alert';
             alertDiv.style.background = '#fee2e2';
@@ -80,7 +72,6 @@
         }
     }
 
-    // تحديث نشاط الجلسة في قاعدة البيانات لمنع الخمول
     async function updateLastActivity() {
         if (!supabase || !currentUser) return;
         try {
@@ -89,10 +80,9 @@
                 .eq('user_id', currentUser.id)
                 .eq('status', 'active')
                 .eq('is_current_session', true);
-        } catch (e) { /* تجاهل الأخطاء الصامتة */ }
+        } catch (e) {}
     }
 
-    // تحميل رحلة العميل
     async function loadCustomerJourney(user) {
         try {
             const { data: req, error: reqError } = await supabase
@@ -117,7 +107,6 @@
             const panel = document.getElementById('requestStatusPanel');
             if (!panel) return;
 
-            // قبل تقديم الطلب
             if (!req || !req.submitted) {
                 const stages = [
                     { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
@@ -158,7 +147,6 @@
                 return;
             }
 
-            // بعد التقديم
             const statusIcons = {
                 'under_review': 'fa-search',
                 'approved': 'fa-check-circle',
@@ -266,7 +254,6 @@
             console.warn('تعذر تحميل المخطط:', e);
         }
 
-        // إذا لم توجد بيانات، أنشئ مخططاً فارغاً
         if (labels.length === 0) {
             labels = ['لا توجد بيانات'];
             values = [0];
@@ -327,15 +314,13 @@
                 const m = mins % 60;
                 elSess.textContent = h > 0 ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`;
             }
-            // تحديث نشاط الجلسة كل دقيقة
             updateLastActivity();
         };
         update();
-        setInterval(update, 60000); // كل دقيقة بدلاً من 30 ثانية لتقليل الاستدعاءات
+        setInterval(update, 60000);
     }
 
     async function init() {
-        // التحقق من وجود Auth
         if (!window.Auth) {
             console.error('نظام المصادقة غير متوفر');
             window.location.replace('/auth/auth/login/login.html');
@@ -355,7 +340,6 @@
 
         document.getElementById('loadingOverlay')?.classList.add('active');
 
-        // طلب إذن الموقع الجغرافي (اختياري ولكن يظهر تنبيه عند الرفض)
         requestGeoLocation();
 
         await loadCustomerJourney(user);
