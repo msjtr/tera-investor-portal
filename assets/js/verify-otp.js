@@ -80,15 +80,9 @@
         if (/Mobi|Android|iPhone/i.test(ua)) deviceType = 'mobile';
         else if (/iPad|Tablet/i.test(ua)) deviceType = 'tablet';
 
-        // بصمة أفضل باستخدام SubtleCrypto (إن وجد) وإلا نرجع لبصمة btoa القديمة
         let fingerprint = '';
         const raw = ua + window.screen.width + window.screen.height + navigator.language + navigator.platform;
-        if (window.crypto && window.crypto.subtle) {
-            // سنستخدم بصمة مبسطة (لا يمكن استخدام digest بشكل متزامن، لذا نعتمد على btoa مؤقتًا)
-            fingerprint = btoa(raw).substring(0, 32);
-        } else {
-            fingerprint = btoa(raw).substring(0, 32);
-        }
+        fingerprint = btoa(raw).substring(0, 32);
 
         return {
             device_type: deviceType,
@@ -169,7 +163,6 @@
             const d = getDeviceAndBrowserInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
 
-            // محاولة الحصول على إحداثيات GPS أولاً
             let gpsCoords = null;
             try {
                 if (window.Auth?.getCurrentPosition) {
@@ -183,7 +176,6 @@
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(gpsCoords?.latitude || geo.lat, gpsCoords?.longitude || geo.lon);
 
-            // الدمج: أفضل GPS ثم LocationIQ ثم IP-API
             const finalCity = loc.city || geo.city || null;
             const finalCountry = geo.country || null;
             const finalLat = gpsCoords?.latitude || geo.lat || null;
@@ -241,26 +233,20 @@
             const { error } = await supabase.from('user_login_sessions').insert(record);
             if (error) {
                 console.error('❌ فشل تسجيل الجلسة:', error);
-                // محاولة الإدراج بدون الحقول الجديدة (إذا كانت لا تزال غير موجودة)
-                // لكن نكتفي بالتحذير للمستخدم
             } else {
                 console.log('✅ تم تسجيل الجلسة بنجاح');
             }
 
-            // تسجيل محاولة OTP ناجحة في سجل التدقيق (اختياري)
             try {
                 await supabase.from('auth_otp_logs').insert({
                     user_id: userId,
                     email: email,
-                    token: code, // رمز OTP المستخدم (يمكن تخزينه مؤقتاً)
+                    token: code,
                     status: 'success',
                     ip_address: geo.ip || 'unknown',
                     created_at: new Date().toISOString()
                 });
-            } catch (logError) {
-                console.warn('فشل تسجيل سجل OTP:', logError);
-            }
-
+            } catch (logError) {}
         } catch (e) {
             console.error('❌ خطأ غير متوقع:', e);
         }
@@ -274,10 +260,7 @@
         const email = sessionStorage.getItem('otpEmail');
 
         try {
-            // استخدام Auth.verifyOTP المركزية بدلاً من supabase المباشر
-            if (!window.Auth || !window.Auth.verifyOTP) {
-                throw new Error('خدمة المصادقة غير متوفرة');
-            }
+            if (!window.Auth || !window.Auth.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
@@ -294,19 +277,6 @@
             console.error(error);
             showError(getArabicErrorMessage(error.message));
             if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
-
-            // تسجيل محاولة فاشلة
-            try {
-                await supabase.from('auth_otp_logs').insert({
-                    user_id: null, // قد لا نعرف user بعد
-                    email: email,
-                    token: code,
-                    status: 'failed',
-                    error_message: error.message,
-                    ip_address: 'unknown',
-                    created_at: new Date().toISOString()
-                });
-            } catch (logError) {}
         }
     }
 
@@ -316,7 +286,6 @@
         clearMessages();
         if (resendBtn) { resendBtn.disabled = true; resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
         try {
-            // استخدام Auth.sendOTP
             if (!window.Auth?.sendOTP) throw new Error('الخدمة غير متوفرة');
             await window.Auth.sendOTP(email);
             if (successMsg) { successMsg.textContent = 'تم إرسال رمز جديد'; successMsg.style.display = 'block'; }
