@@ -1,13 +1,13 @@
 /**
- * verify-otp.js – v3 (يدعم OTP بطول 8 أرقام)
- * التحقق من رمز OTP – متوافق مع Magic link أو OTP عبر البريد
+ * verify-otp.js – v4
+ * يدعم رمز 8 أرقام، اتجاه LTR، مؤقت 5 دقائق، ولصق الكود
  */
 (function() {
-    const OTP_LENGTH = 8; // عدد الأرقام (8 كما هو مطلوب)
+    const OTP_LENGTH = 8;
+    const RESEND_TIMEOUT = 300; // 5 دقائق
 
     let supabase;
 
-    // العناصر
     const otpInputs = document.querySelectorAll('.otp-input');
     const verifyBtn = document.getElementById('verifyOtpBtn');
     const resendBtn = document.getElementById('resendOtpBtn');
@@ -16,14 +16,13 @@
     const successMsg = document.getElementById('otpSuccess');
 
     let countdownInterval;
-    const RESEND_TIMEOUT = 60; // ثانية
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
 
         const email = sessionStorage.getItem('otpEmail');
         if (!email) {
-            console.warn('البريد الإلكتروني غير متوفر في sessionStorage');
+            console.warn('البريد الإلكتروني غير متوفر');
         }
 
         bindEvents();
@@ -33,9 +32,8 @@
     function bindEvents() {
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                const value = e.target.value.replace(/[^0-9]/g, ''); // السماح بالأرقام فقط
+                const value = e.target.value.replace(/[^0-9]/g, '');
                 e.target.value = value;
-
                 if (value && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
@@ -48,7 +46,6 @@
                 }
             });
 
-            // لصق الكود كاملاً
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
                 const paste = (e.clipboardData || window.clipboardData).getData('text');
@@ -59,6 +56,7 @@
                             otpInputs[i].value = digits[i] || '';
                         }
                     }
+                    otpInputs[OTP_LENGTH - 1].focus();
                     checkComplete();
                 }
             });
@@ -75,9 +73,7 @@
 
     function getOtpCode() {
         let code = '';
-        otpInputs.forEach(input => {
-            code += input.value;
-        });
+        otpInputs.forEach(input => { code += input.value; });
         return code;
     }
 
@@ -120,16 +116,14 @@
             const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
             if (!sb) throw new Error('خدمة المصادقة غير متوفرة');
 
-            // محاولة التحقق من الرمز (يدعم email OTP و magic link)
             const { data, error } = await sb.auth.verifyOtp({
                 email: email,
                 token: code,
-                type: 'email' // يمكن أن يكون 'email' أو 'sms'
+                type: 'email'
             });
 
             if (error) throw error;
 
-            // التحقق الناجح
             if (data?.session) {
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) {
@@ -140,7 +134,6 @@
                     window.location.href = '/pages/dashboard/index.html';
                 }, 1500);
             } else {
-                // في حالة Magic link أو إعادة تعيين كلمة مرور
                 if (successMsg) {
                     successMsg.textContent = 'تم التحقق بنجاح';
                     successMsg.style.display = 'block';
@@ -148,7 +141,6 @@
                 if (window.onOtpVerified) {
                     window.onOtpVerified(code);
                 } else {
-                    // السلوك الافتراضي: التوجيه للوحة التحكم
                     setTimeout(() => {
                         window.location.href = '/pages/dashboard/index.html';
                     }, 1000);
@@ -183,9 +175,7 @@
 
             const { error } = await sb.auth.signInWithOtp({
                 email: email,
-                options: {
-                    shouldCreateUser: false // لا ينشئ مستخدم جديد، فقط إعادة إرسال
-                }
+                options: { shouldCreateUser: false }
             });
 
             if (error) throw error;
