@@ -193,11 +193,15 @@
             font-size: 14px;
         }
 
-        .btn-action i {
-            font-size: 18px;
+        .page-footer {
+            text-align: center;
+            padding: 18px 20px;
+            color: var(--gray-500);
+            font-size: 13px;
+            background: transparent;
         }
 
-        /* ========== تجاوب ========== */
+        /* تجاوب */
         @media (max-width: 1024px) {
             .hero-card {
                 padding: 45px 40px;
@@ -233,20 +237,11 @@
             .brand-logo img {
                 width: 130px;
             }
-            .brand-logo {
-                margin-bottom: 25px;
-            }
             .main-title {
                 font-size: 26px;
-                margin-bottom: 15px;
             }
             .main-subtitle {
                 font-size: 15px;
-                margin-bottom: 35px;
-                max-width: 100%;
-            }
-            .auth-actions {
-                gap: 15px;
                 margin-bottom: 35px;
             }
             .btn-action {
@@ -261,27 +256,14 @@
             .feature-card {
                 padding: 20px;
             }
-            .feature-card h3 {
-                font-size: 16px;
-            }
-            .feature-card p {
-                font-size: 13px;
-            }
         }
 
         @media (max-width: 480px) {
-            .hero-section {
-                padding: 20px 12px;
-            }
             .hero-card {
                 padding: 25px 16px;
-                border-radius: 16px;
             }
             .brand-logo img {
                 width: 100px;
-            }
-            .brand-logo {
-                margin-bottom: 20px;
             }
             .main-title {
                 font-size: 22px;
@@ -301,9 +283,6 @@
                 padding: 14px 20px;
                 font-size: 14px;
             }
-            .btn-action i {
-                font-size: 16px;
-            }
             .features-grid {
                 gap: 12px;
             }
@@ -317,7 +296,7 @@
             }
         }
 
-        /* ========== الوضع الداكن ========== */
+        /* الوضع الداكن */
         @media (prefers-color-scheme: dark) {
             body {
                 background: var(--gray-800);
@@ -394,6 +373,9 @@
         </div>
     </main>
 
-    <script src="/assets/js/supabase-client.js"></script>
+    <footer class="page-footer">
+        © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
+    </footer>
+
 </body>
 </html>
