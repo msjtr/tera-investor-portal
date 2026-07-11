@@ -1,11 +1,12 @@
 /**
- * security-registered-devices.js – v9 (تقرير كامل مع موقع جغرافي)
+ * security-registered-devices.js – v10 (تقرير كامل مع موقع جغرافي من السجلات المخزنة)
+ * يعرض الجلسات المخزنة بتفاصيل كاملة: الجهاز، الشبكة، الموقع الجغرافي.
+ * البيانات تأتي مباشرة من جدول user_login_sessions بعد أن يتم تخزينها عبر verify-otp.js.
  */
 (function() {
     let supabase, currentUser, sessions = [];
     let idleTimer, idleWarningTimer;
-    const IDLE_TIME = 5 * 60 * 1000;
-    const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
+    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(s) {
@@ -31,7 +32,10 @@
     }
 
     async function fetchSessions() {
-        const { data, error } = await supabase.from('user_login_sessions').select('*').eq('user_id', currentUser.id).order('login_at', { ascending: false });
+        const { data, error } = await supabase.from('user_login_sessions')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('login_at', { ascending: false });
         if (error) { console.error(error); return; }
         sessions = data || [];
         updateStats();
@@ -40,7 +44,7 @@
 
     function updateStats() {
         document.getElementById('totalCount').textContent = sessions.length;
-        document.getElementById('activeCount').textContent = sessions.filter(s=>s.status==='active').length;
+        document.getElementById('activeCount').textContent = sessions.filter(s => s.status === 'active').length;
     }
 
     function applyFilters() {
@@ -48,7 +52,14 @@
         const q = document.getElementById('searchInput').value.trim().toLowerCase();
         let filtered = sessions;
         if (st !== 'all') filtered = filtered.filter(s => s.status === st);
-        if (q) filtered = filtered.filter(s => (s.session_number||'').includes(q) || (s.ip_address||'').includes(q) || (s.browser_name||'').toLowerCase().includes(q) || (s.country||'').includes(q) || (s.city||'').includes(q) || (s.district||'').includes(q));
+        if (q) filtered = filtered.filter(s =>
+            (s.session_number || '').includes(q) ||
+            (s.ip_address || '').includes(q) ||
+            (s.browser_name || '').toLowerCase().includes(q) ||
+            (s.country || '').includes(q) ||
+            (s.city || '').includes(q) ||
+            (s.district || '').includes(q)
+        );
         renderTable(filtered);
         document.getElementById('filterCount').textContent = `عرض ${filtered.length} جلسة`;
     }
@@ -58,33 +69,47 @@
         if (!list.length) { tbody.innerHTML = '<tr><td colspan="5">لا توجد جلسات</td></tr>'; return; }
         tbody.innerHTML = list.map(s => `
             <tr>
-                <td>${s.session_number||'-'}</td>
+                <td>${s.session_number || '-'}</td>
                 <td>${formatDate(s.login_at)}</td>
                 <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
                 <td><button class="btn-action" onclick="window.showSessionDetail('${s.id}')"><i class="fas fa-eye"></i> عرض</button></td>
-                <td>${s.status==='active'?`<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>`:'-'}</td>
+                <td>${s.status === 'active' ? `<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>` : '-'}</td>
             </tr>
         `).join('');
     }
 
     window.terminateSession = async function(sessionId) {
         if (!confirm('إنهاء هذه الجلسة؟')) return;
-        await supabase.from('user_login_sessions').update({ status:'terminated_by_user', logout_at:new Date().toISOString() }).eq('id',sessionId).eq('user_id',currentUser.id);
+        await supabase.from('user_login_sessions')
+            .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+            .eq('id', sessionId)
+            .eq('user_id', currentUser.id);
         await fetchSessions();
     };
 
-    // عرض التقرير الكامل
-    window.showSessionDetail = async function(sessionId) {
+    // عرض التقرير الكامل (بدون استدعاء خارجي – البيانات من الجدول)
+    window.showSessionDetail = function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
 
         const detailContent = document.getElementById('detailContent');
-        detailContent.innerHTML = '<p style="text-align:center">جاري التحميل...</p>';
         document.getElementById('detailModal').classList.add('show');
 
-        let locationData = null;
-        if (session.latitude && session.longitude) {
-            locationData = await fetchLocationDetails(session.latitude, session.longitude);
+        // تجهيز صفوف الموقع الجغرافي من السجل المخزن
+        function getLocationRows() {
+            const rows = [];
+            if (session.country) rows.push(['الدولة', session.country]);
+            if (session.country_code) rows.push(['الرمز الدولي', session.country_code]);
+            if (session.city) rows.push(['المدينة', session.city]);
+            if (session.district || session.neighbourhood) rows.push(['الحي', session.neighbourhood || session.district]);
+            if (session.province || session.state) rows.push(['المنطقة/المحافظة', session.province || session.state]);
+            if (session.postal_code) rows.push(['الرمز البريدي', session.postal_code]);
+            if (session.latitude && session.longitude) {
+                rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
+                rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank">🗺️ عرض</a>`]);
+            }
+            if (rows.length === 0) rows.push(['الموقع', 'غير متوفر']);
+            return rows;
         }
 
         const groups = [
@@ -93,7 +118,7 @@
                 rows: [
                     ['الرقم التعريفي للجلسة', session.id],
                     ['نوع الجهاز', session.device_type || '—'],
-                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version||''}` : '—'],
+                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''}` : '—'],
                     ['المنصة', session.platform || '—'],
                     ['المعالج (عدد النوى)', session.cpu_architecture || '—'],
                     ['الذاكرة (GB)', session.device_memory || '—']
@@ -102,7 +127,7 @@
             {
                 title: 'بيانات المتصفح', icon: 'fa-chrome',
                 rows: [
-                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version||''}` : '—'],
+                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''}` : '—'],
                     ['المحرك', session.browser_engine || '—'],
                     ['وكيل المستخدم', session.user_agent || '—'],
                     ['اللغة', session.language || '—'],
@@ -136,24 +161,7 @@
             },
             {
                 title: 'الموقع الجغرافي', icon: 'fa-map-marker-alt',
-                rows: (locationData && locationData.country) ? [
-                    ['الدولة', locationData.country],
-                    ['الرمز الدولي', locationData.country_code],
-                    ['المدينة', locationData.city],
-                    ['المنطقة/المحافظة', locationData.province || locationData.state],
-                    ['الحي', locationData.neighbourhood],
-                    ['الرمز البريدي', locationData.postcode || session.postal_code],
-                    ['الإحداثيات', `${session.latitude}, ${session.longitude}`],
-                    ['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank">🗺️ عرض</a>`]
-                ] : (session.country ? [
-                    ['الدولة', session.country],
-                    ['المدينة', session.city],
-                    ['المنطقة', session.province || session.state],
-                    ['الإحداثيات', session.latitude && session.longitude ? `${session.latitude}, ${session.longitude}` : '—'],
-                    ['الخريطة', session.latitude && session.longitude ? `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank">🗺️ عرض</a>` : '—']
-                ] : [
-                    ['الموقع', 'غير متوفر']
-                ])
+                rows: getLocationRows()
             },
             {
                 title: 'معلومات الجلسة', icon: 'fa-clock',
@@ -179,32 +187,12 @@
         detailContent.innerHTML = html || '<p>لا توجد تفاصيل</p>';
     };
 
-    async function fetchLocationDetails(lat, lon) {
-        if (!lat || !lon) return null;
-        const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('فشل');
-            const data = await res.json();
-            return {
-                neighbourhood: data.neighbourhood || data.suburb || '',
-                city: data.city || '',
-                province: data.province || '',
-                state: data.state || '',
-                postcode: data.postcode || '',
-                country: data.country || '',
-                country_code: data.country_code || '',
-                display_name: data.display_name || ''
-            };
-        } catch (e) { return null; }
-    }
-
     function bindEvents() {
         document.getElementById('statusFilter').addEventListener('change', applyFilters);
         document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('closeDetailModal').addEventListener('click', ()=> document.getElementById('detailModal').classList.remove('show'));
-        document.getElementById('closeDetailBtn').addEventListener('click', ()=> document.getElementById('detailModal').classList.remove('show'));
-        ['click','mousemove','keydown','scroll','touchstart'].forEach(ev => document.addEventListener(ev, resetIdleTimer));
+        document.getElementById('closeDetailModal').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
+        document.getElementById('closeDetailBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('show'));
+        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => document.addEventListener(ev, resetIdleTimer));
     }
 
     function initIdleTimer() { resetIdleTimer(); }
@@ -214,7 +202,10 @@
         if (w) w.style.display = 'none';
         idleWarningTimer = setTimeout(() => { if (w) w.style.display = 'flex'; }, IDLE_TIME - 30000);
         idleTimer = setTimeout(async () => {
-            await supabase.from('user_login_sessions').update({ status:'timeout', logout_at:new Date().toISOString() }).eq('user_id',currentUser.id).eq('status','active');
+            await supabase.from('user_login_sessions')
+                .update({ status: 'timeout', logout_at: new Date().toISOString() })
+                .eq('user_id', currentUser.id)
+                .eq('status', 'active');
             window.location.href = '/auth/auth/login/login.html?reason=timeout';
         }, IDLE_TIME);
     }
