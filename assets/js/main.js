@@ -1,129 +1,116 @@
 /**
- * main.js – إدارة واجهة المستخدم (متوافق مع Auth الموحد)
+ * main.js – المنسق العام لواجهة المستخدم
+ * يعتمد على auth.js, app.js, core.js
+ * يعمل في جميع الصفحات التي تحتوي على قائمة جانبية وهيدر
  */
 (function() {
     'use strict';
 
-    function getCurrentPage() {
-        const path = window.location.pathname.toLowerCase();
-        if (path.includes('dashboard')) return 'dashboard';
-        if (path.includes('investments')) return 'investments';
-        if (path.includes('portfolio')) return 'portfolio';
-        if (path.includes('profile')) return 'profile';
-        if (path.includes('reports')) return 'reports';
-        if (path.includes('security')) return 'security';
-        if (path.includes('support')) return 'support';
-        return 'dashboard';
+    // ========== التهيئة عند تحميل الصفحة ==========
+    async function init() {
+        // إذا كانت الصفحة محمية (تحتوي على قائمة جانبية)
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            // استخدام TeraApp لتهيئة الصفحة المحمية
+            if (window.TeraApp && window.TeraApp.initProtectedPage) {
+                await window.TeraApp.initProtectedPage();
+            }
+        }
+
+        // روابط العودة للوحة التحكم (في الصفحات الفرعية)
+        initBackToDashboardLinks();
+
+        // تحديث التاريخ والوقت الحاليين إن وجدت عناصرهم
+        updateDateTime();
+
+        // الأحداث العامة للنقر
+        initGlobalClickEvents();
+
+        console.log('✅ [Main] تمت تهيئة الواجهة الرئيسية.');
     }
 
-    function initBackToDashboard() {
-        if (window._backBtnInitialized) return;
-        window._backBtnInitialized = true;
-
+    // ========== روابط العودة للوحة التحكم ==========
+    function initBackToDashboardLinks() {
         document.body.addEventListener('click', function(e) {
-            const backBtn = e.target.closest('#backToDashboardLink, #backToDashboard');
+            const backBtn = e.target.closest('#backToDashboardLink, #backToDashboard, .btn-back');
             if (backBtn) {
                 e.preventDefault();
-                const url = '/pages/dashboard/index.html';
-                window.location.replace(url);
+                window.location.replace('/pages/dashboard/index.html');
             }
         });
     }
 
-    function showToast(message, type) {
-        if (typeof window.showSecurityAlert === 'function') {
-            window.showSecurityAlert(message, type);
-            return;
+    // ========== تحديث التاريخ والوقت ==========
+    function updateDateTime() {
+        const dateEl = document.getElementById('currentDate');
+        const timeEl = document.getElementById('currentTime');
+        if (!dateEl && !timeEl) return;
+
+        const update = () => {
+            const now = new Date();
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('ar-SA', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            if (timeEl) {
+                timeEl.textContent = now.toLocaleTimeString('ar-SA', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        };
+
+        update();
+        setInterval(update, 30000); // تحديث كل 30 ثانية
+    }
+
+    // ========== أحداث عامة ==========
+    function initGlobalClickEvents() {
+        // أي عنصر له data-action يمكن التعامل معه مركزياً
+        document.body.addEventListener('click', function(e) {
+            const actionBtn = e.target.closest('[data-action]');
+            if (!actionBtn) return;
+
+            const action = actionBtn.getAttribute('data-action');
+            switch (action) {
+                case 'go-back':
+                    e.preventDefault();
+                    window.history.back();
+                    break;
+                case 'refresh-page':
+                    e.preventDefault();
+                    window.location.reload();
+                    break;
+                case 'go-to-dashboard':
+                    e.preventDefault();
+                    window.location.href = '/pages/dashboard/index.html';
+                    break;
+                default:
+                    break;
+            }
+        });
+    }
+
+    // ========== تغيير حالة القائمة الجانبية يدوياً ==========
+    window.toggleSidebar = function() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+        sidebar.classList.toggle('collapsed');
+        if (window.innerWidth < 992) {
+            sidebar.classList.toggle('sidebar-open');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (overlay) overlay.classList.toggle('active');
         }
-        console.log(`[Toast: ${type}] ${message}`);
-    }
-
-    function setActiveNavItem() {
-        const currentPath = window.location.pathname.toLowerCase();
-        const navLinks = document.querySelectorAll('.nav-list a[href], .sidebar-menu a[href]');
-
-        document.querySelectorAll('.nav-item.active, .sidebar-item.active, li.active').forEach(el => el.classList.remove('active'));
-
-        navLinks.forEach(link => {
-            const href = link.getAttribute('href')?.toLowerCase();
-            if (href && href !== '#' && currentPath.includes(href)) {
-                const parentItem = link.closest('.nav-item, .sidebar-item, li');
-                if (parentItem) parentItem.classList.add('active');
-
-                const parentSubmenu = link.closest('.has-submenu');
-                if (parentSubmenu) {
-                    parentSubmenu.classList.add('submenu-open');
-                    const submenuLink = parentSubmenu.querySelector('a');
-                    if (submenuLink) submenuLink.setAttribute('aria-expanded', 'true');
-                }
-            }
-        });
-    }
-
-    function updateDashboardStyling() {
-        const page = getCurrentPage();
-        document.body.setAttribute('data-current-page', page);
-    }
-
-    function initUiEvents() {
-        if (window._uiEventsInitialized) return;
-        window._uiEventsInitialized = true;
-
-        document.body.addEventListener('click', async function(e) {
-            const logoutBtn = e.target.closest('.logout-btn, #logoutBtn');
-            if (logoutBtn) {
-                e.preventDefault();
-                console.log('🔒 [Main] تسجيل الخروج...');
-                logoutBtn.style.pointerEvents = 'none';
-                logoutBtn.disabled = true;
-
-                try {
-                    if (window.Auth && typeof window.Auth.logout === 'function') {
-                        await window.Auth.logout();
-                    } else {
-                        console.warn('⚠️ Auth غير متوفر، خروج احتياطي.');
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        window.location.replace('/auth/auth/login/login.html');
-                    }
-                } catch (error) {
-                    console.error('❌ فشل تسجيل الخروج:', error);
-                    window.location.replace('/auth/auth/login/login.html');
-                } finally {
-                    logoutBtn.style.pointerEvents = 'auto';
-                    logoutBtn.disabled = false;
-                }
-            }
-        });
-    }
-
-    function initMain() {
-        console.log('🚀 [Main] تهيئة واجهة المستخدم...');
-        initBackToDashboard();
-        initUiEvents();
-        updateDashboardStyling();
-        setActiveNavItem();
-
-        if (typeof window.initInvestments === 'function') window.initInvestments();
-    }
-
-    function handlePageChange() {
-        updateDashboardStyling();
-        setActiveNavItem();
-        if (typeof window.initInvestments === 'function') window.initInvestments();
-    }
-    window.addEventListener('popstate', handlePageChange);
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMain);
-    } else {
-        initMain();
-    }
-
-    window.TeraMain = {
-        initMain,
-        getCurrentPage,
-        refreshUI: handlePageChange,
-        showToast
     };
+
+    // ========== بدء التشغيل ==========
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
 })();
