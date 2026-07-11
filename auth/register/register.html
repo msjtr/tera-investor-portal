@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>إنشاء حساب شريك | بوابة الشركاء - تيرا</title>
-    
+    <title>إنشاء حساب | تيرا</title>
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/core.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
     <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="stylesheet" href="/assets/css/responsive.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
     <link rel="stylesheet" href="/auth/register/register.css">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    
     <style>
         :root {
             --primary: #028090;
             --primary-dark: #0A1B3F;
             --danger: #dc2626;
-            --success: #059669;
             --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
             --gray-200: #e2e8f0;
-            --gray-300: #d1d9e6;
             --gray-500: #64748b;
             --gray-700: #334155;
             --gray-900: #0A1B3F;
@@ -33,240 +28,53 @@
             --radius-lg: 16px;
             --radius-xl: 24px;
         }
-
         * { box-sizing: border-box; }
-
         body {
             font-family: 'Tajawal', sans-serif;
             background: #f1f5f9;
             margin: 0;
             color: #1e293b;
         }
-
         .auth-layout {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e6f7f5 100%);
+            background: linear-gradient(135deg, #f0f9ff, #e6f7f5);
             padding: 20px;
         }
-
         .auth-container {
+            max-width: 480px;
             width: 100%;
-            max-width: 580px;
-            background: #ffffff;
+            background: #fff;
             border-radius: var(--radius-xl);
-            box-shadow: 0 20px 60px rgba(2, 128, 144, 0.12);
             padding: 40px 32px 32px;
-            border: 1px solid rgba(2, 128, 144, 0.08);
-            transition: all 0.3s ease;
-            margin: 20px 0;
+            box-shadow: 0 20px 60px rgba(2, 128, 144, 0.12);
         }
-
-        .auth-container:hover {
-            box-shadow: 0 30px 80px rgba(2, 128, 144, 0.16);
-        }
-
-        .logo-img {
-            height: 52px;
-            width: auto;
-        }
-
-        .text-center { text-align: center; }
-        .mb-5 { margin-bottom: 32px; }
-        .mt-3 { margin-top: 16px; }
-
-        .portal-title {
-            font-family: 'Cairo', sans-serif;
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--gray-900);
-            margin: 0 0 4px;
-        }
-
-        .page-subtitle {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
-            margin: 0 0 8px;
-        }
-
-        .welcome-text {
-            font-size: 14px;
-            color: var(--gray-500);
-            margin: 0;
-            line-height: 1.6;
-        }
-
-        /* مؤشر الخطوات */
-        .stepper {
-            display: flex;
-            gap: 12px;
-            margin: 24px 0 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .step {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            background: var(--gray-200);
-            color: #94a3b8;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .step.active {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        /* صندوق التنبيه */
-        .alert-info-box {
-            background: #f0fdfa;
-            border-right: 4px solid var(--primary);
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            margin-bottom: 24px;
-        }
-
-        .alert-title {
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--gray-900);
-            margin: 0 0 8px;
-        }
-
-        .alert-list {
-            margin: 0;
-            padding-right: 20px;
-            font-size: 13px;
-            color: var(--gray-700);
-            line-height: 1.8;
-        }
-
-        /* المراحل */
-        .form-stage-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .form-stage-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .stage-header-title {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--gray-900);
-            margin-bottom: 16px;
-            border-bottom: 2px solid var(--gray-200);
-            padding-bottom: 8px;
-        }
-
-        /* حقول النموذج */
-        .form-field-group {
-            margin-bottom: 18px;
-        }
-
-        .field-label {
-            display: block;
-            font-weight: 700;
-            font-size: 14px;
-            color: #1e293b;
-            margin-bottom: 6px;
-        }
-
-        .required {
-            color: var(--danger);
-            margin-right: 2px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
+        .brand-logo-box { text-align: center; margin-bottom: 20px; }
+        .brand-logo-box img { height: 52px; width: auto; }
+        .portal-title { font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 800; color: var(--gray-900); text-align: center; margin: 0 0 4px; }
+        .page-subtitle { font-size: 18px; font-weight: 700; color: var(--primary); text-align: center; margin: 0 0 8px; }
+        .welcome-text { font-size: 14px; color: var(--gray-500); text-align: center; margin: 0 0 32px; line-height: 1.6; }
+        .form-field-group { margin-bottom: 20px; }
+        .field-label { display: block; font-weight: 700; font-size: 14px; color: #1e293b; margin-bottom: 6px; }
         .form-input-control {
             width: 100%;
-            padding: 12px 40px 12px 16px;
+            padding: 14px 16px;
             border: 2px solid var(--gray-200);
             border-radius: var(--radius-md);
             font-size: 15px;
-            font-family: 'Tajawal', sans-serif;
+            font-family: inherit;
             transition: border-color 0.3s, box-shadow 0.3s;
             background: var(--gray-50);
             color: var(--gray-900);
         }
-
         .form-input-control:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.10);
-            background: #ffffff;
+            background: #fff;
             outline: none;
         }
-
-        select.form-input-control {
-            padding-left: 16px;
-        }
-
-        .field-status-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 18px;
-            pointer-events: none;
-        }
-
-        .error-feedback-msg {
-            color: var(--danger);
-            font-size: 13px;
-            min-height: 20px;
-            margin-top: 4px;
-        }
-
-        .realtime-validation-box-mini ul {
-            margin: 6px 0 0;
-            padding-right: 20px;
-            font-size: 13px;
-            color: var(--gray-700);
-            list-style: none;
-        }
-
-        .realtime-validation-box-mini li {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .icon-marker {
-            font-size: 16px;
-        }
-
-        /* صف الدولة والجوال */
-        .row-flex {
-            display: flex;
-            gap: 16px;
-        }
-
-        .col-inline-5 {
-            flex: 0 0 40%;
-            min-width: 130px;
-        }
-
-        .col-inline-7 {
-            flex: 1;
-        }
-
-        /* إظهار كلمة المرور */
         .checkbox-toggle-label {
             display: flex;
             align-items: center;
@@ -274,114 +82,39 @@
             font-size: 14px;
             color: var(--gray-700);
             cursor: pointer;
-            margin-top: 6px;
+            margin-top: 8px;
         }
-
-        .checkbox-toggle-label input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
-        /* الاتفاقيات */
-        .agreements-scroll-container {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-md);
+        .checkbox-toggle-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+        .btn-submit-login {
+            width: 100%;
             padding: 16px;
-            background: #fafcfc;
-        }
-
-        .agreement-item {
-            margin-bottom: 12px;
-            padding: 8px 12px;
-            background: #ffffff;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--gray-200);
-        }
-
-        .agreement-item label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .agreement-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
-        .master-agree-box {
-            background: #f0fdfa;
-            border-color: var(--primary);
-        }
-
-        /* أزرار التنقل */
-        .form-navigation-actions-bar {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid var(--gray-200);
-        }
-
-        .btn-action-nav {
-            padding: 10px 28px;
+            background: linear-gradient(135deg, var(--primary), #0d9488);
+            color: #fff;
             border: none;
-            border-radius: var(--radius-md);
-            font-size: 15px;
-            font-weight: 700;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
             font-family: 'Tajawal', sans-serif;
             cursor: pointer;
             transition: all 0.3s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 6px;
-            white-space: nowrap;
+            justify-content: center;
+            gap: 8px;
         }
-
-        .btn-action-nav:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .btn-submit-login:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(2, 128, 144, 0.35); }
+        .btn-submit-login:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .bottom-routing-footer-links {
+            margin-top: 28px;
+            border-top: 1px solid var(--gray-200);
+            padding-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--gray-500);
         }
-
-        .btn-style-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn-style-primary:hover:not(:disabled) {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-style-secondary {
-            background: var(--gray-200);
-            color: #1e293b;
-        }
-
-        .btn-style-secondary:hover:not(:disabled) {
-            background: var(--gray-300);
-        }
-
-        .btn-style-success {
-            background: var(--success);
-            color: #fff;
-        }
-
-        .btn-style-success:hover:not(:disabled) {
-            background: #047857;
-            transform: translateY(-2px);
-        }
-
-        /* صندوق التنبيهات */
+        .bottom-routing-footer-links p { margin: 8px 0; }
+        .routing-link { color: var(--primary); font-weight: 700; text-decoration: none; }
+        .routing-link:hover { color: var(--primary-dark); text-decoration: underline; }
         .alert-box {
             display: none;
             align-items: center;
@@ -392,32 +125,8 @@
             font-weight: 700;
             font-size: 14px;
         }
-
-        .alert-box.show {
-            display: flex;
-        }
-
-        .alert-box.success {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
-        .alert-box.error {
-            background: #fef2f2;
-            color: #b91c1c;
-            border: 1px solid #fca5a5;
-        }
-
-        .alert-icon {
-            flex-shrink: 0;
-        }
-
-        .alert-message {
-            flex: 1;
-        }
-
-        /* اللودر */
+        .alert-box.show { display: flex; }
+        .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
         .tera-loader-overlay {
             display: none;
             position: fixed;
@@ -429,16 +138,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        .tera-loader-overlay .loader-content-card {
-            background: #fff;
-            border-radius: var(--radius-xl);
-            padding: 40px 48px;
-            min-width: 280px;
-            text-align: center;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-        }
-
         .spinning-infinity-ring {
             width: 56px;
             height: 56px;
@@ -446,296 +145,81 @@
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 0.9s linear infinite;
-            margin: 0 auto 16px;
+            margin-bottom: 16px;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loader-primary-heading {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--gray-900);
-            margin: 0 0 8px;
-        }
-
-        .creative-motivational-text {
-            font-size: 14px;
-            color: var(--gray-500);
-            margin: 0 0 16px;
-        }
-
-        .loading-progress-track {
-            width: 100%;
-            height: 4px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--primary), #0d9488);
-            border-radius: 4px;
-            transition: width 0.4s ease;
-        }
-
-        /* ========== تجاوب ========== */
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
-            .auth-container {
-                padding: 24px 20px;
-                border-radius: 20px;
-                max-width: 100%;
-            }
-
-            .portal-title {
-                font-size: 20px;
-            }
-
-            .page-subtitle {
-                font-size: 16px;
-            }
-
-            .stepper {
-                gap: 8px;
-            }
-
-            .step {
-                font-size: 12px;
-                padding: 6px 12px;
-            }
-
-            .row-flex {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .col-inline-5,
-            .col-inline-7 {
-                flex: 1 1 100%;
-                min-width: 100%;
-            }
-
-            .form-input-control {
-                font-size: 14px;
-                padding: 10px 36px 10px 14px;
-            }
-
-            .btn-action-nav {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
+            .auth-container { padding: 32px 24px 24px; }
+            .portal-title { font-size: 20px; }
+            .page-subtitle { font-size: 16px; }
+            .welcome-text { font-size: 13px; margin-bottom: 24px; }
+            .form-input-control { font-size: 14px; padding: 12px 14px; }
+            .btn-submit-login { padding: 14px; font-size: 15px; }
         }
-
         @media (max-width: 480px) {
-            .auth-layout {
-                padding: 10px;
-            }
-
-            .auth-container {
-                padding: 16px 14px;
-                border-radius: 16px;
-            }
-
-            .portal-title {
-                font-size: 18px;
-            }
-
-            .page-subtitle {
-                font-size: 14px;
-            }
-
-            .welcome-text {
-                font-size: 13px;
-            }
-
-            .logo-img {
-                height: 40px;
-            }
-
-            .stepper {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 6px;
-            }
-
-            .step {
-                text-align: center;
-                font-size: 11px;
-            }
-
-            .stage-header-title {
-                font-size: 15px;
-            }
-
-            .form-input-control {
-                font-size: 13px;
-                padding: 10px 32px 10px 12px;
-            }
-
-            .form-navigation-actions-bar {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .btn-action-nav {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .field-status-icon {
-                font-size: 16px;
-                left: 10px;
-            }
-
-            .tera-loader-overlay .loader-content-card {
-                padding: 24px 16px;
-                min-width: 240px;
-            }
+            .auth-layout { padding: 10px; }
+            .auth-container { padding: 24px 16px 20px; border-radius: 16px; }
+            .brand-logo-box img { height: 40px; }
+            .portal-title { font-size: 18px; }
+            .page-subtitle { font-size: 14px; }
+            .welcome-text { font-size: 12px; margin-bottom: 20px; }
+            .form-field-group { margin-bottom: 16px; }
+            .field-label { font-size: 13px; }
+            .form-input-control { font-size: 13px; padding: 10px 12px; }
+            .btn-submit-login { font-size: 14px; padding: 12px; }
+            .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 16px; }
+            .spinning-infinity-ring { width: 44px; height: 44px; }
         }
     </style>
 </head>
 <body>
     <div class="auth-layout">
         <div class="auth-container">
-            <div class="text-center mb-5">
-                <img src="/images/logo.svg" alt="تيرا - بوابة الشركاء" class="logo-img" 
-                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'40\'%3E%3Crect width=\'120\' height=\'40\' rx=\'6\' fill=\'%23028090\'/%3E%3Ctext x=\'60\' y=\'26\' font-family=\'Cairo,sans-serif\' font-size=\'20\' font-weight=\'bold\' fill=\'%23ffffff\' text-anchor=\'middle\'%3Eتيرا%3C/text%3E%3C/svg%3E'">
-                <h2 class="portal-title mt-3">بوابة الشركاء - تيرا</h2>
-                <h3 class="page-subtitle">إنشاء حساب شريك</h3>
-                <p class="welcome-text">مرحباً بك في بوابة الشركاء. يرجى استكمال البيانات التالية لإنشاء حساب جديد.</p>
+            <div class="brand-logo-box">
+                <img src="/images/logo.svg" alt="تيرا" onerror="this.src='data:image/svg+xml,...'">
             </div>
-
-            <div class="stepper">
-                <div class="step active" id="step-1">1 إنشاء الحساب والبيانات الأساسية</div>
-                <div class="step" id="step-2">2 الإقرارات والاتفاقيات</div>
-            </div>
-
-            <div class="alert-box" id="formAlert">
-                <span class="alert-icon" id="alertIcon"><i class="fas fa-exclamation-circle"></i></span>
-                <span class="alert-message" id="alertMessage"></span>
-            </div>
-
-            <div class="alert-info-box">
-                <h4 class="alert-title">🔔 ملاحظة مهمة</h4>
-                <ul class="alert-list">
-                    <li>🔔 يتم التحقق من جميع الحقول والمتطلبات بشكل فوري أثناء الإدخال.</li>
-                    <li>✅ ظهور علامة خضراء يعني أن المتطلب تم استيفاؤه بنجاح.</li>
-                    <li>❌ ظهور علامة حمراء يعني أن المتطلب غير مستوفى أو يحتوي على خطأ.</li>
-                    <li>⚠️ لا يمكن الانتقال إلى المرحلة التالية حتى تتحول جميع المتطلبات الإلزامية إلى اللون الأخضر.</li>
-                    <li>🔄 يتم تحديث حالة التحقق تلقائياً عند تعديل البيانات.</li>
-                    <li>📋 يتم عرض سبب الخطأ أسفل الحقل مباشرة لمساعدة المستخدم على تصحيحه.</li>
-                </ul>
-            </div>
-
-            <form id="teraRegisterForm" novalidate>
-                <div class="form-stage-section active" id="stage-1-content">
-                    <h4 class="stage-header-title">المرحلة الأولى: إنشاء الحساب والبيانات الأساسية</h4>
-                    
-                    <div class="form-field-group">
-                        <label class="field-label">الاسم الكامل <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="text" id="fullname_ar" class="form-input-control" placeholder="أدخل الاسم الكامل باللغة العربية" autocomplete="name">
-                            <span class="field-status-icon" id="name_ar-status">❌</span>
-                        </div>
-                        <div class="error-feedback-msg" id="name_ar-error"></div>
-                        <div class="realtime-validation-box-mini">
-                            <ul>
-                                <li id="nar-rule-char"><span class="icon-marker">❌</span> أحرف عربية فقط</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="row-flex">
-                        <div class="col-inline-5">
-                            <div class="form-field-group">
-                                <label class="field-label">مفتاح الدولة <span class="required">*</span></label>
-                                <div class="input-wrapper">
-                                    <select id="country_code_select" class="form-input-control">
-                                        <option value="+966" selected>🇸🇦 السعودية +966</option>
-                                        <option value="+971">🇦🇪 الإمارات +971</option>
-                                        <option value="+965">🇰🇼 الكويت +965</option>
-                                        <option value="+973">🇧🇭 البحرين +973</option>
-                                        <option value="+974">🇶🇦 قطر +974</option>
-                                        <option value="+968">🇴🇲 عُمان +968</option>
-                                        <option value="+20">🇪🇬 مصر +20</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-inline-7">
-                            <div class="form-field-group">
-                                <label class="field-label">رقم الجوال <span class="required">*</span></label>
-                                <div class="input-wrapper">
-                                    <input type="text" id="mobile_number" class="form-input-control" placeholder="5XXXXXXXX" autocomplete="tel">
-                                    <span class="field-status-icon" id="mobile-status">❌</span>
-                                </div>
-                                <div class="error-feedback-msg" id="mobile-error"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">البريد الإلكتروني <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="email">
-                            <span class="field-status-icon" id="email-status">❌</span>
-                        </div>
-                        <div class="error-feedback-msg" id="email-error"></div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">اسم المستخدم <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="text" id="username" class="form-input-control" placeholder="أدخل اسم المستخدم بالإنجليزية" autocomplete="username">
-                            <span class="field-status-icon" id="username-status">❌</span>
-                        </div>
-                        <div class="error-feedback-msg" id="username-error"></div>
-                    </div>
-
-                    <div class="form-field-group">
-                        <label class="field-label">كلمة المرور <span class="required">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية" autocomplete="new-password">
-                            <span class="field-status-icon" id="password-status">❌</span>
-                        </div>
-                        <label class="checkbox-toggle-label"><input type="checkbox" id="show-password"> إظهار كلمة المرور</label>
-                    </div>
+            <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
+            <h3 class="page-subtitle">إنشاء حساب جديد</h3>
+            <p class="welcome-text">أدخل بياناتك الأساسية لإنشاء حساب والبدء في رحلتك الاستثمارية.</p>
+            <div class="alert-box error" id="registerError" style="display:none;"></div>
+            <form id="registerForm" novalidate>
+                <div class="form-field-group">
+                    <label class="field-label" for="fullName">الاسم الكامل <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="fullName" class="form-input-control" placeholder="أدخل اسمك الكامل" autocomplete="name" required>
                 </div>
-
-                <div class="form-stage-section" id="stage-2-content">
-                    <h4 class="stage-header-title">المرحلة الثانية: الإقرارات والاتفاقيات</h4>
-                    <div class="agreements-scroll-container">
-                        <div class="agreement-item master-agree-box">
-                            <label><input type="checkbox" id="master-global-agree"> <strong>أوافق على جميع الشروط والأحكام.</strong></label>
-                        </div>
-                    </div>
+                <div class="form-field-group">
+                    <label class="field-label" for="email">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
+                    <input type="email" id="email" class="form-input-control" placeholder="example@domain.com" autocomplete="email" required>
                 </div>
-
-                <div class="form-navigation-actions-bar">
-                    <button type="button" class="btn-action-nav btn-style-secondary" id="action-prev-btn" style="visibility: hidden;">السابق</button>
-                    <button type="button" class="btn-action-nav btn-style-primary" id="action-next-btn">التالي</button>
-                    <button type="button" class="btn-action-nav btn-style-success" id="action-submit-btn" style="display: none;" disabled>إنشاء حساب شريك</button>
+                <div class="form-field-group">
+                    <label class="field-label" for="password">كلمة المرور <span style="color:var(--danger)">*</span></label>
+                    <input type="password" id="password" class="form-input-control" placeholder="أدخل كلمة مرور قوية" autocomplete="new-password" required>
+                    <label class="checkbox-toggle-label" for="togglePassword">
+                        <input type="checkbox" id="togglePassword"> <i class="fas fa-eye"></i> إظهار كلمة المرور
+                    </label>
                 </div>
+                <div class="form-field-group">
+                    <label class="field-label" for="confirmPassword">تأكيد كلمة المرور <span style="color:var(--danger)">*</span></label>
+                    <input type="password" id="confirmPassword" class="form-input-control" placeholder="أعد إدخال كلمة المرور" autocomplete="new-password" required>
+                    <label class="checkbox-toggle-label" for="toggleConfirmPassword">
+                        <input type="checkbox" id="toggleConfirmPassword"> <i class="fas fa-eye"></i> إظهار كلمة المرور
+                    </label>
+                </div>
+                <button type="submit" class="btn-submit-login" id="registerBtn"><i class="fas fa-user-plus"></i> إنشاء حساب جديد</button>
             </form>
-        </div>
-    </div>
-
-    <div class="tera-loader-overlay" id="creativeLoaderScreen">
-        <div class="loader-content-card">
-            <div class="spinning-infinity-ring"></div>
-            <h4 class="loader-primary-heading">مرحباً بك في أفق تيرا</h4>
-            <p class="creative-motivational-text" id="creativeQuoteText">جاري إنشاء حسابك الاستثماري...</p>
-            <div class="loading-progress-track">
-                <div class="progress-fill-bar" id="progressFillBar"></div>
+            <div class="bottom-routing-footer-links">
+                <p>لديك حساب بالفعل؟ <a href="/auth/auth/login/login.html" class="routing-link">تسجيل الدخول</a></p>
+                <p><a href="/index.html" style="color: var(--gray-500);"><i class="fa-solid fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
+        <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display:none;">
+            <div class="spinning-infinity-ring"></div>
+            <p style="color:#fff; font-weight:700;">جاري إنشاء الحساب...</p>
+        </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
     <script src="/auth/register/register.js"></script>
 </body>
 </html>
