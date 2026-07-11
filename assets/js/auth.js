@@ -1,6 +1,6 @@
 /**
- * auth.js – نظام المصادقة المركزي (v4 - مستقر)
- * يعتمد على supabase-client.js لتوفير Supabase
+ * auth.js – نظام المصادقة المركزي (v5)
+ * يدعم تدفق OTP + كلمة مرور دون مسح بيانات مؤقتة
  */
 (function() {
     let supabase;
@@ -9,20 +9,21 @@
         if (supabase) return supabase;
         supabase = window.teraSupabase || await window.waitForSupabase?.();
         if (!supabase) {
-            console.error('auth.js: Supabase غير متوفر. تأكد من تحميل supabase-client.js أولاً.');
+            console.error('auth.js: Supabase غير متوفر.');
         }
         return supabase;
     }
 
     function validatePassword(password) {
         if (!password || password.length < 8) return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
-        if (!/[A-Z]/.test(password)) return 'يجب أن تحتوي كلمة المرور على حرف كبير (A-Z)';
-        if (!/[a-z]/.test(password)) return 'يجب أن تحتوي كلمة المرور على حرف صغير (a-z)';
+        if (!/[A-Z]/.test(password)) return 'يجب أن تحتوي كلمة المرور على حرف كبير';
+        if (!/[a-z]/.test(password)) return 'يجب أن تحتوي كلمة المرور على حرف صغير';
         if (!/[0-9]/.test(password)) return 'يجب أن تحتوي كلمة المرور على رقم';
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return 'يجب أن تحتوي كلمة المرور على رمز خاص';
         return null;
     }
 
+    // تسجيل الدخول بالبريد وكلمة المرور (جلسة كاملة، بدون OTP)
     async function login(email, password) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -31,6 +32,7 @@
         return data;
     }
 
+    // إرسال OTP فقط (لا يتحقق من كلمة المرور)
     async function sendOTP(email) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -39,6 +41,7 @@
         return data;
     }
 
+    // التحقق من OTP
     async function verifyOTP(email, token) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -49,6 +52,31 @@
         });
         if (error) throw error;
         return data;
+    }
+
+    // التدفق الجديد: التحقق من كلمة المرور ثم إرسال OTP
+    async function loginWithPasswordAndOTP(email, password) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+
+        // 1. التحقق من صحة البريد وكلمة المرور
+        const { error: signInError } = await sb.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        // 2. إلغاء الجلسة المؤقتة التي أنشأتها signInWithPassword
+        await sb.auth.signOut();
+
+        // 3. إرسال رمز OTP
+        const { error: otpError } = await sb.auth.signInWithOtp({
+            email,
+            options: { shouldCreateUser: false }
+        });
+        if (otpError) throw otpError;
+
+        // 4. تخزين البريد للتحقق
+        sessionStorage.setItem('otpEmail', email);
+
+        return { success: true };
     }
 
     async function register(email, password, metadata = {}) {
@@ -84,8 +112,10 @@
     async function logout() {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
-        const { error } = await sb.auth.signOut();
-        if (error) throw error;
+        await sb.auth.signOut();
+        // تنظيف اختياري (يمكن استدعاء هذه الدالة من الزر)
+        localStorage.removeItem('rememberMe');
+        sessionStorage.clear();
     }
 
     async function getSession() {
@@ -105,13 +135,11 @@
     function onAuthStateChange(callback) {
         getSupabase().then(sb => {
             if (!sb) return;
-            sb.auth.onAuthStateChange((event, session) => {
-                callback(event, session);
-            });
+            sb.auth.onAuthStateChange((event, session) => callback(event, session));
         });
     }
 
-    // الدالة المهمة: تفحص الجلسة وتنظف التالفة دون حلقة
+    // التحقق من الجلسة لحماية الصفحات (لا تمسح sessionStorage بالكامل)
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         const sb = await getSupabase();
         if (!sb) {
@@ -121,10 +149,10 @@
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // جلسة غير صالحة - نسجل الخروج وننظف
+                // جلسة غير صالحة - نسجل الخروج وننظف جزئياً
                 await sb.auth.signOut();
                 localStorage.removeItem('rememberMe');
-                sessionStorage.clear();
+                // لا نمسح sessionStorage هنا لنحافظ على otpEmail إن وجد
                 window.location.replace(redirectUrl);
                 return null;
             }
@@ -139,6 +167,7 @@
         login,
         sendOTP,
         verifyOTP,
+        loginWithPasswordAndOTP,  // الدالة الجديدة الموصى بها
         register,
         resetPassword,
         updatePassword,
@@ -150,5 +179,5 @@
         validatePassword
     };
 
-    console.log('auth.js: نظام المصادقة المركزي جاهز');
+    console.log('auth.js v5 جاهز');
 })();
