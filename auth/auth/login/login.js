@@ -1,6 +1,6 @@
 /**
- * login.js – تدفق آمن: تحقق من كلمة المرور -> إرسال OTP -> صفحة التحقق
- * يعتمد على Auth.loginWithPasswordAndOTP من auth.js
+ * login.js – تدفق آمن (محسّن)
+ * يعتمد على Auth.loginWithPasswordAndOTP و Auth.getUser
  */
 (function() {
     let supabase;
@@ -13,12 +13,9 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    if (loaderScreen) loaderScreen.style.display = 'none';
-
-    async function getSupabase() {
-        if (supabase) return supabase;
-        supabase = window.teraSupabase || await window.waitForSupabase?.();
-        return supabase;
+    // إخفاء شاشة التحميل مباشرة، مع إظهارها مؤقتًا أثناء فحص الجلسة
+    if (loaderScreen) {
+        loaderScreen.style.display = 'flex';
     }
 
     function showError(message) {
@@ -64,18 +61,19 @@
             return;
         }
 
+        if (!window.Auth) {
+            showError('خدمة المصادقة غير متاحة مؤقتاً، حاول لاحقاً.');
+            return;
+        }
+
         if (loginBtn) {
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من البيانات...';
         }
 
         try {
-            // استخدام الدالة المركزية من auth.js
             await window.Auth.loginWithPasswordAndOTP(email, password);
-
-            // تم إرسال OTP بنجاح -> توجيه إلى صفحة التحقق
             window.location.href = '/auth/verify-otp.html';
-
         } catch (error) {
             console.error('خطأ:', error);
             let message = 'حدث خطأ، حاول مرة أخرى';
@@ -95,29 +93,46 @@
         }
     }
 
-    if (form) {
-        form.addEventListener('submit', handleLogin);
-    }
+    if (form) form.addEventListener('submit', handleLogin);
     if (passwordInput) {
         passwordInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleLogin(e);
         });
     }
 
-    // فحص الجلسة السابقة
+    // فحص الجلسة السابقة باستخدام الدوال المركزية
     async function checkExistingSession() {
         try {
-            const sb = await getSupabase();
-            if (!sb) return;
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) return;
-            const { data: { user }, error } = await sb.auth.getUser();
-            if (error || !user) {
-                await sb.auth.signOut();
-                return;
+            // الانتظار حتى يصبح Auth متاحاً (إذا لم يكن)
+            if (!window.Auth) {
+                // محاولة انتظار قصيرة
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
-            window.location.href = '/pages/dashboard/index.html';
-        } catch (e) {}
+            if (window.Auth) {
+                const user = await window.Auth.getUser();
+                if (user) {
+                    // جلسة صالحة، انتقل للوحة التحكم
+                    window.location.href = '/pages/dashboard/index.html';
+                    return;
+                }
+            } else {
+                // fallback للمباشرة إذا لم يوجد Auth
+                const sb = window.teraSupabase || await window.waitForSupabase?.();
+                if (sb) {
+                    const { data: { user } } = await sb.auth.getUser();
+                    if (user) {
+                        window.location.href = '/pages/dashboard/index.html';
+                        return;
+                    }
+                }
+            }
+        } catch (e) {
+            // تجاهل الأخطاء، ابق في صفحة الدخول
+        } finally {
+            // إخفاء شاشة التحميل بعد الفحص
+            if (loaderScreen) loaderScreen.style.display = 'none';
+        }
     }
+
     checkExistingSession();
 })();
