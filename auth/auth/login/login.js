@@ -1,8 +1,11 @@
 /**
- * login.js – صفحة تسجيل الدخول (مستقر بالكامل)
- * يعتمد على Auth.loginWithPasswordAndOTP و Auth.getUser
+ * login.js – نسخة مستقرة تمامًا (مضادة للحلقات)
  */
 (function() {
+    // منع التنفيذ المتكرر
+    if (window.__loginInitialized) return;
+    window.__loginInitialized = true;
+
     const form = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -11,7 +14,9 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // إخفاء شاشة التحميل مبدئيًا
+    let sessionCheckDone = false;
+
+    // إخفاء شاشة التحميل فوراً
     if (loaderScreen) loaderScreen.style.display = 'none';
 
     function showError(message) {
@@ -25,7 +30,6 @@
         if (errorMsg) errorMsg.style.display = 'none';
     }
 
-    // إظهار/إخفاء كلمة المرور
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -97,22 +101,26 @@
         });
     }
 
-    // فحص الجلسة مرة واحدة فقط مع آلية آمنة
+    // فحص الجلسة لمرة واحدة فقط
     async function checkExistingSession() {
+        if (sessionCheckDone) return;
+        sessionCheckDone = true;
+
+        // تعطيل الزر أثناء الفحص
+        if (loginBtn) {
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من الجلسة...';
+        }
+
         try {
-            // انتظر قليلاً لتحميل auth.js إذا تأخر
-            if (!window.Auth) {
-                await new Promise(resolve => setTimeout(resolve, 600));
-            }
-            if (window.Auth) {
-                const user = await window.Auth.getUser();
-                if (user) {
-                    // الجلسة صالحة، انتقل للوحة التحكم
+            if (window.Auth && window.Auth.isSessionValid) {
+                const valid = await window.Auth.isSessionValid();
+                if (valid) {
                     window.location.replace('/pages/dashboard/index.html');
                     return;
                 }
             } else {
-                // fallback: استخدم Supabase مباشرة
+                // fallback
                 const sb = window.teraSupabase || await window.waitForSupabase?.();
                 if (sb) {
                     const { data: { user } } = await sb.auth.getUser();
@@ -123,16 +131,20 @@
                 }
             }
         } catch (e) {
-            // أي خطأ، ابق في صفحة الدخول
+            // أي خطأ، تجاهل وابق في الصفحة
         } finally {
-            // تأكد من إخفاء شاشة التحميل بعد الفحص
-            if (loaderScreen) loaderScreen.style.display = 'none';
+            // إعادة تمكين الزر
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
+            }
         }
     }
 
-    // بدء الفحص بعد تحميل الصفحة بوقت قصير جدًا
+    // تنفيذ الفحص بعد تحميل الصفحة بالكامل
     window.addEventListener('load', () => {
-        setTimeout(checkExistingSession, 100);
+        // تأخير بسيط لضمان تحميل auth.js
+        setTimeout(checkExistingSession, 300);
     });
 
 })();
