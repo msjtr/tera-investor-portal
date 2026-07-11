@@ -1,20 +1,27 @@
 /**
- * security-registered-devices.js – v12 (محسّن)
- * - يعالج خطأ 401 عند إنهاء الجلسة برسالة واضحة
- * - يعرض تفاصيل الموقع من LocationIQ كخطة بديلة إن لم تكن مخزنة
- * - مؤقت الخمول ينهي الجلسة الحالية فقط
- * - فحص صلاحية الجلسة قبل التحديث
+ * security-registered-devices.js – v13 (متوافق مع الوحدات)
+ * يستخدم UIHelpers, SessionManager, LocationServices عند توفرها
+ * يحتفظ بوظائف احتياطية لضمان العمل في جميع الحالات
  */
 (function() {
     let supabase, currentUser, sessions = [];
-    let idleTimer, idleWarningTimer;
     const IDLE_TIME = 5 * 60 * 1000;
-    const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
 
+    // دوال مساعدة احتياطية (تُستخدم إذا لم تكن UIHelpers محملة)
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(s) {
         const l = { active:'نشطة', logged_out:'تم تسجيل الخروج', timeout:'انتهت بسبب عدم النشاط', terminated_by_system:'أنهيت بواسطة النظام', terminated_by_user:'أنهيت بواسطة المستخدم' };
         return l[s] || s;
+    }
+    function updateHeader(user) {
+        if (window.UIHelpers?.updateHeader) {
+            return window.UIHelpers.updateHeader(user);
+        }
+        const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (nameEl) nameEl.textContent = name;
+        if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
     }
 
     async function init() {
@@ -28,35 +35,40 @@
         currentUser = user;
         supabase = window.teraSupabase || await window.waitForSupabase();
 
-        await updateHeader(user);
+        updateHeader(user);
         await fetchSessions();
         bindEvents();
-        initIdleTimer();
-    }
 
-    async function updateHeader(user) {
-        const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-        const nameEl = document.getElementById('headerUserName');
-        const avatarEl = document.getElementById('headerAvatar');
-        if (nameEl) nameEl.textContent = name;
-        if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+        // استخدام ActivityTracker إذا كان متوفراً
+        if (window.ActivityTracker) {
+            window.ActivityTracker.startIdleTimer(handleIdleTimeout, currentUser.id);
+        } else {
+            initLegacyIdleTimer();
+        }
     }
 
     async function fetchSessions() {
-        const { data, error } = await supabase
-            .from('user_login_sessions')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('login_at', { ascending: false });
-
-        if (error) {
-            console.error('فشل جلب الجلسات:', error);
-            const tbody = document.getElementById('sessionsTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">تعذر تحميل الجلسات. حاول مجدداً لاحقاً.</td></tr>';
-            return;
+        // استخدام SessionManager إذا كان متوفراً
+        if (window.SessionManager?.fetchSessions) {
+            sessions = await window.SessionManager.fetchSessions(currentUser.id);
+        } else {
+            const { data, error } = await supabase
+                .from('user_login_sessions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('login_at', { ascending: false });
+            if (error) {
+                console.error('فشل جلب الجلسات:', error);
+                sessions = [];
+            } else {
+                sessions = data || [];
+            }
         }
 
-        sessions = data || [];
+        if (sessions.length === 0) {
+            const tbody = document.getElementById('sessionsTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">تعذر تحميل الجلسات. حاول مجدداً لاحقاً.</td></tr>';
+        }
         updateStats();
         applyFilters();
     }
@@ -99,11 +111,14 @@
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;">لا توجد جلسات</td></tr>';
             return;
         }
+        const fmt = window.UIHelpers?.formatDate || formatDate;
+        const lbl = window.UIHelpers?.getStatusLabel || getStatusLabel;
+
         tbody.innerHTML = list.map(s => `
             <tr>
                 <td>${s.session_number || '-'}</td>
-                <td>${formatDate(s.login_at)}</td>
-                <td><span class="status-badge status-${s.status}">${getStatusLabel(s.status)}</span></td>
+                <td>${fmt(s.login_at)}</td>
+                <td><span class="status-badge status-${s.status}">${lbl(s.status)}</span></td>
                 <td><button class="btn-action" onclick="window.showSessionDetail('${s.id}')"><i class="fas fa-eye"></i> عرض</button></td>
                 <td>${s.status === 'active' ? `<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>` : '-'}</td>
             </tr>
@@ -113,30 +128,32 @@
     window.terminateSession = async function(sessionId) {
         if (!confirm('إنهاء هذه الجلسة؟')) return;
 
-        // التحقق من صلاحية الجلسة الحالية
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            alert('انتهت جلستك. يرجى تسجيل الدخول مجدداً.');
-            window.Auth?.logout();
-            return;
-        }
-
         const sessionToTerminate = sessions.find(s => s.id === sessionId);
         const isCurrent = sessionToTerminate && sessionToTerminate.is_current_session;
 
-        const { error } = await supabase
-            .from('user_login_sessions')
-            .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
-            .eq('id', sessionId)
-            .eq('user_id', currentUser.id);
-
-        if (error) {
-            console.error('فشل إنهاء الجلسة:', error);
-            if (error.code === '42501' || error.message?.includes('permission denied')) {
-                alert('ليس لديك صلاحية لإنهاء هذه الجلسة. تأكد من أنك مسجل الدخول بشكل صحيح، أو تواصل مع الدعم.');
-            } else {
-                alert('حدث خطأ أثناء إنهاء الجلسة.');
+        let success = false;
+        if (window.SessionManager?.terminateSession) {
+            success = await window.SessionManager.terminateSession(sessionId, currentUser.id);
+        } else {
+            const { error } = await supabase
+                .from('user_login_sessions')
+                .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+                .eq('id', sessionId)
+                .eq('user_id', currentUser.id);
+            success = !error;
+            if (error) {
+                console.error('فشل إنهاء الجلسة:', error);
+                if (error.code === '42501' || error.message?.includes('permission denied')) {
+                    alert('ليس لديك صلاحية لإنهاء هذه الجلسة. تأكد من أنك مسجل الدخول بشكل صحيح، أو تواصل مع الدعم.');
+                } else {
+                    alert('حدث خطأ أثناء إنهاء الجلسة.');
+                }
+                return;
             }
+        }
+
+        if (!success) {
+            alert('تعذر إنهاء الجلسة.');
             return;
         }
 
@@ -148,30 +165,6 @@
         await fetchSessions();
     };
 
-    // دالة مساعدة لجلب تفاصيل الموقع من LocationIQ عند الحاجة
-    async function fetchLocationDetails(lat, lon) {
-        if (!lat || !lon) return null;
-        const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('LocationIQ failed');
-            const data = await res.json();
-            return {
-                neighbourhood: data.neighbourhood || data.suburb || data.village || '',
-                city: data.city || '',
-                province: data.province || '',
-                state: data.state || '',
-                postcode: data.postcode || '',
-                country: data.country || '',
-                country_code: data.country_code || '',
-                display_name: data.display_name || ''
-            };
-        } catch (e) {
-            console.warn('تعذر جلب تفاصيل الموقع من LocationIQ:', e);
-            return null;
-        }
-    }
-
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -181,15 +174,15 @@
         if (!detailContent || !modal) return;
         modal.classList.add('show');
 
-        // محاولة جلب تفاصيل إضافية إذا كانت البيانات الأساسية ناقصة
         let extraLocation = null;
         if (session.latitude && session.longitude && (!session.city || !session.country)) {
-            extraLocation = await fetchLocationDetails(session.latitude, session.longitude);
+            if (window.LocationServices?.fetchLocationIQ) {
+                extraLocation = await window.LocationServices.fetchLocationIQ(session.latitude, session.longitude);
+            }
         }
 
         function getLocationRows() {
             const rows = [];
-            // استخدام البيانات المخزنة أو المسترجعة
             const country = session.country || extraLocation?.country;
             const country_code = session.country_code || extraLocation?.country_code;
             const city = session.city || extraLocation?.city;
@@ -222,7 +215,7 @@
                     ['نوع الجهاز', session.device_type || '—'],
                     ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''}` : '—'],
                     ['المنصة', session.platform || '—'],
-                    ['المعالج (عدد النوى)', session.cpu_architecture || '—'],
+                    ['المعالج (عدد النوى)', session.cpu_architecture || session.cpu_cores || '—'],
                     ['الذاكرة (GB)', session.device_memory || '—']
                 ]
             },
@@ -269,8 +262,8 @@
                 title: 'معلومات الجلسة', icon: 'fa-clock',
                 rows: [
                     ['رقم الجلسة', session.session_number],
-                    ['وقت الدخول', formatDate(session.login_at)],
-                    ['وقت الخروج', session.logout_at ? formatDate(session.logout_at) : 'مازالت نشطة']
+                    ['وقت الدخول', (window.UIHelpers?.formatDate || formatDate)(session.login_at)],
+                    ['وقت الخروج', session.logout_at ? (window.UIHelpers?.formatDate || formatDate)(session.logout_at) : 'مازالت نشطة']
                 ]
             }
         ];
@@ -305,38 +298,41 @@
                 if (e.target === modal) modal.classList.remove('show');
             });
         }
-
-        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => {
-            document.addEventListener(ev, resetIdleTimer);
-        });
     }
 
-    function initIdleTimer() { resetIdleTimer(); }
-
-    function resetIdleTimer() {
+    // مؤقت الخمول الاحتياطي (يُستخدم فقط إذا لم يكن ActivityTracker موجوداً)
+    let idleTimer, idleWarningTimer;
+    function initLegacyIdleTimer() {
+        resetLegacyTimer();
+        ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => {
+            document.addEventListener(ev, resetLegacyTimer);
+        });
+    }
+    function resetLegacyTimer() {
         clearTimeout(idleTimer);
         clearTimeout(idleWarningTimer);
         const w = document.getElementById('idleWarning');
         if (w) w.style.display = 'none';
+        idleWarningTimer = setTimeout(() => { if (w) w.style.display = 'flex'; }, IDLE_TIME - 30000);
+        idleTimer = setTimeout(handleIdleTimeout, IDLE_TIME);
+    }
 
-        idleWarningTimer = setTimeout(() => {
-            if (w) w.style.display = 'flex';
-        }, IDLE_TIME - 30000);
-
-        idleTimer = setTimeout(async () => {
-            // إنهاء الجلسة الحالية فقط (is_current_session = true)
+    async function handleIdleTimeout() {
+        // إنهاء الجلسة الحالية فقط
+        const currentSession = sessions.find(s => s.is_current_session);
+        if (currentSession && window.SessionManager?.terminateSession) {
+            await window.SessionManager.terminateSession(currentSession.id, currentUser.id);
+        } else if (currentSession) {
             await supabase.from('user_login_sessions')
                 .update({ status: 'timeout', logout_at: new Date().toISOString() })
-                .eq('user_id', currentUser.id)
-                .eq('status', 'active')
-                .eq('is_current_session', true);
-
-            if (window.Auth?.logout) {
-                await window.Auth.logout();
-            } else {
-                window.location.href = '/auth/auth/login/login.html?reason=timeout';
-            }
-        }, IDLE_TIME);
+                .eq('id', currentSession.id)
+                .eq('user_id', currentUser.id);
+        }
+        if (window.Auth?.logout) {
+            await window.Auth.logout();
+        } else {
+            window.location.href = '/auth/auth/login/login.html?reason=timeout';
+        }
     }
 
     init();
