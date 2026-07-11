@@ -1,11 +1,13 @@
 /**
- * verify-otp.js – v2
- * التحقق من رمز OTP (كلمة المرور لمرة واحدة)
+ * verify-otp.js – v3 (يدعم OTP بطول 8 أرقام)
+ * التحقق من رمز OTP – متوافق مع Magic link أو OTP عبر البريد
  */
 (function() {
+    const OTP_LENGTH = 8; // عدد الأرقام (8 كما هو مطلوب)
+
     let supabase;
 
-    // عناصر الصفحة
+    // العناصر
     const otpInputs = document.querySelectorAll('.otp-input');
     const verifyBtn = document.getElementById('verifyOtpBtn');
     const resendBtn = document.getElementById('resendOtpBtn');
@@ -16,21 +18,12 @@
     let countdownInterval;
     const RESEND_TIMEOUT = 60; // ثانية
 
-    // دالة تهيئة
     async function init() {
-        // الحصول على عميل Supabase
-        supabase = window.teraSupabase || await window.waitForSupabase();
+        supabase = window.teraSupabase || await window.waitForSupabase?.();
 
-        // التأكد من وجود جلسة مؤقتة (لإعادة إرسال الرمز) أو التعامل مع البريد الإلكتروني
         const email = sessionStorage.getItem('otpEmail');
         if (!email) {
-            // إذا لم يتوفر بريد إلكتروني، قد يكون المستخدم دخل بطريقة خاطئة
-            // يمكن التوجيه إلى صفحة تسجيل الدخول
-            if (!window.location.pathname.includes('reset-password')) {
-                // في حالة صفحة verify-otp العادية، يجب أن يكون هناك بريد
-                // نعرض رسالة تحذير
-                console.warn('البريد الإلكتروني غير متوفر في sessionStorage');
-            }
+            console.warn('البريد الإلكتروني غير متوفر في sessionStorage');
         }
 
         bindEvents();
@@ -38,20 +31,35 @@
     }
 
     function bindEvents() {
-        // التنقل التلقائي بين حقول الإدخال
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                const value = e.target.value;
+                const value = e.target.value.replace(/[^0-9]/g, ''); // السماح بالأرقام فقط
+                e.target.value = value;
+
                 if (value && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
-                // التحقق من اكتمال الرمز
                 checkComplete();
             });
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     otpInputs[index - 1].focus();
+                }
+            });
+
+            // لصق الكود كاملاً
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = paste.replace(/[^0-9]/g, '');
+                if (digits.length === OTP_LENGTH) {
+                    for (let i = 0; i < OTP_LENGTH; i++) {
+                        if (otpInputs[i]) {
+                            otpInputs[i].value = digits[i] || '';
+                        }
+                    }
+                    checkComplete();
                 }
             });
         });
@@ -65,7 +73,6 @@
         }
     }
 
-    // الحصول على الرمز المدخل
     function getOtpCode() {
         let code = '';
         otpInputs.forEach(input => {
@@ -74,15 +81,13 @@
         return code;
     }
 
-    // التحقق من اكتمال الرمز (6 أرقام)
     function checkComplete() {
         const code = getOtpCode();
         if (verifyBtn) {
-            verifyBtn.disabled = code.length !== otpInputs.length;
+            verifyBtn.disabled = code.length !== OTP_LENGTH;
         }
     }
 
-    // إظهار الخطأ
     function showError(message) {
         if (errorMsg) {
             errorMsg.textContent = message;
@@ -91,16 +96,14 @@
         if (successMsg) successMsg.style.display = 'none';
     }
 
-    // إخفاء الخطأ
     function clearMessages() {
         if (errorMsg) errorMsg.style.display = 'none';
         if (successMsg) successMsg.style.display = 'none';
     }
 
-    // معالجة التحقق من الرمز
     async function handleVerify() {
         const code = getOtpCode();
-        if (code.length !== otpInputs.length) {
+        if (code.length !== OTP_LENGTH) {
             showError('يرجى إدخال رمز التحقق كاملاً');
             return;
         }
@@ -114,41 +117,41 @@
         const email = sessionStorage.getItem('otpEmail');
 
         try {
-            // محاولة التحقق من الرمز باستخدام Supabase
-            const { data, error } = await supabase.auth.verifyOtp({
+            const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
+            if (!sb) throw new Error('خدمة المصادقة غير متوفرة');
+
+            // محاولة التحقق من الرمز (يدعم email OTP و magic link)
+            const { data, error } = await sb.auth.verifyOtp({
                 email: email,
                 token: code,
-                type: 'email' // يمكن أن يكون 'email' أو 'sms' حسب طريقة الإرسال
+                type: 'email' // يمكن أن يكون 'email' أو 'sms'
             });
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
             // التحقق الناجح
             if (data?.session) {
-                // مسح البيانات المؤقتة
                 sessionStorage.removeItem('otpEmail');
-
                 if (successMsg) {
                     successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
                     successMsg.style.display = 'block';
                 }
-
-                // التوجيه إلى الصفحة الرئيسية بعد تأخير قصير
                 setTimeout(() => {
                     window.location.href = '/pages/dashboard/index.html';
                 }, 1500);
             } else {
-                // قد يكون هناك حالة بدون جلسة (مثل إعادة تعيين كلمة المرور)
-                // نتركها للصفحة التي تستدعي OTP لتحديد السلوك
+                // في حالة Magic link أو إعادة تعيين كلمة مرور
                 if (successMsg) {
                     successMsg.textContent = 'تم التحقق بنجاح';
                     successMsg.style.display = 'block';
                 }
-                // تشغيل callback مخصص إذا وجدت (لصفحات مثل تغيير البريد أو الجوال)
                 if (window.onOtpVerified) {
                     window.onOtpVerified(code);
+                } else {
+                    // السلوك الافتراضي: التوجيه للوحة التحكم
+                    setTimeout(() => {
+                        window.location.href = '/pages/dashboard/index.html';
+                    }, 1000);
                 }
             }
         } catch (error) {
@@ -156,12 +159,11 @@
             showError(getArabicErrorMessage(error.message));
             if (verifyBtn) {
                 verifyBtn.disabled = false;
-                verifyBtn.textContent = 'تحقق';
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
             }
         }
     }
 
-    // إعادة إرسال الرمز
     async function handleResend() {
         const email = sessionStorage.getItem('otpEmail');
         if (!email) {
@@ -176,22 +178,23 @@
         }
 
         try {
-            const { error } = await supabase.auth.resend({
-                type: 'signup', // أو يمكن تحديد النوع حسب السياق
+            const sb = supabase || (window.teraSupabase || await window.waitForSupabase?.());
+            if (!sb) throw new Error('خدمة المصادقة غير متوفرة');
+
+            const { error } = await sb.auth.signInWithOtp({
                 email: email,
+                options: {
+                    shouldCreateUser: false // لا ينشئ مستخدم جديد، فقط إعادة إرسال
+                }
             });
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
-            // نجاح الإرسال
             if (successMsg) {
                 successMsg.textContent = 'تم إرسال رمز جديد إلى بريدك الإلكتروني';
                 successMsg.style.display = 'block';
             }
 
-            // إعادة بدء العد التنازلي
             resetCountdown();
         } catch (error) {
             console.error('خطأ في إعادة الإرسال:', error);
@@ -204,11 +207,10 @@
         }
     }
 
-    // مؤقت إعادة الإرسال
     function startCountdown() {
         let seconds = RESEND_TIMEOUT;
         updateTimerDisplay(seconds);
-        resendBtn.disabled = true;
+        if (resendBtn) resendBtn.disabled = true;
 
         countdownInterval = setInterval(() => {
             seconds--;
@@ -232,24 +234,22 @@
 
     function updateTimerDisplay(seconds) {
         if (timerSpan) {
-            timerSpan.textContent = ` (يمكنك الإعادة بعد ${seconds} ثانية)`;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
     }
 
-    // ترجمة رسائل الخطأ الشائعة
     function getArabicErrorMessage(message) {
         const translations = {
             'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
             'Invalid OTP': 'رمز التحقق غير صحيح',
             'Email not confirmed': 'البريد الإلكتروني غير مفعل',
-            'User not found': 'المستخدم غير موجود',
-            'For security purposes, you can only request this once every 60 seconds':
-                'لأسباب أمنية، يمكنك طلب الرمز مرة واحدة كل 60 ثانية'
+            'User not found': 'المستخدم غير موجود'
         };
         return translations[message] || message || 'حدث خطأ غير معروف';
     }
 
-    // بدء التنفيذ
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
