@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v13 (ip-api.com + LocationIQ لضمان جلب الموقع الجغرافي)
+ * verify-otp.js – v14 (ip-api.com عبر HTTPS + LocationIQ)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -106,10 +106,10 @@
         };
     }
 
-    // الخدمة البديلة: ip-api.com (مجاني، لا يحتاج مفتاح)
+    // استخدام HTTPS لإصلاح مشكلة المحتوى المختلط
     async function fetchBasicGeo() {
         try {
-            const r = await fetch('http://ip-api.com/json/?fields=status,message,country,countryCode,city,lat,lon,isp,org,proxy,hosting,query');
+            const r = await fetch('https://ip-api.com/json/?fields=status,message,country,countryCode,city,lat,lon,isp,org,proxy,hosting,query');
             if (!r.ok) throw new Error('ip-api failed');
             const d = await r.json();
             if (d.status !== 'success') throw new Error(d.message || 'ip-api error');
