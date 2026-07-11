@@ -9,7 +9,7 @@
 (function() {
     let supabase, currentUser, sessions = [];
     let idleTimer, idleWarningTimer;
-    const IDLE_TIME = 5 * 60 * 1000; // 5 دقائق
+    const IDLE_TIME = 5 * 60 * 1000;
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(s) {
@@ -18,7 +18,6 @@
     }
 
     async function init() {
-        // استخدام نظام المصادقة الموحد لفحص الجلسة
         if (!window.Auth) {
             window.location.replace('/auth/auth/login/login.html');
             return;
@@ -114,7 +113,6 @@
     window.terminateSession = async function(sessionId) {
         if (!confirm('إنهاء هذه الجلسة؟')) return;
 
-        // التحقق مما إذا كانت هذه الجلسة الحالية (بناءً على is_current_session = true)
         const sessionToTerminate = sessions.find(s => s.id === sessionId);
         const isCurrent = sessionToTerminate && sessionToTerminate.is_current_session;
 
@@ -130,16 +128,14 @@
             return;
         }
 
-        // إذا كانت الجلسة الحالية، نسجل الخروج من Supabase فعلياً
         if (isCurrent && window.Auth?.logout) {
             await window.Auth.logout();
-            return; // Auth.logout ستقوم بالتوجيه
+            return;
         }
 
         await fetchSessions();
     };
 
-    // عرض التقرير الكامل (بدون استدعاء خارجي – البيانات من الجدول)
     window.showSessionDetail = function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -149,7 +145,6 @@
         if (!detailContent || !modal) return;
         modal.classList.add('show');
 
-        // تجهيز صفوف الموقع الجغرافي من السجل المخزن
         function getLocationRows() {
             const rows = [];
             if (session.country) rows.push(['الدولة', session.country]);
@@ -160,7 +155,6 @@
             if (session.postal_code) rows.push(['الرمز البريدي', session.postal_code]);
             if (session.latitude && session.longitude) {
                 rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
-                // هروب آمن للرابط (رغم أن القيم رقمية)
                 const lat = encodeURIComponent(session.latitude);
                 const lon = encodeURIComponent(session.longitude);
                 rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" rel="noopener">🗺️ عرض</a>`]);
@@ -253,19 +247,14 @@
 
         if (statusEl) statusEl.addEventListener('change', applyFilters);
         if (searchEl) searchEl.addEventListener('input', applyFilters);
-        if (closeModalBtn && modal) {
-            closeModalBtn.addEventListener('click', () => modal.classList.remove('show'));
-        }
-        if (closeDetailBtn && modal) {
-            closeDetailBtn.addEventListener('click', () => modal.classList.remove('show'));
-        }
+        if (closeModalBtn && modal) closeModalBtn.addEventListener('click', () => modal.classList.remove('show'));
+        if (closeDetailBtn && modal) closeDetailBtn.addEventListener('click', () => modal.classList.remove('show'));
         if (modal) {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.classList.remove('show');
             });
         }
 
-        // أحداث الخمول
         ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(ev => {
             document.addEventListener(ev, resetIdleTimer);
         });
@@ -284,13 +273,11 @@
         }, IDLE_TIME - 30000);
 
         idleTimer = setTimeout(async () => {
-            // تحديث الجلسات المنتهية بسبب الخمول
             await supabase.from('user_login_sessions')
                 .update({ status: 'timeout', logout_at: new Date().toISOString() })
                 .eq('user_id', currentUser.id)
                 .eq('status', 'active');
 
-            // تسجيل الخروج
             if (window.Auth?.logout) {
                 await window.Auth.logout();
             } else {
