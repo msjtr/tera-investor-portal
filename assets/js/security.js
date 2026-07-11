@@ -11,7 +11,6 @@
         return supabase;
     }
 
-    // ---- كشف VPN / Proxy (باستخدام ip-api.com) ----
     async function detectVPN() {
         try {
             const response = await fetch('https://ip-api.com/json/?fields=proxy,hosting');
@@ -28,7 +27,6 @@
         }
     }
 
-    // ---- نظام الخمول الموحد (يُستخدم من أي صفحة) ----
     let idleTimer, idleWarningTimer;
     const IDLE_TIME = 5 * 60 * 1000;
 
@@ -60,11 +58,9 @@
         clearTimeout(idleWarningTimer);
     }
 
-    // ---- تسجيل الخروج من جميع الأجهزة الأخرى ----
     async function terminateOtherSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return false;
-        // إنهاء جميع الجلسات النشطة ما عدا الجلسة الحالية
         const { error } = await sb.from('user_login_sessions')
             .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
             .eq('user_id', userId)
@@ -73,7 +69,6 @@
         return !error;
     }
 
-    // ---- تعريض الدوال ----
     window.Security = {
         detectVPN,
         initIdleTimer,
