@@ -1,15 +1,15 @@
 /**
- * security-registered-devices.js – v11 (محسن)
- * - يستخدم Auth.requireAuth لتوحيد فحص الجلسة
- * - معالجة أخطاء fetchSessions
- * - التحقق من وجود عناصر DOM قبل ربط الأحداث
- * - إنهاء جلسة Supabase إذا تم إنهاء الجلسة الحالية
- * - تحسين عرض الموقع الجغرافي (هروب آمن للروابط)
+ * security-registered-devices.js – v12 (محسّن)
+ * - يعالج خطأ 401 عند إنهاء الجلسة برسالة واضحة
+ * - يعرض تفاصيل الموقع من LocationIQ كخطة بديلة إن لم تكن مخزنة
+ * - مؤقت الخمول ينهي الجلسة الحالية فقط
+ * - فحص صلاحية الجلسة قبل التحديث
  */
 (function() {
     let supabase, currentUser, sessions = [];
     let idleTimer, idleWarningTimer;
     const IDLE_TIME = 5 * 60 * 1000;
+    const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
 
     function formatDate(d) { return d ? new Date(d).toLocaleString('ar-SA') : '-'; }
     function getStatusLabel(s) {
@@ -113,6 +113,14 @@
     window.terminateSession = async function(sessionId) {
         if (!confirm('إنهاء هذه الجلسة؟')) return;
 
+        // التحقق من صلاحية الجلسة الحالية
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            alert('انتهت جلستك. يرجى تسجيل الدخول مجدداً.');
+            window.Auth?.logout();
+            return;
+        }
+
         const sessionToTerminate = sessions.find(s => s.id === sessionId);
         const isCurrent = sessionToTerminate && sessionToTerminate.is_current_session;
 
@@ -124,7 +132,11 @@
 
         if (error) {
             console.error('فشل إنهاء الجلسة:', error);
-            alert('حدث خطأ أثناء إنهاء الجلسة.');
+            if (error.code === '42501' || error.message?.includes('permission denied')) {
+                alert('ليس لديك صلاحية لإنهاء هذه الجلسة. تأكد من أنك مسجل الدخول بشكل صحيح، أو تواصل مع الدعم.');
+            } else {
+                alert('حدث خطأ أثناء إنهاء الجلسة.');
+            }
             return;
         }
 
@@ -136,7 +148,31 @@
         await fetchSessions();
     };
 
-    window.showSessionDetail = function(sessionId) {
+    // دالة مساعدة لجلب تفاصيل الموقع من LocationIQ عند الحاجة
+    async function fetchLocationDetails(lat, lon) {
+        if (!lat || !lon) return null;
+        const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('LocationIQ failed');
+            const data = await res.json();
+            return {
+                neighbourhood: data.neighbourhood || data.suburb || data.village || '',
+                city: data.city || '',
+                province: data.province || '',
+                state: data.state || '',
+                postcode: data.postcode || '',
+                country: data.country || '',
+                country_code: data.country_code || '',
+                display_name: data.display_name || ''
+            };
+        } catch (e) {
+            console.warn('تعذر جلب تفاصيل الموقع من LocationIQ:', e);
+            return null;
+        }
+    }
+
+    window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
 
@@ -145,14 +181,29 @@
         if (!detailContent || !modal) return;
         modal.classList.add('show');
 
+        // محاولة جلب تفاصيل إضافية إذا كانت البيانات الأساسية ناقصة
+        let extraLocation = null;
+        if (session.latitude && session.longitude && (!session.city || !session.country)) {
+            extraLocation = await fetchLocationDetails(session.latitude, session.longitude);
+        }
+
         function getLocationRows() {
             const rows = [];
-            if (session.country) rows.push(['الدولة', session.country]);
-            if (session.country_code) rows.push(['الرمز الدولي', session.country_code]);
-            if (session.city) rows.push(['المدينة', session.city]);
-            if (session.district || session.neighbourhood) rows.push(['الحي', session.neighbourhood || session.district]);
-            if (session.province || session.state) rows.push(['المنطقة/المحافظة', session.province || session.state]);
-            if (session.postal_code) rows.push(['الرمز البريدي', session.postal_code]);
+            // استخدام البيانات المخزنة أو المسترجعة
+            const country = session.country || extraLocation?.country;
+            const country_code = session.country_code || extraLocation?.country_code;
+            const city = session.city || extraLocation?.city;
+            const neighbourhood = session.neighbourhood || session.district || extraLocation?.neighbourhood;
+            const province = session.province || extraLocation?.province;
+            const state = session.state || extraLocation?.state;
+            const postal_code = session.postal_code || extraLocation?.postcode;
+
+            if (country) rows.push(['الدولة', country]);
+            if (country_code) rows.push(['الرمز الدولي', country_code]);
+            if (city) rows.push(['المدينة', city]);
+            if (neighbourhood) rows.push(['الحي', neighbourhood]);
+            if (province || state) rows.push(['المنطقة/المحافظة', province || state]);
+            if (postal_code) rows.push(['الرمز البريدي', postal_code]);
             if (session.latitude && session.longitude) {
                 rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
                 const lat = encodeURIComponent(session.latitude);
@@ -273,10 +324,12 @@
         }, IDLE_TIME - 30000);
 
         idleTimer = setTimeout(async () => {
+            // إنهاء الجلسة الحالية فقط (is_current_session = true)
             await supabase.from('user_login_sessions')
                 .update({ status: 'timeout', logout_at: new Date().toISOString() })
                 .eq('user_id', currentUser.id)
-                .eq('status', 'active');
+                .eq('status', 'active')
+                .eq('is_current_session', true);
 
             if (window.Auth?.logout) {
                 await window.Auth.logout();
