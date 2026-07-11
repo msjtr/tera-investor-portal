@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v12 (ضمان جلب الموقع مع تشخيص كامل)
+ * verify-otp.js – v13 (ip-api.com + LocationIQ لضمان جلب الموقع الجغرافي)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -106,29 +106,27 @@
         };
     }
 
-    async function getPublicIP() {
-        try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); return d.ip; } catch (e) { return null; }
-    }
-
+    // الخدمة البديلة: ip-api.com (مجاني، لا يحتاج مفتاح)
     async function fetchBasicGeo() {
         try {
-            const r = await fetch('https://ipapi.co/json/');
-            if (!r.ok) throw new Error('ipapi failed');
+            const r = await fetch('http://ip-api.com/json/?fields=status,message,country,countryCode,city,lat,lon,isp,org,proxy,hosting,query');
+            if (!r.ok) throw new Error('ip-api failed');
             const d = await r.json();
-            console.log('📍 ipapi.co:', d);
+            if (d.status !== 'success') throw new Error(d.message || 'ip-api error');
+            console.log('📍 ip-api.com:', d);
             return {
-                ip: d.ip,
+                ip: d.query,
                 city: d.city,
-                country: d.country_name,
-                country_code: d.country_code,
-                isp: d.org,
-                lat: d.latitude,
-                lon: d.longitude,
+                country: d.country,
+                country_code: d.countryCode,
+                isp: d.isp || d.org,
+                lat: d.lat,
+                lon: d.lon,
                 proxy: d.proxy || false,
                 hosting: d.hosting || false
             };
         } catch (e) {
-            console.warn('⚠️ ipapi.co failed:', e);
+            console.warn('⚠️ ip-api.com failed:', e);
             return {};
         }
     }
@@ -159,26 +157,24 @@
     async function createSessionRecord(userId) {
         if (!supabase) return;
         try {
-            const ip = await getPublicIP();
             const d = getDeviceAndBrowserInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(geo.lat, geo.lon);
 
-            // الدمج: نفضل LocationIQ ثم ipapi
             const finalCity = loc.city || geo.city || null;
             const finalCountry = geo.country || null;
             const finalLat = geo.lat || null;
             const finalLon = geo.lon || null;
 
-            console.log('📦 بيانات الموقع النهائية:', { finalCity, finalCountry, finalLat, finalLon, geo, loc });
+            console.log('📦 بيانات الموقع النهائية:', { finalCity, finalCountry, finalLat, finalLon });
 
             const record = {
                 user_id: userId,
                 session_number: sessionNumber,
                 login_at: new Date().toISOString(),
                 status: 'active',
-                ip_address: geo.ip || ip || 'غير معروف',
+                ip_address: geo.ip || 'غير معروف',
                 isp: geo.isp || null,
                 country: finalCountry,
                 country_code: geo.country_code || null,
@@ -223,7 +219,6 @@
             const { error } = await supabase.from('user_login_sessions').insert(record);
             if (error) {
                 console.error('❌ فشل تسجيل الجلسة:', error);
-                // عرض الخطأ للمستخدم (اختياري)
             } else {
                 console.log('✅ تم تسجيل الجلسة بنجاح');
             }
