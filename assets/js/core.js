@@ -1,174 +1,176 @@
 /**
- * ============================================================
- * core.js - الملف الأساسي للدوال المشتركة في منصة تيرا (نسخة الـ SPA)
- * ============================================================
- * الموقع: /assets/js/core.js
- * التحديثات:
- * - استخدام showSecurityAlert بدلاً من TeraApp.showNotification
- * - تحسين التوافق مع النظام الحالي
+ * core.js – النواة الأساسية للتطبيق
+ * يوفر دوال مساعدة عامة، إدارة الثيم واللغة، وتهيئة الاتصال بـ Supabase
+ * يمكن تحميله في أي صفحة دون الاعتماد على ملفات أخرى
  */
-
 (function() {
     'use strict';
 
-    // ============================================================
-    // 1. دوال التحكم في القائمة الجانبية (Sidebar)
-    // ============================================================
+    // ========== دوال مساعدة عامة ==========
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            if (window.innerWidth > 991) {
-                // سطح المكتب: طي / توسعة
-                sidebar.classList.toggle('collapsed');
-                setLocalStorageItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-            } else {
-                // الموبايل: فتح / إغلاق
-                sidebar.classList.toggle('sidebar-open');
-            }
-        }
-    }
-
-    function closeSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && sidebar.classList.contains('sidebar-open')) {
-            sidebar.classList.remove('sidebar-open');
-        }
-    }
-
-    function restoreSidebarState() {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar && window.innerWidth > 991) {
-            const isCollapsed = getLocalStorageItem('sidebarCollapsed', 'false') === 'true';
-            if (isCollapsed) {
-                sidebar.classList.add('collapsed');
-            } else {
-                sidebar.classList.remove('collapsed');
-            }
-        }
-    }
-
-    // ============================================================
-    // 2. دوال مساعدة عامة (DOM Manipulation & Storage)
-    // ============================================================
-
-    function getLocalStorageItem(key, defaultValue) {
-        try {
-            const value = localStorage.getItem(key);
-            return value !== null ? value : defaultValue;
-        } catch (e) {
-            console.warn('⚠️ [core.js] خطأ في قراءة localStorage:', e);
-            return defaultValue;
-        }
-    }
-
-    function setLocalStorageItem(key, value) {
-        try {
-            localStorage.setItem(key, value);
-            return true;
-        } catch (e) {
-            console.warn('⚠️ [core.js] خطأ في كتابة localStorage:', e);
-            return false;
-        }
-    }
-
-    // ============================================================
-    // 3. تهيئة الأحداث الشاملة (Event Delegation)
-    // ============================================================
-
-    function initCore() {
-        // حماية هامة جداً للـ SPA: منع تكرار تهيئة الأحداث عند التنقل بين الصفحات
-        if (window._coreEventsInitialized) {
-            console.log('⚡ [core.js] الأحداث مهيأة مسبقاً، لا حاجة للتكرار.');
-            return;
-        }
-        window._coreEventsInitialized = true;
-
-        // تفويض حدث النقر على مستوى الـ Body ليعمل مع أي عناصر يتم جلبها بـ fetch
-        document.body.addEventListener('click', function(e) {
-            
-            // 1. زر تبديل القائمة الجانبية
-            const toggleBtn = e.target.closest('#sidebarToggle');
-            if (toggleBtn) {
-                e.preventDefault();
-                toggleSidebar();
-                return;
-            }
-
-            // 2. النقر على القوائم الفرعية
-            const submenuLink = e.target.closest('.has-submenu > a');
-            if (submenuLink) {
-                e.preventDefault();
-                const parentLi = submenuLink.parentElement;
-                const sidebarEl = document.getElementById('sidebar');
-
-                // منع فتح القائمة الفرعية إذا كانت القائمة الرئيسية مطوية (سطح مكتب)
-                if (window.innerWidth > 991 && sidebarEl && sidebarEl.classList.contains('collapsed')) {
-                    // تنبيه باستخدام showSecurityAlert إذا كانت موجودة، وإلا تجاهل
-                    if (typeof window.showSecurityAlert === 'function') {
-                        window.showSecurityAlert('يرجى فتح القائمة الجانبية أولاً لعرض الخيارات', 'info');
-                    }
-                    return;
-                }
-
-                // إغلاق القوائم الفرعية المفتوحة الأخرى
-                document.querySelectorAll('.has-submenu').forEach(function(li) {
-                    if (li !== parentLi) {
-                        li.classList.remove('submenu-open');
-                    }
-                });
-
-                // التبديل للقائمة الحالية
-                parentLi.classList.toggle('submenu-open');
-            }
-
-            // 3. إغلاق القائمة في الموبايل عند النقر خارجها
-            if (window.innerWidth <= 991) {
-                const sidebar = document.getElementById('sidebar');
-                if (sidebar && sidebar.classList.contains('sidebar-open')) {
-                    const isInsideSidebar = e.target.closest('#sidebar');
-                    const isToggleBtn = e.target.closest('#sidebarToggle');
-                    if (!isInsideSidebar && !isToggleBtn) {
-                        closeSidebar();
-                    }
-                }
-            }
+    /**
+     * تنسيق التاريخ إلى التنسيق العربي
+     * @param {string|Date} d - التاريخ
+     * @returns {string} التاريخ منسقاً بالعربية
+     */
+    function formatDate(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('ar-SA', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
+    }
 
-        // 4. معالجة تغيير حجم الشاشة
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 991) {
-                closeSidebar(); // نزيل كلاس الموبايل
-                restoreSidebarState(); // نستعيد حالة الانهيار
-            }
+    /**
+     * تنسيق التاريخ مع الوقت
+     */
+    function formatDateTime(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('ar-SA', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
-
-        // استعادة الحالة عند التحميل الأول
-        restoreSidebarState();
-
-        console.log('✅ [core.js] تم تهيئة الأحداث الشاملة بنظام (Event Delegation) بنجاح');
     }
 
-    // ============================================================
-    // 4. تشغيل التهيئة عند تحميل DOM
-    // ============================================================
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initCore);
-    } else {
-        initCore();
+    /**
+     * تنسيق رقم إلى عملة (ريال سعودي)
+     */
+    function formatCurrency(amount) {
+        return Number(amount || 0).toLocaleString('ar-SA', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) + ' ر.س';
     }
 
-    // ============================================================
-    // 5. تعريف دوال عامة للاستخدام الخارجي
-    // ============================================================
+    /**
+     * استخراج قيمة معامل من عنوان URL
+     * @param {string} name - اسم المعامل
+     * @returns {string|null}
+     */
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
 
+    /**
+     * حماية من هجمات XSS عبر تحويل النص إلى HTML آمن
+     */
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    /**
+     * تأخير تنفيذ (sleep) لأغراض الاختبار أو التحميل
+     */
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ========== الثيم واللغة ==========
+
+    /**
+     * تطبيق الوضع المظلم/الفاتح
+     */
+    function applyTheme(mode) {
+        if (mode === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            localStorage.setItem('tera-theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+            localStorage.setItem('tera-theme', 'light');
+        }
+    }
+
+    function initTheme() {
+        const saved = localStorage.getItem('tera-theme');
+        if (saved === 'dark') {
+            applyTheme('dark');
+        } else {
+            applyTheme('light');
+        }
+    }
+
+    /**
+     * الحصول على اللغة الحالية
+     */
+    function getLanguage() {
+        return document.documentElement.lang || 'ar';
+    }
+
+    // ========== مساعدات Supabase ==========
+
+    /**
+     * انتظار جاهزية Supabase (تستدعي waitForSupabase إن وجدت)
+     */
+    async function waitForSupabase() {
+        // إذا كانت الدالة العامة موجودة (من supabase-client.js)
+        if (typeof window.waitForSupabase === 'function') {
+            return await window.waitForSupabase();
+        }
+        // خطة بديلة: انتظار window.teraSupabase
+        if (window.teraSupabase) return window.teraSupabase;
+        // انتظار حدث مخصص (للتوافق مع أنظمة أخرى)
+        return new Promise((resolve) => {
+            const check = setInterval(() => {
+                if (window.teraSupabase) {
+                    clearInterval(check);
+                    resolve(window.teraSupabase);
+                }
+            }, 100);
+            setTimeout(() => clearInterval(check), 10000);
+        });
+    }
+
+    // ========== إعدادات محلية ==========
+    function getCurrentLocale() {
+        return 'ar-SA';
+    }
+
+    // ========== دوال الإشعارات العامة ==========
+    function showBrowserNotification(title, options = {}) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+            new Notification(title, options);
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(perm => {
+                if (perm === 'granted') new Notification(title, options);
+            });
+        }
+    }
+
+    // ========== تعريض الدوال العامة ==========
     window.TeraCore = {
-        toggleSidebar: toggleSidebar,
-        closeSidebar: closeSidebar,
-        getLocalStorageItem: getLocalStorageItem,
-        setLocalStorageItem: setLocalStorageItem,
-        initCore: initCore
+        formatDate,
+        formatDateTime,
+        formatCurrency,
+        getQueryParam,
+        escapeHtml,
+        sleep,
+        applyTheme,
+        initTheme,
+        getLanguage,
+        waitForSupabase,
+        getCurrentLocale,
+        showBrowserNotification
     };
 
+    // تطبيق الثيم تلقائياً عند التحميل
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTheme);
+    } else {
+        initTheme();
+    }
+
+    console.log('core.js: النواة جاهزة');
 })();
