@@ -1,6 +1,5 @@
 /**
- * verify-otp.js – التحقق من رمز OTP وتسجيل الجلسة
- * يعتمد على Auth, LocationServices, DeviceInfo, SessionManager
+ * verify-otp.js – منسق خفيف (يستخدم LocationServices, SessionManager, DeviceInfo)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -9,7 +8,6 @@
     let supabase;
     let countdownInterval;
 
-    // عناصر الواجهة
     const otpInputs = document.querySelectorAll('.otp-input');
     const verifyBtn = document.getElementById('verifyOtpBtn');
     const resendBtn = document.getElementById('resendOtpBtn');
@@ -60,34 +58,7 @@
         if (successMsg) successMsg.style.display = 'none';
     }
 
-    // ───────── جمع بيانات الجلسة ─────────
-    async function collectSessionData() {
-        const data = { geo: {}, locationIQ: {}, gps: null, ip: null };
-        try {
-            if (window.LocationServices) {
-                data.gps = await window.LocationServices.getGPSCoords();
-                data.geo = await window.LocationServices.fetchBasicGeo();
-                const lat = data.gps?.latitude || data.geo.lat;
-                const lon = data.gps?.longitude || data.geo.lon;
-                if (lat && lon) data.locationIQ = await window.LocationServices.fetchLocationIQ(lat, lon);
-            }
-        } catch (e) { console.warn('جمع بيانات الموقع فشل:', e); }
-        return data;
-    }
-
-    async function createSession(userId, email) {
-        const sessionData = await collectSessionData();
-        if (window.SessionManager?.createSessionRecord) {
-            return await window.SessionManager.createSessionRecord(userId, {
-                ...sessionData,
-                ip: sessionData.geo.ip || 'غير معروف',
-                email: email
-            });
-        }
-        return false;
-    }
-
-    // ───────── التحقق ─────────
+    // ──────── استدعاء الوحدات ────────
     async function handleVerify() {
         const code = getOtpCode();
         if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
@@ -100,7 +71,8 @@
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                await createSession(data.session.user.id, email);
+                // إنشاء سجل الجلسة باستخدام الوحدات
+                await createSessionViaModules(data.session.user.id);
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
                 setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
@@ -113,6 +85,36 @@
             console.error(error);
             showError(getArabicErrorMessage(error.message));
             if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
+        }
+    }
+
+    async function createSessionViaModules(userId) {
+        if (!window.LocationServices || !window.SessionManager || !window.DeviceInfo) {
+            console.warn('⚠️ بعض الوحدات غير متوفرة، لن يتم تسجيل الجلسة بالتفصيل.');
+            return;
+        }
+
+        try {
+            // 1. الحصول على إحداثيات GPS
+            const gps = await window.LocationServices.getGPSCoords();
+
+            // 2. بيانات IP الأساسية
+            const geo = await window.LocationServices.fetchBasicGeo();
+
+            // 3. تفاصيل LocationIQ
+            const lat = gps?.latitude || geo.lat;
+            const lon = gps?.longitude || geo.lon;
+            const loc = await window.LocationServices.fetchLocationIQ(lat, lon);
+
+            // 4. إنشاء السجل
+            await window.SessionManager.createSessionRecord(userId, {
+                geo: geo,
+                locationIQ: loc,
+                gps: gps,
+                ip: geo.ip
+            });
+        } catch (e) {
+            console.error('فشل في إنشاء سجل الجلسة عبر الوحدات:', e);
         }
     }
 
