@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v8 (يجمع تفاصيل جهاز كاملة وبيانات الموقع)
+ * verify-otp.js – v10 (متوافق مع الأعمدة الفعلية للجدول)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -60,7 +60,6 @@
         if (successMsg) successMsg.style.display = 'none';
     }
 
-    // ───── معلومات الجهاز والمتصفح ─────
     function getDeviceAndBrowserInfo() {
         const ua = navigator.userAgent;
         let os = 'Unknown', osVersion = '';
@@ -81,46 +80,28 @@
         if (/Mobi|Android|iPhone/i.test(ua)) deviceType = 'mobile';
         else if (/iPad|Tablet/i.test(ua)) deviceType = 'tablet';
 
-        const screenWidth = window.screen.width;
-        const screenHeight = window.screen.height;
-        const colorDepth = window.screen.colorDepth || '';
-        const pixelRatio = window.devicePixelRatio || 1;
-        const language = navigator.language || '';
-        const cpuCores = navigator.hardwareConcurrency || '';
-        const deviceMemory = navigator.deviceMemory || '';
-
-        const touchSupported = !!('ontouchstart' in window || navigator.maxTouchPoints > 0);
-        const cookiesEnabled = navigator.cookieEnabled;
-        const localStorage = typeof Storage !== 'undefined' && !!window.localStorage;
-        const sessionStorage = typeof Storage !== 'undefined' && !!window.sessionStorage;
-        const indexedDB = !!window.indexedDB;
-        const webglSupported = (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch(e){ return false; } })();
-
-        // بصمة بسيطة (hash من userAgent + screen + time)
-        const fingerprint = btoa(ua + screenWidth + screenHeight + language).substring(0, 32);
-
         return {
             device_type: deviceType,
             browser_name: browserName,
             browser_version: browserVersion,
-            browser_engine: '', // يمكن تحسينه لاحقاً
+            browser_engine: '',
             user_agent: ua,
             operating_system: os,
             os_version: osVersion,
             platform: navigator.platform || '',
-            language: language,
-            screen_resolution: `${screenWidth}x${screenHeight}`,
-            color_depth: colorDepth,
-            pixel_ratio: pixelRatio,
-            cpu_cores: cpuCores,
-            device_memory: deviceMemory,
-            touch_supported: touchSupported,
-            cookies_enabled: cookiesEnabled,
-            local_storage: localStorage,
-            session_storage: sessionStorage,
-            indexed_db: indexedDB,
-            webgl_supported: webglSupported,
-            fingerprint: fingerprint,
+            language: navigator.language || '',
+            screen_resolution: `${window.screen.width}x${window.screen.height}`,
+            color_depth: window.screen.colorDepth || '',
+            pixel_ratio: window.devicePixelRatio || 1,
+            cpu_cores: navigator.hardwareConcurrency || '',
+            device_memory: navigator.deviceMemory || '',
+            touch_supported: !!('ontouchstart' in window || navigator.maxTouchPoints > 0),
+            cookies_enabled: navigator.cookieEnabled,
+            local_storage: typeof Storage !== 'undefined' && !!window.localStorage,
+            session_storage: typeof Storage !== 'undefined' && !!window.sessionStorage,
+            indexed_db: !!window.indexedDB,
+            webgl_supported: (() => { try { return !!document.createElement('canvas').getContext('webgl'); } catch(e){ return false; } })(),
+            fingerprint: btoa(ua + window.screen.width + window.screen.height + navigator.language).substring(0, 32),
             network_type: navigator.connection?.effectiveType || ''
         };
     }
@@ -134,17 +115,7 @@
             const r = await fetch('https://ipapi.co/json/');
             if (!r.ok) throw new Error('ipapi');
             const d = await r.json();
-            return {
-                ip: d.ip,
-                city: d.city,
-                country: d.country_name,
-                country_code: d.country_code,
-                isp: d.org,
-                lat: d.latitude,
-                lon: d.longitude,
-                proxy: d.proxy || false,
-                hosting: d.hosting || false
-            };
+            return { ip: d.ip, city: d.city, country: d.country_name, country_code: d.country_code, isp: d.org, lat: d.latitude, lon: d.longitude, proxy: d.proxy || false, hosting: d.hosting || false };
         } catch (e) { return {}; }
     }
 
@@ -171,7 +142,7 @@
         if (!supabase) return;
         try {
             const ip = await getPublicIP();
-            const deviceInfo = getDeviceAndBrowserInfo();
+            const d = getDeviceAndBrowserInfo();
             const sessionNumber = 'SES-' + Date.now().toString(36).toUpperCase();
             const geo = await fetchBasicGeo();
             const loc = await fetchLocationIQ(geo.lat, geo.lon);
@@ -198,39 +169,37 @@
                 vpn_detected: geo.proxy || false,
                 proxy_detected: geo.proxy || false,
                 hosting_detected: geo.hosting || false,
-                device_type: deviceInfo.device_type,
-                browser_name: deviceInfo.browser_name,
-                browser_version: deviceInfo.browser_version,
-                browser_engine: deviceInfo.browser_engine,
-                user_agent: deviceInfo.user_agent,
-                operating_system: deviceInfo.operating_system,
-                os_version: deviceInfo.os_version,
-                platform: deviceInfo.platform,
-                language: deviceInfo.language,
-                screen_resolution: deviceInfo.screen_resolution,
-                cpu_architecture: deviceInfo.cpu_cores || null,
-                device_memory: deviceInfo.device_memory || null,
-                fingerprint: deviceInfo.fingerprint,
-                touch_supported: deviceInfo.touch_supported,
-                cookies_enabled: deviceInfo.cookies_enabled,
-                local_storage: deviceInfo.local_storage,
-                session_storage: deviceInfo.session_storage,
-                indexed_db: deviceInfo.indexed_db,
-                webgl_supported: deviceInfo.webgl_supported,
-                network_type: deviceInfo.network_type || null,
+                device_type: d.device_type,
+                browser_name: d.browser_name,
+                browser_version: d.browser_version,
+                browser_engine: d.browser_engine,
+                user_agent: d.user_agent,
+                operating_system: d.operating_system,
+                os_version: d.os_version,
+                platform: d.platform,
+                language: d.language,
+                screen_resolution: d.screen_resolution,
+                pixel_ratio: d.pixel_ratio,
+                color_depth: d.color_depth,
+                cpu_architecture: d.cpu_cores || null,   // استخدام عمود cpu_architecture الموجود
+                device_memory: d.device_memory,
+                touch_supported: d.touch_supported,
+                cookies_enabled: d.cookies_enabled,
+                local_storage: d.local_storage,
+                session_storage: d.session_storage,
+                indexed_db: d.indexed_db,
+                webgl_supported: d.webgl_supported,
+                fingerprint: d.fingerprint,
+                network_type: d.network_type || null,
                 is_current_session: true
             };
 
             const { error } = await supabase.from('user_login_sessions').insert(record);
-            if (error) console.error('فشل تسجيل الجلسة:', error);
+            if (error) console.error('❌ فشل تسجيل الجلسة:', error);
             else console.log('✅ تم تسجيل الجلسة');
         } catch (e) { console.error('خطأ في تسجيل الجلسة:', e); }
     }
 
-    // ... (دوال التحقق والإعادة والعد التنازلي كما هي دون تغيير)
-    // يمكنك نسخ الدوال المتبقية من الكود السابق (handleVerify, handleResend, startCountdown...)
-
-    // اختصارًا، سأضيف الدوال المفقودة هنا:
     async function handleVerify() {
         const code = getOtpCode();
         if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
