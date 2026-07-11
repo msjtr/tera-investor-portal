@@ -1,6 +1,5 @@
 /**
- * login.js – صفحة تسجيل الدخول (v4 - مستقر)
- * يمنع حلقة إعادة التوجيه مع dashboard
+ * login.js – تدفق آمن: تحقق من كلمة المرور -> إرسال OTP -> صفحة التحقق
  */
 (function() {
     let supabase;
@@ -11,11 +10,9 @@
     const loginBtn = document.getElementById('loginBtn');
     const errorMsg = document.getElementById('loginError');
     const togglePassword = document.getElementById('togglePassword');
-    const rememberMe = document.getElementById('rememberMe');
+    const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // إخفاء شاشة التحميل فوراً
-    const loader = document.getElementById('creativeLoaderScreen');
-    if (loader) loader.style.display = 'none';
+    if (loaderScreen) loaderScreen.style.display = 'none';
 
     async function getSupabase() {
         if (supabase) return supabase;
@@ -68,29 +65,40 @@
 
         if (loginBtn) {
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من البيانات...';
         }
 
         try {
             const sb = await getSupabase();
             if (!sb) throw new Error('الخدمة غير متوفرة');
 
-            const { data, error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-
-            if (rememberMe?.checked) {
-                localStorage.setItem('rememberMe', 'true');
-            } else {
-                localStorage.removeItem('rememberMe');
+            // الخطوة 1: التحقق من صحة البريد وكلمة المرور
+            const { error: signInError } = await sb.auth.signInWithPassword({ email, password });
+            if (signInError) {
+                // البيانات غير صحيحة
+                throw signInError;
             }
 
-            const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/pages/dashboard/index.html';
-            sessionStorage.removeItem('redirectAfterLogin');
-            window.location.href = redirectUrl;
+            // البيانات صحيحة - نسجل الخروج فوراً لإلغاء الجلسة المؤقتة
+            await sb.auth.signOut();
+
+            // الخطوة 2: إرسال رمز تحقق OTP إلى البريد
+            const { error: otpError } = await sb.auth.signInWithOtp({
+                email: email,
+                options: {
+                    shouldCreateUser: false // المستخدم موجود مسبقاً
+                }
+            });
+            if (otpError) throw otpError;
+
+            // تخزين البريد لصفحة التحقق
+            sessionStorage.setItem('otpEmail', email);
+            // التوجيه إلى صفحة إدخال رمز التحقق
+            window.location.href = '/auth/verify-otp.html';
 
         } catch (error) {
-            console.error('خطأ في تسجيل الدخول:', error);
-            let message = 'حدث خطأ أثناء تسجيل الدخول';
+            console.error('خطأ:', error);
+            let message = 'حدث خطأ، حاول مرة أخرى';
             if (error.message?.includes('Invalid login credentials')) {
                 message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
             } else if (error.message?.includes('Email not confirmed')) {
@@ -102,7 +110,7 @@
         } finally {
             if (loginBtn) {
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
+                loginBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
             }
         }
     }
@@ -116,31 +124,20 @@
         });
     }
 
-    // فحص الجلسة المسبقة مع منع الحلقة
+    // فحص الجلسة السابقة
     async function checkExistingSession() {
         try {
             const sb = await getSupabase();
             if (!sb) return;
-
             const { data: { session } } = await sb.auth.getSession();
             if (!session) return;
-
-            // التحقق من صلاحية الجلسة
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // جلسة غير صالحة - نسجل الخروج ونبقى في صفحة الدخول
                 await sb.auth.signOut();
-                localStorage.removeItem('rememberMe');
                 return;
             }
-
-            // جلسة صالحة - ننتقل للوحة التحكم
             window.location.href = '/pages/dashboard/index.html';
-        } catch (e) {
-            console.warn('فحص الجلسة فشل:', e);
-        }
+        } catch (e) {}
     }
-
     checkExistingSession();
-
 })();
