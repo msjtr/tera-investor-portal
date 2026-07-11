@@ -99,18 +99,17 @@
         .alert-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
         .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
 
-        /* حاوية حقول OTP - اتجاه LTR للأرقام */
         .otp-fields-container {
             display: flex;
             gap: 8px;
             justify-content: center;
             margin-bottom: 8px;
             flex-wrap: wrap;
-            direction: ltr;  /* الأرقام تكتب من اليسار لليمين */
+            direction: ltr;
         }
         .otp-input {
-            width: 44px;
-            height: 56px;
+            width: 42px;
+            height: 54px;
             text-align: center;
             font-weight: 800;
             font-size: 22px;
@@ -121,7 +120,7 @@
             caret-color: var(--tera-teal);
             font-family: 'Tajawal', sans-serif;
             outline: none;
-            direction: ltr; /* يضمن كتابة الأرقام من اليسار */
+            direction: ltr;
         }
         .otp-input:focus {
             border-color: var(--tera-teal);
@@ -232,7 +231,7 @@
 
             <div class="timer-container" id="timerContainer">
                 <span>يمكنك إعادة الإرسال بعد </span>
-                <span id="otpTimer">01:00</span>
+                <span id="otpTimer">05:00</span>
             </div>
 
             <div class="text-center">
