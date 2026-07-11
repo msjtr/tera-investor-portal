@@ -1,6 +1,6 @@
 /**
- * login.js – صفحة تسجيل الدخول (مُستقرَّة)
- * يتكامل مع supabase-client.js و auth.js و security.js
+ * login.js – صفحة تسجيل الدخول (v4 - مستقر)
+ * يمنع حلقة إعادة التوجيه مع dashboard
  */
 (function() {
     let supabase;
@@ -12,20 +12,14 @@
     const errorMsg = document.getElementById('loginError');
     const togglePassword = document.getElementById('togglePassword');
     const rememberMe = document.getElementById('rememberMe');
-    const loaderScreen = document.getElementById('creativeLoaderScreen'); // إن وجد
 
-    // إخفاء شاشة التحميل العامة فور بدء السكربت
-    if (loaderScreen) loaderScreen.style.display = 'none';
+    // إخفاء شاشة التحميل فوراً
+    const loader = document.getElementById('creativeLoaderScreen');
+    if (loader) loader.style.display = 'none';
 
-    // انتظار Supabase مع حد أقصى للوقت
     async function getSupabase() {
         if (supabase) return supabase;
-        try {
-            supabase = window.teraSupabase || await window.waitForSupabase?.();
-        } catch (e) {
-            console.error('فشل الاتصال بخدمة المصادقة');
-            showError('تعذَّر الاتصال بالخدمة. حاول مرة أخرى لاحقاً.');
-        }
+        supabase = window.teraSupabase || await window.waitForSupabase?.();
         return supabase;
     }
 
@@ -40,7 +34,6 @@
         if (errorMsg) errorMsg.style.display = 'none';
     }
 
-    // إظهار/إخفاء كلمة المرور
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -57,7 +50,6 @@
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    // معالجة تسجيل الدخول
     async function handleLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -86,14 +78,12 @@
             const { data, error } = await sb.auth.signInWithPassword({ email, password });
             if (error) throw error;
 
-            // "تذكرني"
             if (rememberMe?.checked) {
                 localStorage.setItem('rememberMe', 'true');
             } else {
                 localStorage.removeItem('rememberMe');
             }
 
-            // التوجيه بعد النجاح
             const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/pages/dashboard/index.html';
             sessionStorage.removeItem('redirectAfterLogin');
             window.location.href = redirectUrl;
@@ -112,34 +102,11 @@
         } finally {
             if (loginBtn) {
                 loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-lock"></i> تسجيل الدخول الآمن';
+                loginBtn.innerHTML = '<i class="fa-solid fa-lock"></i> تسجيل الدخول الآمن';
             }
         }
     }
 
-    // معالجة الدخول برمز OTP (إن وُجد الزر)
-    const otpBtn = document.getElementById('sendOtpBtn');
-    if (otpBtn) {
-        otpBtn.addEventListener('click', async () => {
-            const email = emailInput?.value.trim();
-            if (!email || !isValidEmail(email)) {
-                showError('يرجى إدخال بريد إلكتروني صحيح لإرسال الرمز');
-                return;
-            }
-            try {
-                const sb = await getSupabase();
-                if (!sb) return;
-                const { error } = await sb.auth.signInWithOtp({ email });
-                if (error) throw error;
-                sessionStorage.setItem('otpEmail', email);
-                window.location.href = '/auth/verify-otp.html';
-            } catch (error) {
-                showError('فشل إرسال رمز التحقق، حاول مرة أخرى');
-            }
-        });
-    }
-
-    // ربط النموذج وزر Enter
     if (form) {
         form.addEventListener('submit', handleLogin);
     }
@@ -149,31 +116,31 @@
         });
     }
 
-    // ───── التحقق من وجود جلسة سابقة (مع منع الحلقة) ─────
+    // فحص الجلسة المسبقة مع منع الحلقة
     async function checkExistingSession() {
         try {
             const sb = await getSupabase();
             if (!sb) return;
 
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) return; // لا توجد جلسة، ابق في صفحة الدخول
+            if (!session) return;
 
-            // تحقَّق من صلاحية الجلسة بجلب بيانات المستخدم
+            // التحقق من صلاحية الجلسة
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // الجلسة غير صالحة ← نظفها بهدوء
+                // جلسة غير صالحة - نسجل الخروج ونبقى في صفحة الدخول
                 await sb.auth.signOut();
+                localStorage.removeItem('rememberMe');
                 return;
             }
 
-            // الجلسة سليمة ← انتقل إلى لوحة التحكم
+            // جلسة صالحة - ننتقل للوحة التحكم
             window.location.href = '/pages/dashboard/index.html';
         } catch (e) {
-            // فشل التحقق، ابق في صفحة الدخول
+            console.warn('فحص الجلسة فشل:', e);
         }
     }
 
-    // بدء الفحص بعد تحميل الصفحة مباشرةً
     checkExistingSession();
 
 })();
