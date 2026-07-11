@@ -1,10 +1,8 @@
 /**
- * login.js – تدفق آمن (محسّن)
- * يعتمد على Auth.loginWithPasswordAndOTP و Auth.getUser
+ * login.js – صفحة تسجيل الدخول (محسّن)
+ * يعتمد على Auth.loginWithPasswordAndOTP من auth.js
  */
 (function() {
-    let supabase;
-
     const form = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -13,7 +11,7 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // إخفاء شاشة التحميل مباشرة، مع إظهارها مؤقتًا أثناء فحص الجلسة
+    // إخفاء شاشة التحميل أولاً، ثم إظهارها مؤقتاً أثناء فحص الجلسة
     if (loaderScreen) {
         loaderScreen.style.display = 'flex';
     }
@@ -29,6 +27,7 @@
         if (errorMsg) errorMsg.style.display = 'none';
     }
 
+    // إظهار/إخفاء كلمة المرور
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -103,17 +102,19 @@
     // فحص الجلسة السابقة باستخدام الدوال المركزية
     async function checkExistingSession() {
         try {
-            // الانتظار حتى يصبح Auth متاحاً (إذا لم يكن)
+            // الانتظار حتى يصبح Auth متاحاً
             if (!window.Auth) {
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
             if (window.Auth) {
                 const user = await window.Auth.getUser();
                 if (user) {
+                    // جلسة صالحة، انتقل للوحة التحكم
                     window.location.href = '/pages/dashboard/index.html';
                     return;
                 }
             } else {
+                // خطة بديلة في حال عدم وجود Auth
                 const sb = window.teraSupabase || await window.waitForSupabase?.();
                 if (sb) {
                     const { data: { user } } = await sb.auth.getUser();
@@ -124,7 +125,9 @@
                 }
             }
         } catch (e) {
+            // تجاهل الأخطاء، ابق في صفحة الدخول
         } finally {
+            // إخفاء شاشة التحميل بعد الفحص
             if (loaderScreen) loaderScreen.style.display = 'none';
         }
     }
