@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v34 (الاعتماد على LocationIQ فقط، توجيه بعد 10 ثوانٍ، مرن مع الأخطاء)
+ * verify-otp.js – v35 (إصلاح استدعاء deactivateOtherSessions + توجيه 10 ثوانٍ)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -18,8 +18,8 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
-        updateUserDisplayFromSession(); // الاسم المخزن من login.js
-        await updateUserDisplayFromAuth(); // محاولة من Supabase
+        updateUserDisplayFromSession();
+        await updateUserDisplayFromAuth();
         bindEvents();
         startCountdown();
         updateEmailDisplay();
@@ -105,7 +105,6 @@
             return false;
         }
 
-        // جمع بيانات الموقع – أي خطأ لا يمنع تسجيل الجلسة
         let gpsCoords = null, geo = {}, loc = {};
         try {
             if (window.LocationServices?.getGPSCoords) {
@@ -133,8 +132,9 @@
 
             if (success) {
                 console.log('✅ [verify-otp] تم تسجيل الجلسة');
+                // استدعاء صحيح بدون وسيط ثانٍ
                 if (window.SessionManager.deactivateOtherSessions) {
-                    await window.SessionManager.deactivateOtherSessions(userId, null);
+                    await window.SessionManager.deactivateOtherSessions(userId);
                 }
             } else {
                 console.error('❌ [verify-otp] createSessionRecord فشل');
