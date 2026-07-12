@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v31 (كامل + اسم المستخدم الحقيقي + منع توجيه مع أي خطأ)
+ * verify-otp.js – v32 (توجيه بعد 10 ثوانٍ لضمان تسجيل الجلسة)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -18,15 +18,14 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
-        updateUserDisplayFromSession(); // 1. الاسم المخزن من login.js
-        await updateUserDisplayFromAuth(); // 2. محاولة من Supabase
+        updateUserDisplayFromSession();
+        await updateUserDisplayFromAuth();
         bindEvents();
         startCountdown();
         updateEmailDisplay();
         setupBackLink();
     }
 
-    // ─────── عرض الاسم من sessionStorage ───────
     function updateUserDisplayFromSession() {
         const name = sessionStorage.getItem('otpName');
         if (name) {
@@ -35,7 +34,6 @@
         }
     }
 
-    // ─────── عرض الاسم من Supabase (إذا وُجدت جلسة) ───────
     async function updateUserDisplayFromAuth() {
         try {
             let user = null;
@@ -53,7 +51,6 @@
         } catch (e) {}
     }
 
-    // ─────── ربط الأحداث ───────
     function bindEvents() {
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
@@ -101,7 +98,6 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ─────── تسجيل الجلسة ───────
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
         if (!window.SessionManager) {
@@ -139,7 +135,6 @@
         }
     }
 
-    // ─────── التحقق من الرمز ───────
     async function handleVerify() {
         const code = getOtpCode();
         if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
@@ -173,14 +168,16 @@
             showError(getArabicErrorMessage(error.message));
         } finally {
             if (sessionRecorded) {
-                redirectTimer = setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
+                // ⏱️ تم تغيير التأخير إلى 10 ثوانٍ
+                redirectTimer = setTimeout(() => {
+                    window.location.href = '/pages/dashboard/index.html';
+                }, 10000); // 10 ثوانٍ
             } else {
                 if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
             }
         }
     }
 
-    // ─────── إعادة إرسال الرمز ───────
     async function handleResend() {
         const email = sessionStorage.getItem('otpEmail');
         if (!email) { showError('البريد الإلكتروني غير متوفر'); return; }
@@ -195,7 +192,6 @@
         finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
     }
 
-    // ─────── المؤقت ───────
     function startCountdown() {
         let seconds = RESEND_TIMEOUT;
         updateTimerDisplay(seconds);
