@@ -17,163 +17,60 @@
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 
     <style>
-        :root {
-            --tera-teal: #028090;
-            --tera-navy: #0A1B3F;
-        }
-        body {
-            background-color: #f1f5f9;
-            font-family: 'Tajawal', sans-serif;
-            margin: 0;
-            color: #1e293b;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        .focused-header {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
-            min-height: 60px;
-            width: 100%;
-        }
+        :root { --tera-teal: #028090; --tera-navy: #0A1B3F; }
+        body { background-color: #f1f5f9; font-family: 'Tajawal', sans-serif; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
+        .focused-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 6px rgba(0,0,0,0.04); min-height: 60px; width: 100%; }
         .focused-header .logo img { height: 44px; width: auto; display: block; }
         .header-client-info { display: flex; align-items: center; gap: 12px; }
         .header-client-info h5 { margin: 0; font-family: 'Cairo', sans-serif; font-size: 15px; color: #0A1B3F; font-weight: 800; }
-        .header-client-info .avatar {
-            width: 38px; height: 38px; background: #0A1B3F; color: #fff;
-            display: flex; align-items: center; justify-content: center; border-radius: 10px;
-            font-weight: 800; font-size: 16px; border: 2px solid #028090; flex-shrink: 0;
-        }
-        .page-title-section {
-            background: #0A1B3F; padding: 16px 30px; width: 100%;
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-        }
-        .page-title-section h1 {
-            margin: 0; color: #ffffff; font-family: 'Cairo', sans-serif; font-size: 22px;
-            font-weight: 800; display: flex; align-items: center; gap: 10px;
-        }
+        .header-client-info .avatar { width: 38px; height: 38px; background: #0A1B3F; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 800; font-size: 16px; border: 2px solid #028090; flex-shrink: 0; }
+        .page-title-section { background: #0A1B3F; padding: 16px 30px; width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .page-title-section h1 { margin: 0; color: #ffffff; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
         .page-title-section h1 i { color: #5eead4; }
-        .btn-back {
-            background: rgba(255,255,255,0.10); color: #ffffff; padding: 8px 20px;
-            border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 700;
-            transition: 0.25s; display: flex; align-items: center; gap: 8px;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
+        .btn-back { background: rgba(255,255,255,0.10); color: #ffffff; padding: 8px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 700; transition: 0.25s; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.15); }
         .btn-back:hover { background: #028090; border-color: #028090; }
         .content-container { max-width: 550px; margin: 40px auto; padding: 0 24px; flex: 1; width: 100%; }
-        .auth-card {
-            background: #ffffff; border-radius: 24px; padding: 40px 32px 36px 32px;
-            box-shadow: 0 25px 50px rgba(2,128,144,0.08); border: 1px solid #e2e8f0;
-        }
+        .auth-card { background: #ffffff; border-radius: 24px; padding: 40px 32px 36px 32px; box-shadow: 0 25px 50px rgba(2,128,144,0.08); border: 1px solid #e2e8f0; }
         .text-center { text-align: center; }
-        .otp-icon-circle {
-            width: 80px; height: 80px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 24px; font-size: 36px; color: #059669;
-            box-shadow: 0 8px 20px rgba(5,150,105,0.15); border: 3px solid rgba(255,255,255,0.8);
-        }
+        .otp-icon-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 36px; color: #059669; box-shadow: 0 8px 20px rgba(5,150,105,0.15); border: 3px solid rgba(255,255,255,0.8); }
         .portal-title { color: var(--tera-navy); font-weight: 800; margin-bottom: 12px; font-size: 24px; text-align: center; }
-        .instruction-wrapper {
-            margin-bottom: 28px; background: #f8fafc; padding: 14px 16px;
-            border-radius: 12px; border-right: 4px solid var(--tera-teal);
-        }
+        .instruction-wrapper { margin-bottom: 28px; background: #f8fafc; padding: 14px 16px; border-radius: 12px; border-right: 4px solid var(--tera-teal); }
         #instructionMainText { font-size: 15px; color: #475569; line-height: 1.6; margin-bottom: 6px; }
-        #instructionEmailText {
-            font-size: 15px; font-weight: 700; color: var(--tera-navy); word-break: break-all;
-            direction: ltr; display: block; text-align: right; background: #e2e8f0;
-            padding: 4px 10px; border-radius: 6px; margin-top: 8px;
-        }
-        .alert-box {
-            display: none; align-items: center; gap: 10px; padding: 12px 16px;
-            border-radius: 10px; margin-bottom: 16px; font-weight: 700; font-size: 14px;
-        }
+        #instructionEmailText { font-size: 15px; font-weight: 700; color: var(--tera-navy); word-break: break-all; direction: ltr; display: block; text-align: right; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; margin-top: 8px; }
+        .alert-box { display: none; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-weight: 700; font-size: 14px; }
         .alert-box.show { display: flex; }
         .alert-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
         .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
-
-        .otp-fields-container {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-            direction: ltr;
-        }
-        .otp-input {
-            width: 42px;
-            height: 54px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 22px;
-            border: 2px solid #d1d9e6;
-            border-radius: 12px;
-            background: #ffffff;
-            transition: 0.25s;
-            caret-color: var(--tera-teal);
-            font-family: 'Tajawal', sans-serif;
-            outline: none;
-            direction: ltr;
-        }
-        .otp-input:focus {
-            border-color: var(--tera-teal);
-            box-shadow: 0 0 0 4px rgba(2,128,144,0.10);
-            background: #f0fdfa;
-        }
-
-        .btn-submit-login {
-            background: linear-gradient(135deg, var(--tera-teal) 0%, #0d9488 100%);
-            border: none; color: white; padding: 15px 24px; border-radius: 14px;
-            font-size: 16px; font-weight: 800; width: 100%; cursor: pointer;
-            transition: all 0.3s ease; box-shadow: 0 6px 16px rgba(2,128,144,0.2);
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-bottom: 28px;
-        }
-        .btn-submit-login:hover {
-            background: linear-gradient(135deg, #0d9488 0%, var(--tera-navy) 100%);
-            transform: translateY(-2px); box-shadow: 0 10px 24px rgba(2,128,144,0.3);
-        }
+        .otp-fields-container { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; direction: ltr; }
+        .otp-input { width: 42px; height: 54px; text-align: center; font-weight: 800; font-size: 22px; border: 2px solid #d1d9e6; border-radius: 12px; background: #ffffff; transition: 0.25s; caret-color: var(--tera-teal); font-family: 'Tajawal', sans-serif; outline: none; direction: ltr; }
+        .otp-input:focus { border-color: var(--tera-teal); box-shadow: 0 0 0 4px rgba(2,128,144,0.10); background: #f0fdfa; }
+        .btn-submit-login { background: linear-gradient(135deg, var(--tera-teal) 0%, #0d9488 100%); border: none; color: white; padding: 15px 24px; border-radius: 14px; font-size: 16px; font-weight: 800; width: 100%; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 16px rgba(2,128,144,0.2); display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 28px; }
+        .btn-submit-login:hover { background: linear-gradient(135deg, #0d9488 0%, var(--tera-navy) 100%); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(2,128,144,0.3); }
         .btn-submit-login:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
         .timer-container { text-align: center; font-size: 15px; color: #64748b; font-weight: 600; margin-bottom: 20px; }
         #otpTimer { color: var(--tera-teal); font-weight: 800; direction: ltr; display: inline-block; }
-        .resend-link {
-            display: inline-flex; align-items: center; gap: 6px; color: var(--tera-teal);
-            font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px;
-            padding: 8px 14px; border-radius: 8px; background: rgba(2,128,144,0.04);
-            text-decoration: none; margin-top: 8px; border: none;
-        }
+        .resend-link { display: inline-flex; align-items: center; gap: 6px; color: var(--tera-teal); font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 15px; padding: 8px 14px; border-radius: 8px; background: rgba(2,128,144,0.04); text-decoration: none; margin-top: 8px; border: none; }
         .resend-link:hover { background: rgba(2,128,144,0.1); color: #0A1B3F; }
         .resend-link:disabled { color: #94a3b8; pointer-events: none; cursor: not-allowed; background: #f1f5f9; }
-        .page-footer {
-            text-align: center; padding: 18px 20px; color: #94a3b8; font-size: 13px;
-            border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto;
-        }
-
-        @media (max-width: 576px) {
-            .focused-header { padding: 8px 16px; }
-            .focused-header .logo img { height: 36px; }
-            .header-client-info h5 { font-size: 13px; }
-            .header-client-info .avatar { width: 32px; height: 32px; font-size: 14px; }
-            .page-title-section { padding: 14px 16px; }
-            .page-title-section h1 { font-size: 19px; }
-            .content-container { padding: 0 12px; margin: 20px auto; }
-            .auth-card { padding: 24px 16px 20px 16px; border-radius: 20px; }
-            .otp-icon-circle { width: 64px; height: 64px; font-size: 28px; margin-bottom: 20px; }
-            .portal-title { font-size: 20px; margin-bottom: 8px; }
-            .instruction-wrapper { padding: 12px; margin-bottom: 20px; }
-            #instructionMainText { font-size: 14px; }
-            #instructionEmailText { font-size: 14px; padding: 4px 8px; }
-            .otp-input { width: 38px; height: 48px; font-size: 18px; }
-            .btn-submit-login { padding: 13px 18px; font-size: 15px; margin-bottom: 24px; }
-            .timer-container { font-size: 14px; margin-bottom: 16px; }
-            .resend-link { font-size: 14px; padding: 6px 12px; }
+        .page-footer { text-align: center; padding: 18px 20px; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; background: #ffffff; margin-top: auto; }
+        @media (max-width: 576px) { 
+            .focused-header { padding: 8px 16px; } 
+            .focused-header .logo img { height: 36px; } 
+            .header-client-info h5 { font-size: 13px; } 
+            .header-client-info .avatar { width: 32px; height: 32px; font-size: 14px; } 
+            .page-title-section { padding: 14px 16px; } 
+            .page-title-section h1 { font-size: 19px; } 
+            .content-container { padding: 0 12px; margin: 20px auto; } 
+            .auth-card { padding: 24px 16px 20px 16px; border-radius: 20px; } 
+            .otp-icon-circle { width: 64px; height: 64px; font-size: 28px; margin-bottom: 20px; } 
+            .portal-title { font-size: 20px; margin-bottom: 8px; } 
+            .instruction-wrapper { padding: 12px; margin-bottom: 20px; } 
+            #instructionMainText { font-size: 14px; } 
+            #instructionEmailText { font-size: 14px; padding: 4px 8px; } 
+            .otp-input { width: 38px; height: 48px; font-size: 18px; } 
+            .btn-submit-login { padding: 13px 18px; font-size: 15px; margin-bottom: 24px; } 
+            .timer-container { font-size: 14px; margin-bottom: 16px; } 
+            .resend-link { font-size: 14px; padding: 6px 12px; } 
         }
     </style>
 </head>
@@ -256,5 +153,24 @@
     <script src="/assets/js/modules/session-manager.js"></script>
     <!-- سكربت الصفحة -->
     <script src="/assets/js/verify-otp.js"></script>
+
+    <!-- سكريبت احتياطي لعرض الاسم والبريد فوراً -->
+    <script>
+        (function() {
+            const name = sessionStorage.getItem('otpName');
+            if (name) {
+                document.getElementById('headerUserName').textContent = name;
+                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            }
+            const email = sessionStorage.getItem('otpEmail');
+            if (email) {
+                document.getElementById('instructionEmailText').textContent = email;
+            }
+            const backLink = document.getElementById('backLink');
+            if (backLink) {
+                backLink.href = document.referrer || '/auth/auth/login/login.html';
+            }
+        })();
+    </script>
 </body>
 </html>
