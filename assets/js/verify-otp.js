@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v23 (توقف تام عند أي خطأ، لا توجيه أبداً إلا عند النجاح الكلي)
+ * verify-otp.js – v25 (حماية كاملة ضد التوجيه الخاطئ + اسم المستخدم الحقيقي)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -7,6 +7,8 @@
 
     let supabase;
     let countdownInterval;
+    let isVerifying = false; // قفل
+    let redirectTimeout = null; // لتخزين مؤقت التوجيه
 
     const otpInputs = document.querySelectorAll('.otp-input');
     const verifyBtn = document.getElementById('verifyOtpBtn');
@@ -17,10 +19,30 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
+        await updateUserDisplay();
         bindEvents();
         startCountdown();
         updateEmailDisplay();
         setupBackLink();
+    }
+
+    async function updateUserDisplay() {
+        try {
+            let user = null;
+            if (window.Auth?.getUser) {
+                user = await window.Auth.getUser();
+            } else if (supabase) {
+                const { data } = await supabase.auth.getUser();
+                user = data?.user;
+            }
+            if (user) {
+                const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+                const nameEl = document.getElementById('headerUserName');
+                const avatarEl = document.getElementById('headerAvatar');
+                if (nameEl) nameEl.textContent = name;
+                if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+            }
+        } catch (e) { /* تجاهل */ }
     }
 
     function bindEvents() {
@@ -121,11 +143,23 @@
     }
 
     async function handleVerify() {
+        // منع الضغط المتكرر
+        if (isVerifying) return;
         const code = getOtpCode();
         if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
         clearMessages();
+
+        isVerifying = true;
         if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
         const email = sessionStorage.getItem('otpEmail');
+
+        // إلغاء أي مؤقت توجيه سابق
+        if (redirectTimeout) {
+            clearTimeout(redirectTimeout);
+            redirectTimeout = null;
+        }
+
+        let redirectAllowed = false;
 
         try {
             if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
@@ -136,29 +170,36 @@
 
                 if (!sessionCreated) {
                     showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقاً.');
-                    return;  // ⛔️ خروج بدون توجيه
+                    // لا نسمح بالتوجيه
+                } else {
+                    sessionStorage.removeItem('otpEmail');
+                    if (successMsg) {
+                        successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
+                        successMsg.style.display = 'block';
+                    }
+                    redirectAllowed = true;
                 }
-
-                sessionStorage.removeItem('otpEmail');
-                if (successMsg) {
-                    successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
-                    successMsg.style.display = 'block';
-                }
-                // ⬇️ السطر الوحيد المسموح بالتوجيه ⬇️
-                setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
             } else {
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
                 if (window.onOtpVerified) window.onOtpVerified(code);
-                // لا نقوم بتوجيه تلقائي هنا
+                // لا توجيه تلقائي
             }
         } catch (error) {
             console.error(error);
             showError(getArabicErrorMessage(error.message));
         } finally {
-            // نعيد تمكين الزر فقط إذا لم نوجه
-            if (verifyBtn && !successMsg?.textContent?.includes('جاري تحويلك')) {
-                verifyBtn.disabled = false;
-                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+            if (redirectAllowed) {
+                // إنشاء مؤقت توجيه جديد
+                redirectTimeout = setTimeout(() => {
+                    window.location.href = '/pages/dashboard/index.html';
+                }, 2000);
+            } else {
+                // فشل: إعادة تمكين الزر والخروج من القفل
+                if (verifyBtn) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+                }
+                isVerifying = false;
             }
         }
     }
@@ -177,10 +218,36 @@
         finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
     }
 
-    function startCountdown() { /* ... كما هي */ }
+    function startCountdown() {
+        let seconds = RESEND_TIMEOUT;
+        updateTimerDisplay(seconds);
+        if (resendBtn) resendBtn.disabled = true;
+        countdownInterval = setInterval(() => {
+            seconds--;
+            updateTimerDisplay(seconds);
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; }
+                if (timerSpan) timerSpan.textContent = '';
+            }
+        }, 1000);
+    }
     function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
-    function updateTimerDisplay(seconds) { /* ... */ }
-    function getArabicErrorMessage(msg) { /* ... */ }
+    function updateTimerDisplay(seconds) {
+        if (timerSpan) {
+            const m = Math.floor(seconds / 60), s = seconds % 60;
+            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+    function getArabicErrorMessage(msg) {
+        const map = {
+            'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
+            'Invalid OTP': 'رمز التحقق غير صحيح',
+            'Email not confirmed': 'البريد الإلكتروني غير مفعل',
+            'User not found': 'المستخدم غير موجود'
+        };
+        return map[msg] || msg || 'حدث خطأ غير معروف';
+    }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
