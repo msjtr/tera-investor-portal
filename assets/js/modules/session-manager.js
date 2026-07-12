@@ -1,7 +1,5 @@
 /**
  * modules/session-manager.js - إدارة جلسات المستخدم (محسّن)
- * - إنهاء آمن مع رسائل خطأ
- * - دالة لإنهاء جميع الجلسات الأخرى عند إنشاء جلسة جديدة (اختياري)
  */
 (function() {
     async function getSupabase() {
@@ -19,10 +17,6 @@
         return data || [];
     }
 
-    /**
-     * إنهاء جلسة محددة
-     * @returns {object} { success: boolean, error?: string }
-     */
     async function terminateSession(sessionId, userId) {
         const sb = await getSupabase();
         if (!sb) return { success: false, error: 'Supabase غير متوفر' };
@@ -37,11 +31,6 @@
         return { success: true };
     }
 
-    /**
-     * إنهاء جميع الجلسات النشطة للمستخدم ما عدا الجلسة المحددة (أو كلها إذا omitId=null)
-     * @param {string} userId
-     * @param {string?} omitSessionId - جلسة نستثنيها من الإنهاء (مثلاً الجلسة الحالية)
-     */
     async function deactivateOtherSessions(userId, omitSessionId = null) {
         const sb = await getSupabase();
         if (!sb) return false;
@@ -49,14 +38,13 @@
             .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
             .eq('user_id', userId)
             .eq('status', 'active');
-        if (omitSessionId) {
-            query = query.neq('id', omitSessionId);
-        }
+        if (omitSessionId) query = query.neq('id', omitSessionId);
         const { error } = await query;
         if (error) {
             console.error('فشل إنهاء الجلسات الأخرى:', error);
             return false;
         }
+        console.log('✅ تم إنهاء الجلسات القديمة');
         return true;
     }
 
@@ -69,7 +57,7 @@
         const gps = extraData.gps || {};
 
         const finalCity = loc.city || geo.city || null;
-        const finalCountry = geo.country || null;
+        const finalCountry = geo.country || loc.country || null;
         const finalLat = gps.latitude || geo.lat || null;
         const finalLon = gps.longitude || geo.lon || null;
 
@@ -81,7 +69,7 @@
             ip_address: geo.ip || extraData.ip || 'غير معروف',
             isp: geo.isp || null,
             country: finalCountry,
-            country_code: geo.country_code || null,
+            country_code: geo.country_code || loc.country_code || null,
             city: finalCity,
             district: loc.neighbourhood || loc.district || null,
             neighbourhood: loc.neighbourhood || null,
@@ -128,7 +116,7 @@
     window.SessionManager = {
         fetchSessions,
         terminateSession,
-        deactivateOtherSessions,   // ← الجديد
+        deactivateOtherSessions,
         createSessionRecord
     };
 })();
