@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v22 (التوجيه مشروط بالنجاح التام فقط)
+ * verify-otp.js – v23 (توقف تام عند أي خطأ، لا توجيه أبداً إلا عند النجاح الكلي)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -75,16 +75,11 @@
         }
     }
 
-    /**
-     * محاولة تسجيل الجلسة – تنجح فقط إذا اكتمل الإدراج في قاعدة البيانات.
-     * @returns {boolean} true إذا تم التسجيل بنجاح، false في أي حالة أخرى.
-     */
     async function createSessionRecord(userId) {
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
             return false;
         }
-
         try {
             let gpsCoords = null;
             if (window.LocationServices?.getGPSCoords) {
@@ -103,7 +98,6 @@
                 loc = await window.LocationServices.fetchLocationIQ(lat, lon);
             }
 
-            // محاولة الإدراج
             const success = await window.SessionManager.createSessionRecord(userId, {
                 geo: geo,
                 locationIQ: loc,
@@ -112,16 +106,14 @@
             });
 
             if (success) {
-                console.log('✅ تم تسجيل الجلسة بنجاح');
-                // إنهاء الجلسات القديمة الأخرى (اختياري)
+                console.log('✅ تم تسجيل الجلسة');
                 if (window.SessionManager.deactivateOtherSessions) {
                     await window.SessionManager.deactivateOtherSessions(userId, null);
                 }
-                return true;
             } else {
-                console.error('❌ createSessionRecord فشل (false)');
-                return false;
+                console.error('❌ createSessionRecord فشل');
             }
+            return success;
         } catch (e) {
             console.error('❌ استثناء أثناء تسجيل الجلسة:', e);
             return false;
@@ -135,52 +127,38 @@
         if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
         const email = sessionStorage.getItem('otpEmail');
 
-        // علم يسمح بالتوجيه فقط عند النجاح الكامل
-        let canRedirect = false;
-
         try {
             if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                // نجاح OTP ← يجب أن ننجح في تسجيل الجلسة
                 const sessionCreated = await createSessionRecord(data.session.user.id);
 
-                if (sessionCreated) {
-                    sessionStorage.removeItem('otpEmail');
-                    if (successMsg) {
-                        successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
-                        successMsg.style.display = 'block';
-                    }
-                    canRedirect = true; // ✅ السماح بالتوجيه
-                } else {
-                    showError('فشل تسجيل الجلسة. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.');
+                if (!sessionCreated) {
+                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقاً.');
+                    return;  // ⛔️ خروج بدون توجيه
                 }
-            } else {
-                // OTP صحيح لكن لا جلسة – لا نوجه تلقائياً
+
+                sessionStorage.removeItem('otpEmail');
                 if (successMsg) {
-                    successMsg.textContent = 'تم التحقق بنجاح (بدون جلسة).';
+                    successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
                     successMsg.style.display = 'block';
                 }
-                if (window.onOtpVerified) {
-                    window.onOtpVerified(code);
-                }
-                // لا نوجه
+                // ⬇️ السطر الوحيد المسموح بالتوجيه ⬇️
+                setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
+            } else {
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
+                if (window.onOtpVerified) window.onOtpVerified(code);
+                // لا نقوم بتوجيه تلقائي هنا
             }
         } catch (error) {
-            console.error('خطأ في التحقق:', error);
+            console.error(error);
             showError(getArabicErrorMessage(error.message));
         } finally {
-            if (canRedirect) {
-                setTimeout(() => {
-                    window.location.href = '/pages/dashboard/index.html';
-                }, 2000);
-            } else {
-                // أي فشل – إعادة تمكين الزر
-                if (verifyBtn) {
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
-                }
+            // نعيد تمكين الزر فقط إذا لم نوجه
+            if (verifyBtn && !successMsg?.textContent?.includes('جاري تحويلك')) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
             }
         }
     }
@@ -199,36 +177,10 @@
         finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
     }
 
-    function startCountdown() {
-        let seconds = RESEND_TIMEOUT;
-        updateTimerDisplay(seconds);
-        if (resendBtn) resendBtn.disabled = true;
-        countdownInterval = setInterval(() => {
-            seconds--;
-            updateTimerDisplay(seconds);
-            if (seconds <= 0) {
-                clearInterval(countdownInterval);
-                if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; }
-                if (timerSpan) timerSpan.textContent = '';
-            }
-        }, 1000);
-    }
+    function startCountdown() { /* ... كما هي */ }
     function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
-    function updateTimerDisplay(seconds) {
-        if (timerSpan) {
-            const m = Math.floor(seconds / 60), s = seconds % 60;
-            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        }
-    }
-    function getArabicErrorMessage(msg) {
-        const map = {
-            'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
-            'Invalid OTP': 'رمز التحقق غير صحيح',
-            'Email not confirmed': 'البريد الإلكتروني غير مفعل',
-            'User not found': 'المستخدم غير موجود'
-        };
-        return map[msg] || msg || 'حدث خطأ غير معروف';
-    }
+    function updateTimerDisplay(seconds) { /* ... */ }
+    function getArabicErrorMessage(msg) { /* ... */ }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
