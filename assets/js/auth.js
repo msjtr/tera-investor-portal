@@ -1,9 +1,6 @@
 /**
- * auth.js – v7 (نظام المصادقة المركزي مع دعم GPS)
+ * auth.js – v8 (نظام المصادقة المركزي + تخزين الاسم عند OTP)
  * يعتمد على supabase-client.js لتوفير Supabase
- * يوفر: login, sendOTP, verifyOTP, loginWithPasswordAndOTP, register, resetPassword,
- *        updatePassword, logout, getSession, getUser, isSessionValid, onAuthStateChange, requireAuth,
- *        getCurrentPosition, watchLocationPermission
  */
 (function() {
     let supabase;
@@ -51,12 +48,32 @@
     async function loginWithPasswordAndOTP(email, password) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
-        const { error: signInError } = await sb.auth.signInWithPassword({ email, password });
+
+        // 1. التحقق من كلمة المرور (يُنشئ جلسة مؤقتة)
+        const { data, error: signInError } = await sb.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+
+        // 2. تخزين اسم المستخدم من الجلسة المؤقتة
+        const user = data?.user;
+        if (user?.user_metadata?.full_name) {
+            sessionStorage.setItem('otpName', user.user_metadata.full_name);
+        } else {
+            sessionStorage.setItem('otpName', email);
+        }
+
+        // 3. تسجيل الخروج لإنهاء الجلسة المؤقتة
         await sb.auth.signOut();
-        const { error: otpError } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+
+        // 4. إرسال رمز OTP
+        const { error: otpError } = await sb.auth.signInWithOtp({
+            email,
+            options: { shouldCreateUser: false }
+        });
         if (otpError) throw otpError;
+
+        // 5. تخزين البريد الإلكتروني للتحقق
         sessionStorage.setItem('otpEmail', email);
+
         return { success: true };
     }
 
@@ -108,10 +125,6 @@
         return user;
     }
 
-    /**
-     * فحص سريع وآمن لصلاحية الجلسة (بدون إعادة توجيه أو تنظيف)
-     * @returns {boolean} true إذا كانت الجلسة صالحة
-     */
     async function isSessionValid() {
         const sb = await getSupabase();
         if (!sb) return false;
@@ -139,10 +152,8 @@
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // جلسة غير صالحة - نسجل الخروج وننظف جزئياً
                 await sb.auth.signOut();
                 localStorage.removeItem('rememberMe');
-                // لا نمسح sessionStorage هنا لنحافظ على otpEmail إن وجد
                 window.location.replace(redirectUrl);
                 return null;
             }
@@ -153,7 +164,6 @@
         }
     }
 
-    // دوال الموقع الجغرافي
     function getCurrentPosition() {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
@@ -199,5 +209,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v7 جاهز');
+    console.log('auth.js v8 جاهز');
 })();
