@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v19 (إيقاف التوجيه نهائيًا عند أي خطأ في تسجيل الجلسة)
+ * verify-otp.js – v20 (إيقاف التوجيه نهائيًا عند أي خطأ)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -75,16 +75,12 @@
         }
     }
 
-    // تسجيل الجلسة – تُعيد true فقط إذا نجح كل شيء
     async function createSessionRecord(userId) {
-        // 1. التحقق من وجود SessionManager
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
             return false;
         }
-
         try {
-            // 2. جمع بيانات الموقع (حتى لو فشلت نستمر)
             let gpsCoords = null;
             if (window.LocationServices?.getGPSCoords) {
                 gpsCoords = await window.LocationServices.getGPSCoords();
@@ -102,7 +98,6 @@
                 loc = await window.LocationServices.fetchLocationIQ(lat, lon);
             }
 
-            // 3. استدعاء الدالة الأساسية
             console.log('📦 جاري إنشاء سجل الجلسة...');
             const success = await window.SessionManager.createSessionRecord(userId, {
                 geo: geo,
@@ -111,21 +106,18 @@
                 ip: geo.ip
             });
 
-            if (!success) {
-                console.error('❌ createSessionRecord أعاد false (فشل في قاعدة البيانات)');
-                return false;
+            if (success) {
+                console.log('✅ تم تسجيل الجلسة');
+                if (window.SessionManager.deactivateOtherSessions) {
+                    await window.SessionManager.deactivateOtherSessions(userId, null);
+                }
+            } else {
+                console.error('❌ createSessionRecord أعاد false');
             }
 
-            // 4. إنهاء الجلسات القديمة (اختياري)
-            if (window.SessionManager.deactivateOtherSessions) {
-                await window.SessionManager.deactivateOtherSessions(userId, null);
-            }
-
-            console.log('✅ تم تسجيل الجلسة بنجاح');
-            return true;
-
+            return success;
         } catch (e) {
-            console.error('❌ استثناء أثناء createSessionRecord:', e);
+            console.error('❌ استثناء أثناء تسجيل الجلسة:', e);
             return false;
         }
     }
@@ -137,43 +129,43 @@
         if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
         const email = sessionStorage.getItem('otpEmail');
 
+        // علم السماح بالتوجيه
+        let canRedirect = false;
+
         try {
             if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                // نجاح OTP ← نحاول تسجيل الجلسة
                 const sessionCreated = await createSessionRecord(data.session.user.id);
 
-                // ========== نقطة التوقف الأساسية ==========
                 if (!sessionCreated) {
-                    // فشل تسجيل الجلسة – لا توجيه
-                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقًا.');
-                    if (verifyBtn) {
-                        verifyBtn.disabled = false;
-                        verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
-                    }
-                    return; // ⛔️ خروج – لا توجيه
+                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقاً.');
+                } else {
+                    sessionStorage.removeItem('otpEmail');
+                    if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
+                    canRedirect = true;
                 }
-
-                // نجاح كامل
-                sessionStorage.removeItem('otpEmail');
-                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
-                setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
-
             } else {
-                // OTP صحيح لكن لا جلسة (نادر)
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
                 if (window.onOtpVerified) window.onOtpVerified(code);
-                else setTimeout(() => window.location.href = '/pages/dashboard/index.html', 1500);
+                else canRedirect = true; // لا توجد جلسة جديدة لكن نسمح بالتوجيه (حالة نادرة)
             }
         } catch (error) {
-            // فشل في verifyOTP نفسها (رمز خاطئ، انتهاء صلاحية)
             console.error(error);
             showError(getArabicErrorMessage(error.message));
-            if (verifyBtn) {
-                verifyBtn.disabled = false;
-                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+        } finally {
+            if (!canRedirect) {
+                // فشل – نعيد تمكين الزر ولا نوجه
+                if (verifyBtn) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+                }
+            } else {
+                // نجاح – توجيه بعد ثوانٍ
+                setTimeout(() => {
+                    window.location.href = '/pages/dashboard/index.html';
+                }, 2000);
             }
         }
     }
