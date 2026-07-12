@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v18 (إيقاف التوجيه عند فشل تسجيل الجلسة)
+ * verify-otp.js – v19 (إيقاف التوجيه نهائيًا عند أي خطأ في تسجيل الجلسة)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -75,12 +75,16 @@
         }
     }
 
+    // تسجيل الجلسة – تُعيد true فقط إذا نجح كل شيء
     async function createSessionRecord(userId) {
+        // 1. التحقق من وجود SessionManager
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
             return false;
         }
+
         try {
+            // 2. جمع بيانات الموقع (حتى لو فشلت نستمر)
             let gpsCoords = null;
             if (window.LocationServices?.getGPSCoords) {
                 gpsCoords = await window.LocationServices.getGPSCoords();
@@ -98,6 +102,7 @@
                 loc = await window.LocationServices.fetchLocationIQ(lat, lon);
             }
 
+            // 3. استدعاء الدالة الأساسية
             console.log('📦 جاري إنشاء سجل الجلسة...');
             const success = await window.SessionManager.createSessionRecord(userId, {
                 geo: geo,
@@ -106,18 +111,21 @@
                 ip: geo.ip
             });
 
-            if (success) {
-                console.log('✅ تم تسجيل الجلسة');
-                if (window.SessionManager.deactivateOtherSessions) {
-                    await window.SessionManager.deactivateOtherSessions(userId, null);
-                }
-            } else {
-                console.error('❌ createSessionRecord أعاد false');
+            if (!success) {
+                console.error('❌ createSessionRecord أعاد false (فشل في قاعدة البيانات)');
+                return false;
             }
 
-            return success;
+            // 4. إنهاء الجلسات القديمة (اختياري)
+            if (window.SessionManager.deactivateOtherSessions) {
+                await window.SessionManager.deactivateOtherSessions(userId, null);
+            }
+
+            console.log('✅ تم تسجيل الجلسة بنجاح');
+            return true;
+
         } catch (e) {
-            console.error('❌ استثناء أثناء تسجيل الجلسة:', e);
+            console.error('❌ استثناء أثناء createSessionRecord:', e);
             return false;
         }
     }
@@ -134,27 +142,39 @@
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
+                // نجاح OTP ← نحاول تسجيل الجلسة
                 const sessionCreated = await createSessionRecord(data.session.user.id);
 
+                // ========== نقطة التوقف الأساسية ==========
                 if (!sessionCreated) {
-                    // فشل تسجيل الجلسة – إيقاف التوجيه
-                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني.');
-                    if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
-                    return;
+                    // فشل تسجيل الجلسة – لا توجيه
+                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقًا.');
+                    if (verifyBtn) {
+                        verifyBtn.disabled = false;
+                        verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+                    }
+                    return; // ⛔️ خروج – لا توجيه
                 }
 
+                // نجاح كامل
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
                 setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
+
             } else {
+                // OTP صحيح لكن لا جلسة (نادر)
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
                 if (window.onOtpVerified) window.onOtpVerified(code);
                 else setTimeout(() => window.location.href = '/pages/dashboard/index.html', 1500);
             }
         } catch (error) {
+            // فشل في verifyOTP نفسها (رمز خاطئ، انتهاء صلاحية)
             console.error(error);
             showError(getArabicErrorMessage(error.message));
-            if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
+            if (verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+            }
         }
     }
 
