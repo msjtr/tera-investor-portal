@@ -1,5 +1,5 @@
 /**
- * modules/session-manager.js - إدارة جلسات المستخدم (محسّن)
+ * modules/session-manager.js - إدارة جلسات المستخدم (مرن مع البيانات الفارغة)
  */
 (function() {
     async function getSupabase() {
@@ -51,7 +51,14 @@
     async function createSessionRecord(userId, extraData = {}) {
         const sb = await getSupabase();
         if (!sb) return false;
-        const deviceInfo = window.DeviceInfo?.getDeviceAndBrowserInfo() || {};
+
+        // الحصول على معلومات الجهاز بأمان
+        let deviceInfo = {};
+        try {
+            deviceInfo = (window.DeviceInfo && window.DeviceInfo.getDeviceAndBrowserInfo) ?
+                window.DeviceInfo.getDeviceAndBrowserInfo() : {};
+        } catch (e) { /* استخدام كائن فارغ */ }
+
         const geo = extraData.geo || {};
         const loc = extraData.locationIQ || {};
         const gps = extraData.gps || {};
@@ -66,7 +73,7 @@
             session_number: 'SES-' + Date.now().toString(36).toUpperCase(),
             login_at: new Date().toISOString(),
             status: 'active',
-            ip_address: geo.ip || extraData.ip || 'غير معروف',
+            ip_address: geo.ip || extraData.ip || null,  // null إذا لم يتوفر
             isp: geo.isp || null,
             country: finalCountry,
             country_code: geo.country_code || loc.country_code || null,
@@ -83,26 +90,26 @@
             vpn_detected: geo.proxy || false,
             proxy_detected: geo.proxy || false,
             hosting_detected: geo.hosting || false,
-            device_type: deviceInfo.device_type,
-            browser_name: deviceInfo.browser_name,
-            browser_version: deviceInfo.browser_version,
-            user_agent: deviceInfo.user_agent,
-            operating_system: deviceInfo.operating_system,
-            os_version: deviceInfo.os_version,
-            platform: deviceInfo.platform,
-            language: deviceInfo.language,
-            screen_resolution: deviceInfo.screen_resolution,
-            pixel_ratio: deviceInfo.pixel_ratio,
-            color_depth: deviceInfo.color_depth,
+            device_type: deviceInfo.device_type || null,
+            browser_name: deviceInfo.browser_name || null,
+            browser_version: deviceInfo.browser_version || null,
+            user_agent: deviceInfo.user_agent || null,
+            operating_system: deviceInfo.operating_system || null,
+            os_version: deviceInfo.os_version || null,
+            platform: deviceInfo.platform || null,
+            language: deviceInfo.language || null,
+            screen_resolution: deviceInfo.screen_resolution || null,
+            pixel_ratio: deviceInfo.pixel_ratio || null,
+            color_depth: deviceInfo.color_depth || null,
             cpu_architecture: deviceInfo.cpu_cores || null,
-            device_memory: deviceInfo.device_memory,
-            touch_supported: deviceInfo.touch_supported,
-            cookies_enabled: deviceInfo.cookies_enabled,
-            local_storage: deviceInfo.local_storage,
-            session_storage: deviceInfo.session_storage,
-            indexed_db: deviceInfo.indexed_db,
-            webgl_supported: deviceInfo.webgl_supported,
-            fingerprint: deviceInfo.fingerprint,
+            device_memory: deviceInfo.device_memory || null,
+            touch_supported: deviceInfo.touch_supported || null,
+            cookies_enabled: deviceInfo.cookies_enabled || null,
+            local_storage: deviceInfo.local_storage || null,
+            session_storage: deviceInfo.session_storage || null,
+            indexed_db: deviceInfo.indexed_db || null,
+            webgl_supported: deviceInfo.webgl_supported || null,
+            fingerprint: deviceInfo.fingerprint || null,
             network_type: deviceInfo.network_type || null,
             is_current_session: true
         };
