@@ -1,5 +1,6 @@
 /**
- * modules/session-manager.js - إدارة جلسات المستخدم (مرن مع البيانات الفارغة)
+ * modules/session-manager.js – إدارة جلسات المستخدم (مرن مع البيانات الفارغة)
+ * تم إصلاح deactivateOtherSessions لاستثناء الجلسة الحالية تلقائياً
  */
 (function() {
     async function getSupabase() {
@@ -31,20 +32,20 @@
         return { success: true };
     }
 
-    async function deactivateOtherSessions(userId, omitSessionId = null) {
+    // 🔁 تُنهي جميع الجلسات النشطة الأخرى (تستثني الجلسة الحالية تلقائياً)
+    async function deactivateOtherSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return false;
-        let query = sb.from('user_login_sessions')
+        const { error } = await sb.from('user_login_sessions')
             .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
             .eq('user_id', userId)
-            .eq('status', 'active');
-        if (omitSessionId) query = query.neq('id', omitSessionId);
-        const { error } = await query;
+            .eq('status', 'active')
+            .neq('is_current_session', true);  // ⬅️ لا تمس الجلسة الحالية
         if (error) {
             console.error('فشل إنهاء الجلسات الأخرى:', error);
             return false;
         }
-        console.log('✅ تم إنهاء الجلسات القديمة');
+        console.log('✅ تم إنهاء الجلسات القديمة (باستثناء الجلسة الحالية)');
         return true;
     }
 
@@ -52,7 +53,6 @@
         const sb = await getSupabase();
         if (!sb) return false;
 
-        // الحصول على معلومات الجهاز بأمان
         let deviceInfo = {};
         try {
             deviceInfo = (window.DeviceInfo && window.DeviceInfo.getDeviceAndBrowserInfo) ?
@@ -73,7 +73,7 @@
             session_number: 'SES-' + Date.now().toString(36).toUpperCase(),
             login_at: new Date().toISOString(),
             status: 'active',
-            ip_address: geo.ip || extraData.ip || null,  // null إذا لم يتوفر
+            ip_address: geo.ip || extraData.ip || null,
             isp: geo.isp || null,
             country: finalCountry,
             country_code: geo.country_code || loc.country_code || null,
