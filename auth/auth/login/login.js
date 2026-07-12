@@ -1,5 +1,5 @@
 /**
- * login.js – نسخة مستقرة تمامًا (مضادة للحلقات)
+ * login.js – نسخة مستقرة تمامًا (مضادة للحلقات + تخزين اسم المستخدم)
  */
 (function() {
     // منع التنفيذ المتكرر
@@ -74,7 +74,29 @@
 
         try {
             await window.Auth.loginWithPasswordAndOTP(email, password);
+
+            // ──────────── تخزين اسم المستخدم ────────────
+            try {
+                // محاولة الحصول على Supabase لجلب الاسم من الجلسة المؤقتة
+                const sb = window.teraSupabase || await window.waitForSupabase?.();
+                if (sb) {
+                    const { data: { user } } = await sb.auth.getUser();
+                    if (user && user.user_metadata?.full_name) {
+                        sessionStorage.setItem('otpName', user.user_metadata.full_name);
+                    } else {
+                        sessionStorage.setItem('otpName', email);
+                    }
+                } else {
+                    sessionStorage.setItem('otpName', email);
+                }
+            } catch (nameError) {
+                // إذا فشل أي شيء، نخزن البريد كاسم افتراضي
+                sessionStorage.setItem('otpName', email);
+            }
+            // ─────────────────────────────────────────────
+
             window.location.href = '/auth/verify-otp.html';
+
         } catch (error) {
             console.error('خطأ:', error);
             let message = 'حدث خطأ، حاول مرة أخرى';
