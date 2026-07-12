@@ -1,48 +1,19 @@
 /**
- * modules/location-services.js - خدمات تحديد الموقع (استخراج احتياطي من display_name)
+ * modules/location-services.js – يعتمد فقط على LocationIQ + GPS
  */
 (function() {
     const LOCATIONIQ_KEY = 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
 
-    async function tryIPAPIcom() {
-        try {
-            const r = await fetch('https://ip-api.com/json/?fields=query,country,countryCode,city,lat,lon,isp,org,proxy,hosting');
-            if (!r.ok) throw new Error('ip-api failed');
-            const d = await r.json();
-            if (d.query) return { ip: d.query, country: d.country, country_code: d.countryCode, city: d.city, isp: d.isp || d.org, lat: d.lat, lon: d.lon, proxy: d.proxy || false, hosting: d.hosting || false };
-        } catch (e) {}
-        return null;
-    }
-
-    async function tryIPAPIco() {
-        try {
-            const r = await fetch('https://ipapi.co/json/');
-            if (!r.ok) throw new Error('ipapi.co failed');
-            const d = await r.json();
-            if (d.ip) return { ip: d.ip, country: d.country_name, country_code: d.country_code, city: d.city, isp: d.org, lat: d.latitude, lon: d.longitude, proxy: d.proxy || false, hosting: d.hosting || false };
-        } catch (e) {}
-        return null;
-    }
-
-    async function tryFreeGeoIP() {
-        try {
-            const r = await fetch('https://freegeoip.app/json/');
-            if (!r.ok) throw new Error('freegeoip failed');
-            const d = await r.json();
-            if (d.ip) return { ip: d.ip, country: d.country_name, country_code: d.country_code, city: d.city, isp: d.isp, lat: d.latitude, lon: d.longitude, proxy: false, hosting: false };
-        } catch (e) {}
-        return null;
-    }
-
+    /**
+     * لم نعد نستخدم أي خدمات IP خارجية. تُرجع كائنًا فارغًا.
+     */
     async function fetchBasicGeo() {
-        let res = await tryIPAPIcom();
-        if (res) return res;
-        res = await tryIPAPIco();
-        if (res) return res;
-        res = await tryFreeGeoIP();
-        return res || { ip: null, country: null, city: null, isp: null, lat: null, lon: null };
+        return {};
     }
 
+    /**
+     * LocationIQ: يحول الإحداثيات إلى عنوان مفصل.
+     */
     async function fetchLocationIQ(lat, lon) {
         if (!lat || !lon) return {};
         const url = `https://us1.locationiq.com/v1/reverse.php?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json&accept-language=ar`;
@@ -64,7 +35,7 @@
                 district: address.county || data.county || address.district || data.district || ''
             };
 
-            // احتياطي: استخراج من display_name
+            // احتياطي من display_name
             const dn = result.display_name;
             if (dn && (!result.country || !result.city || !result.neighbourhood)) {
                 const parts = dn.split(',').map(s => s.trim());
@@ -82,12 +53,20 @@
             }
 
             return result;
-        } catch (e) { return {}; }
+        } catch (e) {
+            console.warn('⚠️ LocationIQ failed:', e);
+            return {};
+        }
     }
 
+    /**
+     * محاولة الحصول على إحداثيات GPS من المتصفح.
+     */
     async function getGPSCoords() {
         try {
-            if (window.Auth?.getCurrentPosition) return await window.Auth.getCurrentPosition();
+            if (window.Auth?.getCurrentPosition) {
+                return await window.Auth.getCurrentPosition();
+            }
         } catch (e) {}
         return null;
     }
