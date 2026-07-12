@@ -1,9 +1,9 @@
 /**
- * verify-otp.js – منسق خفيف (يستخدم LocationServices, SessionManager, DeviceInfo)
+ * verify-otp.js – منسق خفيف (يتضمن تحديث البريد وزر العودة)
  */
 (function() {
     const OTP_LENGTH = 8;
-    const RESEND_TIMEOUT = 300; // 5 دقائق
+    const RESEND_TIMEOUT = 300;
 
     let supabase;
     let countdownInterval;
@@ -19,6 +19,8 @@
         supabase = window.teraSupabase || await window.waitForSupabase?.();
         bindEvents();
         startCountdown();
+        updateEmailDisplay();
+        setupBackLink();
     }
 
     function bindEvents() {
@@ -56,6 +58,21 @@
     function clearMessages() {
         if (errorMsg) errorMsg.style.display = 'none';
         if (successMsg) successMsg.style.display = 'none';
+    }
+
+    function updateEmailDisplay() {
+        const email = sessionStorage.getItem('otpEmail');
+        if (email) {
+            const emailEl = document.getElementById('instructionEmailText');
+            if (emailEl) emailEl.textContent = email;
+        }
+    }
+
+    function setupBackLink() {
+        const backLink = document.getElementById('backLink');
+        if (backLink) {
+            backLink.href = document.referrer || '/auth/auth/login/login.html';
+        }
     }
 
     async function createSessionRecord(userId) {
