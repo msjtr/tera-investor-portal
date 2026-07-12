@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v20 (إيقاف التوجيه نهائيًا عند أي خطأ)
+ * verify-otp.js – v21 (إيقاف التوجيه عند أي خطأ – نهائي)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -75,6 +75,7 @@
         }
     }
 
+    // تُعيد true فقط إذا تم إدراج الجلسة بنجاح
     async function createSessionRecord(userId) {
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
@@ -129,43 +130,47 @@
         if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...'; }
         const email = sessionStorage.getItem('otpEmail');
 
-        // علم السماح بالتوجيه
+        // متغير التحكم الوحيد المسموح له بتفعيل التوجيه
         let canRedirect = false;
 
         try {
             if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
             const data = await window.Auth.verifyOTP(email, code);
 
+            // الحالة الوحيدة التي تسمح بالتوجيه: OTP صحيح + جلسة + سجل جلسة ناجح
             if (data?.session) {
                 const sessionCreated = await createSessionRecord(data.session.user.id);
 
-                if (!sessionCreated) {
-                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقاً.');
-                } else {
+                if (sessionCreated) {
                     sessionStorage.removeItem('otpEmail');
                     if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
-                    canRedirect = true;
+                    canRedirect = true;  // ✅ التوجيه مسموح
+                } else {
+                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني أو المحاولة لاحقاً.');
                 }
             } else {
+                // OTP صحيح لكن بدون جلسة – نادر، لا نوجه تلقائياً
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح'; successMsg.style.display = 'block'; }
-                if (window.onOtpVerified) window.onOtpVerified(code);
-                else canRedirect = true; // لا توجد جلسة جديدة لكن نسمح بالتوجيه (حالة نادرة)
+                // نعطي فرصة لـ onOtpVerified لكن لا نوجه تلقائياً
+                if (window.onOtpVerified) {
+                    window.onOtpVerified(code);
+                }
             }
         } catch (error) {
             console.error(error);
             showError(getArabicErrorMessage(error.message));
         } finally {
-            if (!canRedirect) {
-                // فشل – نعيد تمكين الزر ولا نوجه
+            if (canRedirect) {
+                // نجاح مؤكد – توجيه بعد ثانيتين
+                setTimeout(() => {
+                    window.location.href = '/pages/dashboard/index.html';
+                }, 2000);
+            } else {
+                // أي شيء آخر – إعادة تمكين الزر والبقاء في الصفحة
                 if (verifyBtn) {
                     verifyBtn.disabled = false;
                     verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
                 }
-            } else {
-                // نجاح – توجيه بعد ثوانٍ
-                setTimeout(() => {
-                    window.location.href = '/pages/dashboard/index.html';
-                }, 2000);
             }
         }
     }
