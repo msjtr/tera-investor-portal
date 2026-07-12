@@ -3,8 +3,10 @@
  */
 (function() {
     const OTP_LENGTH = 8;
-    const RESEND_TIMEOUT = 300;
-    let supabase, countdownInterval;
+    const RESEND_TIMEOUT = 300; // 5 دقائق
+
+    let supabase;
+    let countdownInterval;
 
     const otpInputs = document.querySelectorAll('.otp-input');
     const verifyBtn = document.getElementById('verifyOtpBtn');
@@ -19,30 +21,75 @@
         startCountdown();
     }
 
-    function bindEvents() { /* ... كما هي ... */ }
+    function bindEvents() {
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = value;
+                if (value && index < otpInputs.length - 1) otpInputs[index + 1].focus();
+                checkComplete();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus();
+            });
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+                if (digits.length === OTP_LENGTH) {
+                    for (let i = 0; i < OTP_LENGTH; i++) if (otpInputs[i]) otpInputs[i].value = digits[i] || '';
+                    otpInputs[OTP_LENGTH - 1].focus();
+                    checkComplete();
+                }
+            });
+        });
+        if (verifyBtn) verifyBtn.addEventListener('click', handleVerify);
+        if (resendBtn) resendBtn.addEventListener('click', handleResend);
+    }
+
     function getOtpCode() { let code = ''; otpInputs.forEach(i => code += i.value); return code; }
     function checkComplete() { if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH; }
 
-    function showError(msg) { if (errorMsg) { errorMsg.textContent = msg; errorMsg.style.display = 'block'; } if (successMsg) successMsg.style.display = 'none'; }
-    function clearMessages() { if (errorMsg) errorMsg.style.display = 'none'; if (successMsg) successMsg.style.display = 'none'; }
+    function showError(msg) {
+        if (errorMsg) { errorMsg.textContent = msg; errorMsg.style.display = 'block'; }
+        if (successMsg) successMsg.style.display = 'none';
+    }
+    function clearMessages() {
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (successMsg) successMsg.style.display = 'none';
+    }
 
-    async function createSessionViaModules(userId) {
-        if (!window.LocationServices || !window.SessionManager || !window.DeviceInfo) {
-            console.warn('⚠️ بعض الوحدات غير متوفرة');
-            return;
+    async function createSessionRecord(userId) {
+        if (!window.LocationServices || !window.SessionManager) {
+            console.warn('⚠️ LocationServices أو SessionManager غير متوفر');
+            return false;
         }
         try {
-            const gps = await window.LocationServices.getGPSCoords();
+            let gpsCoords = null;
+            if (window.LocationServices.getGPSCoords) {
+                gpsCoords = await window.LocationServices.getGPSCoords();
+            }
+
             const geo = await window.LocationServices.fetchBasicGeo();
-            const lat = gps?.latitude || geo.lat;
-            const lon = gps?.longitude || geo.lon;
+            const lat = gpsCoords?.latitude || geo.lat;
+            const lon = gpsCoords?.longitude || geo.lon;
             const loc = await window.LocationServices.fetchLocationIQ(lat, lon);
 
-            await window.SessionManager.createSessionRecord(userId, { geo, locationIQ: loc, gps, ip: geo.ip });
+            const success = await window.SessionManager.createSessionRecord(userId, {
+                geo: geo,
+                locationIQ: loc,
+                gps: gpsCoords,
+                ip: geo.ip
+            });
 
-            // إنهاء الجلسات القديمة بعد إنشاء الجلسة الجديدة
-            await window.SessionManager.deactivateOtherSessions(userId, null);
-        } catch (e) { console.error('فشل في إنشاء سجل الجلسة:', e); }
+            if (success && window.SessionManager.deactivateOtherSessions) {
+                await window.SessionManager.deactivateOtherSessions(userId, null);
+            }
+
+            return success;
+        } catch (e) {
+            console.error('❌ فشل إنشاء سجل الجلسة:', e);
+            return false;
+        }
     }
 
     async function handleVerify() {
@@ -55,8 +102,9 @@
         try {
             if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
             const data = await window.Auth.verifyOTP(email, code);
+
             if (data?.session) {
-                await createSessionViaModules(data.session.user.id);
+                await createSessionRecord(data.session.user.id);
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
                 setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
@@ -72,11 +120,50 @@
         }
     }
 
-    async function handleResend() { /* ... كما هي ... */ }
-    function startCountdown() { /* ... */ }
-    function resetCountdown() { /* ... */ }
-    function updateTimerDisplay(seconds) { /* ... */ }
-    function getArabicErrorMessage(msg) { /* ... */ }
+    async function handleResend() {
+        const email = sessionStorage.getItem('otpEmail');
+        if (!email) { showError('البريد الإلكتروني غير متوفر'); return; }
+        clearMessages();
+        if (resendBtn) { resendBtn.disabled = true; resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...'; }
+        try {
+            if (!window.Auth?.sendOTP) throw new Error('الخدمة غير متوفرة');
+            await window.Auth.sendOTP(email);
+            if (successMsg) { successMsg.textContent = 'تم إرسال رمز جديد'; successMsg.style.display = 'block'; }
+            resetCountdown();
+        } catch (e) { showError('فشل إعادة الإرسال'); }
+        finally { if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; } }
+    }
+
+    function startCountdown() {
+        let seconds = RESEND_TIMEOUT;
+        updateTimerDisplay(seconds);
+        if (resendBtn) resendBtn.disabled = true;
+        countdownInterval = setInterval(() => {
+            seconds--;
+            updateTimerDisplay(seconds);
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة إرسال الرمز'; }
+                if (timerSpan) timerSpan.textContent = '';
+            }
+        }, 1000);
+    }
+    function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
+    function updateTimerDisplay(seconds) {
+        if (timerSpan) {
+            const m = Math.floor(seconds / 60), s = seconds % 60;
+            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+    function getArabicErrorMessage(msg) {
+        const map = {
+            'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
+            'Invalid OTP': 'رمز التحقق غير صحيح',
+            'Email not confirmed': 'البريد الإلكتروني غير مفعل',
+            'User not found': 'المستخدم غير موجود'
+        };
+        return map[msg] || msg || 'حدث خطأ غير معروف';
+    }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
