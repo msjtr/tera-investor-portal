@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – منسق خفيف (يتضمن تحديث البريد وزر العودة)
+ * verify-otp.js – v18 (إيقاف التوجيه عند فشل تسجيل الجلسة)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -76,21 +76,29 @@
     }
 
     async function createSessionRecord(userId) {
-        if (!window.LocationServices || !window.SessionManager) {
-            console.warn('⚠️ LocationServices أو SessionManager غير متوفر');
+        if (!window.SessionManager) {
+            console.error('❌ SessionManager غير محمل.');
             return false;
         }
         try {
             let gpsCoords = null;
-            if (window.LocationServices.getGPSCoords) {
+            if (window.LocationServices?.getGPSCoords) {
                 gpsCoords = await window.LocationServices.getGPSCoords();
             }
 
-            const geo = await window.LocationServices.fetchBasicGeo();
+            let geo = {};
+            if (window.LocationServices?.fetchBasicGeo) {
+                geo = await window.LocationServices.fetchBasicGeo();
+            }
+
+            let loc = {};
             const lat = gpsCoords?.latitude || geo.lat;
             const lon = gpsCoords?.longitude || geo.lon;
-            const loc = await window.LocationServices.fetchLocationIQ(lat, lon);
+            if (lat && lon && window.LocationServices?.fetchLocationIQ) {
+                loc = await window.LocationServices.fetchLocationIQ(lat, lon);
+            }
 
+            console.log('📦 جاري إنشاء سجل الجلسة...');
             const success = await window.SessionManager.createSessionRecord(userId, {
                 geo: geo,
                 locationIQ: loc,
@@ -98,13 +106,18 @@
                 ip: geo.ip
             });
 
-            if (success && window.SessionManager.deactivateOtherSessions) {
-                await window.SessionManager.deactivateOtherSessions(userId, null);
+            if (success) {
+                console.log('✅ تم تسجيل الجلسة');
+                if (window.SessionManager.deactivateOtherSessions) {
+                    await window.SessionManager.deactivateOtherSessions(userId, null);
+                }
+            } else {
+                console.error('❌ createSessionRecord أعاد false');
             }
 
             return success;
         } catch (e) {
-            console.error('❌ فشل إنشاء سجل الجلسة:', e);
+            console.error('❌ استثناء أثناء تسجيل الجلسة:', e);
             return false;
         }
     }
@@ -121,7 +134,15 @@
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                await createSessionRecord(data.session.user.id);
+                const sessionCreated = await createSessionRecord(data.session.user.id);
+
+                if (!sessionCreated) {
+                    // فشل تسجيل الجلسة – إيقاف التوجيه
+                    showError('تعذر تسجيل الجلسة. يرجى التواصل مع الدعم الفني.');
+                    if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
+                    return;
+                }
+
                 sessionStorage.removeItem('otpEmail');
                 if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
                 setTimeout(() => { window.location.href = '/pages/dashboard/index.html'; }, 2000);
