@@ -1,8 +1,9 @@
 /**
  * modules/activity-tracker.js – مؤقت الخمول + تحديث last_activity_at
+ * تم تغيير المهلة إلى دقيقة واحدة
  */
 (function() {
-    const IDLE_TIME = 5 * 60 * 1000;
+    const IDLE_TIME = 1 * 60 * 1000; // دقيقة واحدة
     let idleTimer, idleWarningTimer;
     let onTimeoutCallback = null;
 
@@ -36,9 +37,10 @@
         const warningEl = document.getElementById('idleWarning');
         if (warningEl) warningEl.style.display = 'none';
 
+        // تحذير قبل 10 ثوانٍ من انتهاء الدقيقة
         idleWarningTimer = setTimeout(() => {
             if (warningEl) warningEl.style.display = 'flex';
-        }, IDLE_TIME - 30000);
+        }, IDLE_TIME - 10000);
 
         idleTimer = setTimeout(async () => {
             if (onTimeoutCallback) {
@@ -54,6 +56,7 @@
                             .eq('is_current_session', true);
                     }
                 }
+                // Auth.logout الجديدة ستقوم بالتوجيه تلقائياً إلى صفحة الدخول
                 if (window.Auth?.logout) {
                     await window.Auth.logout();
                 } else {
