@@ -215,14 +215,14 @@
 
             <form id="otpForm" novalidate>
                 <div class="otp-fields-container" id="otpFieldsContainer">
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
-                    <input type="text" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp1" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code" required>
+                    <input type="text" id="otp2" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp3" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp4" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp5" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp6" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp7" class="otp-input" maxlength="1" inputmode="numeric" required>
+                    <input type="text" id="otp8" class="otp-input" maxlength="1" inputmode="numeric" required>
                 </div>
                 <button type="button" id="verifyOtpBtn" class="btn-submit-login" disabled>
                     <i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة
@@ -256,18 +256,5 @@
     <script src="/assets/js/modules/session-manager.js"></script>
     <!-- سكربت الصفحة -->
     <script src="/assets/js/verify-otp.js"></script>
-
-    <script>
-        (function() {
-            const email = sessionStorage.getItem('otpEmail');
-            if (email) {
-                document.getElementById('instructionEmailText').textContent = email;
-            }
-            const backLink = document.getElementById('backLink');
-            if (backLink) {
-                backLink.href = document.referrer || '/auth/auth/login/login.html';
-            }
-        })();
-    </script>
 </body>
 </html>
