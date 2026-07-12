@@ -1,18 +1,163 @@
-/**
- * sidebar.js – تفعيل القائمة الجانبية وزر الخروج
- */
+<!-- ============================================================
+     القائمة الجانبية (Sidebar) – مكون مستقل (تم إصلاح زر الخروج)
+     ============================================================
+     يُستخدم في لوحة التحكم والصفحات المحمية
+     ============================================================ -->
+
+<aside class="sidebar-container" id="sidebar" role="navigation" aria-label="القائمة الرئيسية">
+
+    <!-- رأس القائمة للموبايل -->
+    <div class="sidebar-mobile-header d-lg-none">
+        <span class="sidebar-title">
+            <i class="fas fa-bars"></i> القائمة الرئيسية
+        </span>
+        <button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- محتوى القائمة -->
+    <nav class="sidebar-menu">
+        <ul class="nav-list">
+
+            <!-- لوحة التحكم -->
+            <li class="nav-item active">
+                <a href="/pages/dashboard/index.html">
+                    <i class="fas fa-th-large"></i>
+                    <span class="nav-label">لوحة التحكم</span>
+                </a>
+            </li>
+
+            <!-- الاستثمارات -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-label">الاستثمار</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/investments/investment-details.html"><i class="fas fa-store-alt"></i> سوق الفرص والشركات المطروحة</a></li>
+                    <li><a href="/pages/investments/extended-investments.html"><i class="fas fa-history"></i> سجل الشراكة الممتدة</a></li>
+                    <li><a href="/pages/investments/opportunities.html"><i class="fas fa-list-ul"></i> سجل فرص الشراكة</a></li>
+                    <li><a href="/pages/investments/active-investments.html"><i class="fas fa-file-signature"></i> سجل العقود</a></li>
+                </ul>
+            </li>
+
+            <!-- المحفظة -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-wallet"></i>
+                    <span class="nav-label">المحفظة</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/portfolio/portfolio-overview.html"><i class="fas fa-eye"></i> نظرة عامة</a></li>
+                    <li><a href="/pages/portfolio/transactions.html"><i class="fas fa-exchange-alt"></i> المعاملات المالية</a></li>
+                    <li><a href="/pages/portfolio/profits.html"><i class="fas fa-arrow-trend-up"></i> الأرباح الدورية</a></li>
+                    <li><a href="/pages/portfolio/withdraw-request.html"><i class="fas fa-money-bill-wave"></i> طلب سحب</a></li>
+                    <li><a href="/pages/portfolio/withdrawal-history.html"><i class="fas fa-clock"></i> سجل السحوبات</a></li>
+                    <li><a href="/pages/portfolio/account-statement.html"><i class="fas fa-file-invoice-dollar"></i> كشف الحساب الموثق</a></li>
+                </ul>
+            </li>
+
+            <!-- التقارير -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="nav-label">التقارير</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/reports/reports-dashboard.html"><i class="fas fa-chart-bar"></i> لوحة التقارير</a></li>
+                    <li><a href="/pages/reports/portfolio-report.html"><i class="fas fa-folder-open"></i> تقرير المحفظة</a></li>
+                    <li><a href="/pages/reports/investments-report.html"><i class="fas fa-chart-pie"></i> تقرير الاستثمارات</a></li>
+                    <li><a href="/pages/reports/profits-report.html"><i class="fas fa-coins"></i> تقرير الأرباح الصافية</a></li>
+                    <li><a href="/pages/reports/withdrawals-report.html"><i class="fas fa-receipt"></i> تقرير السحوبات</a></li>
+                </ul>
+            </li>
+
+            <!-- الملف الشخصي -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="nav-label">الملف الشخصي</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/profile/personal-information.html"><i class="fas fa-id-card"></i> المعلومات الشخصية</a></li>
+                    <li><a href="/pages/profile/contact-information.html"><i class="fas fa-envelope"></i> معلومات الاتصال</a></li>
+                    <li><a href="/pages/profile/national-address.html"><i class="fas fa-map-marker-alt"></i> العنوان الوطني الموثق</a></li>
+                    <li><a href="/pages/profile/bank-information.html"><i class="fas fa-university"></i> المعلومات البنكية (IBAN)</a></li>
+                    <li><a href="/pages/profile/attachments.html"><i class="fas fa-paperclip"></i> المرفقات والوثائق</a></li>
+                </ul>
+            </li>
+
+            <!-- الأمان -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="nav-label">الأمان</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/security/change-password.html"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
+                    <li><a href="/pages/security/change-email.html"><i class="fas fa-at"></i> تغيير البريد الإلكتروني</a></li>
+                    <li><a href="/pages/security/change-mobile.html"><i class="fas fa-mobile-alt"></i> تغيير رقم الجوال</a></li>
+                    <li><a href="/pages/security/two-factor-authentication.html"><i class="fas fa-user-shield"></i> المصادقة الثنائية (2FA)</a></li>
+                    <li><a href="/pages/security/registered-devices.html"><i class="fas fa-laptop-house"></i> الأجهزة المصرحة</a></li>
+                    <li><a href="/pages/security/login-history.html"><i class="fas fa-user-clock"></i> سجل عمليات الدخول</a></li>
+                </ul>
+            </li>
+
+            <!-- الدعم الفني -->
+            <li class="nav-item has-submenu">
+                <a href="#">
+                    <i class="fas fa-headset"></i>
+                    <span class="nav-label">الدعم الفني</span>
+                    <i class="fas fa-chevron-down submenu-toggle"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="/pages/support/help-center.html"><i class="fas fa-info-circle"></i> مركز المساعدة الرقمي</a></li>
+                    <li><a href="/pages/support/faq.html"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li>
+                    <li><a href="/pages/support/tickets.html"><i class="fas fa-ticket-alt"></i> تذاكر الدعم الفني</a></li>
+                    <li><a href="/pages/support/notifications.html"><i class="fas fa-bell"></i> مركز الإشعارات</a></li>
+                    <li><a href="/pages/support/privacy-policy.html"><i class="fas fa-user-lock"></i> سياسة الخصوصية</a></li>
+                    <li><a href="/pages/support/terms-and-conditions.html"><i class="fas fa-gavel"></i> الشروط والأحكام القانونية</a></li>
+                </ul>
+            </li>
+
+        </ul>
+    </nav>
+
+    <!-- تذييل القائمة (تسجيل الخروج) -->
+    <div class="sidebar-footer">
+        <button class="logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-label">تسجيل الخروج</span>
+        </button>
+    </div>
+
+</aside>
+
+<!-- ============================================================
+     سكربت القائمة الجانبية – زر الخروج يعمل بشكل مستقل
+     ============================================================ -->
+<script>
 (function() {
+    // منع التهيئة المتكررة
     if (window.__sidebarInitialized) return;
     window.__sidebarInitialized = true;
 
-    function init() {
+    function initSidebar() {
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggle');
         const closeBtn = document.getElementById('closeSidebarBtn');
         const overlay = document.getElementById('sidebarOverlay');
 
-        // فتح/إغلاق القائمة
-        if (toggleBtn && sidebar) {
+        if (!sidebar) return;
+
+        // زر البرجر
+        if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 if (window.innerWidth < 992) {
                     sidebar.classList.toggle('sidebar-open');
@@ -23,7 +168,8 @@
             });
         }
 
-        if (closeBtn && sidebar && overlay) {
+        // زر الإغلاق
+        if (closeBtn && overlay) {
             closeBtn.addEventListener('click', () => {
                 sidebar.classList.remove('sidebar-open');
                 overlay.classList.remove('active');
@@ -47,16 +193,23 @@
             });
         });
 
-        // زر الخروج
+        // 🟢 زر تسجيل الخروج (يعمل بشكل مضمون)
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', async (e) => {
+            // إزالة أي مستمعات سابقة
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+
+            newLogoutBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                logoutBtn.disabled = true;
+                if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+                newLogoutBtn.disabled = true;
                 try {
-                    if (window.Auth?.logout) {
+                    if (window.Auth && window.Auth.logout) {
                         await window.Auth.logout();
                     } else {
+                        localStorage.clear();
+                        sessionStorage.clear();
                         window.location.replace('/auth/auth/login/login.html');
                     }
                 } catch (err) {
@@ -64,11 +217,24 @@
                 }
             });
         }
+
+        // تعليم العنصر النشط
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-item > a[href]').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== '#' && currentPath.includes(href)) {
+                link.closest('.nav-item')?.classList.add('active');
+                link.closest('.has-submenu')?.classList.add('submenu-open');
+            }
+        });
+
+        console.log('✅ Sidebar + logout ready');
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', initSidebar);
     } else {
-        init();
+        initSidebar();
     }
 })();
+</script>
