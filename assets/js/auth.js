@@ -1,5 +1,5 @@
 /**
- * auth.js – v8 (نظام المصادقة المركزي + تخزين الاسم عند OTP)
+ * auth.js – v9 (توجيه تلقائي بعد الخروج، تخزين الاسم عند OTP)
  * يعتمد على supabase-client.js لتوفير Supabase
  */
 (function() {
@@ -105,10 +105,22 @@
 
     async function logout() {
         const sb = await getSupabase();
-        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
-        await sb.auth.signOut();
-        localStorage.removeItem('rememberMe');
-        sessionStorage.clear();
+        if (!sb) {
+            // إذا تعذر الاتصال، نوجه مباشرة
+            window.location.replace('/auth/auth/login/login.html');
+            return;
+        }
+        try {
+            await sb.auth.signOut();
+        } catch (e) {
+            console.error('خطأ أثناء تسجيل الخروج:', e);
+        } finally {
+            // تنظيف التخزين المحلي
+            localStorage.removeItem('rememberMe');
+            sessionStorage.clear();
+            // التوجيه إلى صفحة الدخول
+            window.location.replace('/auth/auth/login/login.html');
+        }
     }
 
     async function getSession() {
@@ -209,5 +221,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v8 جاهز');
+    console.log('auth.js v9 جاهز');
 })();
