@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v32 (توجيه بعد 10 ثوانٍ لضمان تسجيل الجلسة)
+ * verify-otp.js – v34 (الاعتماد على LocationIQ فقط، توجيه بعد 10 ثوانٍ، مرن مع الأخطاء)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -18,8 +18,8 @@
 
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
-        updateUserDisplayFromSession();
-        await updateUserDisplayFromAuth();
+        updateUserDisplayFromSession(); // الاسم المخزن من login.js
+        await updateUserDisplayFromAuth(); // محاولة من Supabase
         bindEvents();
         startCountdown();
         updateEmailDisplay();
@@ -104,20 +104,31 @@
             console.error('❌ SessionManager غير محمل.');
             return false;
         }
+
+        // جمع بيانات الموقع – أي خطأ لا يمنع تسجيل الجلسة
+        let gpsCoords = null, geo = {}, loc = {};
         try {
-            let gpsCoords = null;
-            if (window.LocationServices?.getGPSCoords) gpsCoords = await window.LocationServices.getGPSCoords();
-
-            let geo = {};
-            if (window.LocationServices?.fetchBasicGeo) geo = await window.LocationServices.fetchBasicGeo();
-
-            let loc = {};
+            if (window.LocationServices?.getGPSCoords) {
+                gpsCoords = await window.LocationServices.getGPSCoords();
+            }
+            if (window.LocationServices?.fetchBasicGeo) {
+                geo = await window.LocationServices.fetchBasicGeo();
+            }
             const lat = gpsCoords?.latitude || geo.lat;
             const lon = gpsCoords?.longitude || geo.lon;
-            if (lat && lon && window.LocationServices?.fetchLocationIQ) loc = await window.LocationServices.fetchLocationIQ(lat, lon);
+            if (lat && lon && window.LocationServices?.fetchLocationIQ) {
+                loc = await window.LocationServices.fetchLocationIQ(lat, lon);
+            }
+        } catch (e) {
+            console.warn('⚠️ تعذر جمع بيانات الموقع، استمرار بدونها.');
+        }
 
+        try {
             const success = await window.SessionManager.createSessionRecord(userId, {
-                geo: geo, locationIQ: loc, gps: gpsCoords, ip: geo.ip
+                geo: geo,
+                locationIQ: loc,
+                gps: gpsCoords,
+                ip: geo.ip || null
             });
 
             if (success) {
@@ -130,7 +141,7 @@
             }
             return success;
         } catch (e) {
-            console.error('❌ [verify-otp] استثناء:', e);
+            console.error('❌ [verify-otp] استثناء أثناء تسجيل الجلسة:', e);
             return false;
         }
     }
@@ -168,10 +179,9 @@
             showError(getArabicErrorMessage(error.message));
         } finally {
             if (sessionRecorded) {
-                // ⏱️ تم تغيير التأخير إلى 10 ثوانٍ
                 redirectTimer = setTimeout(() => {
                     window.location.href = '/pages/dashboard/index.html';
-                }, 10000); // 10 ثوانٍ
+                }, 10000);
             } else {
                 if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة'; }
             }
