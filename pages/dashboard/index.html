@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
     <style>
+        /* ========== جميع التنسيقات الأصلية دون تغيير ========== */
         :root {
             --primary: #028090;
             --primary-light: #14b8a6;
@@ -436,21 +437,95 @@
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/core.js"></script>
-    
-    <!-- القائمة الجانبية (ضروري لعمل الأزرار والقوائم) -->
-    <script src="/assets/js/sidebar.js"></script>
-    
-    <!-- المنسق العام -->
-    <script src="/assets/js/main.js"></script>
-    
+
     <!-- الوحدات الجديدة -->
     <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/device-info.js"></script>
     <script src="/assets/js/modules/location-services.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
     <script src="/assets/js/modules/ui-helpers.js"></script>
-    
-    <!-- سكريبت الصفحة -->
+
+    <!-- ⚡ سكريبت موحد للقائمة وزر الخروج (يُغني عن sidebar.js و main.js) -->
+    <script>
+    (function() {
+        if (window.__sidebarInitialized) return;
+        window.__sidebarInitialized = true;
+
+        function init() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            // فتح/إغلاق القائمة
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', () => {
+                    if (window.innerWidth < 992) {
+                        sidebar.classList.toggle('sidebar-open');
+                        if (overlay) overlay.classList.toggle('active');
+                    } else {
+                        sidebar.classList.toggle('collapsed');
+                    }
+                });
+            }
+
+            if (closeBtn && overlay) {
+                closeBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('sidebar-open');
+                    overlay.classList.remove('active');
+                });
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('sidebar-open');
+                    overlay.classList.remove('active');
+                });
+            }
+
+            // القوائم الفرعية
+            document.querySelectorAll('.has-submenu > a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && href !== 'javascript:void(0)') return;
+                    e.preventDefault();
+                    this.closest('.has-submenu').classList.toggle('submenu-open');
+                });
+            });
+
+            // 🟢 زر الخروج – يعمل دائمًا
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+                    logoutBtn.disabled = true;
+                    try {
+                        if (window.Auth && window.Auth.logout) {
+                            await window.Auth.logout();
+                        } else {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.location.replace('/auth/auth/login/login.html');
+                        }
+                    } catch (err) {
+                        window.location.replace('/auth/auth/login/login.html');
+                    }
+                });
+            }
+
+            console.log('✅ Sidebar ready');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+
+    <!-- سكريبت لوحة التحكم -->
     <script src="/assets/js/dashboard.js"></script>
 </body>
 </html>
