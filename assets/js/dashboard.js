@@ -1,6 +1,6 @@
 /**
  * dashboard.js – لوحة التحكم المتكاملة (محسّنة باستخدام الوحدات)
- * يعتمد على Auth, UIHelpers, ActivityTracker, TeraCore
+ * يعتمد على Auth, UIHelpers, ActivityTracker
  */
 (function() {
     let supabase;
@@ -24,6 +24,20 @@
         if (!iso) return '';
         const diff = Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24));
         return diff < 1 ? 'أقل من يوم' : `${diff} يوم`;
+    }
+
+    function getStatusLabel(status) {
+        const labels = {
+            draft: 'مسودة',
+            pending_information: 'بانتظار استكمال البيانات',
+            under_review: 'قيد المراجعة',
+            needs_revision: 'يحتاج تعديل',
+            has_notes: 'توجد ملاحظات',
+            approved: 'معتمد',
+            rejected: 'مرفوض',
+            suspended: 'موقوف'
+        };
+        return labels[status] || status;
     }
 
     // ---------- حالة الطلب والملف الشخصي ----------
@@ -110,7 +124,7 @@
         };
         const statusIcon = statusIcons[req.status] || 'fa-clock';
         const statusColor = req.status === 'approved' ? '#10b981' : (req.status === 'rejected' ? '#dc2626' : '#f59e0b');
-        const statusLabel = window.UIHelpers?.getStatusLabel(req.status) || req.status;
+        const statusLabel = getStatusLabel(req.status);
 
         let html = `<div class="request-status-card-full">
             <div class="request-header">
@@ -167,9 +181,9 @@
             if (data) {
                 const statCards = document.querySelectorAll('.stat-card .stat-value');
                 if (statCards.length >= 3) {
-                    statCards[0].textContent = (window.TeraCore?.formatCurrency(data.total_value)) || ((data.total_value || 0).toLocaleString() + ' ر.س');
+                    statCards[0].textContent = (data.total_value || 0).toLocaleString() + ' ر.س';
                     statCards[1].textContent = (data.active_contracts || 0) + ' عقود نشطة';
-                    statCards[2].textContent = (window.TeraCore?.formatCurrency(data.available_balance)) || ((data.available_balance || 0).toLocaleString() + ' ر.س');
+                    statCards[2].textContent = (data.available_balance || 0).toLocaleString() + ' ر.س';
                 }
             }
         } catch (e) {
@@ -264,11 +278,39 @@
         document.getElementById('loadingOverlay')?.classList.add('active');
 
         // تحديث واجهة المستخدم
-        window.UIHelpers?.updateHeader(user);
+        if (window.UIHelpers?.updateHeader) {
+            window.UIHelpers.updateHeader(user);
+        } else {
+            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+            const nameEl = document.getElementById('headerUserName');
+            const avatarEl = document.getElementById('headerAvatar');
+            if (nameEl) nameEl.textContent = name;
+            if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+        }
+
         const h2 = document.querySelector('.welcome-banner h2');
         if (h2) {
             const name = user.user_metadata?.full_name || 'مستخدم';
             h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
+        }
+
+        // ---- إصلاح زر تسجيل الخروج ----
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                    try {
+                        if (window.Auth?.logout) {
+                            await window.Auth.logout();
+                        } else {
+                            window.location.replace('/auth/auth/login/login.html');
+                        }
+                    } catch (e) {
+                        console.error('فشل تسجيل الخروج:', e);
+                        window.location.replace('/auth/auth/login/login.html');
+                    }
+                }
+            });
         }
 
         // طلب الموقع (مرة واحدة)
@@ -286,7 +328,11 @@
                 else window.location.href = '/auth/auth/login/login.html?reason=timeout';
             }, user.id);
 
-            setInterval(() => window.ActivityTracker.updateLastActivity(user.id), 60000);
+            setInterval(() => {
+                if (window.ActivityTracker.updateLastActivity) {
+                    window.ActivityTracker.updateLastActivity(user.id);
+                }
+            }, 60000);
         }
 
         // تحميل البيانات
