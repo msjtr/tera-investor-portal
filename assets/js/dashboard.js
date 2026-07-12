@@ -1,8 +1,8 @@
 /**
- * dashboard.js – لوحة التحكم المتكاملة (كاملة)
- * - يعالج زر الخروج، مراجعة الطلب، الإحصائيات، المخطط، مؤقت الجلسة
+ * dashboard.js – لوحة التحكم المتكاملة (نهائية)
+ * - إزالة معالج الخروج المكرر (يُدار من السكريبت الموحد في HTML)
+ * - تحديث auth.js ليتولى التوجيه بعد الخروج
  * - لا يعيد التوجيه عند الأخطاء التقنية
- * - يتوقف عن تحديث last_activity_at عند خطأ 401
  */
 (function() {
     let supabase;
@@ -17,7 +17,6 @@
         return supabase;
     }
 
-    // ---------- دوال مساعدة ----------
     function formatDateTime(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString('ar-SA', {
@@ -45,7 +44,6 @@
         return labels[status] || status;
     }
 
-    // ---------- حالة الطلب والملف الشخصي ----------
     async function loadCustomerJourney(user) {
         try {
             const { data: req, error: reqError } = await supabase
@@ -172,7 +170,6 @@
         panel.innerHTML = html;
     }
 
-    // ---------- الإحصائيات والمخطط ----------
     async function loadStats(user) {
         try {
             const { data, error } = await supabase
@@ -259,24 +256,6 @@
         });
     }
 
-    // ---------- زر الخروج ----------
-    function initLogout() {
-        document.body.addEventListener('click', async (e) => {
-            const logoutBtn = e.target.closest('#logoutBtn, .logout-btn');
-            if (!logoutBtn) return;
-            e.preventDefault();
-            try {
-                if (window.Auth?.logout) {
-                    await window.Auth.logout();
-                } else {
-                    window.location.replace('/auth/auth/login/login.html');
-                }
-            } catch (err) {
-                window.location.replace('/auth/auth/login/login.html');
-            }
-        });
-    }
-
     // ---------- التهيئة ----------
     async function init() {
         if (!window.Auth) {
@@ -295,9 +274,6 @@
         }
 
         document.getElementById('loadingOverlay')?.classList.add('active');
-
-        // زر الخروج
-        initLogout();
 
         // تحديث واجهة المستخدم
         if (window.UIHelpers?.updateHeader) {
