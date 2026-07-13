@@ -1,10 +1,11 @@
 /**
- * modules/location-services.js – عبر Supabase Edge Function (بدون مفتاح)
+ * modules/location-services.js – عبر خادم Render (بدون مفتاح)
  */
 (function() {
     'use strict';
 
-    const SUPABASE_EDGE_FUNCTION = '/functions/v1/location-reverse';
+    // المسار المحلي على Render الذي يعمل كوكيل لـ Supabase Edge Function
+    const PROXY_ENDPOINT = '/api/location/reverse';
 
     const PROVIDER_NAME = 'LocationIQ';
     const PROVIDER_REGION = 'US1';
@@ -121,27 +122,47 @@
             lookup_id: lookupId,
             location_provider: PROVIDER_NAME,
             provider_region: PROVIDER_REGION,
-            internal_endpoint: SUPABASE_EDGE_FUNCTION,
+            internal_endpoint: PROXY_ENDPOINT,
             api_endpoint: 'https://us1.locationiq.com/v1/reverse',
             api_version: API_VERSION,
             request_method: REQUEST_METHOD,
-            lookup_status: null, http_status: null,
-            request_started_at: null, response_received_at: null, execution_time_ms: null,
-            gps_source: gpsMeta.source || null, gps_accuracy: gpsAccuracy,
-            language: 'native', response_format: 'json', lookup_source: lookupSource,
-            location_verified: locationVerified, risk_score: riskScore,
-            error_code: null, error_message: null,
+            lookup_status: null,
+            http_status: null,
+            request_started_at: null,
+            response_received_at: null,
+            execution_time_ms: null,
+            gps_source: gpsMeta.source || null,
+            gps_accuracy: gpsAccuracy,
+            language: 'native',
+            response_format: 'json',
+            lookup_source: lookupSource,
+            location_verified: locationVerified,
+            risk_score: riskScore,
+            error_code: null,
+            error_message: null,
             request_payload: { lat, lon },
-            request_headers: null, response_headers: null, request_id: null, backend_request_id: null,
-            gps_enabled: gpsMeta.enabled || false, gps_permission: gpsMeta.permission || null,
-            gps_timeout: gpsMeta.timeout || false, gps_error: gpsMeta.error || null,
+            request_headers: null,
+            response_headers: null,
+            request_id: null,
+            backend_request_id: null,
+            gps_enabled: gpsMeta.enabled || false,
+            gps_permission: gpsMeta.permission || null,
+            gps_timeout: gpsMeta.timeout || false,
+            gps_error: gpsMeta.error || null,
             gps_status: gpsMeta.status || 'FAILED',
-            cache_hit: false, browser_timestamp: new Date().toISOString(), server_timestamp: null,
-            retry_count: 0, retry_reason: null,
-            session_id: context.sessionId || null, user_id: context.userId || null, device_id: context.deviceId || null,
+            cache_hit: false,
+            browser_timestamp: new Date().toISOString(),
+            server_timestamp: null,
+            retry_count: 0,
+            retry_reason: null,
+            session_id: context.sessionId || null,
+            user_id: context.userId || null,
+            device_id: context.deviceId || null,
             effective_connection_type: networkInfo.effective_connection_type || null,
-            network_type: networkInfo.network_type || null, downlink: networkInfo.downlink || null,
-            rtt: networkInfo.rtt || null, save_data: networkInfo.save_data || false,
+            network_type: networkInfo.network_type || null,
+            downlink: networkInfo.downlink || null,
+            rtt: networkInfo.rtt || null,
+            save_data: networkInfo.save_data || false,
             place_id: null, licence: null, osm_type: null, osm_id: null,
             latitude: lat, longitude: lon, display_name: null, name: null,
             postal_address: null, class: null, type: null, importance: null,
@@ -158,7 +179,7 @@
         const startTime = performance.now();
 
         try {
-            const url = `${SUPABASE_EDGE_FUNCTION}?lat=${lat}&lon=${lon}`;
+            const url = `${PROXY_ENDPOINT}?lat=${lat}&lon=${lon}`;
             const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include',
@@ -248,7 +269,7 @@
         return {
             lookup_id: lookupId,
             location_provider: PROVIDER_NAME,
-            internal_endpoint: SUPABASE_EDGE_FUNCTION,
+            internal_endpoint: PROXY_ENDPOINT,
             lookup_status: 0,
             error_code: code,
             error_message: message,
