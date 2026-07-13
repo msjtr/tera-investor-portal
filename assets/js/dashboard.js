@@ -1,8 +1,9 @@
 /**
- * dashboard.js – لوحة التحكم المتكاملة (نهائية)
- * - إزالة معالج الخروج المكرر (يُدار من السكريبت الموحد في HTML)
- * - تحديث auth.js ليتولى التوجيه بعد الخروج
+ * dashboard.js – لوحة التحكم المتكاملة (نهائية ومحسّنة)
+ * - يعتمد على السكريبت الموحد في HTML لزر الخروج
+ * - Auth.logout تتولى التوجيه التلقائي
  * - لا يعيد التوجيه عند الأخطاء التقنية
+ * - يتوقف عن تحديث last_activity_at عند خطأ 401
  */
 (function() {
     let supabase;
@@ -17,6 +18,7 @@
         return supabase;
     }
 
+    // ---------- دوال مساعدة ----------
     function formatDateTime(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString('ar-SA', {
@@ -44,6 +46,7 @@
         return labels[status] || status;
     }
 
+    // ---------- حالة الطلب والملف الشخصي ----------
     async function loadCustomerJourney(user) {
         try {
             const { data: req, error: reqError } = await supabase
@@ -170,6 +173,7 @@
         panel.innerHTML = html;
     }
 
+    // ---------- الإحصائيات والمخطط ----------
     async function loadStats(user) {
         try {
             const { data, error } = await supabase
@@ -303,8 +307,8 @@
         // تتبع النشاط مع معالجة أخطاء 401
         if (window.ActivityTracker) {
             window.ActivityTracker.startIdleTimer(async () => {
+                // Auth.logout ستتولى التوجيه بعد الخروج
                 if (window.Auth?.logout) await window.Auth.logout();
-                else window.location.href = '/auth/auth/login/login.html?reason=timeout';
             }, user.id);
 
             try { await window.ActivityTracker.updateLastActivity(user.id); } catch (e) {}
