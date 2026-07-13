@@ -1,5 +1,6 @@
 /**
  * modules/location-services.js – عبر Supabase Edge Function (آمن بالكامل)
+ * المسار: assets/js/modules/location-services.js
  * 
  * - لا يوجد مفتاح API في الكود.
  * - جميع الطلبات تمر عبر Supabase Edge Function.
