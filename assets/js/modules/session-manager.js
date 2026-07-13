@@ -1,6 +1,6 @@
 /**
  * modules/session-manager.js – آمن (يُدرج الحقول الموجودة فقط)
- * - إنهاء الجلسات القديمة تلقائياً عند إنشاء جلسة جديدة
+ * - إنهاء الجلسات القديمة واحدة تلو الأخرى لتجنب مشاكل RLS
  * - تخزين بيانات الموقع الأساسية + الجهاز + المتصفح
  */
 (function() {
@@ -33,19 +33,49 @@
         return { success: true };
     }
 
+    /**
+     * إنهاء جميع الجلسات النشطة السابقة (باستثناء الجلسة الحالية)
+     * تُنفذ واحدة تلو الأخرى لتفادي مشاكل RLS الجماعية.
+     */
     async function deactivateAllActiveSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return false;
-        const { error } = await sb.from('user_login_sessions')
-            .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
+
+        // جلب الجلسات النشطة أولاً
+        const { data: activeSessions, error } = await sb.from('user_login_sessions')
+            .select('id')
             .eq('user_id', userId)
             .eq('status', 'active');
+
         if (error) {
-            console.error('فشل إنهاء الجلسات القديمة:', error);
+            console.error('فشل جلب الجلسات النشطة:', error);
             return false;
         }
-        console.log('✅ تم إنهاء جميع الجلسات النشطة السابقة');
-        return true;
+
+        if (!activeSessions || activeSessions.length === 0) return true;
+
+        // إنهاء كل واحدة على حدة (أكثر أمانًا مع RLS)
+        let allTerminated = true;
+        for (const session of activeSessions) {
+            const { error: updateError } = await sb.from('user_login_sessions')
+                .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
+                .eq('id', session.id)
+                .eq('user_id', userId);
+
+            if (updateError) {
+                console.error('فشل إنهاء الجلسة:', session.id, updateError);
+                allTerminated = false;
+                // نستمر رغم الخطأ لإنهاء البقية
+            }
+        }
+
+        if (allTerminated) {
+            console.log('✅ تم إنهاء جميع الجلسات النشطة السابقة');
+        } else {
+            console.warn('⚠️ بعض الجلسات القديمة لم تُنهَ بنجاح');
+        }
+
+        return allTerminated;
     }
 
     /**
