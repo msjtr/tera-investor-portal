@@ -1,5 +1,5 @@
 /**
- * auth.js – v9 (توجيه تلقائي بعد الخروج، تخزين الاسم عند OTP)
+ * auth.js – v10 (توجيه تلقائي بعد الخروج، تخزين الاسم عند OTP، توحيد requireAuth)
  * يعتمد على supabase-client.js لتوفير Supabase
  */
 (function() {
@@ -155,23 +155,27 @@
         });
     }
 
+    /**
+     * requireAuth – يستخدم الآن logout الموحدة لضمان سلوك متسق
+     */
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         const sb = await getSupabase();
         if (!sb) {
+            // لا يمكن الاتصال بـ Supabase، نوجه فورًا
             window.location.replace(redirectUrl);
             return null;
         }
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                await sb.auth.signOut();
-                localStorage.removeItem('rememberMe');
-                window.location.replace(redirectUrl);
+                // جلسة غير صالحة – نستخدم logout() للتنظيف والتوجيه
+                await logout();
                 return null;
             }
             return user;
         } catch (e) {
-            window.location.replace(redirectUrl);
+            // أي خطأ آخر – تنظيف وتوجيه
+            await logout();
             return null;
         }
     }
@@ -221,5 +225,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v9 جاهز');
+    console.log('auth.js v10 جاهز');
 })();
