@@ -90,7 +90,7 @@
         }
         .modal-overlay.show { display: flex; }
         .modal-box {
-            background: #fff; border-radius: var(--radius-xl); max-width: 920px; width: 100%;
+            background: #fff; border-radius: var(--radius-xl); max-width: 960px; width: 100%;
             padding: 28px 24px; box-shadow: 0 30px 60px rgba(0,0,0,0.25);
             max-height: 90vh; overflow-y: auto; direction: rtl;
         }
@@ -110,9 +110,16 @@
 
         .btn-secondary { background: var(--gray-200); color: var(--gray-700); border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; }
 
+        /* تنسيقات جديدة لقسم Raw JSON */
+        .json-preview { max-height: 250px; overflow: auto; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; font-size: 12px; white-space: pre-wrap; word-break: break-all; font-family: 'Courier New', monospace; }
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+        .action-buttons .btn-action { padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+        .action-buttons .btn-action i { font-size: 14px; }
+
         @media (max-width: 768px) {
             .search-filter-bar { flex-direction: column; align-items: stretch; }
             .modal-box { max-width: 95vw; padding: 20px; }
+            .detail-label { min-width: 120px; }
         }
     </style>
 </head>
@@ -131,7 +138,7 @@
 <main class="content-container">
     <div class="page-desc" style="background:#e0f2fe; border-right:5px solid var(--primary); padding:16px 22px; border-radius:12px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
         <i class="fas fa-info-circle" style="color:var(--primary); font-size:20px;"></i>
-        <span style="color:var(--gray-900); font-weight:600;">جميع الجلسات المسجلة لحسابك. اضغط "عرض" لرؤية تفاصيل الجهاز والموقع الجغرافي.</span>
+        <span style="color:var(--gray-900); font-weight:600;">جميع الجلسات المسجلة لحسابك. اضغط "عرض" لرؤية تقرير شامل عن الجهاز والموقع الجغرافي.</span>
     </div>
 
     <div class="alert-box warning" id="idleWarning" role="alert" style="display:none; background:#fffbeb; color:#92400e; border:1px solid #fcd34d; padding:12px 16px; border-radius:10px; margin-bottom:20px;">
