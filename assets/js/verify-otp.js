@@ -1,9 +1,9 @@
 /**
- * verify-otp.js – v36 (استخدام fetchLocationIQFull + تخزين كامل للموقع)
+ * verify-otp.js – v37 (إصلاح الأزرار + تسجيل الجلسة بشكل مستقل)
  */
 (function() {
     const OTP_LENGTH = 8;
-    const RESEND_TIMEOUT = 300;
+    const RESEND_TIMEOUT = 300; // 5 دقائق
 
     let supabase;
     let countdownInterval;
@@ -16,16 +16,17 @@
     const timerSpan = document.getElementById('otpTimer');
     const successMsg = document.getElementById('otpSuccess');
 
+    // ─── بدء التهيئة ───
     async function init() {
         supabase = window.teraSupabase || await window.waitForSupabase?.();
         updateUserDisplayFromSession();
-        await updateUserDisplayFromAuth();
         bindEvents();
         startCountdown();
         updateEmailDisplay();
         setupBackLink();
     }
 
+    // ─── اسم المستخدم ───
     function updateUserDisplayFromSession() {
         const name = sessionStorage.getItem('otpName');
         if (name) {
@@ -34,19 +35,7 @@
         }
     }
 
-    async function updateUserDisplayFromAuth() {
-        try {
-            let user = null;
-            if (window.Auth?.getUser) user = await window.Auth.getUser();
-            else if (supabase) { const { data } = await supabase.auth.getUser(); user = data?.user; }
-            if (user) {
-                const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-                document.getElementById('headerUserName').textContent = name;
-                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-            }
-        } catch (e) {}
-    }
-
+    // ─── الأحداث ───
     function bindEvents() {
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
@@ -68,6 +57,7 @@
                 }
             });
         });
+
         if (verifyBtn) verifyBtn.addEventListener('click', handleVerify);
         if (resendBtn) resendBtn.addEventListener('click', handleResend);
     }
@@ -94,27 +84,26 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ── إنشاء سجل الجلسة مع بيانات LocationIQ الكاملة ──
+    // ─── تسجيل الجلسة (يعمل حتى لو فشل الموقع) ───
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
+
+        // استخدام SessionManager إذا وُجد، وإلا فشل
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
             return false;
         }
 
-        let gpsMeta = { status: 'FAILED' };
+        // جمع بيانات الموقع بشكل غير متزامن (لا ننتظرها إذا فشلت)
         let fullLocation = null;
-
         try {
-            // الحصول على إحداثيات GPS (إن أمكن)
-            if (window.LocationServices?.getGPSCoords) {
-                gpsMeta = await window.LocationServices.getGPSCoords();
-            }
-            // استدعاء LocationIQ عبر الخادم (أو المفتاح العام حسب الإعداد)
-            const lat = gpsMeta.coords?.latitude || null;
-            const lon = gpsMeta.coords?.longitude || null;
-            if (lat && lon && window.LocationServices?.fetchLocationIQFull) {
-                fullLocation = await window.LocationServices.fetchLocationIQFull(lat, lon, gpsMeta, 'auto_login');
+            if (window.LocationServices?.getGPSCoords && window.LocationServices?.fetchLocationIQFull) {
+                const gpsMeta = await window.LocationServices.getGPSCoords();
+                const lat = gpsMeta.coords?.latitude;
+                const lon = gpsMeta.coords?.longitude;
+                if (lat && lon) {
+                    fullLocation = await window.LocationServices.fetchLocationIQFull(lat, lon, gpsMeta, 'auto_login');
+                }
             }
         } catch (e) {
             console.warn('⚠️ تعذر جمع بيانات الموقع، استمرار بدونها.');
@@ -122,9 +111,9 @@
 
         try {
             const success = await window.SessionManager.createSessionRecord(userId, {
-                geo: {},                         // لم نعد نستخدم IP
-                locationIQ: fullLocation || {}, // الكائن الكامل
-                gps: gpsMeta.coords || null,
+                geo: {},
+                locationIQ: fullLocation || {},
+                gps: null,
                 ip: null
             });
 
@@ -143,12 +132,143 @@
         }
     }
 
-    async function handleVerify() { /* ... مطابق للإصدار السابق ... */ }
-    async function handleResend() { /* ... مطابق للإصدار السابق ... */ }
-    function startCountdown() { /* ... */ }
-    function resetCountdown() { clearInterval(countdownInterval); startCountdown(); }
-    function updateTimerDisplay(seconds) { /* ... */ }
-    function getArabicErrorMessage(msg) { /* ... */ }
+    // ─── التحقق من الرمز ───
+    async function handleVerify() {
+        const code = getOtpCode();
+        if (code.length !== OTP_LENGTH) { showError('يرجى إدخال رمز التحقق كاملاً'); return; }
+        clearMessages();
+
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+        }
+
+        const email = sessionStorage.getItem('otpEmail');
+        if (!email) {
+            showError('انتهت الجلسة. يرجى العودة لصفحة الدخول.');
+            if (verifyBtn) {
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+            }
+            return;
+        }
+
+        if (redirectTimer) { clearTimeout(redirectTimer); redirectTimer = null; }
+
+        let sessionRecorded = false;
+
+        try {
+            if (!window.Auth?.verifyOTP) throw new Error('خدمة المصادقة غير متوفرة');
+            const data = await window.Auth.verifyOTP(email, code);
+
+            if (data?.session) {
+                const sessionCreated = await createSessionRecord(data.session.user.id);
+                if (!sessionCreated) {
+                    showError('فشل تسجيل الجلسة. يرجى التواصل مع الدعم.');
+                } else {
+                    sessionStorage.removeItem('otpEmail');
+                    if (successMsg) {
+                        successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
+                        successMsg.style.display = 'block';
+                    }
+                    sessionRecorded = true;
+                }
+            } else {
+                if (successMsg) {
+                    successMsg.textContent = 'تم التحقق بنجاح';
+                    successMsg.style.display = 'block';
+                }
+                if (window.onOtpVerified) window.onOtpVerified(code);
+            }
+        } catch (error) {
+            console.error(error);
+            showError(getArabicErrorMessage(error.message));
+        } finally {
+            if (sessionRecorded) {
+                redirectTimer = setTimeout(() => {
+                    window.location.href = '/pages/dashboard/index.html';
+                }, 10000);
+            } else {
+                if (verifyBtn) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد الرمز والمتابعة';
+                }
+            }
+        }
+    }
+
+    // ─── إعادة إرسال الرمز ───
+    async function handleResend() {
+        const email = sessionStorage.getItem('otpEmail');
+        if (!email) {
+            showError('البريد الإلكتروني غير متوفر. يرجى العودة لصفحة الدخول.');
+            return;
+        }
+
+        clearMessages();
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+        }
+
+        try {
+            if (!window.Auth?.sendOTP) throw new Error('الخدمة غير متوفرة');
+            await window.Auth.sendOTP(email);
+            if (successMsg) {
+                successMsg.textContent = 'تم إرسال رمز جديد إلى بريدك الإلكتروني';
+                successMsg.style.display = 'block';
+            }
+            resetCountdown();
+        } catch (e) {
+            showError('فشل إعادة الإرسال. حاول مرة أخرى لاحقاً.');
+        } finally {
+            if (resendBtn) {
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'إعادة إرسال الرمز';
+            }
+        }
+    }
+
+    // ─── مؤقت إعادة الإرسال ───
+    function startCountdown() {
+        let seconds = RESEND_TIMEOUT;
+        updateTimerDisplay(seconds);
+        if (resendBtn) resendBtn.disabled = true;
+        countdownInterval = setInterval(() => {
+            seconds--;
+            updateTimerDisplay(seconds);
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                if (resendBtn) {
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'إعادة إرسال الرمز';
+                }
+                if (timerSpan) timerSpan.textContent = '';
+            }
+        }, 1000);
+    }
+
+    function resetCountdown() {
+        clearInterval(countdownInterval);
+        startCountdown();
+    }
+
+    function updateTimerDisplay(seconds) {
+        if (timerSpan) {
+            const m = Math.floor(seconds / 60), s = seconds % 60;
+            timerSpan.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    }
+
+    function getArabicErrorMessage(msg) {
+        const map = {
+            'Token has expired or is invalid': 'انتهت صلاحية الرمز أو أنه غير صحيح',
+            'Invalid OTP': 'رمز التحقق غير صحيح',
+            'Email not confirmed': 'البريد الإلكتروني غير مفعل',
+            'User not found': 'المستخدم غير موجود'
+        };
+        return map[msg] || msg || 'حدث خطأ غير معروف';
+    }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
