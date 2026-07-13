@@ -1,11 +1,11 @@
 /**
- * modules/location-services.js – عبر خادم Render (بدون مفتاح)
+ * modules/location-services.js – عبر Supabase Edge Function (بدون مفتاح)
  */
 (function() {
     'use strict';
 
-    // المسار المحلي على Render الذي يعمل كوكيل لـ Supabase Edge Function
-    const PROXY_ENDPOINT = '/api/location/reverse';
+    // رابط Edge Function المنشورة على Supabase
+    const SUPABASE_EDGE_FUNCTION = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/location-reverse';
 
     const PROVIDER_NAME = 'LocationIQ';
     const PROVIDER_REGION = 'US1';
@@ -122,7 +122,7 @@
             lookup_id: lookupId,
             location_provider: PROVIDER_NAME,
             provider_region: PROVIDER_REGION,
-            internal_endpoint: PROXY_ENDPOINT,
+            internal_endpoint: SUPABASE_EDGE_FUNCTION,
             api_endpoint: 'https://us1.locationiq.com/v1/reverse',
             api_version: API_VERSION,
             request_method: REQUEST_METHOD,
@@ -179,10 +179,9 @@
         const startTime = performance.now();
 
         try {
-            const url = `${PROXY_ENDPOINT}?lat=${lat}&lon=${lon}`;
+            const url = `${SUPABASE_EDGE_FUNCTION}?lat=${lat}&lon=${lon}`;
             const response = await fetch(url, {
                 method: 'GET',
-                credentials: 'include',
                 headers: { 'Accept': 'application/json' }
             });
 
@@ -269,7 +268,7 @@
         return {
             lookup_id: lookupId,
             location_provider: PROVIDER_NAME,
-            internal_endpoint: PROXY_ENDPOINT,
+            internal_endpoint: SUPABASE_EDGE_FUNCTION,
             lookup_status: 0,
             error_code: code,
             error_message: message,
