@@ -1,14 +1,12 @@
 // supabase/functions/location-reverse/index.ts
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// قراءة المتغيرات من Secrets (لا تكتب القيم هنا)
 const LOCATIONIQ_API_KEY = Deno.env.get("LOCATIONIQ_API_KEY")!;
 const LOCATIONIQ_BASE_URL = Deno.env.get("LOCATIONIQ_BASE_URL") || "https://us1.locationiq.com";
 const LOCATIONIQ_ENDPOINT = Deno.env.get("LOCATIONIQ_ENDPOINT") || "/v1/reverse";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // قيده بنطاق موقعك في الإنتاج
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
