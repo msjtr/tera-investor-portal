@@ -1,8 +1,7 @@
 /**
- * login.js – نسخة مستقرة تمامًا (مضادة للحلقات + تخزين اسم المستخدم)
+ * login.js – نسخة مستقرة تمامًا (متوافقة مع auth.js v10)
  */
 (function() {
-    // منع التنفيذ المتكرر
     if (window.__loginInitialized) return;
     window.__loginInitialized = true;
 
@@ -15,8 +14,6 @@
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
     let sessionCheckDone = false;
-
-    // إخفاء شاشة التحميل فوراً
     if (loaderScreen) loaderScreen.style.display = 'none';
 
     function showError(message) {
@@ -73,28 +70,8 @@
         }
 
         try {
+            // auth.js يقوم تلقائياً بحفظ otpName و otpEmail
             await window.Auth.loginWithPasswordAndOTP(email, password);
-
-            // ──────────── تخزين اسم المستخدم ────────────
-            try {
-                // محاولة الحصول على Supabase لجلب الاسم من الجلسة المؤقتة
-                const sb = window.teraSupabase || await window.waitForSupabase?.();
-                if (sb) {
-                    const { data: { user } } = await sb.auth.getUser();
-                    if (user && user.user_metadata?.full_name) {
-                        sessionStorage.setItem('otpName', user.user_metadata.full_name);
-                    } else {
-                        sessionStorage.setItem('otpName', email);
-                    }
-                } else {
-                    sessionStorage.setItem('otpName', email);
-                }
-            } catch (nameError) {
-                // إذا فشل أي شيء، نخزن البريد كاسم افتراضي
-                sessionStorage.setItem('otpName', email);
-            }
-            // ─────────────────────────────────────────────
-
             window.location.href = '/auth/verify-otp.html';
 
         } catch (error) {
@@ -123,26 +100,23 @@
         });
     }
 
-    // فحص الجلسة لمرة واحدة فقط
     async function checkExistingSession() {
         if (sessionCheckDone) return;
         sessionCheckDone = true;
 
-        // تعطيل الزر أثناء الفحص
         if (loginBtn) {
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من الجلسة...';
         }
 
         try {
-            if (window.Auth && window.Auth.isSessionValid) {
+            if (window.Auth?.isSessionValid) {
                 const valid = await window.Auth.isSessionValid();
                 if (valid) {
                     window.location.replace('/pages/dashboard/index.html');
                     return;
                 }
             } else {
-                // fallback
                 const sb = window.teraSupabase || await window.waitForSupabase?.();
                 if (sb) {
                     const { data: { user } } = await sb.auth.getUser();
@@ -153,9 +127,8 @@
                 }
             }
         } catch (e) {
-            // أي خطأ، تجاهل وابق في الصفحة
+            // ابق في صفحة الدخول
         } finally {
-            // إعادة تمكين الزر
             if (loginBtn) {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
@@ -163,10 +136,7 @@
         }
     }
 
-    // تنفيذ الفحص بعد تحميل الصفحة بالكامل
     window.addEventListener('load', () => {
-        // تأخير بسيط لضمان تحميل auth.js
         setTimeout(checkExistingSession, 300);
     });
-
 })();
