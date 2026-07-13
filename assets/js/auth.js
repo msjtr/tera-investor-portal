@@ -1,6 +1,5 @@
 /**
- * auth.js – v10 (توجيه تلقائي بعد الخروج، تخزين الاسم عند OTP، توحيد requireAuth)
- * يعتمد على supabase-client.js لتوفير Supabase
+ * auth.js – v11 (استخدام اسم محلي من البريد كبديل عند عدم وجود full_name)
  */
 (function() {
     let supabase;
@@ -58,7 +57,9 @@
         if (user?.user_metadata?.full_name) {
             sessionStorage.setItem('otpName', user.user_metadata.full_name);
         } else {
-            sessionStorage.setItem('otpName', email);
+            // استخدام الجزء المحلي من البريد (قبل @) كاسم بديل
+            const localPart = email.split('@')[0];
+            sessionStorage.setItem('otpName', localPart);
         }
 
         // 3. تسجيل الخروج لإنهاء الجلسة المؤقتة
@@ -106,7 +107,6 @@
     async function logout() {
         const sb = await getSupabase();
         if (!sb) {
-            // إذا تعذر الاتصال، نوجه مباشرة
             window.location.replace('/auth/auth/login/login.html');
             return;
         }
@@ -115,10 +115,8 @@
         } catch (e) {
             console.error('خطأ أثناء تسجيل الخروج:', e);
         } finally {
-            // تنظيف التخزين المحلي
             localStorage.removeItem('rememberMe');
             sessionStorage.clear();
-            // التوجيه إلى صفحة الدخول
             window.location.replace('/auth/auth/login/login.html');
         }
     }
@@ -155,26 +153,20 @@
         });
     }
 
-    /**
-     * requireAuth – يستخدم الآن logout الموحدة لضمان سلوك متسق
-     */
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         const sb = await getSupabase();
         if (!sb) {
-            // لا يمكن الاتصال بـ Supabase، نوجه فورًا
             window.location.replace(redirectUrl);
             return null;
         }
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // جلسة غير صالحة – نستخدم logout() للتنظيف والتوجيه
                 await logout();
                 return null;
             }
             return user;
         } catch (e) {
-            // أي خطأ آخر – تنظيف وتوجيه
             await logout();
             return null;
         }
@@ -225,5 +217,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v10 جاهز');
+    console.log('auth.js v11 جاهز');
 })();
