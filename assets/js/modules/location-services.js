@@ -1,15 +1,9 @@
 /**
- * modules/location-services.js – عبر Supabase Edge Function (آمن بالكامل)
- * المسار: assets/js/modules/location-services.js
- * 
- * - لا يوجد مفتاح API في الكود.
- * - جميع الطلبات تمر عبر Supabase Edge Function.
- * - متوافق مع جميع الحقول المؤسسية المطلوبة.
+ * modules/location-services.js – عبر Supabase Edge Function (بدون مفتاح)
  */
 (function() {
     'use strict';
 
-    // استدعاء Supabase Edge Function المنشورة
     const SUPABASE_EDGE_FUNCTION = '/functions/v1/location-reverse';
 
     const PROVIDER_NAME = 'LocationIQ';
@@ -131,43 +125,23 @@
             api_endpoint: 'https://us1.locationiq.com/v1/reverse',
             api_version: API_VERSION,
             request_method: REQUEST_METHOD,
-            lookup_status: null,
-            http_status: null,
-            request_started_at: null,
-            response_received_at: null,
-            execution_time_ms: null,
-            gps_source: gpsMeta.source || null,
-            gps_accuracy: gpsAccuracy,
-            language: 'native',
-            response_format: 'json',
-            lookup_source: lookupSource,
-            location_verified: locationVerified,
-            risk_score: riskScore,
-            error_code: null,
-            error_message: null,
+            lookup_status: null, http_status: null,
+            request_started_at: null, response_received_at: null, execution_time_ms: null,
+            gps_source: gpsMeta.source || null, gps_accuracy: gpsAccuracy,
+            language: 'native', response_format: 'json', lookup_source: lookupSource,
+            location_verified: locationVerified, risk_score: riskScore,
+            error_code: null, error_message: null,
             request_payload: { lat, lon },
-            request_headers: null,
-            response_headers: null,
-            request_id: null,
-            backend_request_id: null,
-            gps_enabled: gpsMeta.enabled || false,
-            gps_permission: gpsMeta.permission || null,
-            gps_timeout: gpsMeta.timeout || false,
-            gps_error: gpsMeta.error || null,
+            request_headers: null, response_headers: null, request_id: null, backend_request_id: null,
+            gps_enabled: gpsMeta.enabled || false, gps_permission: gpsMeta.permission || null,
+            gps_timeout: gpsMeta.timeout || false, gps_error: gpsMeta.error || null,
             gps_status: gpsMeta.status || 'FAILED',
-            cache_hit: false,
-            browser_timestamp: new Date().toISOString(),
-            server_timestamp: null,
-            retry_count: 0,
-            retry_reason: null,
-            session_id: context.sessionId || null,
-            user_id: context.userId || null,
-            device_id: context.deviceId || null,
+            cache_hit: false, browser_timestamp: new Date().toISOString(), server_timestamp: null,
+            retry_count: 0, retry_reason: null,
+            session_id: context.sessionId || null, user_id: context.userId || null, device_id: context.deviceId || null,
             effective_connection_type: networkInfo.effective_connection_type || null,
-            network_type: networkInfo.network_type || null,
-            downlink: networkInfo.downlink || null,
-            rtt: networkInfo.rtt || null,
-            save_data: networkInfo.save_data || false,
+            network_type: networkInfo.network_type || null, downlink: networkInfo.downlink || null,
+            rtt: networkInfo.rtt || null, save_data: networkInfo.save_data || false,
             place_id: null, licence: null, osm_type: null, osm_id: null,
             latitude: lat, longitude: lon, display_name: null, name: null,
             postal_address: null, class: null, type: null, importance: null,
@@ -215,7 +189,6 @@
             result.lookup_status = 1;
             result.server_timestamp = new Date().toISOString();
 
-            // استخراج البيانات بنفس الطريقة التفصيلية
             result.place_id = data.place_id || null;
             result.licence = data.licence || null;
             result.osm_type = data.osm_type || null;
