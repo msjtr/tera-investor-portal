@@ -1,26 +1,78 @@
 /**
- * modules/session-manager.js – تخزين جميع حقول LocationIQ الجديدة
+ * modules/session-manager.js – إدارة جلسات المستخدم (كامل)
+ * - إنهاء الجلسات القديمة تلقائيًا عند إنشاء جلسة جديدة
+ * - تخزين جميع حقول LocationIQ الجديدة
  */
 (function() {
     async function getSupabase() {
         return window.teraSupabase || await window.waitForSupabase?.();
     }
 
-    // ... fetchSessions, terminateSession, deactivateAllActiveSessions (كما هي) ...
+    /**
+     * جلب جميع جلسات المستخدم
+     */
+    async function fetchSessions(userId) {
+        const sb = await getSupabase();
+        if (!sb) return [];
+        const { data, error } = await sb.from('user_login_sessions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('login_at', { ascending: false });
+        if (error) { console.error('فشل جلب الجلسات:', error); return []; }
+        return data || [];
+    }
 
+    /**
+     * إنهاء جلسة محددة
+     */
+    async function terminateSession(sessionId, userId) {
+        const sb = await getSupabase();
+        if (!sb) return { success: false, error: 'Supabase غير متوفر' };
+        const { error } = await sb.from('user_login_sessions')
+            .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+            .eq('id', sessionId)
+            .eq('user_id', userId);
+        if (error) {
+            console.error('فشل إنهاء الجلسة:', error);
+            return { success: false, error: error.message };
+        }
+        return { success: true };
+    }
+
+    /**
+     * إنهاء جميع الجلسات النشطة للمستخدم (تُستدعى قبل إنشاء جلسة جديدة)
+     */
+    async function deactivateAllActiveSessions(userId) {
+        const sb = await getSupabase();
+        if (!sb) return false;
+        const { error } = await sb.from('user_login_sessions')
+            .update({ status: 'terminated_by_system', logout_at: new Date().toISOString() })
+            .eq('user_id', userId)
+            .eq('status', 'active');
+        if (error) {
+            console.error('فشل إنهاء الجلسات القديمة:', error);
+            return false;
+        }
+        console.log('✅ تم إنهاء جميع الجلسات النشطة السابقة');
+        return true;
+    }
+
+    /**
+     * إنشاء سجل جلسة جديد مع تخزين جميع حقول الموقع
+     */
     async function createSessionRecord(userId, extraData = {}) {
         const sb = await getSupabase();
         if (!sb) return false;
 
-        // 1. إنهاء الجلسات القديمة (ضمان جلسة واحدة نشطة)
+        // 1. إنهاء جميع الجلسات النشطة السابقة (ضمان جلسة واحدة فقط)
         await deactivateAllActiveSessions(userId);
 
-        // 2. معلومات الجهاز
+        // 2. الحصول على معلومات الجهاز
         let deviceInfo = {};
         try {
-            deviceInfo = (window.DeviceInfo?.getDeviceAndBrowserInfo) ?
+            deviceInfo = (window.DeviceInfo && window.DeviceInfo.getDeviceAndBrowserInfo) ?
                 window.DeviceInfo.getDeviceAndBrowserInfo() : {};
-        } catch (e) {}
+        } catch (e) { /* استخدام كائن فارغ */ }
 
         const geo = extraData.geo || {};
         const full = extraData.locationIQ || {};  // الكائن الكامل من fetchLocationIQFull
@@ -36,8 +88,6 @@
             session_number: 'SES-' + Date.now().toString(36).toUpperCase(),
             login_at: new Date().toISOString(),
             status: 'active',
-
-            // أساسيات
             ip_address: geo.ip || extraData.ip || null,
             isp: geo.isp || null,
             country: finalCountry,
@@ -52,6 +102,9 @@
             latitude: finalLat,
             longitude: finalLon,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+            vpn_detected: geo.proxy || false,
+            proxy_detected: geo.proxy || false,
+            hosting_detected: geo.hosting || false,
 
             // LocationIQ Lookup Information
             location_provider: full.location_provider || null,
@@ -74,7 +127,6 @@
             error_code: full.error_code,
             error_message: full.error_message,
             request_payload: full.request_payload,
-            request_headers: full.request_headers,
             response_headers: full.response_headers,
             request_id: full.request_id,
             gps_enabled: full.gps_enabled,
@@ -135,15 +187,33 @@
             operating_system: deviceInfo.operating_system || null,
             os_version: deviceInfo.os_version || null,
             platform: deviceInfo.platform || null,
-            // ... (باقي حقول deviceInfo) ...
+            language: deviceInfo.language || null,
+            screen_resolution: deviceInfo.screen_resolution || null,
+            pixel_ratio: deviceInfo.pixel_ratio || null,
+            color_depth: deviceInfo.color_depth || null,
+            cpu_architecture: deviceInfo.cpu_cores || null,
+            device_memory: deviceInfo.device_memory || null,
+            touch_supported: deviceInfo.touch_supported || null,
+            cookies_enabled: deviceInfo.cookies_enabled || null,
+            local_storage: deviceInfo.local_storage || null,
+            session_storage: deviceInfo.session_storage || null,
+            indexed_db: deviceInfo.indexed_db || null,
+            webgl_supported: deviceInfo.webgl_supported || null,
+            fingerprint: deviceInfo.fingerprint || null,
+            network_type: deviceInfo.network_type || null,
             is_current_session: true
         };
 
         const { error } = await sb.from('user_login_sessions').insert(record);
         if (error) { console.error('❌ فشل تسجيل الجلسة:', error); return false; }
-        console.log('✅ تم تسجيل الجلسة بنجاح مع بيانات LocationIQ الكاملة');
+        console.log('✅ تم تسجيل الجلسة بنجاح مع بيانات الموقع الكاملة');
         return true;
     }
 
-    window.SessionManager = { fetchSessions, terminateSession, deactivateOtherSessions: deactivateAllActiveSessions, createSessionRecord };
+    window.SessionManager = {
+        fetchSessions,
+        terminateSession,
+        deactivateOtherSessions: deactivateAllActiveSessions, // للتوافق مع الاستدعاءات القديمة
+        createSessionRecord
+    };
 })();
