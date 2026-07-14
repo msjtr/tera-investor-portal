@@ -1,34 +1,28 @@
 /**
- * modules/activity-tracker.js – أفضل مؤقت خمول مع تحذير وعد تنازلي
- * - 5 دقائق خمول
- * - تحذير 60 ثانية مع خيارات (تمديد / خروج)
- * - إنهاء الجلسة تلقائياً بنهاية التحذير مع السبب
- * - دعم Page Visibility API لتجنب الخروج غير المقصود
+ * modules/activity-tracker.js – مؤقت خمول آمن (5 دقائق + تحذير 60 ثانية)
+ * - لا ينتهي الجلسة والمستخدم نشط فعليًا
+ * - يدعم Page Visibility API
  */
 (function() {
     'use strict';
 
-    // ⏱️ الإعدادات
-    const IDLE_TIMEOUT = 5 * 60 * 1000;           // 5 دقائق
-    const WARNING_BEFORE = 60 * 1000;             // التحذير قبل 60 ثانية
-    const ACTIVITY_UPDATE_INTERVAL = 30 * 1000;   // تحديث last_activity_at كل 30 ثانية
+    const IDLE_TIMEOUT = 5 * 60 * 1000;
+    const WARNING_BEFORE = 60 * 1000;
+    const ACTIVITY_UPDATE_INTERVAL = 30 * 1000;
 
-    // 🔧 متغيرات داخلية
     let warningTimer = null;
     let countdownInterval = null;
     let countdownSeconds = 0;
     let lastActivityUpdate = 0;
     let isUpdating = false;
     let currentUserId = null;
-    let isSessionEnded = false;                  // لمنع إنهاء الجلسة مرتين
+    let isSessionEnded = false;
     let onTimeoutCallback = null;
 
-    // 📌 دوال مساعدة
     async function getSupabase() {
         return window.teraSupabase || await window.waitForSupabase?.();
     }
 
-    // 📤 تحديث وقت آخر نشاط (مع خنق زمني)
     async function updateLastActivity(userId, force = false) {
         if (!userId || isSessionEnded) return;
         const now = Date.now();
@@ -46,75 +40,62 @@
                     .eq('is_current_session', true);
                 lastActivityUpdate = now;
             }
-        } catch (error) {
-            console.warn('فشل تحديث آخر نشاط:', error);
-        } finally {
+        } catch (e) { /* تجاهل */ } finally {
             isUpdating = false;
         }
     }
 
-    // 🖥️ إظهار نافذة التحذير مع العد التنازلي
-    function showWarning(userId) {
+    function showWarning() {
         const box = document.getElementById('idleWarning');
         if (!box || isSessionEnded) return;
 
-        // إظهار النافذة
         box.style.display = 'flex';
         countdownSeconds = WARNING_BEFORE / 1000;
         const display = document.getElementById('countdown');
         if (display) display.textContent = countdownSeconds;
 
-        // العد التنازلي
+        clearInterval(countdownInterval);
         countdownInterval = setInterval(() => {
             countdownSeconds--;
             if (display) display.textContent = countdownSeconds;
-
             if (countdownSeconds <= 0) {
                 clearInterval(countdownInterval);
-                endSession(userId, 'system_timeout');
+                endSession('system_timeout');
             }
         }, 1000);
 
-        // زر التمديد
         const extendBtn = document.getElementById('extendSessionBtn');
         if (extendBtn) {
             extendBtn.onclick = (e) => {
                 e.preventDefault();
                 clearInterval(countdownInterval);
                 hideWarning();
-                resetTimers(userId);
+                resetTimers();
             };
         }
 
-        // زر الخروج
         const logoutBtn = document.getElementById('logoutNowBtn');
         if (logoutBtn) {
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
                 clearInterval(countdownInterval);
-                hideWarning();
-                endSession(userId, 'user_logout');
+                endSession('user_logout');
             };
         }
     }
 
-    // 🙈 إخفاء نافذة التحذير
     function hideWarning() {
         const box = document.getElementById('idleWarning');
         if (box) box.style.display = 'none';
         clearInterval(countdownInterval);
     }
 
-    // 🚪 إنهاء الجلسة (تحديث القاعدة + توجيه)
-    async function endSession(userId, reason) {
-        if (isSessionEnded) return;  // منع التكرار
+    async function endSession(reason) {
+        if (isSessionEnded) return;
         isSessionEnded = true;
-
-        // إيقاف جميع المؤقتات
         clearAllTimers();
 
-        // تحديث قاعدة البيانات
-        if (userId) {
+        if (currentUserId) {
             const sb = await getSupabase();
             if (sb) {
                 await sb.from('user_login_sessions')
@@ -123,13 +104,12 @@
                         logout_at: new Date().toISOString(),
                         logout_reason: reason
                     })
-                    .eq('user_id', userId)
+                    .eq('user_id', currentUserId)
                     .eq('status', 'active')
                     .eq('is_current_session', true);
             }
         }
 
-        // استدعاء callback أو الخروج الافتراضي
         if (onTimeoutCallback) {
             onTimeoutCallback(reason);
         } else {
@@ -141,85 +121,92 @@
         }
     }
 
-    // 🔄 إعادة تعيين المؤقتات (يُستدعى عند أي نشاط)
+    // 🔁 إعادة تعيين المؤقتات (يقبل userId اختياريًا، يستخدم currentUserId إن لم يُمرر)
     function resetTimers(userId) {
         if (isSessionEnded) return;
+
+        // تحديث userId إذا تم تمريره
+        if (userId) {
+            currentUserId = userId;
+        }
+        // إذا لا يوجد userId على الإطلاق، لا يمكننا الاستمرار
+        if (!currentUserId) return;
+
         clearTimeout(warningTimer);
         hideWarning();
-        currentUserId = userId;
 
-        // تحديث وقت آخر نشاط
-        updateLastActivity(userId);
+        // تحديث آخر نشاط
+        updateLastActivity(currentUserId);
 
-        // ضبط مؤقت التحذير (قبل 60 ثانية من نهاية المهلة)
+        // ضبط مؤقت التحذير (4 دقائق)
         const warningDelay = IDLE_TIMEOUT - WARNING_BEFORE;
         warningTimer = setTimeout(() => {
-            showWarning(userId);
+            showWarning();
         }, warningDelay);
     }
 
-    // 🧹 إلغاء جميع المؤقتات والمستمعين
     function clearAllTimers() {
         clearTimeout(warningTimer);
         clearInterval(countdownInterval);
         hideWarning();
     }
 
-    // 🚀 بدء المراقبة
+    // 🚀 بدء المراقبة (يربط الأحداث ويبدأ المؤقت)
     function startIdleTimer(onTimeout, userId) {
+        // تنظيف أي مستمعين سابقين إن وجد (اختياري لكن آمن)
+        stopListening();
+
         onTimeoutCallback = onTimeout;
         isSessionEnded = false;
         lastActivityUpdate = 0;
-        currentUserId = userId;
+        currentUserId = userId || currentUserId;
 
-        resetTimers(userId);
+        if (!currentUserId) {
+            console.warn('ActivityTracker: لم يتم توفير userId، لن يعمل المؤقت');
+            return;
+        }
 
-        // أحداث النشاط
-        const events = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.addEventListener(event, activityHandler);
-        });
+        resetTimers(currentUserId);
 
-        // Page Visibility API: إيقاف المؤقت عند إخفاء الصفحة
+        // مستمعو الأحداث
+        window._activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+        window._activityEvents.forEach(ev => document.addEventListener(ev, activityHandler));
         document.addEventListener('visibilitychange', visibilityHandler);
     }
 
-    // 🎯 معالج النشاط
     function activityHandler() {
         if (isSessionEnded) return;
-        resetTimers(currentUserId);
+        // نمرر currentUserId المخزّن (مضمون وجوده بعد start)
+        resetTimers();
     }
 
-    // 👁️ معالج رؤية الصفحة (يمنع الخروج عند التصغير)
     function visibilityHandler() {
         if (document.hidden) {
-            // إخفاء الصفحة: إيقاف مؤقت التحذير (لكن لا ننهي الجلسة)
             clearTimeout(warningTimer);
             clearInterval(countdownInterval);
-            hideWarning();
         } else {
-            // عودة المستخدم: إعادة ضبط المؤقتات وكأنه نشط
             if (!isSessionEnded && currentUserId) {
-                resetTimers(currentUserId);
+                resetTimers();
             }
         }
     }
 
-    // 🧽 تنظيف كامل (عند تسجيل الخروج اليدوي مثلاً)
-    function destroy() {
-        clearAllTimers();
-        isSessionEnded = true;
-        const events = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.removeEventListener(event, activityHandler);
-        });
+    function stopListening() {
+        if (window._activityEvents) {
+            window._activityEvents.forEach(ev => document.removeEventListener(ev, activityHandler));
+        }
         document.removeEventListener('visibilitychange', visibilityHandler);
     }
 
-    // 🌐 واجهة عامة
+    function destroy() {
+        clearAllTimers();
+        isSessionEnded = true;
+        stopListening();
+    }
+
     window.ActivityTracker = {
         startIdleTimer,
-        resetIdleTimer: resetTimers,   // متوافق مع الاسم القديم
+        resetIdleTimer: resetTimers,
         clearIdleTimer: clearAllTimers,
         updateLastActivity,
         endSession,
