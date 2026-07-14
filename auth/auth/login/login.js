@@ -1,5 +1,5 @@
 /**
- * login.js – نسخة مستقرة تمامًا (متوافقة مع auth.js v10)
+ * login.js – نسخة محدثة (متوافقة مع auth.js v10 + فحص الشبكة)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -64,13 +64,18 @@
             return;
         }
 
+        // 🛡️ فحص أمان الشبكة قبل إرسال رمز التحقق (اختياري)
+        if (window.SecurityEnforcer && window.SecurityEnforcer.enforceSecureConnection) {
+            const isSafe = await window.SecurityEnforcer.enforceSecureConnection();
+            if (!isSafe) return; // تم عرض إشعار المنع من داخل enforcer
+        }
+
         if (loginBtn) {
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق من البيانات...';
         }
 
         try {
-            // auth.js يقوم تلقائياً بحفظ otpName و otpEmail
             await window.Auth.loginWithPasswordAndOTP(email, password);
             window.location.href = '/auth/verify-otp.html';
 
