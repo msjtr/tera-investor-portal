@@ -51,6 +51,7 @@
             margin: 0;
             color: var(--gray-900);
             line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* الأزرار العامة */
@@ -68,11 +69,21 @@
             gap: 6px;
             transition: all 0.2s;
             white-space: nowrap;
+            text-decoration: none;
         }
         .btn-action i { font-size: 14px; }
         .btn-action:hover { background: #016f7a; transform: translateY(-1px); }
         .btn-action.danger { background: var(--danger); }
         .btn-action.danger:hover { background: #b91c1c; }
+        .btn-action.outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        .btn-action.outline:hover {
+            background: var(--primary);
+            color: white;
+        }
 
         .btn-secondary {
             background: var(--gray-200);
@@ -82,7 +93,9 @@
             border-radius: var(--radius-sm);
             font-weight: 700;
             cursor: pointer;
+            transition: background 0.2s;
         }
+        .btn-secondary:hover { background: var(--gray-300); }
 
         /* حاوية الصفحة الرئيسية */
         .content-container {
@@ -105,7 +118,9 @@
             border: 1px solid var(--gray-200);
             text-align: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
         }
+        .stat-box:hover { transform: translateY(-2px); }
         .stat-box .number {
             font-size: 28px;
             font-weight: 800;
@@ -151,13 +166,14 @@
         }
         .search-filter-bar input {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
         }
         #filterCount {
             font-weight: 600;
             color: var(--gray-500);
             font-size: 14px;
             white-space: nowrap;
+            margin-right: auto;
         }
 
         /* الجدول */
@@ -170,7 +186,7 @@
         }
         .table-container table {
             width: 100%;
-            min-width: 650px;
+            min-width: 600px;
             border-collapse: collapse;
             font-size: 14px;
         }
@@ -240,6 +256,10 @@
             margin-bottom: 24px;
             border-bottom: 2px solid var(--gray-100);
             padding-bottom: 16px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
         }
         .modal-header h3 {
             margin: 0;
@@ -254,6 +274,8 @@
             font-size: 26px;
             color: var(--gray-500);
             cursor: pointer;
+            padding: 5px;
+            line-height: 1;
         }
 
         /* مجموعات التفاصيل */
@@ -273,6 +295,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
+            user-select: none;
         }
         .detail-group h4 i { color: var(--primary); font-size: 17px; }
         .detail-row {
@@ -326,6 +350,9 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+            .search-filter-bar input {
+                min-width: 100%;
+            }
             .modal-box {
                 max-width: 95vw;
                 padding: 20px 14px;
@@ -345,6 +372,29 @@
                 padding: 6px 12px;
                 font-size: 11px;
             }
+            .detail-group {
+                padding: 14px;
+            }
+            .detail-label {
+                min-width: 100%;
+                margin-bottom: 2px;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-subheader h1 {
+                font-size: 20px;
+            }
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .table-container table {
+                min-width: 450px;
+            }
         }
 
         /* تنسيق رأس الصفحة السفلي */
@@ -355,6 +405,7 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 20px;
+            padding: 0 16px;
         }
         .page-subheader h1 {
             font-size: 24px;
@@ -376,6 +427,7 @@
             align-items: center;
             gap: 6px;
             transition: background 0.2s;
+            font-size: 14px;
         }
         .btn-back:hover { background: var(--gray-200); }
 
@@ -389,6 +441,27 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+        }
+
+        /* تحذير الخمول */
+        .alert-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .alert-box i { font-size: 20px; }
+
+        /* تذييل الصفحة */
+        .page-footer {
+            text-align: center;
+            padding: 16px;
+            color: var(--gray-500);
+            font-size: 13px;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -413,9 +486,9 @@
     </div>
 
     <!-- تحذير الخمول -->
-    <div class="alert-box warning" id="idleWarning" role="alert" style="display:none; background:#fffbeb; color:#92400e; border:1px solid #fcd34d; padding:12px 16px; border-radius:10px; margin-bottom:20px;">
+    <div class="alert-box" id="idleWarning" role="alert" style="display:none; background:#fffbeb; color:#92400e; border:1px solid #fcd34d;">
         <i class="fas fa-clock"></i>
-        <span>أنت غير نشط منذ فترة. سيتم إنهاء جلستك تلقائياً خلال 30 ثانية.</span>
+        <span>أنت غير نشط منذ فترة. سيتم إنهاء جلستك تلقائياً خلال <strong id="idleCountdown">60</strong> ثانية.</span>
     </div>
 
     <!-- الإحصائيات -->
@@ -426,7 +499,7 @@
 
     <!-- شريط البحث والتصفية -->
     <div class="search-filter-bar">
-        <input type="text" id="searchInput" placeholder="بحث برقم الجلسة أو التاريخ...">
+        <input type="text" id="searchInput" placeholder="🔍 بحث برقم الجلسة أو التاريخ...">
         <select id="statusFilter">
             <option value="all">جميع الجلسات</option>
             <option value="active">النشطة</option>
@@ -435,6 +508,9 @@
             <option value="terminated_by_user">أنهيت بواسطتك</option>
             <option value="terminated_by_system">أنهيت بواسطة النظام</option>
         </select>
+        <button class="btn-action outline" onclick="location.reload()" title="تحديث الجدول">
+            <i class="fas fa-sync-alt"></i> تحديث
+        </button>
         <span id="filterCount">عرض 0 جلسة</span>
     </div>
 
@@ -476,7 +552,7 @@
 <script src="/assets/js/supabase-client.js"></script>
 <script src="/assets/js/auth.js"></script>
 
-<!-- وحدات النظام (تأكد من وجودها) -->
+<!-- وحدات النظام -->
 <script src="/assets/js/modules/network-monitor.js"></script>
 <script src="/assets/js/modules/device-info.js"></script>
 <script src="/assets/js/modules/connection-info.js"></script>
@@ -486,7 +562,7 @@
 <script src="/assets/js/modules/activity-tracker.js"></script>
 <script src="/assets/js/modules/session-manager.js"></script>
 
-<!-- سكربت الصفحة (يجب أن يكون بعد جميع الوحدات) -->
+<!-- سكربت الصفحة -->
 <script src="/assets/js/security-registered-devices.js"></script>
 </body>
 </html>
