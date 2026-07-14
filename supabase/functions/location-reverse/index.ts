@@ -1,82 +1,95 @@
-// supabase/functions/location-reverse/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+/**
+ * location-reverse/index.ts
+ * يستدعي LocationIQ ويعيد بيانات شاملة مع CORS
+ */
+export default {
+  async fetch(req: Request): Promise<Response> {
+    // إعداد CORS شامل
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    };
 
-const LOCATIONIQ_API_KEY = Deno.env.get("LOCATIONIQ_API_KEY")!;
-const LOCATIONIQ_BASE_URL = Deno.env.get("LOCATIONIQ_BASE_URL") || "https://us1.locationiq.com";
-const LOCATIONIQ_ENDPOINT = Deno.env.get("LOCATIONIQ_ENDPOINT") || "/v1/reverse";
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    try {
+      const url = new URL(req.url);
+      const lat = url.searchParams.get("lat");
+      const lon = url.searchParams.get("lon");
+
+      if (!lat || !lon) {
+        return new Response(
+          JSON.stringify({ error: "Latitude and Longitude are required", lookup_status: 0 }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const latNum = parseFloat(lat);
+      const lonNum = parseFloat(lon);
+
+      if (isNaN(latNum) || isNaN(lonNum) || latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+        return new Response(
+          JSON.stringify({ error: "Invalid coordinates", lookup_status: 0 }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const apiKey = Deno.env.get("LOCATIONIQ_API_KEY");
+      if (!apiKey) {
+        return new Response(
+          JSON.stringify({ error: "Server configuration error", lookup_status: 0 }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // بناء الرابط مع كل المعاملات المفيدة
+      const params = new URLSearchParams({
+        key: apiKey,
+        lat: latNum.toString(),
+        lon: lonNum.toString(),
+        format: "json",
+        addressdetails: "1",
+        normalizeaddress: "1",
+        normalizecity: "1",
+        postaladdress: "1",
+        matchquality: "1",
+        statecode: "1",
+        namedetails: "1",
+        extratags: "1",
+        "accept-language": "native",   // سيعيد الأسماء باللغة المحلية (عربية في السعودية)
+      });
+
+      // استخدام الرابط الثابت (لن نحتاج BASE_URL و ENDPOINT)
+      const locationIQUrl = `https://us1.locationiq.com/v1/reverse?${params.toString()}`;
+
+      console.log("Requesting:", locationIQUrl.replace(apiKey, "***"));
+
+      const response = await fetch(locationIQUrl);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return new Response(
+          JSON.stringify({ error: `LocationIQ ${response.status}: ${errorText}`, lookup_status: 0 }),
+          { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const data = await response.json();
+
+      return new Response(
+        JSON.stringify({ ...data, lookup_status: 1 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    } catch (error: any) {
+      console.error("Edge Function error:", error);
+      return new Response(
+        JSON.stringify({ error: "Internal server error", lookup_status: 0 }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+  },
 };
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    const url = new URL(req.url);
-    const lat = url.searchParams.get("lat");
-    const lon = url.searchParams.get("lon");
-
-    if (!lat || !lon) {
-      return new Response(
-        JSON.stringify({ error: "Latitude and Longitude are required", lookup_status: 0 }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const latNum = parseFloat(lat);
-    const lonNum = parseFloat(lon);
-
-    if (isNaN(latNum) || isNaN(lonNum) || latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
-      return new Response(
-        JSON.stringify({ error: "Invalid coordinates", lookup_status: 0 }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const params = new URLSearchParams({
-      key: LOCATIONIQ_API_KEY,
-      lat: latNum.toString(),
-      lon: lonNum.toString(),
-      format: "json",
-      addressdetails: "1",
-      normalizeaddress: "1",
-      normalizecity: "1",
-      postaladdress: "1",
-      matchquality: "1",
-      statecode: "1",
-      namedetails: "1",
-      extratags: "1",
-      "accept-language": "native",
-    });
-
-    const locationIQUrl = `${LOCATIONIQ_BASE_URL}${LOCATIONIQ_ENDPOINT}?${params.toString()}`;
-    console.log("Requesting:", locationIQUrl.replace(LOCATIONIQ_API_KEY, "***"));
-
-    const response = await fetch(locationIQUrl);
-
-    if (!response.ok) {
-      return new Response(
-        JSON.stringify({ error: `LocationIQ returned ${response.status}`, lookup_status: 0 }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const data = await response.json();
-
-    return new Response(
-      JSON.stringify({ ...data, lookup_status: 1 }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
-  } catch (error) {
-    console.error(error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error", lookup_status: 0 }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-});
