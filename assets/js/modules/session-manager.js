@@ -1,6 +1,7 @@
 /**
  * modules/session-manager.js – إدارة جلسات متكاملة وآمنة
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
+ * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
  * - دمج معلومات الموقع (LocationIQ) + الجهاز (DeviceInfo) + الشبكة (ConnectionInfo)
  * - تخزين كافة التفاصيل في جدول الجلسات
  */
@@ -50,10 +51,11 @@
 
     // ───────────────────────────────────────
     // 3. إنهاء جميع الجلسات النشطة السابقة (ما عدا الحالية)
+    //    تُعيد عدد الجلسات التي تم إنهاؤها بنجاح
     // ───────────────────────────────────────
     async function deactivateAllActiveSessions(userId) {
         const sb = await getSupabase();
-        if (!sb) return false;
+        if (!sb) return 0;
 
         const { data: activeSessions, error } = await sb.from('user_login_sessions')
             .select('id')
@@ -62,25 +64,24 @@
 
         if (error) {
             console.error('فشل جلب الجلسات النشطة:', error);
-            return false;
+            return 0;
         }
-        if (!activeSessions || activeSessions.length === 0) return true;
+        if (!activeSessions || activeSessions.length === 0) return 0;
 
-        let allTerminated = true;
+        let terminatedCount = 0;
         for (const session of activeSessions) {
             const { error: updateError } = await sb.from('user_login_sessions')
                 .update({
                     status: 'terminated_by_system',
-                    logout_at: new Date().toISOString()
+                    logout_at: new Date().toISOString(),
+                    logout_reason: 'تم إنهاء الجلسة تلقائياً لوجود جلسة أحدث'
                 })
                 .eq('id', session.id)
                 .eq('user_id', userId);
-            if (updateError) {
-                console.error('فشل إنهاء الجلسة:', session.id, updateError);
-                allTerminated = false;
-            }
+            if (!updateError) terminatedCount++;
+            else console.error('فشل إنهاء الجلسة:', session.id, updateError);
         }
-        return allTerminated;
+        return terminatedCount;
     }
 
     // ───────────────────────────────────────
@@ -90,19 +91,28 @@
         const sb = await getSupabase();
         if (!sb) return false;
 
-        // 🛡️ 4.0 فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) – إذا كان مشبوهاً، نوقف الجلسة فوراً
+        // 🛡️ 4.0 فحص أمان الشبكة
         if (window.SecurityEnforcer && window.SecurityEnforcer.enforceSecureConnection) {
             const isSafe = await window.SecurityEnforcer.enforceSecureConnection();
-            if (!isSafe) {
-                // تم عرض إشعار للمستخدم من داخل security-enforcer.js
-                return false;
+            if (!isSafe) return false;
+        }
+
+        // 4.1 إنهاء جميع الجلسات النشطة السابقة والحصول على العدد
+        const closedCount = await deactivateAllActiveSessions(userId);
+
+        // 4.2 إشعار المستخدم إذا تم إغلاق جلسات سابقة
+        if (closedCount > 0) {
+            const message = closedCount === 1
+                ? 'تم إغلاق جلسة سابقة واحدة لوجود جلسة أحدث.'
+                : `تم إغلاق ${closedCount} جلسات سابقة لوجود جلسة أحدث.`;
+            if (window.UIHelpers && window.UIHelpers.showToast) {
+                window.UIHelpers.showToast(message, 'info', 4000);
+            } else {
+                alert(message);
             }
         }
 
-        // 4.1 إنهاء الجلسات القديمة النشطة
-        await deactivateAllActiveSessions(userId);
-
-        // 4.2 جمع معلومات الجهاز والمتصفح
+        // 4.3 جمع معلومات الجهاز والمتصفح
         let deviceInfo = {};
         try {
             if (window.DeviceInfo && window.DeviceInfo.getDeviceAndBrowserInfo) {
@@ -112,7 +122,7 @@
             console.warn('تعذر جمع معلومات الجهاز:', e);
         }
 
-        // 4.3 جمع معلومات الاتصال (الشبكة والـ IP والأمان)
+        // 4.4 جمع معلومات الاتصال
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
@@ -122,7 +132,7 @@
             console.warn('تعذر جمع معلومات الاتصال:', e);
         }
 
-        // 4.4 استخراج بيانات الموقع (من Geo IP و LocationIQ و GPS)
+        // 4.5 بيانات الموقع
         const geo = extraData.geo || {};
         const full = extraData.locationIQ || {};
         const gps = extraData.gps || {};
@@ -131,17 +141,13 @@
         const addrComp = full.address_components || {};
         const addl = full.additional || {};
 
-        // أفضل إحداثيات متاحة
         const finalLat = full.latitude || full.lat || gps.latitude || geo.lat || connectionInfo?.ip?.lat || null;
         const finalLon = full.longitude || full.lon || gps.longitude || geo.lon || connectionInfo?.ip?.lon || null;
-
-        // أفضل مدينة ودولة
         const finalCity = addrComp.city || full.city || geo.city || connectionInfo?.ip?.city || null;
         const finalCountry = addrComp.country || full.country || geo.country || connectionInfo?.ip?.country || null;
         const finalState = addrComp.state || full.state || connectionInfo?.ip?.region || null;
         const finalPostcode = addrComp.postcode || full.postcode || null;
 
-        // تفاصيل الـ IP والأمان من الشبكة
         const ipAddress = connectionInfo?.ip?.public || geo.ip || extraData.ip || null;
         const isp = connectionInfo?.ip?.isp || geo.isp || null;
         const isVPN = connectionInfo?.security?.isVPN || geo.proxy || false;
@@ -149,7 +155,7 @@
         const isTor = connectionInfo?.security?.isTor || false;
         const isHosting = connectionInfo?.security?.isHosting || geo.hosting || false;
 
-        // 4.5 بناء كائن الجلسة
+        // 4.6 بناء كائن الجلسة (كما هو بدون تغيير)
         const record = {
             user_id: userId,
             session_number: generateSessionNumber(),
@@ -157,7 +163,6 @@
             status: 'active',
             is_current_session: true,
 
-            // IP والموقع الجغرافي
             ip_address: ipAddress,
             isp: isp,
             country: finalCountry,
@@ -176,7 +181,6 @@
             latitude: finalLat,
             longitude: finalLon,
 
-            // حقول LocationIQ إضافية
             place_id: core.place_id || full.place_id || null,
             licence: core.licence || full.licence || null,
             osm_type: core.osm_type || full.osm_type || null,
@@ -186,16 +190,13 @@
             match_level: full.match_level || (addl.matchquality ? addl.matchquality.matchlevel : null) || null,
             boundingbox: full.boundingbox ? (Array.isArray(full.boundingbox) ? full.boundingbox.join(',') : full.boundingbox) : null,
 
-            // الوقت والمنطقة الزمنية
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || connectionInfo?.ip?.timezone || null,
 
-            // علامات الأمان
             vpn_detected: isVPN,
             proxy_detected: isProxy,
             tor_detected: isTor,
             hosting_detected: isHosting,
 
-            // الجهاز والمتصفح
             device_type: deviceInfo.device_type || null,
             browser_name: deviceInfo.browser_name || null,
             browser_version: deviceInfo.browser_version || null,
@@ -218,7 +219,6 @@
             webgl_supported: deviceInfo.browser_features?.webgl || null,
             fingerprint: deviceInfo.fingerprint || null,
 
-            // الشبكة
             network_type: connectionInfo?.network?.type || null,
             network_online: connectionInfo?.network?.online ?? null,
             network_effective_type: connectionInfo?.network?.effectiveType || null,
@@ -226,10 +226,8 @@
             network_rtt: connectionInfo?.network?.latency ?? null,
             network_save_data: connectionInfo?.network?.saveData ?? null,
 
-            // تخزين بيانات الاتصال الكاملة في حقل JSON (إن كان العمود موجوداً)
             connection_info: connectionInfo || null,
 
-            // معلومات إضافية عن الجهاز في JSON
             extra_device_info: deviceInfo ? {
                 battery: deviceInfo.battery,
                 browser_features: deviceInfo.browser_features,
@@ -240,33 +238,26 @@
             } : null
         };
 
-        // إزالة الحقول غير المعرفة (undefined)
+        // إزالة الحقول غير المعرفة
         Object.keys(record).forEach(key => {
             if (record[key] === undefined) delete record[key];
         });
 
-        // الإدراج في قاعدة البيانات
         const { error } = await sb.from('user_login_sessions').insert(record);
         if (error) {
             console.error('❌ فشل تسجيل الجلسة:', error);
             return false;
         }
-        console.log('✅ تم تسجيل الجلسة بنجاح بجميع التفاصيل');
+        console.log('✅ تم تسجيل الجلسة بنجاح (تم إغلاق ' + closedCount + ' جلسة سابقة)');
         return true;
     }
 
-    // ───────────────────────────────────────
-    // 5. توليد رقم جلسة فريد
-    // ───────────────────────────────────────
     function generateSessionNumber() {
         const timestamp = Date.now().toString(36).toUpperCase();
         const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
         return `SES-${timestamp}-${randomPart}`;
     }
 
-    // ───────────────────────────────────────
-    // واجهة عامة
-    // ───────────────────────────────────────
     window.SessionManager = {
         fetchSessions,
         terminateSession,
