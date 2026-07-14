@@ -4,7 +4,6 @@
 (function() {
     'use strict';
 
-    // رابط Edge Function المنشورة على Supabase
     const SUPABASE_EDGE_FUNCTION = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/location-reverse';
 
     const PROVIDER_NAME = 'LocationIQ';
@@ -33,8 +32,8 @@
         if (lat == null || lon == null) return { valid: false, error: 'الإحداثيات غير متوفرة' };
         if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon))
             return { valid: false, error: 'الإحداثيات يجب أن تكون أرقاماً' };
-        if (lat < LAT_MIN || lat > LAT_MAX) return { valid: false, error: `خط العرض خارج النطاق` };
-        if (lon < LON_MIN || lon > LON_MAX) return { valid: false, error: `خط الطول خارج النطاق` };
+        if (lat < LAT_MIN || lat > LAT_MAX) return { valid: false, error: 'خط العرض خارج النطاق' };
+        if (lon < LON_MIN || lon > LON_MAX) return { valid: false, error: 'خط الطول خارج النطاق' };
         return { valid: true };
     }
 
@@ -163,6 +162,7 @@
             downlink: networkInfo.downlink || null,
             rtt: networkInfo.rtt || null,
             save_data: networkInfo.save_data || false,
+            // حقول LocationIQ (ستُملأ لاحقاً)
             place_id: null, licence: null, osm_type: null, osm_id: null,
             latitude: lat, longitude: lon, display_name: null, name: null,
             postal_address: null, class: null, type: null, importance: null,
@@ -172,7 +172,11 @@
             municipality: null, county: null, state_district: null, state: null,
             state_code: null, postcode: null, country: null, country_code: null,
             boundingbox: null, namedetails: null, extratags: null,
-            matchquality: null, address: null, locationiq_response: null
+            matchquality: null, address: null, locationiq_response: null,
+            government: null,   // حقل مخصص
+            core: null,
+            address_components: null,
+            additional: null
         };
 
         result.request_started_at = new Date().toISOString();
@@ -180,7 +184,6 @@
 
         try {
             const url = `${SUPABASE_EDGE_FUNCTION}?lat=${lat}&lon=${lon}`;
-            // ⚠️ لا يوجد أي مفتاح أو Authorization - الدالة عامة على Supabase
             const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' }
@@ -206,14 +209,68 @@
                 return result;
             }
 
-            result.locationiq_response = data;
+            // --- تم استلام البيانات بنجاح، نسخ جميع خصائص LocationIQ إلى result ---
+            Object.assign(result, data);
+
             result.lookup_status = 1;
             result.server_timestamp = new Date().toISOString();
 
+            // استخراج العنوان
+            const addr = data.address || {};
+            result.address = addr;
+
+            // حقل government (مخصص)
+            result.government = [addr.house_number, addr.road].filter(Boolean).join(' ') || null;
+
+            // توحيد city إذا لم تكن موجودة مباشرة
+            if (!result.city) {
+                result.city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || addr.locality || null;
+            }
+
+            // الأقسام الثلاثة
+            result.core = {
+                place_id: data.place_id || null,
+                licence: data.licence || null,
+                osm_type: data.osm_type || null,
+                osm_id: data.osm_id || null,
+                lat: data.lat,
+                lon: data.lon,
+                display_name: data.display_name || null
+            };
+
+            result.address_components = {
+                government: result.government,
+                house_number: addr.house_number || null,
+                road: addr.road || null,
+                quarter: addr.quarter || null,
+                suburb: addr.suburb || null,
+                city: result.city,
+                state: addr.state || null,
+                postcode: addr.postcode || null,
+                country: addr.country || null,
+                country_code: addr.country_code || null
+            };
+
+            result.additional = {
+                boundingbox: data.boundingbox || null,
+                namedetails: data.namedetails || null,
+                extratags: data.extratags || null,
+                matchquality: data.matchquality || null,
+                class: data.class || null,
+                type: data.type || null,
+                importance: data.importance || null
+            };
+
+            // الاحتفاظ بنسخة خام من رد LocationIQ
+            result.locationiq_response = data;
+
+            // ملء الحقول الفردية (التي كانت موجودة سابقاً) لضمان التوافق
             result.place_id = data.place_id || null;
             result.licence = data.licence || null;
             result.osm_type = data.osm_type || null;
             result.osm_id = data.osm_id || null;
+            result.latitude = data.lat;
+            result.longitude = data.lon;
             result.display_name = data.display_name || null;
             result.boundingbox = data.boundingbox || null;
             result.name = data.name || null;
@@ -232,14 +289,13 @@
             result.namedetails = data.namedetails || null;
             result.extratags = data.extratags || null;
 
-            const addr = data.address || {};
-            result.address = addr;
-
             result.house_number = addr.house_number || null;
             result.road = addr.road || null;
             result.neighbourhood = addr.neighbourhood || null;
             result.suburb = addr.suburb || null;
             result.quarter = addr.quarter || null;
+            result.district = addr.suburb || addr.quarter || addr.neighbourhood || addr.residential || null;
+            result.city = result.city;
             result.town = addr.town || null;
             result.village = addr.village || null;
             result.municipality = addr.municipality || null;
@@ -250,9 +306,6 @@
             result.postcode = addr.postcode || null;
             result.country = addr.country || null;
             result.country_code = addr.country_code || null;
-
-            result.city = addr.city || addr.town || addr.municipality || addr.village || addr.city_district || addr.hamlet || addr.locality || null;
-            result.district = addr.suburb || addr.quarter || addr.neighbourhood || addr.residential || null;
 
             return result;
         } catch (e) {
@@ -285,6 +338,7 @@
 
     async function fetchLocationIQ(lat, lon) {
         const full = await fetchLocationIQFull(lat, lon);
+        // يمكنك إما إرجاع الحقول المختصرة كما كان، أو إرجاع full بالكامل
         return {
             neighbourhood: full.neighbourhood || '',
             city: full.city || '',
