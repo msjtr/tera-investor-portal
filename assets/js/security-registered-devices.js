@@ -1,6 +1,6 @@
 /**
- * security-registered-devices.js – v14 (تقرير موقع جغرافي مقسم + أيقونات محسنة + أزرار تفاعلية)
- * يعرض تفاصيل الجلسة مع ثلاثة أقسام للموقع: Lookup Information, Location Information, Raw JSON Response
+ * security-registered-devices.js – v15 (عرض جميع بيانات الجلسة المُحسَّنة)
+ * يعرض كل التفاصيل: الجهاز، الشبكة، الموقع، الأمان، JSON الخام
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -104,7 +104,7 @@
     };
 
     // ──────────────────────────────────────────────
-    // عرض تفاصيل الجلسة مع أقسام الموقع الجديدة
+    // عرض تفاصيل الجلسة الكاملة
     // ──────────────────────────────────────────────
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
@@ -114,7 +114,7 @@
         if (!detailContent || !modal) return;
         modal.classList.add('show');
 
-        // محاولة جلب بيانات إضافية من LocationIQ إذا كانت ناقصة
+        // محاولة جلب بيانات الموقع إن كانت مفقودة
         let extraLocation = null;
         const hasMissingTextData = !session.country || !session.city || !session.neighbourhood || !session.postal_code;
         if (session.latitude && session.longitude && hasMissingTextData) {
@@ -124,214 +124,196 @@
             }
         }
 
-        // ── دوال مساعدة ──
-        function getLocationRows() {
-            const rows = [];
-            const country = session.country || extraLocation?.country;
-            const country_code = session.country_code || extraLocation?.country_code;
-            const city = session.city || extraLocation?.city;
-            const neighbourhood = session.neighbourhood || session.district || extraLocation?.neighbourhood;
-            const province = session.province || extraLocation?.province;
-            const state = session.state || extraLocation?.state;
-            const postal_code = session.postal_code || extraLocation?.postcode;
-            const display_name = session.display_name || extraLocation?.display_name;
+        // استخراج الحقول الاختيارية من connection_info و extra_device_info (إن كانت JSONB أو كائنات)
+        const conn = (typeof session.connection_info === 'string') ? JSON.parse(session.connection_info) : session.connection_info;
+        const extraDev = (typeof session.extra_device_info === 'string') ? JSON.parse(session.extra_device_info) : session.extra_device_info;
 
-            if (country) rows.push(['الدولة', country]);
-            if (country_code) rows.push(['الرمز الدولي', country_code]);
-            if (city) rows.push(['المدينة', city]);
-            if (neighbourhood) rows.push(['الحي', neighbourhood]);
-            if (province || state) rows.push(['المنطقة/المحافظة', province || state]);
-            if (postal_code) rows.push(['الرمز البريدي', postal_code]);
-            if (session.latitude && session.longitude) {
-                rows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
-                rows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
-            }
-            if (rows.length === 0 && display_name) {
-                rows.push(['العنوان الكامل', display_name]);
-            } else if (rows.length === 0) {
-                rows.push(['الموقع', 'غير متوفر']);
-            }
-            return rows;
-        }
-
-        // بناء قسم Lookup Information (إن وجدت بيانات)
-        function getLookupRows() {
-            const rows = [];
-            if (session.location_provider) rows.push(['مزود الخدمة', session.location_provider]);
-            if (session.api_endpoint) rows.push(['API Endpoint', session.api_endpoint]);
-            if (session.http_status) rows.push(['HTTP Status', session.http_status]);
-            if (session.lookup_status !== undefined && session.lookup_status !== null) rows.push(['Lookup Status', session.lookup_status === 1 ? 'نجاح' : 'فشل']);
-            if (session.request_started_at) rows.push(['وقت بدء الطلب', formatDate(session.request_started_at)]);
-            if (session.response_received_at) rows.push(['وقت استلام الرد', formatDate(session.response_received_at)]);
-            if (session.execution_time_ms) rows.push(['زمن التنفيذ', `${session.execution_time_ms} ms`]);
-            if (session.gps_source) rows.push(['مصدر GPS', session.gps_source]);
-            if (session.gps_accuracy) rows.push(['دقة GPS', `${session.gps_accuracy} متر`]);
-            return rows;
-        }
-
-        // بناء قسم Location Information المتقدم (من LocationIQ)
-        function getAdvancedLocationRows() {
-            const rows = [];
-            if (session.place_id) rows.push(['Place ID', session.place_id]);
-            if (session.licence) rows.push(['Licence', session.licence]);
-            if (session.osm_type) rows.push(['OSM Type', session.osm_type]);
-            if (session.osm_id) rows.push(['OSM ID', session.osm_id]);
-            if (session.display_name) rows.push(['Display Name', session.display_name]);
-            if (session.name) rows.push(['Name', session.name]);
-            if (session.postal_address) rows.push(['Postal Address', session.postal_address]);
-            if (session.class) rows.push(['Class', session.class]);
-            if (session.type) rows.push(['Type', session.type]);
-            if (session.match_code) rows.push(['Match Code', session.match_code]);
-            if (session.match_type) rows.push(['Match Type', session.match_type]);
-            if (session.match_level) rows.push(['Match Level', session.match_level]);
-            if (session.house_number) rows.push(['House Number', session.house_number]);
-            if (session.road) rows.push(['Road', session.road]);
-            if (session.neighbourhood) rows.push(['Neighbourhood', session.neighbourhood]);
-            if (session.suburb) rows.push(['Suburb', session.suburb]);
-            if (session.quarter) rows.push(['Quarter', session.quarter]);
-            if (session.district) rows.push(['District', session.district]);
-            if (session.city) rows.push(['City', session.city]);
-            if (session.town) rows.push(['Town', session.town]);
-            if (session.village) rows.push(['Village', session.village]);
-            if (session.municipality) rows.push(['Municipality', session.municipality]);
-            if (session.county) rows.push(['County', session.county]);
-            if (session.state_district) rows.push(['State District', session.state_district]);
-            if (session.state) rows.push(['State', session.state]);
-            if (session.state_code) rows.push(['State Code', session.state_code]);
-            if (session.postcode) rows.push(['Postcode', session.postcode]);
-            if (session.country) rows.push(['Country', session.country]);
-            if (session.country_code) rows.push(['Country Code', session.country_code]);
-            return rows;
-        }
-
-        // بناء أزرار التحكم
-        function getLocationButtons() {
-            const lat = session.latitude;
-            const lon = session.longitude;
-            const raw = session.locationiq_response;
-            let btns = '';
-            if (lat && lon) {
-                btns += `<button class="btn-action" onclick="window.open('https://maps.google.com/?q=${lat},${lon}', '_blank')"><i class="fas fa-map-marker-alt"></i> عرض على الخريطة</button>`;
-                btns += `<button class="btn-action" onclick="navigator.clipboard.writeText('${lat}, ${lon}')"><i class="fas fa-copy"></i> نسخ الإحداثيات</button>`;
-            }
-            if (raw) {
-                btns += `<button class="btn-action" onclick="navigator.clipboard.writeText(JSON.stringify(${JSON.stringify(raw)}, null, 2))"><i class="fas fa-code"></i> نسخ JSON</button>`;
-                btns += `<button class="btn-action" onclick="downloadJSON('${session.session_number || 'response'}', ${JSON.stringify(raw)})"><i class="fas fa-download"></i> تحميل JSON</button>`;
-            }
-            return btns;
-        }
-
-        // ── تجميع المجموعات ──
+        // أقسام قابلة للطي
         const groups = [
             {
-                title: 'هوية الجهاز', icon: 'fa-id-card',
+                title: 'معلومات أساسية', icon: 'fa-info-circle',
                 rows: [
-                    ['الرقم التعريفي للجلسة', session.id],
-                    ['نوع الجهاز', session.device_type || '—'],
-                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''}` : '—'],
-                    ['المنصة', session.platform || '—'],
-                    ['المعالج (عدد النوى)', session.cpu_architecture || session.cpu_cores || '—'],
-                    ['الذاكرة (GB)', session.device_memory || '—']
+                    ['رقم الجلسة', session.session_number],
+                    ['وقت الدخول', formatDate(session.login_at)],
+                    ['آخر نشاط', session.last_activity_at ? formatDate(session.last_activity_at) : '—'],
+                    ['الخروج', session.logout_at ? formatDate(session.logout_at) : (session.status === 'active' ? 'ما زالت نشطة' : '—')],
+                    ['الحالة', getStatusLabel(session.status)],
+                    ['مزود الجلسة', session.location_provider || '—']
                 ]
             },
             {
-                title: 'بيانات المتصفح', icon: 'fa-chrome',
+                title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop',
                 rows: [
-                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''}` : '—'],
-                    ['المحرك', session.browser_engine || '—'],
+                    ['نوع الجهاز', session.device_type || '—'],
+                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : '—'],
+                    ['المنصة', session.platform || '—'],
+                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''} (${session.browser_engine || ''})` : '—'],
                     ['وكيل المستخدم', session.user_agent || '—'],
                     ['اللغة', session.language || '—'],
-                    ['المنطقة الزمنية', session.timezone || '—']
-                ]
-            },
-            {
-                title: 'الشاشة والإمكانيات', icon: 'fa-desktop',
-                rows: [
                     ['دقة الشاشة', session.screen_resolution || '—'],
                     ['نسبة البكسل', session.pixel_ratio || '—'],
-                    ['اللمس', session.touch_supported ? 'نعم' : 'لا'],
+                    ['عمق اللون', session.color_depth || '—'],
+                    ['اللمس', session.touch_supported ? `نعم (${session.max_touch_points || extraDev?.touch_points || '?'} نقطة)` : 'لا'],
+                    ['المعالج (نوى)', session.cpu_architecture || session.cpu_cores || '—'],
+                    ['ذاكرة الجهاز', session.device_memory || '—'],
                     ['الكوكيز', session.cookies_enabled ? 'نعم' : 'لا'],
-                    ['تخزين محلي', session.local_storage ? 'نعم' : 'لا'],
-                    ['تخزين الجلسة', session.session_storage ? 'نعم' : 'لا'],
+                    ['Local Storage', session.local_storage ? 'نعم' : 'لا'],
+                    ['Session Storage', session.session_storage ? 'نعم' : 'لا'],
                     ['IndexedDB', session.indexed_db ? 'نعم' : 'لا'],
-                    ['WebGL', session.webgl_supported ? 'نعم' : 'لا']
+                    ['WebGL', session.webgl_supported ? 'نعم' : 'لا'],
+                    ['البصمة', session.fingerprint || '—'],
+                    ['المنطقة الزمنية', session.timezone || '—'],
                 ]
             },
             {
-                title: 'بيانات الشبكة', icon: 'fa-network-wired',
+                title: 'الشبكة والاتصال', icon: 'fa-network-wired',
                 rows: [
                     ['IP العام', session.ip_address || '—'],
-                    ['مزود الخدمة', session.isp || '—'],
-                    ['نوع الشبكة', session.network_type || '—'],
+                    ['IP المحلي', conn?.ip?.local || '—'],
+                    ['مزود الخدمة', session.isp || conn?.ip?.isp || '—'],
+                    ['ASN', conn?.ip?.asn || '—'],
+                    ['نوع الشبكة', session.network_type || conn?.network?.type || '—'],
+                    ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : '—'],
+                    ['نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType || '—'],
+                    ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
+                    ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
+                    ['توفير البيانات', session.network_save_data ? 'نعم' : 'لا'],
+                ]
+            },
+            {
+                title: 'أمان الشبكة', icon: 'fa-shield-alt',
+                rows: [
                     ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
                     ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
                     ['Tor', session.tor_detected ? 'نعم' : 'لا'],
-                    ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا']
+                    ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا'],
+                    ['مصادر الكشف', conn?.security?.sources?.join(', ') || '—']
                 ]
-            },
-            {
-                title: 'الموقع الجغرافي (LocationIQ)', icon: 'fa-globe',
-                rows: getLocationRows()
             }
         ];
 
-        // إضافة قسم Lookup Information إذا وُجدت بيانات
-        const lookupRows = getLookupRows();
-        if (lookupRows.length > 0) {
+        // إضافة ميزات المتصفح (من extra_device_info)
+        const features = extraDev?.browser_features;
+        if (features) {
+            const featureRows = Object.entries(features).map(([key, val]) => [key.replace(/_/g, ' '), val ? '✓' : '✗']);
             groups.push({
-                title: 'معلومات عملية الاستعلام (Lookup)', icon: 'fa-search-location',
-                rows: lookupRows
+                title: 'ميزات المتصفح', icon: 'fa-puzzle-piece',
+                rows: featureRows
             });
         }
 
-        // إضافة قسم Location Information (متقدم) إذا وُجدت بيانات
-        const advRows = getAdvancedLocationRows();
-        if (advRows.length > 0) {
+        // البطارية
+        if (extraDev?.battery) {
+            const b = extraDev.battery;
             groups.push({
-                title: 'تفاصيل الموقع (Location Details)', icon: 'fa-info-circle',
-                rows: advRows
+                title: 'البطارية', icon: 'fa-battery-half',
+                rows: [
+                    ['الشحن', b.charging ? 'قيد الشحن' : 'غير موصول'],
+                    ['النسبة', b.level || '—'],
+                    ['وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? '—' : (b.charging_time / 60).toFixed(1)],
+                    ['الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? '—' : (b.discharging_time / 60).toFixed(1)]
+                ]
             });
         }
 
-        // قسم Raw JSON (إن وُجد)
+        // الوضع الخفي
+        if (extraDev?.incognito_likely !== undefined) {
+            groups.push({
+                title: 'معلومات إضافية', icon: 'fa-user-secret',
+                rows: [
+                    ['وضع التصفح المخفي (تقديري)', extraDev.incognito_likely ? 'نعم' : 'لا']
+                ]
+            });
+        }
+
+        // الموقع الجغرافي
+        const locationRows = [];
+        const country = session.country || extraLocation?.country;
+        const country_code = session.country_code || extraLocation?.country_code;
+        const city = session.city || extraLocation?.city;
+        const neighbourhood = session.neighbourhood || session.district || extraLocation?.neighbourhood;
+        const province = session.province || extraLocation?.province;
+        const state = session.state || extraLocation?.state;
+        const postal_code = session.postal_code || extraLocation?.postcode;
+        const display_name = session.display_name || extraLocation?.display_name;
+        if (country) locationRows.push(['الدولة', country]);
+        if (country_code) locationRows.push(['الرمز الدولي', country_code]);
+        if (city) locationRows.push(['المدينة', city]);
+        if (neighbourhood) locationRows.push(['الحي', neighbourhood]);
+        if (province || state) locationRows.push(['المنطقة/المحافظة', province || state]);
+        if (postal_code) locationRows.push(['الرمز البريدي', postal_code]);
+        if (session.latitude && session.longitude) {
+            locationRows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
+            locationRows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
+        }
+        if (locationRows.length === 0 && display_name) locationRows.push(['العنوان الكامل', display_name]);
+        else if (locationRows.length === 0) locationRows.push(['الموقع', 'غير متوفر']);
+        groups.push({ title: 'الموقع الجغرافي', icon: 'fa-globe', rows: locationRows });
+
+        // تفاصيل الموقع (LocationIQ)
+        const advancedLocationRows = [];
+        const locFields = ['place_id','licence','osm_type','osm_id','display_name','name','class','type','match_code','match_type','match_level',
+                          'house_number','road','quarter','suburb','town','village','municipality','county','state_district','state_code','postcode','government'];
+        locFields.forEach(f => {
+            if (session[f]) advancedLocationRows.push([f, session[f]]);
+        });
+        if (session.boundingbox) advancedLocationRows.push(['boundingbox', Array.isArray(session.boundingbox) ? session.boundingbox.join(', ') : session.boundingbox]);
+        if (advancedLocationRows.length > 0) groups.push({ title: 'تفاصيل الموقع (LocationIQ)', icon: 'fa-map-marked-alt', rows: advancedLocationRows });
+
+        // معلومات الاستعلام (Lookup)
+        const lookupRows = [];
+        const lookupFields = ['location_provider','api_endpoint','http_status','lookup_status','request_started_at','response_received_at','execution_time_ms','gps_source','gps_accuracy','error_code','error_message'];
+        lookupFields.forEach(f => {
+            let val = session[f];
+            if (f === 'lookup_status') val = val === 1 ? 'نجاح' : val === 0 ? 'فشل' : val;
+            if (f.endsWith('_at')) val = formatDate(val);
+            if (val !== null && val !== undefined) lookupRows.push([f, val]);
+        });
+        if (lookupRows.length > 0) groups.push({ title: 'معلومات الاستعلام (Lookup)', icon: 'fa-search', rows: lookupRows });
+
+        // Raw JSON
         if (session.locationiq_response) {
             groups.push({
-                title: 'Raw JSON Response', icon: 'fa-code',
-                rows: [[ 'الاستجابة الأصلية', `<pre style="max-height:200px;overflow:auto;background:#1e293b;color:#e2e8f0;padding:8px;border-radius:6px;font-size:12px;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(session.locationiq_response, null, 2)}</pre>` ]]
+                title: 'الرد الخام (Raw JSON)', icon: 'fa-code',
+                rows: [[ 'JSON', `<pre style="max-height:250px;overflow:auto;background:#1e293b;color:#e2e8f0;padding:8px;border-radius:6px;font-size:12px;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(session.locationiq_response, null, 2)}</pre>` ]]
             });
         }
 
-        groups.push({
-            title: 'معلومات الجلسة', icon: 'fa-clock',
-            rows: [
-                ['رقم الجلسة', session.session_number],
-                ['وقت الدخول', (window.UIHelpers?.formatDate || formatDate)(session.login_at)],
-                ['وقت الخروج', session.logout_at ? (window.UIHelpers?.formatDate || formatDate)(session.logout_at) : 'مازالت نشطة']
-            ]
-        });
+        // أزرار التحكم
+        let buttonsHTML = '';
+        if (session.latitude && session.longitude) {
+            buttonsHTML += `<button class="btn-action" onclick="window.open('https://maps.google.com/?q=${session.latitude},${session.longitude}', '_blank')"><i class="fas fa-map-marker-alt"></i> عرض على الخريطة</button>`;
+            buttonsHTML += `<button class="btn-action" onclick="navigator.clipboard.writeText('${session.latitude}, ${session.longitude}')"><i class="fas fa-copy"></i> نسخ الإحداثيات</button>`;
+        }
+        if (session.locationiq_response) {
+            const raw = JSON.stringify(session.locationiq_response);
+            buttonsHTML += `<button class="btn-action" onclick="navigator.clipboard.writeText('${raw.replace(/'/g, "\\'")}')"><i class="fas fa-code"></i> نسخ JSON</button>`;
+            buttonsHTML += `<button class="btn-action" onclick="window.downloadJSON('${session.session_number}', ${raw})"><i class="fas fa-download"></i> تحميل JSON</button>`;
+        }
 
-        // ── توليد HTML ──
+        // بناء HTML النهائي
         let html = '';
         groups.forEach(group => {
-            const hasData = group.rows.some(row => row[1] && row[1] !== '—');
-            if (!hasData) return;
-            html += `<div class="detail-group"><h4><i class="fas ${group.icon}"></i> ${group.title}</h4>`;
-            group.rows.forEach(row => {
+            const dataRows = group.rows.filter(r => r[1] && r[1] !== '—');
+            if (dataRows.length === 0) return;
+            html += `<div class="detail-group">
+                <div class="group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')" style="cursor:pointer;display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <i class="fas ${group.icon}"></i><h4>${group.title}</h4><i class="fas fa-chevron-down group-toggle-icon" style="margin-left:auto;"></i>
+                </div>
+                <div class="group-content">`;
+            dataRows.forEach(row => {
                 html += `<div class="detail-row"><span class="detail-label">${row[0]}:</span><span class="detail-value">${row[1]}</span></div>`;
             });
-            html += `</div>`;
+            html += `</div></div>`;
         });
 
-        // أزرار التحكم
-        const buttons = getLocationButtons();
-        if (buttons) {
-            html += `<div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">${buttons}</div>`;
+        if (buttonsHTML) {
+            html += `<div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">${buttonsHTML}</div>`;
         }
 
         detailContent.innerHTML = html || '<p>لا توجد تفاصيل</p>';
     };
 
-    // دالة مساعدة لتحميل JSON (توضع عامة)
     window.downloadJSON = function(filename, data) {
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
