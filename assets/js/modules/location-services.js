@@ -180,6 +180,7 @@
 
         try {
             const url = `${SUPABASE_EDGE_FUNCTION}?lat=${lat}&lon=${lon}`;
+            // ⚠️ لا يوجد أي مفتاح أو Authorization - الدالة عامة على Supabase
             const response = await fetch(url, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' }
