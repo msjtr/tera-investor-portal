@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v30 (تقرير شبكة شامل مع إحداثيات IP ونوع الشبكة)
+ * security-registered-devices.js – v31 (ملف كامل بجميع الدوال والأقسام)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -213,7 +213,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (تقرير الشبكة الشامل) ----------
+    // ---------- نافذة التفاصيل (كاملة مع جميع الأقسام) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -249,7 +249,7 @@
 
         const groups = [];
 
-        // 1. معلومات أساسية (دون تغيير)
+        // 1. معلومات أساسية
         const basicRows = [];
         addRow(basicRows, 'رقم الجلسة', session.session_number);
         addRow(basicRows, 'وقت الدخول', formatDate(session.login_at));
@@ -259,7 +259,7 @@
         addRow(basicRows, 'مزود الجلسة', session.location_provider);
         groups.push({ title: 'معلومات أساسية', icon: 'fa-info-circle', rows: basicRows });
 
-        // 2. بيانات الجهاز والمتصفح (دون تغيير)
+        // 2. بيانات الجهاز والمتصفح
         const deviceRows = [];
         addRow(deviceRows, 'نوع الجهاز', session.device_type);
         addRow(deviceRows, 'نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : null);
@@ -282,15 +282,12 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. تقرير الشبكة والاتصال الشامل (جديد بالكامل)
+        // 3. الشبكة والاتصال
         const netRows = [];
-        // IP العام والمحلي
         addRow(netRows, 'IP العام', session.ip_address || conn?.ip?.public);
         addRow(netRows, 'IP المحلي', conn?.ip?.local);
-        // مزود الخدمة و ASN
         addRow(netRows, 'مزود الخدمة', session.isp || conn?.ip?.isp);
         addRow(netRows, 'ASN', conn?.ip?.asn);
-        // نوع الشبكة وسرعة الاتصال
         addRow(netRows, 'نوع الشبكة', session.network_type || conn?.network?.type);
         addRow(netRows, 'حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : (conn?.network?.online !== undefined ? (conn.network.online ? 'متصل' : 'غير متصل') : null));
         addRow(netRows, 'نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType);
@@ -299,16 +296,14 @@
         const rtt = session.network_rtt ?? conn?.network?.latency;
         addRow(netRows, 'تأخير (RTT ms)', rtt !== null ? rtt : null);
         addRow(netRows, 'توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : null));
-        // إحداثيات IP (تقريبية من مزود الخدمة)
         if (conn?.ip?.lat && conn?.ip?.lon) {
             netRows.push(['إحداثيات IP (تقريبي)', `${conn.ip.lat}, ${conn.ip.lon}`]);
         }
-        // مصدر البيانات
         const dataSources = conn?.security?.sources || [];
         addRow(netRows, 'مصدر البيانات', dataSources.length > 0 ? dataSources.join('، ') : null);
         groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
 
-        // 4. أمان الشبكة (دون تغيير)
+        // 4. أمان الشبكة
         const secRows = [
             ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
             ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
@@ -318,10 +313,88 @@
         ];
         groups.push({ title: 'أمان الشبكة', icon: 'fa-shield-alt', rows: secRows });
 
-        // ... (باقي الأقسام: ميزات المتصفح، البطارية، الموقع الجغرافي، تفاصيل LocationIQ، معلومات الاستعلام، Raw JSON) تبقى كما هي بدون تغيير ...
-        // يجب عليك إضافتها هنا كما في النسخة الكاملة السابقة (v29). لقد اختصرتها لتجنب التكرار، لكن تأكد من وجودها في ملفك.
+        // 5. ميزات المتصفح
+        const features = extraDev?.browser_features;
+        if (features) {
+            const featureRows = Object.entries(features).map(([key, val]) => [key.replace(/_/g, ' '), val ? '✓' : '✗']);
+            groups.push({ title: 'ميزات المتصفح', icon: 'fa-puzzle-piece', rows: featureRows });
+        }
 
-        // بناء HTML (نفس المنطق)
+        // 6. البطارية
+        if (extraDev?.battery) {
+            const b = extraDev.battery;
+            const battRows = [];
+            addRow(battRows, 'الشحن', b.charging ? 'قيد الشحن' : 'غير موصول');
+            addRow(battRows, 'النسبة', b.level);
+            addRow(battRows, 'وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? null : (b.charging_time / 60).toFixed(1));
+            addRow(battRows, 'الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? null : (b.discharging_time / 60).toFixed(1));
+            groups.push({ title: 'البطارية', icon: 'fa-battery-half', rows: battRows });
+        }
+
+        // 7. الوضع الخفي
+        if (extraDev?.incognito_likely !== undefined) {
+            groups.push({ title: 'معلومات إضافية', icon: 'fa-user-secret', rows: [['وضع التصفح المخفي (تقديري)', extraDev.incognito_likely ? 'نعم' : 'لا']] });
+        }
+
+        // 8. الموقع الجغرافي
+        const locationRows = [];
+        const country = session.country || extraLocation?.country;
+        const country_code = session.country_code || extraLocation?.country_code;
+        const city = session.city || extraLocation?.city;
+        const neighbourhood = session.neighbourhood || session.district || extraLocation?.neighbourhood;
+        const province = session.province || extraLocation?.province;
+        const state = session.state || extraLocation?.state;
+        const postal_code = session.postal_code || extraLocation?.postcode;
+        const display_name = session.display_name || extraLocation?.display_name;
+        addRow(locationRows, 'الدولة', country);
+        addRow(locationRows, 'الرمز الدولي', country_code);
+        addRow(locationRows, 'المدينة', city);
+        addRow(locationRows, 'الحي', neighbourhood);
+        addRow(locationRows, 'المنطقة/المحافظة', province || state);
+        addRow(locationRows, 'الرمز البريدي', postal_code);
+        if (session.latitude && session.longitude) {
+            locationRows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
+            locationRows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
+        }
+        if (locationRows.length === 0 && display_name) locationRows.push(['العنوان الكامل', display_name]);
+        else if (locationRows.length === 0) locationRows.push(['الموقع', 'غير متوفر']);
+        groups.push({ title: 'الموقع الجغرافي', icon: 'fa-globe', rows: locationRows });
+
+        // 9. تفاصيل الموقع (LocationIQ)
+        const advancedLocationRows = [];
+        const locFields = ['place_id','licence','osm_type','osm_id','display_name','name','class','type','match_code','match_type','match_level',
+                          'house_number','road','quarter','suburb','town','village','municipality','county','state_district','state_code','postcode','government'];
+        locFields.forEach(f => { if (session[f]) advancedLocationRows.push([f, session[f]]); });
+        if (session.boundingbox) advancedLocationRows.push(['boundingbox', Array.isArray(session.boundingbox) ? session.boundingbox.join(', ') : session.boundingbox]);
+        if (advancedLocationRows.length > 0) groups.push({ title: 'تفاصيل الموقع (LocationIQ)', icon: 'fa-map-marked-alt', rows: advancedLocationRows });
+
+        // 10. معلومات الاستعلام (Lookup)
+        const lookupRows = [];
+        addRow(lookupRows, 'وقت بدء الطلب', session.request_started_at ? formatDate(session.request_started_at) : null);
+        addRow(lookupRows, 'وقت استلام الرد', session.response_received_at ? formatDate(session.response_received_at) : null);
+        addRow(lookupRows, 'زمن التنفيذ (ms)', session.execution_time_ms);
+        addRow(lookupRows, 'مصدر GPS', session.gps_source);
+        addRow(lookupRows, 'دقة GPS (متر)', session.gps_accuracy);
+        let lookupStatusLabel = 'غير معروف';
+        if (session.lookup_status === 1 || session.place_id || session.display_name || session.latitude) {
+            lookupStatusLabel = 'نجاح';
+        } else if (session.lookup_status === 0) {
+            lookupStatusLabel = 'فشل';
+        }
+        addRow(lookupRows, 'حالة الاستعلام', lookupStatusLabel);
+        addRow(lookupRows, 'HTTP Status', session.http_status);
+        addRow(lookupRows, 'رمز الخطأ', session.error_code);
+        if (lookupRows.length > 0) groups.push({ title: 'معلومات الاستعلام (Lookup)', icon: 'fa-search', rows: lookupRows });
+
+        // 11. Raw JSON
+        if (session.locationiq_response) {
+            groups.push({
+                title: 'الرد الخام (Raw JSON)', icon: 'fa-code',
+                rows: [[ 'JSON', `<pre style="max-height:250px;overflow:auto;background:#1e293b;color:#e2e8f0;padding:8px;border-radius:6px;font-size:12px;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(session.locationiq_response, null, 2)}</pre>` ]]
+            });
+        }
+
+        // بناء HTML
         let buttonsHTML = '';
         if (session.latitude && session.longitude) {
             buttonsHTML += `<button class="btn-action" onclick="window.open('https://maps.google.com/?q=${session.latitude},${session.longitude}', '_blank')"><i class="fas fa-map-marker-alt"></i> عرض على الخريطة</button>`;
@@ -354,6 +427,98 @@
         detailContent.innerHTML = html || '<p>لا توجد تفاصيل كافية لعرضها.</p>';
     };
 
-    // ... باقي الدوال (downloadJSON, bindEvents, listenForSessionTermination, injectStyles, init) تبقى كما في v29 ...
+    window.downloadJSON = function(filename, data) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}_location.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
+    // ---------- أحداث ----------
+    function bindEvents() {
+        const statusEl = document.getElementById('statusFilter');
+        const searchEl = document.getElementById('searchInput');
+        const closeModalBtn = document.getElementById('closeDetailModal');
+        const closeDetailBtn = document.getElementById('closeDetailBtn');
+        const modal = document.getElementById('detailModal');
+        if (statusEl) statusEl.addEventListener('change', applyFilters);
+        if (searchEl) searchEl.addEventListener('input', applyFilters);
+        if (closeModalBtn && modal) closeModalBtn.addEventListener('click', () => modal.classList.remove('show'));
+        if (closeDetailBtn && modal) closeDetailBtn.addEventListener('click', () => modal.classList.remove('show'));
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+    }
+
+    function listenForSessionTermination() {
+        if (typeof BroadcastChannel === 'undefined') return;
+        try {
+            const channel = new BroadcastChannel('tera_session_channel');
+            channel.onmessage = (event) => {
+                if (event.data && event.data.action === 'SESSION_TERMINATED_BY_NEW_LOGIN') {
+                    if (window.UIHelpers?.showToast) {
+                        window.UIHelpers.showToast('تم إنهاء هذه الجلسة لوجود جلسة أحدث في مكان آخر.', 'warning', 5000);
+                    } else {
+                        alert('تم إنهاء هذه الجلسة لوجود جلسة أحدث في مكان آخر.');
+                    }
+                    setTimeout(() => {
+                        if (window.Auth?.logout) window.Auth.logout();
+                        else window.location.href = '/auth/auth/login/login.html?reason=new_session';
+                    }, 2000);
+                }
+            };
+        } catch (e) {}
+    }
+
+    function injectStyles() {
+        if (document.getElementById('tera-session-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'tera-session-styles';
+        style.textContent = `
+            .current-session-row { background-color: #e0f2fe !important; }
+            .badge-current { background: #028090; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 6px; display: inline-block; }
+            #currentSessionCard { background: #ffffff; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+            .group-content.collapsed { display: none; }
+            .group-header.collapsed .fa-chevron-down { transform: rotate(-90deg); }
+            .group-header .fa-chevron-down { transition: transform 0.2s; }
+            .detail-group .group-header { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; }
+            .detail-group .group-header h4 { margin: 0; flex: 1; }
+            @media (max-width: 768px) {
+                .detail-label { min-width: 100%; margin-bottom: 2px; }
+                .detail-row { flex-direction: column; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // ---------- التهيئة ----------
+    async function init() {
+        injectStyles();
+        if (!window.Auth) { window.location.replace('/auth/auth/login/login.html'); return; }
+        const user = await window.Auth.requireAuth();
+        if (!user) return;
+        currentUser = user;
+        supabase = window.teraSupabase || await window.waitForSupabase();
+        updateHeader(user);
+
+        listenForSessionTermination();
+
+        await fetchSessions();
+        await ensureCurrentSessionFlag();
+        bindEvents();
+
+        const sessionId = sessionStorage.getItem('currentSessionId');
+        if (window.SessionManager?.startSessionGuard && sessionId) {
+            window.SessionManager.startSessionGuard(currentUser.id, sessionId);
+        }
+
+        if (window.ActivityTracker?.startIdleTimer) {
+            window.ActivityTracker.startIdleTimer(handleIdleTimeout, currentUser.id);
+        } else {
+            console.warn('ActivityTracker غير محمل');
+        }
+    }
+
+    init();
 })();
