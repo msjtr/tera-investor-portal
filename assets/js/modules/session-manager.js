@@ -1,12 +1,12 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v3)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v4)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
  * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
- * - جمع كافة التفاصيل (موقع، جهاز، شبكة) وتخزينها
+ * - جمع كافة التفاصيل (موقع، جهاز، شبكة، معلومات الاستعلام) وتخزينها
  */
 (function() {
     'use strict';
@@ -255,7 +255,14 @@
                 plugins: deviceInfo.plugins,
                 mime_types: deviceInfo.mime_types,
                 touch_points: deviceInfo.max_touch_points
-            } : null
+            } : null,
+
+            // ⭐ معلومات الاستعلام (Lookup) من Location Services
+            request_started_at: full.request_started_at || null,
+            response_received_at: full.response_received_at || null,
+            execution_time_ms: full.execution_time_ms || null,
+            gps_source: full.gps_source || null,
+            gps_accuracy: full.gps_accuracy || null
         };
 
         Object.keys(record).forEach(key => {
@@ -268,7 +275,6 @@
             return false;
         }
         const sessionId = inserted.id;
-        // ✅ تخزين sessionId في sessionStorage لاستخدامه في الصفحات الأخرى (زيادة تأكيد)
         try { sessionStorage.setItem('currentSessionId', sessionId); } catch (e) {}
         console.log('✅ تم تسجيل الجلسة بنجاح – المعرف: ' + sessionId + ' (تم إغلاق ' + closedCount + ' جلسة سابقة)');
         return { success: true, sessionId };
@@ -315,8 +321,6 @@
         currentUserIdGuard = userId;
         currentSessionIdGuard = sessionId;
         guardActive = true;
-
-        // مستمع انقطاع الإنترنت فقط (بدون pagehide)
         window.addEventListener('offline', handleOffline);
     }
 
