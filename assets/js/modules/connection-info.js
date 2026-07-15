@@ -1,28 +1,74 @@
 /**
- * modules/connection-info.js – v5 (دمج ذكي لـ ipinfo.io لضمان ظهور ASN)
+ * modules/connection-info.js – v10 (واي فاي/بيانات + إحداثيات + مزود خدمة)
  */
 (function() {
     'use strict';
+
+    // قاموس أسماء مزودي الخدمة
+    const ISP_ALIASES = {
+        'saudi telecom company': 'STC',
+        'stc': 'STC',
+        'etihad etisalat': 'Mobily',
+        'mobily': 'Mobily',
+        'zain saudi arabia': 'Zain',
+        'zain': 'Zain',
+        'amazon.com': 'AWS',
+        'amazon': 'AWS',
+        'cloudflare': 'Cloudflare',
+        'google': 'Google',
+        'microsoft': 'Microsoft'
+    };
+
+    function normalizeISP(isp) {
+        if (!isp) return null;
+        const key = isp.toLowerCase().trim();
+        return ISP_ALIASES[key] || isp;
+    }
+
+    function extractASNFromOrg(orgStr) {
+        if (!orgStr) return null;
+        const match = orgStr.match(/AS(\d+)/i);
+        return match ? match[1] : null;
+    }
+
+    function translateNetworkType(type, effectiveType) {
+        // ترجمة نوع الاتصال إلى العربية
+        const typeMap = {
+            'wifi': 'واي فاي',
+            'cellular': 'بيانات خلوية',
+            'ethernet': 'إيثرنت',
+            'none': 'غير متصل'
+        };
+        if (type && typeMap[type]) return typeMap[type];
+        // إذا لم يتوفر type، نستخدم effectiveType لتخمين أنه خلوي (مثل 4g)
+        if (!type && effectiveType && effectiveType !== 'غير معروف') {
+            const speedMap = { 'slow-2g':'2G', '2g':'2G', '3g':'3G', '4g':'4G', '5g':'5G' };
+            return `بيانات خلوية (${speedMap[effectiveType] || effectiveType.toUpperCase()})`;
+        }
+        return 'غير معروف';
+    }
 
     function getBrowserNetworkInfo() {
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         if (!conn) {
             return {
                 online: navigator.onLine,
-                effectiveType: 'غير معروف',
+                effectiveType: 'غير متاح',
                 downlink: null,
                 rtt: null,
                 saveData: false,
-                type: 'غير معروف'
+                type: 'غير متاح'
             };
         }
+        const effectiveType = conn.effectiveType || 'غير معروف';
+        const rawType = conn.type || '';
         return {
             online: navigator.onLine,
-            effectiveType: conn.effectiveType || 'غير معروف',
+            effectiveType: effectiveType,
             downlink: conn.downlink ?? null,
             rtt: conn.rtt ?? null,
             saveData: conn.saveData || false,
-            type: conn.type || 'غير معروف'
+            type: translateNetworkType(rawType, effectiveType)
         };
     }
 
@@ -46,108 +92,47 @@
     }
 
     async function getPublicIPDetails() {
-        let bestResult = null;
+        const results = { edge: null, ipapi: null, ipinfo: null };
+        const sources = [];
 
-        // المسار 1: Edge Function (آمن) – نعطيها الأولوية القصوى
+        // 1. Edge Function
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
-                    console.log('✅ تم جلب IP عبر Edge Function');
-                    bestResult = {
+                    results.edge = {
                         publicIP: net.ip,
-                        isp: net.isp || null,
+                        isp: normalizeISP(net.isp) || null,
                         org: net.org || null,
-                        asn: net.asn || null,
+                        asn: net.asn || extractASNFromOrg(net.org),
                         country: net.country || null,
                         countryCode: net.country_code || null,
                         region: net.region || null,
                         city: net.city || null,
                         timezone: net.timezone || null,
-                        lat: null, lon: null,
+                        lat: net.lat || null, lon: net.lon || null,
                         isVPN: net.is_vpn || false,
                         isProxy: net.is_proxy || false,
                         isTor: net.is_tor || false,
                         isHosting: net.is_hosting || false,
-                        isDatacenter: net.is_datacenter || false,
-                        sources: net.sources || [],
-                        details: net.details || {}
+                        isDatacenter: net.is_datacenter || false
                     };
+                    sources.push(...(net.sources || []));
                 }
-            } catch (e) { console.warn('⚠️ Edge Function فشل.'); }
+            } catch (e) {}
         }
 
-        // إذا كانت Edge Function تفتقد ASN، نكمّلها بـ ipinfo.io (الذي يوفره غالبًا)
-        if (bestResult && !bestResult.asn) {
-            try {
-                console.log('🔄 Edge Function تفتقد ASN… محاولة ipinfo.io لتكميل البيانات');
-                const res = await fetch('https://ipinfo.io/json');
-                if (!res.ok) throw new Error('status ' + res.status);
-                const d = await res.json();
-                if (d.ip) {
-                    // ندمج فقط الحقول الناقصة
-                    bestResult.asn = d.asn ? d.asn.replace('AS', '') : null;
-                    bestResult.isp = bestResult.isp || d.org || null;
-                    bestResult.org = bestResult.org || d.org || null;
-                    bestResult.country = bestResult.country || d.country || null;
-                    bestResult.countryCode = bestResult.countryCode || d.country || null;
-                    bestResult.region = bestResult.region || d.region || null;
-                    bestResult.city = bestResult.city || d.city || null;
-                    bestResult.timezone = bestResult.timezone || d.timezone || null;
-                    // نضيف ipinfo.io إلى مصادر الكشف إن لم يكن موجودًا
-                    if (!bestResult.sources.includes('ipinfo.io')) {
-                        bestResult.sources.push('ipinfo.io');
-                    }
-                    // نضيف التفاصيل
-                    bestResult.details = { ...bestResult.details, ipinfo_io: d };
-                    console.log('✅ تم دمج ASN من ipinfo.io');
-                }
-            } catch (e) { console.warn('❌ فشل ipinfo.io التكميلي.'); }
-        }
-
-        // إذا لم تنجح Edge Function نهائيًا، ننتقل إلى المصادر المباشرة
-        if (!bestResult) {
-            // المسار 2: ipinfo.io (يعطي ASN عادة)
-            try {
-                console.log('🔄 محاولة ipinfo.io...');
-                const res = await fetch('https://ipinfo.io/json');
-                if (!res.ok) throw new Error('status ' + res.status);
-                const d = await res.json();
-                if (d.ip) {
-                    console.log('✅ تم جلب IP عبر ipinfo.io');
-                    return {
-                        publicIP: d.ip,
-                        isp: d.org || null,
-                        org: d.org || null,
-                        asn: d.asn?.replace('AS', '') || null,
-                        country: d.country || null,
-                        countryCode: d.country || null,
-                        region: d.region || null,
-                        city: d.city || null,
-                        timezone: d.timezone || null,
-                        lat: d.loc ? d.loc.split(',')[0] : null,
-                        lon: d.loc ? d.loc.split(',')[1] : null,
-                        isVPN: false, isProxy: false, isTor: false,
-                        isHosting: false, isDatacenter: false,
-                        sources: ['ipinfo.io'],
-                        details: { ipinfo_io: d }
-                    };
-                }
-            } catch (e) { console.warn('❌ ipinfo.io فشل.'); }
-
-            // المسار 3: ip-api.com
-            try {
-                console.log('🔄 محاولة ip-api.com...');
-                const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
-                if (!res.ok) throw new Error('status ' + res.status);
+        // 2. ip-api.com (يدعم أحياناً lat/lon)
+        try {
+            const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,lat,lon,country,countryCode,region,city,timezone');
+            if (res.ok) {
                 const d = await res.json();
                 if (d.query) {
-                    console.log('✅ تم جلب IP عبر ip-api.com');
-                    return {
+                    results.ipapi = {
                         publicIP: d.query,
-                        isp: d.isp || d.org || null,
+                        isp: normalizeISP(d.isp || d.org) || null,
                         org: d.org || null,
-                        asn: d.as || null,
+                        asn: d.as || extractASNFromOrg(d.org),
                         country: d.country || null,
                         countryCode: d.countryCode || null,
                         region: d.regionName || d.region || null,
@@ -158,15 +143,68 @@
                         isProxy: d.proxy || false,
                         isTor: false,
                         isHosting: d.hosting || false,
-                        isDatacenter: d.hosting || false,
-                        sources: ['ip-api.com'],
-                        details: { ip_api: d }
+                        isDatacenter: d.hosting || false
                     };
+                    sources.push('ip-api.com');
                 }
-            } catch (e) { console.warn('❌ ip-api.com فشل.'); }
-        }
+            }
+        } catch (e) {}
 
-        return bestResult || null;
+        // 3. ipinfo.io
+        try {
+            const res = await fetch('https://ipinfo.io/json');
+            if (res.ok) {
+                const d = await res.json();
+                if (d.ip) {
+                    results.ipinfo = {
+                        publicIP: d.ip,
+                        isp: normalizeISP(d.org) || null,
+                        org: d.org || null,
+                        asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
+                        country: d.country || null,
+                        countryCode: d.country || null,
+                        region: d.region || null,
+                        city: d.city || null,
+                        timezone: d.timezone || null,
+                        lat: d.loc ? d.loc.split(',')[0] : null,
+                        lon: d.loc ? d.loc.split(',')[1] : null,
+                        isVPN: false, isProxy: false, isTor: false,
+                        isHosting: false, isDatacenter: false
+                    };
+                    sources.push('ipinfo.io');
+                }
+            }
+        } catch (e) {}
+
+        if (!results.edge && !results.ipapi && !results.ipinfo) return null;
+
+        const pick = (field) => results.ipinfo?.[field] || results.ipapi?.[field] || results.edge?.[field] || null;
+        const merged = {
+            publicIP: results.edge?.publicIP || results.ipapi?.publicIP || results.ipinfo?.publicIP,
+            isp: pick('isp'),
+            org: pick('org'),
+            asn: pick('asn'),
+            country: pick('country'),
+            countryCode: pick('countryCode'),
+            region: pick('region'),
+            city: pick('city'),
+            timezone: pick('timezone'),
+            lat: pick('lat'),
+            lon: pick('lon'),
+            isVPN: results.edge?.isVPN || results.ipapi?.isVPN || false,
+            isProxy: results.edge?.isProxy || results.ipapi?.isProxy || false,
+            isTor: results.edge?.isTor || false,
+            isHosting: results.edge?.isHosting || results.ipapi?.isHosting || false,
+            isDatacenter: results.edge?.isDatacenter || results.ipapi?.isDatacenter || false,
+            sources: [...new Set(sources)],
+            details: {
+                edge: results.edge,
+                ip_api: results.ipapi,
+                ipinfo_io: results.ipinfo
+            }
+        };
+
+        return merged;
     }
 
     async function getConnectionInfo() {
@@ -199,7 +237,8 @@
                 region: pub?.region || null,
                 city: pub?.city || null,
                 timezone: pub?.timezone || null,
-                lat: null, lon: null
+                lat: pub?.lat || null,
+                lon: pub?.lon || null
             },
             security: {
                 isVPN: pub?.isVPN || false,
