@@ -1,5 +1,6 @@
 /**
- * security-registered-devices.js – v23 (إصلاح الجلسة الحالية + منع الإنهاء الخاطئ)
+ * security-registered-devices.js – v24 (تقرير كامل + بطاقة الجلسة + أيقونات + طي)
+ * يعرض جميع التفاصيل المخزنة لكل جلسة
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -40,38 +41,26 @@
     // ======== تصحيح تلقائي للجلسة الحالية ========
     async function ensureCurrentSessionFlag() {
         if (!currentUser || !supabase) return;
-        
-        // إذا كانت هناك جلسة نشطة بعلامة is_current_session صحيحة، لا حاجة للتصحيح
         const activeWithFlag = sessions.some(s => s.status === 'active' && s.is_current_session);
         if (activeWithFlag) return;
 
-        // البحث عن أحدث جلسة نشطة (حسب login_at)
         const activeSessions = sessions
             .filter(s => s.status === 'active')
             .sort((a, b) => new Date(b.login_at) - new Date(a.login_at));
-
         if (activeSessions.length === 0) return;
         const newestActive = activeSessions[0];
 
         try {
-            // تصحيح قاعدة البيانات
             await supabase.from('user_login_sessions')
                 .update({ is_current_session: false })
                 .eq('user_id', currentUser.id)
                 .neq('id', newestActive.id);
-
             await supabase.from('user_login_sessions')
                 .update({ is_current_session: true })
                 .eq('id', newestActive.id)
                 .eq('user_id', currentUser.id);
-
-            // تحديث الجلسات محلياً
-            sessions.forEach(s => {
-                s.is_current_session = (s.id === newestActive.id);
-            });
-        } catch (e) {
-            console.warn('تعذر تصحيح is_current_session:', e);
-        }
+            sessions.forEach(s => { s.is_current_session = (s.id === newestActive.id); });
+        } catch (e) { /* ignore */ }
     }
 
     // بطاقة الجلسة الحالية
@@ -80,10 +69,7 @@
         if (!card) return;
         let current = sessions.find(s => s.status === 'active' && s.is_current_session);
         if (!current) current = sessions.find(s => s.status === 'active');
-        if (!current) {
-            card.style.display = 'none';
-            return;
-        }
+        if (!current) { card.style.display = 'none'; return; }
         card.style.display = 'block';
         const fmt = formatDate;
         const devIcon = getDeviceIcon(current);
@@ -228,7 +214,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل ----------
+    // ---------- نافذة التفاصيل (موسعة) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -273,7 +259,7 @@
                     ['دقة الشاشة', session.screen_resolution || '—'],
                     ['نسبة البكسل', session.pixel_ratio || '—'],
                     ['عمق اللون', session.color_depth || '—'],
-                    ['اللمس', session.touch_supported ? `نعم (${session.max_touch_points || extraDev?.touch_points || '?'} نقطة)` : 'لا'],
+                    ['اللمس', session.touch_supported ? 'نعم' : 'لا'],
                     ['المعالج (نوى)', session.cpu_architecture || session.cpu_cores || '—'],
                     ['ذاكرة الجهاز', session.device_memory || '—'],
                     ['الكوكيز', session.cookies_enabled ? 'نعم' : 'لا'],
@@ -335,6 +321,7 @@
             groups.push({ title: 'معلومات إضافية', icon: 'fa-user-secret', rows: [['وضع التصفح المخفي (تقديري)', extraDev.incognito_likely ? 'نعم' : 'لا']] });
         }
 
+        // الموقع الجغرافي
         const locationRows = [];
         const country = session.country || extraLocation?.country;
         const country_code = session.country_code || extraLocation?.country_code;
@@ -358,6 +345,7 @@
         else if (locationRows.length === 0) locationRows.push(['الموقع', 'غير متوفر']);
         groups.push({ title: 'الموقع الجغرافي', icon: 'fa-globe', rows: locationRows });
 
+        // تفاصيل الموقع (LocationIQ)
         const advancedLocationRows = [];
         const locFields = ['place_id','licence','osm_type','osm_id','display_name','name','class','type','match_code','match_type','match_level',
                           'house_number','road','quarter','suburb','town','village','municipality','county','state_district','state_code','postcode','government'];
@@ -365,16 +353,19 @@
         if (session.boundingbox) advancedLocationRows.push(['boundingbox', Array.isArray(session.boundingbox) ? session.boundingbox.join(', ') : session.boundingbox]);
         if (advancedLocationRows.length > 0) groups.push({ title: 'تفاصيل الموقع (LocationIQ)', icon: 'fa-map-marked-alt', rows: advancedLocationRows });
 
+        // معلومات الاستعلام (Lookup)
         const lookupRows = [];
-        const lookupFields = ['location_provider','api_endpoint','http_status','lookup_status','request_started_at','response_received_at','execution_time_ms','gps_source','gps_accuracy','error_code','error_message'];
-        lookupFields.forEach(f => {
-            let val = session[f];
-            if (f === 'lookup_status') val = val === 1 ? 'نجاح' : val === 0 ? 'فشل' : val;
-            if (f.endsWith('_at')) val = formatDate(val);
-            if (val !== null && val !== undefined) lookupRows.push([f, val]);
-        });
+        if (session.request_started_at) lookupRows.push(['وقت بدء الطلب', formatDate(session.request_started_at)]);
+        if (session.response_received_at) lookupRows.push(['وقت استلام الرد', formatDate(session.response_received_at)]);
+        if (session.execution_time_ms) lookupRows.push(['زمن التنفيذ (ms)', session.execution_time_ms]);
+        if (session.gps_source) lookupRows.push(['مصدر GPS', session.gps_source]);
+        if (session.gps_accuracy) lookupRows.push(['دقة GPS (متر)', session.gps_accuracy]);
+        if (session.lookup_status !== undefined) lookupRows.push(['حالة الاستعلام', session.lookup_status === 1 ? 'نجاح' : 'فشل']);
+        if (session.http_status) lookupRows.push(['HTTP Status', session.http_status]);
+        if (session.error_code) lookupRows.push(['رمز الخطأ', session.error_code]);
         if (lookupRows.length > 0) groups.push({ title: 'معلومات الاستعلام (Lookup)', icon: 'fa-search', rows: lookupRows });
 
+        // Raw JSON
         if (session.locationiq_response) {
             groups.push({
                 title: 'الرد الخام (Raw JSON)', icon: 'fa-code',
@@ -412,7 +403,7 @@
 
         if (buttonsHTML) html += `<div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">${buttonsHTML}</div>`;
 
-        detailContent.innerHTML = html || '<p>لا توجد تفاصيل</p>';
+        detailContent.innerHTML = html || '<p>لا توجد تفاصيل كافية لعرضها.</p>';
     };
 
     window.downloadJSON = function(filename, data) {
@@ -493,7 +484,7 @@
         listenForSessionTermination();
 
         await fetchSessions();
-        await ensureCurrentSessionFlag();  // تصحيح الجلسة الحالية إن لزم
+        await ensureCurrentSessionFlag();
         bindEvents();
 
         const sessionId = sessionStorage.getItem('currentSessionId');
