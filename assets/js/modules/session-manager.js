@@ -1,11 +1,11 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v2)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v3)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
  * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
- * - إنهاء الجلسة تلقائياً عند إغلاق المتصفح، أو انقطاع الإنترنت، أو الخمول
+ * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة) وتخزينها
  */
 (function() {
@@ -31,14 +31,17 @@
         return data || [];
     }
 
-    async function terminateSession(sessionId, userId) {
+    async function terminateSession(sessionId, userId, reason = null) {
         const sb = await getSupabase();
         if (!sb) return { success: false, error: 'Supabase غير متوفر' };
+        const updateData = {
+            status: 'terminated_by_user',
+            logout_at: new Date().toISOString()
+        };
+        if (reason) updateData.logout_reason = reason;
+
         const { error } = await sb.from('user_login_sessions')
-            .update({
-                status: 'terminated_by_user',
-                logout_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('id', sessionId)
             .eq('user_id', userId);
         if (error) {
@@ -265,6 +268,8 @@
             return false;
         }
         const sessionId = inserted.id;
+        // ✅ تخزين sessionId في sessionStorage لاستخدامه في الصفحات الأخرى (زيادة تأكيد)
+        try { sessionStorage.setItem('currentSessionId', sessionId); } catch (e) {}
         console.log('✅ تم تسجيل الجلسة بنجاح – المعرف: ' + sessionId + ' (تم إغلاق ' + closedCount + ' جلسة سابقة)');
         return { success: true, sessionId };
     }
@@ -275,26 +280,10 @@
         return `SES-${timestamp}-${randomPart}`;
     }
 
-    // ========== حماية الجلسة (إغلاق المتصفح – انقطاع الإنترنت – الخمول) ==========
+    // ========== حماية الجلسة (انقطاع الإنترنت – الخمول) ==========
     let guardActive = false;
     let currentUserIdGuard = null;
     let currentSessionIdGuard = null;
-
-    async function handleTabClose(event) {
-        if (!currentSessionIdGuard || !currentUserIdGuard) return;
-        const sb = await getSupabase();
-        if (!sb) return;
-        try {
-            await sb.from('user_login_sessions')
-                .update({
-                    status: 'logged_out',
-                    logout_at: new Date().toISOString(),
-                    logout_reason: 'browser_close'
-                })
-                .eq('id', currentSessionIdGuard)
-                .eq('user_id', currentUserIdGuard);
-        } catch (e) {}
-    }
 
     function handleOffline() {
         if (!currentSessionIdGuard || !currentUserIdGuard) return;
@@ -304,19 +293,16 @@
         } else {
             alert(message);
         }
-        terminateSession(currentSessionIdGuard, currentUserIdGuard)
-            .then(() => {
+        terminateSession(currentSessionIdGuard, currentUserIdGuard, 'network_loss')
+            .finally(() => {
                 if (window.Auth?.logout) window.Auth.logout();
                 else window.location.href = '/auth/auth/login/login.html?reason=offline';
-            })
-            .catch(() => {
-                window.location.href = '/auth/auth/login/login.html?reason=offline';
             });
     }
 
     async function handleIdleTimeout(reason) {
         if (!currentSessionIdGuard || !currentUserIdGuard) return;
-        await terminateSession(currentSessionIdGuard, currentUserIdGuard);
+        await terminateSession(currentSessionIdGuard, currentUserIdGuard, reason || 'idle');
         if (window.Auth?.logout) {
             await window.Auth.logout();
         } else {
@@ -330,17 +316,23 @@
         currentSessionIdGuard = sessionId;
         guardActive = true;
 
-        window.addEventListener('pagehide', handleTabClose);
+        // مستمع انقطاع الإنترنت فقط (بدون pagehide)
         window.addEventListener('offline', handleOffline);
     }
 
     function stopSessionGuard() {
         if (!guardActive) return;
-        window.removeEventListener('pagehide', handleTabClose);
         window.removeEventListener('offline', handleOffline);
         guardActive = false;
         currentUserIdGuard = null;
         currentSessionIdGuard = null;
+    }
+
+    function getCurrentSessionInfo() {
+        return {
+            userId: currentUserIdGuard,
+            sessionId: currentSessionIdGuard
+        };
     }
 
     // ========== الواجهة العامة ==========
@@ -352,6 +344,7 @@
         terminateAllSessions,
         startSessionGuard,
         stopSessionGuard,
-        handleIdleTimeout
+        handleIdleTimeout,
+        getCurrentSessionInfo
     };
 })();
