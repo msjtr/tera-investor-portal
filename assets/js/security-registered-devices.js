@@ -1,6 +1,5 @@
 /**
- * security-registered-devices.js – v25 (إصلاح عرض الشبكة والاتصال + تحسينات)
- * يعرض جميع التفاصيل المخزنة لكل جلسة بشكل كامل
+ * security-registered-devices.js – v26 (إظهار كامل للشبكة والاتصال + جميع التفاصيل)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -243,7 +242,6 @@
             extraDev = (typeof session.extra_device_info === 'string') ? JSON.parse(session.extra_device_info) : session.extra_device_info;
         } catch (e) { extraDev = session.extra_device_info; }
 
-        // دالة مساعدة لإضافة صف فقط إذا كانت القيمة موجودة وغير فارغة
         function addRow(rows, label, value) {
             if (value !== undefined && value !== null && value !== '' && value !== '—') {
                 rows.push([label, value]);
@@ -285,30 +283,29 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال (توسيع كبير)
-        const netRows = [];
-        addRow(netRows, 'IP العام', session.ip_address);
-        addRow(netRows, 'IP المحلي', conn?.ip?.local);
-        addRow(netRows, 'مزود الخدمة', session.isp || conn?.ip?.isp);
-        addRow(netRows, 'ASN', conn?.ip?.asn);
-        addRow(netRows, 'نوع الشبكة', session.network_type || conn?.network?.type);
-        addRow(netRows, 'حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : null);
-        addRow(netRows, 'نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType);
-        // عرض سرعة التحميل و RTT مع وحدات
-        const downlink = session.network_downlink ?? conn?.network?.downlinkSpeed;
-        addRow(netRows, 'سرعة التحميل (Mbps)', downlink !== null ? downlink : null);
-        const rtt = session.network_rtt ?? conn?.network?.latency;
-        addRow(netRows, 'تأخير (RTT ms)', rtt !== null ? rtt : null);
-        addRow(netRows, 'توفير البيانات', session.network_save_data ? 'نعم' : 'لا');
+        // 3. الشبكة والاتصال – إظهار جميع الصفوف مباشرة
+        const netRows = [
+            ['IP العام', session.ip_address || '—'],
+            ['IP المحلي', conn?.ip?.local || '—'],
+            ['مزود الخدمة', session.isp || conn?.ip?.isp || '—'],
+            ['ASN', conn?.ip?.asn || '—'],
+            ['نوع الشبكة', session.network_type || conn?.network?.type || '—'],
+            ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : '—'],
+            ['نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType || '—'],
+            ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
+            ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
+            ['توفير البيانات', session.network_save_data ? 'نعم' : 'لا']
+        ];
         groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
 
-        // 4. أمان الشبكة
-        const secRows = [];
-        addRow(secRows, 'VPN', session.vpn_detected ? 'نعم' : 'لا');
-        addRow(secRows, 'Proxy', session.proxy_detected ? 'نعم' : 'لا');
-        addRow(secRows, 'Tor', session.tor_detected ? 'نعم' : 'لا');
-        addRow(secRows, 'استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا');
-        addRow(secRows, 'مصادر الكشف', conn?.security?.sources?.join(', '));
+        // 4. أمان الشبكة – إظهار جميع الصفوف مباشرة
+        const secRows = [
+            ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
+            ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
+            ['Tor', session.tor_detected ? 'نعم' : 'لا'],
+            ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا'],
+            ['مصادر الكشف', conn?.security?.sources?.join(', ') || '—']
+        ];
         groups.push({ title: 'أمان الشبكة', icon: 'fa-shield-alt', rows: secRows });
 
         // 5. ميزات المتصفح
@@ -373,7 +370,6 @@
         addRow(lookupRows, 'زمن التنفيذ (ms)', session.execution_time_ms);
         addRow(lookupRows, 'مصدر GPS', session.gps_source);
         addRow(lookupRows, 'دقة GPS (متر)', session.gps_accuracy);
-        // تحديد حالة الاستعلام بذكاء
         let lookupStatusLabel = 'غير معروف';
         if (session.lookup_status === 1 || session.place_id || session.display_name || session.latitude) {
             lookupStatusLabel = 'نجاح';
