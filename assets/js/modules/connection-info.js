@@ -1,5 +1,5 @@
 /**
- * modules/connection-info.js – v4 (دعم ipinfo.io عام + ثلاث خطط طوارئ)
+ * modules/connection-info.js – v5 (دمج ذكي لـ ipinfo.io لضمان ظهور ASN)
  */
 (function() {
     'use strict';
@@ -46,13 +46,15 @@
     }
 
     async function getPublicIPDetails() {
-        // المسار 1: Edge Function (آمن)
+        let bestResult = null;
+
+        // المسار 1: Edge Function (آمن) – نعطيها الأولوية القصوى
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
                     console.log('✅ تم جلب IP عبر Edge Function');
-                    return {
+                    bestResult = {
                         publicIP: net.ip,
                         isp: net.isp || null,
                         org: net.org || null,
@@ -75,68 +77,96 @@
             } catch (e) { console.warn('⚠️ Edge Function فشل.'); }
         }
 
-        // المسار 2: ip-api.com (مجاني)
-        try {
-            console.log('🔄 محاولة ip-api.com...');
-            const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
-            if (!res.ok) throw new Error('status ' + res.status);
-            const d = await res.json();
-            if (d.query) {
-                console.log('✅ تم جلب IP عبر ip-api.com');
-                return {
-                    publicIP: d.query,
-                    isp: d.isp || d.org || null,
-                    org: d.org || null,
-                    asn: d.as || null,
-                    country: d.country || null,
-                    countryCode: d.countryCode || null,
-                    region: d.regionName || d.region || null,
-                    city: d.city || null,
-                    timezone: d.timezone || null,
-                    lat: d.lat || null, lon: d.lon || null,
-                    isVPN: d.proxy || d.hosting || false,
-                    isProxy: d.proxy || false,
-                    isTor: false,
-                    isHosting: d.hosting || false,
-                    isDatacenter: d.hosting || false,
-                    sources: ['ip-api.com'],
-                    details: { ip_api: d }
-                };
-            }
-        } catch (e) { console.warn('❌ ip-api.com فشل.'); }
+        // إذا كانت Edge Function تفتقد ASN، نكمّلها بـ ipinfo.io (الذي يوفره غالبًا)
+        if (bestResult && !bestResult.asn) {
+            try {
+                console.log('🔄 Edge Function تفتقد ASN… محاولة ipinfo.io لتكميل البيانات');
+                const res = await fetch('https://ipinfo.io/json');
+                if (!res.ok) throw new Error('status ' + res.status);
+                const d = await res.json();
+                if (d.ip) {
+                    // ندمج فقط الحقول الناقصة
+                    bestResult.asn = d.asn ? d.asn.replace('AS', '') : null;
+                    bestResult.isp = bestResult.isp || d.org || null;
+                    bestResult.org = bestResult.org || d.org || null;
+                    bestResult.country = bestResult.country || d.country || null;
+                    bestResult.countryCode = bestResult.countryCode || d.country || null;
+                    bestResult.region = bestResult.region || d.region || null;
+                    bestResult.city = bestResult.city || d.city || null;
+                    bestResult.timezone = bestResult.timezone || d.timezone || null;
+                    // نضيف ipinfo.io إلى مصادر الكشف إن لم يكن موجودًا
+                    if (!bestResult.sources.includes('ipinfo.io')) {
+                        bestResult.sources.push('ipinfo.io');
+                    }
+                    // نضيف التفاصيل
+                    bestResult.details = { ...bestResult.details, ipinfo_io: d };
+                    console.log('✅ تم دمج ASN من ipinfo.io');
+                }
+            } catch (e) { console.warn('❌ فشل ipinfo.io التكميلي.'); }
+        }
 
-        // المسار 3: ipinfo.io عام (بدون مفتاح)
-        try {
-            console.log('🔄 محاولة ipinfo.io...');
-            const res = await fetch('https://ipinfo.io/json');
-            if (!res.ok) throw new Error('status ' + res.status);
-            const d = await res.json();
-            if (d.ip) {
-                console.log('✅ تم جلب IP عبر ipinfo.io');
-                return {
-                    publicIP: d.ip,
-                    isp: d.org || null,
-                    org: d.org || null,
-                    asn: d.asn?.replace('AS', '') || null,
-                    country: d.country || null,
-                    countryCode: d.country || null,
-                    region: d.region || null,
-                    city: d.city || null,
-                    timezone: d.timezone || null,
-                    lat: d.loc ? d.loc.split(',')[0] : null,
-                    lon: d.loc ? d.loc.split(',')[1] : null,
-                    isVPN: false,
-                    isProxy: false,
-                    isTor: false,
-                    isHosting: false,
-                    isDatacenter: false,
-                    sources: ['ipinfo.io'],
-                    details: { ipinfo_io: d }
-                };
-            }
-        } catch (e) { console.warn('❌ ipinfo.io فشل.'); }
+        // إذا لم تنجح Edge Function نهائيًا، ننتقل إلى المصادر المباشرة
+        if (!bestResult) {
+            // المسار 2: ipinfo.io (يعطي ASN عادة)
+            try {
+                console.log('🔄 محاولة ipinfo.io...');
+                const res = await fetch('https://ipinfo.io/json');
+                if (!res.ok) throw new Error('status ' + res.status);
+                const d = await res.json();
+                if (d.ip) {
+                    console.log('✅ تم جلب IP عبر ipinfo.io');
+                    return {
+                        publicIP: d.ip,
+                        isp: d.org || null,
+                        org: d.org || null,
+                        asn: d.asn?.replace('AS', '') || null,
+                        country: d.country || null,
+                        countryCode: d.country || null,
+                        region: d.region || null,
+                        city: d.city || null,
+                        timezone: d.timezone || null,
+                        lat: d.loc ? d.loc.split(',')[0] : null,
+                        lon: d.loc ? d.loc.split(',')[1] : null,
+                        isVPN: false, isProxy: false, isTor: false,
+                        isHosting: false, isDatacenter: false,
+                        sources: ['ipinfo.io'],
+                        details: { ipinfo_io: d }
+                    };
+                }
+            } catch (e) { console.warn('❌ ipinfo.io فشل.'); }
 
-        return null;
+            // المسار 3: ip-api.com
+            try {
+                console.log('🔄 محاولة ip-api.com...');
+                const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
+                if (!res.ok) throw new Error('status ' + res.status);
+                const d = await res.json();
+                if (d.query) {
+                    console.log('✅ تم جلب IP عبر ip-api.com');
+                    return {
+                        publicIP: d.query,
+                        isp: d.isp || d.org || null,
+                        org: d.org || null,
+                        asn: d.as || null,
+                        country: d.country || null,
+                        countryCode: d.countryCode || null,
+                        region: d.regionName || d.region || null,
+                        city: d.city || null,
+                        timezone: d.timezone || null,
+                        lat: d.lat || null, lon: d.lon || null,
+                        isVPN: d.proxy || d.hosting || false,
+                        isProxy: d.proxy || false,
+                        isTor: false,
+                        isHosting: d.hosting || false,
+                        isDatacenter: d.hosting || false,
+                        sources: ['ip-api.com'],
+                        details: { ip_api: d }
+                    };
+                }
+            } catch (e) { console.warn('❌ ip-api.com فشل.'); }
+        }
+
+        return bestResult || null;
     }
 
     async function getConnectionInfo() {
