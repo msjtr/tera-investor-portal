@@ -1,6 +1,7 @@
 /**
- * security-registered-devices.js – v17 (مع BroadcastChannel للإنهاء الفوري)
- * يعرض كل تفاصيل الجلسة المسجلة، ويستجيب لإنهاء الجلسة من علامات تبويب أخرى.
+ * security-registered-devices.js – v18 (مع تمييز الجلسة الحالية)
+ * يعرض كل تفاصيل الجلسة، ويستجيب لإنهاء الجلسة من علامات تبويب أخرى.
+ * يضيف شارة "أنت هنا" للجلسة النشطة الحالية.
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -19,6 +20,18 @@
         if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
     }
 
+    // إدراج تنسيقات CSS للجلسة الحالية
+    function injectStyles() {
+        if (document.getElementById('tera-session-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'tera-session-styles';
+        style.textContent = `
+            .current-session-row { background-color: #e0f2fe !important; }
+            .badge-current { background: #028090; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 6px; display: inline-block; }
+        `;
+        document.head.appendChild(style);
+    }
+
     // 🚀 بدء مراقبة إشعارات إنهاء الجلسة من الجلسات الأخرى
     function listenForSessionTermination() {
         if (typeof BroadcastChannel === 'undefined') return;
@@ -26,13 +39,11 @@
             const channel = new BroadcastChannel('tera_session_channel');
             channel.onmessage = (event) => {
                 if (event.data && event.data.action === 'SESSION_TERMINATED_BY_NEW_LOGIN') {
-                    // عرض إشعار للمستخدم
                     if (window.UIHelpers && window.UIHelpers.showToast) {
                         window.UIHelpers.showToast('تم إنهاء هذه الجلسة لوجود جلسة أحدث في مكان آخر.', 'warning', 5000);
                     } else {
                         alert('تم إنهاء هذه الجلسة لوجود جلسة أحدث في مكان آخر.');
                     }
-                    // بعد مهلة قصيرة، تسجيل الخروج
                     setTimeout(() => {
                         if (window.Auth?.logout) {
                             window.Auth.logout();
@@ -46,20 +57,17 @@
     }
 
     async function init() {
+        injectStyles();
         if (!window.Auth) { window.location.replace('/auth/auth/login/login.html'); return; }
         const user = await window.Auth.requireAuth();
         if (!user) return;
         currentUser = user;
         supabase = window.teraSupabase || await window.waitForSupabase();
         updateHeader(user);
-
-        // تشغيل مستمع إنهاء الجلسة من مكان آخر
         listenForSessionTermination();
-
         await fetchSessions();
         bindEvents();
 
-        // مؤقت الخمول
         if (window.ActivityTracker && window.ActivityTracker.startIdleTimer) {
             window.ActivityTracker.startIdleTimer(handleIdleTimeout, currentUser.id);
         } else {
@@ -112,9 +120,16 @@
         const fmt = window.UIHelpers?.formatDate || formatDate;
         const lbl = window.UIHelpers?.getStatusLabel || getStatusLabel;
         tbody.innerHTML = list.map(s => `
-            <tr><td>${s.session_number || '-'}</td><td>${fmt(s.login_at)}</td><td><span class="status-badge status-${s.status}">${lbl(s.status)}</span></td>
-            <td><button class="btn-action" onclick="window.showSessionDetail('${s.id}')"><i class="fas fa-eye"></i> عرض</button></td>
-            <td>${s.status === 'active' ? `<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>` : '-'}</td></tr>
+            <tr class="${s.is_current_session ? 'current-session-row' : ''}">
+                <td>
+                    ${s.session_number || '-'}
+                    ${s.is_current_session ? '<span class="badge-current">أنت هنا</span>' : ''}
+                </td>
+                <td>${fmt(s.login_at)}</td>
+                <td><span class="status-badge status-${s.status}">${lbl(s.status)}</span></td>
+                <td><button class="btn-action" onclick="window.showSessionDetail('${s.id}')"><i class="fas fa-eye"></i> عرض</button></td>
+                <td>${s.status === 'active' ? `<button class="btn-action danger" onclick="window.terminateSession('${s.id}')"><i class="fas fa-sign-out-alt"></i> خروج</button>` : '-'}</td>
+            </tr>
         `).join('');
     }
 
