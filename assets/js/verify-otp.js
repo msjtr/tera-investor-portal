@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v37 (إصلاح الأزرار + تسجيل الجلسة بشكل مستقل)
+ * verify-otp.js – v38 (مع بدء حماية الجلسة + إصلاحات)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -30,8 +30,10 @@
     function updateUserDisplayFromSession() {
         const name = sessionStorage.getItem('otpName');
         if (name) {
-            document.getElementById('headerUserName').textContent = name;
-            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            const nameEl = document.getElementById('headerUserName');
+            const avatarEl = document.getElementById('headerAvatar');
+            if (nameEl) nameEl.textContent = name;
+            if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
         }
     }
 
@@ -76,7 +78,10 @@
 
     function updateEmailDisplay() {
         const email = sessionStorage.getItem('otpEmail');
-        if (email) document.getElementById('instructionEmailText').textContent = email;
+        if (email) {
+            const el = document.getElementById('instructionEmailText');
+            if (el) el.textContent = email;
+        }
     }
 
     function setupBackLink() {
@@ -84,17 +89,16 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ─── تسجيل الجلسة (يعمل حتى لو فشل الموقع) ───
+    // ─── تسجيل الجلسة (مع بدء الحماية) ───
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
 
-        // استخدام SessionManager إذا وُجد، وإلا فشل
         if (!window.SessionManager) {
             console.error('❌ SessionManager غير محمل.');
-            return false;
+            return null;
         }
 
-        // جمع بيانات الموقع بشكل غير متزامن (لا ننتظرها إذا فشلت)
+        // جمع بيانات الموقع بشكل غير متزامن (اختياري)
         let fullLocation = null;
         try {
             if (window.LocationServices?.getGPSCoords && window.LocationServices?.fetchLocationIQFull) {
@@ -110,25 +114,27 @@
         }
 
         try {
-            const success = await window.SessionManager.createSessionRecord(userId, {
+            const result = await window.SessionManager.createSessionRecord(userId, {
                 geo: {},
                 locationIQ: fullLocation || {},
                 gps: null,
                 ip: null
             });
 
-            if (success) {
-                console.log('✅ [verify-otp] تم تسجيل الجلسة');
-                if (window.SessionManager.deactivateOtherSessions) {
-                    await window.SessionManager.deactivateOtherSessions(userId);
+            if (result && result.success) {
+                console.log('✅ [verify-otp] تم تسجيل الجلسة – المعرف: ' + result.sessionId);
+                // بدء حماية الجلسة (إغلاق المتصفح، انقطاع الإنترنت، الخمول)
+                if (window.SessionManager.startSessionGuard) {
+                    window.SessionManager.startSessionGuard(userId, result.sessionId);
                 }
+                return result.sessionId;
             } else {
                 console.error('❌ [verify-otp] createSessionRecord فشل');
+                return null;
             }
-            return success;
         } catch (e) {
-            console.error('❌ [verify-otp] استثناء أثناء تسجيل الجلسة:', e);
-            return false;
+            console.error('❌ [verify-otp] استثناء:', e);
+            return null;
         }
     }
 
@@ -162,14 +168,17 @@
             const data = await window.Auth.verifyOTP(email, code);
 
             if (data?.session) {
-                const sessionCreated = await createSessionRecord(data.session.user.id);
-                if (!sessionCreated) {
+                const sessionId = await createSessionRecord(data.session.user.id);
+                if (!sessionId) {
                     showError('فشل تسجيل الجلسة. يرجى التواصل مع الدعم.');
                 } else {
                     sessionStorage.removeItem('otpEmail');
                     if (successMsg) {
                         successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
                         successMsg.style.display = 'block';
+                    }
+                    if (window.UIHelpers?.showToast) {
+                        window.UIHelpers.showToast('مرحباً بعودتك!', 'success', 3000);
                     }
                     sessionRecorded = true;
                 }
@@ -187,7 +196,7 @@
             if (sessionRecorded) {
                 redirectTimer = setTimeout(() => {
                     window.location.href = '/pages/dashboard/index.html';
-                }, 10000);
+                }, 3000);
             } else {
                 if (verifyBtn) {
                     verifyBtn.disabled = false;
