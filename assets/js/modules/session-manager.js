@@ -1,5 +1,5 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v6)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v7)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
@@ -7,7 +7,7 @@
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة، معلومات الاستعلام) وتخزينها
- * - خطة بديلة لضمان تخزين بيانات الشبكة الأساسية حتى في حال فشل ConnectionInfo
+ * - خطة بديلة قوية لجلب IP العامة عبر ip-api.com عند فشل ConnectionInfo
  * - تحسين أولوية بيانات IP العامة من ConnectionInfo
  */
 (function() {
@@ -157,10 +157,62 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
 
-        // ⚡ إذا فشل الحصول على ConnectionInfo، أنشئ كائنًا افتراضيًا يحتوي على بيانات المتصفح
+        // ⚡ إذا فشل ConnectionInfo أو لم يُعِد IP عام، استخدم ip-api.com مباشرةً
+        if (!connectionInfo || !connectionInfo.ip?.public) {
+            try {
+                console.log('🔄 محاولة ip-api.com كخطة طوارئ...');
+                const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
+                if (res.ok) {
+                    const d = await res.json();
+                    if (d.query) {
+                        const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
+                            ? window.ConnectionInfo.getBrowserNetworkInfo() 
+                            : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
+                        connectionInfo = {
+                            network: {
+                                online: browserNet.online,
+                                type: browserNet.type || 'غير معروف',
+                                effectiveType: browserNet.effectiveType || 'غير معروف',
+                                downlinkSpeed: browserNet.downlink ?? null,
+                                latency: browserNet.rtt ?? null,
+                                saveData: browserNet.saveData || false
+                            },
+                            ip: {
+                                public: d.query,
+                                local: connectionInfo?.ip?.local || null,
+                                isp: d.isp || d.org || null,
+                                org: d.org || null,
+                                asn: d.as || null,
+                                country: d.country || null,
+                                countryCode: d.countryCode || null,
+                                region: d.regionName || d.region || null,
+                                city: d.city || null,
+                                timezone: d.timezone || null,
+                                lat: d.lat || null,
+                                lon: d.lon || null
+                            },
+                            security: {
+                                isVPN: d.proxy || d.hosting || false,
+                                isProxy: d.proxy || false,
+                                isTor: false,
+                                isHosting: d.hosting || false,
+                                isDatacenter: d.hosting || false,
+                                sources: ['ip-api.com'],
+                                details: { ip_api: d }
+                            }
+                        };
+                        console.log('✅ تم جلب IP العامة عبر ip-api.com');
+                    }
+                }
+            } catch (e) {
+                console.warn('❌ فشل ip-api.com أيضاً:', e);
+            }
+        }
+
+        // ⚡ إذا ظل connectionInfo فارغًا، أنشئ كائنًا افتراضيًا
         if (!connectionInfo) {
-            const browserNet = (window.ConnectionInfo && window.ConnectionInfo.getBrowserNetworkInfo)
-                ? window.ConnectionInfo.getBrowserNetworkInfo()
+            const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
+                ? window.ConnectionInfo.getBrowserNetworkInfo() 
                 : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
             connectionInfo = {
                 network: {
@@ -184,7 +236,6 @@
         const addrComp = full.address_components || {};
         const addl = full.additional || {};
 
-        // 🎯 الأولوية الآن لبيانات connectionInfo.ip لأنها الأحدث (من Edge Function أو ip-api)
         const finalLat = full.latitude || full.lat || gps.latitude || geo.lat || connectionInfo?.ip?.lat || null;
         const finalLon = full.longitude || full.lon || gps.longitude || geo.lon || connectionInfo?.ip?.lon || null;
         const finalCity = addrComp.city || full.city || connectionInfo?.ip?.city || geo.city || null;
@@ -192,7 +243,6 @@
         const finalState = addrComp.state || full.state || connectionInfo?.ip?.region || null;
         const finalPostcode = addrComp.postcode || full.postcode || null;
 
-        // ⭐ IP العامة والمزود من connectionInfo أولاً
         const ipAddress = connectionInfo?.ip?.public || geo.ip || extraData.ip || null;
         const isp = connectionInfo?.ip?.isp || geo.isp || null;
         const isVPN = connectionInfo?.security?.isVPN || geo.proxy || false;
