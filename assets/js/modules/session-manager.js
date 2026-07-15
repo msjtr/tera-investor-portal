@@ -7,6 +7,7 @@
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند إغلاق المتصفح، أو انقطاع الإنترنت، أو الخمول
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة) وتخزينها
+ * - دالة terminateAllSessions لإنهاء جميع الجلسات النشطة دفعة واحدة
  */
 (function() {
     'use strict';
@@ -46,6 +47,29 @@
             return { success: false, error: error.message };
         }
         return { success: true };
+    }
+
+    // إنهاء جميع الجلسات النشطة للمستخدم (عدا الجلسة الحالية التي سيتم إنشاؤها لاحقاً)
+    async function terminateAllSessions(userId) {
+        const sb = await getSupabase();
+        if (!sb) return { success: false, count: 0 };
+        const { data: activeSessions, error } = await sb.from('user_login_sessions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'active');
+
+        if (error) return { success: false, count: 0 };
+        if (!activeSessions || activeSessions.length === 0) return { success: true, count: 0 };
+
+        let count = 0;
+        for (const s of activeSessions) {
+            const { error: err } = await sb.from('user_login_sessions')
+                .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+                .eq('id', s.id)
+                .eq('user_id', userId);
+            if (!err) count++;
+        }
+        return { success: true, count };
     }
 
     async function deactivateAllActiveSessions(userId) {
@@ -255,10 +279,8 @@
     let currentUserIdGuard = null;
     let currentSessionIdGuard = null;
 
-    // إنهاء الجلسة عند إغلاق التبويب/المتصفح (باستخدام pagehide + fetch keepalive)
     async function handleTabClose(event) {
         if (!currentSessionIdGuard || !currentUserIdGuard) return;
-        // لا يمكن الاعتماد على async/await هنا بالكامل، لذا نستخدم fetch مع keepalive
         const sb = await getSupabase();
         if (!sb) return;
         try {
@@ -273,7 +295,6 @@
         } catch (e) {}
     }
 
-    // إنهاء الجلسة عند انقطاع الاتصال بالإنترنت
     function handleOffline() {
         if (!currentSessionIdGuard || !currentUserIdGuard) return;
         const message = 'تم فقدان الاتصال بالإنترنت. سيتم إنهاء الجلسة.';
@@ -282,7 +303,6 @@
         } else {
             alert(message);
         }
-        // إنهاء الجلسة ثم التوجيه لصفحة الدخول
         terminateSession(currentSessionIdGuard, currentUserIdGuard)
             .then(() => {
                 if (window.Auth?.logout) {
@@ -296,9 +316,7 @@
             });
     }
 
-    // إنهاء الجلسة عند الخمول (تستدعيها activity-tracker أو الصفحة)
     async function handleIdleTimeout(reason) {
-        // reason يمكن أن يكون 'timeout' من activity tracker
         if (!currentSessionIdGuard || !currentUserIdGuard) return;
         await terminateSession(currentSessionIdGuard, currentUserIdGuard);
         if (window.Auth?.logout) {
@@ -314,12 +332,8 @@
         currentSessionIdGuard = sessionId;
         guardActive = true;
 
-        // مستمع إغلاق التبويب
         window.addEventListener('pagehide', handleTabClose);
-        // مستمع انقطاع الإنترنت
         window.addEventListener('offline', handleOffline);
-        // يمكن أيضًا ربط الخمول عبر activity-tracker، لكننا نضيف handleIdleTimeout كمرجع
-        // (ستستدعيها الصفحة بنفسها)
     }
 
     function stopSessionGuard() {
@@ -335,10 +349,11 @@
     window.SessionManager = {
         fetchSessions,
         terminateSession,
+        terminateAllSessions,   // إضافة جديدة
         deactivateOtherSessions: deactivateAllActiveSessions,
         createSessionRecord,
         startSessionGuard,
         stopSessionGuard,
-        handleIdleTimeout   // لاستخدامها من activity-tracker
+        handleIdleTimeout
     };
 })();
