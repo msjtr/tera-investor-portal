@@ -1,5 +1,5 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v4)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v5)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
@@ -7,6 +7,7 @@
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة، معلومات الاستعلام) وتخزينها
+ * - خطة بديلة لضمان تخزين بيانات الشبكة الأساسية حتى في حال فشل ConnectionInfo
  */
 (function() {
     'use strict';
@@ -147,12 +148,32 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الجهاز:', e); }
 
+        // ⭐ تجميع معلومات الاتصال مع خطة بديلة
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
                 connectionInfo = await window.ConnectionInfo.getConnectionInfo();
             }
         } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
+
+        // ⚡ خطة بديلة إذا لم تنجح ConnectionInfo (أو أرجعت null)
+        if (!connectionInfo) {
+            const browserNet = (window.ConnectionInfo && window.ConnectionInfo.getBrowserNetworkInfo)
+                ? window.ConnectionInfo.getBrowserNetworkInfo()
+                : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
+            connectionInfo = {
+                network: {
+                    online: browserNet.online,
+                    type: browserNet.type || 'غير معروف',
+                    effectiveType: browserNet.effectiveType || 'غير معروف',
+                    downlinkSpeed: browserNet.downlink ?? null,
+                    latency: browserNet.rtt ?? null,
+                    saveData: browserNet.saveData || false
+                },
+                ip: { public: null, local: null, isp: null, org: null, asn: null, country: null, countryCode: null, region: null, city: null, timezone: null, lat: null, lon: null },
+                security: { isVPN: false, isProxy: false, isTor: false, isHosting: false, isDatacenter: false, sources: [], details: {} }
+            };
+        }
 
         const geo = extraData.geo || {};
         const full = extraData.locationIQ || {};
@@ -257,7 +278,6 @@
                 touch_points: deviceInfo.max_touch_points
             } : null,
 
-            // ⭐ معلومات الاستعلام (Lookup) من Location Services
             request_started_at: full.request_started_at || null,
             response_received_at: full.response_received_at || null,
             execution_time_ms: full.execution_time_ms || null,
