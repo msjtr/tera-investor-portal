@@ -1,10 +1,10 @@
 /**
- * modules/connection-info.js – v11 (أسماء مزودي خدمة محسّنة عالميًا)
+ * modules/connection-info.js – v11 (إزالة ip-api.com المباشر + قاموس مزودين عالمي)
  */
 (function() {
     'use strict';
 
-    // قاموس أسماء مزودي الخدمة العالميين
+    // قاموس أسماء مزودي خدمة عالمي (اختصارات)
     const ISP_ALIASES = {
         // السعودية
         'saudi telecom company': 'STC',
@@ -14,66 +14,41 @@
         'zain saudi arabia': 'Zain',
         'zain': 'Zain',
         // الإمارات
+        'emirates telecommunications': 'Etisalat',
         'etisalat': 'Etisalat',
         'emirates integrated telecommunications': 'du',
         'du': 'du',
         // مصر
         'vodafone egypt': 'Vodafone مصر',
         'orange egypt': 'Orange مصر',
-        'etisalat misr': 'Etisalat مصر',
-        'telecom egypt': 'WE',
+        'etisalat egypt': 'Etisalat مصر',
         // أوروبا
         'vodafone': 'Vodafone',
         'orange': 'Orange',
         'deutsche telekom': 'Deutsche Telekom',
         'telefonica': 'Telefónica',
-        'bt group': 'BT',
-        'british telecommunications': 'BT',
-        'telenor': 'Telenor',
-        'telia': 'Telia',
+        'bt': 'BT',
         // أمريكا
         'at&t': 'AT&T',
         'verizon': 'Verizon',
         't-mobile': 'T-Mobile',
-        'sprint': 'Sprint',
         'comcast': 'Comcast',
-        'charter': 'Spectrum',
         // الهند
-        'jio': 'Jio',
-        'airtel': 'Airtel',
+        'reliance jio': 'Jio',
+        'bharti airtel': 'Airtel',
         'vodafone idea': 'Vi',
-        'bsnl': 'BSNL',
-        // الصين
-        'china telecom': 'China Telecom',
-        'china mobile': 'China Mobile',
-        'china unicom': 'China Unicom',
-        // اليابان
-        'ntt': 'NTT',
-        'kddi': 'KDDI',
-        'softbank': 'SoftBank',
-        // عالمي
+        // عالمي (سحابة)
         'amazon.com': 'AWS',
         'amazon': 'AWS',
         'cloudflare': 'Cloudflare',
         'google': 'Google',
-        'microsoft': 'Microsoft',
-        'oracle': 'Oracle Cloud',
-        'digitalocean': 'DigitalOcean',
-        'hetzner': 'Hetzner',
-        'ovh': 'OVH'
+        'microsoft': 'Microsoft'
     };
 
     function normalizeISP(isp) {
         if (!isp) return null;
         const key = isp.toLowerCase().trim();
-        // إذا كان الاسم معروفًا، أرجع المختصر
-        if (ISP_ALIASES[key]) return ISP_ALIASES[key];
-        // إذا كان يحتوي على كلمة معروفة، حاول استبدالها
-        for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
-            if (key.includes(pattern)) return alias;
-        }
-        // أرجع الاسم الأصلي
-        return isp;
+        return ISP_ALIASES[key] || isp;
     }
 
     function extractASNFromOrg(orgStr) {
@@ -141,15 +116,15 @@
     }
 
     async function getPublicIPDetails() {
-        const results = { edge: null, ipapi: null, ipinfo: null };
+        let bestResult = null;
         const sources = [];
 
-        // 1. Edge Function
+        // 1. Edge Function (تستخدم ip-api.com وغيرها عبر الخادم – لا تواجه 403)
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
-                    results.edge = {
+                    bestResult = {
                         publicIP: net.ip,
                         isp: normalizeISP(net.isp) || null,
                         org: net.org || null,
@@ -159,102 +134,65 @@
                         region: net.region || null,
                         city: net.city || null,
                         timezone: net.timezone || null,
-                        lat: net.lat || null, lon: net.lon || null,
+                        lat: net.lat || null,
+                        lon: net.lon || null,
                         isVPN: net.is_vpn || false,
                         isProxy: net.is_proxy || false,
                         isTor: net.is_tor || false,
                         isHosting: net.is_hosting || false,
-                        isDatacenter: net.is_datacenter || false
+                        isDatacenter: net.is_datacenter || false,
+                        sources: net.sources || [],
+                        details: net.details || {}
                     };
                     sources.push(...(net.sources || []));
                 }
             } catch (e) {}
         }
 
-        // 2. ip-api.com
-        try {
-            const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,lat,lon,country,countryCode,region,city,timezone');
-            if (res.ok) {
-                const d = await res.json();
-                if (d.query) {
-                    results.ipapi = {
-                        publicIP: d.query,
-                        isp: normalizeISP(d.isp || d.org) || null,
-                        org: d.org || null,
-                        asn: d.as || extractASNFromOrg(d.org),
-                        country: d.country || null,
-                        countryCode: d.countryCode || null,
-                        region: d.regionName || d.region || null,
-                        city: d.city || null,
-                        timezone: d.timezone || null,
-                        lat: d.lat || null, lon: d.lon || null,
-                        isVPN: d.proxy || d.hosting || false,
-                        isProxy: d.proxy || false,
-                        isTor: false,
-                        isHosting: d.hosting || false,
-                        isDatacenter: d.hosting || false
-                    };
-                    sources.push('ip-api.com');
+        // 2. ipinfo.io (خطة بديلة مباشرة، لا تعاني 403)
+        if (!bestResult || !bestResult.asn) {
+            try {
+                const res = await fetch('https://ipinfo.io/json');
+                if (res.ok) {
+                    const d = await res.json();
+                    if (d.ip) {
+                        const result = {
+                            publicIP: d.ip,
+                            isp: normalizeISP(d.org) || null,
+                            org: d.org || null,
+                            asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
+                            country: d.country || null,
+                            countryCode: d.country || null,
+                            region: d.region || null,
+                            city: d.city || null,
+                            timezone: d.timezone || null,
+                            lat: d.loc ? d.loc.split(',')[0] : null,
+                            lon: d.loc ? d.loc.split(',')[1] : null,
+                            isVPN: false, isProxy: false, isTor: false,
+                            isHosting: false, isDatacenter: false,
+                            sources: ['ipinfo.io'],
+                            details: { ipinfo_io: d }
+                        };
+                        if (!bestResult) {
+                            bestResult = result;
+                        } else {
+                            // دمج الحقول الناقصة
+                            if (!bestResult.asn) bestResult.asn = result.asn;
+                            if (!bestResult.isp) bestResult.isp = result.isp;
+                            if (!bestResult.country) bestResult.country = result.country;
+                            if (!bestResult.lat) bestResult.lat = result.lat;
+                            if (!bestResult.lon) bestResult.lon = result.lon;
+                            bestResult.sources = [...new Set([...bestResult.sources, ...result.sources])];
+                            bestResult.details = { ...bestResult.details, ...result.details };
+                        }
+                        sources.push('ipinfo.io');
+                    }
                 }
-            }
-        } catch (e) {}
+            } catch (e) {}
+        }
 
-        // 3. ipinfo.io
-        try {
-            const res = await fetch('https://ipinfo.io/json');
-            if (res.ok) {
-                const d = await res.json();
-                if (d.ip) {
-                    results.ipinfo = {
-                        publicIP: d.ip,
-                        isp: normalizeISP(d.org) || null,
-                        org: d.org || null,
-                        asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
-                        country: d.country || null,
-                        countryCode: d.country || null,
-                        region: d.region || null,
-                        city: d.city || null,
-                        timezone: d.timezone || null,
-                        lat: d.loc ? d.loc.split(',')[0] : null,
-                        lon: d.loc ? d.loc.split(',')[1] : null,
-                        isVPN: false, isProxy: false, isTor: false,
-                        isHosting: false, isDatacenter: false
-                    };
-                    sources.push('ipinfo.io');
-                }
-            }
-        } catch (e) {}
-
-        if (!results.edge && !results.ipapi && !results.ipinfo) return null;
-
-        // دمج مع إعطاء أولوية للـ ISP الأكثر وضوحاً
-        const pick = (field) => results.ipinfo?.[field] || results.ipapi?.[field] || results.edge?.[field] || null;
-        const merged = {
-            publicIP: results.edge?.publicIP || results.ipapi?.publicIP || results.ipinfo?.publicIP,
-            isp: pick('isp'),
-            org: pick('org'),
-            asn: pick('asn'),
-            country: pick('country'),
-            countryCode: pick('countryCode'),
-            region: pick('region'),
-            city: pick('city'),
-            timezone: pick('timezone'),
-            lat: pick('lat'),
-            lon: pick('lon'),
-            isVPN: results.edge?.isVPN || results.ipapi?.isVPN || false,
-            isProxy: results.edge?.isProxy || results.ipapi?.isProxy || false,
-            isTor: results.edge?.isTor || false,
-            isHosting: results.edge?.isHosting || results.ipapi?.isHosting || false,
-            isDatacenter: results.edge?.isDatacenter || results.ipapi?.isDatacenter || false,
-            sources: [...new Set(sources)],
-            details: {
-                edge: results.edge,
-                ip_api: results.ipapi,
-                ipinfo_io: results.ipinfo
-            }
-        };
-
-        return merged;
+        if (!bestResult) return null;
+        return bestResult;
     }
 
     async function getConnectionInfo() {
