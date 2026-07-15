@@ -7,7 +7,6 @@
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند إغلاق المتصفح، أو انقطاع الإنترنت، أو الخمول
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة) وتخزينها
- * - دالة terminateAllSessions لإنهاء جميع الجلسات النشطة دفعة واحدة
  */
 (function() {
     'use strict';
@@ -49,29 +48,7 @@
         return { success: true };
     }
 
-    // إنهاء جميع الجلسات النشطة للمستخدم (عدا الجلسة الحالية التي سيتم إنشاؤها لاحقاً)
-    async function terminateAllSessions(userId) {
-        const sb = await getSupabase();
-        if (!sb) return { success: false, count: 0 };
-        const { data: activeSessions, error } = await sb.from('user_login_sessions')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('status', 'active');
-
-        if (error) return { success: false, count: 0 };
-        if (!activeSessions || activeSessions.length === 0) return { success: true, count: 0 };
-
-        let count = 0;
-        for (const s of activeSessions) {
-            const { error: err } = await sb.from('user_login_sessions')
-                .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
-                .eq('id', s.id)
-                .eq('user_id', userId);
-            if (!err) count++;
-        }
-        return { success: true, count };
-    }
-
+    // إنهاء جميع الجلسات النشطة للمستخدم (ما عدا الحالية) – تُستخدم لفرض جلسة واحدة
     async function deactivateAllActiveSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return 0;
@@ -101,6 +78,29 @@
             if (!updateError) terminatedCount++;
         }
         return terminatedCount;
+    }
+
+    // إنهاء جميع الجلسات النشطة (يدوياً) – للزر في الواجهة
+    async function terminateAllSessions(userId) {
+        const sb = await getSupabase();
+        if (!sb) return { success: false, count: 0 };
+        const { data: activeSessions, error } = await sb.from('user_login_sessions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'active');
+
+        if (error) return { success: false, count: 0 };
+        if (!activeSessions || activeSessions.length === 0) return { success: true, count: 0 };
+
+        let count = 0;
+        for (const s of activeSessions) {
+            const { error: err } = await sb.from('user_login_sessions')
+                .update({ status: 'terminated_by_user', logout_at: new Date().toISOString() })
+                .eq('id', s.id)
+                .eq('user_id', userId);
+            if (!err) count++;
+        }
+        return { success: true, count };
     }
 
     function notifyOtherTabs() {
@@ -259,13 +259,14 @@
             if (record[key] === undefined) delete record[key];
         });
 
-        const { error } = await sb.from('user_login_sessions').insert(record);
+        const { data: inserted, error } = await sb.from('user_login_sessions').insert(record).select('id').single();
         if (error) {
             console.error('❌ فشل تسجيل الجلسة:', error);
             return false;
         }
-        console.log('✅ تم تسجيل الجلسة بنجاح (تم إغلاق ' + closedCount + ' جلسة سابقة)');
-        return true;
+        const sessionId = inserted.id;
+        console.log('✅ تم تسجيل الجلسة بنجاح – المعرف: ' + sessionId + ' (تم إغلاق ' + closedCount + ' جلسة سابقة)');
+        return { success: true, sessionId };
     }
 
     function generateSessionNumber() {
@@ -305,11 +306,8 @@
         }
         terminateSession(currentSessionIdGuard, currentUserIdGuard)
             .then(() => {
-                if (window.Auth?.logout) {
-                    window.Auth.logout();
-                } else {
-                    window.location.href = '/auth/auth/login/login.html?reason=offline';
-                }
+                if (window.Auth?.logout) window.Auth.logout();
+                else window.location.href = '/auth/auth/login/login.html?reason=offline';
             })
             .catch(() => {
                 window.location.href = '/auth/auth/login/login.html?reason=offline';
@@ -349,9 +347,9 @@
     window.SessionManager = {
         fetchSessions,
         terminateSession,
-        terminateAllSessions,   // إضافة جديدة
         deactivateOtherSessions: deactivateAllActiveSessions,
         createSessionRecord,
+        terminateAllSessions,
         startSessionGuard,
         stopSessionGuard,
         handleIdleTimeout
