@@ -1,10 +1,9 @@
 /**
- * modules/connection-info.js – v13 (جلب إحداثيات من Edge Function و ipinfo.io + تحسين نوع الشبكة)
+ * modules/connection-info.js – v13 (دمج إحداثيات متعددة المصادر + تحسين نوع الشبكة)
  */
 (function() {
     'use strict';
 
-    // قاموس أسماء مزودي خدمة عالمي (اختصارات)
     const ISP_ALIASES = {
         'saudi telecom company': 'STC',
         'stc': 'STC',
@@ -40,9 +39,11 @@
 
     function normalizeISP(raw) {
         if (!raw) return null;
-        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim();
-        const key = cleaned.toLowerCase();
-        return ISP_ALIASES[key] || cleaned || raw;
+        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
+        for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
+            if (cleaned.includes(pattern)) return alias;
+        }
+        return cleaned || raw;
     }
 
     function extractASNFromOrg(orgStr) {
@@ -59,9 +60,10 @@
             'none': 'غير متصل'
         };
         if (type && typeMap[type]) return typeMap[type];
+        // إذا لم يكن النوع معروفاً، نعرض effectiveType مع تنبيه
         if (!type && effectiveType && effectiveType !== 'غير معروف') {
             const speedMap = { 'slow-2g':'2G', '2g':'2G', '3g':'3G', '4g':'4G', '5g':'5G' };
-            return `غير معروف (${speedMap[effectiveType] || effectiveType.toUpperCase()})`; // توضيح
+            return `غير معروف (${speedMap[effectiveType] || effectiveType.toUpperCase()})`;
         }
         return 'غير معروف';
     }
@@ -90,13 +92,30 @@
         };
     }
 
-    async function getLocalIP() { /* ... unchanged ... */ }
+    async function getLocalIP() {
+        try {
+            const pc = new RTCPeerConnection({ iceServers: [] });
+            pc.createDataChannel('');
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            const localIP = await new Promise((resolve) => {
+                pc.onicecandidate = (e) => {
+                    if (!e.candidate) { pc.close(); resolve(null); return; }
+                    const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
+                    const match = e.candidate.candidate.match(ipRegex);
+                    if (match) { pc.close(); resolve(match[0]); }
+                };
+                setTimeout(() => { pc.close(); resolve(null); }, 2500);
+            });
+            return localIP;
+        } catch (e) { return null; }
+    }
 
     async function getPublicIPDetails() {
         let bestResult = null;
         const sources = [];
 
-        // 1. Edge Function (يُفضل لأنها تجمع من ip-api و ipapi.co وتوفر lat/lon)
+        // 1. Edge Function (أولوية قصوى، تُعيد lat/lon من مصادرها)
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
@@ -111,7 +130,7 @@
                         region: net.region || null,
                         city: net.city || null,
                         timezone: net.timezone || null,
-                        lat: net.lat || null,   // الآن نأخذ الإحداثيات من Edge Function إذا وُجدت
+                        lat: net.lat || null,   // من Edge Function (ip-api, ipapi.co)
                         lon: net.lon || null,
                         isVPN: net.is_vpn || false,
                         isProxy: net.is_proxy || false,
@@ -126,7 +145,7 @@
             } catch (e) {}
         }
 
-        // 2. إذا لم توجد إحداثيات من Edge Function، نكمّل بـ ipinfo.io (بدقة أقل)
+        // 2. ipinfo.io (خطة بديلة – توفّر إحداثيات بدقة مدينة)
         if (!bestResult || !bestResult.lat) {
             try {
                 const res = await fetch('https://ipinfo.io/json');
@@ -170,7 +189,55 @@
         return bestResult;
     }
 
-    async function getConnectionInfo() { /* ... unchanged ... */ }
+    async function getConnectionInfo() {
+        const browserNet = getBrowserNetworkInfo();
+        const [localResult, publicResult] = await Promise.allSettled([
+            getLocalIP(),
+            getPublicIPDetails()
+        ]);
+        const localIP = localResult.status === 'fulfilled' ? localResult.value : null;
+        const pub = publicResult.status === 'fulfilled' ? publicResult.value : null;
 
-    window.ConnectionInfo = { /* ... */ };
+        return {
+            timestamp: new Date().toISOString(),
+            network: {
+                online: browserNet.online,
+                type: browserNet.type,
+                effectiveType: browserNet.effectiveType,
+                downlinkSpeed: browserNet.downlink,
+                latency: browserNet.rtt,
+                saveData: browserNet.saveData
+            },
+            ip: {
+                public: pub?.publicIP || null,
+                local: localIP,
+                isp: pub?.isp || null,
+                org: pub?.org || null,
+                asn: pub?.asn || null,
+                country: pub?.country || null,
+                countryCode: pub?.countryCode || null,
+                region: pub?.region || null,
+                city: pub?.city || null,
+                timezone: pub?.timezone || null,
+                lat: pub?.lat || null,
+                lon: pub?.lon || null
+            },
+            security: {
+                isVPN: pub?.isVPN || false,
+                isProxy: pub?.isProxy || false,
+                isTor: pub?.isTor || false,
+                isHosting: pub?.isHosting || false,
+                isDatacenter: pub?.isDatacenter || false,
+                sources: pub?.sources || [],
+                details: pub?.details || {}
+            }
+        };
+    }
+
+    window.ConnectionInfo = {
+        getConnectionInfo,
+        getBrowserNetworkInfo,
+        getLocalIP,
+        getPublicIPDetails
+    };
 })();
