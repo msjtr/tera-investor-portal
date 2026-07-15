@@ -1,5 +1,5 @@
 /**
- * auth.js – v12 (تسجيل خروج آمن مع إنهاء الجلسة في قاعدة البيانات)
+ * auth.js – v13 (تسجيل خروج آمن مع إنهاء الجلسة + تنظيف كامل)
  */
 (function() {
     let supabase;
@@ -48,32 +48,24 @@
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
 
-        // 1. التحقق من كلمة المرور (يُنشئ جلسة مؤقتة)
         const { data, error: signInError } = await sb.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
 
-        // 2. تخزين اسم المستخدم من الجلسة المؤقتة
         const user = data?.user;
         if (user?.user_metadata?.full_name) {
             sessionStorage.setItem('otpName', user.user_metadata.full_name);
         } else {
-            const localPart = email.split('@')[0];
-            sessionStorage.setItem('otpName', localPart);
+            sessionStorage.setItem('otpName', email.split('@')[0]);
         }
-
-        // 3. تسجيل الخروج لإنهاء الجلسة المؤقتة
         await sb.auth.signOut();
 
-        // 4. إرسال رمز OTP
         const { error: otpError } = await sb.auth.signInWithOtp({
             email,
             options: { shouldCreateUser: false }
         });
         if (otpError) throw otpError;
 
-        // 5. تخزين البريد الإلكتروني للتحقق
         sessionStorage.setItem('otpEmail', email);
-
         return { success: true };
     }
 
@@ -104,30 +96,29 @@
     }
 
     async function logout() {
-        // إنهاء الجلسة في قاعدة البيانات قبل تسجيل الخروج من Supabase
+        // 1. إنهاء الجلسة في قاعدة البيانات عبر SessionManager
         if (window.SessionManager) {
             try {
                 const info = window.SessionManager.getCurrentSessionInfo();
-                if (info.userId && info.sessionId) {
+                if (info && info.userId && info.sessionId) {
                     await window.SessionManager.terminateSession(info.sessionId, info.userId);
                 }
-                window.SessionManager.stopSessionGuard();
-            } catch (e) {
-                // لا نوقف عملية الخروج
-            }
+            } catch (e) {}
+            // 2. إيقاف حماية الجلسة (مستمعي الأحداث)
+            try { window.SessionManager.stopSessionGuard(); } catch (e) {}
         }
 
+        // 3. تسجيل الخروج من Supabase
         const sb = await getSupabase();
         if (sb) {
-            try {
-                await sb.auth.signOut();
-            } catch (e) {
-                console.error('خطأ أثناء تسجيل الخروج:', e);
-            }
+            try { await sb.auth.signOut(); } catch (e) {}
         }
 
-        localStorage.removeItem('rememberMe');
-        sessionStorage.clear();
+        // 4. تنظيف التخزين المحلي
+        try { localStorage.removeItem('rememberMe'); } catch (e) {}
+        try { sessionStorage.clear(); } catch (e) {}
+
+        // 5. إعادة التوجيه إلى صفحة الدخول
         window.location.replace('/auth/auth/login/login.html');
     }
 
@@ -202,7 +193,7 @@
     }
 
     function watchLocationPermission(callback) {
-        if (!navigator.permissions || !navigator.permissions.query) return;
+        if (!navigator.permissions?.query) return;
         navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
             permissionStatus.onchange = () => callback(permissionStatus.state);
         });
@@ -227,5 +218,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v12 جاهز');
+    console.log('auth.js v13 جاهز');
 })();
