@@ -1,5 +1,5 @@
 /**
- * modules/ui-helpers.js - دوال مساعدة شاملة لواجهة المستخدم
+ * modules/ui-helpers.js – دوال مساعدة شاملة لواجهة المستخدم (محمية من التعارضات)
  */
 (function() {
     'use strict';
@@ -72,15 +72,30 @@
     }
 
     // ═══════════════════════════════════════
-    // إشعارات (Toast)
+    // إشعارات (Toast) – محمية من تعارض CSS
     // ═══════════════════════════════════════
     function showToast(message, type = 'info', duration = 4000) {
         const container = getToastContainer();
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        // أنماط مضمنة لتجنب الاعتماد على ملفات CSS خارجية
+        const bgColors = {
+            info: '#028090',
+            success: '#10b981',
+            warning: '#f59e0b',
+            danger: '#dc2626',
+            error: '#dc2626'
+        };
+        const bg = bgColors[type] || bgColors.info;
+        toast.style.cssText = `
+            background: ${bg}; color: white; padding: 12px 20px; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2); display: flex; align-items: center;
+            gap: 12px; font-size: 14px; font-family: 'Tajawal', sans-serif;
+            opacity: 1; transform: translateX(0); transition: all 0.3s ease;
+            max-width: 360px; word-break: break-word;
+        `;
         toast.innerHTML = `
-            <span>${message}</span>
-            <button class="toast-close">×</button>
+            <span style="flex:1;">${message}</span>
+            <button class="toast-close" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; line-height:1;">×</button>
         `;
         container.appendChild(toast);
 
@@ -91,13 +106,13 @@
     }
 
     function getToastContainer() {
-        let container = document.getElementById('toast-container');
+        let container = document.getElementById('tera-ui-toast-container');
         if (!container) {
             container = document.createElement('div');
-            container.id = 'toast-container';
+            container.id = 'tera-ui-toast-container';
             container.style.cssText = `
                 position:fixed; top:20px; right:20px; z-index:99999;
-                display:flex; flex-direction:column; gap:8px;
+                display:flex; flex-direction:column; gap:8px; pointer-events:none;
             `;
             document.body.appendChild(container);
         }
@@ -114,30 +129,45 @@
     // ═══════════════════════════════════════
     // مؤشر التحميل (Spinner)
     // ═══════════════════════════════════════
-    function showLoading(message = 'جاري التحميل...', target = document.body) {
-        hideLoading(); // إزالة أي مؤشر سابق
+    function showLoading(message = 'جاري التحميل...') {
+        hideLoading();
         const overlay = document.createElement('div');
-        overlay.className = 'loading-overlay';
-        overlay.innerHTML = `
-            <div class="loading-spinner"></div>
-            <p>${message}</p>
-        `;
+        overlay.className = 'tera-ui-loading-overlay';
         overlay.style.cssText = `
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(255,255,255,0.8); display:flex;
+            background: rgba(255,255,255,0.85); display:flex;
             flex-direction:column; justify-content:center; align-items:center;
-            z-index: 99998;
+            z-index: 99998; font-family: 'Tajawal', sans-serif;
         `;
+        const spinner = document.createElement('div');
+        spinner.style.cssText = `
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top-color: #028090; border-radius: 50%;
+            animation: tera-spin 0.8s linear infinite; margin-bottom: 16px;
+        `;
+        const text = document.createElement('p');
+        text.textContent = message;
+        text.style.cssText = 'color:#334155; font-size:15px; margin:0;';
+        overlay.appendChild(spinner);
+        overlay.appendChild(text);
         document.body.appendChild(overlay);
+
+        // حقن animation keyframe مرة واحدة
+        if (!document.getElementById('tera-spinner-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'tera-spinner-keyframes';
+            style.textContent = '@keyframes tera-spin { to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+        }
         return overlay;
     }
 
     function hideLoading() {
-        document.querySelectorAll('.loading-overlay').forEach(el => el.remove());
+        document.querySelectorAll('.tera-ui-loading-overlay').forEach(el => el.remove());
     }
 
     // ═══════════════════════════════════════
-    // نوافذ حوارية (تأكيد، تنبيه)
+    // نوافذ حوارية (تأكيد، تنبيه) – محمية
     // ═══════════════════════════════════════
     function showConfirm(message, onConfirm, onCancel) {
         const modal = createModal(message, [
@@ -156,19 +186,20 @@
 
     function createModal(message, buttons) {
         const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
+        overlay.className = 'tera-ui-modal-overlay';
         overlay.style.cssText = `
             position:fixed; top:0; left:0; width:100%; height:100%;
             background:rgba(0,0,0,0.5); display:flex; justify-content:center;
-            align-items:center; z-index:100000;
+            align-items:center; z-index:100000; font-family: 'Tajawal', sans-serif;
         `;
         const box = document.createElement('div');
-        box.className = 'modal-box';
+        box.className = 'tera-ui-modal-box';
         box.style.cssText = `
             background:white; padding:24px; border-radius:12px;
-            min-width:300px; max-width:90%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.2);
+            min-width:300px; max-width:90%; text-align:center;
+            box-shadow:0 10px 40px rgba(0,0,0,0.2); direction: rtl;
         `;
-        box.innerHTML = `<p style="font-size:1.1rem; margin-bottom:20px;">${message}</p>`;
+        box.innerHTML = `<p style="font-size:1.1rem; margin-bottom:20px; color:#0A1B3F;">${message}</p>`;
 
         const btnContainer = document.createElement('div');
         btnContainer.style.cssText = 'display:flex; gap:10px; justify-content:center; flex-wrap:wrap;';
@@ -176,8 +207,12 @@
         buttons.forEach(btn => {
             const button = document.createElement('button');
             button.textContent = btn.text;
-            button.className = `btn ${btn.class}`;
-            button.style.cssText = 'padding:8px 20px; border-radius:6px; cursor:pointer;';
+            button.style.cssText = 'padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:600; font-family:inherit;';
+            if (btn.class === 'btn-primary') {
+                button.style.cssText += 'background:#028090; color:white; border:none;';
+            } else {
+                button.style.cssText += 'background:#e2e8f0; color:#334155; border:none;';
+            }
             button.addEventListener('click', btn.callback);
             btnContainer.appendChild(button);
         });
@@ -185,7 +220,6 @@
         box.appendChild(btnContainer);
         overlay.appendChild(box);
 
-        // إغلاق عند النقر خارج الصندوق
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) closeModal(overlay);
         });
@@ -242,27 +276,19 @@
     // واجهة عامة
     // ═══════════════════════════════════════
     window.UIHelpers = {
-        // التواريخ
         formatDate,
         formatTimeAgo,
-        // الحالات والتسميات
         getStatusLabel,
-        // رأس المستخدم
         updateHeader,
         getInitials,
-        // الإشعارات
         showToast,
-        // التحميل
         showLoading,
         hideLoading,
-        // الحوارات
         showConfirm,
         showAlert,
-        // العناصر
         showElement,
         hideElement,
         toggleElement,
-        // الحافظة والتنسيق
         copyToClipboard,
         formatCurrency,
         formatNumber
