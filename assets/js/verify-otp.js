@@ -1,8 +1,8 @@
 /**
- * verify-otp.js – v41 (متوافق مع session-manager v6 وجميع التحسينات الجديدة)
- * - يجمع بيانات الموقع عبر LocationServices وينقلها كاملة
- * - يخزن sessionId ويبدأ حماية الجلسة
- * - يعتمد على session‑manager لجمع معلومات الجهاز والشبكة تلقائيًا
+ * verify-otp.js – v42 (متوافق مع session-manager v7 + جميع التحسينات)
+ * - يجمع بيانات الموقع إن أمكن، لكنه لا يعتمد عليها لإنشاء الجلسة
+ * - يخزن sessionId ويبدأ حماية الجلسة فوراً
+ * - يعتمد على session‑manager لجمع معلومات الجهاز والشبكة تلقائياً
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -92,7 +92,7 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ─── تسجيل الجلسة (مع تجميع بيانات الموقع فقط – الجهاز والشبكة يتولاهما session‑manager) ───
+    // ─── تسجيل الجلسة (خفيف، لا يمنع الدخول إذا فشل الموقع) ───
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
 
@@ -101,7 +101,7 @@
             return null;
         }
 
-        // ⭐ تجميع بيانات الموقع من LocationServices (اختياري، قد يفشل ولن يؤثر على إنشاء الجلسة)
+        // ⭐ تجميع بيانات الموقع من LocationServices (اختياري، قد يفشل تماماً ولن يؤثر على الجلسة)
         let fullLocation = null;
         try {
             if (window.LocationServices?.getGPSCoords && window.LocationServices?.fetchLocationIQFull) {
@@ -110,16 +110,13 @@
                 const lon = gpsMeta.coords?.longitude;
                 if (lat && lon) {
                     fullLocation = await window.LocationServices.fetchLocationIQFull(lat, lon, gpsMeta, 'auto_login');
-                } else {
-                    console.log('ℹ️ لا توجد إحداثيات GPS دقيقة، سيتم الاعتماد على IP لتحديد الموقع.');
                 }
             }
         } catch (e) {
             console.warn('⚠️ تعذر جمع بيانات الموقع، استمرار بدونها.');
         }
 
-        // SessionManager v6 يتولى جمع معلومات الجهاز (DeviceInfo) والاتصال (ConnectionInfo)
-        // نمرر فقط بيانات الموقع إن وجدت
+        // SessionManager v7 يجمع الجهاز والشبكة تلقائياً، فقط نمرر الموقع إن وجد
         const extraData = {
             locationIQ: fullLocation || {}
         };
@@ -130,10 +127,8 @@
             if (result && result.success) {
                 console.log('✅ [verify-otp] تم تسجيل الجلسة – المعرف: ' + result.sessionId);
                 
-                // تخزين sessionId لاستخدامه في الصفحات الأخرى
                 sessionStorage.setItem('currentSessionId', result.sessionId);
                 
-                // بدء حماية الجلسة (انقطاع الإنترنت)
                 if (window.SessionManager.startSessionGuard) {
                     window.SessionManager.startSessionGuard(userId, result.sessionId);
                 }
