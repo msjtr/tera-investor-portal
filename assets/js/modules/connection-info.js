@@ -1,5 +1,5 @@
 /**
- * modules/connection-info.js – v13 (دمج إحداثيات متعددة المصادر + تحسين نوع الشبكة)
+ * modules/connection-info.js – v14 (ipinfo.io كخطة أساسية عند فشل Edge Function)
  */
 (function() {
     'use strict';
@@ -60,7 +60,6 @@
             'none': 'غير متصل'
         };
         if (type && typeMap[type]) return typeMap[type];
-        // إذا لم يكن النوع معروفاً، نعرض effectiveType مع تنبيه
         if (!type && effectiveType && effectiveType !== 'غير معروف') {
             const speedMap = { 'slow-2g':'2G', '2g':'2G', '3g':'3G', '4g':'4G', '5g':'5G' };
             return `غير معروف (${speedMap[effectiveType] || effectiveType.toUpperCase()})`;
@@ -112,15 +111,12 @@
     }
 
     async function getPublicIPDetails() {
-        let bestResult = null;
-        const sources = [];
-
-        // 1. Edge Function (أولوية قصوى، تُعيد lat/lon من مصادرها)
+        // 1. محاولة عبر Edge Function
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
-                    bestResult = {
+                    return {
                         publicIP: net.ip,
                         isp: normalizeISP(net.isp || net.org),
                         org: net.org || null,
@@ -130,7 +126,7 @@
                         region: net.region || null,
                         city: net.city || null,
                         timezone: net.timezone || null,
-                        lat: net.lat || null,   // من Edge Function (ip-api, ipapi.co)
+                        lat: net.lat || null,
                         lon: net.lon || null,
                         isVPN: net.is_vpn || false,
                         isProxy: net.is_proxy || false,
@@ -140,53 +136,39 @@
                         sources: net.sources || [],
                         details: net.details || {}
                     };
-                    sources.push(...(net.sources || []));
                 }
-            } catch (e) {}
+            } catch (e) { /* Edge Function فشل */ }
         }
 
-        // 2. ipinfo.io (خطة بديلة – توفّر إحداثيات بدقة مدينة)
-        if (!bestResult || !bestResult.lat) {
-            try {
-                const res = await fetch('https://ipinfo.io/json');
-                if (res.ok) {
-                    const d = await res.json();
-                    if (d.ip) {
-                        const result = {
-                            publicIP: d.ip,
-                            isp: normalizeISP(d.org),
-                            org: d.org || null,
-                            asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
-                            country: d.country || null,
-                            countryCode: d.country || null,
-                            region: d.region || null,
-                            city: d.city || null,
-                            timezone: d.timezone || null,
-                            lat: d.loc ? d.loc.split(',')[0] : null,
-                            lon: d.loc ? d.loc.split(',')[1] : null,
-                            isVPN: false, isProxy: false, isTor: false,
-                            isHosting: false, isDatacenter: false,
-                            sources: ['ipinfo.io'],
-                            details: { ipinfo_io: d }
-                        };
-                        if (!bestResult) {
-                            bestResult = result;
-                        } else {
-                            if (!bestResult.asn) bestResult.asn = result.asn;
-                            if (!bestResult.isp) bestResult.isp = result.isp;
-                            if (!bestResult.lat) bestResult.lat = result.lat;
-                            if (!bestResult.lon) bestResult.lon = result.lon;
-                            bestResult.sources = [...new Set([...bestResult.sources, ...result.sources])];
-                            bestResult.details = { ...bestResult.details, ...result.details };
-                        }
-                        sources.push('ipinfo.io');
-                    }
+        // 2. إذا فشلت Edge Function، نعتمد على ipinfo.io العامة مباشرة
+        try {
+            const res = await fetch('https://ipinfo.io/json');
+            if (res.ok) {
+                const d = await res.json();
+                if (d.ip) {
+                    return {
+                        publicIP: d.ip,
+                        isp: normalizeISP(d.org),
+                        org: d.org || null,
+                        asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
+                        country: d.country || null,
+                        countryCode: d.country || null,
+                        region: d.region || null,
+                        city: d.city || null,
+                        timezone: d.timezone || null,
+                        lat: d.loc ? d.loc.split(',')[0] : null,
+                        lon: d.loc ? d.loc.split(',')[1] : null,
+                        isVPN: false, isProxy: false, isTor: false,
+                        isHosting: false, isDatacenter: false,
+                        sources: ['ipinfo.io'],
+                        details: { ipinfo_io: d }
+                    };
                 }
-            } catch (e) {}
-        }
+            }
+        } catch (e) { /* ipinfo.io فشل أيضاً */ }
 
-        if (!bestResult) return null;
-        return bestResult;
+        // 3. إذا فشل كل شيء، نعيد null (ستظهر "غير معروف" في التقرير)
+        return null;
     }
 
     async function getConnectionInfo() {
