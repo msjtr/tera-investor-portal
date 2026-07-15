@@ -1,14 +1,13 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v8)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v10)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
  * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
  * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
  * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
- * - جمع كافة التفاصيل (موقع، جهاز، شبكة، معلومات الاستعلام) وتخزينها
- * - خطة بديلة قوية لجلب IP العامة عبر ip-api.com + ipinfo.io عند فشل ConnectionInfo
- * - ضمان ظهور مصادر الكشف دائمًا
+ * - جمع كافة التفاصيل (موقع، جهاز، شبكة، تحليلات أمنية) وتخزينها
+ * - يعتمد على connection-info.js v15 لجمع تحليلات الشبكة والخصوصية
  */
 (function() {
     'use strict';
@@ -147,7 +146,7 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الجهاز:', e); }
 
-        // ⭐ تجميع معلومات الاتصال (مع خطة بديلة قوية)
+        // ⭐ تجميع معلومات الشبكة والاتصال (connection-info.js v15 يتولى كل شيء)
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
@@ -155,108 +154,7 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
 
-        // ⚡ إذا فشل ConnectionInfo أو لم يُعِد IP عام، استخدم الخطط البديلة
-        if (!connectionInfo || !connectionInfo.ip?.public) {
-            // خطة 1: ip-api.com
-            try {
-                console.log('🔄 محاولة ip-api.com...');
-                const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
-                if (res.ok) {
-                    const d = await res.json();
-                    if (d.query) {
-                        const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
-                            ? window.ConnectionInfo.getBrowserNetworkInfo() 
-                            : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
-                        connectionInfo = {
-                            network: {
-                                online: browserNet.online,
-                                type: browserNet.type || 'غير معروف',
-                                effectiveType: browserNet.effectiveType || 'غير معروف',
-                                downlinkSpeed: browserNet.downlink ?? null,
-                                latency: browserNet.rtt ?? null,
-                                saveData: browserNet.saveData || false
-                            },
-                            ip: {
-                                public: d.query,
-                                local: connectionInfo?.ip?.local || null,
-                                isp: d.isp || d.org || null,
-                                org: d.org || null,
-                                asn: d.as || null,
-                                country: d.country || null,
-                                countryCode: d.countryCode || null,
-                                region: d.regionName || d.region || null,
-                                city: d.city || null,
-                                timezone: d.timezone || null,
-                                lat: d.lat || null,
-                                lon: d.lon || null
-                            },
-                            security: {
-                                isVPN: d.proxy || d.hosting || false,
-                                isProxy: d.proxy || false,
-                                isTor: false,
-                                isHosting: d.hosting || false,
-                                isDatacenter: d.hosting || false,
-                                sources: ['ip-api.com'],
-                                details: { ip_api: d }
-                            }
-                        };
-                        console.log('✅ تم جلب IP العامة عبر ip-api.com');
-                    }
-                }
-            } catch (e) { console.warn('❌ فشل ip-api.com:', e); }
-
-            // خطة 2: ipinfo.io عام (إذا لم تنجح السابقة)
-            if (!connectionInfo || !connectionInfo.ip?.public) {
-                try {
-                    console.log('🔄 محاولة ipinfo.io...');
-                    const res = await fetch('https://ipinfo.io/json');
-                    if (res.ok) {
-                        const d = await res.json();
-                        if (d.ip) {
-                            const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
-                                ? window.ConnectionInfo.getBrowserNetworkInfo() 
-                                : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
-                            connectionInfo = {
-                                network: {
-                                    online: browserNet.online,
-                                    type: browserNet.type || 'غير معروف',
-                                    effectiveType: browserNet.effectiveType || 'غير معروف',
-                                    downlinkSpeed: browserNet.downlink ?? null,
-                                    latency: browserNet.rtt ?? null,
-                                    saveData: browserNet.saveData || false
-                                },
-                                ip: {
-                                    public: d.ip,
-                                    local: connectionInfo?.ip?.local || null,
-                                    isp: d.org || null,
-                                    org: d.org || null,
-                                    asn: d.asn?.replace('AS', '') || null,
-                                    country: d.country || null,
-                                    countryCode: d.country || null,
-                                    region: d.region || null,
-                                    city: d.city || null,
-                                    timezone: d.timezone || null,
-                                    lat: d.loc ? d.loc.split(',')[0] : null,
-                                    lon: d.loc ? d.loc.split(',')[1] : null
-                                },
-                                security: {
-                                    isVPN: false,
-                                    isProxy: false,
-                                    isTor: false,
-                                    isHosting: false,
-                                    isDatacenter: false,
-                                    sources: ['ipinfo.io'],
-                                    details: { ipinfo_io: d }
-                                }
-                            };
-                            console.log('✅ تم جلب IP العامة عبر ipinfo.io');
-                        }
-                    }
-                } catch (e) { console.warn('❌ فشل ipinfo.io:', e); }
-            }
-        }
-
-        // ⚡ إذا ظل connectionInfo فارغًا، أنشئ كائنًا افتراضيًا مع مصدر "غير معروف"
+        // ⚡ إذا فشل كل شيء، أنشئ كائنًا افتراضيًا
         if (!connectionInfo) {
             const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
                 ? window.ConnectionInfo.getBrowserNetworkInfo() 
@@ -271,13 +169,14 @@
                     saveData: browserNet.saveData || false
                 },
                 ip: { public: null, local: null, isp: null, org: null, asn: null, country: null, countryCode: null, region: null, city: null, timezone: null, lat: null, lon: null },
-                security: { isVPN: false, isProxy: false, isTor: false, isHosting: false, isDatacenter: false, sources: ['لم يتم تحديد المصدر'], details: {} }
+                security: { 
+                    isVPN: false, isProxy: false, isTor: false, isHosting: false, isDatacenter: false, 
+                    sources: ['لم يتم تحديد المصدر'], details: {},
+                    risk_score: 0, privacy_risk: 'Low', trusted_network: true,
+                    suspicious_connection: false, known_hosting: false, known_vpn: false, anonymous: false
+                },
+                ipinfo_response: null
             };
-        }
-
-        // ✨ ضمان وجود sources دائمًا
-        if (!connectionInfo.security.sources || connectionInfo.security.sources.length === 0) {
-            connectionInfo.security.sources = ['لم يتم تحديد المصدر'];
         }
 
         const geo = extraData.geo || {};
@@ -373,6 +272,15 @@
             network_save_data: connectionInfo?.network?.saveData ?? null,
 
             connection_info: connectionInfo || null,
+
+            // ⭐ حقول التحليل الأمني الجديدة (من connection-info.js v15)
+            network_risk_score: connectionInfo?.security?.risk_score || 0,
+            privacy_risk: connectionInfo?.security?.privacy_risk || 'Low',
+            trusted_network: connectionInfo?.security?.trusted_network ?? true,
+            suspicious_connection: connectionInfo?.security?.suspicious_connection ?? false,
+            known_hosting: connectionInfo?.security?.known_hosting ?? false,
+            known_vpn: connectionInfo?.security?.known_vpn ?? false,
+            ipinfo_response: connectionInfo?.ipinfo_response || null,
 
             extra_device_info: deviceInfo ? {
                 battery: deviceInfo.battery,
