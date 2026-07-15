@@ -1,5 +1,5 @@
 /**
- * login.js – v2 (متوافقة مع auth.js v13 + فحص أمان اختياري)
+ * login.js – v3 (متوافقة مع auth.js v13 + فحص أمان الشبكة)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -64,10 +64,10 @@
             return;
         }
 
-        // 🛡️ فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) – إذا كانت الخدمة متاحة
+        // 🛡️ فحص أمان الشبكة (اختياري)
         if (window.SecurityEnforcer?.enforceSecureConnection) {
             const isSafe = await window.SecurityEnforcer.enforceSecureConnection();
-            if (!isSafe) return; // تم عرض رسالة المنع من داخل enforcer
+            if (!isSafe) return;
         }
 
         if (loginBtn) {
