@@ -1,9 +1,9 @@
 /**
- * modules/connection-info.js – تفاصيل اتصال شاملة وآمنة
+ * modules/connection-info.js – تفاصيل اتصال شاملة وآمنة (مضمونة الإرجاع)
  * - يستخدم NetworkMonitor (عبر Supabase Edge Function) للحصول على معلومات الـ IP العامة والأمان
  * - يحصل على معلومات الشبكة من المتصفح (Network Information API)
  * - يحصل على الـ IP المحلي عبر WebRTC (اختياري)
- * - يجمع كل شيء في تقرير واحد مفصل
+ * - يجمع كل شيء في تقرير واحد مفصل، دائماً يعيد بيانات الشبكة الأساسية
  */
 (function() {
     'use strict';
@@ -55,7 +55,6 @@
                         resolve(match[0]);
                     }
                 };
-                // إذا لم نحصل على مرشح خلال 2.5 ثانية نتوقف
                 setTimeout(() => { pc.close(); resolve(null); }, 2500);
             });
             return localIP;
@@ -70,48 +69,59 @@
      * @returns {Promise<Object|null>}
      */
     async function getPublicIPDetails() {
-        // NetworkMonitor يجب أن يكون محمّلاً (من network-monitor.js)
         if (!window.NetworkMonitor || !window.NetworkMonitor.checkVPNProxy) {
             console.warn('NetworkMonitor غير متوفر، تعذّر جلب تفاصيل الـ IP العامة');
             return null;
         }
 
-        // نستدعي checkVPNProxy بدون تمرير IP ليجلب بيانات الـ IP الحالي للعميل
-        const networkData = await window.NetworkMonitor.checkVPNProxy();
-        if (!networkData) return null;
+        try {
+            const networkData = await window.NetworkMonitor.checkVPNProxy();
+            if (!networkData) return null;
 
-        return {
-            publicIP: networkData.ip,
-            isp: networkData.isp,
-            org: networkData.org,
-            asn: networkData.asn,
-            country: networkData.country,
-            countryCode: networkData.country_code,
-            region: networkData.region,
-            city: networkData.city,
-            timezone: networkData.timezone,
-            lat: null,   // لا توفره Edge Function الحالية، يمكن إضافته لاحقاً
-            lon: null,
-            isVPN: networkData.is_vpn,
-            isProxy: networkData.is_proxy,
-            isTor: networkData.is_tor,
-            isHosting: networkData.is_hosting,
-            isDatacenter: networkData.is_datacenter,
-            sources: networkData.sources || [],
-            details: networkData.details || {}
-        };
+            return {
+                publicIP: networkData.ip,
+                isp: networkData.isp,
+                org: networkData.org,
+                asn: networkData.asn,
+                country: networkData.country,
+                countryCode: networkData.country_code,
+                region: networkData.region,
+                city: networkData.city,
+                timezone: networkData.timezone,
+                lat: null,
+                lon: null,
+                isVPN: networkData.is_vpn,
+                isProxy: networkData.is_proxy,
+                isTor: networkData.is_tor,
+                isHosting: networkData.is_hosting,
+                isDatacenter: networkData.is_datacenter,
+                sources: networkData.sources || [],
+                details: networkData.details || {}
+            };
+        } catch (e) {
+            console.warn('فشل استدعاء NetworkMonitor:', e);
+            return null;
+        }
     }
 
     /**
-     * تجميع جميع معلومات الاتصال في تقرير واحد
+     * تجميع جميع معلومات الاتصال في تقرير واحد – مضمونة الإرجاع دائماً
      * @returns {Promise<Object>}
      */
     async function getConnectionInfo() {
+        // بيانات الشبكة من المتصفح (متوفرة فوراً)
         const browserNet = getBrowserNetworkInfo();
-        const localIP = await getLocalIP();
-        const publicIP = await getPublicIPDetails();
 
-        const result = {
+        // تشغيل الاستعلامات البطيئة بالتوازي مع مهلة
+        const [localResult, publicResult] = await Promise.allSettled([
+            getLocalIP(),
+            getPublicIPDetails()
+        ]);
+
+        const localIP = localResult.status === 'fulfilled' ? localResult.value : null;
+        const publicIP = publicResult.status === 'fulfilled' ? publicResult.value : null;
+
+        return {
             timestamp: new Date().toISOString(),
             network: {
                 online: browserNet.online,
@@ -132,8 +142,8 @@
                 region: publicIP?.region || null,
                 city: publicIP?.city || null,
                 timezone: publicIP?.timezone || null,
-                lat: publicIP?.lat || null,
-                lon: publicIP?.lon || null
+                lat: null,
+                lon: null
             },
             security: {
                 isVPN: publicIP?.isVPN || false,
@@ -145,8 +155,6 @@
                 details: publicIP?.details || {}
             }
         };
-
-        return result;
     }
 
     /**
