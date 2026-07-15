@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v33 (عرض مضمون لجميع الحقول + تحسينات)
+ * security-registered-devices.js – v34 (إصلاح اختصار ISP + تحسين عرض الشبكة والموقع)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -73,9 +73,14 @@
 
     function normalizeISP(raw) {
         if (!raw) return null;
-        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim();
-        const key = cleaned.toLowerCase();
-        return ISP_ALIASES[key] || cleaned || raw;
+        // إزالة بادئة ASxxxxx إن وجدت
+        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
+        // البحث الجزئي في القاموس
+        for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
+            if (cleaned.includes(pattern)) return alias;
+        }
+        // إذا لم يطابق أي نمط، نعيد الاسم المُنظف أو الأصلي
+        return cleaned || raw;
     }
 
     // ======== تصحيح تلقائي للجلسة الحالية ========
@@ -254,7 +259,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (مع عرض مضمون لجميع الحقول) ----------
+    // ---------- نافذة التفاصيل (مع عرض مضمون لجميع الحقول + تحسينات) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -324,7 +329,7 @@
         ];
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال – عرض مضمون
+        // 3. الشبكة والاتصال – عرض مضمون مع تحسينات ISP ونوع الشبكة
         const ispValue = normalizeISP(session.isp || conn?.ip?.isp);
         const netRows = [
             ['IP العام', orUnknown(session.ip_address || conn?.ip?.public)],
@@ -338,8 +343,9 @@
             ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
             ['توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : '—')]
         ];
+        // إحداثيات IP – مع تحذير من الدقة
         if (conn?.ip?.lat && conn?.ip?.lon) {
-            netRows.push(['إحداثيات IP (تقريبي – دقة منخفضة)', `${conn.ip.lat}, ${conn.ip.lon}`]);
+            netRows.push(['إحداثيات IP (دقة مدينة – غير دقيقة)', `${conn.ip.lat}, ${conn.ip.lon}`]);
             netRows.push(['الخريطة (IP)', `<a href="https://maps.google.com/?q=${conn.ip.lat},${conn.ip.lon}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
         }
         const dataSources = conn?.security?.sources || [];
