@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v26 (إظهار كامل للشبكة والاتصال + جميع التفاصيل)
+ * security-registered-devices.js – v27 (عرض محسّن للشبكة مع مصدر البيانات)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -213,7 +213,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (محسنة بالكامل) ----------
+    // ---------- نافذة التفاصيل (محسنة بمصدر البيانات) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -283,7 +283,7 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال – إظهار جميع الصفوف مباشرة
+        // 3. الشبكة والاتصال – إظهار جميع الصفوف مع مصدر البيانات
         const netRows = [
             ['IP العام', session.ip_address || '—'],
             ['IP المحلي', conn?.ip?.local || '—'],
@@ -296,9 +296,14 @@
             ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
             ['توفير البيانات', session.network_save_data ? 'نعم' : 'لا']
         ];
+        // إضافة مصدر البيانات إذا كان متاحاً
+        const dataSources = conn?.security?.sources || [];
+        if (dataSources.length > 0) {
+            netRows.push(['مصدر البيانات', dataSources.join('، ')]);
+        }
         groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
 
-        // 4. أمان الشبكة – إظهار جميع الصفوف مباشرة
+        // 4. أمان الشبكة
         const secRows = [
             ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
             ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
