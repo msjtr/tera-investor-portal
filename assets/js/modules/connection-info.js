@@ -1,28 +1,79 @@
 /**
- * modules/connection-info.js – v10 (واي فاي/بيانات + إحداثيات + مزود خدمة)
+ * modules/connection-info.js – v11 (أسماء مزودي خدمة محسّنة عالميًا)
  */
 (function() {
     'use strict';
 
-    // قاموس أسماء مزودي الخدمة
+    // قاموس أسماء مزودي الخدمة العالميين
     const ISP_ALIASES = {
+        // السعودية
         'saudi telecom company': 'STC',
         'stc': 'STC',
         'etihad etisalat': 'Mobily',
         'mobily': 'Mobily',
         'zain saudi arabia': 'Zain',
         'zain': 'Zain',
+        // الإمارات
+        'etisalat': 'Etisalat',
+        'emirates integrated telecommunications': 'du',
+        'du': 'du',
+        // مصر
+        'vodafone egypt': 'Vodafone مصر',
+        'orange egypt': 'Orange مصر',
+        'etisalat misr': 'Etisalat مصر',
+        'telecom egypt': 'WE',
+        // أوروبا
+        'vodafone': 'Vodafone',
+        'orange': 'Orange',
+        'deutsche telekom': 'Deutsche Telekom',
+        'telefonica': 'Telefónica',
+        'bt group': 'BT',
+        'british telecommunications': 'BT',
+        'telenor': 'Telenor',
+        'telia': 'Telia',
+        // أمريكا
+        'at&t': 'AT&T',
+        'verizon': 'Verizon',
+        't-mobile': 'T-Mobile',
+        'sprint': 'Sprint',
+        'comcast': 'Comcast',
+        'charter': 'Spectrum',
+        // الهند
+        'jio': 'Jio',
+        'airtel': 'Airtel',
+        'vodafone idea': 'Vi',
+        'bsnl': 'BSNL',
+        // الصين
+        'china telecom': 'China Telecom',
+        'china mobile': 'China Mobile',
+        'china unicom': 'China Unicom',
+        // اليابان
+        'ntt': 'NTT',
+        'kddi': 'KDDI',
+        'softbank': 'SoftBank',
+        // عالمي
         'amazon.com': 'AWS',
         'amazon': 'AWS',
         'cloudflare': 'Cloudflare',
         'google': 'Google',
-        'microsoft': 'Microsoft'
+        'microsoft': 'Microsoft',
+        'oracle': 'Oracle Cloud',
+        'digitalocean': 'DigitalOcean',
+        'hetzner': 'Hetzner',
+        'ovh': 'OVH'
     };
 
     function normalizeISP(isp) {
         if (!isp) return null;
         const key = isp.toLowerCase().trim();
-        return ISP_ALIASES[key] || isp;
+        // إذا كان الاسم معروفًا، أرجع المختصر
+        if (ISP_ALIASES[key]) return ISP_ALIASES[key];
+        // إذا كان يحتوي على كلمة معروفة، حاول استبدالها
+        for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
+            if (key.includes(pattern)) return alias;
+        }
+        // أرجع الاسم الأصلي
+        return isp;
     }
 
     function extractASNFromOrg(orgStr) {
@@ -32,7 +83,6 @@
     }
 
     function translateNetworkType(type, effectiveType) {
-        // ترجمة نوع الاتصال إلى العربية
         const typeMap = {
             'wifi': 'واي فاي',
             'cellular': 'بيانات خلوية',
@@ -40,7 +90,6 @@
             'none': 'غير متصل'
         };
         if (type && typeMap[type]) return typeMap[type];
-        // إذا لم يتوفر type، نستخدم effectiveType لتخمين أنه خلوي (مثل 4g)
         if (!type && effectiveType && effectiveType !== 'غير معروف') {
             const speedMap = { 'slow-2g':'2G', '2g':'2G', '3g':'3G', '4g':'4G', '5g':'5G' };
             return `بيانات خلوية (${speedMap[effectiveType] || effectiveType.toUpperCase()})`;
@@ -122,7 +171,7 @@
             } catch (e) {}
         }
 
-        // 2. ip-api.com (يدعم أحياناً lat/lon)
+        // 2. ip-api.com
         try {
             const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,lat,lon,country,countryCode,region,city,timezone');
             if (res.ok) {
@@ -178,6 +227,7 @@
 
         if (!results.edge && !results.ipapi && !results.ipinfo) return null;
 
+        // دمج مع إعطاء أولوية للـ ISP الأكثر وضوحاً
         const pick = (field) => results.ipinfo?.[field] || results.ipapi?.[field] || results.edge?.[field] || null;
         const merged = {
             publicIP: results.edge?.publicIP || results.ipapi?.publicIP || results.ipinfo?.publicIP,
