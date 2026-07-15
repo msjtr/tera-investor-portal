@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v38 (مع بدء حماية الجلسة + إصلاحات)
+ * verify-otp.js – v39 (إضافة تخزين sessionId + بدء الحماية)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -89,7 +89,7 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ─── تسجيل الجلسة (مع بدء الحماية) ───
+    // ─── تسجيل الجلسة (مع بدء الحماية + تخزين sessionId) ───
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
 
@@ -98,7 +98,6 @@
             return null;
         }
 
-        // جمع بيانات الموقع بشكل غير متزامن (اختياري)
         let fullLocation = null;
         try {
             if (window.LocationServices?.getGPSCoords && window.LocationServices?.fetchLocationIQFull) {
@@ -123,6 +122,10 @@
 
             if (result && result.success) {
                 console.log('✅ [verify-otp] تم تسجيل الجلسة – المعرف: ' + result.sessionId);
+                
+                // ✅ تخزين sessionId في sessionStorage لاستخدامه في الصفحات الأخرى
+                sessionStorage.setItem('currentSessionId', result.sessionId);
+                
                 // بدء حماية الجلسة (إغلاق المتصفح، انقطاع الإنترنت، الخمول)
                 if (window.SessionManager.startSessionGuard) {
                     window.SessionManager.startSessionGuard(userId, result.sessionId);
