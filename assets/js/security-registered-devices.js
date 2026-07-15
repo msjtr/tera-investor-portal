@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v28 (عرض ذكي للشبكة يدمج connection_info)
+ * security-registered-devices.js – v29 (عرض محسّن لمصادر الكشف وتقارير كاملة)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -213,7 +213,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (عرض ذكي يدمج الحقول المباشرة مع connection_info) ----------
+    // ---------- نافذة التفاصيل (محسنة بمصادر الكشف) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -282,7 +282,7 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال – عرض ذكي يدمج الحقول المباشرة مع connection_info
+        // 3. الشبكة والاتصال – عرض ذكي مع مصادر البيانات دائمًا
         const netRows = [
             ['IP العام', session.ip_address || conn?.ip?.public || '—'],
             ['IP المحلي', conn?.ip?.local || '—'],
@@ -293,21 +293,18 @@
             ['نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType || '—'],
             ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
             ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
-            ['توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : '—')]
+            ['توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : '—')],
+            ['مصدر البيانات', (conn?.security?.sources && conn.security.sources.length > 0) ? conn.security.sources.join('، ') : '—']
         ];
-        const dataSources = conn?.security?.sources || [];
-        if (dataSources.length > 0) {
-            netRows.push(['مصدر البيانات', dataSources.join('، ')]);
-        }
         groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
 
-        // 4. أمان الشبكة
+        // 4. أمان الشبكة – مع عرض مصادر الكشف بوضوح
         const secRows = [
             ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
             ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
             ['Tor', session.tor_detected ? 'نعم' : 'لا'],
             ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا'],
-            ['مصادر الكشف', conn?.security?.sources?.join(', ') || '—']
+            ['مصادر الكشف', (conn?.security?.sources && conn.security.sources.length > 0) ? conn.security.sources.join('، ') : 'لم يتم تحديد المصدر']
         ];
         groups.push({ title: 'أمان الشبكة', icon: 'fa-shield-alt', rows: secRows });
 
