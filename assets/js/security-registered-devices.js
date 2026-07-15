@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v20 (إصلاح كامل + بطاقة الجلسة الحالية + أيقونات + طي)
+ * security-registered-devices.js – v23 (إصلاح الجلسة الحالية + منع الإنهاء الخاطئ)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -26,7 +26,6 @@
         if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
     }
 
-    // أيقونة الجهاز
     function getDeviceIcon(session) {
         const type = session.device_type;
         const os = (session.operating_system || '').toLowerCase();
@@ -38,12 +37,49 @@
         return 'fa-desktop';
     }
 
+    // ======== تصحيح تلقائي للجلسة الحالية ========
+    async function ensureCurrentSessionFlag() {
+        if (!currentUser || !supabase) return;
+        
+        // إذا كانت هناك جلسة نشطة بعلامة is_current_session صحيحة، لا حاجة للتصحيح
+        const activeWithFlag = sessions.some(s => s.status === 'active' && s.is_current_session);
+        if (activeWithFlag) return;
+
+        // البحث عن أحدث جلسة نشطة (حسب login_at)
+        const activeSessions = sessions
+            .filter(s => s.status === 'active')
+            .sort((a, b) => new Date(b.login_at) - new Date(a.login_at));
+
+        if (activeSessions.length === 0) return;
+        const newestActive = activeSessions[0];
+
+        try {
+            // تصحيح قاعدة البيانات
+            await supabase.from('user_login_sessions')
+                .update({ is_current_session: false })
+                .eq('user_id', currentUser.id)
+                .neq('id', newestActive.id);
+
+            await supabase.from('user_login_sessions')
+                .update({ is_current_session: true })
+                .eq('id', newestActive.id)
+                .eq('user_id', currentUser.id);
+
+            // تحديث الجلسات محلياً
+            sessions.forEach(s => {
+                s.is_current_session = (s.id === newestActive.id);
+            });
+        } catch (e) {
+            console.warn('تعذر تصحيح is_current_session:', e);
+        }
+    }
+
     // بطاقة الجلسة الحالية
     function renderCurrentSessionCard() {
         const card = document.getElementById('currentSessionCard');
         if (!card) return;
         let current = sessions.find(s => s.status === 'active' && s.is_current_session);
-        if (!current) current = sessions.find(s => s.status === 'active'); // احتياط
+        if (!current) current = sessions.find(s => s.status === 'active');
         if (!current) {
             card.style.display = 'none';
             return;
@@ -56,18 +92,18 @@
         const ip = current.ip_address || '—';
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div class="card-header" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
                 <i class="fas ${devIcon}" style="font-size:28px; color:var(--primary);"></i>
                 <div style="flex:1;">
-                    <div style="font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px;">
+                    <div class="card-title" style="font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px;">
                         الجلسة الحالية
-                        <span class="badge-current">أنت هنا</span>
+                        <span class="badge-current" style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:11px;">أنت هنا</span>
                     </div>
-                    <div style="font-size:13px; color:var(--gray-500);">${current.session_number} • ${fmt(current.login_at)}</div>
+                    <div class="card-meta" style="font-size:13px; color:var(--gray-500);">${current.session_number} • ${fmt(current.login_at)}</div>
                 </div>
                 <button class="btn-action danger" onclick="window.terminateSession('${current.id}')"><i class="fas fa-sign-out-alt"></i> إنهاء</button>
             </div>
-            <div style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:10px;">
+            <div class="card-details" style="margin-top:12px; display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:10px;">
                 <div><strong>الجهاز:</strong> ${current.device_type || '—'}</div>
                 <div><strong>المتصفح:</strong> ${browser}</div>
                 <div><strong>IP:</strong> ${ip}</div>
@@ -456,13 +492,14 @@
 
         listenForSessionTermination();
 
+        await fetchSessions();
+        await ensureCurrentSessionFlag();  // تصحيح الجلسة الحالية إن لزم
+        bindEvents();
+
         const sessionId = sessionStorage.getItem('currentSessionId');
         if (window.SessionManager?.startSessionGuard && sessionId) {
             window.SessionManager.startSessionGuard(currentUser.id, sessionId);
         }
-
-        await fetchSessions();
-        bindEvents();
 
         if (window.ActivityTracker?.startIdleTimer) {
             window.ActivityTracker.startIdleTimer(handleIdleTimeout, currentUser.id);
