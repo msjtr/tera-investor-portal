@@ -1,10 +1,12 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v2)
+ * 
+ * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
  * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
- * - إرسال إشعار فوري للجلسات المفتوحة الأخرى لإغلاق نفسها
- * - دمج معلومات الموقع (LocationIQ) + الجهاز (DeviceInfo) + الشبكة (ConnectionInfo)
- * - تخزين كافة التفاصيل في جدول الجلسات
+ * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
+ * - إنهاء الجلسة تلقائياً عند إغلاق المتصفح، أو انقطاع الإنترنت، أو الخمول
+ * - جمع كافة التفاصيل (موقع، جهاز، شبكة) وتخزينها
  */
 (function() {
     'use strict';
@@ -13,9 +15,8 @@
         return window.teraSupabase || await window.waitForSupabase?.();
     }
 
-    // ───────────────────────────────────────
-    // 1. جلب جميع جلسات المستخدم
-    // ───────────────────────────────────────
+    // ========== دوال الجلسات الأساسية ==========
+
     async function fetchSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return [];
@@ -30,9 +31,6 @@
         return data || [];
     }
 
-    // ───────────────────────────────────────
-    // 2. إنهاء جلسة واحدة (يدوياً)
-    // ───────────────────────────────────────
     async function terminateSession(sessionId, userId) {
         const sb = await getSupabase();
         if (!sb) return { success: false, error: 'Supabase غير متوفر' };
@@ -50,10 +48,6 @@
         return { success: true };
     }
 
-    // ───────────────────────────────────────
-    // 3. إنهاء جميع الجلسات النشطة السابقة (ما عدا الحالية)
-    //    تُعيد عدد الجلسات التي تم إنهاؤها بنجاح
-    // ───────────────────────────────────────
     async function deactivateAllActiveSessions(userId) {
         const sb = await getSupabase();
         if (!sb) return 0;
@@ -75,52 +69,40 @@
                 .update({
                     status: 'terminated_by_system',
                     logout_at: new Date().toISOString(),
-                    logout_reason: 'تم إنهاء الجلسة تلقائياً لوجود جلسة أحدث'
+                    logout_reason: 'تم إنهاء الجلسة تلقائياً لوجود جلسة أحدث',
+                    is_current_session: false
                 })
                 .eq('id', session.id)
                 .eq('user_id', userId);
             if (!updateError) terminatedCount++;
-            else console.error('فشل إنهاء الجلسة:', session.id, updateError);
         }
         return terminatedCount;
     }
 
-    // ───────────────────────────────────────
-    // 3.b إرسال إشعار للجلسات المفتوحة الأخرى
-    // ───────────────────────────────────────
     function notifyOtherTabs() {
         if (typeof BroadcastChannel === 'undefined') return;
         try {
             const channel = new BroadcastChannel('tera_session_channel');
             channel.postMessage({ action: 'SESSION_TERMINATED_BY_NEW_LOGIN' });
             channel.close();
-        } catch (e) {
-            // تجاهل الخطأ (المتصفح لا يدعم أو فشل)
-        }
+        } catch (e) {}
     }
 
-    // ───────────────────────────────────────
-    // 4. إنشاء سجل جلسة جديد (الوظيفة الرئيسية)
-    // ───────────────────────────────────────
+    // ========== إنشاء الجلسة ==========
+
     async function createSessionRecord(userId, extraData = {}) {
         const sb = await getSupabase();
         if (!sb) return false;
 
-        // 🛡️ 4.0 فحص أمان الشبكة
         if (window.SecurityEnforcer && window.SecurityEnforcer.enforceSecureConnection) {
             const isSafe = await window.SecurityEnforcer.enforceSecureConnection();
             if (!isSafe) return false;
         }
 
-        // 4.1 إنهاء جميع الجلسات النشطة السابقة والحصول على العدد
         const closedCount = await deactivateAllActiveSessions(userId);
 
-        // 4.2 إذا تم إغلاق جلسات سابقة، أرسل إشعارًا للجلسات الأخرى وأخبر المستخدم الحالي
         if (closedCount > 0) {
-            // إشعار للجلسات القديمة عبر BroadcastChannel
             notifyOtherTabs();
-
-            // إشعار في الجلسة الحالية
             const message = closedCount === 1
                 ? 'تم إغلاق جلسة سابقة واحدة لوجود جلسة أحدث.'
                 : `تم إغلاق ${closedCount} جلسات سابقة لوجود جلسة أحدث.`;
@@ -131,27 +113,20 @@
             }
         }
 
-        // 4.3 جمع معلومات الجهاز والمتصفح
         let deviceInfo = {};
         try {
             if (window.DeviceInfo && window.DeviceInfo.getDeviceAndBrowserInfo) {
                 deviceInfo = await window.DeviceInfo.getDeviceAndBrowserInfo();
             }
-        } catch (e) {
-            console.warn('تعذر جمع معلومات الجهاز:', e);
-        }
+        } catch (e) { console.warn('تعذر جمع معلومات الجهاز:', e); }
 
-        // 4.4 جمع معلومات الاتصال
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
                 connectionInfo = await window.ConnectionInfo.getConnectionInfo();
             }
-        } catch (e) {
-            console.warn('تعذر جمع معلومات الاتصال:', e);
-        }
+        } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
 
-        // 4.5 بيانات الموقع
         const geo = extraData.geo || {};
         const full = extraData.locationIQ || {};
         const gps = extraData.gps || {};
@@ -174,7 +149,6 @@
         const isTor = connectionInfo?.security?.isTor || false;
         const isHosting = connectionInfo?.security?.isHosting || geo.hosting || false;
 
-        // 4.6 بناء كائن الجلسة (كما هو بدون تغيير)
         const record = {
             user_id: userId,
             session_number: generateSessionNumber(),
@@ -257,7 +231,6 @@
             } : null
         };
 
-        // إزالة الحقول غير المعرفة
         Object.keys(record).forEach(key => {
             if (record[key] === undefined) delete record[key];
         });
@@ -277,10 +250,95 @@
         return `SES-${timestamp}-${randomPart}`;
     }
 
+    // ========== حماية الجلسة (إغلاق المتصفح – انقطاع الإنترنت – الخمول) ==========
+    let guardActive = false;
+    let currentUserIdGuard = null;
+    let currentSessionIdGuard = null;
+
+    // إنهاء الجلسة عند إغلاق التبويب/المتصفح (باستخدام pagehide + fetch keepalive)
+    async function handleTabClose(event) {
+        if (!currentSessionIdGuard || !currentUserIdGuard) return;
+        // لا يمكن الاعتماد على async/await هنا بالكامل، لذا نستخدم fetch مع keepalive
+        const sb = await getSupabase();
+        if (!sb) return;
+        try {
+            await sb.from('user_login_sessions')
+                .update({
+                    status: 'logged_out',
+                    logout_at: new Date().toISOString(),
+                    logout_reason: 'browser_close'
+                })
+                .eq('id', currentSessionIdGuard)
+                .eq('user_id', currentUserIdGuard);
+        } catch (e) {}
+    }
+
+    // إنهاء الجلسة عند انقطاع الاتصال بالإنترنت
+    function handleOffline() {
+        if (!currentSessionIdGuard || !currentUserIdGuard) return;
+        const message = 'تم فقدان الاتصال بالإنترنت. سيتم إنهاء الجلسة.';
+        if (window.UIHelpers && window.UIHelpers.showToast) {
+            window.UIHelpers.showToast(message, 'danger', 5000);
+        } else {
+            alert(message);
+        }
+        // إنهاء الجلسة ثم التوجيه لصفحة الدخول
+        terminateSession(currentSessionIdGuard, currentUserIdGuard)
+            .then(() => {
+                if (window.Auth?.logout) {
+                    window.Auth.logout();
+                } else {
+                    window.location.href = '/auth/auth/login/login.html?reason=offline';
+                }
+            })
+            .catch(() => {
+                window.location.href = '/auth/auth/login/login.html?reason=offline';
+            });
+    }
+
+    // إنهاء الجلسة عند الخمول (تستدعيها activity-tracker أو الصفحة)
+    async function handleIdleTimeout(reason) {
+        // reason يمكن أن يكون 'timeout' من activity tracker
+        if (!currentSessionIdGuard || !currentUserIdGuard) return;
+        await terminateSession(currentSessionIdGuard, currentUserIdGuard);
+        if (window.Auth?.logout) {
+            await window.Auth.logout();
+        } else {
+            window.location.href = `/auth/auth/login/login.html?reason=${reason || 'idle'}`;
+        }
+    }
+
+    function startSessionGuard(userId, sessionId) {
+        if (guardActive) stopSessionGuard();
+        currentUserIdGuard = userId;
+        currentSessionIdGuard = sessionId;
+        guardActive = true;
+
+        // مستمع إغلاق التبويب
+        window.addEventListener('pagehide', handleTabClose);
+        // مستمع انقطاع الإنترنت
+        window.addEventListener('offline', handleOffline);
+        // يمكن أيضًا ربط الخمول عبر activity-tracker، لكننا نضيف handleIdleTimeout كمرجع
+        // (ستستدعيها الصفحة بنفسها)
+    }
+
+    function stopSessionGuard() {
+        if (!guardActive) return;
+        window.removeEventListener('pagehide', handleTabClose);
+        window.removeEventListener('offline', handleOffline);
+        guardActive = false;
+        currentUserIdGuard = null;
+        currentSessionIdGuard = null;
+    }
+
+    // ========== الواجهة العامة ==========
     window.SessionManager = {
         fetchSessions,
         terminateSession,
         deactivateOtherSessions: deactivateAllActiveSessions,
-        createSessionRecord
+        createSessionRecord,
+        startSessionGuard,
+        stopSessionGuard,
+        handleIdleTimeout   // لاستخدامها من activity-tracker
     };
 })();
