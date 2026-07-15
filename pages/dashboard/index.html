@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>لوحة التحكم | Tera Investor Portal</title>
 
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
     <link rel="apple-touch-icon" href="/images/share-thumb.png" />
 
+    <!-- الخطوط -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
+    <!-- أيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- الأنماط الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
@@ -438,14 +443,14 @@
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/core.js"></script>
 
-    <!-- الوحدات الجديدة -->
+    <!-- الوحدات الجديدة (بالترتيب الصحيح) -->
     <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/device-info.js"></script>
     <script src="/assets/js/modules/location-services.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
     <script src="/assets/js/modules/ui-helpers.js"></script>
 
-    <!-- ⚡ سكريبت موحد للقائمة وزر الخروج (يُغني عن sidebar.js و main.js) -->
+    <!-- ⚡ سكريبت موحد للقائمة وزر الخروج -->
     <script>
     (function() {
         if (window.__sidebarInitialized) return;
@@ -493,7 +498,7 @@
                 });
             });
 
-            // 🟢 زر الخروج – يعمل دائمًا
+            // 🟢 زر الخروج – يستخدم Auth.logout الآمنة
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async (e) => {
@@ -502,8 +507,9 @@
                     logoutBtn.disabled = true;
                     try {
                         if (window.Auth && window.Auth.logout) {
-                            await window.Auth.logout();
+                            await window.Auth.logout(); // v13 تنهي الجلسة وتنظف SessionManager
                         } else {
+                            // خطة طوارئ
                             localStorage.clear();
                             sessionStorage.clear();
                             window.location.replace('/auth/auth/login/login.html');
