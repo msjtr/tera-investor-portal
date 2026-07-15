@@ -2,6 +2,7 @@
  * modules/session-manager.js – إدارة جلسات متكاملة وآمنة
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
  * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
+ * - إرسال إشعار فوري للجلسات المفتوحة الأخرى لإغلاق نفسها
  * - دمج معلومات الموقع (LocationIQ) + الجهاز (DeviceInfo) + الشبكة (ConnectionInfo)
  * - تخزين كافة التفاصيل في جدول الجلسات
  */
@@ -85,6 +86,20 @@
     }
 
     // ───────────────────────────────────────
+    // 3.b إرسال إشعار للجلسات المفتوحة الأخرى
+    // ───────────────────────────────────────
+    function notifyOtherTabs() {
+        if (typeof BroadcastChannel === 'undefined') return;
+        try {
+            const channel = new BroadcastChannel('tera_session_channel');
+            channel.postMessage({ action: 'SESSION_TERMINATED_BY_NEW_LOGIN' });
+            channel.close();
+        } catch (e) {
+            // تجاهل الخطأ (المتصفح لا يدعم أو فشل)
+        }
+    }
+
+    // ───────────────────────────────────────
     // 4. إنشاء سجل جلسة جديد (الوظيفة الرئيسية)
     // ───────────────────────────────────────
     async function createSessionRecord(userId, extraData = {}) {
@@ -100,8 +115,12 @@
         // 4.1 إنهاء جميع الجلسات النشطة السابقة والحصول على العدد
         const closedCount = await deactivateAllActiveSessions(userId);
 
-        // 4.2 إشعار المستخدم إذا تم إغلاق جلسات سابقة
+        // 4.2 إذا تم إغلاق جلسات سابقة، أرسل إشعارًا للجلسات الأخرى وأخبر المستخدم الحالي
         if (closedCount > 0) {
+            // إشعار للجلسات القديمة عبر BroadcastChannel
+            notifyOtherTabs();
+
+            // إشعار في الجلسة الحالية
             const message = closedCount === 1
                 ? 'تم إغلاق جلسة سابقة واحدة لوجود جلسة أحدث.'
                 : `تم إغلاق ${closedCount} جلسات سابقة لوجود جلسة أحدث.`;
