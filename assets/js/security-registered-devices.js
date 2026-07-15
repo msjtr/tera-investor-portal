@@ -1,6 +1,6 @@
 /**
- * security-registered-devices.js – v24 (تقرير كامل + بطاقة الجلسة + أيقونات + طي)
- * يعرض جميع التفاصيل المخزنة لكل جلسة
+ * security-registered-devices.js – v25 (إصلاح عرض الشبكة والاتصال + تحسينات)
+ * يعرض جميع التفاصيل المخزنة لكل جلسة بشكل كامل
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -214,7 +214,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (موسعة) ----------
+    // ---------- نافذة التفاصيل (محسنة بالكامل) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -232,96 +232,109 @@
             }
         }
 
-        const conn = (typeof session.connection_info === 'string') ? JSON.parse(session.connection_info) : session.connection_info;
-        const extraDev = (typeof session.extra_device_info === 'string') ? JSON.parse(session.extra_device_info) : session.extra_device_info;
+        // معالجة connection_info و extra_device_info بأمان
+        let conn = null;
+        try {
+            conn = (typeof session.connection_info === 'string') ? JSON.parse(session.connection_info) : session.connection_info;
+        } catch (e) { conn = session.connection_info; }
 
-        const groups = [
-            {
-                title: 'معلومات أساسية', icon: 'fa-info-circle',
-                rows: [
-                    ['رقم الجلسة', session.session_number],
-                    ['وقت الدخول', formatDate(session.login_at)],
-                    ['آخر نشاط', session.last_activity_at ? formatDate(session.last_activity_at) : '—'],
-                    ['الخروج', session.logout_at ? formatDate(session.logout_at) : (session.status === 'active' ? 'ما زالت نشطة' : '—')],
-                    ['الحالة', getStatusLabel(session.status)],
-                    ['مزود الجلسة', session.location_provider || '—']
-                ]
-            },
-            {
-                title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop',
-                rows: [
-                    ['نوع الجهاز', session.device_type || '—'],
-                    ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : '—'],
-                    ['المنصة', session.platform || '—'],
-                    ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''} (${session.browser_engine || ''})` : '—'],
-                    ['وكيل المستخدم', session.user_agent || '—'],
-                    ['اللغة', session.language || '—'],
-                    ['دقة الشاشة', session.screen_resolution || '—'],
-                    ['نسبة البكسل', session.pixel_ratio || '—'],
-                    ['عمق اللون', session.color_depth || '—'],
-                    ['اللمس', session.touch_supported ? 'نعم' : 'لا'],
-                    ['المعالج (نوى)', session.cpu_architecture || session.cpu_cores || '—'],
-                    ['ذاكرة الجهاز', session.device_memory || '—'],
-                    ['الكوكيز', session.cookies_enabled ? 'نعم' : 'لا'],
-                    ['Local Storage', session.local_storage ? 'نعم' : 'لا'],
-                    ['Session Storage', session.session_storage ? 'نعم' : 'لا'],
-                    ['IndexedDB', session.indexed_db ? 'نعم' : 'لا'],
-                    ['WebGL', session.webgl_supported ? 'نعم' : 'لا'],
-                    ['البصمة', session.fingerprint || '—'],
-                    ['المنطقة الزمنية', session.timezone || '—'],
-                ]
-            },
-            {
-                title: 'الشبكة والاتصال', icon: 'fa-network-wired',
-                rows: [
-                    ['IP العام', session.ip_address || '—'],
-                    ['IP المحلي', conn?.ip?.local || '—'],
-                    ['مزود الخدمة', session.isp || conn?.ip?.isp || '—'],
-                    ['ASN', conn?.ip?.asn || '—'],
-                    ['نوع الشبكة', session.network_type || conn?.network?.type || '—'],
-                    ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : '—'],
-                    ['نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType || '—'],
-                    ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
-                    ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
-                    ['توفير البيانات', session.network_save_data ? 'نعم' : 'لا'],
-                ]
-            },
-            {
-                title: 'أمان الشبكة', icon: 'fa-shield-alt',
-                rows: [
-                    ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
-                    ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
-                    ['Tor', session.tor_detected ? 'نعم' : 'لا'],
-                    ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا'],
-                    ['مصادر الكشف', conn?.security?.sources?.join(', ') || '—']
-                ]
+        let extraDev = null;
+        try {
+            extraDev = (typeof session.extra_device_info === 'string') ? JSON.parse(session.extra_device_info) : session.extra_device_info;
+        } catch (e) { extraDev = session.extra_device_info; }
+
+        // دالة مساعدة لإضافة صف فقط إذا كانت القيمة موجودة وغير فارغة
+        function addRow(rows, label, value) {
+            if (value !== undefined && value !== null && value !== '' && value !== '—') {
+                rows.push([label, value]);
             }
-        ];
+        }
 
+        const groups = [];
+
+        // 1. معلومات أساسية
+        const basicRows = [];
+        addRow(basicRows, 'رقم الجلسة', session.session_number);
+        addRow(basicRows, 'وقت الدخول', formatDate(session.login_at));
+        addRow(basicRows, 'آخر نشاط', session.last_activity_at ? formatDate(session.last_activity_at) : null);
+        addRow(basicRows, 'الخروج', session.logout_at ? formatDate(session.logout_at) : (session.status === 'active' ? 'ما زالت نشطة' : '—'));
+        addRow(basicRows, 'الحالة', getStatusLabel(session.status));
+        addRow(basicRows, 'مزود الجلسة', session.location_provider);
+        groups.push({ title: 'معلومات أساسية', icon: 'fa-info-circle', rows: basicRows });
+
+        // 2. بيانات الجهاز والمتصفح
+        const deviceRows = [];
+        addRow(deviceRows, 'نوع الجهاز', session.device_type);
+        addRow(deviceRows, 'نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : null);
+        addRow(deviceRows, 'المنصة', session.platform);
+        addRow(deviceRows, 'المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''} (${session.browser_engine || ''})` : null);
+        addRow(deviceRows, 'وكيل المستخدم', session.user_agent);
+        addRow(deviceRows, 'اللغة', session.language);
+        addRow(deviceRows, 'دقة الشاشة', session.screen_resolution);
+        addRow(deviceRows, 'نسبة البكسل', session.pixel_ratio);
+        addRow(deviceRows, 'عمق اللون', session.color_depth);
+        addRow(deviceRows, 'اللمس', session.touch_supported ? 'نعم' : 'لا');
+        addRow(deviceRows, 'المعالج (نوى)', session.cpu_architecture || session.cpu_cores);
+        addRow(deviceRows, 'ذاكرة الجهاز', session.device_memory);
+        addRow(deviceRows, 'الكوكيز', session.cookies_enabled ? 'نعم' : 'لا');
+        addRow(deviceRows, 'Local Storage', session.local_storage ? 'نعم' : 'لا');
+        addRow(deviceRows, 'Session Storage', session.session_storage ? 'نعم' : 'لا');
+        addRow(deviceRows, 'IndexedDB', session.indexed_db ? 'نعم' : 'لا');
+        addRow(deviceRows, 'WebGL', session.webgl_supported ? 'نعم' : 'لا');
+        addRow(deviceRows, 'البصمة', session.fingerprint);
+        addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
+        groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
+
+        // 3. الشبكة والاتصال (توسيع كبير)
+        const netRows = [];
+        addRow(netRows, 'IP العام', session.ip_address);
+        addRow(netRows, 'IP المحلي', conn?.ip?.local);
+        addRow(netRows, 'مزود الخدمة', session.isp || conn?.ip?.isp);
+        addRow(netRows, 'ASN', conn?.ip?.asn);
+        addRow(netRows, 'نوع الشبكة', session.network_type || conn?.network?.type);
+        addRow(netRows, 'حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : null);
+        addRow(netRows, 'نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType);
+        // عرض سرعة التحميل و RTT مع وحدات
+        const downlink = session.network_downlink ?? conn?.network?.downlinkSpeed;
+        addRow(netRows, 'سرعة التحميل (Mbps)', downlink !== null ? downlink : null);
+        const rtt = session.network_rtt ?? conn?.network?.latency;
+        addRow(netRows, 'تأخير (RTT ms)', rtt !== null ? rtt : null);
+        addRow(netRows, 'توفير البيانات', session.network_save_data ? 'نعم' : 'لا');
+        groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
+
+        // 4. أمان الشبكة
+        const secRows = [];
+        addRow(secRows, 'VPN', session.vpn_detected ? 'نعم' : 'لا');
+        addRow(secRows, 'Proxy', session.proxy_detected ? 'نعم' : 'لا');
+        addRow(secRows, 'Tor', session.tor_detected ? 'نعم' : 'لا');
+        addRow(secRows, 'استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا');
+        addRow(secRows, 'مصادر الكشف', conn?.security?.sources?.join(', '));
+        groups.push({ title: 'أمان الشبكة', icon: 'fa-shield-alt', rows: secRows });
+
+        // 5. ميزات المتصفح
         const features = extraDev?.browser_features;
         if (features) {
             const featureRows = Object.entries(features).map(([key, val]) => [key.replace(/_/g, ' '), val ? '✓' : '✗']);
             groups.push({ title: 'ميزات المتصفح', icon: 'fa-puzzle-piece', rows: featureRows });
         }
 
+        // 6. البطارية
         if (extraDev?.battery) {
             const b = extraDev.battery;
-            groups.push({
-                title: 'البطارية', icon: 'fa-battery-half',
-                rows: [
-                    ['الشحن', b.charging ? 'قيد الشحن' : 'غير موصول'],
-                    ['النسبة', b.level || '—'],
-                    ['وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? '—' : (b.charging_time / 60).toFixed(1)],
-                    ['الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? '—' : (b.discharging_time / 60).toFixed(1)]
-                ]
-            });
+            const battRows = [];
+            addRow(battRows, 'الشحن', b.charging ? 'قيد الشحن' : 'غير موصول');
+            addRow(battRows, 'النسبة', b.level);
+            addRow(battRows, 'وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? null : (b.charging_time / 60).toFixed(1));
+            addRow(battRows, 'الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? null : (b.discharging_time / 60).toFixed(1));
+            groups.push({ title: 'البطارية', icon: 'fa-battery-half', rows: battRows });
         }
 
+        // 7. الوضع الخفي
         if (extraDev?.incognito_likely !== undefined) {
             groups.push({ title: 'معلومات إضافية', icon: 'fa-user-secret', rows: [['وضع التصفح المخفي (تقديري)', extraDev.incognito_likely ? 'نعم' : 'لا']] });
         }
 
-        // الموقع الجغرافي
+        // 8. الموقع الجغرافي
         const locationRows = [];
         const country = session.country || extraLocation?.country;
         const country_code = session.country_code || extraLocation?.country_code;
@@ -331,12 +344,12 @@
         const state = session.state || extraLocation?.state;
         const postal_code = session.postal_code || extraLocation?.postcode;
         const display_name = session.display_name || extraLocation?.display_name;
-        if (country) locationRows.push(['الدولة', country]);
-        if (country_code) locationRows.push(['الرمز الدولي', country_code]);
-        if (city) locationRows.push(['المدينة', city]);
-        if (neighbourhood) locationRows.push(['الحي', neighbourhood]);
-        if (province || state) locationRows.push(['المنطقة/المحافظة', province || state]);
-        if (postal_code) locationRows.push(['الرمز البريدي', postal_code]);
+        addRow(locationRows, 'الدولة', country);
+        addRow(locationRows, 'الرمز الدولي', country_code);
+        addRow(locationRows, 'المدينة', city);
+        addRow(locationRows, 'الحي', neighbourhood);
+        addRow(locationRows, 'المنطقة/المحافظة', province || state);
+        addRow(locationRows, 'الرمز البريدي', postal_code);
         if (session.latitude && session.longitude) {
             locationRows.push(['الإحداثيات', `${session.latitude}, ${session.longitude}`]);
             locationRows.push(['الخريطة', `<a href="https://maps.google.com/?q=${session.latitude},${session.longitude}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
@@ -345,7 +358,7 @@
         else if (locationRows.length === 0) locationRows.push(['الموقع', 'غير متوفر']);
         groups.push({ title: 'الموقع الجغرافي', icon: 'fa-globe', rows: locationRows });
 
-        // تفاصيل الموقع (LocationIQ)
+        // 9. تفاصيل الموقع (LocationIQ)
         const advancedLocationRows = [];
         const locFields = ['place_id','licence','osm_type','osm_id','display_name','name','class','type','match_code','match_type','match_level',
                           'house_number','road','quarter','suburb','town','village','municipality','county','state_district','state_code','postcode','government'];
@@ -353,19 +366,26 @@
         if (session.boundingbox) advancedLocationRows.push(['boundingbox', Array.isArray(session.boundingbox) ? session.boundingbox.join(', ') : session.boundingbox]);
         if (advancedLocationRows.length > 0) groups.push({ title: 'تفاصيل الموقع (LocationIQ)', icon: 'fa-map-marked-alt', rows: advancedLocationRows });
 
-        // معلومات الاستعلام (Lookup)
+        // 10. معلومات الاستعلام (Lookup) مع تصحيح الحالة
         const lookupRows = [];
-        if (session.request_started_at) lookupRows.push(['وقت بدء الطلب', formatDate(session.request_started_at)]);
-        if (session.response_received_at) lookupRows.push(['وقت استلام الرد', formatDate(session.response_received_at)]);
-        if (session.execution_time_ms) lookupRows.push(['زمن التنفيذ (ms)', session.execution_time_ms]);
-        if (session.gps_source) lookupRows.push(['مصدر GPS', session.gps_source]);
-        if (session.gps_accuracy) lookupRows.push(['دقة GPS (متر)', session.gps_accuracy]);
-        if (session.lookup_status !== undefined) lookupRows.push(['حالة الاستعلام', session.lookup_status === 1 ? 'نجاح' : 'فشل']);
-        if (session.http_status) lookupRows.push(['HTTP Status', session.http_status]);
-        if (session.error_code) lookupRows.push(['رمز الخطأ', session.error_code]);
+        addRow(lookupRows, 'وقت بدء الطلب', session.request_started_at ? formatDate(session.request_started_at) : null);
+        addRow(lookupRows, 'وقت استلام الرد', session.response_received_at ? formatDate(session.response_received_at) : null);
+        addRow(lookupRows, 'زمن التنفيذ (ms)', session.execution_time_ms);
+        addRow(lookupRows, 'مصدر GPS', session.gps_source);
+        addRow(lookupRows, 'دقة GPS (متر)', session.gps_accuracy);
+        // تحديد حالة الاستعلام بذكاء
+        let lookupStatusLabel = 'غير معروف';
+        if (session.lookup_status === 1 || session.place_id || session.display_name || session.latitude) {
+            lookupStatusLabel = 'نجاح';
+        } else if (session.lookup_status === 0) {
+            lookupStatusLabel = 'فشل';
+        }
+        addRow(lookupRows, 'حالة الاستعلام', lookupStatusLabel);
+        addRow(lookupRows, 'HTTP Status', session.http_status);
+        addRow(lookupRows, 'رمز الخطأ', session.error_code);
         if (lookupRows.length > 0) groups.push({ title: 'معلومات الاستعلام (Lookup)', icon: 'fa-search', rows: lookupRows });
 
-        // Raw JSON
+        // 11. Raw JSON
         if (session.locationiq_response) {
             groups.push({
                 title: 'الرد الخام (Raw JSON)', icon: 'fa-code',
@@ -373,6 +393,7 @@
             });
         }
 
+        // بناء HTML
         let buttonsHTML = '';
         if (session.latitude && session.longitude) {
             buttonsHTML += `<button class="btn-action" onclick="window.open('https://maps.google.com/?q=${session.latitude},${session.longitude}', '_blank')"><i class="fas fa-map-marker-alt"></i> عرض على الخريطة</button>`;
@@ -386,8 +407,7 @@
 
         let html = '';
         groups.forEach(group => {
-            const dataRows = group.rows.filter(r => r[1] && r[1] !== '—');
-            if (dataRows.length === 0) return;
+            if (group.rows.length === 0) return;
             html += `<div class="detail-group">
                 <div class="group-header" onclick="this.classList.toggle('collapsed'); this.nextElementSibling.classList.toggle('collapsed');">
                     <i class="fas ${group.icon}"></i>
@@ -395,7 +415,7 @@
                     <i class="fas fa-chevron-down" style="margin-right:auto;"></i>
                 </div>
                 <div class="group-content">`;
-            dataRows.forEach(row => {
+            group.rows.forEach(row => {
                 html += `<div class="detail-row"><span class="detail-label">${row[0]}:</span><span class="detail-value">${row[1]}</span></div>`;
             });
             html += `</div></div>`;
