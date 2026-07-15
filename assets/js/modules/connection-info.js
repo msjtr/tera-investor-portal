@@ -1,6 +1,7 @@
 /**
- * modules/connection-info.js – تفاصيل اتصال شاملة وآمنة (مضمونة الإرجاع)
- * - يستخدم NetworkMonitor (عبر Supabase Edge Function) للحصول على معلومات الـ IP العامة والأمان
+ * modules/connection-info.js – تفاصيل اتصال شاملة وآمنة (v2)
+ * - يستخدم NetworkMonitor (عبر Supabase Edge Function) كخيار أساسي وآمن
+ * - خطة بديلة تلقائية عبر ip-api.com عند فشل Edge Function
  * - يحصل على معلومات الشبكة من المتصفح (Network Information API)
  * - يحصل على الـ IP المحلي عبر WebRTC (اختياري)
  * - يجمع كل شيء في تقرير واحد مفصل، دائماً يعيد بيانات الشبكة الأساسية
@@ -10,7 +11,6 @@
 
     /**
      * الحصول على معلومات شبكة المتصفح (نوع الاتصال، السرعة...)
-     * @returns {Object}
      */
     function getBrowserNetworkInfo() {
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -30,13 +30,12 @@
             downlink: conn.downlink ?? null,
             rtt: conn.rtt ?? null,
             saveData: conn.saveData || false,
-            type: conn.type || 'غير معروف'   // 'wifi', 'cellular', 'ethernet', 'none', etc.
+            type: conn.type || 'غير معروف'
         };
     }
 
     /**
      * محاولة الحصول على الـ IP المحلي (داخل الشبكة) باستخدام WebRTC
-     * @returns {Promise<string|null>}
      */
     async function getLocalIP() {
         try {
@@ -65,54 +64,85 @@
 
     /**
      * الحصول على معلومات الـ IP العامة وتحليل الأمان (VPN/Proxy/Tor/Hosting)
-     * باستخدام NetworkMonitor الآمن الذي يعتمد على Edge Function.
-     * @returns {Promise<Object|null>}
+     * المسار 1: NetworkMonitor الآمن (Edge Function)
+     * المسار 2: ip-api.com مباشرة (خطة طوارئ)
      */
     async function getPublicIPDetails() {
-        if (!window.NetworkMonitor || !window.NetworkMonitor.checkVPNProxy) {
-            console.warn('NetworkMonitor غير متوفر، تعذّر جلب تفاصيل الـ IP العامة');
-            return null;
+        // ⚡ المسار 1: المحاولة عبر Edge Function (الأكثر أماناً)
+        if (window.NetworkMonitor?.checkVPNProxy) {
+            try {
+                const networkData = await window.NetworkMonitor.checkVPNProxy();
+                if (networkData && networkData.ip) {
+                    console.log('✅ تم جلب IP عبر Edge Function');
+                    return {
+                        publicIP: networkData.ip,
+                        isp: networkData.isp || null,
+                        org: networkData.org || null,
+                        asn: networkData.asn || null,
+                        country: networkData.country || null,
+                        countryCode: networkData.country_code || null,
+                        region: networkData.region || null,
+                        city: networkData.city || null,
+                        timezone: networkData.timezone || null,
+                        lat: null,
+                        lon: null,
+                        isVPN: networkData.is_vpn || false,
+                        isProxy: networkData.is_proxy || false,
+                        isTor: networkData.is_tor || false,
+                        isHosting: networkData.is_hosting || false,
+                        isDatacenter: networkData.is_datacenter || false,
+                        sources: networkData.sources || [],
+                        details: networkData.details || {}
+                    };
+                }
+            } catch (e) {
+                console.warn('⚠️ فشل استدعاء Edge Function، جاري استخدام الخطة البديلة...');
+            }
         }
 
+        // 🔥 المسار 2: خطة طوارئ – ip-api.com مباشرة (بدون مفتاح API)
         try {
-            const networkData = await window.NetworkMonitor.checkVPNProxy();
-            if (!networkData) return null;
-
-            return {
-                publicIP: networkData.ip,
-                isp: networkData.isp,
-                org: networkData.org,
-                asn: networkData.asn,
-                country: networkData.country,
-                countryCode: networkData.country_code,
-                region: networkData.region,
-                city: networkData.city,
-                timezone: networkData.timezone,
-                lat: null,
-                lon: null,
-                isVPN: networkData.is_vpn,
-                isProxy: networkData.is_proxy,
-                isTor: networkData.is_tor,
-                isHosting: networkData.is_hosting,
-                isDatacenter: networkData.is_datacenter,
-                sources: networkData.sources || [],
-                details: networkData.details || {}
-            };
+            console.log('🔄 محاولة ip-api.com...');
+            const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
+            if (!res.ok) throw new Error('ip-api returned ' + res.status);
+            const d = await res.json();
+            if (d.query) {
+                console.log('✅ تم جلب IP عبر ip-api.com');
+                return {
+                    publicIP: d.query,
+                    isp: d.isp || d.org || null,
+                    org: d.org || null,
+                    asn: d.as || null,
+                    country: d.country || null,
+                    countryCode: d.countryCode || null,
+                    region: d.regionName || d.region || null,
+                    city: d.city || null,
+                    timezone: d.timezone || null,
+                    lat: d.lat || null,
+                    lon: d.lon || null,
+                    isVPN: d.proxy || d.hosting || false,
+                    isProxy: d.proxy || false,
+                    isTor: false,
+                    isHosting: d.hosting || false,
+                    isDatacenter: d.hosting || false,
+                    sources: ['ip-api.com'],
+                    details: { ip_api: d }
+                };
+            }
         } catch (e) {
-            console.warn('فشل استدعاء NetworkMonitor:', e);
-            return null;
+            console.warn('❌ فشل ip-api.com أيضاً:', e.message);
         }
+
+        console.warn('⚠️ لم نتمكن من جلب IP العامة من أي مصدر');
+        return null;
     }
 
     /**
      * تجميع جميع معلومات الاتصال في تقرير واحد – مضمونة الإرجاع دائماً
-     * @returns {Promise<Object>}
      */
     async function getConnectionInfo() {
-        // بيانات الشبكة من المتصفح (متوفرة فوراً)
         const browserNet = getBrowserNetworkInfo();
 
-        // تشغيل الاستعلامات البطيئة بالتوازي مع مهلة
         const [localResult, publicResult] = await Promise.allSettled([
             getLocalIP(),
             getPublicIPDetails()
@@ -157,9 +187,6 @@
         };
     }
 
-    /**
-     * دوال اختيارية للوصول المباشر لكل جزء
-     */
     window.ConnectionInfo = {
         getConnectionInfo,
         getBrowserNetworkInfo,
