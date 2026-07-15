@@ -1,5 +1,5 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v5)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v6)
  * 
  * المميزات:
  * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
@@ -8,6 +8,7 @@
  * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
  * - جمع كافة التفاصيل (موقع، جهاز، شبكة، معلومات الاستعلام) وتخزينها
  * - خطة بديلة لضمان تخزين بيانات الشبكة الأساسية حتى في حال فشل ConnectionInfo
+ * - تحسين أولوية بيانات IP العامة من ConnectionInfo
  */
 (function() {
     'use strict';
@@ -148,7 +149,7 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الجهاز:', e); }
 
-        // ⭐ تجميع معلومات الاتصال مع خطة بديلة
+        // ⭐ تجميع معلومات الاتصال (مع خطة بديلة قوية)
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
@@ -156,7 +157,7 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
 
-        // ⚡ خطة بديلة إذا لم تنجح ConnectionInfo (أو أرجعت null)
+        // ⚡ إذا فشل الحصول على ConnectionInfo، أنشئ كائنًا افتراضيًا يحتوي على بيانات المتصفح
         if (!connectionInfo) {
             const browserNet = (window.ConnectionInfo && window.ConnectionInfo.getBrowserNetworkInfo)
                 ? window.ConnectionInfo.getBrowserNetworkInfo()
@@ -183,13 +184,15 @@
         const addrComp = full.address_components || {};
         const addl = full.additional || {};
 
+        // 🎯 الأولوية الآن لبيانات connectionInfo.ip لأنها الأحدث (من Edge Function أو ip-api)
         const finalLat = full.latitude || full.lat || gps.latitude || geo.lat || connectionInfo?.ip?.lat || null;
         const finalLon = full.longitude || full.lon || gps.longitude || geo.lon || connectionInfo?.ip?.lon || null;
-        const finalCity = addrComp.city || full.city || geo.city || connectionInfo?.ip?.city || null;
-        const finalCountry = addrComp.country || full.country || geo.country || connectionInfo?.ip?.country || null;
+        const finalCity = addrComp.city || full.city || connectionInfo?.ip?.city || geo.city || null;
+        const finalCountry = addrComp.country || full.country || connectionInfo?.ip?.country || geo.country || null;
         const finalState = addrComp.state || full.state || connectionInfo?.ip?.region || null;
         const finalPostcode = addrComp.postcode || full.postcode || null;
 
+        // ⭐ IP العامة والمزود من connectionInfo أولاً
         const ipAddress = connectionInfo?.ip?.public || geo.ip || extraData.ip || null;
         const isp = connectionInfo?.ip?.isp || geo.isp || null;
         const isVPN = connectionInfo?.security?.isVPN || geo.proxy || false;
