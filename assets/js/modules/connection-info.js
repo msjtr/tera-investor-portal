@@ -1,10 +1,5 @@
 /**
- * modules/connection-info.js – تفاصيل اتصال شاملة وآمنة (v3)
- * - المسار 1: NetworkMonitor (Edge Function) – آمن ولا يكشف مفاتيح
- * - المسار 2: ip-api.com مباشرة (خطة طوارئ تلقائية)
- * - يحصل على معلومات الشبكة من المتصفح (Network Information API)
- * - يحصل على الـ IP المحلي عبر WebRTC (اختياري)
- * - يجمع كل شيء في تقرير واحد، ويعيد بيانات الشبكة دائماً
+ * modules/connection-info.js – v4 (دعم ipinfo.io عام + ثلاث خطط طوارئ)
  */
 (function() {
     'use strict';
@@ -55,7 +50,6 @@
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
-                // نتأكد أن الرد يحتوي على IP فعلي
                 if (net && net.ip && net.ip !== 'undefined') {
                     console.log('✅ تم جلب IP عبر Edge Function');
                     return {
@@ -78,10 +72,10 @@
                         details: net.details || {}
                     };
                 }
-            } catch (e) { console.warn('⚠️ Edge Function فشل:', e.message); }
+            } catch (e) { console.warn('⚠️ Edge Function فشل.'); }
         }
 
-        // المسار 2: ip-api.com (خطة طوارئ)
+        // المسار 2: ip-api.com (مجاني)
         try {
             console.log('🔄 محاولة ip-api.com...');
             const res = await fetch('https://ip-api.com/json/?fields=proxy,hosting,query,isp,org,as,country,countryCode,region,city,timezone');
@@ -109,7 +103,38 @@
                     details: { ip_api: d }
                 };
             }
-        } catch (e) { console.warn('❌ ip-api.com فشل:', e.message); }
+        } catch (e) { console.warn('❌ ip-api.com فشل.'); }
+
+        // المسار 3: ipinfo.io عام (بدون مفتاح)
+        try {
+            console.log('🔄 محاولة ipinfo.io...');
+            const res = await fetch('https://ipinfo.io/json');
+            if (!res.ok) throw new Error('status ' + res.status);
+            const d = await res.json();
+            if (d.ip) {
+                console.log('✅ تم جلب IP عبر ipinfo.io');
+                return {
+                    publicIP: d.ip,
+                    isp: d.org || null,
+                    org: d.org || null,
+                    asn: d.asn?.replace('AS', '') || null,
+                    country: d.country || null,
+                    countryCode: d.country || null,
+                    region: d.region || null,
+                    city: d.city || null,
+                    timezone: d.timezone || null,
+                    lat: d.loc ? d.loc.split(',')[0] : null,
+                    lon: d.loc ? d.loc.split(',')[1] : null,
+                    isVPN: false,
+                    isProxy: false,
+                    isTor: false,
+                    isHosting: false,
+                    isDatacenter: false,
+                    sources: ['ipinfo.io'],
+                    details: { ipinfo_io: d }
+                };
+            }
+        } catch (e) { console.warn('❌ ipinfo.io فشل.'); }
 
         return null;
     }
