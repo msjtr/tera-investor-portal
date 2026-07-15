@@ -1,9 +1,10 @@
 /**
- * modules/connection-info.js – v14 (ipinfo.io كخطة أساسية عند فشل Edge Function)
+ * modules/connection-info.js – v15 (تحليلات شبكة وخصوصية متكاملة)
  */
 (function() {
     'use strict';
 
+    // قاموس اختصارات مزودي الخدمة
     const ISP_ALIASES = {
         'saudi telecom company': 'STC',
         'stc': 'STC',
@@ -37,6 +38,7 @@
         'microsoft': 'Microsoft'
     };
 
+    // تطبيع اسم المزود
     function normalizeISP(raw) {
         if (!raw) return null;
         let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
@@ -46,12 +48,14 @@
         return cleaned || raw;
     }
 
+    // استخراج ASN من org
     function extractASNFromOrg(orgStr) {
         if (!orgStr) return null;
         const match = orgStr.match(/AS(\d+)/i);
         return match ? match[1] : null;
     }
 
+    // ترجمة نوع الشبكة
     function translateNetworkType(type, effectiveType) {
         const typeMap = {
             'wifi': 'واي فاي',
@@ -67,6 +71,7 @@
         return 'غير معروف';
     }
 
+    // معلومات الشبكة من المتصفح
     function getBrowserNetworkInfo() {
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         if (!conn) {
@@ -91,6 +96,7 @@
         };
     }
 
+    // IP محلي
     async function getLocalIP() {
         try {
             const pc = new RTCPeerConnection({ iceServers: [] });
@@ -110,8 +116,27 @@
         } catch (e) { return null; }
     }
 
+    // درجة خطورة الشبكة
+    function calculateRiskScore(security) {
+        let score = 0;
+        if (security.isVPN || security.isProxy) score += 30;
+        if (security.isTor) score += 50;
+        if (security.isHosting) score += 40;
+        if (security.isDatacenter) score += 40;
+        return Math.min(score, 100);
+    }
+
+    // مستوى خطر الخصوصية
+    function getPrivacyRisk(security) {
+        const score = calculateRiskScore(security);
+        if (score >= 60) return 'High';
+        if (score >= 30) return 'Medium';
+        return 'Low';
+    }
+
+    // جلب بيانات IP العامة (Edge Function → ipinfo.io)
     async function getPublicIPDetails() {
-        // 1. محاولة عبر Edge Function
+        // 1. Edge Function
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
@@ -137,10 +162,10 @@
                         details: net.details || {}
                     };
                 }
-            } catch (e) { /* Edge Function فشل */ }
+            } catch (e) { /* فشل */ }
         }
 
-        // 2. إذا فشلت Edge Function، نعتمد على ipinfo.io العامة مباشرة
+        // 2. ipinfo.io مباشرة
         try {
             const res = await fetch('https://ipinfo.io/json');
             if (res.ok) {
@@ -165,12 +190,12 @@
                     };
                 }
             }
-        } catch (e) { /* ipinfo.io فشل أيضاً */ }
+        } catch (e) { /* فشل */ }
 
-        // 3. إذا فشل كل شيء، نعيد null (ستظهر "غير معروف" في التقرير)
         return null;
     }
 
+    // التجميع الرئيسي
     async function getConnectionInfo() {
         const browserNet = getBrowserNetworkInfo();
         const [localResult, publicResult] = await Promise.allSettled([
@@ -179,6 +204,19 @@
         ]);
         const localIP = localResult.status === 'fulfilled' ? localResult.value : null;
         const pub = publicResult.status === 'fulfilled' ? publicResult.value : null;
+
+        const security = {
+            isVPN: pub?.isVPN || false,
+            isProxy: pub?.isProxy || false,
+            isTor: pub?.isTor || false,
+            isHosting: pub?.isHosting || false,
+            isDatacenter: pub?.isDatacenter || false,
+            sources: pub?.sources || [],
+            details: pub?.details || {}
+        };
+
+        const riskScore = calculateRiskScore(security);
+        const privacyRisk = getPrivacyRisk(security);
 
         return {
             timestamp: new Date().toISOString(),
@@ -193,26 +231,36 @@
             ip: {
                 public: pub?.publicIP || null,
                 local: localIP,
+                ipv6: null,
+                hostname: null,
                 isp: pub?.isp || null,
                 org: pub?.org || null,
                 asn: pub?.asn || null,
+                asn_name: null,
+                carrier: null,
+                domain: null,
                 country: pub?.country || null,
                 countryCode: pub?.countryCode || null,
                 region: pub?.region || null,
                 city: pub?.city || null,
                 timezone: pub?.timezone || null,
                 lat: pub?.lat || null,
-                lon: pub?.lon || null
+                lon: pub?.lon || null,
+                lookup_provider: pub?.sources?.join(', ') || null,
+                lookup_time: null,
+                request_duration: null
             },
             security: {
-                isVPN: pub?.isVPN || false,
-                isProxy: pub?.isProxy || false,
-                isTor: pub?.isTor || false,
-                isHosting: pub?.isHosting || false,
-                isDatacenter: pub?.isDatacenter || false,
-                sources: pub?.sources || [],
-                details: pub?.details || {}
-            }
+                ...security,
+                risk_score: riskScore,
+                privacy_risk: privacyRisk,
+                trusted_network: !security.isVPN && !security.isProxy && !security.isTor,
+                suspicious_connection: security.isVPN || security.isTor,
+                known_hosting: security.isHosting,
+                known_vpn: security.isVPN,
+                anonymous: security.isVPN || security.isProxy || security.isTor
+            },
+            ipinfo_response: pub?.details || null
         };
     }
 
