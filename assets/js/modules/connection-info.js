@@ -1,43 +1,36 @@
 /**
- * modules/connection-info.js – v11 (إزالة ip-api.com المباشر + قاموس مزودين عالمي)
+ * modules/connection-info.js – v12 (تنظيف اسم ISP من بادئة ASN + قاموس عالمي)
  */
 (function() {
     'use strict';
 
     // قاموس أسماء مزودي خدمة عالمي (اختصارات)
     const ISP_ALIASES = {
-        // السعودية
         'saudi telecom company': 'STC',
         'stc': 'STC',
         'etihad etisalat': 'Mobily',
         'mobily': 'Mobily',
         'zain saudi arabia': 'Zain',
         'zain': 'Zain',
-        // الإمارات
         'emirates telecommunications': 'Etisalat',
         'etisalat': 'Etisalat',
         'emirates integrated telecommunications': 'du',
         'du': 'du',
-        // مصر
         'vodafone egypt': 'Vodafone مصر',
         'orange egypt': 'Orange مصر',
         'etisalat egypt': 'Etisalat مصر',
-        // أوروبا
         'vodafone': 'Vodafone',
         'orange': 'Orange',
         'deutsche telekom': 'Deutsche Telekom',
         'telefonica': 'Telefónica',
         'bt': 'BT',
-        // أمريكا
         'at&t': 'AT&T',
         'verizon': 'Verizon',
         't-mobile': 'T-Mobile',
         'comcast': 'Comcast',
-        // الهند
         'reliance jio': 'Jio',
         'bharti airtel': 'Airtel',
         'vodafone idea': 'Vi',
-        // عالمي (سحابة)
         'amazon.com': 'AWS',
         'amazon': 'AWS',
         'cloudflare': 'Cloudflare',
@@ -45,10 +38,12 @@
         'microsoft': 'Microsoft'
     };
 
-    function normalizeISP(isp) {
-        if (!isp) return null;
-        const key = isp.toLowerCase().trim();
-        return ISP_ALIASES[key] || isp;
+    // إزالة بادئة ASxxxxx من اسم ISP إن وجدت، ثم تطبيع
+    function normalizeISP(raw) {
+        if (!raw) return null;
+        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim(); // إزالة AS39891 مثلاً
+        const key = cleaned.toLowerCase();
+        return ISP_ALIASES[key] || cleaned || raw;
     }
 
     function extractASNFromOrg(orgStr) {
@@ -119,14 +114,14 @@
         let bestResult = null;
         const sources = [];
 
-        // 1. Edge Function (تستخدم ip-api.com وغيرها عبر الخادم – لا تواجه 403)
+        // 1. Edge Function
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
                     bestResult = {
                         publicIP: net.ip,
-                        isp: normalizeISP(net.isp) || null,
+                        isp: normalizeISP(net.isp || net.org),
                         org: net.org || null,
                         asn: net.asn || extractASNFromOrg(net.org),
                         country: net.country || null,
@@ -149,7 +144,7 @@
             } catch (e) {}
         }
 
-        // 2. ipinfo.io (خطة بديلة مباشرة، لا تعاني 403)
+        // 2. ipinfo.io (خطة بديلة مباشرة)
         if (!bestResult || !bestResult.asn) {
             try {
                 const res = await fetch('https://ipinfo.io/json');
@@ -158,7 +153,7 @@
                     if (d.ip) {
                         const result = {
                             publicIP: d.ip,
-                            isp: normalizeISP(d.org) || null,
+                            isp: normalizeISP(d.org),
                             org: d.org || null,
                             asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
                             country: d.country || null,
@@ -176,7 +171,6 @@
                         if (!bestResult) {
                             bestResult = result;
                         } else {
-                            // دمج الحقول الناقصة
                             if (!bestResult.asn) bestResult.asn = result.asn;
                             if (!bestResult.isp) bestResult.isp = result.isp;
                             if (!bestResult.country) bestResult.country = result.country;
