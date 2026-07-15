@@ -2,6 +2,7 @@
  * modules/activity-tracker.js – مؤقت خمول آمن (5 دقائق + تحذير 60 ثانية)
  * - لا ينتهي الجلسة والمستخدم نشط فعليًا
  * - يدعم Page Visibility API
+ * - متسامح مع عدم وجود أزرار التمديد/الخروج
  */
 (function() {
     'use strict';
@@ -9,10 +10,10 @@
     const IDLE_TIMEOUT = 5 * 60 * 1000;
     const WARNING_BEFORE = 60 * 1000;
     const ACTIVITY_UPDATE_INTERVAL = 30 * 1000;
+    const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
     let warningTimer = null;
     let countdownInterval = null;
-    let countdownSeconds = 0;
     let lastActivityUpdate = 0;
     let isUpdating = false;
     let currentUserId = null;
@@ -33,14 +34,17 @@
         try {
             const sb = await getSupabase();
             if (sb) {
-                await sb.from('user_login_sessions')
+                const { error } = await sb.from('user_login_sessions')
                     .update({ last_activity_at: new Date().toISOString() })
                     .eq('user_id', userId)
                     .eq('status', 'active')
                     .eq('is_current_session', true);
-                lastActivityUpdate = now;
+                if (!error) lastActivityUpdate = now;
+                else if (error.code === '401' || error.message?.includes('401')) {
+                    // يمكن إيقاف المؤقت إذا انتهت صلاحية الجلسة، لكن نترك للصفحة التحكم
+                }
             }
-        } catch (e) { /* تجاهل */ } finally {
+        } catch (e) { /* تجاهل أخطاء الشبكة */ } finally {
             isUpdating = false;
         }
     }
@@ -50,20 +54,21 @@
         if (!box || isSessionEnded) return;
 
         box.style.display = 'flex';
-        countdownSeconds = WARNING_BEFORE / 1000;
-        const display = document.getElementById('countdown');
-        if (display) display.textContent = countdownSeconds;
+        const countdownDisplay = document.getElementById('idleCountdown') || document.getElementById('countdown');
+        let secondsLeft = WARNING_BEFORE / 1000;
+        if (countdownDisplay) countdownDisplay.textContent = secondsLeft;
 
         clearInterval(countdownInterval);
         countdownInterval = setInterval(() => {
-            countdownSeconds--;
-            if (display) display.textContent = countdownSeconds;
-            if (countdownSeconds <= 0) {
+            secondsLeft--;
+            if (countdownDisplay) countdownDisplay.textContent = secondsLeft;
+            if (secondsLeft <= 0) {
                 clearInterval(countdownInterval);
                 endSession('system_timeout');
             }
         }, 1000);
 
+        // أزرار التمديد والخروج اختيارية (غير موجودة في لوحة التحكم مثلاً)
         const extendBtn = document.getElementById('extendSessionBtn');
         if (extendBtn) {
             extendBtn.onclick = (e) => {
@@ -96,18 +101,20 @@
         clearAllTimers();
 
         if (currentUserId) {
-            const sb = await getSupabase();
-            if (sb) {
-                await sb.from('user_login_sessions')
-                    .update({
-                        status: 'timeout',
-                        logout_at: new Date().toISOString(),
-                        logout_reason: reason
-                    })
-                    .eq('user_id', currentUserId)
-                    .eq('status', 'active')
-                    .eq('is_current_session', true);
-            }
+            try {
+                const sb = await getSupabase();
+                if (sb) {
+                    await sb.from('user_login_sessions')
+                        .update({
+                            status: 'timeout',
+                            logout_at: new Date().toISOString(),
+                            logout_reason: reason
+                        })
+                        .eq('user_id', currentUserId)
+                        .eq('status', 'active')
+                        .eq('is_current_session', true);
+                }
+            } catch (e) { /* تجاهل أخطاء التحديث */ }
         }
 
         if (onTimeoutCallback) {
@@ -121,28 +128,18 @@
         }
     }
 
-    // 🔁 إعادة تعيين المؤقتات (يقبل userId اختياريًا، يستخدم currentUserId إن لم يُمرر)
     function resetTimers(userId) {
         if (isSessionEnded) return;
-
-        // تحديث userId إذا تم تمريره
-        if (userId) {
-            currentUserId = userId;
-        }
-        // إذا لا يوجد userId على الإطلاق، لا يمكننا الاستمرار
+        if (userId) currentUserId = userId;
         if (!currentUserId) return;
 
         clearTimeout(warningTimer);
         hideWarning();
 
-        // تحديث آخر نشاط
         updateLastActivity(currentUserId);
 
-        // ضبط مؤقت التحذير (4 دقائق)
         const warningDelay = IDLE_TIMEOUT - WARNING_BEFORE;
-        warningTimer = setTimeout(() => {
-            showWarning();
-        }, warningDelay);
+        warningTimer = setTimeout(() => showWarning(), warningDelay);
     }
 
     function clearAllTimers() {
@@ -151,9 +148,7 @@
         hideWarning();
     }
 
-    // 🚀 بدء المراقبة (يربط الأحداث ويبدأ المؤقت)
     function startIdleTimer(onTimeout, userId) {
-        // تنظيف أي مستمعين سابقين إن وجد (اختياري لكن آمن)
         stopListening();
 
         onTimeoutCallback = onTimeout;
@@ -168,15 +163,12 @@
 
         resetTimers(currentUserId);
 
-        // مستمعو الأحداث
-        window._activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-        window._activityEvents.forEach(ev => document.addEventListener(ev, activityHandler));
+        activityEvents.forEach(ev => document.addEventListener(ev, activityHandler));
         document.addEventListener('visibilitychange', visibilityHandler);
     }
 
     function activityHandler() {
         if (isSessionEnded) return;
-        // نمرر currentUserId المخزّن (مضمون وجوده بعد start)
         resetTimers();
     }
 
@@ -192,9 +184,7 @@
     }
 
     function stopListening() {
-        if (window._activityEvents) {
-            window._activityEvents.forEach(ev => document.removeEventListener(ev, activityHandler));
-        }
+        activityEvents.forEach(ev => document.removeEventListener(ev, activityHandler));
         document.removeEventListener('visibilitychange', visibilityHandler);
     }
 
