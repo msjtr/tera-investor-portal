@@ -1,5 +1,5 @@
 /**
- * login.js – نسخة محدثة (متوافقة مع auth.js v10 + فحص الشبكة)
+ * login.js – v2 (متوافقة مع auth.js v13 + فحص أمان اختياري)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -64,10 +64,10 @@
             return;
         }
 
-        // 🛡️ فحص أمان الشبكة قبل إرسال رمز التحقق (اختياري)
-        if (window.SecurityEnforcer && window.SecurityEnforcer.enforceSecureConnection) {
+        // 🛡️ فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) – إذا كانت الخدمة متاحة
+        if (window.SecurityEnforcer?.enforceSecureConnection) {
             const isSafe = await window.SecurityEnforcer.enforceSecureConnection();
-            if (!isSafe) return; // تم عرض إشعار المنع من داخل enforcer
+            if (!isSafe) return; // تم عرض رسالة المنع من داخل enforcer
         }
 
         if (loginBtn) {
@@ -78,7 +78,6 @@
         try {
             await window.Auth.loginWithPasswordAndOTP(email, password);
             window.location.href = '/auth/verify-otp.html';
-
         } catch (error) {
             console.error('خطأ:', error);
             let message = 'حدث خطأ، حاول مرة أخرى';
