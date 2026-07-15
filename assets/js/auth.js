@@ -1,5 +1,5 @@
 /**
- * auth.js – v11 (استخدام اسم محلي من البريد كبديل عند عدم وجود full_name)
+ * auth.js – v12 (تسجيل خروج آمن مع إنهاء الجلسة في قاعدة البيانات)
  */
 (function() {
     let supabase;
@@ -57,7 +57,6 @@
         if (user?.user_metadata?.full_name) {
             sessionStorage.setItem('otpName', user.user_metadata.full_name);
         } else {
-            // استخدام الجزء المحلي من البريد (قبل @) كاسم بديل
             const localPart = email.split('@')[0];
             sessionStorage.setItem('otpName', localPart);
         }
@@ -105,20 +104,31 @@
     }
 
     async function logout() {
+        // إنهاء الجلسة في قاعدة البيانات قبل تسجيل الخروج من Supabase
+        if (window.SessionManager) {
+            try {
+                const info = window.SessionManager.getCurrentSessionInfo();
+                if (info.userId && info.sessionId) {
+                    await window.SessionManager.terminateSession(info.sessionId, info.userId);
+                }
+                window.SessionManager.stopSessionGuard();
+            } catch (e) {
+                // لا نوقف عملية الخروج
+            }
+        }
+
         const sb = await getSupabase();
-        if (!sb) {
-            window.location.replace('/auth/auth/login/login.html');
-            return;
+        if (sb) {
+            try {
+                await sb.auth.signOut();
+            } catch (e) {
+                console.error('خطأ أثناء تسجيل الخروج:', e);
+            }
         }
-        try {
-            await sb.auth.signOut();
-        } catch (e) {
-            console.error('خطأ أثناء تسجيل الخروج:', e);
-        } finally {
-            localStorage.removeItem('rememberMe');
-            sessionStorage.clear();
-            window.location.replace('/auth/auth/login/login.html');
-        }
+
+        localStorage.removeItem('rememberMe');
+        sessionStorage.clear();
+        window.location.replace('/auth/auth/login/login.html');
     }
 
     async function getSession() {
@@ -217,5 +227,5 @@
         watchLocationPermission
     };
 
-    console.log('auth.js v11 جاهز');
+    console.log('auth.js v12 جاهز');
 })();
