@@ -1,7 +1,8 @@
 /**
- * verify-otp.js – v40 (متوافق مع session-manager v4 + تجميع كافة البيانات)
+ * verify-otp.js – v41 (متوافق مع session-manager v6 وجميع التحسينات الجديدة)
  * - يجمع بيانات الموقع عبر LocationServices وينقلها كاملة
  * - يخزن sessionId ويبدأ حماية الجلسة
+ * - يعتمد على session‑manager لجمع معلومات الجهاز والشبكة تلقائيًا
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -91,7 +92,7 @@
         if (backLink) backLink.href = document.referrer || '/auth/auth/login/login.html';
     }
 
-    // ─── تسجيل الجلسة (مع تجميع كافة البيانات) ───
+    // ─── تسجيل الجلسة (مع تجميع بيانات الموقع فقط – الجهاز والشبكة يتولاهما session‑manager) ───
     async function createSessionRecord(userId) {
         console.log('📦 [verify-otp] محاولة تسجيل الجلسة...');
 
@@ -100,7 +101,7 @@
             return null;
         }
 
-        // ⭐ تجميع بيانات الموقع من LocationServices
+        // ⭐ تجميع بيانات الموقع من LocationServices (اختياري، قد يفشل ولن يؤثر على إنشاء الجلسة)
         let fullLocation = null;
         try {
             if (window.LocationServices?.getGPSCoords && window.LocationServices?.fetchLocationIQFull) {
@@ -108,23 +109,19 @@
                 const lat = gpsMeta.coords?.latitude;
                 const lon = gpsMeta.coords?.longitude;
                 if (lat && lon) {
-                    // استدعاء fetchLocationIQFull الذي يرجع كل التفاصيل (core, address_components, lookup...)
                     fullLocation = await window.LocationServices.fetchLocationIQFull(lat, lon, gpsMeta, 'auto_login');
                 } else {
-                    // إذا لم تتوفر إحداثيات GPS، نحاول الحصول على بيانات IP (تقوم بها session-manager لاحقاً)
-                    console.log('ℹ️ لا توجد إحداثيات GPS، سيتم الاعتماد على IP لتحديد الموقع.');
+                    console.log('ℹ️ لا توجد إحداثيات GPS دقيقة، سيتم الاعتماد على IP لتحديد الموقع.');
                 }
             }
         } catch (e) {
             console.warn('⚠️ تعذر جمع بيانات الموقع، استمرار بدونها.');
         }
 
-        // بناء كائن extraData متوافق مع session-manager v4
+        // SessionManager v6 يتولى جمع معلومات الجهاز (DeviceInfo) والاتصال (ConnectionInfo)
+        // نمرر فقط بيانات الموقع إن وجدت
         const extraData = {
-            geo: {},                // ستُملأ داخل session-manager من connectionInfo
-            locationIQ: fullLocation || {},  // يحتوي على request_started_at, gps_source... إلخ
-            gps: null,
-            ip: null
+            locationIQ: fullLocation || {}
         };
 
         try {
@@ -133,7 +130,7 @@
             if (result && result.success) {
                 console.log('✅ [verify-otp] تم تسجيل الجلسة – المعرف: ' + result.sessionId);
                 
-                // تخزين sessionId في sessionStorage لاستخدامه في الصفحات الأخرى
+                // تخزين sessionId لاستخدامه في الصفحات الأخرى
                 sessionStorage.setItem('currentSessionId', result.sessionId);
                 
                 // بدء حماية الجلسة (انقطاع الإنترنت)
