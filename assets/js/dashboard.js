@@ -1,10 +1,8 @@
 /**
- * dashboard.js – لوحة التحكم المتكاملة (مع حماية الجلسة وتحديث النشاط)
- * - يعتمد على السكريبت الموحد في HTML لزر الخروج
- * - Auth.logout تتولى التوجيه التلقائي
- * - لا يعيد التوجيه عند الأخطاء التقنية
- * - يتوقف عن تحديث last_activity_at عند خطأ 401
+ * dashboard.js – v2 (حماية جلسة محسنة + توافق مع جميع الوحدات)
  * - يبدأ حماية الجلسة (startSessionGuard) إذا وُجد معرف الجلسة
+ * - يتعامل مع غياب ActivityTracker أو SessionManager بأمان
+ * - يعتمد على Auth.logout لإنهاء الجلسة بشكل آمن
  */
 (function() {
     let supabase;
@@ -282,6 +280,8 @@
         const sessionId = sessionStorage.getItem('currentSessionId');
         if (window.SessionManager && sessionId) {
             window.SessionManager.startSessionGuard(user.id, sessionId);
+        } else {
+            console.warn('تعذر بدء حماية الجلسة: SessionManager غير محمل أو currentSessionId غير موجود');
         }
 
         document.getElementById('loadingOverlay')?.classList.add('active');
@@ -311,10 +311,10 @@
             }).catch(() => {});
         }
 
-        // تتبع النشاط مع معالجة أخطاء 401
+        // تتبع النشاط مع ActivityTracker (إن وجد)
         if (window.ActivityTracker) {
             window.ActivityTracker.startIdleTimer(async () => {
-                // Auth.logout ستتولى التوجيه بعد الخروج
+                // Auth.logout ستتولى إنهاء الجلسة بشكل آمن (تنظيف SessionManager)
                 if (window.Auth?.logout) await window.Auth.logout();
             }, user.id);
 
@@ -322,16 +322,15 @@
 
             updateActivityInterval = setInterval(async () => {
                 try {
-                    const result = await window.ActivityTracker.updateLastActivity(user.id);
-                    if (result === false) {
-                        clearInterval(updateActivityInterval);
-                    }
+                    await window.ActivityTracker.updateLastActivity(user.id);
                 } catch (e) {
-                    if (e.code === 401 || e.message?.includes('401')) {
+                    if (e?.code === 401 || e?.message?.includes('401')) {
                         clearInterval(updateActivityInterval);
                     }
                 }
             }, 60000);
+        } else {
+            console.warn('ActivityTracker غير محمل – لن يتم تتبع الخمول');
         }
 
         // تحميل البيانات
