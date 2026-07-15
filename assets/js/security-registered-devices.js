@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v27 (عرض محسّن للشبكة مع مصدر البيانات)
+ * security-registered-devices.js – v28 (عرض ذكي للشبكة يدمج connection_info)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -213,7 +213,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (محسنة بمصدر البيانات) ----------
+    // ---------- نافذة التفاصيل (عرض ذكي يدمج الحقول المباشرة مع connection_info) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -231,7 +231,6 @@
             }
         }
 
-        // معالجة connection_info و extra_device_info بأمان
         let conn = null;
         try {
             conn = (typeof session.connection_info === 'string') ? JSON.parse(session.connection_info) : session.connection_info;
@@ -283,20 +282,19 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال – إظهار جميع الصفوف مع مصدر البيانات
+        // 3. الشبكة والاتصال – عرض ذكي يدمج الحقول المباشرة مع connection_info
         const netRows = [
-            ['IP العام', session.ip_address || '—'],
+            ['IP العام', session.ip_address || conn?.ip?.public || '—'],
             ['IP المحلي', conn?.ip?.local || '—'],
             ['مزود الخدمة', session.isp || conn?.ip?.isp || '—'],
             ['ASN', conn?.ip?.asn || '—'],
             ['نوع الشبكة', session.network_type || conn?.network?.type || '—'],
-            ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : '—'],
+            ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : (conn?.network?.online !== undefined ? (conn.network.online ? 'متصل' : 'غير متصل') : '—')],
             ['نوع الاتصال الفعّال', session.network_effective_type || conn?.network?.effectiveType || '—'],
             ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
             ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
-            ['توفير البيانات', session.network_save_data ? 'نعم' : 'لا']
+            ['توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : '—')]
         ];
-        // إضافة مصدر البيانات إذا كان متاحاً
         const dataSources = conn?.security?.sources || [];
         if (dataSources.length > 0) {
             netRows.push(['مصدر البيانات', dataSources.join('، ')]);
