@@ -1,6 +1,7 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v11)
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v12)
  * - يعتمد على connection-info.js v16 لجمع تحليلات الشبكة
+ * - يخزن جميع تفاصيل LocationIQ (road, government, gps_accuracy…)
  * - خطة طوارئ مدمجة لضمان ظهور ISP/ASN
  */
 (function() {
@@ -194,27 +195,24 @@
             };
         }
 
-        const geo = extraData.geo || {};
         const full = extraData.locationIQ || {};
-        const gps = extraData.gps || {};
-
         const core = full.core || {};
         const addrComp = full.address_components || {};
         const addl = full.additional || {};
 
-        const finalLat = full.latitude || full.lat || gps.latitude || geo.lat || connectionInfo?.ip?.lat || null;
-        const finalLon = full.longitude || full.lon || gps.longitude || geo.lon || connectionInfo?.ip?.lon || null;
-        const finalCity = addrComp.city || full.city || connectionInfo?.ip?.city || geo.city || null;
-        const finalCountry = addrComp.country || full.country || connectionInfo?.ip?.country || geo.country || null;
+        const finalLat = full.latitude || full.lat || connectionInfo?.ip?.lat || null;
+        const finalLon = full.longitude || full.lon || connectionInfo?.ip?.lon || null;
+        const finalCity = addrComp.city || full.city || connectionInfo?.ip?.city || null;
+        const finalCountry = addrComp.country || full.country || connectionInfo?.ip?.country || null;
         const finalState = addrComp.state || full.state || connectionInfo?.ip?.region || null;
         const finalPostcode = addrComp.postcode || full.postcode || null;
 
-        const ipAddress = connectionInfo?.ip?.public || geo.ip || extraData.ip || null;
-        const isp = connectionInfo?.ip?.isp || geo.isp || null;
-        const isVPN = connectionInfo?.security?.isVPN || geo.proxy || false;
-        const isProxy = connectionInfo?.security?.isProxy || geo.proxy || false;
+        const ipAddress = connectionInfo?.ip?.public || null;
+        const isp = connectionInfo?.ip?.isp || null;
+        const isVPN = connectionInfo?.security?.isVPN || false;
+        const isProxy = connectionInfo?.security?.isProxy || false;
         const isTor = connectionInfo?.security?.isTor || false;
-        const isHosting = connectionInfo?.security?.isHosting || geo.hosting || false;
+        const isHosting = connectionInfo?.security?.isHosting || false;
 
         const record = {
             user_id: userId,
@@ -226,7 +224,7 @@
             ip_address: ipAddress,
             isp: isp,
             country: finalCountry,
-            country_code: full.country_code || geo.country_code || connectionInfo?.ip?.countryCode || null,
+            country_code: full.country_code || connectionInfo?.ip?.countryCode || null,
             city: finalCity,
             state: finalState,
             postal_code: finalPostcode,
@@ -288,7 +286,6 @@
 
             connection_info: connectionInfo || null,
 
-            // ⭐ حقول التحليل الأمني الجديدة (من connection-info.js v16)
             network_risk_score: connectionInfo?.security?.risk_score || 0,
             privacy_risk: connectionInfo?.security?.privacy_risk || 'Low',
             trusted_network: connectionInfo?.security?.trusted_network ?? true,
@@ -387,12 +384,13 @@
         };
     }
 
-    // ========== دوال مساعدة مستوردة من connection-info.js (لخطة الطوارئ) ==========
+    // ========== دوال مساعدة (لخطة الطوارئ) ==========
     function normalizeISP(raw) {
         if (!raw) return null;
         const ISP_ALIASES = {
             'saudi telecom company': 'STC', 'stc': 'STC', 'etihad etisalat': 'Mobily', 'mobily': 'Mobily',
-            'zain saudi arabia': 'Zain', 'zain': 'Zain', 'amazon.com': 'AWS', 'amazon': 'AWS'
+            'zain saudi arabia': 'Zain', 'zain': 'Zain', 'amazon.com': 'AWS', 'amazon': 'AWS',
+            'cloudflare': 'Cloudflare', 'google': 'Google', 'microsoft': 'Microsoft'
         };
         let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
         for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
