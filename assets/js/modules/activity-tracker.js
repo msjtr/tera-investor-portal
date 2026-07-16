@@ -1,15 +1,15 @@
 /**
- * modules/activity-tracker.js – مؤقت خمول آمن (5 دقائق + تحذير 60 ثانية)
- * - لا ينتهي الجلسة والمستخدم نشط فعليًا
+ * modules/activity-tracker.js – v2 (مؤقت خمول موثوق + تحذير 60 ثانية)
+ * - يعمل في جميع الصفحات (حتى بدون أزرار التمديد/الخروج)
+ * - لا ينهي الجلسة أثناء نشاط المستخدم
  * - يدعم Page Visibility API
- * - متسامح مع عدم وجود أزرار التمديد/الخروج
  */
 (function() {
     'use strict';
 
-    const IDLE_TIMEOUT = 5 * 60 * 1000;
-    const WARNING_BEFORE = 60 * 1000;
-    const ACTIVITY_UPDATE_INTERVAL = 30 * 1000;
+    const IDLE_TIMEOUT = 5 * 60 * 1000;         // 5 دقائق
+    const WARNING_BEFORE = 60 * 1000;           // التحذير قبل 60 ثانية
+    const ACTIVITY_UPDATE_INTERVAL = 30 * 1000; // تحديث آخر نشاط كل 30 ثانية
     const activityEvents = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
 
     let warningTimer = null;
@@ -40,9 +40,6 @@
                     .eq('status', 'active')
                     .eq('is_current_session', true);
                 if (!error) lastActivityUpdate = now;
-                else if (error.code === '401' || error.message?.includes('401')) {
-                    // يمكن إيقاف المؤقت إذا انتهت صلاحية الجلسة، لكن نترك للصفحة التحكم
-                }
             }
         } catch (e) { /* تجاهل أخطاء الشبكة */ } finally {
             isUpdating = false;
@@ -68,7 +65,7 @@
             }
         }, 1000);
 
-        // أزرار التمديد والخروج اختيارية (غير موجودة في لوحة التحكم مثلاً)
+        // أزرار التمديد والخروج – التعامل بأمان إذا لم تكن موجودة
         const extendBtn = document.getElementById('extendSessionBtn');
         if (extendBtn) {
             extendBtn.onclick = (e) => {
@@ -114,7 +111,7 @@
                         .eq('status', 'active')
                         .eq('is_current_session', true);
                 }
-            } catch (e) { /* تجاهل أخطاء التحديث */ }
+            } catch (e) { /* تجاهل */ }
         }
 
         if (onTimeoutCallback) {
@@ -149,6 +146,7 @@
     }
 
     function startIdleTimer(onTimeout, userId) {
+        // تنظيف أي مستمعين سابقين لتجنب الازدواجية
         stopListening();
 
         onTimeoutCallback = onTimeout;
