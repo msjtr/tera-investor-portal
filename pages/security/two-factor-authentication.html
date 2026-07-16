@@ -123,14 +123,13 @@
             padding: 12px 16px;
             border: 2px solid var(--gray-200);
             border-radius: var(--radius-md);
-            font-size: 15px;
+            font-size: 22px;
             font-family: inherit;
             transition: border-color 0.3s;
             background: var(--gray-50);
             color: var(--gray-900);
             text-align: center;
             letter-spacing: 6px;
-            font-size: 22px;
             max-width: 160px;
         }
         .form-input-control:focus {
@@ -211,6 +210,8 @@
 
     <!-- وحدات النظام -->
     <script src="/assets/js/modules/ui-helpers.js"></script>
+    <script src="/assets/js/modules/activity-tracker.js"></script>
+    <script src="/assets/js/modules/session-manager.js"></script>
 
     <!-- سكربت المصادقة الثنائية -->
     <script src="/assets/js/security-two-factor-authentication.js"></script>
@@ -219,11 +220,24 @@
     <script>
         (async function() {
             // تحديث الهيدر
-            const user = await window.Auth?.getUser();
-            if (user) {
-                const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-                document.getElementById('headerUserName').textContent = name;
-                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            if (window.Auth?.getUser) {
+                try {
+                    const user = await window.Auth.getUser();
+                    if (user) {
+                        const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+                        document.getElementById('headerUserName').textContent = name;
+                        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+                    }
+                } catch (e) {}
+            }
+
+            // بدء حماية الجلسة
+            if (window.SessionManager?.startSessionGuard) {
+                const sessionId = sessionStorage.getItem('currentSessionId');
+                const user = await window.Auth?.getUser();
+                if (sessionId && user) {
+                    window.SessionManager.startSessionGuard(user.id, sessionId);
+                }
             }
 
             // بدء واجهة 2FA
