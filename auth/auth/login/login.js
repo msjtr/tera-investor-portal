@@ -1,5 +1,5 @@
 /**
- * login.js – v3 (متوافقة مع auth.js v13 + فحص أمان الشبكة)
+ * login.js – v4 (دعم المصادقة الثنائية + auth.js v15)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -76,8 +76,35 @@
         }
 
         try {
+            // 1. التحقق من حالة المصادقة الثنائية (إن كانت الخدمة متاحة)
+            let totpToken = null;
+            try {
+                const status = await window.Auth.getTwoFactorStatus();
+                if (status && status.two_factor_enabled) {
+                    // طلب رمز TOTP من المستخدم
+                    totpToken = prompt('أدخل رمز المصادقة الثنائية من تطبيقك:');
+                    if (!totpToken || totpToken.length !== 6) {
+                        showError('يرجى إدخال رمز المصادقة الثنائية الصحيح.');
+                        return;
+                    }
+                    // التحقق من الرمز عبر Edge Function
+                    await window.Auth.verifyTwoFactor(totpToken);
+                }
+            } catch (e) {
+                // إذا فشل الاتصال بـ Edge Function أو كانت 2FA غير مفعلة، نستمر بشكل طبيعي
+                console.warn('تعذر التحقق من المصادقة الثنائية:', e);
+                // إذا كان الخطأ بسبب رمز خاطئ، نتوقف
+                if (e.message?.includes('Invalid TOTP') || e.message?.includes('TOTP')) {
+                    showError('رمز المصادقة الثنائية غير صحيح.');
+                    return;
+                }
+                // أي خطأ آخر نستمر فيه (مثل عدم وجود الخدمة)
+            }
+
+            // 2. إرسال OTP
             await window.Auth.loginWithPasswordAndOTP(email, password);
             window.location.href = '/auth/verify-otp.html';
+
         } catch (error) {
             console.error('خطأ:', error);
             let message = 'حدث خطأ، حاول مرة أخرى';
