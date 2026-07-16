@@ -1,13 +1,7 @@
 /**
- * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v10)
- * 
- * المميزات:
- * - فحص أمان الشبكة (VPN/Proxy/Tor/Hosting) قبل إنشاء الجلسة
- * - إنهاء جميع الجلسات السابقة فوراً مع إشعار المستخدم
- * - إشعار فوري للجلسات المفتوحة الأخرى عبر BroadcastChannel
- * - إنهاء الجلسة تلقائياً عند انقطاع الإنترنت أو الخمول (بدون pagehide)
- * - جمع كافة التفاصيل (موقع، جهاز، شبكة، تحليلات أمنية) وتخزينها
- * - يعتمد على connection-info.js v15 لجمع تحليلات الشبكة والخصوصية
+ * modules/session-manager.js – إدارة جلسات متكاملة وآمنة (v11)
+ * - يعتمد على connection-info.js v16 لجمع تحليلات الشبكة
+ * - خطة طوارئ مدمجة لضمان ظهور ISP/ASN
  */
 (function() {
     'use strict';
@@ -146,7 +140,7 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الجهاز:', e); }
 
-        // ⭐ تجميع معلومات الشبكة والاتصال (connection-info.js v15 يتولى كل شيء)
+        // ⭐ تجميع معلومات الشبكة والاتصال (connection-info.js v16 يتولى كل شيء)
         let connectionInfo = null;
         try {
             if (window.ConnectionInfo && window.ConnectionInfo.getConnectionInfo) {
@@ -154,10 +148,31 @@
             }
         } catch (e) { console.warn('تعذر جمع معلومات الاتصال:', e); }
 
+        // ⚡ إذا كانت connectionInfo لا تحتوي على ISP أو ASN، نحاول استخراجها مباشرة من ipinfo.io
+        if (connectionInfo && (!connectionInfo.ip?.isp || !connectionInfo.ip?.asn)) {
+            try {
+                const res = await fetch('https://ipinfo.io/json');
+                if (res.ok) {
+                    const d = await res.json();
+                    if (d.ip) {
+                        if (!connectionInfo.ip.isp) {
+                            connectionInfo.ip.isp = normalizeISP(d.org) || d.org;
+                        }
+                        if (!connectionInfo.ip.asn) {
+                            connectionInfo.ip.asn = d.asn?.replace('AS', '') || extractASNFromOrg(d.org);
+                        }
+                        if (!connectionInfo.ip.org) connectionInfo.ip.org = d.org;
+                        connectionInfo.ipinfo_response = connectionInfo.ipinfo_response || d;
+                        console.log('✅ تم استكمال ISP/ASN من ipinfo.io');
+                    }
+                }
+            } catch (e) {}
+        }
+
         // ⚡ إذا فشل كل شيء، أنشئ كائنًا افتراضيًا
         if (!connectionInfo) {
-            const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo) 
-                ? window.ConnectionInfo.getBrowserNetworkInfo() 
+            const browserNet = (window.ConnectionInfo?.getBrowserNetworkInfo)
+                ? window.ConnectionInfo.getBrowserNetworkInfo()
                 : { online: navigator.onLine, effectiveType: 'غير معروف', downlink: null, rtt: null, saveData: false, type: 'غير معروف' };
             connectionInfo = {
                 network: {
@@ -169,8 +184,8 @@
                     saveData: browserNet.saveData || false
                 },
                 ip: { public: null, local: null, isp: null, org: null, asn: null, country: null, countryCode: null, region: null, city: null, timezone: null, lat: null, lon: null },
-                security: { 
-                    isVPN: false, isProxy: false, isTor: false, isHosting: false, isDatacenter: false, 
+                security: {
+                    isVPN: false, isProxy: false, isTor: false, isHosting: false, isDatacenter: false,
                     sources: ['لم يتم تحديد المصدر'], details: {},
                     risk_score: 0, privacy_risk: 'Low', trusted_network: true,
                     suspicious_connection: false, known_hosting: false, known_vpn: false, anonymous: false
@@ -273,7 +288,7 @@
 
             connection_info: connectionInfo || null,
 
-            // ⭐ حقول التحليل الأمني الجديدة (من connection-info.js v15)
+            // ⭐ حقول التحليل الأمني الجديدة (من connection-info.js v16)
             network_risk_score: connectionInfo?.security?.risk_score || 0,
             privacy_risk: connectionInfo?.security?.privacy_risk || 'Low',
             trusted_network: connectionInfo?.security?.trusted_network ?? true,
@@ -319,7 +334,7 @@
         return `SES-${timestamp}-${randomPart}`;
     }
 
-    // ========== حماية الجلسة (انقطاع الإنترنت – الخمول) ==========
+    // ========== حماية الجلسة ==========
     let guardActive = false;
     let currentUserIdGuard = null;
     let currentSessionIdGuard = null;
@@ -370,6 +385,26 @@
             userId: currentUserIdGuard,
             sessionId: currentSessionIdGuard
         };
+    }
+
+    // ========== دوال مساعدة مستوردة من connection-info.js (لخطة الطوارئ) ==========
+    function normalizeISP(raw) {
+        if (!raw) return null;
+        const ISP_ALIASES = {
+            'saudi telecom company': 'STC', 'stc': 'STC', 'etihad etisalat': 'Mobily', 'mobily': 'Mobily',
+            'zain saudi arabia': 'Zain', 'zain': 'Zain', 'amazon.com': 'AWS', 'amazon': 'AWS'
+        };
+        let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
+        for (const [pattern, alias] of Object.entries(ISP_ALIASES)) {
+            if (cleaned.includes(pattern)) return alias;
+        }
+        return cleaned || raw;
+    }
+
+    function extractASNFromOrg(orgStr) {
+        if (!orgStr) return null;
+        const match = orgStr.match(/AS(\d+)/i);
+        return match ? match[1] : null;
     }
 
     // ========== الواجهة العامة ==========
