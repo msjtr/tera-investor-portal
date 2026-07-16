@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v37 (إصلاح عرض البيانات + دمج أقسام الشبكة)
+ * security-registered-devices.js – v38 (إضافة الشارع إلى الموقع الجغرافي + جميع التفاصيل)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -256,7 +256,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (دمج + تحسين) ----------
+    // ---------- نافذة التفاصيل (الشارع مضاف + كل التفاصيل) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -288,7 +288,6 @@
             return (val !== undefined && val !== null && val !== '' && val !== '—') ? val : 'غير معروف';
         }
 
-        // دالة addRow مريحة
         function addRow(rows, label, value) {
             if (value !== undefined && value !== null && value !== '' && value !== '—') {
                 rows.push([label, value]);
@@ -330,7 +329,7 @@
         addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // ========== قسم Network Information (موحد) ==========
+        // ========== قسم Network Information ==========
         // IP Information
         const ipInfoRows = [];
         addRow(ipInfoRows, 'Public IP', session.ip_address || conn?.ip?.public);
@@ -413,12 +412,13 @@
             groups.push({ title: 'معلومات إضافية', icon: 'fa-user-secret', rows: [['وضع التصفح المخفي (تقديري)', extraDev.incognito_likely ? 'نعم' : 'لا']] });
         }
 
-        // 8. الموقع الجغرافي
+        // 8. الموقع الجغرافي (مع الشارع)
         const locationRows = [];
         const country = session.country || extraLocation?.country;
         if (country) locationRows.push(['الدولة', country]);
         if (session.country_code || extraLocation?.country_code) locationRows.push(['الرمز الدولي', session.country_code || extraLocation?.country_code]);
         if (session.city || extraLocation?.city) locationRows.push(['المدينة', session.city || extraLocation?.city]);
+        if (session.road) locationRows.push(['الشارع', session.road]);
         if (session.neighbourhood || session.district) locationRows.push(['الحي', session.neighbourhood || session.district]);
         if (session.province || session.state) locationRows.push(['المنطقة/المحافظة', session.province || session.state]);
         if (session.postal_code) locationRows.push(['الرمز البريدي', session.postal_code]);
