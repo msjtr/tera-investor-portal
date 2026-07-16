@@ -1,5 +1,5 @@
 /**
- * auth.js – v18 (دعم تسجيل الدخول بكلمة المرور + TOTP + فحص مخاطر)
+ * auth.js – v19 (دعم كامل للمصادقة الذكية + رموز الاسترداد)
  */
 (function() {
     let supabase;
@@ -100,13 +100,13 @@
     async function getTwoFactorStatus() { return await callTOTPFunction('status'); }
     async function verifyTwoFactor(code, isBackup = false) { return await callTOTPFunction('verify', { code, is_backup: isBackup }); }
     async function disableTwoFactor(code) { return await callTOTPFunction('disable', { code }); }
+    async function regenerateBackupCodes(code) { return await callTOTPFunction('regenerate-backup-codes', { code }); }
 
     // ─── فحص المخاطر ─────────────────────────────────────
     async function checkRisk(email, password) {
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
 
-        // 1. تسجيل الدخول المؤقت
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
@@ -114,22 +114,18 @@
         if (!user) throw new Error('بيانات المستخدم غير متوفرة');
 
         try {
-            // 2. فحص المخاطر (IP، جهاز جديد...)
             let requiresTOTP = false;
             try {
                 const riskData = await callTOTPFunction('check-risk', { ip: 'unknown' }, data.session);
                 requiresTOTP = riskData?.requires_totp || false;
             } catch (e) {
-                // إذا تعذر الفحص، نتعامل معه كأنه لا توجد مخاطر
                 console.warn('تعذر فحص المخاطر:', e);
             }
 
-            // 3. إذا تطلب TOTP، نطلب الرمز
             if (requiresTOTP) {
                 throw new Error('TOTP_REQUIRED');
             }
 
-            // 4. نجاح بدون TOTP
             if (user.user_metadata?.full_name) {
                 sessionStorage.setItem('otpName', user.user_metadata.full_name);
             } else {
@@ -152,16 +148,12 @@
 
         try {
             const result = await checkRisk(email, password);
-            // إذا تطلب TOTP
             if (result.requiresTOTP) {
                 if (!totpToken) {
                     throw new Error('TOTP_REQUIRED');
                 }
-                // إعادة المحاولة مع TOTP (سننفذ التحقق في Edge Function)
-                // لكن للتبسيط، نستخدم نفس منطق checkPasswordAnd2FA
                 await checkPasswordAnd2FA(email, password, totpToken);
             }
-            // إعادة تعيين العداد عند النجاح
             loginAttempts = 0;
             return result;
         } catch (e) {
@@ -176,20 +168,9 @@
 
     // ─── تسجيل الدخول بالمصادقة الثنائية فقط ─────────────
     async function loginWithTOTP(email, token) {
-        // سنستخدم Edge Function جديدة 'verify-totp-login' التي ستتحقق وتُنشئ جلسة
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
 
-        // 1. الحصول على user_id من email
-        const { data: userData, error: userError } = await sb.auth.admin?.listUsers();
-        let userId = null;
-        if (userData?.users) {
-            const found = userData.users.find(u => u.email === email);
-            userId = found?.id;
-        }
-        if (!userId) throw new Error('المستخدم غير موجود');
-
-        // 2. استدعاء Edge Function للتحقق من TOTP وإنشاء جلسة
         const res = await fetch(`${TOTP_FUNCTION_URL}/verify-totp-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -202,7 +183,6 @@
         const { session } = await res.json();
         if (!session) throw new Error('فشل إنشاء الجلسة');
 
-        // 3. تعيين الجلسة في Supabase (تخزينها)
         await sb.auth.setSession(session);
         return { success: true };
     }
@@ -212,10 +192,8 @@
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
 
-        // 1. التحقق من كلمة المرور و 2FA
         await checkPasswordAnd2FA(email, password);
 
-        // 2. إرسال OTP
         const { error: otpError } = await sb.auth.signInWithOtp({
             email,
             options: { shouldCreateUser: false }
@@ -265,17 +243,128 @@
     }
 
     // ─── الدوال الأساسية الأخرى ─────────────────────────
-    async function register(email, password, metadata = {}) { /* ... كما هي */ }
-    async function resetPassword(email) { /* ... */ }
-    async function updatePassword(newPassword) { /* ... */ }
-    async function logout() { /* ... */ }
-    async function getSession() { /* ... */ }
-    async function getUser() { /* ... */ }
-    async function isSessionValid() { /* ... */ }
-    function onAuthStateChange(callback) { /* ... */ }
-    async function requireAuth(redirectUrl = '/auth/auth/login/login.html') { /* ... */ }
-    function getCurrentPosition() { /* ... */ }
-    function watchLocationPermission(callback) { /* ... */ }
+    async function register(email, password, metadata = {}) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const passwordError = validatePassword(password);
+        if (passwordError) throw new Error(passwordError);
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: metadata } });
+        if (error) throw error;
+        return data;
+    }
+
+    async function resetPassword(email) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const { error } = await sb.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+    }
+
+    async function updatePassword(newPassword) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) throw new Error(passwordError);
+        const { error } = await sb.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+    }
+
+    async function logout() {
+        if (window.SessionManager) {
+            try {
+                const info = window.SessionManager.getCurrentSessionInfo();
+                if (info?.userId && info?.sessionId) {
+                    await window.SessionManager.terminateSession(info.sessionId, info.userId);
+                }
+            } catch (e) {}
+            try { window.SessionManager.stopSessionGuard(); } catch (e) {}
+        }
+
+        const sb = await getSupabase();
+        if (sb) {
+            try { await sb.auth.signOut(); } catch (e) {}
+        }
+
+        try { localStorage.removeItem('rememberMe'); } catch (e) {}
+        try { sessionStorage.clear(); } catch (e) {}
+
+        window.location.replace('/auth/auth/login/login.html');
+    }
+
+    async function getSession() {
+        const sb = await getSupabase();
+        if (!sb) return null;
+        const { data: { session } } = await sb.auth.getSession();
+        return session;
+    }
+
+    async function getUser() {
+        const sb = await getSupabase();
+        if (!sb) return null;
+        const { data: { user } } = await sb.auth.getUser();
+        return user;
+    }
+
+    async function isSessionValid() {
+        const sb = await getSupabase();
+        if (!sb) return false;
+        try {
+            const { data: { user }, error } = await sb.auth.getUser();
+            return !error && !!user;
+        } catch (e) { return false; }
+    }
+
+    function onAuthStateChange(callback) {
+        getSupabase().then(sb => {
+            if (!sb) return;
+            sb.auth.onAuthStateChange((event, session) => callback(event, session));
+        });
+    }
+
+    async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
+        const sb = await getSupabase();
+        if (!sb) {
+            window.location.replace(redirectUrl);
+            return null;
+        }
+        try {
+            const { data: { user }, error } = await sb.auth.getUser();
+            if (error || !user) {
+                await logout();
+                return null;
+            }
+            return user;
+        } catch (e) {
+            await logout();
+            return null;
+        }
+    }
+
+    function getCurrentPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                return reject(new Error('متصفحك لا يدعم تحديد الموقع الجغرافي'));
+            }
+            navigator.geolocation.getCurrentPosition(
+                pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                err => {
+                    if (err.code === err.PERMISSION_DENIED) {
+                        reject(new Error('تم رفض إذن الموقع الجغرافي. يجب السماح للتطبيق بتتبع موقعك لأسباب أمنية.'));
+                    } else {
+                        reject(new Error('تعذر الحصول على الموقع: ' + err.message));
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+
+    function watchLocationPermission(callback) {
+        if (!navigator.permissions?.query) return;
+        navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+            permissionStatus.onchange = () => callback(permissionStatus.state);
+        });
+    }
 
     // ─── تعريض الدوال ──────────────────────────────────
     window.Auth = {
@@ -283,9 +372,9 @@
         sendOTP,
         verifyOTP,
         loginWithPasswordAndOTP,
-        loginWithPassword,     // 🆕
-        loginWithTOTP,         // 🆕
-        checkRisk,             // 🆕
+        loginWithPassword,
+        loginWithTOTP,
+        checkRisk,
         checkPasswordAnd2FA,
         register,
         resetPassword,
@@ -303,8 +392,9 @@
         enableTwoFactor,
         getTwoFactorStatus,
         verifyTwoFactor,
-        disableTwoFactor
+        disableTwoFactor,
+        regenerateBackupCodes
     };
 
-    console.log('auth.js v18 (2FA Smart) جاهز');
+    console.log('auth.js v19 (2FA Smart + Backup) جاهز');
 })();
