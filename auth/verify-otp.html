@@ -30,6 +30,7 @@
             --gray-50: #f8fafc;
             --gray-100: #f1f5f9;
             --gray-200: #e2e8f0;
+            --gray-300: #d1d9e6;
             --gray-500: #64748b;
             --gray-700: #334155;
             --gray-900: #0A1B3F;
@@ -131,16 +132,16 @@
 
         /* المحتوى الرئيسي */
         .content-container {
-            max-width: 550px;
+            max-width: 520px;
             margin: 40px auto;
-            padding: 0 24px;
+            padding: 0 20px;
             flex: 1;
             width: 100%;
         }
         .auth-card {
             background: #ffffff;
             border-radius: var(--radius-xl);
-            padding: 40px 32px 36px 32px;
+            padding: 36px 28px 32px 28px;
             box-shadow: 0 25px 50px rgba(2,128,144,0.08);
             border: 1px solid var(--gray-200);
         }
@@ -148,15 +149,15 @@
 
         /* أيقونة التحقق */
         .otp-icon-circle {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 36px;
+            margin: 0 auto 20px;
+            font-size: 32px;
             color: var(--success);
             box-shadow: 0 8px 20px rgba(5,150,105,0.15);
             border: 3px solid rgba(255,255,255,0.8);
@@ -164,24 +165,24 @@
         .portal-title {
             color: var(--primary-dark);
             font-weight: 800;
-            margin-bottom: 12px;
-            font-size: 24px;
+            margin-bottom: 10px;
+            font-size: 22px;
         }
         .instruction-wrapper {
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             background: var(--gray-50);
-            padding: 14px 16px;
+            padding: 12px 14px;
             border-radius: var(--radius-md);
             border-right: 4px solid var(--primary);
         }
         #instructionMainText {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--gray-700);
             line-height: 1.6;
             margin-bottom: 6px;
         }
         #instructionEmailText {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--primary-dark);
             word-break: break-all;
@@ -212,7 +213,7 @@
         /* حقول OTP */
         .otp-fields-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
             margin-bottom: 8px;
             flex-wrap: wrap;
@@ -223,8 +224,8 @@
             height: 54px;
             text-align: center;
             font-weight: 800;
-            font-size: 22px;
-            border: 2px solid #d1d9e6;
+            font-size: 20px;
+            border: 2px solid var(--gray-300);
             border-radius: var(--radius-sm);
             background: #ffffff;
             transition: 0.25s;
@@ -232,6 +233,7 @@
             font-family: 'Tajawal', sans-serif;
             outline: none;
             direction: ltr;
+            color: var(--gray-900);
         }
         .otp-input:focus {
             border-color: var(--primary);
@@ -244,9 +246,9 @@
             background: linear-gradient(135deg, var(--primary) 0%, #0d9488 100%);
             border: none;
             color: white;
-            padding: 15px 24px;
+            padding: 14px 20px;
             border-radius: 14px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             width: 100%;
             cursor: pointer;
@@ -256,7 +258,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             font-family: inherit;
         }
         .btn-submit:hover {
@@ -269,10 +271,10 @@
         /* المؤقت */
         .timer-container {
             text-align: center;
-            font-size: 15px;
+            font-size: 14px;
             color: var(--gray-500);
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         #otpTimer { color: var(--primary); font-weight: 800; direction: ltr; display: inline-block; }
 
@@ -285,12 +287,12 @@
             font-weight: 700;
             cursor: pointer;
             transition: 0.2s;
-            font-size: 15px;
+            font-size: 14px;
             padding: 8px 14px;
             border-radius: var(--radius-sm);
             background: rgba(2,128,144,0.04);
             text-decoration: none;
-            margin-top: 8px;
+            margin-top: 6px;
             border: none;
             font-family: inherit;
         }
@@ -300,7 +302,7 @@
         /* تذييل */
         .page-footer {
             text-align: center;
-            padding: 18px 20px;
+            padding: 16px 20px;
             color: #94a3b8;
             font-size: 13px;
             border-top: 1px solid var(--gray-200);
@@ -314,24 +316,27 @@
             .focused-header .logo img { height: 36px; }
             .client-info h5 { font-size: 13px; }
             .avatar { width: 32px; height: 32px; font-size: 14px; }
-            .page-subheader { padding: 14px 16px; }
-            .page-subheader h1 { font-size: 19px; }
-            .content-container { padding: 0 12px; margin: 20px auto; }
-            .auth-card { padding: 24px 16px 20px 16px; border-radius: 20px; }
-            .otp-icon-circle { width: 64px; height: 64px; font-size: 28px; margin-bottom: 20px; }
-            .portal-title { font-size: 20px; margin-bottom: 8px; }
-            .instruction-wrapper { padding: 12px; margin-bottom: 20px; }
-            #instructionMainText { font-size: 14px; }
-            #instructionEmailText { font-size: 14px; padding: 4px 8px; }
-            .otp-input { width: 38px; height: 48px; font-size: 18px; }
-            .btn-submit { padding: 13px 18px; font-size: 15px; margin-bottom: 24px; }
-            .timer-container { font-size: 14px; margin-bottom: 16px; }
-            .btn-resend { font-size: 14px; padding: 6px 12px; }
+            .page-subheader { padding: 12px 16px; }
+            .page-subheader h1 { font-size: 18px; }
+            .content-container { padding: 0 12px; margin: 24px auto; }
+            .auth-card { padding: 24px 18px 22px 18px; border-radius: 20px; }
+            .otp-icon-circle { width: 60px; height: 60px; font-size: 26px; margin-bottom: 16px; }
+            .portal-title { font-size: 19px; margin-bottom: 8px; }
+            .instruction-wrapper { padding: 10px 12px; margin-bottom: 20px; }
+            #instructionMainText { font-size: 13px; }
+            #instructionEmailText { font-size: 13px; padding: 4px 8px; }
+            .otp-input { width: 36px; height: 46px; font-size: 17px; }
+            .otp-fields-container { gap: 5px; }
+            .btn-submit { padding: 13px 16px; font-size: 14px; margin-bottom: 20px; }
+            .timer-container { font-size: 13px; margin-bottom: 14px; }
+            .btn-resend { font-size: 13px; padding: 6px 12px; }
         }
 
-        @media (max-width: 480px) {
-            .otp-input { width: 34px; height: 44px; font-size: 16px; }
-            .otp-fields-container { gap: 5px; }
+        @media (max-width: 400px) {
+            .otp-input { width: 32px; height: 42px; font-size: 15px; }
+            .otp-fields-container { gap: 4px; }
+            .auth-card { padding: 20px 14px 18px 14px; }
+            .btn-submit { padding: 12px 14px; font-size: 13px; }
         }
     </style>
 </head>
