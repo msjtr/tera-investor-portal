@@ -1,471 +1,238 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>المصادقة الثنائية (2FA) | Tera Investor Portal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>المصادقة الثنائية | تيرا</title>
 
-    <!-- الشعار والأيقونات -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
-    <link rel="apple-touch-icon" href="/images/share-thumb.png" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="apple-touch-icon" href="/images/share-thumb.png">
 
     <!-- الخطوط -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!-- الملفات المشتركة -->
-    <link rel="stylesheet" href="/assets/css/core.css" />
-    <link rel="stylesheet" href="/assets/css/app.css" />
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link rel="stylesheet" href="/assets/css/responsive.css" />
+    <!-- أيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ملف التنسيق الخاص بصفحات الأمان -->
-    <link rel="stylesheet" href="/assets/css/security.css" />
+    <!-- ملفات CSS الأساسية -->
+    <link rel="stylesheet" href="/assets/css/core.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    <link rel="stylesheet" href="/assets/css/security.css">
 
     <style>
-        /* =========================================
-           تنسيقات إضافية للصفحة
-           ========================================= */
-        .qr-container {
+        :root {
+            --primary: #028090;
+            --primary-dark: #0A1B3F;
+            --danger: #dc2626;
+            --success: #10b981;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #d1d9e6;
+            --gray-500: #64748b;
+            --gray-700: #334155;
+            --gray-900: #0A1B3F;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background: var(--gray-50);
+            margin: 0;
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .page-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        .page-subheader {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e9edf2;
-            margin: 16px 0;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
         }
-        .qr-container .qr-placeholder {
-            width: 180px;
-            height: 180px;
-            background: #ffffff;
-            border: 2px dashed #d1d9e6;
-            border-radius: 12px;
+        .page-subheader h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gray-900);
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: #028090;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin: 0;
         }
-        .qr-container .qr-placeholder i {
-            opacity: 0.6;
-        }
-        .qr-container .secret-key {
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            background: #f1f5f9;
-            padding: 8px 16px;
-            border-radius: 8px;
-            letter-spacing: 2px;
-            color: #0A1B3F;
+        .btn-back {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 10px 20px;
+            border-radius: 20px;
             font-weight: 700;
-            direction: ltr;
-            text-align: center;
-            word-break: break-all;
-        }
-        .qr-container .secret-label {
-            font-size: 13px;
-            color: #64748b;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .backup-codes-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: 16px 20px;
-            border: 1px solid #e9edf2;
-            font-family: 'Courier New', monospace;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
             font-size: 14px;
-            direction: ltr;
-            text-align: center;
-            margin: 12px 0 16px;
-            color: #1e293b;
         }
-        .backup-codes-grid .code-item {
-            padding: 6px 8px;
-            background: #ffffff;
-            border-radius: 6px;
-            border: 1px solid #e9edf2;
-            letter-spacing: 1px;
-            font-size: 13px;
-        }
-        .backup-codes-grid .code-item.used {
-            opacity: 0.5;
-            text-decoration: line-through;
-            background: #f1f5f9;
+        .btn-back:hover { background: var(--gray-200); }
+
+        .card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 24px 26px;
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
         }
 
-        .status-badge-lg {
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 700;
+            transition: all 0.2s;
         }
-        .status-badge-lg.active {
-            background: #D1E7DD;
-            color: #0F5132;
+        .btn-action:hover { background: #016f7a; transform: translateY(-1px); }
+        .btn-action.danger { background: var(--danger); }
+        .btn-action.danger:hover { background: #b91c1c; }
+
+        .form-input-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            text-align: center;
+            letter-spacing: 6px;
+            font-size: 22px;
+            max-width: 160px;
         }
-        .status-badge-lg.active i {
-            color: #16a34a;
-        }
-        .status-badge-lg.inactive {
-            background: #F8D7DA;
-            color: #721C24;
-        }
-        .status-badge-lg.inactive i {
-            color: #dc2626;
+        .form-input-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.1);
+            background: #fff;
+            outline: none;
         }
 
-        .setup-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .setup-step:last-child {
-            border-bottom: none;
-        }
-        .setup-step .step-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #f0fdfa;
-            color: #028090;
+        .totp-card h4 {
+            font-size: 18px;
+            color: var(--primary-dark);
+            margin: 0 0 12px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 800;
+            gap: 8px;
+        }
+        .totp-card h4 i { color: var(--primary); font-size: 22px; }
+
+        .setup-box {
+            background: #f0fdf4;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #bbf7d0;
+            margin-top: 16px;
+        }
+        .setup-box p { margin: 0 0 8px; }
+        .setup-box code {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
             font-size: 14px;
-            flex-shrink: 0;
-            border: 1px solid #028090;
-        }
-        .setup-step .step-content {
-            flex: 1;
-        }
-        .setup-step .step-content .step-title {
-            font-weight: 700;
-            font-size: 15px;
-            color: #0A1B3F;
-        }
-        .setup-step .step-content .step-desc {
-            font-size: 13px;
-            color: #64748b;
-            margin-top: 2px;
+            word-break: break-all;
         }
 
-        /* تحسين التجاوب */
-        @media (max-width: 576px) {
-            .backup-codes-grid {
-                grid-template-columns: 1fr;
-                font-size: 13px;
-                padding: 12px 14px;
-            }
-            .qr-container .qr-placeholder {
-                width: 140px;
-                height: 140px;
-                font-size: 36px;
-            }
-            .qr-container .secret-key {
-                font-size: 14px;
-                padding: 6px 12px;
-            }
-            .status-badge-lg {
-                font-size: 13px;
-                padding: 4px 16px;
-            }
-            .setup-step .step-number {
-                width: 28px;
-                height: 28px;
-                font-size: 12px;
-            }
-            .setup-step .step-content .step-title {
-                font-size: 14px;
-            }
-            .setup-step .step-content .step-desc {
-                font-size: 12px;
-            }
+        @media (max-width: 480px) {
+            .page-subheader h1 { font-size: 20px; }
+            .card { padding: 18px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- =========================================
-    الهيدر العلوي
-    ========================================= -->
+    <!-- الهيدر -->
     <header class="focused-header no-print">
-        <div class="logo">
-            <img src="/images/logo.svg" alt="Tera Logo" onerror="this.src='https://via.placeholder.com/120x35/028090/fff?text=Tera'" />
-        </div>
+        <div class="logo"><img src="/images/logo.svg" alt="تيرا"></div>
         <div class="client-info">
-            <h5>محمد عبدالله الشمري</h5>
-            <div class="avatar">م</div>
+            <h5 id="headerUserName">مستخدم</h5>
+            <div class="avatar" id="headerAvatar">م</div>
         </div>
     </header>
 
-    <!-- =========================================
-    عنوان الصفحة – زر العودة للوحة التحكم في سطر واحد
-    ========================================= -->
+    <!-- عنوان الصفحة -->
     <div class="page-subheader no-print">
-        <h1><i class="fas fa-shield-alt"></i> المصادقة الثنائية (2FA)</h1>
+        <h1><i class="fas fa-shield-alt"></i> المصادقة الثنائية</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
             <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
         </a>
     </div>
 
-    <!-- =========================================
-    المحتوى الرئيسي
-    ========================================= -->
-    <main class="content-container">
-
-        <div class="page-desc">
-            <i class="fas fa-info-circle"></i>
-            <span><strong>تعزيز أمان حسابك:</strong> تفعيل المصادقة الثنائية (2FA) يضيف طبقة إضافية من الحماية. ستحتاج إلى رمز من تطبيق المصادقة بالإضافة إلى كلمة المرور عند تسجيل الدخول.</span>
+    <!-- المحتوى الرئيسي -->
+    <main class="page-container">
+        <div class="card">
+            <div id="totp-container">
+                <p style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> جاري تحميل إعدادات المصادقة...</p>
+            </div>
         </div>
-
-        <!-- =========================================
-        شريط التقدم – سطر واحد في الديسكتوب، صفوف في الجوال
-        ========================================= -->
-        <ul class="progress-steps">
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">الأمان</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير كلمة المرور</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير البريد الإلكتروني</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="completed">
-                <span class="step-num"><i class="fas fa-check" style="font-size:8px;"></i></span>
-                <span class="step-label">تغيير رقم الجوال</span>
-            </li>
-            <li class="step-line completed"></li>
-            <li class="active">
-                <span class="step-num">5</span>
-                <span class="step-label">المصادقة الثنائية</span>
-            </li>
-            <li class="step-line"></li>
-            <li>
-                <span class="step-num">6</span>
-                <span class="step-label">الأجهزة المصرحة</span>
-            </li>
-            <li class="step-line"></li>
-            <li>
-                <span class="step-num">7</span>
-                <span class="step-label">سجل الدخول</span>
-            </li>
-        </ul>
-
-        <!-- منطقة التنبيه -->
-        <div class="alert-box" id="formAlert" role="alert">
-            <i class="fas" id="alertIcon"></i>
-            <span id="alertMessage"></span>
-        </div>
-
-        <form id="twoFactorForm" novalidate>
-
-            <!-- =========================================
-            القسم 1: حالة المصادقة الثنائية
-            ========================================= -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>حالة المصادقة الثنائية</h3>
-                    <span class="status-badge-lg inactive" id="statusBadge">
-                        <i class="fas fa-times-circle"></i>
-                        <span id="statusText">غير مفعلة</span>
-                    </span>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group full-width">
-                        <p style="font-size:14px; color:#475569; margin-bottom:8px;">
-                            <i class="fas fa-info-circle" style="color:#028090;"></i>
-                            المصادقة الثنائية توفر طبقة حماية إضافية لحسابك. عند التفعيل، ستحتاج إلى إدخال رمز من تطبيق المصادقة (مثل Google Authenticator أو Authy) بالإضافة إلى كلمة المرور.
-                        </p>
-                        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
-                            <button type="button" class="btn-submit" id="enable2faBtn" style="flex:1; min-width:140px; margin-top:0; background:#028090;">
-                                <i class="fas fa-check-circle"></i> تفعيل المصادقة الثنائية
-                            </button>
-                            <button type="button" class="btn-submit" id="disable2faBtn" style="flex:1; min-width:140px; margin-top:0; background:#dc2626; display:none;">
-                                <i class="fas fa-times-circle"></i> إلغاء التفعيل
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- =========================================
-            القسم 2: إعداد المصادقة الثنائية (يظهر عند التفعيل)
-            ========================================= -->
-            <div class="panel-card" id="setupSection" style="display:none;">
-                <div class="panel-header">
-                    <i class="fas fa-cog"></i>
-                    <h3>إعداد المصادقة الثنائية</h3>
-                    <span class="panel-badge">خطوات الإعداد</span>
-                </div>
-
-                <!-- الخطوة 1 -->
-                <div class="setup-step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <div class="step-title">تحميل تطبيق المصادقة</div>
-                        <div class="step-desc">قم بتحميل أحد تطبيقات المصادقة مثل Google Authenticator أو Authy أو Microsoft Authenticator من متجر التطبيقات.</div>
-                    </div>
-                </div>
-
-                <!-- الخطوة 2 -->
-                <div class="setup-step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <div class="step-title">مسح رمز QR أو إدخال المفتاح يدوياً</div>
-                        <div class="step-desc">افتح تطبيق المصادقة وامسح رمز QR أدناه، أو أدخل المفتاح السري يدوياً.</div>
-                    </div>
-                </div>
-
-                <!-- QR Code والمفتاح السري -->
-                <div class="qr-container">
-                    <div class="qr-placeholder">
-                        <i class="fas fa-qrcode"></i>
-                    </div>
-                    <div class="secret-label">المفتاح السري (Secret Key)</div>
-                    <div class="secret-key" id="secretKey">T3R4-S3CR3T-K3Y-2FA</div>
-                    <button type="button" class="btn-text-action" id="copySecretBtn" style="margin-top:8px; color:#028090; font-weight:700; background:transparent; border:none; cursor:pointer;">
-                        <i class="fas fa-copy"></i> نسخ المفتاح
-                    </button>
-                </div>
-
-                <!-- الخطوة 3 -->
-                <div class="setup-step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <div class="step-title">إدخال رمز التحقق</div>
-                        <div class="step-desc">أدخل الرقم المكون من 6 أرقام الذي يظهر في تطبيق المصادقة لتأكيد الإعداد.</div>
-                    </div>
-                </div>
-
-                <div class="form-grid" style="margin-top:12px;">
-                    <div class="form-group full-width">
-                        <label class="form-label">رمز التحقق (6 أرقام) <span class="req">*</span></label>
-                        <input type="text" class="form-control" id="verifyCode" placeholder="أدخل الرمز المكون من 6 أرقام" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="max-width:200px;">
-                        <span class="format-hint" id="verifyCodeHint">أدخل الرمز الظاهر في تطبيق المصادقة.</span>
-                    </div>
-                </div>
-
-                <button type="button" class="btn-submit" id="verifyAndEnableBtn" style="background:#028090; margin-top:8px;">
-                    <i class="fas fa-check"></i> تأكيد وتفعيل
-                </button>
-
-                <div class="otp-notice" style="margin-top:20px; background:#f0f9ff; border-color:#bae6fd; color:#0369a1;">
-                    <i class="fas fa-info-circle" style="color:#028090;"></i>
-                    <span><strong>تذكير:</strong> احتفظ بالمفتاح السري في مكان آمن. يمكنك استخدامه لاستعادة الوصول إلى حسابك إذا فقدت هاتفك.</span>
-                </div>
-            </div>
-
-            <!-- =========================================
-            القسم 3: رموز الاسترداد (تظهر بعد التفعيل)
-            ========================================= -->
-            <div class="panel-card" id="recoverySection" style="display:none;">
-                <div class="panel-header">
-                    <i class="fas fa-key"></i>
-                    <h3>رموز الاسترداد</h3>
-                    <span class="panel-badge">احتفظ بها بأمان</span>
-                </div>
-
-                <p style="font-size:14px; color:#475569; margin-bottom:12px;">
-                    <i class="fas fa-exclamation-triangle" style="color:#f59e0b;"></i>
-                    استخدم هذه الرموز لاستعادة الوصول إلى حسابك إذا فقدت هاتفك أو لم تتمكن من استخدام تطبيق المصادقة. كل رمز يستخدم لمرة واحدة فقط.
-                </p>
-
-                <div class="backup-codes-grid" id="backupCodesGrid">
-                    <div class="code-item">T3R4-8K2L-9M7N-4P5Q</div>
-                    <div class="code-item">A1B2-C3D4-E5F6-G7H8</div>
-                    <div class="code-item">I9J0-K1L2-M3N4-O5P6</div>
-                    <div class="code-item">Q7R8-S9T0-U1V2-W3X4</div>
-                    <div class="code-item">Y5Z6-A7B8-C9D0-E1F2</div>
-                    <div class="code-item">G3H4-I5J6-K7L8-M9N0</div>
-                </div>
-
-                <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                    <button type="button" class="btn-text-action" id="copyCodesBtn" style="color:#028090; font-weight:700; background:transparent; border:1px solid #028090; padding:8px 20px; border-radius:8px; cursor:pointer;">
-                        <i class="fas fa-copy"></i> نسخ الرموز
-                    </button>
-                    <button type="button" class="btn-text-action" id="regenerateCodesBtn" style="color:#f59e0b; font-weight:700; background:transparent; border:1px solid #f59e0b; padding:8px 20px; border-radius:8px; cursor:pointer;">
-                        <i class="fas fa-sync-alt"></i> إنشاء رموز جديدة
-                    </button>
-                </div>
-
-                <div class="otp-notice" style="margin-top:16px; background:#fef3c7; border-color:#fde68a; color:#92400e;">
-                    <i class="fas fa-shield-alt" style="color:#f59e0b;"></i>
-                    <span><strong>تنبيه:</strong> احفظ هذه الرموز في مكان آمن. لن نتمكن من عرضها مرة أخرى بعد إغلاق هذه الصفحة.</span>
-                </div>
-            </div>
-
-            <!-- =========================================
-            القسم 4: نصائح أمنية إضافية
-            ========================================= -->
-            <div class="panel-card">
-                <div class="panel-header">
-                    <i class="fas fa-lightbulb"></i>
-                    <h3>نصائح أمنية إضافية</h3>
-                    <span class="panel-badge">توصيات</span>
-                </div>
-
-                <div class="security-tips" style="margin-top:0;">
-                    <ul>
-                        <li><i class="fas fa-check"></i> استخدم تطبيق مصادقة موثوقاً مثل Google Authenticator أو Authy.</li>
-                        <li><i class="fas fa-check"></i> احتفظ برموز الاسترداد في مكان آمن ولا تشاركها مع أي شخص.</li>
-                        <li><i class="fas fa-check"></i> قم بتحديث تطبيق المصادقة بانتظام للحصول على أفضل حماية.</li>
-                        <li><i class="fas fa-check"></i> إذا فقدت هاتفك، استخدم رموز الاسترداد لتسجيل الدخول وإعادة إعداد 2FA.</li>
-                        <li><i class="fas fa-check"></i> قم بتسجيل جهاز موثوق به لتجنب طلب رمز 2FA في كل مرة.</li>
-                    </ul>
-                </div>
-            </div>
-
-        </form>
-
     </main>
 
-    <!-- =========================================
-    التذييل
-    ========================================= -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- =========================================
-    ربط الملفات المشتركة
-    ========================================= -->
-    <script src="/assets/js/core.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/main.js"></script>
+    <!-- السكربتات الأساسية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/supabase-client.js"></script>
+    <script src="/assets/js/auth.js"></script>
 
-    <!-- =========================================
-    الملف الرئيسي لصفحات الأمان
-    ========================================= -->
-    <script src="/assets/js/security.js"></script>
+    <!-- وحدات النظام -->
+    <script src="/assets/js/modules/ui-helpers.js"></script>
 
-    <!-- =========================================
-    الملف المخصص للصفحة
-    ========================================= -->
+    <!-- سكربت المصادقة الثنائية -->
     <script src="/assets/js/security-two-factor-authentication.js"></script>
 
+    <!-- بدء تشغيل الواجهة -->
+    <script>
+        (async function() {
+            // تحديث الهيدر
+            const user = await window.Auth?.getUser();
+            if (user) {
+                const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+                document.getElementById('headerUserName').textContent = name;
+                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            }
+
+            // بدء واجهة 2FA
+            if (window.TwoFactorAuth) {
+                window.TwoFactorAuth.render('totp-container');
+            } else {
+                document.getElementById('totp-container').innerHTML = '<p style="color:var(--danger);">تعذر تحميل وحدة المصادقة الثنائية.</p>';
+            }
+        })();
+    </script>
 </body>
 </html>
