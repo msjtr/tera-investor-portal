@@ -1,30 +1,26 @@
-    <!-- السكربتات الأساسية -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/assets/js/supabase-client.js"></script>
-    <script src="/assets/js/auth.js"></script>
+/**
+ * نقطة الدخول الرئيسية لصفحة إعدادات المصادقة الثنائية
+ */
+(async function() {
+    // التأكد من تحميل جميع الوحدات
+    if (!window.TwoFactorAPI || !window.TwoFactorUI || !window.TwoFactorActions) {
+        console.error('تعذر تحميل وحدات 2FA');
+        return;
+    }
 
-    <!-- وحدات النظام -->
-    <script src="/assets/js/modules/ui-helpers.js"></script>
-    <script src="/assets/js/modules/activity-tracker.js"></script>
-    <script src="/assets/js/modules/session-manager.js"></script>
+    const user = await window.Auth?.requireAuth();
+    if (!user) return;
 
-    <!-- سكربت المصادقة الثنائية (النسخة المطورة) -->
-    <script src="/assets/js/security-two-factor-authentication.js"></script>
+    // تحديث الهيدر
+    const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+    document.getElementById('headerUserName').textContent = name;
+    document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
 
-    <!-- بدء تشغيل الواجهة (مع requireAuth) -->
-    <script>
-        (async function() {
-            const user = await window.Auth?.requireAuth();
-            if (!user) return;
+    const sessionId = sessionStorage.getItem('currentSessionId');
+    if (window.SessionManager?.startSessionGuard && sessionId) {
+        window.SessionManager.startSessionGuard(user.id, sessionId);
+    }
 
-            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-            document.getElementById('headerUserName').textContent = name;
-            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-
-            const sessionId = sessionStorage.getItem('currentSessionId');
-            if (window.SessionManager?.startSessionGuard && sessionId) {
-                window.SessionManager.startSessionGuard(user.id, sessionId);
-            }
-            // ملاحظة: واجهة 2FA تُشغَّل تلقائياً من داخل security-two-factor-authentication.js
-        })();
-    </script>
+    // بدء تحميل البيانات
+    await window.TwoFactorActions.loadData();
+})();
