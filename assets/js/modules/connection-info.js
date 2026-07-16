@@ -1,10 +1,9 @@
 /**
- * modules/connection-info.js – v15 (تحليلات شبكة وخصوصية متكاملة)
+ * modules/connection-info.js – v16 (ipinfo.io كمصدر أساسي مع تحسين ISP/ASN)
  */
 (function() {
     'use strict';
 
-    // قاموس اختصارات مزودي الخدمة
     const ISP_ALIASES = {
         'saudi telecom company': 'STC',
         'stc': 'STC',
@@ -38,7 +37,6 @@
         'microsoft': 'Microsoft'
     };
 
-    // تطبيع اسم المزود
     function normalizeISP(raw) {
         if (!raw) return null;
         let cleaned = raw.replace(/^AS\d+\s*/i, '').trim().toLowerCase();
@@ -48,14 +46,12 @@
         return cleaned || raw;
     }
 
-    // استخراج ASN من org
     function extractASNFromOrg(orgStr) {
         if (!orgStr) return null;
         const match = orgStr.match(/AS(\d+)/i);
         return match ? match[1] : null;
     }
 
-    // ترجمة نوع الشبكة
     function translateNetworkType(type, effectiveType) {
         const typeMap = {
             'wifi': 'واي فاي',
@@ -71,7 +67,6 @@
         return 'غير معروف';
     }
 
-    // معلومات الشبكة من المتصفح
     function getBrowserNetworkInfo() {
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         if (!conn) {
@@ -96,7 +91,6 @@
         };
     }
 
-    // IP محلي
     async function getLocalIP() {
         try {
             const pc = new RTCPeerConnection({ iceServers: [] });
@@ -116,7 +110,6 @@
         } catch (e) { return null; }
     }
 
-    // درجة خطورة الشبكة
     function calculateRiskScore(security) {
         let score = 0;
         if (security.isVPN || security.isProxy) score += 30;
@@ -126,7 +119,6 @@
         return Math.min(score, 100);
     }
 
-    // مستوى خطر الخصوصية
     function getPrivacyRisk(security) {
         const score = calculateRiskScore(security);
         if (score >= 60) return 'High';
@@ -134,13 +126,43 @@
         return 'Low';
     }
 
-    // جلب بيانات IP العامة (Edge Function → ipinfo.io)
     async function getPublicIPDetails() {
-        // 1. Edge Function
+        // 1. ipinfo.io مباشرة (أعطى نتائج جيدة سابقًا)
+        try {
+            const res = await fetch('https://ipinfo.io/json');
+            if (res.ok) {
+                const d = await res.json();
+                if (d.ip) {
+                    const isp = normalizeISP(d.org) || d.org || null;
+                    const asn = d.asn ? d.asn.replace('AS', '') : extractASNFromOrg(d.org);
+                    console.log('✅ تم جلب IP عبر ipinfo.io');
+                    return {
+                        publicIP: d.ip,
+                        isp: isp,
+                        org: d.org || null,
+                        asn: asn,
+                        country: d.country || null,
+                        countryCode: d.country || null,
+                        region: d.region || null,
+                        city: d.city || null,
+                        timezone: d.timezone || null,
+                        lat: d.loc ? d.loc.split(',')[0] : null,
+                        lon: d.loc ? d.loc.split(',')[1] : null,
+                        isVPN: false, isProxy: false, isTor: false,
+                        isHosting: false, isDatacenter: false,
+                        sources: ['ipinfo.io'],
+                        details: { ipinfo_io: d }
+                    };
+                }
+            }
+        } catch (e) { console.warn('❌ ipinfo.io فشل.'); }
+
+        // 2. Edge Function (إن كانت متاحة)
         if (window.NetworkMonitor?.checkVPNProxy) {
             try {
                 const net = await window.NetworkMonitor.checkVPNProxy();
                 if (net && net.ip && net.ip !== 'undefined') {
+                    console.log('✅ تم جلب IP عبر Edge Function');
                     return {
                         publicIP: net.ip,
                         isp: normalizeISP(net.isp || net.org),
@@ -162,40 +184,12 @@
                         details: net.details || {}
                     };
                 }
-            } catch (e) { /* فشل */ }
+            } catch (e) { /* Edge Function فشل */ }
         }
-
-        // 2. ipinfo.io مباشرة
-        try {
-            const res = await fetch('https://ipinfo.io/json');
-            if (res.ok) {
-                const d = await res.json();
-                if (d.ip) {
-                    return {
-                        publicIP: d.ip,
-                        isp: normalizeISP(d.org),
-                        org: d.org || null,
-                        asn: d.asn?.replace('AS', '') || extractASNFromOrg(d.org),
-                        country: d.country || null,
-                        countryCode: d.country || null,
-                        region: d.region || null,
-                        city: d.city || null,
-                        timezone: d.timezone || null,
-                        lat: d.loc ? d.loc.split(',')[0] : null,
-                        lon: d.loc ? d.loc.split(',')[1] : null,
-                        isVPN: false, isProxy: false, isTor: false,
-                        isHosting: false, isDatacenter: false,
-                        sources: ['ipinfo.io'],
-                        details: { ipinfo_io: d }
-                    };
-                }
-            }
-        } catch (e) { /* فشل */ }
 
         return null;
     }
 
-    // التجميع الرئيسي
     async function getConnectionInfo() {
         const browserNet = getBrowserNetworkInfo();
         const [localResult, publicResult] = await Promise.allSettled([
