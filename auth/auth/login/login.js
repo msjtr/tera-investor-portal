@@ -1,7 +1,7 @@
 /**
- * login.js – v5 (متوافقة مع auth.js v19 – دعم تسجيل الدخول الذكي)
- * - تبويب كلمة المرور: يستخدم Auth.loginWithPassword (يفحص المخاطر ويفرض 2FA تلقائياً)
- * - تبويب TOTP: يستخدم Auth.loginWithTOTP (دخول مباشر برمز المصادقة)
+ * login.js – v6 (متوافقة مع auth.js v20 – دعم تسجيل الدخول الذكي وإرسال رموز OTP)
+ * - تبويب كلمة المرور: يتحقق من صحة البريد وكلمة المرور، ثم يطلب TOTP إن لزم، ويرسل OTP
+ * - تبويب TOTP: تسجيل دخول مباشر برمز TOTP فقط
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -11,7 +11,8 @@
     const form = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
-    const totpInput = document.getElementById('totp');          // 🆕 حقل اختياري لرمز TOTP
+    const totpGroup = document.getElementById('totpGroup');         // الحاوية التي تحوي حقل TOTP ورسالته
+    const totpInput = document.getElementById('totp');             // حقل رمز TOTP
     const loginBtn = document.getElementById('loginBtn');
     const errorMsg = document.getElementById('loginError');
     const togglePassword = document.getElementById('togglePassword');
@@ -23,8 +24,14 @@
     const passwordSection = document.getElementById('passwordSection');
     const totpSection = document.getElementById('totpSection');
     const totpEmailInput = document.getElementById('totpEmail');
+    const totpTokenOnly = document.getElementById('totpTokenOnly');
+    const totpSubmitBtn = document.getElementById('totpSubmitBtn');
 
-    let activeMode = 'password'; // 'password' أو 'totp'
+    let activeMode = 'password';
+
+    // متغير لتخزين آخر بريد وكلمة مرور تم إدخالهما (لإعادة المحاولة مع TOTP)
+    let lastEmail = null;
+    let lastPassword = null;
 
     let sessionCheckDone = false;
     if (loaderScreen) loaderScreen.style.display = 'none';
@@ -66,12 +73,16 @@
                 totpSection.style.display = 'block';
             }
         }
+        // إخفاء حقل TOTP عند التبديل
+        if (totpGroup) totpGroup.style.display = 'none';
+        lastEmail = null;
+        lastPassword = null;
     }
 
     if (tabPassword) tabPassword.addEventListener('click', () => switchMode('password'));
     if (tabTOTP) tabTOTP.addEventListener('click', () => switchMode('totp'));
 
-    // ─── تسجيل الدخول بكلمة المرور ──────────────────
+    // ─── تسجيل الدخول بكلمة المرور (مع إرسال OTP) ────
     async function handlePasswordLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -103,33 +114,37 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
         }
 
+        // حفظ البريد وكلمة المرور الحاليين لاستخدامهما في إعادة المحاولة مع TOTP
+        lastEmail = email;
+        lastPassword = password;
+
         try {
-            // استخدام الدالة الذكية loginWithPassword (تفحص المخاطر وتطلب TOTP إن لزم)
-            await window.Auth.loginWithPassword(email, password, totpToken);
-            // نجاح – انتقل إلى OTP أو اللوحة (حسب إعدادات النظام)
+            // الخطوة 1: التحقق من صحة بيانات الدخول (وطلب TOTP إن لزم)
+            await window.Auth.checkPasswordAnd2FA(email, password, totpToken);
+
+            // الخطوة 2: إرسال رمز OTP إلى البريد
+            await window.Auth.sendOTP(email);
+
+            // تخزين البيانات المطلوبة في sessionStorage لصفحة التحقق
+            sessionStorage.setItem('otpEmail', email);
+            sessionStorage.setItem('otpName', email.split('@')[0]); // اسم مؤقت
+            sessionStorage.setItem('loginMethod', 'password_otp');
+
+            // إخفاء حقل TOTP بعد النجاح (في حال ظهر)
+            if (totpGroup) totpGroup.style.display = 'none';
+
+            // الانتقال إلى صفحة إدخال OTP
             window.location.href = '/auth/verify-otp.html';
         } catch (error) {
             console.error('خطأ:', error);
-            let message = 'حدث خطأ، حاول مرة أخرى';
             if (error.message === 'TOTP_REQUIRED') {
-                // النظام طلب رمز TOTP، نطلب من المستخدم إدخاله
-                const code = prompt('مطلوب رمز المصادقة الثنائية. أدخل الرمز من تطبيقك:');
-                if (code && code.length === 6) {
-                    // إعادة المحاولة مع الرمز
-                    if (loginBtn) loginBtn.disabled = false;
-                    await handlePasswordLoginWithTOTP(email, password, code);
-                    return;
-                } else {
-                    message = 'يجب إدخال رمز المصادقة الثنائية للمتابعة.';
-                }
-            } else if (error.message?.includes('Invalid login credentials')) {
-                message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-            } else if (error.message?.includes('تجاوز عدد المحاولات')) {
-                message = error.message;
-            } else if (error.message?.includes('Email not confirmed')) {
-                message = 'يرجى تأكيد البريد الإلكتروني أولاً';
+                // النظام يطلب رمز TOTP: إظهار حقل الإدخال
+                if (totpGroup) totpGroup.style.display = 'block';
+                if (totpInput) totpInput.focus();
+                showError('حسابك محمي بمصادقة ثنائية. يرجى إدخال رمز التحقق من تطبيق المصادقة.');
+            } else {
+                showError(getArabicErrorMessage(error.message));
             }
-            showError(message);
         } finally {
             if (loginBtn) {
                 loginBtn.disabled = false;
@@ -138,24 +153,13 @@
         }
     }
 
-    // مساعد لإعادة المحاولة مع TOTP بعد الطلب الأول
-    async function handlePasswordLoginWithTOTP(email, password, totpToken) {
-        try {
-            await window.Auth.checkPasswordAnd2FA(email, password, totpToken);
-            // نجاح
-            window.location.href = '/auth/verify-otp.html';
-        } catch (e) {
-            showError(e.message || 'فشل التحقق. تأكد من الرمز.');
-        }
-    }
-
-    // ─── تسجيل الدخول بـ TOTP فقط ────────────────────
+    // ─── تسجيل الدخول بـ TOTP فقط (بدون كلمة مرور) ───
     async function handleTOTPLogin(e) {
         if (e) e.preventDefault();
         clearError();
 
         const email = totpEmailInput?.value.trim();
-        const token = document.getElementById('totpTokenOnly')?.value.trim();
+        const token = totpTokenOnly?.value.trim();
 
         if (!email || !token) {
             showError('يرجى إدخال البريد الإلكتروني ورمز المصادقة.');
@@ -166,39 +170,53 @@
             return;
         }
 
-        if (loginBtn) {
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+        if (totpSubmitBtn) {
+            totpSubmitBtn.disabled = true;
+            totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
         }
 
         try {
             await window.Auth.loginWithTOTP(email, token);
+            // نجاح – انتقال مباشر للوحة التحكم
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
             console.error('خطأ:', error);
             showError(error.message || 'فشل تسجيل الدخول. تأكد من الرمز.');
         } finally {
-            if (loginBtn) {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-paper-plane"></i> دخول';
+            if (totpSubmitBtn) {
+                totpSubmitBtn.disabled = false;
+                totpSubmitBtn.innerHTML = '<i class="fas fa-shield-alt"></i> دخول';
             }
         }
     }
 
     // ─── ربط الأحداث ─────────────────────────────────
-    if (form) form.addEventListener('submit', (e) => {
-        if (activeMode === 'password') handlePasswordLogin(e);
-        else handleTOTPLogin(e);
-    });
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (activeMode === 'password') handlePasswordLogin(e);
+            else handleTOTPLogin(e);
+        });
+    }
 
-    // زر إضافي لنموذج TOTP
-    const totpSubmitBtn = document.getElementById('totpSubmitBtn');
+    // زر TOTP المنفصل
     if (totpSubmitBtn) totpSubmitBtn.addEventListener('click', handleTOTPLogin);
 
+    // الضغط على Enter من حقل كلمة المرور
     if (passwordInput) {
         passwordInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handlePasswordLogin(e);
         });
+    }
+
+    // ─── ترجمة أخطاء شائعة ───────────────────────────
+    function getArabicErrorMessage(msg) {
+        const map = {
+            'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+            'Email not confirmed': 'يرجى تأكيد البريد الإلكتروني أولاً',
+            'User not found': 'المستخدم غير موجود',
+        };
+        return map[msg] || msg || 'حدث خطأ غير معروف';
     }
 
     // ─── التحقق من جلسة سابقة ────────────────────────
@@ -228,7 +246,7 @@
                     }
                 }
             }
-        } catch (e) { /* ابق في صفحة الدخول */ }
+        } catch (e) { /* تجاهل */ }
         finally {
             if (loginBtn) {
                 loginBtn.disabled = false;
