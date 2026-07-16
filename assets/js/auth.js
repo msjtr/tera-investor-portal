@@ -1,5 +1,5 @@
 /**
- * auth.js – v15 (دعم المصادقة الثنائية عبر Edge Function + جميع الميزات السابقة)
+ * auth.js – v16 (دعم المصادقة الثنائية مع تجديد تلقائي للجلسة)
  */
 (function() {
     let supabase;
@@ -48,59 +48,95 @@
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
 
-        // 1. التحقق من كلمة المرور (يُنشئ جلسة مؤقتة)
         const { data, error: signInError } = await sb.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
 
         const user = data?.user;
         if (!user) throw new Error('بيانات المستخدم غير متوفرة');
 
-        // 2. تخزين اسم المستخدم من الجلسة المؤقتة
         if (user?.user_metadata?.full_name) {
             sessionStorage.setItem('otpName', user.user_metadata.full_name);
         } else {
             sessionStorage.setItem('otpName', email.split('@')[0]);
         }
 
-        // 3. تسجيل الخروج لإنهاء الجلسة المؤقتة
         await sb.auth.signOut();
 
-        // 4. إرسال رمز OTP
         const { error: otpError } = await sb.auth.signInWithOtp({
             email,
             options: { shouldCreateUser: false }
         });
         if (otpError) throw otpError;
 
-        // 5. تخزين البريد الإلكتروني للتحقق
         sessionStorage.setItem('otpEmail', email);
-
         return { success: true };
     }
 
-    // ─── دوال المصادقة الثنائية (جديد) ──────────────────────────
+    // ─── دوال المصادقة الثنائية (مع تجديد تلقائي للجلسة) ────
     const TOTP_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
 
     async function callTOTPFunction(endpoint, body = {}) {
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) throw new Error('لا توجد جلسة نشطة');
 
-        const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify(body)
-        });
+        // محاولة الحصول على الجلسة الحالية
+        let { data: { session } } = await sb.auth.getSession();
 
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'فشل الطلب');
+        if (!session) {
+            // لا توجد جلسة نشطة، توجيه إلى تسجيل الدخول
+            alert('انتهت جلستك. يرجى تسجيل الدخول مجددًا.');
+            await logout();
+            throw new Error('NO_SESSION');
         }
-        return res.json();
+
+        try {
+            const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            // إذا كان الخطأ 401 (غير مصرح)، نحاول تجديد التوكن
+            if (res.status === 401) {
+                const { data: { session: newSession }, error: refreshError } = await sb.auth.refreshSession();
+                if (!refreshError && newSession) {
+                    // إعادة المحاولة بالتوكن الجديد
+                    const retryRes = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${newSession.access_token}`
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (retryRes.ok) return retryRes.json();
+
+                    const retryErr = await retryRes.json();
+                    throw new Error(retryErr.error || 'فشل الطلب بعد تجديد الجلسة');
+                } else {
+                    alert('انتهت جلستك. يرجى تسجيل الدخول مجددًا.');
+                    await logout();
+                    throw new Error('SESSION_EXPIRED');
+                }
+            }
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'فشل الطلب');
+            }
+
+            return res.json();
+        } catch (e) {
+            if (e.message === 'NO_SESSION' || e.message === 'SESSION_EXPIRED') throw e;
+            if (e.message.includes('Failed to fetch')) {
+                throw new Error('تعذر الاتصال بالخادم. تأكد من اتصالك بالإنترنت.');
+            }
+            throw e;
+        }
     }
 
     async function setupTwoFactor() {
@@ -246,9 +282,6 @@
         });
     }
 
-    // ⚠️ إزالة الدوال القديمة isTOTPEnabled و verifyTOTPCode (لم تعد تُستخدم)
-    // ⚠️ إزالة checkTOTPRequired (يُستخدم getTwoFactorStatus بدلاً منها)
-
     window.Auth = {
         login,
         sendOTP,
@@ -266,7 +299,6 @@
         validatePassword,
         getCurrentPosition,
         watchLocationPermission,
-        // دوال المصادقة الثنائية الجديدة
         setupTwoFactor,
         enableTwoFactor,
         getTwoFactorStatus,
@@ -274,5 +306,5 @@
         disableTwoFactor
     };
 
-    console.log('auth.js v15 (2FA via Edge Function) جاهز');
+    console.log('auth.js v16 (2FA with session refresh) جاهز');
 })();
