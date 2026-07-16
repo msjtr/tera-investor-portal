@@ -1,5 +1,5 @@
 /**
- * modules/location-services.js – عبر Supabase Edge Function (بدون مفتاح)
+ * modules/location-services.js – v2 (دقة GPS محسّنة + عرض اسم الشارع)
  */
 (function() {
     'use strict';
@@ -60,9 +60,18 @@
             }
             const pos = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+                    enableHighAccuracy: true,
+                    timeout: 15000,       // زيادة المهلة للحصول على دقة أفضل
+                    maximumAge: 0
                 });
             });
+            // فلترة الدقة: نقبل فقط إذا كانت الدقة أقل من أو تساوي 6 أمتار
+            if (pos.coords.accuracy > 6) {
+                result.status = 'LOW_ACCURACY';
+                result.error = `دقة GPS ضعيفة (${pos.coords.accuracy} متر)، الحد الأدنى المطلوب 6 أمتار`;
+                result.accuracy = pos.coords.accuracy;
+                return result;
+            }
             result.coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
             result.source = 'gps';
             result.accuracy = pos.coords.accuracy;
@@ -114,7 +123,7 @@
 
         const gpsAccuracy = gpsMeta.accuracy || null;
         const riskScore = calculateRiskScore(gpsAccuracy);
-        const locationVerified = gpsAccuracy !== null && gpsAccuracy <= 20 && gpsMeta.permission === 'granted';
+        const locationVerified = gpsAccuracy !== null && gpsAccuracy <= 6 && gpsMeta.permission === 'granted';
         const networkInfo = getNetworkInfo();
 
         const result = {
@@ -162,7 +171,6 @@
             downlink: networkInfo.downlink || null,
             rtt: networkInfo.rtt || null,
             save_data: networkInfo.save_data || false,
-            // حقول LocationIQ (ستُملأ لاحقاً)
             place_id: null, licence: null, osm_type: null, osm_id: null,
             latitude: lat, longitude: lon, display_name: null, name: null,
             postal_address: null, class: null, type: null, importance: null,
@@ -173,10 +181,7 @@
             state_code: null, postcode: null, country: null, country_code: null,
             boundingbox: null, namedetails: null, extratags: null,
             matchquality: null, address: null, locationiq_response: null,
-            government: null,   // حقل مخصص
-            core: null,
-            address_components: null,
-            additional: null
+            government: null, core: null, address_components: null, additional: null
         };
 
         result.request_started_at = new Date().toISOString();
@@ -209,25 +214,20 @@
                 return result;
             }
 
-            // --- تم استلام البيانات بنجاح، نسخ جميع خصائص LocationIQ إلى result ---
             Object.assign(result, data);
-
             result.lookup_status = 1;
             result.server_timestamp = new Date().toISOString();
 
-            // استخراج العنوان
             const addr = data.address || {};
             result.address = addr;
 
             // حقل government (مخصص)
             result.government = [addr.house_number, addr.road].filter(Boolean).join(' ') || null;
 
-            // توحيد city إذا لم تكن موجودة مباشرة
             if (!result.city) {
                 result.city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || addr.locality || null;
             }
 
-            // الأقسام الثلاثة
             result.core = {
                 place_id: data.place_id || null,
                 licence: data.licence || null,
@@ -261,10 +261,9 @@
                 importance: data.importance || null
             };
 
-            // الاحتفاظ بنسخة خام من رد LocationIQ
             result.locationiq_response = data;
 
-            // ملء الحقول الفردية (التي كانت موجودة سابقاً) لضمان التوافق
+            // ملء الحقول الفردية
             result.place_id = data.place_id || null;
             result.licence = data.licence || null;
             result.osm_type = data.osm_type || null;
@@ -338,7 +337,6 @@
 
     async function fetchLocationIQ(lat, lon) {
         const full = await fetchLocationIQFull(lat, lon);
-        // يمكنك إما إرجاع الحقول المختصرة كما كان، أو إرجاع full بالكامل
         return {
             neighbourhood: full.neighbourhood || '',
             city: full.city || '',
