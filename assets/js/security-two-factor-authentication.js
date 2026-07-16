@@ -1,17 +1,9 @@
 /**
- * ==========================================================
- * security-two-factor-authentication.js
- * المصادقة الثنائية (2FA) – Enterprise Version 2026 (v2)
- * تعتمد على auth.js v15 و Edge Function 'two-factor'
- * ==========================================================
+ * security-two-factor-authentication.js – v3 (آمن مع معالجة أخطاء محسّنة)
  */
 (function() {
     'use strict';
 
-    /**
-     * عرض واجهة المصادقة الثنائية داخل حاوية محددة
-     * @param {string} containerId - id العنصر الحاوي
-     */
     async function renderTOTPUI(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -66,7 +58,11 @@
 
         try {
             const data = await window.Auth.setupTwoFactor();
-            // data يحتوي على { qr_code, manual_key, backup_codes }
+            // التحقق من وجود البيانات المطلوبة
+            if (!data || !data.qr_code || !data.manual_key || !Array.isArray(data.backup_codes)) {
+                throw new Error('استجابة غير مكتملة من الخادم');
+            }
+
             setupArea.innerHTML = `
                 <div style="background:#f0fdf4; padding:16px; border-radius:12px; border:1px solid #bbf7d0;">
                     <p><strong>الخطوة 1:</strong> امسح رمز QR أو أدخل المفتاح يدوياً في تطبيق المصادقة.</p>
@@ -104,6 +100,7 @@
             renderTOTPUI('totp-container');
         } catch (e) {
             errorEl.style.display = 'block';
+            errorEl.textContent = e.message;
         }
     }
 
@@ -120,7 +117,6 @@
         }
     }
 
-    // واجهة عامة
     window.TwoFactorAuth = {
         render: renderTOTPUI
     };
