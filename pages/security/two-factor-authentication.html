@@ -216,28 +216,22 @@
     <!-- سكربت المصادقة الثنائية -->
     <script src="/assets/js/security-two-factor-authentication.js"></script>
 
-    <!-- بدء تشغيل الواجهة -->
+    <!-- بدء تشغيل الواجهة (مع requireAuth) -->
     <script>
         (async function() {
+            // التحقق من صلاحية الجلسة – إذا كانت غير صالحة سيتم توجيه المستخدم إلى صفحة الدخول
+            const user = await window.Auth?.requireAuth();
+            if (!user) return; // تم توجيه المستخدم بالفعل
+
             // تحديث الهيدر
-            if (window.Auth?.getUser) {
-                try {
-                    const user = await window.Auth.getUser();
-                    if (user) {
-                        const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-                        document.getElementById('headerUserName').textContent = name;
-                        document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-                    }
-                } catch (e) {}
-            }
+            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
+            document.getElementById('headerUserName').textContent = name;
+            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
 
             // بدء حماية الجلسة
-            if (window.SessionManager?.startSessionGuard) {
-                const sessionId = sessionStorage.getItem('currentSessionId');
-                const user = await window.Auth?.getUser();
-                if (sessionId && user) {
-                    window.SessionManager.startSessionGuard(user.id, sessionId);
-                }
+            const sessionId = sessionStorage.getItem('currentSessionId');
+            if (window.SessionManager?.startSessionGuard && sessionId) {
+                window.SessionManager.startSessionGuard(user.id, sessionId);
             }
 
             // بدء واجهة 2FA
