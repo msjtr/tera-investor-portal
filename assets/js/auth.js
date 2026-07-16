@@ -1,5 +1,5 @@
 /**
- * auth.js – v14 (دعم المصادقة الثنائية TOTP + تسجيل خروج آمن)
+ * auth.js – v15 (دعم المصادقة الثنائية عبر Edge Function + جميع الميزات السابقة)
  */
 (function() {
     let supabase;
@@ -44,58 +44,7 @@
         return data;
     }
 
-    // ─── دوال المصادقة الثنائية ──────────────────────────
-
-    /**
-     * التحقق مما إذا كانت المصادقة الثنائية مفعلة للمستخدم
-     * @param {string} userId
-     * @returns {Promise<boolean>}
-     */
-    async function isTOTPEnabled(userId) {
-        const sb = await getSupabase();
-        if (!sb) return false;
-        const { data, error } = await sb.from('user_totp')
-            .select('totp_enabled')
-            .eq('user_id', userId)
-            .maybeSingle();
-        if (error) return false;
-        return data?.totp_enabled === true;
-    }
-
-    /**
-     * التحقق من رمز TOTP المدخل
-     * @param {string} userId
-     * @param {string} token
-     * @returns {Promise<boolean>}
-     */
-    async function verifyTOTPCode(userId, token) {
-        const sb = await getSupabase();
-        if (!sb) return false;
-        const { data, error } = await sb.from('user_totp')
-            .select('totp_secret')
-            .eq('user_id', userId)
-            .eq('totp_enabled', true)
-            .maybeSingle();
-        if (error || !data?.totp_secret) return false;
-
-        // استخدام وحدة TwoFactorAuth إن وُجدت
-        if (window.TwoFactorAuth?.verifyTOTP) {
-            return await window.TwoFactorAuth.verifyTOTP(data.totp_secret, token);
-        }
-        // خطة بديلة بسيطة (غير آمنة، للتطوير فقط)
-        console.warn('وحدة TwoFactorAuth غير محملة');
-        return false;
-    }
-
-    // ─── تسجيل الدخول مع دعم 2FA ──────────────────────────
-
-    /**
-     * تسجيل الدخول بكلمة المرور + OTP مع دعم TOTP اختياري
-     * @param {string} email
-     * @param {string} password
-     * @param {string} [totpToken] - رمز TOTP (مطلوب إذا كانت 2FA مفعلة)
-     */
-    async function loginWithPasswordAndOTP(email, password, totpToken) {
+    async function loginWithPasswordAndOTP(email, password) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
 
@@ -106,52 +55,72 @@
         const user = data?.user;
         if (!user) throw new Error('بيانات المستخدم غير متوفرة');
 
-        // 2. التحقق من 2FA إذا كانت مفعلة
-        const totpEnabled = await isTOTPEnabled(user.id);
-        if (totpEnabled) {
-            if (!totpToken) {
-                throw new Error('TOTP_REQUIRED'); // رمز خاص للتعامل معه في الواجهة
-            }
-            const valid = await verifyTOTPCode(user.id, totpToken);
-            if (!valid) {
-                throw new Error('رمز المصادقة الثنائية غير صحيح');
-            }
-        }
-
-        // 3. تخزين اسم المستخدم
-        if (user.user_metadata?.full_name) {
+        // 2. تخزين اسم المستخدم من الجلسة المؤقتة
+        if (user?.user_metadata?.full_name) {
             sessionStorage.setItem('otpName', user.user_metadata.full_name);
         } else {
             sessionStorage.setItem('otpName', email.split('@')[0]);
         }
 
-        // 4. إنهاء الجلسة المؤقتة
+        // 3. تسجيل الخروج لإنهاء الجلسة المؤقتة
         await sb.auth.signOut();
 
-        // 5. إرسال OTP
+        // 4. إرسال رمز OTP
         const { error: otpError } = await sb.auth.signInWithOtp({
             email,
             options: { shouldCreateUser: false }
         });
         if (otpError) throw otpError;
 
-        // 6. تخزين البريد الإلكتروني للتحقق
+        // 5. تخزين البريد الإلكتروني للتحقق
         sessionStorage.setItem('otpEmail', email);
 
-        return { success: true, totpEnabled };
+        return { success: true };
     }
 
-    /**
-     * التحقق مما إذا كان البريد الإلكتروني يتطلب 2FA
-     * (يمكن استخدامها في صفحة تسجيل الدخول قبل إرسال البيانات)
-     */
-    async function checkTOTPRequired(email) {
+    // ─── دوال المصادقة الثنائية (جديد) ──────────────────────────
+    const TOTP_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
+
+    async function callTOTPFunction(endpoint, body = {}) {
         const sb = await getSupabase();
-        if (!sb) return false;
-        // جلب معرف المستخدم بالبريد
-        const { data, error } = await sb.rpc('get_user_id_by_email', { email_input: email });
-        if (error || !data) return false;
-        return await isTOTPEnabled(data);
+        if (!sb) throw new Error('Supabase غير متوفر');
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) throw new Error('لا توجد جلسة نشطة');
+
+        const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'فشل الطلب');
+        }
+        return res.json();
+    }
+
+    async function setupTwoFactor() {
+        return await callTOTPFunction('setup');
+    }
+
+    async function enableTwoFactor(code) {
+        return await callTOTPFunction('enable', { code });
+    }
+
+    async function getTwoFactorStatus() {
+        return await callTOTPFunction('status');
+    }
+
+    async function verifyTwoFactor(code, isBackup = false) {
+        return await callTOTPFunction('verify', { code, is_backup: isBackup });
+    }
+
+    async function disableTwoFactor(code) {
+        return await callTOTPFunction('disable', { code });
     }
 
     async function register(email, password, metadata = {}) {
@@ -277,13 +246,14 @@
         });
     }
 
+    // ⚠️ إزالة الدوال القديمة isTOTPEnabled و verifyTOTPCode (لم تعد تُستخدم)
+    // ⚠️ إزالة checkTOTPRequired (يُستخدم getTwoFactorStatus بدلاً منها)
+
     window.Auth = {
         login,
         sendOTP,
         verifyOTP,
         loginWithPasswordAndOTP,
-        checkTOTPRequired,
-        verifyTOTPCode,
         register,
         resetPassword,
         updatePassword,
@@ -295,8 +265,14 @@
         requireAuth,
         validatePassword,
         getCurrentPosition,
-        watchLocationPermission
+        watchLocationPermission,
+        // دوال المصادقة الثنائية الجديدة
+        setupTwoFactor,
+        enableTwoFactor,
+        getTwoFactorStatus,
+        verifyTwoFactor,
+        disableTwoFactor
     };
 
-    console.log('auth.js v14 (2FA) جاهز');
+    console.log('auth.js v15 (2FA via Edge Function) جاهز');
 })();
