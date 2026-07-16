@@ -1,14 +1,9 @@
 /**
- * modules/security-enforcer.js – منع الوصول عبر VPN/Proxy/Tor/Hosting
- * يوقف العملية ويعرض إشعارًا للمستخدم عند اكتشاف اتصال مشبوه
+ * modules/security-enforcer.js – v2 (إشعارات مميزة ومنع الوصول المشبوه)
  */
 (function() {
     'use strict';
 
-    /**
-     * التحقق من أمان الشبكة ومنع المتابعة إذا كانت مشبوهة.
-     * @returns {Promise<boolean>} true إذا كان الاتصال آمناً، false إذا كان مشبوهاً.
-     */
     async function enforceSecureConnection() {
         if (!window.NetworkMonitor?.checkVPNProxy) {
             console.warn('NetworkMonitor غير متوفر، تم السماح بالمرور.');
@@ -28,29 +23,35 @@
             if (networkData.is_tor) flags.push('تور (Tor)');
             if (networkData.is_hosting) flags.push('خادم استضافة');
 
-            const suspicious = flags.length > 0;
-            if (suspicious) {
+            if (flags.length > 0) {
                 const reason = flags.join('، ');
                 const message = `تم اكتشاف ${reason}. لأسباب أمنية، لا يُسمح بالوصول عبر هذا الاتصال. يرجى تعطيل هذه الخدمات والمحاولة مرة أخرى.`;
-                showErrorMessage(message);
+                showBlockMessage(message);
                 return false;
             }
 
             return true;
         } catch (error) {
             console.error('خطأ أثناء فحص الشبكة:', error);
-            return true;
+            return true; // نسمح بالمرور في حالة الخطأ
         }
     }
 
-    /**
-     * عرض رسالة خطأ للمستخدم (باستخدام UIHelpers إذا وجدت، وإلا alert)
-     */
-    function showErrorMessage(message) {
-        if (window.UIHelpers?.showAlert) {
-            window.UIHelpers.showAlert(message);
+    function showBlockMessage(message) {
+        // محاولة استخدام UIHelpers.showConfirm لعرض نافذة حوارية
+        if (window.UIHelpers?.showConfirm) {
+            window.UIHelpers.showConfirm(message, () => {
+                // عند الضغط على "نعم" – يمكن توجيه المستخدم أو إعادة المحاولة
+                window.location.reload();
+            }, () => {
+                // عند الضغط على "إلغاء" – لا شيء إضافي
+            });
+        } else if (window.UIHelpers?.showAlert) {
+            window.UIHelpers.showAlert(message, () => {
+                window.location.reload();
+            });
         } else if (window.UIHelpers?.showToast) {
-            window.UIHelpers.showToast(message, 'danger', 6000);
+            window.UIHelpers.showToast(message, 'danger', 8000);
         } else {
             alert(message);
         }
