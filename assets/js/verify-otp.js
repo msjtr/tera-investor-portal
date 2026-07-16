@@ -1,9 +1,10 @@
 /**
- * verify-otp.js – v43 (متوافق مع session-manager v12 + auth.js v15)
+ * verify-otp.js – v44 (متوافق مع session-manager v12 + auth.js v18)
  * - يجمع بيانات الموقع إن أمكن، لكنه لا يعتمد عليها لإنشاء الجلسة
  * - يخزن sessionId ويبدأ حماية الجلسة فوراً
  * - يعتمد على session‑manager لجمع معلومات الجهاز والشبكة تلقائياً
  * - متوافق مع عملية تسجيل الدخول بعد اجتياز المصادقة الثنائية (إن وُجدت)
+ * - يدعم الدوال الجديدة loginWithPassword, loginWithTOTP من auth.js v18
  */
 (function() {
     const OTP_LENGTH = 8;
