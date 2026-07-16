@@ -1,5 +1,5 @@
 /**
- * security-registered-devices.js – v36 (قسم Network Information المتكامل)
+ * security-registered-devices.js – v37 (إصلاح عرض البيانات + دمج أقسام الشبكة)
  */
 (function() {
     let supabase, currentUser, sessions = [];
@@ -256,7 +256,7 @@
         else window.location.href = '/auth/auth/login/login.html?reason=timeout';
     }
 
-    // ---------- نافذة التفاصيل (شاملة لجميع الأقسام) ----------
+    // ---------- نافذة التفاصيل (دمج + تحسين) ----------
     window.showSessionDetail = async function(sessionId) {
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -288,138 +288,106 @@
             return (val !== undefined && val !== null && val !== '' && val !== '—') ? val : 'غير معروف';
         }
 
+        // دالة addRow مريحة
+        function addRow(rows, label, value) {
+            if (value !== undefined && value !== null && value !== '' && value !== '—') {
+                rows.push([label, value]);
+            }
+        }
+
         const groups = [];
 
         // 1. معلومات أساسية
-        const basicRows = [
-            ['رقم الجلسة', orUnknown(session.session_number)],
-            ['وقت الدخول', formatDate(session.login_at)],
-            ['آخر نشاط', session.last_activity_at ? formatDate(session.last_activity_at) : '—'],
-            ['الخروج', session.logout_at ? formatDate(session.logout_at) : (session.status === 'active' ? 'ما زالت نشطة' : '—')],
-            ['الحالة', getStatusLabel(session.status)],
-            ['مزود الجلسة', orUnknown(session.location_provider)]
-        ];
+        const basicRows = [];
+        addRow(basicRows, 'رقم الجلسة', session.session_number);
+        addRow(basicRows, 'وقت الدخول', formatDate(session.login_at));
+        addRow(basicRows, 'آخر نشاط', session.last_activity_at ? formatDate(session.last_activity_at) : null);
+        addRow(basicRows, 'الخروج', session.logout_at ? formatDate(session.logout_at) : (session.status === 'active' ? 'ما زالت نشطة' : '—'));
+        addRow(basicRows, 'الحالة', getStatusLabel(session.status));
+        addRow(basicRows, 'مزود الجلسة', session.location_provider);
         groups.push({ title: 'معلومات أساسية', icon: 'fa-info-circle', rows: basicRows });
 
         // 2. بيانات الجهاز والمتصفح
-        const deviceRows = [
-            ['نوع الجهاز', orUnknown(session.device_type)],
-            ['نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : '—'],
-            ['المنصة', orUnknown(session.platform)],
-            ['المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''} (${session.browser_engine || ''})` : '—'],
-            ['وكيل المستخدم', orUnknown(session.user_agent)],
-            ['اللغة', orUnknown(session.language)],
-            ['دقة الشاشة', orUnknown(session.screen_resolution)],
-            ['نسبة البكسل', orUnknown(session.pixel_ratio)],
-            ['عمق اللون', orUnknown(session.color_depth)],
-            ['اللمس', session.touch_supported ? 'نعم' : 'لا'],
-            ['المعالج (نوى)', orUnknown(session.cpu_architecture || session.cpu_cores)],
-            ['ذاكرة الجهاز', orUnknown(session.device_memory)],
-            ['الكوكيز', session.cookies_enabled ? 'نعم' : 'لا'],
-            ['Local Storage', session.local_storage ? 'نعم' : 'لا'],
-            ['Session Storage', session.session_storage ? 'نعم' : 'لا'],
-            ['IndexedDB', session.indexed_db ? 'نعم' : 'لا'],
-            ['WebGL', session.webgl_supported ? 'نعم' : 'لا'],
-            ['البصمة', orUnknown(session.fingerprint)],
-            ['المنطقة الزمنية', orUnknown(session.timezone)]
-        ];
+        const deviceRows = [];
+        addRow(deviceRows, 'نوع الجهاز', session.device_type);
+        addRow(deviceRows, 'نظام التشغيل', session.operating_system ? `${session.operating_system} ${session.os_version || ''} (${session.os_architecture || ''})` : null);
+        addRow(deviceRows, 'المنصة', session.platform);
+        addRow(deviceRows, 'المتصفح', session.browser_name ? `${session.browser_name} ${session.browser_version || ''} (${session.browser_engine || ''})` : null);
+        addRow(deviceRows, 'وكيل المستخدم', session.user_agent);
+        addRow(deviceRows, 'اللغة', session.language);
+        addRow(deviceRows, 'دقة الشاشة', session.screen_resolution);
+        addRow(deviceRows, 'نسبة البكسل', session.pixel_ratio);
+        addRow(deviceRows, 'عمق اللون', session.color_depth);
+        addRow(deviceRows, 'اللمس', session.touch_supported ? 'نعم' : 'لا');
+        addRow(deviceRows, 'المعالج (نوى)', session.cpu_architecture || session.cpu_cores);
+        addRow(deviceRows, 'ذاكرة الجهاز', session.device_memory);
+        addRow(deviceRows, 'الكوكيز', session.cookies_enabled ? 'نعم' : 'لا');
+        addRow(deviceRows, 'Local Storage', session.local_storage ? 'نعم' : 'لا');
+        addRow(deviceRows, 'Session Storage', session.session_storage ? 'نعم' : 'لا');
+        addRow(deviceRows, 'IndexedDB', session.indexed_db ? 'نعم' : 'لا');
+        addRow(deviceRows, 'WebGL', session.webgl_supported ? 'نعم' : 'لا');
+        addRow(deviceRows, 'البصمة', session.fingerprint);
+        addRow(deviceRows, 'المنطقة الزمنية', session.timezone);
         groups.push({ title: 'بيانات الجهاز والمتصفح', icon: 'fa-laptop', rows: deviceRows });
 
-        // 3. الشبكة والاتصال – عرض مضمون مع تحسينات ISP ونوع الشبكة
-        const ispValue = normalizeISP(session.isp || conn?.ip?.isp);
-        const netRows = [
-            ['IP العام', orUnknown(session.ip_address || conn?.ip?.public)],
-            ['IP المحلي', orUnknown(conn?.ip?.local)],
-            ['مزود الخدمة', orUnknown(ispValue)],
-            ['ASN', orUnknown(conn?.ip?.asn)],
-            ['نوع الشبكة', orUnknown(session.network_type || conn?.network?.type)],
-            ['حالة الاتصال', session.network_online !== null ? (session.network_online ? 'متصل' : 'غير متصل') : (conn?.network?.online !== undefined ? (conn.network.online ? 'متصل' : 'غير متصل') : 'غير معروف')],
-            ['نوع الاتصال الفعّال', orUnknown(session.network_effective_type || conn?.network?.effectiveType)],
-            ['سرعة التحميل (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
-            ['تأخير (RTT ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
-            ['توفير البيانات', session.network_save_data !== null ? (session.network_save_data ? 'نعم' : 'لا') : (conn?.network?.saveData !== undefined ? (conn.network.saveData ? 'نعم' : 'لا') : '—')]
-        ];
-        if (conn?.ip?.lat && conn?.ip?.lon) {
-            netRows.push(['إحداثيات IP (دقة مدينة – غير دقيقة)', `${conn.ip.lat}, ${conn.ip.lon}`]);
-            netRows.push(['الخريطة (IP)', `<a href="https://maps.google.com/?q=${conn.ip.lat},${conn.ip.lon}" target="_blank" rel="noopener"><i class="fas fa-map-pin"></i> عرض على الخريطة</a>`]);
-        }
-        const dataSources = conn?.security?.sources || [];
-        netRows.push(['مصدر البيانات', dataSources.length > 0 ? dataSources.join('، ') : '—']);
-        groups.push({ title: 'الشبكة والاتصال', icon: 'fa-network-wired', rows: netRows });
-
-        // 4. أمان الشبكة
-        const secRows = [
-            ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
-            ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
-            ['Tor', session.tor_detected ? 'نعم' : 'لا'],
-            ['استضافة/داتا سنتر', session.hosting_detected ? 'نعم' : 'لا'],
-            ['مصادر الكشف', conn?.security?.sources?.join(', ') || '—']
-        ];
-        groups.push({ title: 'أمان الشبكة', icon: 'fa-shield-alt', rows: secRows });
-
-        // ========== قسم Network Information (جديد) ==========
+        // ========== قسم Network Information (موحد) ==========
         // IP Information
-        const ipInfoRows = [
-            ['Public IP', orUnknown(session.ip_address || conn?.ip?.public)],
-            ['Private IP', orUnknown(conn?.ip?.local)],
-            ['IPv6', orUnknown(conn?.ip?.ipv6)],
-            ['Hostname', orUnknown(conn?.ip?.hostname)]
-        ];
+        const ipInfoRows = [];
+        addRow(ipInfoRows, 'Public IP', session.ip_address || conn?.ip?.public);
+        addRow(ipInfoRows, 'Private IP', conn?.ip?.local);
+        addRow(ipInfoRows, 'IPv6', conn?.ip?.ipv6);
+        addRow(ipInfoRows, 'Hostname', conn?.ip?.hostname);
         groups.push({ title: 'IP Information', icon: 'fa-globe', rows: ipInfoRows });
 
         // Internet Provider
-        const provRows = [
-            ['ISP', orUnknown(session.isp || conn?.ip?.isp)],
-            ['Organization', orUnknown(conn?.ip?.org)],
-            ['ASN', orUnknown(conn?.ip?.asn)],
-            ['ASN Name', orUnknown(conn?.ip?.asn_name)],
-            ['Carrier', orUnknown(conn?.ip?.carrier)],
-            ['Domain', orUnknown(conn?.ip?.domain)]
-        ];
+        const provRows = [];
+        const ispValue = normalizeISP(session.isp || conn?.ip?.isp);
+        addRow(provRows, 'ISP', ispValue);
+        addRow(provRows, 'Organization', conn?.ip?.org);
+        addRow(provRows, 'ASN', conn?.ip?.asn);
+        addRow(provRows, 'ASN Name', conn?.ip?.asn_name);
+        addRow(provRows, 'Carrier', conn?.ip?.carrier);
+        addRow(provRows, 'Domain', conn?.ip?.domain);
         groups.push({ title: 'Internet Provider', icon: 'fa-building', rows: provRows });
 
         // Connection Details
-        const connRows = [
-            ['Connection Status', session.network_online ? 'متصل' : 'غير متصل'],
-            ['Network Type', orUnknown(session.network_type || conn?.network?.type)],
-            ['Effective Type', orUnknown(session.network_effective_type || conn?.network?.effectiveType)],
-            ['Download Speed (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed ?? '—'],
-            ['RTT (ms)', session.network_rtt ?? conn?.network?.latency ?? '—'],
-            ['Save Data Mode', session.network_save_data ? 'نعم' : 'لا']
-        ];
+        const connRows = [];
+        addRow(connRows, 'Connection Status', session.network_online ? 'متصل' : 'غير متصل');
+        addRow(connRows, 'Network Type', session.network_type || conn?.network?.type);
+        addRow(connRows, 'Effective Type', session.network_effective_type || conn?.network?.effectiveType);
+        addRow(connRows, 'Download Speed (Mbps)', session.network_downlink ?? conn?.network?.downlinkSpeed);
+        addRow(connRows, 'RTT (ms)', session.network_rtt ?? conn?.network?.latency);
+        addRow(connRows, 'Save Data Mode', session.network_save_data ? 'نعم' : 'لا');
         groups.push({ title: 'Connection Details', icon: 'fa-plug', rows: connRows });
 
         // Privacy Detection
-        const privacyRows = [
-            ['VPN', session.vpn_detected ? 'نعم' : 'لا'],
-            ['Proxy', session.proxy_detected ? 'نعم' : 'لا'],
-            ['TOR', session.tor_detected ? 'نعم' : 'لا'],
-            ['Hosting Provider', session.hosting_detected ? 'نعم' : 'لا'],
-            ['Relay', orUnknown(conn?.privacy?.relay)],
-            ['Anonymous', (session.vpn_detected || session.proxy_detected || session.tor_detected) ? 'نعم' : 'لا']
-        ];
+        const privacyRows = [];
+        addRow(privacyRows, 'VPN', session.vpn_detected ? 'نعم' : 'لا');
+        addRow(privacyRows, 'Proxy', session.proxy_detected ? 'نعم' : 'لا');
+        addRow(privacyRows, 'TOR', session.tor_detected ? 'نعم' : 'لا');
+        addRow(privacyRows, 'Hosting Provider', session.hosting_detected ? 'نعم' : 'لا');
+        addRow(privacyRows, 'Relay', conn?.privacy?.relay);
+        addRow(privacyRows, 'Anonymous', (session.vpn_detected || session.proxy_detected || session.tor_detected) ? 'نعم' : 'لا');
         groups.push({ title: 'Privacy Detection', icon: 'fa-user-secret', rows: privacyRows });
 
         // Security Analysis
-        const secAnalysisRows = [
-            ['Network Risk Score', session.network_risk_score || 0],
-            ['Privacy Risk', session.privacy_risk || 'Low'],
-            ['Trusted Network', session.trusted_network ? 'نعم' : 'لا'],
-            ['Suspicious Connection', session.suspicious_connection ? 'نعم' : 'لا'],
-            ['Known Hosting Provider', session.known_hosting ? 'نعم' : 'لا'],
-            ['Known VPN Provider', session.known_vpn ? 'نعم' : 'لا']
-        ];
+        const secAnalysisRows = [];
+        addRow(secAnalysisRows, 'Network Risk Score', session.network_risk_score ?? 0);
+        addRow(secAnalysisRows, 'Privacy Risk', session.privacy_risk || 'Low');
+        addRow(secAnalysisRows, 'Trusted Network', session.trusted_network ? 'نعم' : 'لا');
+        addRow(secAnalysisRows, 'Suspicious Connection', session.suspicious_connection ? 'نعم' : 'لا');
+        addRow(secAnalysisRows, 'Known Hosting Provider', session.known_hosting ? 'نعم' : 'لا');
+        addRow(secAnalysisRows, 'Known VPN Provider', session.known_vpn ? 'نعم' : 'لا');
         groups.push({ title: 'Security Analysis', icon: 'fa-shield-virus', rows: secAnalysisRows });
 
         // Technical Information
-        const techRows = [
-            ['IP Version', conn?.ip?.ipv6 ? 'IPv6' : 'IPv4'],
-            ['ASN Number', orUnknown(conn?.ip?.asn)],
-            ['Source', orUnknown(conn?.security?.sources?.join(', '))],
-            ['Lookup Provider', orUnknown(conn?.ip?.lookup_provider)],
-            ['Lookup Time', conn?.ip?.lookup_time || '—'],
-            ['Request Duration (ms)', conn?.ip?.request_duration || '—']
-        ];
+        const techRows = [];
+        addRow(techRows, 'IP Version', conn?.ip?.ipv6 ? 'IPv6' : 'IPv4');
+        addRow(techRows, 'ASN Number', conn?.ip?.asn);
+        addRow(techRows, 'Source', conn?.security?.sources?.join(', '));
+        addRow(techRows, 'Lookup Provider', conn?.ip?.lookup_provider);
+        addRow(techRows, 'Lookup Time', conn?.ip?.lookup_time);
+        addRow(techRows, 'Request Duration (ms)', conn?.ip?.request_duration);
         groups.push({ title: 'Technical Information', icon: 'fa-cogs', rows: techRows });
 
         // 5. ميزات المتصفح
@@ -432,12 +400,11 @@
         // 6. البطارية
         if (extraDev?.battery) {
             const b = extraDev.battery;
-            const battRows = [
-                ['الشحن', b.charging ? 'قيد الشحن' : 'غير موصول'],
-                ['النسبة', b.level || '—'],
-                ['وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? '—' : (b.charging_time / 60).toFixed(1)],
-                ['الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? '—' : (b.discharging_time / 60).toFixed(1)]
-            ];
+            const battRows = [];
+            addRow(battRows, 'الشحن', b.charging ? 'قيد الشحن' : 'غير موصول');
+            addRow(battRows, 'النسبة', b.level);
+            addRow(battRows, 'وقت الشحن المتبقي (دقيقة)', b.charging_time === 'لا نهائي' ? null : (b.charging_time / 60).toFixed(1));
+            addRow(battRows, 'الوقت حتى التفريغ (دقيقة)', b.discharging_time === 'لا نهائي' ? null : (b.discharging_time / 60).toFixed(1));
             groups.push({ title: 'البطارية', icon: 'fa-battery-half', rows: battRows });
         }
 
