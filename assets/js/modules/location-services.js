@@ -1,5 +1,8 @@
 /**
- * modules/location-services.js – v3 (بدون فلترة دقة + دعم كامل لعنوان الشارع)
+ * modules/location-services.js – v3 (نهائي – يعتمد على LocationIQ فقط)
+ * - يجلب جميع التفاصيل من LocationIQ (اسم الشارع، الحي، الإحداثيات، إلخ)
+ * - يعرض دقة GPS الفعلية دون فلترة
+ * - اللغة: العربية (عبر Edge Function)
  */
 (function() {
     'use strict';
@@ -60,15 +63,15 @@
             }
             const pos = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
+                    enableHighAccuracy: true,   // طلب أعلى دقة (قد تصل إلى 3-6 أمتار)
                     timeout: 15000,
                     maximumAge: 0
                 });
             });
-            // نقبل أي دقة (لا نرفض حتى لو كانت عالية)
+            // نقبل أي دقة (لا نرفض)
             result.coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
             result.source = 'gps';
-            result.accuracy = pos.coords.accuracy;
+            result.accuracy = pos.coords.accuracy;   // هذه هي الدقة الفعلية التي سنعرضها
             result.permission = 'granted';
             result.status = 'SUCCESS';
         } catch (err) {
