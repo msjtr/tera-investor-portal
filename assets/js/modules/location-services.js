@@ -1,5 +1,5 @@
 /**
- * modules/location-services.js – v2 (دقة GPS محسّنة + عرض اسم الشارع)
+ * modules/location-services.js – v3 (بدون فلترة دقة + دعم كامل لعنوان الشارع)
  */
 (function() {
     'use strict';
@@ -61,17 +61,11 @@
             const pos = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 15000,       // زيادة المهلة للحصول على دقة أفضل
+                    timeout: 15000,
                     maximumAge: 0
                 });
             });
-            // فلترة الدقة: نقبل فقط إذا كانت الدقة أقل من أو تساوي 6 أمتار
-            if (pos.coords.accuracy > 6) {
-                result.status = 'LOW_ACCURACY';
-                result.error = `دقة GPS ضعيفة (${pos.coords.accuracy} متر)، الحد الأدنى المطلوب 6 أمتار`;
-                result.accuracy = pos.coords.accuracy;
-                return result;
-            }
+            // نقبل أي دقة (لا نرفض حتى لو كانت عالية)
             result.coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
             result.source = 'gps';
             result.accuracy = pos.coords.accuracy;
@@ -123,7 +117,7 @@
 
         const gpsAccuracy = gpsMeta.accuracy || null;
         const riskScore = calculateRiskScore(gpsAccuracy);
-        const locationVerified = gpsAccuracy !== null && gpsAccuracy <= 6 && gpsMeta.permission === 'granted';
+        const locationVerified = gpsAccuracy !== null && gpsAccuracy <= 20 && gpsMeta.permission === 'granted';
         const networkInfo = getNetworkInfo();
 
         const result = {
@@ -221,7 +215,6 @@
             const addr = data.address || {};
             result.address = addr;
 
-            // حقل government (مخصص)
             result.government = [addr.house_number, addr.road].filter(Boolean).join(' ') || null;
 
             if (!result.city) {
@@ -263,7 +256,6 @@
 
             result.locationiq_response = data;
 
-            // ملء الحقول الفردية
             result.place_id = data.place_id || null;
             result.licence = data.licence || null;
             result.osm_type = data.osm_type || null;
