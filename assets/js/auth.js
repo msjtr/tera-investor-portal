@@ -1,5 +1,5 @@
 /**
- * auth.js – v16 (دعم المصادقة الثنائية مع تجديد تلقائي للجلسة)
+ * auth.js – v17 (التحقق من 2FA عبر الجلسة المؤقتة لتجنب انتهاء الجلسة)
  */
 (function() {
     let supabase;
@@ -44,48 +44,21 @@
         return data;
     }
 
-    async function loginWithPasswordAndOTP(email, password) {
-        const sb = await getSupabase();
-        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
-
-        const { data, error: signInError } = await sb.auth.signInWithPassword({ email, password });
-        if (signInError) throw signInError;
-
-        const user = data?.user;
-        if (!user) throw new Error('بيانات المستخدم غير متوفرة');
-
-        if (user?.user_metadata?.full_name) {
-            sessionStorage.setItem('otpName', user.user_metadata.full_name);
-        } else {
-            sessionStorage.setItem('otpName', email.split('@')[0]);
-        }
-
-        await sb.auth.signOut();
-
-        const { error: otpError } = await sb.auth.signInWithOtp({
-            email,
-            options: { shouldCreateUser: false }
-        });
-        if (otpError) throw otpError;
-
-        sessionStorage.setItem('otpEmail', email);
-        return { success: true };
-    }
-
-    // ─── دوال المصادقة الثنائية (مع تجديد تلقائي للجلسة) ────
+    // ─── دوال المصادقة الثنائية ──────────────────────────
     const TOTP_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
 
-    async function callTOTPFunction(endpoint, body = {}) {
+    async function callTOTPFunction(endpoint, body = {}, session = null) {
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
 
-        // محاولة الحصول على الجلسة الحالية
-        let { data: { session } } = await sb.auth.getSession();
+        // استخدام الجلسة المُمررة أو الجلب من التخزين
+        let currentSession = session;
+        if (!currentSession) {
+            const { data } = await sb.auth.getSession();
+            currentSession = data.session;
+        }
 
-        if (!session) {
-            // لا توجد جلسة نشطة، توجيه إلى تسجيل الدخول
-            alert('انتهت جلستك. يرجى تسجيل الدخول مجددًا.');
-            await logout();
+        if (!currentSession) {
             throw new Error('NO_SESSION');
         }
 
@@ -94,34 +67,18 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
+                    'Authorization': `Bearer ${currentSession.access_token}`
                 },
                 body: JSON.stringify(body)
             });
 
-            // إذا كان الخطأ 401 (غير مصرح)، نحاول تجديد التوكن
-            if (res.status === 401) {
+            if (res.status === 401 && !session) {
+                // محاولة تجديد الجلسة إذا لم تكن مؤقتة
                 const { data: { session: newSession }, error: refreshError } = await sb.auth.refreshSession();
                 if (!refreshError && newSession) {
-                    // إعادة المحاولة بالتوكن الجديد
-                    const retryRes = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${newSession.access_token}`
-                        },
-                        body: JSON.stringify(body)
-                    });
-
-                    if (retryRes.ok) return retryRes.json();
-
-                    const retryErr = await retryRes.json();
-                    throw new Error(retryErr.error || 'فشل الطلب بعد تجديد الجلسة');
-                } else {
-                    alert('انتهت جلستك. يرجى تسجيل الدخول مجددًا.');
-                    await logout();
-                    throw new Error('SESSION_EXPIRED');
+                    return await callTOTPFunction(endpoint, body, newSession);
                 }
+                throw new Error('SESSION_EXPIRED');
             }
 
             if (!res.ok) {
@@ -159,6 +116,74 @@
         return await callTOTPFunction('disable', { code });
     }
 
+    /**
+     * التحقق من كلمة المرور والمصادقة الثنائية (تُستخدم في تسجيل الدخول)
+     * تحتفظ بالجلسة المؤقتة للتحقق من 2FA
+     */
+    async function checkPasswordAnd2FA(email, password, totpToken) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+
+        // 1. تسجيل الدخول للحصول على جلسة مؤقتة
+        const { data, error: signInError } = await sb.auth.signInWithPassword({ email, password });
+        if (signInError) throw signInError;
+
+        const user = data?.user;
+        if (!user) throw new Error('بيانات المستخدم غير متوفرة');
+
+        try {
+            // 2. التحقق من حالة 2FA باستخدام الجلسة المؤقتة
+            let totpEnabled = false;
+            try {
+                const status = await callTOTPFunction('status', {}, data.session);
+                totpEnabled = status?.two_factor_enabled || false;
+            } catch (e) {
+                // إذا تعذر التحقق من 2FA، نستمر (قد تكون الخدمة غير متاحة)
+                console.warn('تعذر التحقق من 2FA:', e);
+            }
+
+            // 3. إذا كانت 2FA مفعلة، يجب تقديم رمز صحيح
+            if (totpEnabled) {
+                if (!totpToken) {
+                    throw new Error('TOTP_REQUIRED');
+                }
+                await callTOTPFunction('verify', { code: totpToken }, data.session);
+            }
+
+            // 4. تخزين اسم المستخدم للاستخدام لاحقًا
+            if (user.user_metadata?.full_name) {
+                sessionStorage.setItem('otpName', user.user_metadata.full_name);
+            } else {
+                sessionStorage.setItem('otpName', email.split('@')[0]);
+            }
+
+            return { success: true, totpEnabled };
+        } finally {
+            // 5. إنهاء الجلسة المؤقتة في جميع الأحوال
+            await sb.auth.signOut();
+        }
+    }
+
+    async function loginWithPasswordAndOTP(email, password) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+
+        // 1. التحقق من كلمة المرور و 2FA أولاً
+        await checkPasswordAnd2FA(email, password);
+
+        // 2. إرسال OTP
+        const { error: otpError } = await sb.auth.signInWithOtp({
+            email,
+            options: { shouldCreateUser: false }
+        });
+        if (otpError) throw otpError;
+
+        // 3. تخزين البريد الإلكتروني
+        sessionStorage.setItem('otpEmail', email);
+
+        return { success: true };
+    }
+
     async function register(email, password, metadata = {}) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -189,7 +214,7 @@
         if (window.SessionManager) {
             try {
                 const info = window.SessionManager.getCurrentSessionInfo();
-                if (info && info.userId && info.sessionId) {
+                if (info?.userId && info?.sessionId) {
                     await window.SessionManager.terminateSession(info.sessionId, info.userId);
                 }
             } catch (e) {}
@@ -262,8 +287,8 @@
                 return reject(new Error('متصفحك لا يدعم تحديد الموقع الجغرافي'));
             }
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-                (err) => {
+                pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                err => {
                     if (err.code === err.PERMISSION_DENIED) {
                         reject(new Error('تم رفض إذن الموقع الجغرافي. يجب السماح للتطبيق بتتبع موقعك لأسباب أمنية.'));
                     } else {
@@ -287,6 +312,7 @@
         sendOTP,
         verifyOTP,
         loginWithPasswordAndOTP,
+        checkPasswordAnd2FA,  // دالة جديدة للتحقق من كلمة المرور و 2FA
         register,
         resetPassword,
         updatePassword,
@@ -306,5 +332,5 @@
         disableTwoFactor
     };
 
-    console.log('auth.js v16 (2FA with session refresh) جاهز');
+    console.log('auth.js v17 جاهز');
 })();
