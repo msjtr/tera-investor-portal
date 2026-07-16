@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>المصادقة الثنائية | تيرا</title>
 
     <!-- Favicon -->
@@ -22,11 +22,230 @@
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
     <link rel="stylesheet" href="/assets/css/security.css">
-    <!-- CSS الخاص بالصفحة (منفصل) -->
-    <link rel="stylesheet" href="/assets/css/security-two-factor.css">
+
+    <!-- أنماط صفحة المصادقة الثنائية (مدمجة) -->
+    <style>
+        /* ========== متغيرات (إن لم تكن في core.css) ========== */
+        :root {
+            --primary: #028090;
+            --primary-dark: #0A1B3F;
+            --danger: #dc2626;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #d1d9e6;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0A1B3F;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --transition: 0.2s ease;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background: var(--gray-50);
+            margin: 0;
+            color: var(--gray-900);
+            line-height: 1.7;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        .page-container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        .page-subheader {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .page-subheader h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        .page-subheader h1 i { color: var(--primary); font-size: 28px; }
+        .btn-back {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition);
+            font-size: 14px;
+            border: 1px solid var(--gray-200);
+        }
+        .btn-back:hover { background: var(--gray-200); color: var(--gray-900); }
+
+        .card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 24px 26px;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            transition: box-shadow var(--transition);
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header h3 i { color: var(--primary); font-size: 20px; width: 24px; text-align: center; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .status-badge.active { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+        .status-badge.inactive { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.green { background: var(--success); box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+        .status-dot.gray { background: var(--gray-400); }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+        .info-item { background: var(--gray-50); border-radius: var(--radius-md); padding: 14px 16px; border: 1px solid var(--gray-200); }
+        .info-item .info-label { font-size: 12px; color: var(--gray-500); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .info-item .info-value { font-size: 15px; font-weight: 700; color: var(--gray-900); word-break: break-word; }
+
+        .btn {
+            padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+            transition: all var(--transition); border: 2px solid transparent;
+            font-family: inherit; text-decoration: none; white-space: nowrap;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: #016f7a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(2,128,144,0.3); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+        .btn-outline { background: #fff; color: var(--gray-700); border-color: var(--gray-300); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: #f0fdfa; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 14px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        .devices-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+        .devices-table th { text-align: right; padding: 12px 10px; background: var(--gray-50); color: var(--gray-600); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--gray-200); }
+        .devices-table td { padding: 14px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        .devices-table .device-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--gray-600); }
+        .device-current-badge { font-size: 11px; background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 10px; font-weight: 700; }
+        .btn-remove-device { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 6px; transition: all var(--transition); }
+        .btn-remove-device:hover { background: #fef2f2; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal { background: #fff; border-radius: var(--radius-xl); padding: 28px 24px; max-width: 480px; width: 100%; box-shadow: var(--shadow-lg); text-align: center; animation: slideUp 0.25s ease; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .qr-container { background: #fff; padding: 20px; border-radius: var(--radius-lg); border: 2px dashed var(--gray-200); display: inline-block; margin: 16px auto; }
+        .manual-key { background: var(--gray-50); padding: 12px 16px; border-radius: var(--radius-md); font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px; word-break: break-all; color: var(--gray-800); border: 1px solid var(--gray-200); margin: 12px 0; text-align: center; user-select: all; cursor: text; }
+        .backup-codes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
+        .backup-code { background: var(--gray-50); padding: 10px 12px; border-radius: var(--radius-sm); font-family: 'Courier New', monospace; font-size: 13px; text-align: center; border: 1px solid var(--gray-200); letter-spacing: 1px; color: var(--gray-800); user-select: all; cursor: text; }
+
+        .activity-log { max-height: 320px; overflow-y: auto; font-size: 13px; }
+        .activity-log .log-entry { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+        .log-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .log-icon.success { background: #ecfdf5; color: var(--success); }
+        .log-icon.fail { background: #fef2f2; color: var(--danger); }
+        .log-icon.info { background: #eff6ff; color: #3b82f6; }
+        .log-icon.warning { background: #fffbeb; color: var(--warning); }
+        .log-details .log-action { font-weight: 700; color: var(--gray-900); }
+        .log-details .log-meta { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+        .log-time { font-size: 11px; color: var(--gray-400); white-space: nowrap; }
+
+        .notification-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100); gap: 10px; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--gray-300); border-radius: 24px; transition: var(--transition); }
+        .toggle-slider::before { content: ""; position: absolute; height: 18px; width: 18px; right: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: var(--transition); }
+        .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: #fff; padding: 12px 24px; border-radius: 24px; font-weight: 600; font-size: 14px; z-index: 2000; box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards; max-width: 90vw; text-align: center; }
+        .toast.success { background: #065f46; }
+        .toast.error { background: #991b1b; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+
+        .loading-spinner { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--gray-500); }
+
+        /* stepper */
+        .steps-container { margin-top: 8px; }
+        .step { display: flex; gap: 14px; margin-bottom: 20px; }
+        .step-number {
+            width: 32px; height: 32px; background: var(--primary); color: #fff;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px; flex-shrink: 0; margin-top: 2px;
+        }
+        .step-content { flex: 1; }
+        .step-content strong { display: block; margin-bottom: 4px; color: var(--gray-900); }
+        .step-content p { margin: 0; color: var(--gray-600); font-size: 14px; }
+        .app-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+        @media (max-width: 600px) {
+            .page-subheader h1 { font-size: 20px; }
+            .card { padding: 16px; }
+            .info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .devices-table { font-size: 12px; }
+            .backup-codes-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; }
+            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+        }
+    </style>
 </head>
 <body>
 
+    <!-- الهيدر -->
     <header class="focused-header no-print">
         <div class="logo"><img src="/images/logo.svg" alt="تيرا"></div>
         <div class="client-info">
@@ -35,6 +254,7 @@
         </div>
     </header>
 
+    <!-- عنوان الصفحة -->
     <div class="page-subheader no-print">
         <h1><i class="fas fa-shield-haltered"></i> المصادقة الثنائية</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
@@ -42,6 +262,7 @@
         </a>
     </div>
 
+    <!-- المحتوى الرئيسي -->
     <main class="page-container" id="main-content">
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-pulse"></i>
@@ -49,7 +270,10 @@
         </div>
     </main>
 
+    <!-- حاوية النافذة المنبثقة -->
     <div id="modal-container"></div>
+
+    <!-- حاوية التنبيهات -->
     <div id="toast-container"></div>
 
     <footer class="page-footer no-print">
@@ -61,15 +285,13 @@
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
 
-    <!-- وحدات النظام -->
+    <!-- وحدات النظام (اختيارية) -->
     <script src="/assets/js/modules/ui-helpers.js"></script>
     <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
 
-    <!-- وحدات 2FA المنفصلة -->
-    <script src="/assets/js/modules/2fa-api.js"></script>
-    <script src="/assets/js/modules/2fa-ui.js"></script>
-    <script src="/assets/js/modules/2fa-actions.js"></script>
+    <!-- الملف الموحد للمصادقة الثنائية -->
     <script src="/assets/js/security-two-factor-authentication.js"></script>
+
 </body>
 </html>
