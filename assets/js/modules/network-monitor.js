@@ -1,122 +1,359 @@
 /**
- * modules/network-monitor.js – كشف VPN/Proxy/Tor/Hosting (آمن عبر Edge Function)
- * - لا يكشف أي مفاتيح API للمتصفح
- * - يستخدم Supabase Edge Function (network-check) كوسيط
- * - يدعم ذاكرة تخزين مؤقت للحفاظ على الأداء
+ * modules/location-services.js – v2 (دقة GPS محسّنة + عرض اسم الشارع)
  */
 (function() {
     'use strict';
 
-    const EDGE_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/network-check';
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 دقائق
+    const SUPABASE_EDGE_FUNCTION = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/location-reverse';
 
-    const cache = new Map();
+    const PROVIDER_NAME = 'LocationIQ';
+    const PROVIDER_REGION = 'US1';
+    const API_VERSION = 'v1';
+    const REQUEST_METHOD = 'GET';
 
-    // استدعاء Edge Function (دون إرسال مفتاح لأنها عامة)
-    async function callEdgeFunction(ip) {
-        const url = new URL(EDGE_FUNCTION_URL);
-        if (ip) url.searchParams.set('ip', ip);
-        
-        const response = await fetch(url.toString(), {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (!response.ok) {
-            throw new Error(`Edge function returned ${response.status}`);
-        }
-        return await response.json();
+    const LAT_MIN = -90, LAT_MAX = 90;
+    const LON_MIN = -180, LON_MAX = 180;
+
+    async function fetchBasicGeo() { return {}; }
+
+    function getNetworkInfo() {
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (!conn) return {};
+        return {
+            effective_connection_type: conn.effectiveType || null,
+            network_type: conn.type || null,
+            downlink: conn.downlink || null,
+            rtt: conn.rtt || null,
+            save_data: conn.saveData || false
+        };
     }
 
-    /**
-     * checkVPNProxy(ip?)
-     * إذا لم يتم تمرير IP، تكتشفه الدالة تلقائيًا من الخادم.
-     * تعيد كائنًا موحدًا بكل التفاصيل.
-     */
-    async function checkVPNProxy(ip) {
-        // إذا كان ip فارغًا أو null نتركه للدالة لتحدده
-        const cacheKey = ip || '__auto__';
-        const cached = cache.get(cacheKey);
-        if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-            return { ...cached.data, cached: true };
+    function validateCoordinates(lat, lon) {
+        if (lat == null || lon == null) return { valid: false, error: 'الإحداثيات غير متوفرة' };
+        if (typeof lat !== 'number' || typeof lon !== 'number' || isNaN(lat) || isNaN(lon))
+            return { valid: false, error: 'الإحداثيات يجب أن تكون أرقاماً' };
+        if (lat < LAT_MIN || lat > LAT_MAX) return { valid: false, error: 'خط العرض خارج النطاق' };
+        if (lon < LON_MIN || lon > LON_MAX) return { valid: false, error: 'خط الطول خارج النطاق' };
+        return { valid: true };
+    }
+
+    async function getGPSCoords() {
+        const result = {
+            coords: null, source: 'unavailable', accuracy: null,
+            permission: 'unknown', enabled: false, timeout: false, error: null,
+            status: 'FAILED'
+        };
+        if (!navigator.geolocation) {
+            result.error = 'Geolocation API not available';
+            return result;
+        }
+        result.enabled = true;
+        try {
+            if (navigator.permissions?.query) {
+                const perm = await navigator.permissions.query({ name: 'geolocation' });
+                result.permission = perm.state;
+            }
+            if (result.permission === 'denied') {
+                result.status = 'DENIED';
+                result.error = 'User denied geolocation permission';
+                return result;
+            }
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 15000,       // زيادة المهلة للحصول على دقة أفضل
+                    maximumAge: 0
+                });
+            });
+            // فلترة الدقة: نقبل فقط إذا كانت الدقة أقل من أو تساوي 6 أمتار
+            if (pos.coords.accuracy > 6) {
+                result.status = 'LOW_ACCURACY';
+                result.error = `دقة GPS ضعيفة (${pos.coords.accuracy} متر)، الحد الأدنى المطلوب 6 أمتار`;
+                result.accuracy = pos.coords.accuracy;
+                return result;
+            }
+            result.coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+            result.source = 'gps';
+            result.accuracy = pos.coords.accuracy;
+            result.permission = 'granted';
+            result.status = 'SUCCESS';
+        } catch (err) {
+            result.source = 'browser';
+            if (err.code === err.PERMISSION_DENIED) {
+                result.permission = 'denied';
+                result.status = 'DENIED';
+            } else if (err.code === err.TIMEOUT) {
+                result.permission = 'timeout';
+                result.timeout = true;
+                result.status = 'TIMEOUT';
+            } else {
+                result.permission = 'error';
+                result.status = 'FAILED';
+            }
+            result.error = err.message || 'Unknown GPS error';
+        }
+        return result;
+    }
+
+    function calculateRiskScore(accuracy) {
+        if (!accuracy) return 30;
+        if (accuracy <= 5) return 0;
+        if (accuracy <= 10) return 5;
+        if (accuracy <= 20) return 15;
+        if (accuracy <= 50) return 30;
+        if (accuracy <= 100) return 50;
+        return 75;
+    }
+
+    function generateLookupId() {
+        if (crypto.randomUUID) return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    async function fetchLocationIQFull(lat, lon, gpsMeta = {}, lookupSource = 'gps', context = {}) {
+        const lookupId = generateLookupId();
+        const validation = validateCoordinates(lat, lon);
+
+        if (!validation.valid) {
+            return createErrorResult(lookupId, 'INVALID_COORDINATES', validation.error, gpsMeta, context);
         }
 
+        const gpsAccuracy = gpsMeta.accuracy || null;
+        const riskScore = calculateRiskScore(gpsAccuracy);
+        const locationVerified = gpsAccuracy !== null && gpsAccuracy <= 6 && gpsMeta.permission === 'granted';
+        const networkInfo = getNetworkInfo();
+
+        const result = {
+            lookup_id: lookupId,
+            location_provider: PROVIDER_NAME,
+            provider_region: PROVIDER_REGION,
+            internal_endpoint: SUPABASE_EDGE_FUNCTION,
+            api_endpoint: 'https://us1.locationiq.com/v1/reverse',
+            api_version: API_VERSION,
+            request_method: REQUEST_METHOD,
+            lookup_status: null,
+            http_status: null,
+            request_started_at: null,
+            response_received_at: null,
+            execution_time_ms: null,
+            gps_source: gpsMeta.source || null,
+            gps_accuracy: gpsAccuracy,
+            language: 'native',
+            response_format: 'json',
+            lookup_source: lookupSource,
+            location_verified: locationVerified,
+            risk_score: riskScore,
+            error_code: null,
+            error_message: null,
+            request_payload: { lat, lon },
+            request_headers: null,
+            response_headers: null,
+            request_id: null,
+            backend_request_id: null,
+            gps_enabled: gpsMeta.enabled || false,
+            gps_permission: gpsMeta.permission || null,
+            gps_timeout: gpsMeta.timeout || false,
+            gps_error: gpsMeta.error || null,
+            gps_status: gpsMeta.status || 'FAILED',
+            cache_hit: false,
+            browser_timestamp: new Date().toISOString(),
+            server_timestamp: null,
+            retry_count: 0,
+            retry_reason: null,
+            session_id: context.sessionId || null,
+            user_id: context.userId || null,
+            device_id: context.deviceId || null,
+            effective_connection_type: networkInfo.effective_connection_type || null,
+            network_type: networkInfo.network_type || null,
+            downlink: networkInfo.downlink || null,
+            rtt: networkInfo.rtt || null,
+            save_data: networkInfo.save_data || false,
+            place_id: null, licence: null, osm_type: null, osm_id: null,
+            latitude: lat, longitude: lon, display_name: null, name: null,
+            postal_address: null, class: null, type: null, importance: null,
+            match_code: null, match_type: null, match_level: null,
+            house_number: null, road: null, neighbourhood: null, suburb: null,
+            quarter: null, district: null, city: null, town: null, village: null,
+            municipality: null, county: null, state_district: null, state: null,
+            state_code: null, postcode: null, country: null, country_code: null,
+            boundingbox: null, namedetails: null, extratags: null,
+            matchquality: null, address: null, locationiq_response: null,
+            government: null, core: null, address_components: null, additional: null
+        };
+
+        result.request_started_at = new Date().toISOString();
+        const startTime = performance.now();
+
         try {
-            const data = await callEdgeFunction(ip);
-            // توحيد بعض الأسماء
-            const result = {
-                ip: data.ip,
-                is_vpn: data.is_vpn,
-                is_proxy: data.is_proxy,
-                is_tor: data.is_tor,
-                is_hosting: data.is_hosting,
-                is_datacenter: data.is_datacenter,
-                isp: data.isp,
-                org: data.org,
-                asn: data.asn,
-                country: data.country,
-                country_code: data.country_code,
-                region: data.region,
-                city: data.city,
-                timezone: data.timezone,
-                sources: data.sources,
-                details: data.details,
-                cached: false
+            const url = `${SUPABASE_EDGE_FUNCTION}?lat=${lat}&lon=${lon}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            result.http_status = response.status;
+            result.response_received_at = new Date().toISOString();
+            result.execution_time_ms = Number((performance.now() - startTime).toFixed(2));
+
+            if (!response.ok) {
+                result.lookup_status = 0;
+                result.error_code = `HTTP_${response.status}`;
+                result.error_message = `Server returned ${response.status}`;
+                return result;
+            }
+
+            const data = await response.json();
+
+            if (data.lookup_status === 0) {
+                result.lookup_status = 0;
+                result.error_code = data.error || 'LOOKUP_FAILED';
+                result.error_message = data.error || 'Location lookup failed';
+                return result;
+            }
+
+            Object.assign(result, data);
+            result.lookup_status = 1;
+            result.server_timestamp = new Date().toISOString();
+
+            const addr = data.address || {};
+            result.address = addr;
+
+            // حقل government (مخصص)
+            result.government = [addr.house_number, addr.road].filter(Boolean).join(' ') || null;
+
+            if (!result.city) {
+                result.city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || addr.locality || null;
+            }
+
+            result.core = {
+                place_id: data.place_id || null,
+                licence: data.licence || null,
+                osm_type: data.osm_type || null,
+                osm_id: data.osm_id || null,
+                lat: data.lat,
+                lon: data.lon,
+                display_name: data.display_name || null
             };
-            cache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+            result.address_components = {
+                government: result.government,
+                house_number: addr.house_number || null,
+                road: addr.road || null,
+                quarter: addr.quarter || null,
+                suburb: addr.suburb || null,
+                city: result.city,
+                state: addr.state || null,
+                postcode: addr.postcode || null,
+                country: addr.country || null,
+                country_code: addr.country_code || null
+            };
+
+            result.additional = {
+                boundingbox: data.boundingbox || null,
+                namedetails: data.namedetails || null,
+                extratags: data.extratags || null,
+                matchquality: data.matchquality || null,
+                class: data.class || null,
+                type: data.type || null,
+                importance: data.importance || null
+            };
+
+            result.locationiq_response = data;
+
+            // ملء الحقول الفردية
+            result.place_id = data.place_id || null;
+            result.licence = data.licence || null;
+            result.osm_type = data.osm_type || null;
+            result.osm_id = data.osm_id || null;
+            result.latitude = data.lat;
+            result.longitude = data.lon;
+            result.display_name = data.display_name || null;
+            result.boundingbox = data.boundingbox || null;
+            result.name = data.name || null;
+            result.postal_address = data.postal_address || null;
+            result.class = data.class || null;
+            result.type = data.type || null;
+            result.importance = data.importance || null;
+
+            if (data.matchquality) {
+                result.match_code = data.matchquality.matchcode || null;
+                result.match_type = data.matchquality.matchtype || null;
+                result.match_level = data.matchquality.matchlevel || null;
+                result.matchquality = data.matchquality;
+            }
+
+            result.namedetails = data.namedetails || null;
+            result.extratags = data.extratags || null;
+
+            result.house_number = addr.house_number || null;
+            result.road = addr.road || null;
+            result.neighbourhood = addr.neighbourhood || null;
+            result.suburb = addr.suburb || null;
+            result.quarter = addr.quarter || null;
+            result.district = addr.suburb || addr.quarter || addr.neighbourhood || addr.residential || null;
+            result.city = result.city;
+            result.town = addr.town || null;
+            result.village = addr.village || null;
+            result.municipality = addr.municipality || null;
+            result.county = addr.county || null;
+            result.state_district = addr.state_district || null;
+            result.state = addr.state || null;
+            result.state_code = addr.state_code || null;
+            result.postcode = addr.postcode || null;
+            result.country = addr.country || null;
+            result.country_code = addr.country_code || null;
+
             return result;
         } catch (e) {
-            console.error('فشل فحص الشبكة:', e);
-            return null;
+            result.response_received_at = new Date().toISOString();
+            result.execution_time_ms = Number((performance.now() - startTime).toFixed(2));
+            result.lookup_status = 0;
+            result.error_code = 'NETWORK_ERROR';
+            result.error_message = e.message || 'Network request failed';
+            return result;
         }
     }
 
-    /**
-     * getNetworkSummary(ip?) - تقرير نصي بالعربية
-     */
-    async function getNetworkSummary(ip) {
-        const data = await checkVPNProxy(ip);
-        if (!data) return { text: 'تعذر تحليل الشبكة', suspicious: false };
-
-        let flags = [];
-        if (data.is_vpn || data.is_proxy) flags.push('VPN/Proxy');
-        if (data.is_tor) flags.push('Tor');
-        if (data.is_hosting) flags.push('استضافة/خادم');
-
-        const location = [data.city, data.region, data.country].filter(Boolean).join('، ') || 'غير معروف';
-        const summary = {
-            ip: data.ip,
-            isp: data.isp || 'غير معروف',
-            location,
-            flags,
-            suspicious: flags.length > 0,
-            text: flags.length > 0
-                ? `⚠️ ${data.ip} - مشبوه (${flags.join('، ')}) - ${data.isp}`
-                : `✅ ${data.ip} - آمن - ${data.isp}`,
-            details: data
+    function createErrorResult(lookupId, code, message, gpsMeta, context) {
+        return {
+            lookup_id: lookupId,
+            location_provider: PROVIDER_NAME,
+            internal_endpoint: SUPABASE_EDGE_FUNCTION,
+            lookup_status: 0,
+            error_code: code,
+            error_message: message,
+            risk_score: 100,
+            location_verified: false,
+            gps_status: gpsMeta.status || 'FAILED',
+            latitude: null, longitude: null,
+            session_id: context.sessionId || null,
+            user_id: context.userId || null,
+            device_id: context.deviceId || null
         };
-        return summary;
     }
 
-    /**
-     * getClientIP() - الحصول على IP العميل من الخادم (بدون استدعاء خارجي في المتصفح)
-     */
-    async function getClientIP() {
-        try {
-            const data = await callEdgeFunction(''); // بدون IP سيرجع IP المستخدم
-            return data.ip || null;
-        } catch (e) {
-            return null;
-        }
+    async function fetchLocationIQ(lat, lon) {
+        const full = await fetchLocationIQFull(lat, lon);
+        return {
+            neighbourhood: full.neighbourhood || '',
+            city: full.city || '',
+            province: full.state || '',
+            state: full.state || '',
+            postal_code: full.postcode || '',
+            country: full.country || '',
+            country_code: full.country_code || '',
+            display_name: full.display_name || '',
+            district: full.district || ''
+        };
     }
 
-    function clearCache() {
-        cache.clear();
-    }
-
-    window.NetworkMonitor = {
-        checkVPNProxy,
-        getNetworkSummary,
-        getClientIP,
-        clearCache
+    window.LocationServices = {
+        fetchBasicGeo,
+        fetchLocationIQ,
+        fetchLocationIQFull,
+        getGPSCoords
     };
 })();
