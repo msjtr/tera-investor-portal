@@ -1,164 +1,35 @@
 /**
  * ==========================================================
  * security-two-factor-authentication.js
- * المصادقة الثنائية (2FA) – Enterprise Version 2026
+ * المصادقة الثنائية (2FA) – Enterprise Version 2026 (v2)
+ * تعتمد على auth.js v15 و Edge Function 'two-factor'
  * ==========================================================
  */
 (function() {
     'use strict';
 
-    // ---------- دوال مساعدة لـ TOTP (RFC 6238) ----------
-    // توليد secret عشوائي (base32)
-    function generateSecret(length = 20) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        const array = new Uint8Array(length);
-        crypto.getRandomValues(array);
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars[array[i] % chars.length];
-        }
-        return result;
-    }
-
-    // تحويل base32 إلى ArrayBuffer (مبسط)
-    function base32ToBuffer(str) {
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        str = str.toUpperCase().replace(/=+$/, '');
-        let bits = '', bytes = [];
-        for (let i = 0; i < str.length; i++) {
-            const val = alphabet.indexOf(str[i]);
-            if (val === -1) continue;
-            bits += val.toString(2).padStart(5, '0');
-        }
-        for (let i = 0; i + 8 <= bits.length; i += 8) {
-            bytes.push(parseInt(bits.substring(i, i + 8), 2));
-        }
-        return new Uint8Array(bytes).buffer;
-    }
-
-    // حساب HMAC-SHA1
-    async function hmacSha1(key, msg) {
-        const cryptoKey = await crypto.subtle.importKey(
-            'raw', key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
-        );
-        const signature = await crypto.subtle.sign('HMAC', cryptoKey, msg);
-        return new Uint8Array(signature);
-    }
-
-    // توليد رمز TOTP (صالح لمدة 30 ثانية)
-    async function generateTOTP(secret) {
-        const epoch = Math.floor(Date.now() / 1000);
-        const time = Math.floor(epoch / 30);
-        const msg = new ArrayBuffer(8);
-        const view = new DataView(msg);
-        view.setUint32(4, time, false); // big-endian
-        const key = base32ToBuffer(secret);
-        const hmac = await hmacSha1(key, msg);
-        const offset = hmac[hmac.length - 1] & 0x0F;
-        const binary = ((hmac[offset] & 0x7F) << 24) |
-                       ((hmac[offset + 1] & 0xFF) << 16) |
-                       ((hmac[offset + 2] & 0xFF) << 8) |
-                       (hmac[offset + 3] & 0xFF);
-        const otp = binary % 1000000;
-        return otp.toString().padStart(6, '0');
-    }
-
-    // التحقق من رمز TOTP (يقبل فترة ±1)
-    async function verifyTOTP(secret, token) {
-        const expected = await generateTOTP(secret);
-        if (token === expected) return true;
-        // يمكن محاولة الفترة السابقة والتالية لتحمل فارق التوقيت
-        // لكن لسهولة، نكتفي بالرمز الحالي مع السماح بفارق بسيط (اختياري)
-        return false;
-    }
-
-    // ---------- دوال Supabase ----------
-    async function getSupabase() {
-        return window.teraSupabase || await window.waitForSupabase?.();
-    }
-
-    async function getCurrentUser() {
-        if (window.Auth?.getUser) {
-            return await window.Auth.getUser();
-        }
-        const sb = await getSupabase();
-        if (!sb) return null;
-        const { data: { user } } = await sb.auth.getUser();
-        return user;
-    }
-
-    // جلب إعدادات 2FA للمستخدم
-    async function fetchTOTPStatus() {
-        const sb = await getSupabase();
-        if (!sb) return null;
-        const user = await getCurrentUser();
-        if (!user) return null;
-        const { data, error } = await sb.from('user_totp')
-            .select('totp_secret, totp_enabled')
-            .eq('user_id', user.id)
-            .maybeSingle();
-        if (error) {
-            console.error('فشل جلب حالة 2FA:', error);
-            return null;
-        }
-        return data; // { totp_secret, totp_enabled }
-    }
-
-    // حفظ (تفعيل) إعدادات 2FA
-    async function enableTOTP(secret) {
-        const sb = await getSupabase();
-        if (!sb) return false;
-        const user = await getCurrentUser();
-        if (!user) return false;
-        const { error } = await sb.from('user_totp').upsert({
-            user_id: user.id,
-            totp_secret: secret,
-            totp_enabled: true,
-            updated_at: new Date().toISOString()
-        });
-        if (error) {
-            console.error('فشل تفعيل 2FA:', error);
-            return false;
-        }
-        return true;
-    }
-
-    // تعطيل 2FA
-    async function disableTOTP() {
-        const sb = await getSupabase();
-        if (!sb) return false;
-        const user = await getCurrentUser();
-        if (!user) return false;
-        const { error } = await sb.from('user_totp').update({
-            totp_secret: null,
-            totp_enabled: false,
-            updated_at: new Date().toISOString()
-        }).eq('user_id', user.id);
-        if (error) {
-            console.error('فشل تعطيل 2FA:', error);
-            return false;
-        }
-        return true;
-    }
-
-    // ---------- واجهة المستخدم ----------
-    let currentSecret = null; // يُخزن مؤقتاً أثناء عملية التفعيل
-
+    /**
+     * عرض واجهة المصادقة الثنائية داخل حاوية محددة
+     * @param {string} containerId - id العنصر الحاوي
+     */
     async function renderTOTPUI(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        const user = await getCurrentUser();
-        if (!user) {
-            container.innerHTML = '<p>يجب تسجيل الدخول أولاً.</p>';
+        if (!window.Auth?.getTwoFactorStatus) {
+            container.innerHTML = '<p style="color:var(--danger);">خدمة المصادقة الثنائية غير متاحة حالياً.</p>';
             return;
         }
 
-        const status = await fetchTOTPStatus();
-        if (status && status.totp_enabled) {
-            renderEnabledUI(container);
-        } else {
-            renderDisabledUI(container);
+        try {
+            const status = await window.Auth.getTwoFactorStatus();
+            if (status && status.two_factor_enabled) {
+                renderEnabledUI(container, status);
+            } else {
+                renderDisabledUI(container);
+            }
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--danger);">تعذر تحميل حالة المصادقة: ${e.message}</p>`;
         }
     }
 
@@ -174,92 +45,83 @@
         document.getElementById('enable2FABtn').addEventListener('click', startSetup);
     }
 
-    function renderEnabledUI(container) {
+    function renderEnabledUI(container, status) {
         container.innerHTML = `
             <div class="totp-card">
                 <h4><i class="fas fa-shield-alt"></i> المصادقة الثنائية</h4>
-                <p>المصادقة الثنائية <strong>مفعلة</strong>. حسابك محمي برمز إضافي.</p>
+                <p>المصادقة الثنائية <strong>مفعلة</strong>.</p>
+                <p>رموز الاسترداد المتبقية: <strong>${status.backup_codes_count || 0}</strong></p>
+                ${status.last_verified_at ? `<p>آخر تحقق: ${new Date(status.last_verified_at).toLocaleString('ar-SA')}</p>` : ''}
                 <button class="btn-action danger" id="disable2FABtn"><i class="fas fa-unlock-alt"></i> تعطيل المصادقة الثنائية</button>
             </div>
         `;
-        document.getElementById('disable2FABtn').addEventListener('click', async () => {
-            if (!confirm('هل أنت متأكد من تعطيل المصادقة الثنائية؟ سيتم إلغاء الحماية الإضافية.')) return;
-            const success = await disableTOTP();
-            if (success) {
-                if (window.UIHelpers?.showToast) window.UIHelpers.showToast('تم تعطيل المصادقة الثنائية.', 'info');
-                else alert('تم تعطيل المصادقة الثنائية.');
-                renderTOTPUI('totp-container');
-            } else {
-                alert('حدث خطأ أثناء التعطيل.');
-            }
-        });
+        document.getElementById('disable2FABtn').addEventListener('click', handleDisable);
     }
 
     async function startSetup() {
         const setupArea = document.getElementById('setupArea');
         if (!setupArea) return;
         setupArea.style.display = 'block';
+        setupArea.innerHTML = '<p style="text-align:center"><i class="fas fa-spinner fa-spin"></i> جاري الإعداد...</p>';
 
-        // توليد secret جديد
-        currentSecret = generateSecret();
-        const user = await getCurrentUser();
-        const issuer = 'TeraPortal';
-        const label = user.email || 'user';
-        const otpAuthUrl = `otpauth://totp/${issuer}:${label}?secret=${currentSecret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
-
-        // عرض QR Code (باستخدام مكتبة qrcode أو API خارجي)
-        const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpAuthUrl)}`;
-
-        setupArea.innerHTML = `
-            <div style="background:#f0fdf4; padding:16px; border-radius:12px; border:1px solid #bbf7d0;">
-                <p><strong>الخطوة 1:</strong> امسح رمز QR باستخدام تطبيق المصادقة (Google Authenticator، Authy).</p>
-                <img src="${qrImg}" alt="QR Code" style="display:block; margin:10px auto; border:1px solid #ccc; padding:8px; background:#fff;"/>
-                <p style="font-size:12px; word-break:break-all; margin-top:10px;">أو أدخل المفتاح يدوياً: <code>${currentSecret}</code></p>
-            </div>
-            <div style="margin-top:16px;">
-                <label>الخطوة 2: أدخل رمز التحقق من التطبيق:</label>
-                <input type="text" id="totpToken" class="form-input-control" placeholder="XXXXXX" maxlength="6" autocomplete="off" style="width:120px; text-align:center; font-size:20px; letter-spacing:4px;"/>
-                <button class="btn-action" id="verifyTokenBtn" style="margin-right:10px;">تحقق</button>
-                <p id="verifyError" style="color:var(--danger); display:none; margin-top:8px;">الرمز غير صحيح. حاول مرة أخرى.</p>
-            </div>
-        `;
-
-        document.getElementById('verifyTokenBtn').addEventListener('click', verifyAndEnable);
+        try {
+            const data = await window.Auth.setupTwoFactor();
+            // data يحتوي على { qr_code, manual_key, backup_codes }
+            setupArea.innerHTML = `
+                <div style="background:#f0fdf4; padding:16px; border-radius:12px; border:1px solid #bbf7d0;">
+                    <p><strong>الخطوة 1:</strong> امسح رمز QR أو أدخل المفتاح يدوياً في تطبيق المصادقة.</p>
+                    <img src="${data.qr_code}" alt="QR Code" style="display:block; margin:10px auto; max-width:200px;"/>
+                    <p style="font-size:12px; word-break:break-all;">المفتاح اليدوي: <code>${data.manual_key}</code></p>
+                    <p style="margin-top:10px;"><strong>رموز الاسترداد (احفظها بأمان):</strong><br>
+                    <code>${data.backup_codes.join('<br>')}</code></p>
+                </div>
+                <div style="margin-top:16px;">
+                    <label>الخطوة 2: أدخل رمز التحقق من التطبيق:</label>
+                    <input type="text" id="totpToken" class="form-input-control" placeholder="XXXXXX" maxlength="6" autocomplete="off" style="width:120px; text-align:center; font-size:20px; letter-spacing:4px;"/>
+                    <button class="btn-action" id="verifyTokenBtn" style="margin-right:10px;">تفعيل</button>
+                    <p id="verifyError" style="color:var(--danger); display:none; margin-top:8px;">الرمز غير صحيح. حاول مرة أخرى.</p>
+                </div>
+            `;
+            document.getElementById('verifyTokenBtn').addEventListener('click', verifyAndEnable);
+        } catch (e) {
+            setupArea.innerHTML = `<p style="color:var(--danger);">فشل الإعداد: ${e.message}</p>`;
+        }
     }
 
     async function verifyAndEnable() {
-        const tokenInput = document.getElementById('totpToken');
+        const token = document.getElementById('totpToken').value.trim();
         const errorEl = document.getElementById('verifyError');
-        const token = tokenInput.value.trim();
         if (!token || token.length !== 6) {
             errorEl.style.display = 'block';
             return;
         }
         errorEl.style.display = 'none';
 
-        const isValid = await verifyTOTP(currentSecret, token);
-        if (!isValid) {
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        // رمز صحيح، تفعيل 2FA
-        const success = await enableTOTP(currentSecret);
-        if (success) {
+        try {
+            await window.Auth.enableTwoFactor(token);
             if (window.UIHelpers?.showToast) window.UIHelpers.showToast('تم تفعيل المصادقة الثنائية بنجاح!', 'success');
             else alert('تم تفعيل المصادقة الثنائية بنجاح!');
-            currentSecret = null;
             renderTOTPUI('totp-container');
-        } else {
-            alert('حدث خطأ أثناء التفعيل.');
+        } catch (e) {
+            errorEl.style.display = 'block';
         }
     }
 
-    // ---------- واجهة عامة ----------
+    async function handleDisable() {
+        const code = prompt('أدخل رمز المصادقة الثنائية للتعطيل:');
+        if (!code) return;
+        try {
+            await window.Auth.disableTwoFactor(code);
+            if (window.UIHelpers?.showToast) window.UIHelpers.showToast('تم تعطيل المصادقة الثنائية.', 'info');
+            else alert('تم تعطيل المصادقة الثنائية.');
+            renderTOTPUI('totp-container');
+        } catch (e) {
+            alert('فشل التعطيل: ' + e.message);
+        }
+    }
+
+    // واجهة عامة
     window.TwoFactorAuth = {
-        render: renderTOTPUI,
-        verifyTOTP,      // لاستخدامها في تدفق تسجيل الدخول لاحقاً
-        generateSecret,
-        generateTOTP
+        render: renderTOTPUI
     };
 })();
