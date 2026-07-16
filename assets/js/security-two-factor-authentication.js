@@ -1,13 +1,15 @@
 /**
- * security-two-factor-authentication.js (إصدار موحّد)
+ * security-two-factor-authentication.js (إصدار نهائي مُصلح)
  * يعتمد على:
- *   - window.Auth (من auth.js v20)
- *   - window.SessionManager (اختياري)
+ *   - window.Auth (من auth.js v20) للتحقق من الجلسة واستدعاءات 2FA
+ *   - window.SessionManager (اختياري) لإدارة الجلسة
+ *
+ * تم دمج API + UI + Actions في ملف واحد لتجنب مشاكل الاعتماديات.
  */
 (function() {
     'use strict';
 
-    // ========== الحالة العامة ==========
+    // ========== الحالة ==========
     const state = {
         isEnabled: false,
         method: null,
@@ -19,10 +21,9 @@
         trustedDevices: [],
         activityLog: [],
         isLoading: true,
-        pendingSetupSecret: null,
+        pendingSetupSecret: null
     };
 
-    // ========== العناصر الأساسية ==========
     let mainContent, modalContainer, toastContainer;
 
     // ========== دوال مساعدة ==========
@@ -67,7 +68,9 @@
                 ${footerHTML ? `<div class="btn-group" style="margin-top:16px;">${footerHTML}</div>` : ''}
             </div>
         `;
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
         modalContainer.appendChild(overlay);
         document.body.style.overflow = 'hidden';
     }
@@ -78,109 +81,108 @@
         state.pendingSetupSecret = null;
     }
 
-    // ========== استدعاءات API (باستخدام Auth) ==========
+    // ========== استدعاءات API عبر Auth ==========
     async function fetchStatus() {
         if (!window.Auth?.getTwoFactorStatus) throw new Error('خدمة المصادقة غير متاحة');
         return await window.Auth.getTwoFactorStatus();
     }
 
-    async function getSetupSecret() {
+    async function setupTwoFactor() {
         if (!window.Auth?.setupTwoFactor) throw new Error('خدمة المصادقة غير متاحة');
         return await window.Auth.setupTwoFactor();
     }
 
-    async function enable2FA(token) {
+    async function enableTwoFactor(code) {
         if (!window.Auth?.enableTwoFactor) throw new Error('خدمة المصادقة غير متاحة');
-        return await window.Auth.enableTwoFactor(token);
+        return await window.Auth.enableTwoFactor(code);
     }
 
-    async function disable2FA(token) {
+    async function disableTwoFactor(code) {
         if (!window.Auth?.disableTwoFactor) throw new Error('خدمة المصادقة غير متاحة');
-        return await window.Auth.disableTwoFactor(token);
+        return await window.Auth.disableTwoFactor(code);
     }
 
-    async function regenerateCodes(token) {
+    async function regenerateBackupCodes(code) {
         if (!window.Auth?.regenerateBackupCodes) throw new Error('خدمة المصادقة غير متاحة');
-        return await window.Auth.regenerateBackupCodes(token);
+        return await window.Auth.regenerateBackupCodes(code);
     }
 
-    // ========== عرض الأقسام ==========
+    // ========== عرض المكونات ==========
     function renderEducationalSection() {
         return `
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-question-circle"></i> ما هي المصادقة الثنائية؟</h3>
-                </div>
-                <p style="margin:0; color:var(--gray-700);">
-                    المصادقة الثنائية (2FA) هي طبقة حماية إضافية لحسابك. بعد تفعيلها، لن يتمكن أي شخص من تسجيل الدخول إلى حسابك حتى لو عرف كلمة المرور، إلا باستخدام رمز تحقق مؤقت يتم إنشاؤه داخل تطبيق المصادقة على جهازك.
-                </p>
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-question-circle"></i> ما هي المصادقة الثنائية؟</h3>
             </div>
-            <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-list-ol"></i> كيفية التفعيل</h3>
-                </div>
-                <div class="steps-container">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <strong>ثبّت تطبيق المصادقة</strong>
-                            <p>حمّل أحد تطبيقات المصادقة على هاتفك:</p>
-                            <div class="app-links">
-                                <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-google-play"></i> Google Authenticator</a>
-                                <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-apple"></i> iOS</a>
-                                <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Microsoft Authenticator</a>
-                                <a href="https://authy.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Authy</a>
-                                <a href="https://bitwarden.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Bitwarden Authenticator</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <strong>اضغط "تفعيل المصادقة الثنائية"</strong>
-                            <p>ستجد الزر في قسم الإجراءات أدناه.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <strong>سيظهر لك رمز QR ومفتاح يدوي</strong>
-                            <p>رمز QR للاستخدام السهل، والمفتاح اليدوي كحل بديل.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <strong>افتح تطبيق المصادقة وأضف حساباً جديداً</strong>
-                            <p>اختر "مسح رمز QR" ووجّه الكاميرا إلى الشاشة. أو اختر "إدخال المفتاح يدوياً".</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">5</div>
-                        <div class="step-content">
-                            <strong>سيبدأ التطبيق بإظهار رمز مكون من 6 أرقام</strong>
-                            <p>يتغير الرمز تلقائياً كل 30 ثانية.</p>
-                        </div>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">6</div>
-                        <div class="step-content">
-                            <strong>أدخل الرمز في المنصة واضغط "تأكيد التفعيل"</strong>
-                            <p>بعد التحقق الناجح سيتم تفعيل المصادقة الثنائية.</p>
+            <p style="margin:0; color:var(--gray-700);">
+                المصادقة الثنائية (2FA) هي طبقة حماية إضافية لحسابك. بعد تفعيلها، لن يتمكن أي شخص من تسجيل الدخول إلى حسابك حتى لو عرف كلمة المرور، إلا باستخدام رمز تحقق مؤقت يتم إنشاؤه داخل تطبيق المصادقة على جهازك.
+            </p>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list-ol"></i> كيفية التفعيل</h3>
+            </div>
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>ثبّت تطبيق المصادقة</strong>
+                        <p>حمّل أحد تطبيقات المصادقة على هاتفك:</p>
+                        <div class="app-links">
+                            <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-google-play"></i> Google Authenticator</a>
+                            <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-apple"></i> iOS</a>
+                            <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Microsoft Authenticator</a>
+                            <a href="https://authy.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Authy</a>
+                            <a href="https://bitwarden.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Bitwarden Authenticator</a>
                         </div>
                     </div>
                 </div>
-                <div style="margin-top:16px; padding:12px; background:#fffbeb; border-radius:8px; border:1px solid #fde68a;">
-                    <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
-                    <strong>ملاحظات مهمة:</strong>
-                    <ul style="margin:8px 0 0 16px; font-size:14px; color:var(--gray-700);">
-                        <li>لا تشارك رمز QR أو المفتاح اليدوي مع أي شخص.</li>
-                        <li>احتفظ برموز الاسترداد (Backup Codes) في مكان آمن.</li>
-                        <li>في حال تغيير هاتفك، انقل حسابات تطبيق المصادقة أو أعد الإعداد من هنا.</li>
-                    </ul>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>اضغط "تفعيل المصادقة الثنائية"</strong>
+                        <p>ستجد الزر في قسم الإجراءات أدناه.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>سيظهر لك رمز QR ومفتاح يدوي</strong>
+                        <p>رمز QR للاستخدام السهل، والمفتاح اليدوي كحل بديل.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>افتح تطبيق المصادقة وأضف حساباً جديداً</strong>
+                        <p>اختر "مسح رمز QR" ووجّه الكاميرا إلى الشاشة. أو اختر "إدخال المفتاح يدوياً".</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <strong>سيبدأ التطبيق بإظهار رمز مكون من 6 أرقام</strong>
+                        <p>يتغير الرمز تلقائياً كل 30 ثانية.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <strong>أدخل الرمز في المنصة واضغط "تأكيد التفعيل"</strong>
+                        <p>بعد التحقق الناجح سيتم تفعيل المصادقة الثنائية.</p>
+                    </div>
                 </div>
             </div>
-        `;
+            <div style="margin-top:16px; padding:12px; background:#fffbeb; border-radius:8px; border:1px solid #fde68a;">
+                <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
+                <strong>ملاحظات مهمة:</strong>
+                <ul style="margin:8px 0 0 16px; font-size:14px; color:var(--gray-700);">
+                    <li>لا تشارك رمز QR أو المفتاح اليدوي مع أي شخص.</li>
+                    <li>احتفظ برموز الاسترداد (Backup Codes) في مكان آمن.</li>
+                    <li>في حال تغيير هاتفك، انقل حسابات تطبيق المصادقة أو أعد الإعداد من هنا.</li>
+                </ul>
+            </div>
+        </div>`;
     }
 
     function renderStatusBadge() {
@@ -188,8 +190,7 @@
             <span class="status-badge ${state.isEnabled ? 'active' : 'inactive'}">
                 <span class="status-dot ${state.isEnabled ? 'green' : 'gray'}"></span>
                 ${state.isEnabled ? 'مفعلة' : 'غير مفعلة'}
-            </span>
-        `;
+            </span>`;
     }
 
     function renderInfoGrid() {
@@ -200,21 +201,18 @@
             { label: 'تاريخ التفعيل', value: formatDateTime(s.enabledAt) },
             { label: 'آخر استخدام ناجح', value: formatDate(s.lastUsedAt) },
             { label: 'آخر محاولة فاشلة', value: formatDate(s.lastFailedAt) || 'لا توجد' },
-            { label: 'رموز الاسترداد المتبقية', value: s.isEnabled ? `<strong>${s.backupCodesRemaining}</strong> / 10` : '—' },
+            { label: 'رموز الاسترداد المتبقية', value: s.isEnabled ? `<strong>${s.backupCodesRemaining}</strong> / 10` : '—' }
         ];
         return rows.map(r => `
             <div class="info-item">
                 <div class="info-label">${r.label}</div>
                 <div class="info-value">${r.value}</div>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     function renderTrustedDevices() {
         const devices = state.trustedDevices || [];
-        if (devices.length === 0) {
-            return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد أجهزة موثوقة حالياً.</p>';
-        }
+        if (devices.length === 0) return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد أجهزة موثوقة حالياً.</p>';
         const rows = devices.map(d => `
             <tr>
                 <td><div class="device-icon"><i class="fas fa-${d.device_type === 'mobile' ? 'mobile-alt' : d.device_type === 'tablet' ? 'tablet-alt' : 'laptop'}"></i></div></td>
@@ -223,39 +221,30 @@
                 <td>${formatDate(d.last_used_at)}</td>
                 <td dir="ltr" style="font-size:12px;">${d.last_ip || '—'}</td>
                 <td>${d.location || '—'}</td>
-                <td>${!d.is_current ? `<button class="btn-remove-device" onclick="window.TwoFactorUI.removeDevice('${d.id}')" title="إزالة الثقة"><i class="fas fa-times-circle"></i></button>` : '<span style="color:var(--gray-400);">—</span>'}</td>
-            </tr>
-        `).join('');
-        return `
-            <div style="overflow-x:auto;">
-                <table class="devices-table">
-                    <thead><tr><th>الجهاز</th><th>الاسم</th><th>المتصفح</th><th>آخر استخدام</th><th>آخر IP</th><th>الموقع</th><th>إجراء</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
+                <td>${!d.is_current ? `<button class="btn-remove-device" onclick="window.TwoFactorUI.removeDevice('${d.id}')"><i class="fas fa-times-circle"></i></button>` : '<span style="color:var(--gray-400);">—</span>'}</td>
+            </tr>`).join('');
+        return `<div style="overflow-x:auto;"><table class="devices-table">
+            <thead><tr><th>الجهاز</th><th>الاسم</th><th>المتصفح</th><th>آخر استخدام</th><th>آخر IP</th><th>الموقع</th><th>إجراء</th></tr></thead>
+            <tbody>${rows}</tbody></table></div>`;
     }
 
     function renderActivityLog() {
         const log = state.activityLog || [];
-        if (log.length === 0) {
-            return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد عمليات مسجلة حتى الآن.</p>';
-        }
+        if (log.length === 0) return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد عمليات مسجلة حتى الآن.</p>';
         return log.map(entry => {
             let iconClass = 'info', iconSymbol = 'fa-info-circle';
-            if (entry.type === 'success' || entry.type === 'enabled' || entry.type === 'login_success') { iconClass = 'success'; iconSymbol = 'fa-check-circle'; }
-            else if (entry.type === 'fail' || entry.type === 'disabled' || entry.type === 'login_fail') { iconClass = 'fail'; iconSymbol = 'fa-times-circle'; }
-            else if (entry.type === 'warning' || entry.type === 'locked') { iconClass = 'warning'; iconSymbol = 'fa-exclamation-triangle'; }
-            return `
-                <div class="log-entry">
-                    <div class="log-icon ${iconClass}"><i class="fas ${iconSymbol}"></i></div>
-                    <div class="log-details">
-                        <div class="log-action">${entry.action}</div>
-                        <div class="log-meta">${entry.details || ''} ${entry.ip ? '· IP: ' + entry.ip : ''}</div>
-                    </div>
-                    <div class="log-time">${formatDate(entry.timestamp)}</div>
-                </div>
-            `;
+            if (entry.type === 'success' || entry.type === 'enabled' || entry.type === 'login_success') {
+                iconClass = 'success'; iconSymbol = 'fa-check-circle';
+            } else if (entry.type === 'fail' || entry.type === 'disabled' || entry.type === 'login_fail') {
+                iconClass = 'fail'; iconSymbol = 'fa-times-circle';
+            } else if (entry.type === 'warning' || entry.type === 'locked') {
+                iconClass = 'warning'; iconSymbol = 'fa-exclamation-triangle';
+            }
+            return `<div class="log-entry">
+                <div class="log-icon ${iconClass}"><i class="fas ${iconSymbol}"></i></div>
+                <div class="log-details"><div class="log-action">${entry.action}</div><div class="log-meta">${entry.details || ''} ${entry.ip ? '· IP: ' + entry.ip : ''}</div></div>
+                <div class="log-time">${formatDate(entry.timestamp)}</div>
+            </div>`;
         }).join('');
     }
 
@@ -268,7 +257,7 @@
             { id: 'notify_backup_used', label: 'استخدام رمز استرداد', checked: true },
             { id: 'notify_new_device', label: 'تسجيل الدخول من جهاز جديد', checked: true },
             { id: 'notify_password_lock', label: 'تجاوز عدد محاولات كلمة المرور', checked: true },
-            { id: 'notify_device_trust_change', label: 'تغيير الجهاز الموثوق', checked: true },
+            { id: 'notify_device_trust_change', label: 'تغيير الجهاز الموثوق', checked: true }
         ];
         return toggles.map(t => `
             <div class="notification-toggle">
@@ -277,26 +266,20 @@
                     <input type="checkbox" ${t.checked ? 'checked' : ''} data-notify-id="${t.id}">
                     <span class="toggle-slider"></span>
                 </label>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
-    // ========== تجميع الصفحة بالكامل ==========
     function renderFullPage() {
         if (!mainContent) return;
         if (state.isLoading) {
             mainContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-pulse"></i> جاري تحميل إعدادات المصادقة...</div>';
             return;
         }
-
         const isEnabled = state.isEnabled;
         mainContent.innerHTML = `
             ${renderEducationalSection()}
             <div class="card">
-                <div class="card-header">
-                    <h3><i class="fas fa-toggle-on"></i> حالة المصادقة الثنائية</h3>
-                    ${renderStatusBadge()}
-                </div>
+                <div class="card-header"><h3><i class="fas fa-toggle-on"></i> حالة المصادقة الثنائية</h3>${renderStatusBadge()}</div>
             </div>
             <div class="card">
                 <div class="card-header"><h3><i class="fas fa-info-circle"></i> معلومات عامة</h3></div>
@@ -310,19 +293,11 @@
                 <div class="card-header"><h3><i class="fas fa-cogs"></i> إجراءات</h3></div>
                 <div class="btn-group">
                     ${!isEnabled ? `
-                        <button class="btn btn-primary" onclick="window.TwoFactorUI.showSetupWizard()">
-                            <i class="fas fa-shield-alt"></i> تفعيل المصادقة الثنائية
-                        </button>
+                        <button class="btn btn-primary" onclick="window.TwoFactorUI.showSetupWizard()"><i class="fas fa-shield-alt"></i> تفعيل المصادقة الثنائية</button>
                     ` : `
-                        <button class="btn btn-outline" onclick="window.TwoFactorUI.showRegenerateCodes()">
-                            <i class="fas fa-sync-alt"></i> إنشاء رموز استرداد جديدة
-                        </button>
-                        <button class="btn btn-outline" onclick="window.TwoFactorUI.downloadBackupCodes()">
-                            <i class="fas fa-download"></i> تنزيل رموز الاسترداد
-                        </button>
-                        <button class="btn btn-danger" onclick="window.TwoFactorUI.confirmDisable()">
-                            <i class="fas fa-shield-slash"></i> تعطيل المصادقة الثنائية
-                        </button>
+                        <button class="btn btn-outline" onclick="window.TwoFactorUI.showRegenerateCodes()"><i class="fas fa-sync-alt"></i> إنشاء رموز استرداد جديدة</button>
+                        <button class="btn btn-outline" onclick="window.TwoFactorUI.downloadBackupCodes()"><i class="fas fa-download"></i> تنزيل رموز الاسترداد</button>
+                        <button class="btn btn-danger" onclick="window.TwoFactorUI.confirmDisable()"><i class="fas fa-shield-slash"></i> تعطيل المصادقة الثنائية</button>
                     `}
                 </div>
             </div>
@@ -333,12 +308,8 @@
                     <div class="info-item"><div class="info-label">الرموز المتبقية</div><div class="info-value">${state.backupCodesRemaining} / 10</div></div>
                     <div class="info-item"><div class="info-label">آخر استخدام</div><div class="info-value">${formatDate(state.backupCodesLastUsed) || 'لم تُستخدم بعد'}</div></div>
                 </div>
-                <p style="font-size:13px;color:var(--gray-500);margin-top:12px;">
-                    <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
-                    احفظ هذه الرموز في مكان آمن. كل رمز صالح للاستخدام مرة واحدة فقط. إذا نفدت الرموز، يمكنك إنشاء مجموعة جديدة.
-                </p>
-            </div>
-            ` : ''}
+                <p style="font-size:13px;color:var(--gray-500);margin-top:12px;"><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> احفظ هذه الرموز في مكان آمن. كل رمز صالح للاستخدام مرة واحدة فقط.</p>
+            </div>` : ''}
             <div class="card">
                 <div class="card-header"><h3><i class="fas fa-history"></i> سجل العمليات</h3></div>
                 <div class="activity-log">${renderActivityLog()}</div>
@@ -346,11 +317,10 @@
             <div class="card no-print">
                 <div class="card-header"><h3><i class="fas fa-bell"></i> تفضيلات الإشعارات</h3></div>
                 ${renderNotificationToggles()}
-            </div>
-        `;
+            </div>`;
     }
 
-    // ========== الإجراءات الأساسية ==========
+    // ========== الإجراءات ==========
     async function loadData() {
         state.isLoading = true;
         renderFullPage();
@@ -377,7 +347,7 @@
 
     async function showSetupWizard() {
         try {
-            const secretData = await getSetupSecret();
+            const secretData = await setupTwoFactor();
             state.pendingSetupSecret = secretData.secret;
             const qrHTML = secretData.qr_data_uri
                 ? `<img src="${secretData.qr_data_uri}" alt="QR Code" style="max-width:200px;">`
@@ -385,30 +355,26 @@
 
             showModal(
                 'تفعيل المصادقة الثنائية',
-                `
-                    <div style="background:#fffbeb; padding:10px; border-radius:8px; margin-bottom:16px; border:1px solid #fde68a;">
-                        <i class="fas fa-exclamation-circle" style="color:var(--warning);"></i>
-                        <strong>تنبيه:</strong> رمز QR والمفتاح اليدوي يظهران مرة واحدة فقط. تأكد من حفظ رموز الاسترداد قبل المتابعة.
-                    </div>
-                    <p>امسح رمز QR باستخدام تطبيق المصادقة.</p>
-                    <div class="qr-container">${qrHTML}</div>
-                    <p style="font-size:13px;color:var(--gray-500);">أو أدخل المفتاح اليدوي:</p>
-                    <div class="manual-key">${secretData.secret}</div>
-                    <p style="font-size:13px;color:var(--gray-500);">
-                        <i class="fas fa-user"></i> ${secretData.account || 'المستخدم'}<br>
-                        <i class="fas fa-building"></i> ${secretData.issuer || 'تيرا'}
-                    </p>
-                    <label for="totp-verify-input" style="display:block;font-weight:700;margin-top:12px;">أدخل رمز التحقق من التطبيق:</label>
-                    <input type="text" id="totp-verify-input" class="form-input-control" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000" style="margin:8px auto;display:block;max-width:160px;font-size:22px;letter-spacing:6px;">
-                    <p id="setup-error" style="color:var(--danger);font-size:13px;display:none;margin-top:8px;"></p>
-                `,
-                `
-                    <button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button>
-                    <button class="btn btn-primary" onclick="window.TwoFactorUI.verifyAndEnable()">تحقق وتفعيل</button>
-                `
+                `<div style="background:#fffbeb; padding:10px; border-radius:8px; margin-bottom:16px; border:1px solid #fde68a;">
+                    <i class="fas fa-exclamation-circle" style="color:var(--warning);"></i>
+                    <strong>تنبيه:</strong> رمز QR والمفتاح اليدوي يظهران مرة واحدة فقط. احفظ رموز الاسترداد جيداً.
+                </div>
+                <p>امسح رمز QR باستخدام تطبيق المصادقة.</p>
+                <div class="qr-container">${qrHTML}</div>
+                <p style="font-size:13px;color:var(--gray-500);">أو أدخل المفتاح اليدوي:</p>
+                <div class="manual-key">${secretData.secret}</div>
+                <p style="font-size:13px;color:var(--gray-500);">
+                    <i class="fas fa-user"></i> ${secretData.account || 'المستخدم'}<br>
+                    <i class="fas fa-building"></i> ${secretData.issuer || 'تيرا'}
+                </p>
+                <label for="totp-verify-input" style="display:block;font-weight:700;margin-top:12px;">أدخل رمز التحقق من التطبيق:</label>
+                <input type="text" id="totp-verify-input" class="form-input-control" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000" style="margin:8px auto;display:block;max-width:160px;font-size:22px;letter-spacing:6px;">
+                <p id="setup-error" style="color:var(--danger);font-size:13px;display:none;margin-top:8px;"></p>`,
+                `<button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="window.TwoFactorUI.verifyAndEnable()">تحقق وتفعيل</button>`
             );
         } catch (err) {
-            showToast('تعذر بدء عملية التفعيل.', 'error');
+            showToast('تعذر بدء عملية التفعيل: ' + err.message, 'error');
         }
     }
 
@@ -421,33 +387,31 @@
             return;
         }
         try {
-            const result = await enable2FA(token);
-            if (result.success) {
+            const result = await enableTwoFactor(token);
+            if (result && result.success) {
                 closeModal();
                 showToast('تم تفعيل المصادقة الثنائية بنجاح!', 'success');
                 if (result.backup_codes) showBackupCodesModal(result.backup_codes);
                 await loadData();
             } else {
-                if (errorEl) { errorEl.textContent = 'رمز التحقق غير صحيح أو منتهي الصلاحية.'; errorEl.style.display = 'block'; }
+                if (errorEl) { errorEl.textContent = (result && result.error) || 'فشل التفعيل، تأكد من الرمز.'; errorEl.style.display = 'block'; }
             }
         } catch (err) {
-            if (errorEl) { errorEl.textContent = 'حدث خطأ. حاول مرة أخرى.'; errorEl.style.display = 'block'; }
+            if (errorEl) {
+                errorEl.textContent = err.message || 'حدث خطأ غير معروف. حاول مرة أخرى.';
+                errorEl.style.display = 'block';
+            }
         }
     }
 
     function showBackupCodesModal(codes) {
         if (!codes || codes.length === 0) return;
         const codesHTML = codes.map(c => `<span class="backup-code">${c}</span>`).join('');
-        showModal(
-            'رموز الاسترداد الخاصة بك',
-            `
-                <p style="color:var(--danger);font-weight:700;">احفظ هذه الرموز في مكان آمن. لن تظهر مرة أخرى!</p>
-                <div class="backup-codes-grid">${codesHTML}</div>
-            `,
-            `
-                <button class="btn btn-primary" onclick="window.TwoFactorUI.downloadBackupCodesInline('${encodeURIComponent(JSON.stringify(codes))}')"><i class="fas fa-download"></i> تنزيل</button>
-                <button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">تم الحفظ</button>
-            `
+        showModal('رموز الاسترداد الخاصة بك',
+            `<p style="color:var(--danger);font-weight:700;">احفظ هذه الرموز في مكان آمن. لن تظهر مرة أخرى!</p>
+            <div class="backup-codes-grid">${codesHTML}</div>`,
+            `<button class="btn btn-primary" onclick="window.TwoFactorUI.downloadBackupCodesInline('${encodeURIComponent(JSON.stringify(codes))}')"><i class="fas fa-download"></i> تنزيل</button>
+            <button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">تم الحفظ</button>`
         );
     }
 
@@ -466,7 +430,7 @@
         const token = prompt('أدخل رمز المصادقة الثنائية الحالي لتنزيل رموز الاسترداد:');
         if (!token) return;
         try {
-            const result = await regenerateCodes(token);
+            const result = await regenerateBackupCodes(token);
             if (result.success && result.backup_codes) {
                 const text = result.backup_codes.join('\n');
                 const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
@@ -476,15 +440,16 @@
                 a.click();
                 showToast('تم تنزيل الرموز.', 'success');
                 await loadData();
+            } else {
+                showToast('فشل تنزيل الرموز.', 'error');
             }
         } catch (err) {
-            showToast('تعذر تنزيل الرموز.', 'error');
+            showToast('خطأ: ' + err.message, 'error');
         }
     }
 
     async function showRegenerateCodes() {
-        showModal(
-            'إنشاء رموز استرداد جديدة',
+        showModal('إنشاء رموز استرداد جديدة',
             '<p>سيؤدي هذا إلى إبطال جميع الرموز السابقة وإنشاء مجموعة جديدة (10 رموز).</p><p style="color:var(--danger);">هل أنت متأكد؟</p>',
             `<button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button><button class="btn btn-primary" onclick="window.TwoFactorUI.doRegenerateCodes()">نعم</button>`
         );
@@ -494,7 +459,7 @@
         const token = prompt('أدخل رمز المصادقة الثنائية الحالي:');
         if (!token) return;
         try {
-            const result = await regenerateCodes(token);
+            const result = await regenerateBackupCodes(token);
             if (result.success) {
                 closeModal();
                 showToast('تم إنشاء رموز جديدة.', 'success');
@@ -504,13 +469,12 @@
                 showToast('فشل إنشاء الرموز.', 'error');
             }
         } catch (err) {
-            showToast('حدث خطأ.', 'error');
+            showToast('خطأ: ' + err.message, 'error');
         }
     }
 
     function confirmDisable() {
-        showModal(
-            'تعطيل المصادقة الثنائية',
+        showModal('تعطيل المصادقة الثنائية',
             '<p style="color:var(--danger);">تحذير: تعطيل المصادقة يقلل أمان حسابك.</p><p>هل أنت متأكد؟</p>',
             `<button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button><button class="btn btn-danger" onclick="window.TwoFactorUI.doDisable()">تعطيل</button>`
         );
@@ -520,7 +484,7 @@
         const token = prompt('أدخل رمز المصادقة الثنائية الحالي للتعطيل:');
         if (!token) return;
         try {
-            const result = await disable2FA(token);
+            const result = await disableTwoFactor(token);
             if (result.success) {
                 closeModal();
                 showToast('تم تعطيل المصادقة الثنائية.', 'success');
@@ -529,7 +493,7 @@
                 showToast('فشل التعطيل.', 'error');
             }
         } catch (err) {
-            showToast('حدث خطأ.', 'error');
+            showToast('خطأ: ' + err.message, 'error');
         }
     }
 
@@ -540,8 +504,7 @@
     }
 
     async function doRemoveDevice(deviceId) {
-        // غير مطبقة بعد، يمكن إضافتها لاحقاً
-        showToast('الميزة قيد التطوير', 'error');
+        showToast('الميزة قيد التطوير.', 'error');
     }
 
     // ========== تصدير الدوال العامة ==========
@@ -557,7 +520,7 @@
         downloadBackupCodes,
         downloadBackupCodesInline,
         closeModal,
-        loadData,
+        loadData
     };
 
     // ========== بدء التشغيل بعد التحقق من الجلسة ==========
