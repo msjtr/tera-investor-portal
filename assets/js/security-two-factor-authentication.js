@@ -1,5 +1,5 @@
 /**
- * security-two-factor-authentication.js - ملف متكامل نهائي
+ * security-two-factor-authentication.js - متوافق مع user_two_factor
  */
 (function() {
     'use strict';
@@ -40,23 +40,38 @@
 
     function renderEducationalSection() {
         return `
-        <div class="card"><div class="card-header"><h3><i class="fas fa-question-circle"></i> ما هي المصادقة الثنائية؟</h3></div><p style="margin:0;color:var(--gray-700);">طبقة حماية إضافية لحسابك...</p></div>
-        <div class="card"><div class="card-header"><h3><i class="fas fa-list-ol"></i> كيفية التفعيل</h3></div>
-        <div class="steps-container">
-            <div class="step"><div class="step-number">1</div><div class="step-content"><strong>ثبّت تطبيق المصادقة</strong><p>حمّل أحد التطبيقات:</p><div class="app-links">
-                <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-google-play"></i> Google Authenticator</a>
-                <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-apple"></i> iOS</a>
-                <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Microsoft Authenticator</a>
-                <a href="https://authy.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Authy</a>
-                <a href="https://bitwarden.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Bitwarden</a>
-            </div></div></div>
-            <div class="step"><div class="step-number">2</div><div class="step-content"><strong>اضغط "تفعيل المصادقة الثنائية"</strong><p>الزر في قسم الإجراءات.</p></div></div>
-            <div class="step"><div class="step-number">3</div><div class="step-content"><strong>سيظهر QR ومفتاح يدوي</strong></div></div>
-            <div class="step"><div class="step-number">4</div><div class="step-content"><strong>افتح تطبيق المصادقة وامسح QR</strong></div></div>
-            <div class="step"><div class="step-number">5</div><div class="step-content"><strong>يظهر رمز من 6 أرقام</strong></div></div>
-            <div class="step"><div class="step-number">6</div><div class="step-content"><strong>أدخل الرمز واضغط تأكيد</strong></div></div>
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-question-circle"></i> ما هي المصادقة الثنائية؟</h3></div>
+            <p style="margin:0;color:var(--gray-700);">
+                المصادقة الثنائية (2FA) هي طبقة حماية إضافية لحسابك. بعد تفعيلها، لن يتمكن أي شخص من تسجيل الدخول إلى حسابك حتى لو عرف كلمة المرور، إلا باستخدام رمز تحقق مؤقت يتم إنشاؤه داخل تطبيق المصادقة على جهازك.
+            </p>
         </div>
-        <div style="margin-top:16px;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;"><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> <strong>ملاحظات مهمة:</strong><ul style="margin:8px 0 0 16px;font-size:14px;color:var(--gray-700);"><li>لا تشارك رمز QR أو المفتاح.</li><li>احتفظ برموز الاسترداد في مكان آمن.</li></ul></div>
+        <div class="card">
+            <div class="card-header"><h3><i class="fas fa-list-ol"></i> كيفية التفعيل</h3></div>
+            <div class="steps-container">
+                <div class="step"><div class="step-number">1</div><div class="step-content"><strong>ثبّت تطبيق المصادقة</strong><p>قم بتثبيت أحد تطبيقات المصادقة على هاتفك الذكي، مثل:</p><div class="app-links">
+                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-google-play"></i> Google Authenticator</a>
+                    <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener" class="btn btn-outline btn-sm"><i class="fab fa-apple"></i> iOS</a>
+                    <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Microsoft Authenticator</a>
+                    <a href="https://authy.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Authy</a>
+                    <a href="https://bitwarden.com/download/" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Bitwarden Authenticator</a>
+                </div></div></div>
+                <div class="step"><div class="step-number">2</div><div class="step-content"><strong>اضغط "تفعيل المصادقة الثنائية"</strong><p>ستجد الزر في قسم الإجراءات أدناه.</p></div></div>
+                <div class="step"><div class="step-number">3</div><div class="step-content"><strong>سيظهر لك رمز QR ومفتاح يدوي</strong><p>رمز QR للاستخدام السهل، والمفتاح اليدوي كحل بديل.</p></div></div>
+                <div class="step"><div class="step-number">4</div><div class="step-content"><strong>افتح تطبيق المصادقة وأضف حساباً جديداً</strong><p>اختر "مسح رمز QR" ووجّه الكاميرا إلى الشاشة. أو اختر "إدخال المفتاح يدوياً".</p></div></div>
+                <div class="step"><div class="step-number">5</div><div class="step-content"><strong>سيبدأ التطبيق بإظهار رمز مكون من 6 أرقام</strong><p>يتغير الرمز تلقائياً كل 30 ثانية.</p></div></div>
+                <div class="step"><div class="step-number">6</div><div class="step-content"><strong>أدخل الرمز في المنصة واضغط "تأكيد التفعيل"</strong><p>بعد نجاح التحقق سيتم تفعيل المصادقة الثنائية وربط التطبيق بحسابك.</p></div></div>
+            </div>
+            <div style="margin-top:16px;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a;">
+                <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
+                <strong>ملاحظات مهمة:</strong>
+                <ul style="margin:8px 0 0 16px;font-size:14px;color:var(--gray-700);">
+                    <li>لا تشارك رمز QR أو المفتاح اليدوي مع أي شخص.</li>
+                    <li>احتفظ برموز الاسترداد (Backup Codes) في مكان آمن، فهي تساعدك على استعادة الوصول إذا فقدت هاتفك.</li>
+                    <li>لا يمكن استخدام رمز التحقق إلا لفترة قصيرة، ثم يتغير تلقائياً كل 30 ثانية.</li>
+                    <li>في حال تغيير هاتفك، قم بنقل حسابات تطبيق المصادقة أو أعد إعداد المصادقة الثنائية من داخل المنصة قبل حذف التطبيق من الجهاز القديم.</li>
+                </ul>
+            </div>
         </div>`;
     }
 
@@ -142,6 +157,7 @@
         renderFullPage();
         try {
             const data = await fetchStatus();
+            console.log('📊 بيانات 2FA من الخادم:', data);
             state.isEnabled = data?.is_enabled || false;
             state.method = data?.method || (data?.is_enabled ? 'TOTP' : null);
             state.enabledAt = data?.enabled_at || null;
@@ -160,9 +176,11 @@
         }
     }
 
+    // --- الإجراءات (جميعها كما هي) ---
     async function showSetupWizard() {
         try {
             const secretData = await setupTwoFactor();
+            console.log('📬 بيانات setup:', secretData);
             if (!secretData?.qr_data_uri || !secretData?.secret) throw new Error('بيانات الإعداد غير مكتملة');
             state.pendingSetupSecret = secretData.secret;
             showModal('تفعيل المصادقة الثنائية',
@@ -189,6 +207,7 @@
         }
         try {
             const result = await enableTwoFactor(token);
+            console.log('📬 نتيجة enable:', result);
             if (result?.success) {
                 closeModal();
                 showToast('تم التفعيل بنجاح', 'success');
