@@ -1,5 +1,5 @@
 /**
- * auth.js – v26 (يدعم loginWithTOTP الآمن)
+ * auth.js – v26 (يدعم loginWithTOTP الآمن، كامل)
  */
 (function() {
     'use strict';
@@ -29,19 +29,97 @@
         return data;
     }
 
-    async function logout() { /* unchanged */ }
-    async function getSession() { /* unchanged */ }
-    async function getUser() { /* unchanged */ }
-    async function isSessionValid() { /* unchanged */ }
+    async function logout() {
+        if (window.SessionManager) {
+            try {
+                const info = window.SessionManager.getCurrentSessionInfo();
+                if (info?.userId && info?.sessionId) {
+                    await window.SessionManager.terminateSession(info.sessionId, info.userId);
+                }
+            } catch (e) {}
+            try { window.SessionManager.stopSessionGuard(); } catch (e) {}
+        }
+        const sb = await getSupabase();
+        if (sb) { try { await sb.auth.signOut(); } catch (e) {} }
+        localStorage.removeItem('rememberMe');
+        sessionStorage.clear();
+        window.location.replace('/auth/auth/login/login.html');
+    }
+
+    async function getSession() {
+        const sb = await getSupabase();
+        if (!sb) return null;
+        const { data: { session } } = await sb.auth.getSession();
+        return session;
+    }
+
+    async function getUser() {
+        const sb = await getSupabase();
+        if (!sb) return null;
+        const { data: { user } } = await sb.auth.getUser();
+        return user;
+    }
+
+    async function isSessionValid() {
+        const sb = await getSupabase();
+        if (!sb) return false;
+        try {
+            const { data: { user }, error } = await sb.auth.getUser();
+            return !error && !!user;
+        } catch (e) { return false; }
+    }
 
     // 2. Email OTP
-    async function sendOTP(email) { /* unchanged */ }
-    async function verifyOTP(email, token) { /* unchanged */ }
+    async function sendOTP(email) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const { data, error } = await sb.auth.signInWithOtp({ email });
+        if (error) throw error;
+        return data;
+    }
+
+    async function verifyOTP(email, token) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+        if (error) throw error;
+        return data;
+    }
 
     // 3. Two‑Factor (TOTP)
     const TOTP_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
 
-    async function callTOTPFunction(endpoint, body = {}, session = null) { /* unchanged */ }
+    async function callTOTPFunction(endpoint, body = {}, session = null) {
+        const sb = await getSupabase();
+        let currentSession = session;
+        if (!currentSession) {
+            const { data } = await sb.auth.getSession();
+            currentSession = data.session;
+        }
+        if (!currentSession) throw new Error('NO_SESSION');
+
+        const makeRequest = async (sess) => {
+            const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sess.access_token}`
+                },
+                body: JSON.stringify(body)
+            });
+            if (res.status === 401) {
+                const { data: { session: newSession }, error: refreshError } = await sb.auth.refreshSession();
+                if (!refreshError && newSession) return makeRequest(newSession);
+                throw new Error('SESSION_EXPIRED');
+            }
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'فشل الطلب');
+            }
+            return res.json();
+        };
+        return makeRequest(currentSession);
+    }
 
     async function setupTwoFactor() { return await callTOTPFunction('setup', {}); }
     async function enableTwoFactor(code) { return await callTOTPFunction('enable', { code }); }
@@ -93,7 +171,6 @@
         return { success: true, user };
     }
 
-    // 🆕 تسجيل الدخول المباشر بـ TOTP (بدون كلمة مرور)
     async function loginWithTOTP(email, token) {
         const res = await fetch(`${TOTP_FUNCTION_URL}/verify-totp-login`, {
             method: 'POST',
@@ -112,15 +189,45 @@
         return { success: true };
     }
 
-    async function cancelTOTPLogin() { /* unchanged */ }
+    async function cancelTOTPLogin() {
+        const sb = await getSupabase();
+        try { await sb.auth.signOut(); } catch (e) { console.warn('فشل تسجيل الخروج أثناء إلغاء TOTP:', e); }
+    }
 
     // 5. Password
-    async function resetPassword(email) { /* unchanged */ }
-    async function updatePassword(newPassword) { /* unchanged */ }
+    async function resetPassword(email) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const { error } = await sb.auth.resetPasswordForEmail(email);
+        if (error) throw error;
+    }
+
+    async function updatePassword(newPassword) {
+        const sb = await getSupabase();
+        if (!sb) throw new Error('خدمة المصادقة غير متاحة');
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) throw new Error(passwordError);
+        const { error } = await sb.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+    }
 
     // 6. User & Session
-    async function requireAuth(redirectUrl = '/auth/auth/login/login.html') { /* unchanged */ }
-    function onAuthStateChange(callback) { /* unchanged */ }
+    async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
+        const sb = await getSupabase();
+        if (!sb) { window.location.replace(redirectUrl); return null; }
+        try {
+            const { data: { user }, error } = await sb.auth.getUser();
+            if (error || !user) { await logout(); return null; }
+            return user;
+        } catch (e) { await logout(); return null; }
+    }
+
+    function onAuthStateChange(callback) {
+        getSupabase().then(sb => {
+            if (!sb) return;
+            sb.auth.onAuthStateChange((event, session) => callback(event, session));
+        });
+    }
 
     window.Auth = {
         login, logout, getSession, getUser, isSessionValid,
