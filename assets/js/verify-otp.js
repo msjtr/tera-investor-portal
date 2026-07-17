@@ -1,10 +1,10 @@
 /**
- * verify-otp.js – v52 (الخيار الرابع: مؤقت 10 دقائق، تنظيف الجلسة عند الإلغاء أو انتهاء الوقت)
+ * verify-otp.js – v53 (تحسين: السماح بالدخول حتى لو فشل SessionManager)
  */
 (function() {
     let OTP_LENGTH = 8;
     const RESEND_TIMEOUT = 300;
-    const TOTP_SESSION_TIMEOUT = 10 * 60 * 1000; // 10 دقائق بالمللي ثانية
+    const TOTP_SESSION_TIMEOUT = 10 * 60 * 1000; // 10 دقائق
     let countdownInterval, redirectTimer, totpTimeout;
     let currentLoginMethod = 'password_otp';
 
@@ -26,7 +26,7 @@
         } else {
             if (timerSpan) timerSpan.style.display = 'none';
             if (resendBtn) resendBtn.style.display = 'none';
-            startTOTPSessionTimer(); // بدء مؤقت انتهاء الجلسة
+            startTOTPSessionTimer();
         }
         updateEmailDisplay();
     }
@@ -92,7 +92,6 @@
         }
     }
 
-    // بدء مؤقت انتهاء صلاحية جلسة TOTP (10 دقائق)
     function startTOTPSessionTimer() {
         clearTimeout(totpTimeout);
         totpTimeout = setTimeout(async () => {
@@ -101,7 +100,6 @@
         }, TOTP_SESSION_TIMEOUT);
     }
 
-    // إلغاء الجلسة والعودة إلى صفحة الدخول
     async function cancelAndGoBack() {
         clearTimeout(totpTimeout);
         if (window.Auth?.cancelTOTPLogin) {
@@ -131,26 +129,24 @@
         sessionStorage.removeItem('loginMethod');
     }
 
-    async function createSessionRecord(userId) {
-        if (!window.SessionManager) return null;
-        let fullLocation = null;
+    // تسجيل الجلسة (لا يمنع الدخول إذا فشل)
+    async function tryCreateSessionRecord(userId) {
+        if (!window.SessionManager) return;
         try {
+            let fullLocation = null;
             if (window.LocationServices?.getGPSCoords) {
                 const gpsMeta = await window.LocationServices.getGPSCoords();
                 const lat = gpsMeta.coords?.latitude, lon = gpsMeta.coords?.longitude;
                 if (lat && lon) fullLocation = await window.LocationServices.fetchLocationIQFull(lat, lon, gpsMeta, 'login');
             }
-        } catch (e) {}
-        const extraData = { locationIQ: fullLocation || {} };
-        try {
-            const result = await window.SessionManager.createSessionRecord(userId, extraData);
+            const result = await window.SessionManager.createSessionRecord(userId, { locationIQ: fullLocation || {} });
             if (result?.success) {
                 sessionStorage.setItem('currentSessionId', result.sessionId);
                 window.SessionManager.startSessionGuard?.(userId, result.sessionId);
-                return result.sessionId;
             }
-        } catch (e) {}
-        return null;
+        } catch (e) {
+            console.warn('تعذر تسجيل الجلسة، استمرار بدونها:', e);
+        }
     }
 
     async function verifyTOTP(code) {
@@ -174,7 +170,7 @@
         verifyBtn.disabled = true;
         verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
-        let sessionRecorded = false, userId = null;
+        let userId = null;
         try {
             if (currentLoginMethod === 'password_totp') {
                 userId = (await verifyTOTP(code)).id;
@@ -183,19 +179,14 @@
             }
 
             if (userId) {
-                const sessionId = await createSessionRecord(userId);
-                if (sessionId) {
-                    clearTimeout(totpTimeout);
-                    clearOtpSession();
-                    if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
-                    if (window.UIHelpers?.showToast) window.UIHelpers.showToast('مرحباً بعودتك!', 'success', 3000);
-                    sessionRecorded = true;
-                } else showError('فشل تسجيل الجلسة.');
-            }
-        } catch (error) {
-            showError(error.message || 'حدث خطأ');
-        } finally {
-            if (sessionRecorded) {
+                // محاولة تسجيل الجلسة (لن تمنع الدخول إذا فشلت)
+                await tryCreateSessionRecord(userId);
+                clearTimeout(totpTimeout);
+                clearOtpSession();
+                if (successMsg) { successMsg.textContent = 'تم التحقق بنجاح، جاري تحويلك...'; successMsg.style.display = 'block'; }
+                if (window.UIHelpers?.showToast) window.UIHelpers.showToast('مرحباً بعودتك!', 'success', 3000);
+
+                // تحويل آمن بعد 3 ثوانٍ
                 redirectTimer = setTimeout(async () => {
                     if (window.Auth?.isSessionValid) {
                         const valid = await window.Auth.isSessionValid();
@@ -207,7 +198,10 @@
                     }
                     window.location.href = '/pages/dashboard/index.html';
                 }, 3000);
-            } else resetBtn();
+            }
+        } catch (error) {
+            showError(error.message || 'حدث خطأ');
+            resetBtn();
         }
     }
 
