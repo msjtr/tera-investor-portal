@@ -1,5 +1,5 @@
 /**
- * login.js – v17 (التوجيه الصحيح: verify-totp.html عند طلب TOTP)
+ * login.js – v18 (توجيه TOTP صحيح، تخزين otpName، توافق كامل)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -13,7 +13,7 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // عناصر التبويب الثاني
+    // عناصر التبويب الثاني (TOTP)
     const tabPassword = document.getElementById('tabPassword');
     const tabTOTP = document.getElementById('tabTOTP');
     const passwordSection = document.getElementById('passwordSection');
@@ -34,12 +34,16 @@
     }
     function clearError() { if (errorMsg) errorMsg.style.display = 'none'; }
 
+    // إظهار / إخفاء كلمة المرور
     if (togglePassword) {
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        togglePassword.addEventListener('change', function() {
+            const type = this.checked ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            const icon = this.querySelector('i');
-            if (icon) { icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
+            const icon = this.nextElementSibling?.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-eye', !this.checked);
+                icon.classList.toggle('fa-eye-slash', this.checked);
+            }
         });
     }
 
@@ -94,13 +98,12 @@
             if (result.requiresTwoFactor) {
                 sessionStorage.setItem('loginMethod', 'password_totp');
                 sessionStorage.setItem('otpEmail', email);
-                sessionStorage.setItem('otpName', email.split('@')[0]);
-                // توجيه إلى صفحة TOTP بدلاً من verify-otp
+                sessionStorage.setItem('otpName', email.split('@')[0]); // ليظهر في الهيدر لاحقاً
                 window.location.href = '/auth/verify-totp.html';
                 return;
             }
 
-            // دخول مباشر ناجح – نحاول تسجيل جلسة (اختياري) ثم الانتقال للوحة التحكم
+            // دخول مباشر ناجح
             if (window.SessionManager) {
                 try {
                     const user = result.user || await window.Auth.getUser();
@@ -111,7 +114,7 @@
                             window.SessionManager.startSessionGuard?.(user.id, sessionResult.sessionId);
                         }
                     }
-                } catch (e) { console.warn('تعذر تسجيل الجلسة، الاستمرار بدونها.'); }
+                } catch (e) { console.warn('تعذر تسجيل الجلسة.'); }
             }
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
@@ -146,7 +149,6 @@
 
         try {
             await window.Auth.loginWithTOTP(email, token);
-            // loginWithTOTP تقوم بضبط الجلسة داخلياً، نحاول تسجيلها
             if (window.SessionManager) {
                 try {
                     const user = await window.Auth.getUser();
