@@ -175,7 +175,7 @@
             border-radius: var(--radius-md);
             border-right: 4px solid var(--primary);
         }
-        #instructionMainText {
+        #instructionText {
             font-size: 14px;
             color: var(--gray-700);
             line-height: 1.6;
@@ -323,7 +323,7 @@
             .otp-icon-circle { width: 60px; height: 60px; font-size: 26px; margin-bottom: 16px; }
             .portal-title { font-size: 19px; margin-bottom: 8px; }
             .instruction-wrapper { padding: 10px 12px; margin-bottom: 20px; }
-            #instructionMainText { font-size: 13px; }
+            #instructionText { font-size: 13px; }
             #instructionEmailText { font-size: 13px; padding: 4px 8px; }
             .otp-input { width: 36px; height: 46px; font-size: 17px; }
             .otp-fields-container { gap: 5px; }
@@ -355,9 +355,9 @@
 
     <!-- عنوان الصفحة -->
     <div class="page-subheader no-print">
-        <h1><i class="fas fa-shield-alt"></i> التحقق من الرمز</h1>
-        <a href="#" id="backLink" class="btn-back">
-            <i class="fas fa-arrow-left"></i> العودة
+        <h1 id="pageTitle"><i class="fas fa-shield-alt"></i> التحقق من الرمز</h1>
+        <a href="/auth/auth/login/login.html" id="backLink" class="btn-back">
+            <i class="fas fa-arrow-right"></i> العودة
         </a>
     </div>
 
@@ -365,22 +365,22 @@
     <main class="content-container">
         <div class="auth-card">
             <div class="text-center">
-                <div class="otp-icon-circle">
+                <div class="otp-icon-circle" id="otpIcon">
                     <i class="fas fa-shield-alt"></i>
                 </div>
-                <h2 class="portal-title">التحقق من الرمز</h2>
+                <h2 class="portal-title" id="portalTitle">التحقق من الرمز</h2>
             </div>
 
             <div class="instruction-wrapper">
-                <p id="instructionMainText">أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني</p>
-                <span id="instructionEmailText">example@domain.com</span>
+                <p id="instructionText">أدخل رمز التحقق المكون من 8 أرقام المرسل إلى بريدك الإلكتروني</p>
+                <span id="instructionEmailText"></span>
             </div>
 
             <!-- رسائل الخطأ والنجاح -->
             <div id="otpError" class="alert-box error" role="alert"></div>
             <div id="otpSuccess" class="alert-box success" role="alert"></div>
 
-            <!-- حقول OTP -->
+            <!-- حقول OTP (سيتم التحكم في العدد عبر JavaScript) -->
             <div class="otp-fields-container" id="otpFieldsContainer">
                 <input type="text" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
                 <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
@@ -429,26 +429,8 @@
     <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
 
-    <!-- سكربت الصفحة -->
+    <!-- سكربت الصفحة (يتحكم في كل شيء) -->
     <script src="/assets/js/verify-otp.js"></script>
 
-    <!-- تهيئة أولية سريعة -->
-    <script>
-        (function() {
-            const name = sessionStorage.getItem('otpName');
-            if (name) {
-                document.getElementById('headerUserName').textContent = name;
-                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-            }
-            const email = sessionStorage.getItem('otpEmail');
-            if (email) {
-                document.getElementById('instructionEmailText').textContent = email;
-            }
-            const backLink = document.getElementById('backLink');
-            if (backLink) {
-                backLink.href = document.referrer || '/auth/auth/login/login.html';
-            }
-        })();
-    </script>
 </body>
 </html>
