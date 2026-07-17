@@ -1,10 +1,11 @@
 /**
- * login.js – v22 (إصلاح كامل: يمنع الدخول التلقائي بعد إغلاق المتصفح)
+ * login.js – v23 (ضمان وجود Auth + تحسين checkExistingSession)
  */
 (function() {
     if (window.__loginInitialized) return;
     window.__loginInitialized = true;
 
+    // --- عناصر DOM ---
     const form = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
@@ -13,7 +14,7 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // عناصر التبويب الثاني (TOTP)
+    // عناصر تبويب TOTP
     const tabPassword = document.getElementById('tabPassword');
     const tabTOTP = document.getElementById('tabTOTP');
     const passwordSection = document.getElementById('passwordSection');
@@ -24,6 +25,7 @@
 
     if (loaderScreen) loaderScreen.style.display = 'none';
 
+    // --- دوال مساعدة ---
     function showError(msg) {
         if (errorMsg) {
             errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
@@ -66,7 +68,18 @@
         });
     }
 
-    // معالج الدخول بكلمة المرور
+    // --- ضمان وجود Auth ---
+    async function waitForAuth(timeout = 5000) {
+        if (window.Auth) return true;
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (window.Auth) return true;
+        }
+        return false;
+    }
+
+    // --- معالجات الدخول ---
     async function handlePasswordLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -75,7 +88,11 @@
         const password = passwordInput?.value;
         if (!email || !password) { showError('يرجى إدخال البريد الإلكتروني وكلمة المرور'); return; }
         if (!isValidEmail(email)) { showError('يرجى إدخال بريد إلكتروني صحيح'); return; }
-        if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
+
+        if (!await waitForAuth()) {
+            showError('خدمة المصادقة غير متاحة. الرجاء تحديث الصفحة.');
+            return;
+        }
 
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -91,7 +108,6 @@
                 return;
             }
 
-            // دخول مباشر ناجح
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
             console.error('خطأ:', error);
@@ -110,7 +126,6 @@
         }
     }
 
-    // معالج الدخول المباشر بـ TOTP (تبويب المصادقة الثنائية)
     async function handleTOTPLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -118,7 +133,11 @@
         const email = totpEmailInput?.value.trim();
         const token = totpTokenOnly?.value.trim();
         if (!email || !token) { showError('يرجى إدخال البريد الإلكتروني ورمز المصادقة'); return; }
-        if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
+
+        if (!await waitForAuth()) {
+            showError('خدمة المصادقة غير متاحة');
+            return;
+        }
 
         totpSubmitBtn.disabled = true;
         totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -138,38 +157,34 @@
     if (form) form.addEventListener('submit', handlePasswordLogin);
     if (totpSubmitBtn) totpSubmitBtn.addEventListener('click', handleTOTPLogin);
 
-    // ✅ فحص الجلسة عند تحميل صفحة الدخول
+    // --- فحص الجلسة عند التحميل ---
     async function checkExistingSession() {
+        if (!window.Auth) {
+            await waitForAuth(2000);
+        }
+        if (!window.Auth) return;
+
         try {
-            // 1. تحقق من وجود جلسة Supabase صالحة
-            if (!window.Auth?.isSessionValid) return;
             const valid = await window.Auth.isSessionValid();
             if (!valid) return;
 
-            // 2. هل لدينا جلسة كاملة (currentSessionId)؟
             const sessionId = sessionStorage.getItem('currentSessionId');
-            if (sessionId) {
-                // جلسة كاملة موجودة → انتقال مباشر
-                window.location.replace('/pages/dashboard/index.html');
-                return;
-            }
-
-            // 3. هل المستخدم في منتصف عملية TOTP؟
             const loginMethod = sessionStorage.getItem('loginMethod');
-            if (loginMethod === 'password_totp') {
-                // المستخدم لم يكمل TOTP بعد → ننتقل إلى صفحة TOTP
+
+            if (sessionId) {
+                window.location.replace('/pages/dashboard/index.html');
+            } else if (loginMethod === 'password_totp') {
                 window.location.replace('/auth/verify-totp.html');
-                return;
+            } else {
+                console.log('🔄 إنهاء جلسة قديمة...');
+                await window.Auth.logout();
             }
-
-            // 4. لا currentSessionId ولا عملية TOTP معلقة → جلسة قديمة (بعد إغلاق المتصفح)
-            console.log('🔄 إنهاء جلسة قديمة...');
-            await window.Auth.logout();
-
         } catch (e) {
             console.warn('تعذر فحص الجلسة:', e);
         }
     }
 
-    window.addEventListener('load', () => setTimeout(checkExistingSession, 300));
+    window.addEventListener('load', () => {
+        setTimeout(checkExistingSession, 300);
+    });
 })();
