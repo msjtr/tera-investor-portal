@@ -74,7 +74,34 @@
         .portal-title { font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--gray-900); text-align: center; margin: 0 0 4px; }
         .page-subtitle { font-size: 16px; font-weight: 700; color: var(--primary); text-align: center; margin: 0 0 20px; }
 
-        /* حقول إدخال محسنة */
+        /* التبويبات */
+        .tabs-container {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: var(--gray-50);
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .tab-btn i { margin-left: 6px; }
+
         .form-field-group { margin-bottom: 18px; }
         .field-label { display: block; font-weight: 700; font-size: 13px; color: #1e293b; margin-bottom: 6px; }
         .field-label-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
@@ -94,6 +121,26 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.1);
             background: #ffffff;
+            outline: none;
+        }
+
+        .otp-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 20px;
+            font-family: monospace;
+            letter-spacing: 8px;
+            text-align: center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: var(--gray-50);
+            color: var(--gray-900);
+        }
+        .otp-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.1);
+            background: #fff;
             outline: none;
         }
 
@@ -187,13 +234,13 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* تحسينات الجوال */
         @media (max-width: 768px) {
             .auth-container { padding: 28px 20px 24px; }
             .portal-title { font-size: 20px; }
             .page-subtitle { font-size: 15px; margin-bottom: 16px; }
-            .form-input-control { font-size: 14px; padding: 12px 14px; }
+            .form-input-control, .otp-input { font-size: 14px; padding: 12px 14px; }
             .btn-submit-login { padding: 14px; font-size: 15px; }
+            .tab-btn { font-size: 13px; padding: 10px 6px; }
         }
         @media (max-width: 480px) {
             .auth-layout { padding: 10px; }
@@ -203,11 +250,12 @@
             .page-subtitle { font-size: 14px; margin-bottom: 14px; }
             .form-field-group { margin-bottom: 14px; }
             .field-label { font-size: 13px; }
-            .form-input-control { font-size: 13px; padding: 10px 12px; }
+            .form-input-control, .otp-input { font-size: 13px; padding: 10px 12px; }
             .btn-submit-login { font-size: 14px; padding: 12px; }
             .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 14px; }
             .forgot-pass-link { font-size: 12px; }
             .spinning-infinity-ring { width: 44px; height: 44px; }
+            .tab-btn { font-size: 12px; padding: 10px 4px; }
         }
     </style>
 </head>
@@ -215,26 +263,27 @@
 
     <div class="auth-layout">
         <div class="auth-container">
-            <!-- الشعار -->
             <div class="brand-logo-box">
                 <img src="/images/logo.svg" alt="تيرا">
             </div>
-
-            <!-- العناوين -->
             <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
             <h3 class="page-subtitle">تسجيل الدخول الآمن</h3>
 
-            <!-- رسالة الخطأ -->
+            <!-- التبويبات -->
+            <div class="tabs-container" id="tabsContainer">
+                <button class="tab-btn active" id="tabPassword"><i class="fas fa-key"></i> كلمة المرور</button>
+                <button class="tab-btn" id="tabTOTP"><i class="fas fa-shield-alt"></i> المصادقة الثنائية</button>
+            </div>
+
             <div class="alert-box error" id="loginError" style="display:none;" role="alert"></div>
 
-            <!-- نموذج كلمة المرور (المسار الوحيد) -->
+            <!-- نموذج كلمة المرور -->
             <div id="passwordSection">
                 <form id="loginForm" novalidate>
                     <div class="form-field-group">
                         <label class="field-label" for="email">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
                         <input type="email" id="email" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
                     </div>
-
                     <div class="form-field-group">
                         <div class="field-label-flex">
                             <label class="field-label" for="password">كلمة المرور <span style="color:var(--danger)">*</span></label>
@@ -245,37 +294,46 @@
                             <input type="checkbox" id="togglePassword"> <i class="fas fa-eye"></i> إظهار كلمة المرور
                         </label>
                     </div>
-
                     <button type="submit" class="btn-submit-login" id="loginBtn">
                         <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                     </button>
                 </form>
             </div>
 
-            <!-- روابط سفلية -->
+            <!-- نموذج المصادقة الثنائية -->
+            <div id="totpSection" style="display:none;">
+                <p style="margin-bottom:20px; color: var(--gray-700);">أدخل بريدك الإلكتروني ورمز المصادقة من تطبيقك للدخول مباشرة.</p>
+                <form id="totpForm" novalidate>
+                    <div class="form-field-group">
+                        <label class="field-label" for="totpEmail">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
+                        <input type="email" id="totpEmail" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
+                    </div>
+                    <div class="form-field-group">
+                        <label class="field-label" for="totpTokenOnly">رمز المصادقة <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="totpTokenOnly" class="otp-input" placeholder="XXXXXX" maxlength="6" autocomplete="off" required>
+                    </div>
+                    <button type="button" class="btn-submit-login" id="totpSubmitBtn">
+                        <i class="fas fa-shield-alt"></i> تسجيل الدخول
+                    </button>
+                </form>
+            </div>
+
             <div class="bottom-routing-footer-links">
                 <p>ليس لديك حساب؟ <a href="/auth/register/register.html" class="routing-link">إنشاء حساب جديد</a></p>
                 <p><a href="/index.html" style="color: var(--gray-500);"><i class="fas fa-arrow-right"></i> العودة للشاشة الرئيسية</a></p>
             </div>
         </div>
-
-        <!-- شاشة التحميل -->
         <div class="tera-loader-overlay" id="creativeLoaderScreen" style="display:none;">
             <div class="spinning-infinity-ring"></div>
             <p style="color:#ffffff; font-weight:700;">جاري التحقق...</p>
         </div>
     </div>
 
-    <!-- السكربتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
-
-    <!-- وحدات الأمان (اختيارية) -->
     <script src="/assets/js/modules/network-monitor.js"></script>
     <script src="/assets/js/modules/security-enforcer.js"></script>
-
-    <!-- سكربت الصفحة (يجب أن يكون login.js v14 – آخر نسخة) -->
     <script src="/auth/auth/login/login.js"></script>
 </body>
 </html>
