@@ -1,5 +1,5 @@
 /**
- * login.js – v24 (يعيد إرسال OTP بريدي للمستخدمين غير المفعلين TOTP)
+ * login.js – v25 (اختياري: كلمة مرور ➔ OTP بريدي / TOTP ➔ دخول مباشر)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -62,18 +62,7 @@
         clearError();
     });
 
-    // ضمان وجود Auth
-    async function waitForAuth(timeout = 5000) {
-        if (window.Auth) return true;
-        const start = Date.now();
-        while (Date.now() - start < timeout) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            if (window.Auth) return true;
-        }
-        return false;
-    }
-
-    // معالج الدخول بكلمة المرور
+    // --- الدخول بكلمة المرور (يرسل OTP بريدي دائمًا) ---
     async function handlePasswordLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -82,35 +71,30 @@
         const password = passwordInput?.value;
         if (!email || !password) { showError('يرجى إدخال البريد الإلكتروني وكلمة المرور'); return; }
         if (!isValidEmail(email)) { showError('بريد إلكتروني غير صحيح'); return; }
-        if (!await waitForAuth()) { showError('خدمة المصادقة غير متاحة'); return; }
+        if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
         try {
+            // التحقق من صحة البريد وكلمة المرور فقط (لا نهتم بـ TOTP هنا)
             const result = await window.Auth.loginWithPassword(email, password);
 
-            if (result.requiresTwoFactor) {
-                // المستخدم مفعّل TOTP → انتقل إلى صفحة TOTP
-                sessionStorage.setItem('loginMethod', 'password_totp');
-                sessionStorage.setItem('otpEmail', email);
-                sessionStorage.setItem('otpName', email.split('@')[0]);
-                window.location.href = '/auth/verify-totp.html';
-                return;
-            }
-
-            // لا توجد TOTP → أرسل OTP بريدي وانتقل إلى صفحة OTP
+            // بغض النظر عن result.requiresTwoFactor، نُرسل OTP بريدي
             await window.Auth.sendOTP(email);
+
             sessionStorage.setItem('loginMethod', 'password_otp');
             sessionStorage.setItem('otpEmail', email);
             sessionStorage.setItem('otpName', email.split('@')[0]);
-            window.location.href = '/auth/verify-otp.html';
 
+            window.location.href = '/auth/verify-otp.html';
         } catch (error) {
             console.error('خطأ:', error);
-            let message = error.message || 'حدث خطأ';
+            let message = 'حدث خطأ، حاول مرة أخرى';
             if (error.message?.includes('Invalid login credentials')) {
                 message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+            } else if (error.message?.includes('تجاوز عدد المحاولات')) {
+                message = error.message;
             }
             showError(message);
         } finally {
@@ -119,7 +103,7 @@
         }
     }
 
-    // معالج تبويب TOTP المباشر
+    // --- الدخول عبر تبويب TOTP (مباشر) ---
     async function handleTOTPLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -127,7 +111,7 @@
         const email = totpEmailInput?.value.trim();
         const token = totpTokenOnly?.value.trim();
         if (!email || !token) { showError('يرجى إدخال البريد ورمز المصادقة'); return; }
-        if (!await waitForAuth()) { showError('خدمة المصادقة غير متاحة'); return; }
+        if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
         totpSubmitBtn.disabled = true;
         totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -135,7 +119,7 @@
             await window.Auth.loginWithTOTP(email, token);
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
-            showError(error.message || 'فشل تسجيل الدخول');
+            showError(error.message || 'فشل تسجيل الدخول. تأكد من الرمز.');
         } finally {
             totpSubmitBtn.disabled = false;
             totpSubmitBtn.innerHTML = '<i class="fas fa-shield-alt"></i> تسجيل الدخول';
@@ -147,9 +131,7 @@
 
     // فحص الجلسة عند تحميل صفحة الدخول
     async function checkExistingSession() {
-        if (!window.Auth) await waitForAuth(2000);
         if (!window.Auth) return;
-
         try {
             const valid = await window.Auth.isSessionValid();
             if (!valid) return;
@@ -162,13 +144,9 @@
             } else if (loginMethod === 'password_totp') {
                 window.location.replace('/auth/verify-totp.html');
             } else {
-                // جلسة قديمة → إنهاء
                 await window.Auth.logout();
             }
-        } catch (e) {
-            console.warn('تعذر فحص الجلسة:', e);
-        }
+        } catch (e) {}
     }
-
     window.addEventListener('load', () => setTimeout(checkExistingSession, 300));
 })();
