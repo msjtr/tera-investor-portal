@@ -1,5 +1,5 @@
 /**
- * login.js – v21 (فحص جلسة محسّن، يمنع الدخول التلقائي بعد إغلاق المتصفح)
+ * login.js – v22 (إصلاح كامل: يمنع الدخول التلقائي بعد إغلاق المتصفح)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -23,8 +23,6 @@
     const totpSubmitBtn = document.getElementById('totpSubmitBtn');
 
     if (loaderScreen) loaderScreen.style.display = 'none';
-
-    let activeTab = 'password';
 
     function showError(msg) {
         if (errorMsg) {
@@ -51,7 +49,6 @@
     // تبديل التبويبات
     if (tabPassword) {
         tabPassword.addEventListener('click', () => {
-            activeTab = 'password';
             tabPassword.classList.add('active');
             tabTOTP.classList.remove('active');
             passwordSection.style.display = 'block';
@@ -61,7 +58,6 @@
     }
     if (tabTOTP) {
         tabTOTP.addEventListener('click', () => {
-            activeTab = 'totp';
             tabTOTP.classList.add('active');
             tabPassword.classList.remove('active');
             passwordSection.style.display = 'none';
@@ -142,30 +138,35 @@
     if (form) form.addEventListener('submit', handlePasswordLogin);
     if (totpSubmitBtn) totpSubmitBtn.addEventListener('click', handleTOTPLogin);
 
-    // 🆕 فحص الجلسة عند تحميل صفحة الدخول
+    // ✅ فحص الجلسة عند تحميل صفحة الدخول
     async function checkExistingSession() {
         try {
-            if (window.Auth?.isSessionValid) {
-                const valid = await window.Auth.isSessionValid();
-                if (valid) {
-                    // توجد جلسة Supabase صالحة (كوكيز)، لكن هل مررنا بتدفق تسجيل الدخول كاملاً؟
-                    const sessionId = sessionStorage.getItem('currentSessionId');
-                    const loginMethod = sessionStorage.getItem('loginMethod');
-                    
-                    // إذا لم توجد currentSessionId، فهذه جلسة قديمة (من إغلاق متصفح وإعادة فتح)
-                    if (!sessionId && !loginMethod) {
-                        // إنهاء الجلسة القديمة وإجبار المستخدم على تسجيل الدخول
-                        console.log('🔄 تم اكتشاف جلسة قديمة، جاري إنهاؤها...');
-                        await window.Auth.logout();
-                        return; // يبقى في صفحة الدخول
-                    }
-                    
-                    // إذا كانت الجلسة كاملة، ننتقل إلى Dashboard
-                    window.location.replace('/pages/dashboard/index.html');
-                }
+            // 1. تحقق من وجود جلسة Supabase صالحة
+            if (!window.Auth?.isSessionValid) return;
+            const valid = await window.Auth.isSessionValid();
+            if (!valid) return;
+
+            // 2. هل لدينا جلسة كاملة (currentSessionId)؟
+            const sessionId = sessionStorage.getItem('currentSessionId');
+            if (sessionId) {
+                // جلسة كاملة موجودة → انتقال مباشر
+                window.location.replace('/pages/dashboard/index.html');
+                return;
             }
+
+            // 3. هل المستخدم في منتصف عملية TOTP؟
+            const loginMethod = sessionStorage.getItem('loginMethod');
+            if (loginMethod === 'password_totp') {
+                // المستخدم لم يكمل TOTP بعد → ننتقل إلى صفحة TOTP
+                window.location.replace('/auth/verify-totp.html');
+                return;
+            }
+
+            // 4. لا currentSessionId ولا عملية TOTP معلقة → جلسة قديمة (بعد إغلاق المتصفح)
+            console.log('🔄 إنهاء جلسة قديمة...');
+            await window.Auth.logout();
+
         } catch (e) {
-            // في حال فشل الفحص، نبقى في صفحة الدخول
             console.warn('تعذر فحص الجلسة:', e);
         }
     }
