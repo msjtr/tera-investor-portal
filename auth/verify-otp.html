@@ -389,28 +389,13 @@
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
+    <!-- السكربتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
+
+    <!-- ملف الجافا سكريبت الخاص بصفحة OTP البريدية فقط -->
     <script src="/assets/js/verify-otp.js"></script>
-    <script>
-        // ضمان عرض البريد واسم المستخدم
-        (function() {
-            const name = sessionStorage.getItem('otpName');
-            if (name) {
-                document.getElementById('headerUserName').textContent = name;
-                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-            }
-            const email = sessionStorage.getItem('otpEmail');
-            if (email) {
-                document.getElementById('instructionEmailText').textContent = email;
-            }
-            // إذا لم توجد loginMethod، نعتبرها password_otp
-            if (!sessionStorage.getItem('loginMethod')) {
-                sessionStorage.setItem('loginMethod', 'password_otp');
-            }
-        })();
-    </script>
 </body>
 </html>
