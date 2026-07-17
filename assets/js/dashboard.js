@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v3 (إصلاح تحذير SessionManager، بدء الجلسة تلقائياً)
+ * dashboard.js – v4 (متوافق مع تدفق المصادقة الجديد – بدون إنشاء جلسة مكرر)
  */
 (function() {
     let supabase;
@@ -273,26 +273,21 @@
             return;
         }
 
-        // بدء حماية الجلسة (مع محاولة إنشاء جلسة إذا لزم الأمر)
-        let sessionId = sessionStorage.getItem('currentSessionId');
-        if (!sessionId && window.SessionManager) {
+        // بدء حماية الجلسة إذا كان SessionManager محملاً
+        const sessionId = sessionStorage.getItem('currentSessionId');
+        if (window.SessionManager && sessionId) {
+            window.SessionManager.startSessionGuard(user.id, sessionId);
+        } else if (window.SessionManager && !sessionId) {
+            // محاولة إنشاء جلسة جديدة إذا لم تكن موجودة
             try {
-                // محاولة إنشاء جلسة جديدة إذا لم تكن موجودة
                 const result = await window.SessionManager.createSessionRecord(user.id);
                 if (result?.success) {
-                    sessionId = result.sessionId;
-                    sessionStorage.setItem('currentSessionId', sessionId);
+                    sessionStorage.setItem('currentSessionId', result.sessionId);
+                    window.SessionManager.startSessionGuard(user.id, result.sessionId);
                 }
             } catch (e) {
                 console.warn('تعذر إنشاء جلسة تلقائياً:', e);
             }
-        }
-
-        if (window.SessionManager && sessionId) {
-            window.SessionManager.startSessionGuard(user.id, sessionId);
-        } else {
-            // رسالة منخفضة المستوى، يمكن تعطيلها في الإنتاج
-            console.log('حماية الجلسة غير مفعلة (SessionManager أو currentSessionId غير متوفر)');
         }
 
         document.getElementById('loadingOverlay')?.classList.add('active');
@@ -339,8 +334,6 @@
                     }
                 }
             }, 60000);
-        } else {
-            console.warn('ActivityTracker غير محمل – لن يتم تتبع الخمول');
         }
 
         // تحميل البيانات
