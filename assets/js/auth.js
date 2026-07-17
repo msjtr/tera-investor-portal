@@ -1,13 +1,11 @@
 /**
- * auth.js – v20 (المصادقة الذكية + وحدات 2FA)
+ * auth.js – v20.1 (المصادقة الذكية + logging مؤقت لتشخيص 2FA)
  * 
  * ### السياسات المطلوبة في Supabase ###
  * 
- * جدول: user_totp (انظر security-two-factor-authentication.js)
- * Edge Function: two-factor (المسار: supabase/functions/two-factor/index.ts)
- *   تدعم النهايات: setup, enable, status, verify, disable, regenerate-backup-codes, check-risk, verify-totp-login
- * 
- * يجب أن يكون لدى المستخدم صف في user_totp مع RLS مناسبة.
+ * جدول: user_totp
+ * Edge Function: two-factor (تدعم: setup, enable, status, verify, disable,
+ *                regenerate-backup-codes, check-risk, verify-totp-login)
  */
 (function() {
     'use strict';
@@ -69,10 +67,14 @@
         }
 
         if (!currentSession) {
+            console.error('❌ [TOTP] لا توجد جلسة');
             throw new Error('NO_SESSION');
         }
 
+        console.log(`🚀 [TOTP] استدعاء: ${endpoint}`, body);
+
         const makeRequest = async (sess) => {
+            console.log(`🌐 [TOTP] إرسال طلب إلى: ${TOTP_FUNCTION_URL}/${endpoint}`);
             const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
                 method: 'POST',
                 headers: {
@@ -82,21 +84,28 @@
                 body: JSON.stringify(body)
             });
 
+            console.log(`📡 [TOTP] حالة الاستجابة: ${res.status}`);
+
             if (res.status === 401) {
-                // محاولة تجديد التوكن
+                console.warn('⚠️ [TOTP] انتهت الجلسة، محاولة تجديد...');
                 const { data: { session: newSession }, error: refreshError } = await sb.auth.refreshSession();
                 if (!refreshError && newSession) {
+                    console.log('🔄 [TOTP] تم تجديد الجلسة');
                     return await makeRequest(newSession);
                 }
+                console.error('❌ [TOTP] فشل تجديد الجلسة');
                 throw new Error('SESSION_EXPIRED');
             }
 
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
+                console.error('❌ [TOTP] خطأ من الخادم:', err);
                 throw new Error(err.error || 'فشل الطلب');
             }
 
-            return res.json();
+            const result = await res.json();
+            console.log('✅ [TOTP] نجح الطلب:', result);
+            return result;
         };
 
         try {
@@ -104,26 +113,57 @@
         } catch (e) {
             if (e.message === 'NO_SESSION' || e.message === 'SESSION_EXPIRED') throw e;
             if (e.message.includes('Failed to fetch')) {
+                console.error('❌ [TOTP] فشل الاتصال بالخادم');
                 throw new Error('تعذر الاتصال بالخادم. تأكد من اتصالك بالإنترنت.');
             }
             throw e;
         }
     }
 
-    // دوال TOTP العامة (تُستخدم من قبل الوحدات الأخرى)
-    async function setupTwoFactor() { return await callTOTPFunction('setup'); }
-    async function enableTwoFactor(code) { return await callTOTPFunction('enable', { code }); }
-    async function getTwoFactorStatus() { return await callTOTPFunction('status'); }
-    async function verifyTwoFactor(code, isBackup = false) { return await callTOTPFunction('verify', { code, is_backup: isBackup }); }
-    async function disableTwoFactor(code) { return await callTOTPFunction('disable', { code }); }
-    async function regenerateBackupCodes(code) { return await callTOTPFunction('regenerate-backup-codes', { code }); }
+    // دوال TOTP العامة
+    async function setupTwoFactor() {
+        console.log('🔧 [Auth] بدء setupTwoFactor...');
+        try {
+            const result = await callTOTPFunction('setup', {}); // body فارغ
+            console.log('✅ [Auth] اكتمل setupTwoFactor، النتيجة:', result);
+            return result;
+        } catch (e) {
+            console.error('❌ [Auth] setupTwoFactor فشل:', e);
+            throw e;
+        }
+    }
 
-    // ─── فحص المخاطر (Risk Check) ───────────────────────
+    async function enableTwoFactor(code) {
+        console.log('🔧 [Auth] بدء enableTwoFactor...');
+        const result = await callTOTPFunction('enable', { code });
+        console.log('✅ [Auth] enableTwoFactor نجح');
+        return result;
+    }
+
+    async function getTwoFactorStatus() {
+        console.log('🔧 [Auth] جلب حالة 2FA...');
+        const result = await callTOTPFunction('status');
+        console.log('✅ [Auth] حالة 2FA:', result);
+        return result;
+    }
+
+    async function verifyTwoFactor(code, isBackup = false) {
+        return await callTOTPFunction('verify', { code, is_backup: isBackup });
+    }
+
+    async function disableTwoFactor(code) {
+        return await callTOTPFunction('disable', { code });
+    }
+
+    async function regenerateBackupCodes(code) {
+        return await callTOTPFunction('regenerate-backup-codes', { code });
+    }
+
+    // ─── فحص المخاطر ─────────────────────────────────────
     async function checkRisk(email, password) {
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
 
-        // تسجيل الدخول مؤقتًا لفحص المخاطر
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
@@ -136,12 +176,9 @@
             requiresTOTP = riskData?.requires_totp || false;
         } catch (e) {
             console.warn('تعذر فحص المخاطر:', e);
-            // في حالة الفشل، نتعامل بحذر: نفرض TOTP إذا كان مفعلاً (سنفحص لاحقًا)
         }
 
-        // تسجيل الخروج بعد الفحص (لأننا سنسجل الدخول فعليًا لاحقًا)
         await sb.auth.signOut();
-
         return { requiresTOTP, userEmail: email };
     }
 
@@ -168,38 +205,32 @@
         }
 
         try {
-            // فحص المخاطر
             const riskResult = await checkRisk(email, password);
             if (riskResult.requiresTOTP) {
-                if (!totpToken) {
-                    throw new Error('TOTP_REQUIRED');
-                }
-                // إذا طلب TOTP، نتحقق منه ثم نكمل الدخول
+                if (!totpToken) throw new Error('TOTP_REQUIRED');
                 const sb = await getSupabase();
                 const { data } = await sb.auth.signInWithPassword({ email, password });
                 await callTOTPFunction('verify', { code: totpToken }, data.session);
-                // تم التحقق بنجاح، نستمر
                 resetLoginAttempts();
                 return { success: true, user: data.user };
             }
 
-            // لا توجد مخاطر، تسجيل دخول مباشر
             const sb = await getSupabase();
             const { data, error } = await sb.auth.signInWithPassword({ email, password });
             if (error) throw error;
             resetLoginAttempts();
             return { success: true, user: data.user };
         } catch (e) {
-            if (e.message === 'TOTP_REQUIRED') throw e; // نمررها للأعلى
+            if (e.message === 'TOTP_REQUIRED') throw e;
             incrementLoginAttempts();
             if (getLoginAttempts() >= MAX_ATTEMPTS) {
                 throw new Error('تم تجاوز عدد المحاولات. يرجى استخدام المصادقة الثنائية.');
             }
-            throw e; // أي خطأ آخر
+            throw e;
         }
     }
 
-    // ─── تسجيل الدخول باستخدام TOTP فقط (بدون كلمة مرور) ──
+    // ─── تسجيل الدخول باستخدام TOTP فقط ─────────────
     async function loginWithTOTP(email, token) {
         const sb = await getSupabase();
         if (!sb) throw new Error('Supabase غير متوفر');
@@ -223,15 +254,13 @@
         return { success: true };
     }
 
-    // ─── تسجيل الدخول بكلمة المرور ثم OTP (للتوافق) ─────
+    // ─── تسجيل الدخول بكلمة المرور ثم OTP ─────────────
     async function loginWithPasswordAndOTP(email, password) {
-        // هذه الطريقة تستخدم OTP عبر البريد، ليست TOTP
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
 
-        await checkPasswordAnd2FA(email, password); // يتحقق من كلمة المرور ويفرض TOTP إن وجد
+        await checkPasswordAnd2FA(email, password);
 
-        // إرسال OTP
         const { error: otpError } = await sb.auth.signInWithOtp({
             email,
             options: { shouldCreateUser: false }
@@ -242,7 +271,6 @@
         return { success: true };
     }
 
-    // دالة مساعدة: تحقق من كلمة المرور مع إمكانية طلب TOTP
     async function checkPasswordAnd2FA(email, password, totpToken) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -263,13 +291,10 @@
             }
 
             if (totpEnabled) {
-                if (!totpToken) {
-                    throw new Error('TOTP_REQUIRED');
-                }
+                if (!totpToken) throw new Error('TOTP_REQUIRED');
                 await callTOTPFunction('verify', { code: totpToken }, data.session);
             }
 
-            // تخزين اسم المستخدم للاستخدام لاحقًا
             if (user.user_metadata?.full_name) {
                 sessionStorage.setItem('otpName', user.user_metadata.full_name);
             } else {
@@ -436,5 +461,5 @@
         regenerateBackupCodes
     };
 
-    console.log('auth.js v20 (المصادقة الذكية + 2FA) جاهز');
+    console.log('✅ auth.js v20.1 (مع logging) جاهز');
 })();
