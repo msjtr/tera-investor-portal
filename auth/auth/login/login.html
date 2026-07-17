@@ -124,28 +124,6 @@
             outline: none;
         }
 
-        /* حقل TOTP خاص – اتجاه الأرقام من اليسار */
-        .otp-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-md);
-            font-size: 20px;
-            font-family: monospace;
-            letter-spacing: 8px;
-            text-align: center;
-            direction: ltr;            /* الأرقام تظهر من اليسار */
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background: var(--gray-50);
-            color: var(--gray-900);
-        }
-        .otp-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.1);
-            background: #fff;
-            outline: none;
-        }
-
         .forgot-pass-link {
             font-size: 13px;
             color: var(--primary);
@@ -240,7 +218,7 @@
             .auth-container { padding: 28px 20px 24px; }
             .portal-title { font-size: 20px; }
             .page-subtitle { font-size: 15px; margin-bottom: 16px; }
-            .form-input-control, .otp-input { font-size: 14px; padding: 12px 14px; }
+            .form-input-control { font-size: 14px; padding: 12px 14px; }
             .btn-submit-login { padding: 14px; font-size: 15px; }
             .tab-btn { font-size: 13px; padding: 10px 6px; }
         }
@@ -252,7 +230,7 @@
             .page-subtitle { font-size: 14px; margin-bottom: 14px; }
             .form-field-group { margin-bottom: 14px; }
             .field-label { font-size: 13px; }
-            .form-input-control, .otp-input { font-size: 13px; padding: 10px 12px; }
+            .form-input-control { font-size: 13px; padding: 10px 12px; }
             .btn-submit-login { font-size: 14px; padding: 12px; }
             .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 14px; }
             .forgot-pass-link { font-size: 12px; }
@@ -302,20 +280,16 @@
                 </form>
             </div>
 
-            <!-- نموذج المصادقة الثنائية -->
+            <!-- نموذج المصادقة الثنائية – بريد إلكتروني فقط -->
             <div id="totpSection" style="display:none;">
-                <p style="margin-bottom:20px; color: var(--gray-700);">أدخل بريدك الإلكتروني ورمز المصادقة من تطبيقك للدخول مباشرة.</p>
+                <p style="margin-bottom:20px; color: var(--gray-700);">أدخل بريدك الإلكتروني المسجل، ثم أكمل التحقق من خلال تطبيق المصادقة على هاتفك.</p>
                 <form id="totpForm" novalidate>
                     <div class="form-field-group">
                         <label class="field-label" for="totpEmail">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
                         <input type="email" id="totpEmail" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
                     </div>
-                    <div class="form-field-group">
-                        <label class="field-label" for="totpTokenOnly">رمز المصادقة <span style="color:var(--danger)">*</span></label>
-                        <input type="text" id="totpTokenOnly" class="otp-input" placeholder="XXXXXX" maxlength="6" autocomplete="off" required>
-                    </div>
-                    <button type="button" class="btn-submit-login" id="totpSubmitBtn">
-                        <i class="fas fa-shield-alt"></i> تسجيل الدخول
+                    <button type="submit" class="btn-submit-login" id="totpSubmitBtn">
+                        <i class="fas fa-arrow-left"></i> متابعة إلى التحقق
                     </button>
                 </form>
             </div>
