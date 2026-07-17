@@ -1,8 +1,5 @@
 /**
- * dashboard.js – v2 (حماية جلسة محسنة + توافق مع جميع الوحدات)
- * - يبدأ حماية الجلسة (startSessionGuard) إذا وُجد معرف الجلسة
- * - يتعامل مع غياب ActivityTracker أو SessionManager بأمان
- * - يعتمد على Auth.logout لإنهاء الجلسة بشكل آمن
+ * dashboard.js – v3 (إصلاح تحذير SessionManager، بدء الجلسة تلقائياً)
  */
 (function() {
     let supabase;
@@ -276,12 +273,26 @@
             return;
         }
 
-        // بدء حماية الجلسة (إذا وُجد معرف الجلسة مخزّن)
-        const sessionId = sessionStorage.getItem('currentSessionId');
+        // بدء حماية الجلسة (مع محاولة إنشاء جلسة إذا لزم الأمر)
+        let sessionId = sessionStorage.getItem('currentSessionId');
+        if (!sessionId && window.SessionManager) {
+            try {
+                // محاولة إنشاء جلسة جديدة إذا لم تكن موجودة
+                const result = await window.SessionManager.createSessionRecord(user.id);
+                if (result?.success) {
+                    sessionId = result.sessionId;
+                    sessionStorage.setItem('currentSessionId', sessionId);
+                }
+            } catch (e) {
+                console.warn('تعذر إنشاء جلسة تلقائياً:', e);
+            }
+        }
+
         if (window.SessionManager && sessionId) {
             window.SessionManager.startSessionGuard(user.id, sessionId);
         } else {
-            console.warn('تعذر بدء حماية الجلسة: SessionManager غير محمل أو currentSessionId غير موجود');
+            // رسالة منخفضة المستوى، يمكن تعطيلها في الإنتاج
+            console.log('حماية الجلسة غير مفعلة (SessionManager أو currentSessionId غير متوفر)');
         }
 
         document.getElementById('loadingOverlay')?.classList.add('active');
@@ -314,7 +325,6 @@
         // تتبع النشاط مع ActivityTracker (إن وجد)
         if (window.ActivityTracker) {
             window.ActivityTracker.startIdleTimer(async () => {
-                // Auth.logout ستتولى إنهاء الجلسة بشكل آمن (تنظيف SessionManager)
                 if (window.Auth?.logout) await window.Auth.logout();
             }, user.id);
 
