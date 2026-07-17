@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v56 (مستقل لصفحة OTP البريدية 8 أرقام)
+ * verify-otp.js – v57 (تحسين معالجة أخطاء OTP البريدي)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -117,9 +117,12 @@
 
         try {
             const email = sessionStorage.getItem('otpEmail');
-            if (!email) throw new Error('انتهت الجلسة');
+            if (!email) throw new Error('انتهت الجلسة. يرجى العودة لصفحة الدخول.');
 
+            console.log('محاولة التحقق من OTP للبريد:', email);
             const data = await window.Auth.verifyOTP(email, code);
+            console.log('استجابة verifyOTP:', data);
+
             if (!data?.session) throw new Error('رمز التحقق غير صحيح');
 
             const user = data.session.user;
@@ -135,8 +138,18 @@
                 window.location.href = '/pages/dashboard/index.html';
             }, 3000);
         } catch (error) {
-            showError(error.message || 'حدث خطأ');
+            console.error('خطأ في verifyOTP:', error);
+            let message = error.message || 'حدث خطأ';
+            if (error.message?.includes('otp_expired')) {
+                message = 'انتهت صلاحية الرمز. اطلب رمزاً جديداً.';
+            } else if (error.message?.includes('Invalid OTP') || error.message?.includes('Token has expired')) {
+                message = 'الرمز غير صحيح أو منتهي الصلاحية. حاول مرة أخرى أو اطلب رمزاً جديداً.';
+            }
+            showError(message);
             resetBtn();
+            // تفريغ الحقول ليتمكن من إدخال رمز جديد
+            otpInputs.forEach(inp => inp.value = '');
+            otpInputs[0]?.focus();
         }
     }
 
@@ -154,7 +167,7 @@
             }
             resetCountdown();
         } catch (e) {
-            showError('فشل الإرسال');
+            showError('فشل الإرسال. تأكد من البريد وحاول لاحقاً.');
         } finally {
             resendBtn.disabled = false;
             resendBtn.textContent = 'إعادة إرسال الرمز';
