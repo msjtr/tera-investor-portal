@@ -1,5 +1,5 @@
 /**
- * login.js – v15 (يدعم تبويب كلمة المرور وتبويب TOTP)
+ * login.js – v16 (يدعم تبويب كلمة المرور وتبويب TOTP، مع تحسين إعادة التوجيه)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -78,6 +78,13 @@
         if (!isValidEmail(email)) { showError('يرجى إدخال بريد إلكتروني صحيح'); return; }
         if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
+        // إلغاء أي جلسة TOTP معلقة من محاولة سابقة
+        const pendingTOTP = sessionStorage.getItem('loginMethod') === 'password_totp';
+        if (pendingTOTP) {
+            try { await window.Auth.cancelTOTPLogin(); } catch(e) {}
+            ['loginMethod', 'otpEmail', 'otpName'].forEach(k => sessionStorage.removeItem(k));
+        }
+
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
@@ -92,6 +99,19 @@
                 return;
             }
 
+            // دخول مباشر ناجح – نحاول تسجيل جلسة (اختياري) ثم الانتقال للوحة التحكم
+            if (window.SessionManager) {
+                try {
+                    const user = result.user || await window.Auth.getUser();
+                    if (user) {
+                        const sessionResult = await window.SessionManager.createSessionRecord(user.id);
+                        if (sessionResult?.success) {
+                            sessionStorage.setItem('currentSessionId', sessionResult.sessionId);
+                            window.SessionManager.startSessionGuard?.(user.id, sessionResult.sessionId);
+                        }
+                    }
+                } catch (e) { console.warn('تعذر تسجيل الجلسة، الاستمرار بدونها.'); }
+            }
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
             console.error('خطأ:', error);
@@ -125,6 +145,19 @@
 
         try {
             await window.Auth.loginWithTOTP(email, token);
+            // loginWithTOTP تقوم بضبط الجلسة داخلياً، نحاول تسجيلها
+            if (window.SessionManager) {
+                try {
+                    const user = await window.Auth.getUser();
+                    if (user) {
+                        const sessionResult = await window.SessionManager.createSessionRecord(user.id);
+                        if (sessionResult?.success) {
+                            sessionStorage.setItem('currentSessionId', sessionResult.sessionId);
+                            window.SessionManager.startSessionGuard?.(user.id, sessionResult.sessionId);
+                        }
+                    }
+                } catch (e) { console.warn('تعذر تسجيل الجلسة.'); }
+            }
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
             console.error('خطأ:', error);
@@ -138,6 +171,13 @@
     if (form) form.addEventListener('submit', handlePasswordLogin);
     if (totpSubmitBtn) totpSubmitBtn.addEventListener('click', handleTOTPLogin);
 
-    async function checkExistingSession() { /* unchanged */ }
+    async function checkExistingSession() {
+        try {
+            if (window.Auth?.isSessionValid) {
+                const valid = await window.Auth.isSessionValid();
+                if (valid) window.location.replace('/pages/dashboard/index.html');
+            }
+        } catch (e) {}
+    }
     window.addEventListener('load', () => setTimeout(checkExistingSession, 300));
 })();
