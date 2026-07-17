@@ -1,5 +1,6 @@
 /**
- * security-two-factor-authentication.js - متوافق مع user_two_factor
+ * security-two-factor-authentication.js – متوافق مع user_totp + user_security
+ * يعتمد على Auth.js v27 و Edge Function التي تستخدم الجدولين المنفصلين.
  */
 (function() {
     'use strict';
@@ -176,7 +177,7 @@
         }
     }
 
-    // --- الإجراءات (جميعها كما هي) ---
+    // --- الإجراءات ---
     async function showSetupWizard() {
         try {
             const secretData = await setupTwoFactor();
