@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>التحقق من الرمز | تيرا</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+
     <!-- الخطوط -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,9 +20,6 @@
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/auth.css">
-
-    <!-- أيقونة الموقع -->
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
 
     <style>
         :root {
@@ -53,7 +53,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* الهيدر */
         .focused-header {
             background: #ffffff;
             border-bottom: 1px solid var(--gray-200);
@@ -92,7 +91,6 @@
             flex-shrink: 0;
         }
 
-        /* شريط العنوان */
         .page-subheader {
             background: var(--primary-dark);
             padding: 16px 30px;
@@ -130,7 +128,6 @@
         }
         .btn-back:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* المحتوى الرئيسي */
         .content-container {
             max-width: 520px;
             margin: 40px auto;
@@ -147,7 +144,6 @@
         }
         .text-center { text-align: center; }
 
-        /* أيقونة التحقق */
         .otp-icon-circle {
             width: 72px;
             height: 72px;
@@ -195,7 +191,6 @@
             margin-top: 8px;
         }
 
-        /* تنبيهات */
         .alert-box {
             display: none;
             align-items: center;
@@ -210,7 +205,6 @@
         .alert-box.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
         .alert-box.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
 
-        /* حقول OTP */
         .otp-fields-container {
             display: flex;
             gap: 6px;
@@ -241,7 +235,6 @@
             background: #f0fdfa;
         }
 
-        /* زر التأكيد */
         .btn-submit {
             background: linear-gradient(135deg, var(--primary) 0%, #0d9488 100%);
             border: none;
@@ -268,7 +261,6 @@
         }
         .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-        /* المؤقت */
         .timer-container {
             text-align: center;
             font-size: 14px;
@@ -278,7 +270,6 @@
         }
         #otpTimer { color: var(--primary); font-weight: 800; direction: ltr; display: inline-block; }
 
-        /* زر إعادة الإرسال */
         .btn-resend {
             display: inline-flex;
             align-items: center;
@@ -299,7 +290,6 @@
         .btn-resend:hover { background: rgba(2,128,144,0.1); color: var(--primary-dark); }
         .btn-resend:disabled { color: #94a3b8; pointer-events: none; cursor: not-allowed; background: var(--gray-100); }
 
-        /* تذييل */
         .page-footer {
             text-align: center;
             padding: 16px 20px;
@@ -310,7 +300,6 @@
             margin-top: auto;
         }
 
-        /* تحسينات الجوال */
         @media (max-width: 768px) {
             .focused-header { padding: 8px 16px; }
             .focused-header .logo img { height: 36px; }
@@ -326,23 +315,14 @@
             #instructionText { font-size: 13px; }
             #instructionEmailText { font-size: 13px; padding: 4px 8px; }
             .otp-input { width: 36px; height: 46px; font-size: 17px; }
-            .otp-fields-container { gap: 5px; }
             .btn-submit { padding: 13px 16px; font-size: 14px; margin-bottom: 20px; }
             .timer-container { font-size: 13px; margin-bottom: 14px; }
             .btn-resend { font-size: 13px; padding: 6px 12px; }
-        }
-
-        @media (max-width: 400px) {
-            .otp-input { width: 32px; height: 42px; font-size: 15px; }
-            .otp-fields-container { gap: 4px; }
-            .auth-card { padding: 20px 14px 18px 14px; }
-            .btn-submit { padding: 12px 14px; font-size: 13px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- الهيدر -->
     <header class="focused-header no-print">
         <div class="logo">
             <img src="/images/logo.svg" alt="تيرا">
@@ -353,22 +333,20 @@
         </div>
     </header>
 
-    <!-- عنوان الصفحة -->
     <div class="page-subheader no-print">
-        <h1 id="pageTitle"><i class="fas fa-shield-alt"></i> التحقق من الرمز</h1>
-        <a href="/auth/auth/login/login.html" id="backLink" class="btn-back">
+        <h1><i class="fas fa-envelope-open-text"></i> التحقق من الرمز</h1>
+        <a href="/auth/auth/login/login.html" class="btn-back" id="backLink">
             <i class="fas fa-arrow-right"></i> العودة
         </a>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <main class="content-container">
         <div class="auth-card">
             <div class="text-center">
-                <div class="otp-icon-circle" id="otpIcon">
-                    <i class="fas fa-shield-alt"></i>
+                <div class="otp-icon-circle">
+                    <i class="fas fa-envelope-open-text"></i>
                 </div>
-                <h2 class="portal-title" id="portalTitle">التحقق من الرمز</h2>
+                <h2 class="portal-title">التحقق من الرمز</h2>
             </div>
 
             <div class="instruction-wrapper">
@@ -376,11 +354,9 @@
                 <span id="instructionEmailText"></span>
             </div>
 
-            <!-- رسائل الخطأ والنجاح -->
             <div id="otpError" class="alert-box error" role="alert"></div>
             <div id="otpSuccess" class="alert-box success" role="alert"></div>
 
-            <!-- حقول OTP (سيتم التحكم في العدد عبر JavaScript) -->
             <div class="otp-fields-container" id="otpFieldsContainer">
                 <input type="text" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
                 <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
@@ -409,28 +385,32 @@
         </div>
     </main>
 
-    <!-- تذييل -->
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- السكربتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
-
-    <!-- وحدات النظام (بالترتيب الصحيح) -->
-    <script src="/assets/js/modules/network-monitor.js"></script>
-    <script src="/assets/js/modules/device-info.js"></script>
-    <script src="/assets/js/modules/connection-info.js"></script>
-    <script src="/assets/js/modules/security-enforcer.js"></script>
-    <script src="/assets/js/modules/ui-helpers.js"></script>
-    <script src="/assets/js/modules/location-services.js"></script>
-    <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
-
-    <!-- سكربت الصفحة (يتحكم في كل شيء) -->
     <script src="/assets/js/verify-otp.js"></script>
-
+    <script>
+        // ضمان عرض البريد واسم المستخدم
+        (function() {
+            const name = sessionStorage.getItem('otpName');
+            if (name) {
+                document.getElementById('headerUserName').textContent = name;
+                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            }
+            const email = sessionStorage.getItem('otpEmail');
+            if (email) {
+                document.getElementById('instructionEmailText').textContent = email;
+            }
+            // إذا لم توجد loginMethod، نعتبرها password_otp
+            if (!sessionStorage.getItem('loginMethod')) {
+                sessionStorage.setItem('loginMethod', 'password_otp');
+            }
+        })();
+    </script>
 </body>
 </html>
