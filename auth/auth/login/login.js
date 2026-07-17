@@ -1,5 +1,5 @@
 /**
- * login.js – v18 (توجيه TOTP صحيح، تخزين otpName، توافق كامل)
+ * login.js – v19 (إرسال OTP بريدي عند الدخول العادي، توجيه إلى verify-otp.html)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -13,7 +13,7 @@
     const togglePassword = document.getElementById('togglePassword');
     const loaderScreen = document.getElementById('creativeLoaderScreen');
 
-    // عناصر التبويب الثاني (TOTP)
+    // عناصر التبويب الثاني (TOTP) – ستبقى موجودة لكن لن تستخدم في هذا الإصدار
     const tabPassword = document.getElementById('tabPassword');
     const tabTOTP = document.getElementById('tabTOTP');
     const passwordSection = document.getElementById('passwordSection');
@@ -24,8 +24,6 @@
 
     if (loaderScreen) loaderScreen.style.display = 'none';
 
-    let activeTab = 'password';
-
     function showError(msg) {
         if (errorMsg) {
             errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
@@ -34,7 +32,6 @@
     }
     function clearError() { if (errorMsg) errorMsg.style.display = 'none'; }
 
-    // إظهار / إخفاء كلمة المرور
     if (togglePassword) {
         togglePassword.addEventListener('change', function() {
             const type = this.checked ? 'text' : 'password';
@@ -49,10 +46,9 @@
 
     function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-    // تبديل التبويبات
+    // تبديل التبويبات (لن نستخدمها كثيرًا)
     if (tabPassword) {
         tabPassword.addEventListener('click', () => {
-            activeTab = 'password';
             tabPassword.classList.add('active');
             tabTOTP.classList.remove('active');
             passwordSection.style.display = 'block';
@@ -62,7 +58,6 @@
     }
     if (tabTOTP) {
         tabTOTP.addEventListener('click', () => {
-            activeTab = 'totp';
             tabTOTP.classList.add('active');
             tabPassword.classList.remove('active');
             passwordSection.style.display = 'none';
@@ -71,7 +66,6 @@
         });
     }
 
-    // معالج الدخول بكلمة المرور
     async function handlePasswordLogin(e) {
         if (e) e.preventDefault();
         clearError();
@@ -82,89 +76,48 @@
         if (!isValidEmail(email)) { showError('يرجى إدخال بريد إلكتروني صحيح'); return; }
         if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
-        // إلغاء أي جلسة TOTP معلقة من محاولة سابقة
-        const pendingTOTP = sessionStorage.getItem('loginMethod') === 'password_totp';
-        if (pendingTOTP) {
-            try { await window.Auth.cancelTOTPLogin(); } catch(e) {}
-            ['loginMethod', 'otpEmail', 'otpName'].forEach(k => sessionStorage.removeItem(k));
-        }
-
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
         try {
-            const result = await window.Auth.loginWithPassword(email, password);
-
-            if (result.requiresTwoFactor) {
-                sessionStorage.setItem('loginMethod', 'password_totp');
-                sessionStorage.setItem('otpEmail', email);
-                sessionStorage.setItem('otpName', email.split('@')[0]); // ليظهر في الهيدر لاحقاً
-                window.location.href = '/auth/verify-totp.html';
-                return;
-            }
-
-            // دخول مباشر ناجح
-            if (window.SessionManager) {
-                try {
-                    const user = result.user || await window.Auth.getUser();
-                    if (user) {
-                        const sessionResult = await window.SessionManager.createSessionRecord(user.id);
-                        if (sessionResult?.success) {
-                            sessionStorage.setItem('currentSessionId', sessionResult.sessionId);
-                            window.SessionManager.startSessionGuard?.(user.id, sessionResult.sessionId);
-                        }
-                    }
-                } catch (e) { console.warn('تعذر تسجيل الجلسة.'); }
-            }
-            window.location.href = '/pages/dashboard/index.html';
+            // التحقق من صحة كلمة المرور (دون متابعة TOTP)
+            await window.Auth.checkPasswordAnd2FA(email, password);
+            // إرسال OTP بريدي
+            await window.Auth.sendOTP(email);
+            // تخزين البيانات والتوجيه إلى صفحة OTP
+            sessionStorage.setItem('otpEmail', email);
+            sessionStorage.setItem('otpName', email.split('@')[0]);
+            sessionStorage.setItem('loginMethod', 'password_otp');
+            window.location.href = '/auth/verify-otp.html';
         } catch (error) {
             console.error('خطأ:', error);
-            let message = 'حدث خطأ، حاول مرة أخرى';
+            let message = error.message || 'حدث خطأ';
             if (error.message?.includes('Invalid login credentials')) {
                 message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-            } else if (error.message?.includes('تجاوز عدد المحاولات')) {
-                message = error.message;
-            } else if (error.message?.includes('Email not confirmed')) {
-                message = 'يرجى تأكيد البريد الإلكتروني أولاً';
             }
             showError(message);
         } finally {
             loginBtn.disabled = false;
-            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+            loginBtn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال رمز التحقق';
         }
     }
 
-    // معالج الدخول المباشر بـ TOTP (تبويب المصادقة الثنائية)
+    // معالج الدخول المباشر بـ TOTP (يبقى اختياريًا)
     async function handleTOTPLogin(e) {
         if (e) e.preventDefault();
         clearError();
-
         const email = totpEmailInput?.value.trim();
         const token = totpTokenOnly?.value.trim();
-        if (!email || !token) { showError('يرجى إدخال البريد الإلكتروني ورمز المصادقة'); return; }
+        if (!email || !token) { showError('يرجى إدخال البريد ورمز المصادقة'); return; }
         if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
         totpSubmitBtn.disabled = true;
         totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-
         try {
             await window.Auth.loginWithTOTP(email, token);
-            if (window.SessionManager) {
-                try {
-                    const user = await window.Auth.getUser();
-                    if (user) {
-                        const sessionResult = await window.SessionManager.createSessionRecord(user.id);
-                        if (sessionResult?.success) {
-                            sessionStorage.setItem('currentSessionId', sessionResult.sessionId);
-                            window.SessionManager.startSessionGuard?.(user.id, sessionResult.sessionId);
-                        }
-                    }
-                } catch (e) { console.warn('تعذر تسجيل الجلسة.'); }
-            }
             window.location.href = '/pages/dashboard/index.html';
         } catch (error) {
-            console.error('خطأ:', error);
-            showError(error.message || 'فشل تسجيل الدخول. تأكد من الرمز.');
+            showError(error.message || 'فشل تسجيل الدخول');
         } finally {
             totpSubmitBtn.disabled = false;
             totpSubmitBtn.innerHTML = '<i class="fas fa-shield-alt"></i> تسجيل الدخول';
@@ -176,10 +129,8 @@
 
     async function checkExistingSession() {
         try {
-            if (window.Auth?.isSessionValid) {
-                const valid = await window.Auth.isSessionValid();
-                if (valid) window.location.replace('/pages/dashboard/index.html');
-            }
+            const valid = window.Auth?.isSessionValid && await window.Auth.isSessionValid();
+            if (valid) window.location.replace('/pages/dashboard/index.html');
         } catch (e) {}
     }
     window.addEventListener('load', () => setTimeout(checkExistingSession, 300));
