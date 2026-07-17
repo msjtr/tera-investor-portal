@@ -1,5 +1,5 @@
 /**
- * login.js – v16 (يدعم تبويب كلمة المرور وتبويب TOTP، مع تحسين إعادة التوجيه)
+ * login.js – v17 (التوجيه الصحيح: verify-totp.html عند طلب TOTP)
  */
 (function() {
     if (window.__loginInitialized) return;
@@ -95,7 +95,8 @@
                 sessionStorage.setItem('loginMethod', 'password_totp');
                 sessionStorage.setItem('otpEmail', email);
                 sessionStorage.setItem('otpName', email.split('@')[0]);
-                window.location.href = '/auth/verify-otp.html';
+                // توجيه إلى صفحة TOTP بدلاً من verify-otp
+                window.location.href = '/auth/verify-totp.html';
                 return;
             }
 
@@ -130,7 +131,7 @@
         }
     }
 
-    // معالج الدخول المباشر بـ TOTP
+    // معالج الدخول المباشر بـ TOTP (تبويب المصادقة الثنائية)
     async function handleTOTPLogin(e) {
         if (e) e.preventDefault();
         clearError();
