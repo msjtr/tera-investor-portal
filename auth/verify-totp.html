@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -345,144 +345,13 @@
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
+    <!-- السكربتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
-    <script>
-        // سكربت خاص بصفحة TOTP (6 أرقام)
-        (function() {
-            const OTP_LENGTH = 6;
-            const TOTP_TIMEOUT = 10 * 60 * 1000; // 10 دقائق
-            let totpTimeout;
 
-            const inputs = document.querySelectorAll('#totpFieldsContainer .otp-input');
-            const verifyBtn = document.getElementById('verifyTotpBtn');
-            const errorEl = document.getElementById('totpError');
-            const successEl = document.getElementById('totpSuccess');
-            const backLink = document.getElementById('backLink');
-
-            function getCode() {
-                let code = '';
-                inputs.forEach(i => code += i.value);
-                return code;
-            }
-
-            function checkComplete() {
-                verifyBtn.disabled = getCode().length !== OTP_LENGTH;
-            }
-
-            function showError(msg) {
-                if (errorEl) { errorEl.textContent = msg; errorEl.style.display = 'flex'; }
-                if (successEl) successEl.style.display = 'none';
-            }
-
-            function clearMessages() {
-                if (errorEl) errorEl.style.display = 'none';
-                if (successEl) successEl.style.display = 'none';
-            }
-
-            // تهيئة اسم المستخدم والبريد
-            const name = sessionStorage.getItem('otpName');
-            if (name) {
-                document.getElementById('headerUserName').textContent = name;
-                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
-            }
-            const email = sessionStorage.getItem('otpEmail');
-            if (email) {
-                document.getElementById('instructionEmailText').textContent = email;
-            } else {
-                // إذا لم يوجد بريد، قد تكون الجلسة انتهت، نتأكد
-                showError('انتهت الجلسة. يرجى العودة لصفحة الدخول.');
-            }
-
-            // أحداث الحقول
-            inputs.forEach((input, index) => {
-                input.addEventListener('input', (e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                    if (e.target.value && index < OTP_LENGTH - 1) {
-                        inputs[index + 1].focus();
-                    }
-                    checkComplete();
-                });
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                        inputs[index - 1].focus();
-                    }
-                });
-                input.addEventListener('paste', (e) => {
-                    e.preventDefault();
-                    const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
-                    if (digits.length === OTP_LENGTH) {
-                        for (let i = 0; i < OTP_LENGTH; i++) inputs[i].value = digits[i] || '';
-                        checkComplete();
-                    }
-                });
-            });
-
-            verifyBtn.addEventListener('click', async () => {
-                const code = getCode();
-                if (code.length !== OTP_LENGTH) return;
-                clearMessages();
-                verifyBtn.disabled = true;
-                verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
-
-                try {
-                    if (!window.Auth || !window.Auth.completeLoginWithTOTP) throw new Error('خدمة المصادقة غير متاحة');
-                    const result = await window.Auth.completeLoginWithTOTP(code);
-                    if (result?.user) {
-                        // تسجيل الجلسة اختياري
-                        if (window.SessionManager) {
-                            try {
-                                const sessionRes = await window.SessionManager.createSessionRecord(result.user.id);
-                                if (sessionRes?.success) {
-                                    sessionStorage.setItem('currentSessionId', sessionRes.sessionId);
-                                    window.SessionManager.startSessionGuard?.(result.user.id, sessionRes.sessionId);
-                                }
-                            } catch (e) {}
-                        }
-                        successEl.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
-                        successEl.style.display = 'flex';
-                        setTimeout(() => {
-                            window.location.href = '/pages/dashboard/index.html';
-                        }, 3000);
-                    }
-                } catch (error) {
-                    showError(error.message || 'رمز التحقق غير صحيح');
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تحقق';
-                }
-            });
-
-            // مؤقت انتهاء الجلسة (10 دقائق)
-            function startTimeout() {
-                totpTimeout = setTimeout(async () => {
-                    if (window.Auth?.cancelTOTPLogin) await window.Auth.cancelTOTPLogin();
-                    sessionStorage.removeItem('loginMethod');
-                    sessionStorage.removeItem('otpEmail');
-                    sessionStorage.removeItem('otpName');
-                    window.location.href = '/auth/auth/login/login.html';
-                }, TOTP_TIMEOUT);
-            }
-            startTimeout();
-
-            // زر العودة – إلغاء الجلسة
-            if (backLink) {
-                backLink.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    if (window.Auth?.cancelTOTPLogin) await window.Auth.cancelTOTPLogin();
-                    sessionStorage.removeItem('loginMethod');
-                    sessionStorage.removeItem('otpEmail');
-                    sessionStorage.removeItem('otpName');
-                    window.location.href = backLink.href;
-                });
-            }
-
-            // عند مغادرة الصفحة تنظيف المؤقت
-            window.addEventListener('beforeunload', () => {
-                if (totpTimeout) clearTimeout(totpTimeout);
-            });
-        })();
-    </script>
+    <!-- ملف الجافا سكريبت الخاص بصفحة TOTP فقط -->
+    <script src="/assets/js/verify-totp.js"></script>
 </body>
 </html>
