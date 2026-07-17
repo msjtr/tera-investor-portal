@@ -1,5 +1,5 @@
 /**
- * auth.js – v26 (يدعم loginWithTOTP الآمن، كامل)
+ * auth.js – v27 (دعم كامل لصفحات OTP و TOTP المنفصلة)
  */
 (function() {
     'use strict';
@@ -150,6 +150,7 @@
             } catch (e) { console.warn('تعذر التحقق من TOTP:', e); }
 
             if (isTOTPEnabled) {
+                // الجلسة تبقى مفتوحة، سنطلب من المستخدم إدخال رمز TOTP في صفحة منفصلة
                 return { requiresTwoFactor: true, email };
             }
             resetLoginAttempts();
@@ -171,6 +172,7 @@
         return { success: true, user };
     }
 
+    // تسجيل الدخول المباشر بـ TOTP (من تبويب المصادقة الثنائية)
     async function loginWithTOTP(email, token) {
         const res = await fetch(`${TOTP_FUNCTION_URL}/verify-totp-login`, {
             method: 'POST',
@@ -179,6 +181,10 @@
         });
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
+            // تحسين رسالة الخطأ في حال كانت النقطة غير موجودة
+            if (res.status === 404 || err.error?.includes('Unknown')) {
+                throw new Error('خدمة المصادقة الثنائية غير متاحة حالياً. الرجاء استخدام الدخول العادي.');
+            }
             throw new Error(err.error || 'فشل التحقق من رمز TOTP');
         }
         const { session } = await res.json();
@@ -238,5 +244,5 @@
         requireAuth, onAuthStateChange, validatePassword
     };
 
-    console.log('✅ auth.js v26 (مع loginWithTOTP) جاهز');
+    console.log('✅ auth.js v27 (جاهز للصفحات المنفصلة)');
 })();
