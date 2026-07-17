@@ -74,34 +74,6 @@
         .portal-title { font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--gray-900); text-align: center; margin: 0 0 4px; }
         .page-subtitle { font-size: 16px; font-weight: 700; color: var(--primary); text-align: center; margin: 0 0 20px; }
 
-        /* التبويبات */
-        .tabs-container {
-            display: flex;
-            gap: 0;
-            margin-bottom: 24px;
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            border: 1px solid var(--gray-200);
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 12px 8px;
-            background: var(--gray-50);
-            border: none;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            color: var(--gray-500);
-            transition: all 0.2s;
-            text-align: center;
-        }
-        .tab-btn.active {
-            background: var(--primary);
-            color: #fff;
-        }
-        .tab-btn i { margin-left: 6px; }
-
         /* حقول إدخال محسنة */
         .form-field-group { margin-bottom: 18px; }
         .field-label { display: block; font-weight: 700; font-size: 13px; color: #1e293b; margin-bottom: 6px; }
@@ -122,26 +94,6 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.1);
             background: #ffffff;
-            outline: none;
-        }
-
-        .otp-input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--gray-200);
-            border-radius: var(--radius-md);
-            font-size: 20px;
-            font-family: monospace;
-            letter-spacing: 8px;
-            text-align: center;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background: var(--gray-50);
-            color: var(--gray-900);
-        }
-        .otp-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(2, 128, 144, 0.1);
-            background: #fff;
             outline: none;
         }
 
@@ -240,9 +192,8 @@
             .auth-container { padding: 28px 20px 24px; }
             .portal-title { font-size: 20px; }
             .page-subtitle { font-size: 15px; margin-bottom: 16px; }
-            .form-input-control, .otp-input { font-size: 14px; padding: 12px 14px; }
+            .form-input-control { font-size: 14px; padding: 12px 14px; }
             .btn-submit-login { padding: 14px; font-size: 15px; }
-            .tab-btn { font-size: 13px; padding: 10px 6px; }
         }
         @media (max-width: 480px) {
             .auth-layout { padding: 10px; }
@@ -252,12 +203,11 @@
             .page-subtitle { font-size: 14px; margin-bottom: 14px; }
             .form-field-group { margin-bottom: 14px; }
             .field-label { font-size: 13px; }
-            .form-input-control, .otp-input { font-size: 13px; padding: 10px 12px; }
+            .form-input-control { font-size: 13px; padding: 10px 12px; }
             .btn-submit-login { font-size: 14px; padding: 12px; }
             .bottom-routing-footer-links { font-size: 13px; margin-top: 20px; padding-top: 14px; }
             .forgot-pass-link { font-size: 12px; }
             .spinning-infinity-ring { width: 44px; height: 44px; }
-            .tab-btn { font-size: 12px; padding: 10px 4px; }
         }
     </style>
 </head>
@@ -274,16 +224,10 @@
             <h2 class="portal-title">بوابة المستثمر - تيرا</h2>
             <h3 class="page-subtitle">تسجيل الدخول الآمن</h3>
 
-            <!-- التبويبات -->
-            <div class="tabs-container" id="tabsContainer">
-                <button class="tab-btn active" id="tabPassword"><i class="fas fa-key"></i> كلمة المرور</button>
-                <button class="tab-btn" id="tabTOTP"><i class="fas fa-shield-alt"></i> المصادقة الثنائية</button>
-            </div>
-
             <!-- رسالة الخطأ -->
             <div class="alert-box error" id="loginError" style="display:none;" role="alert"></div>
 
-            <!-- نموذج كلمة المرور -->
+            <!-- نموذج كلمة المرور (المسار الوحيد) -->
             <div id="passwordSection">
                 <form id="loginForm" novalidate>
                     <div class="form-field-group">
@@ -302,32 +246,8 @@
                         </label>
                     </div>
 
-                    <!-- حقل TOTP اختياري (يُستخدم عندما يطلب النظام رمز 2FA تلقائياً) -->
-                    <div class="form-field-group" id="totpField" style="display:none;">
-                        <label class="field-label" for="totp">رمز المصادقة الثنائية</label>
-                        <input type="text" id="totp" class="otp-input" placeholder="XXXXXX" maxlength="6" autocomplete="off">
-                    </div>
-
                     <button type="submit" class="btn-submit-login" id="loginBtn">
-                        <i class="fas fa-paper-plane"></i> إرسال رمز التحقق
-                    </button>
-                </form>
-            </div>
-
-            <!-- نموذج المصادقة الثنائية فقط -->
-            <div id="totpSection" style="display:none;">
-                <p class="welcome-text" style="margin-bottom:20px;">أدخل بريدك الإلكتروني ورمز المصادقة من تطبيقك للدخول مباشرة.</p>
-                <form id="totpForm" novalidate>
-                    <div class="form-field-group">
-                        <label class="field-label" for="totpEmail">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
-                        <input type="email" id="totpEmail" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
-                    </div>
-                    <div class="form-field-group">
-                        <label class="field-label" for="totpTokenOnly">رمز المصادقة <span style="color:var(--danger)">*</span></label>
-                        <input type="text" id="totpTokenOnly" class="otp-input" placeholder="XXXXXX" maxlength="6" autocomplete="off" required>
-                    </div>
-                    <button type="button" class="btn-submit-login" id="totpSubmitBtn">
-                        <i class="fas fa-shield-alt"></i> تسجيل الدخول
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
                     </button>
                 </form>
             </div>
@@ -355,7 +275,7 @@
     <script src="/assets/js/modules/network-monitor.js"></script>
     <script src="/assets/js/modules/security-enforcer.js"></script>
 
-    <!-- سكربت الصفحة (متوافق مع login.js v5) -->
+    <!-- سكربت الصفحة (يجب أن يكون login.js v14 – آخر نسخة) -->
     <script src="/auth/auth/login/login.js"></script>
 </body>
 </html>
