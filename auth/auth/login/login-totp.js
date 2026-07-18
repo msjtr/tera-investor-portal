@@ -1,5 +1,5 @@
 /**
- * login-totp.js – معالج تبويب المصادقة الثنائية (بريد فقط ➔ verify-totp.html)
+ * login-totp.js – معالج تبويب المصادقة الثنائية (بريد فقط ➔ تحقق TOTP)
  */
 (function() {
     const totpEmailInput = document.getElementById('totpEmail');
