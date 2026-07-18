@@ -1,5 +1,5 @@
 /**
- * verify-totp.js – v1 (مستقل لصفحة TOTP 6 أرقام)
+ * verify-totp.js – v2 (مستقل لصفحة TOTP 6 أرقام، متوافق مع النظام الحالي)
  */
 (function() {
     const OTP_LENGTH = 6;
@@ -12,13 +12,25 @@
     const successEl = document.getElementById('totpSuccess');
     const backLink = document.getElementById('backLink');
 
-    function updateUserDisplayFromSession() {
+    function updateUserDisplay() {
+        // جلب اسم العميل من sessionStorage (تم تخزينه من login-totp.js)
         const name = sessionStorage.getItem('otpName');
+        const email = sessionStorage.getItem('otpEmail');
+        
         if (name) {
-            const nameEl = document.getElementById('headerUserName');
-            if (nameEl) nameEl.textContent = name;
-            const avatarEl = document.getElementById('headerAvatar');
-            if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
+            document.getElementById('headerUserName').textContent = name;
+            document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+        } else if (email) {
+            // استخدام جزء البريد كاسم مؤقت
+            const fallbackName = email.split('@')[0];
+            document.getElementById('headerUserName').textContent = fallbackName;
+            document.getElementById('headerAvatar').textContent = fallbackName.charAt(0).toUpperCase();
+        }
+
+        // عرض البريد في مكانه المخصص
+        if (email) {
+            const emailEl = document.getElementById('instructionEmailText');
+            if (emailEl) emailEl.textContent = email;
         }
     }
 
@@ -115,18 +127,36 @@
             if (!window.Auth || !window.Auth.completeLoginWithTOTP) throw new Error('خدمة المصادقة غير متاحة');
             const result = await window.Auth.completeLoginWithTOTP(code);
             if (result?.user) {
+                // تحديث الاسم الحقيقي من بيانات المستخدم إن وجد
+                if (result.user.user_metadata?.full_name) {
+                    sessionStorage.setItem('otpName', result.user.user_metadata.full_name);
+                    document.getElementById('headerUserName').textContent = result.user.user_metadata.full_name;
+                    document.getElementById('headerAvatar').textContent = result.user.user_metadata.full_name.charAt(0).toUpperCase();
+                }
+                
                 await tryCreateSessionRecord(result.user.id);
                 clearTimeout(totpTimeout);
                 sessionStorage.removeItem('loginMethod');
                 sessionStorage.removeItem('otpEmail');
-                sessionStorage.removeItem('otpName');
+                // نبقي otpName لتظهر في Dashboard
+                sessionStorage.setItem('otpName', sessionStorage.getItem('otpName') || result.user.email?.split('@')[0]);
 
                 if (successEl) {
                     successEl.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
                     successEl.style.display = 'flex';
                 }
 
-                redirectTimer = setTimeout(() => {
+                redirectTimer = setTimeout(async () => {
+                    // تحقق من صلاحية الجلسة قبل الانتقال
+                    if (window.Auth?.isSessionValid) {
+                        const valid = await window.Auth.isSessionValid();
+                        if (!valid) {
+                            showError('انتهت الجلسة، يرجى تسجيل الدخول مجدداً.');
+                            verifyBtn.disabled = false;
+                            verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> تحقق';
+                            return;
+                        }
+                    }
                     window.location.href = '/pages/dashboard/index.html';
                 }, 3000);
             }
@@ -138,7 +168,7 @@
     }
 
     // التهيئة
-    updateUserDisplayFromSession();
+    updateUserDisplay();
     bindEvents();
     startTimeout();
 
