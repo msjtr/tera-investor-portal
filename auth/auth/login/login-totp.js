@@ -1,12 +1,11 @@
 /**
- * login-totp.js – v2 (بريد فقط ➔ تحقق TOTP، مع تحقق من صحة البريد)
+ * login-totp.js – معالج تبويب المصادقة الثنائية (بريد فقط ➔ verify-totp.html)
  */
 (function() {
     const totpEmailInput = document.getElementById('totpEmail');
     const totpSubmitBtn = document.getElementById('totpSubmitBtn');
     const errorMsg = document.getElementById('loginError');
 
-    // نتأكد أن العناصر موجودة (حقل بريد + زر)
     if (!totpEmailInput || !totpSubmitBtn) return;
 
     function showError(msg) {
@@ -32,15 +31,10 @@
         totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
         try {
-            // تحقق اختياري: هل المستخدم موجود؟ (يمكن الاستغناء عنه إذا كانت Edge Function تتولى ذلك)
-            // لكننا نكتفي بتخزين البيانات والانتقال
-
-            // تخزين البيانات المطلوبة لصفحة التحقق
             sessionStorage.setItem('loginMethod', 'totp_direct');
             sessionStorage.setItem('otpEmail', email);
             sessionStorage.setItem('otpName', email.split('@')[0]);
 
-            // الانتقال إلى صفحة إدخال رمز TOTP
             window.location.href = '/auth/verify-totp.html';
         } catch (error) {
             console.error('خطأ:', error);
@@ -52,12 +46,4 @@
     }
 
     totpSubmitBtn.addEventListener('click', handleSubmit);
-
-    // دعم إرسال النموذج بالضغط على Enter
-    totpEmailInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSubmit(e);
-        }
-    });
 })();
