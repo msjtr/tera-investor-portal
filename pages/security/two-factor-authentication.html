@@ -23,9 +23,7 @@
     <link rel="stylesheet" href="/assets/css/responsive.css">
     <link rel="stylesheet" href="/assets/css/security.css">
 
-    <!-- أنماط صفحة المصادقة الثنائية (مدمجة) -->
     <style>
-        /* ========== متغيرات (إن لم تكن في core.css) ========== */
         :root {
             --primary: #028090;
             --primary-dark: #0A1B3F;
@@ -60,7 +58,6 @@
             margin: 0;
             color: var(--gray-900);
             line-height: 1.7;
-            -webkit-tap-highlight-color: transparent;
             min-height: 100vh;
         }
 
@@ -111,9 +108,7 @@
             border: 1px solid var(--gray-200);
             box-shadow: var(--shadow-sm);
             margin-bottom: 20px;
-            transition: box-shadow var(--transition);
         }
-        .card:hover { box-shadow: var(--shadow-md); }
         .card-header {
             display: flex;
             align-items: center;
@@ -170,33 +165,110 @@
         .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
         .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
 
-        .devices-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
-        .devices-table th { text-align: right; padding: 12px 10px; background: var(--gray-50); color: var(--gray-600); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--gray-200); }
-        .devices-table td { padding: 14px 10px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
-        .devices-table .device-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--gray-600); }
-        .device-current-badge { font-size: 11px; background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 10px; font-weight: 700; }
-        .btn-remove-device { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 6px; transition: all var(--transition); }
-        .btn-remove-device:hover { background: #fef2f2; }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+        /* نافذة منبثقة محسّنة */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,27,63,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal { background: #fff; border-radius: var(--radius-xl); padding: 28px 24px; max-width: 480px; width: 100%; box-shadow: var(--shadow-lg); text-align: center; animation: slideUp 0.25s ease; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .qr-container { background: #fff; padding: 20px; border-radius: var(--radius-lg); border: 2px dashed var(--gray-200); display: inline-block; margin: 16px auto; }
-        .manual-key { background: var(--gray-50); padding: 12px 16px; border-radius: var(--radius-md); font-family: 'Courier New', monospace; font-size: 14px; letter-spacing: 2px; word-break: break-all; color: var(--gray-800); border: 1px solid var(--gray-200); margin: 12px 0; text-align: center; user-select: all; cursor: text; }
+        .modal {
+            background: #fff;
+            border-radius: var(--radius-xl);
+            padding: 32px 28px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal h3 { font-size: 22px; margin: 0 0 16px; color: var(--gray-900); }
+        .modal p { color: var(--gray-600); margin: 0 0 16px; font-size: 14px; line-height: 1.6; }
+
+        .qr-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--gray-200);
+            max-width: 250px;
+        }
+        .qr-wrapper img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .manual-key-box {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--gray-800);
+            direction: ltr;
+            justify-content: space-between;
+        }
+        .manual-key-box span {
+            flex: 1;
+            text-align: left;
+        }
+        .btn-copy {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--gray-700);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .btn-copy:hover { background: var(--gray-200); }
+
+        .form-input-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 22px;
+            font-family: 'Tajawal', sans-serif;
+            text-align: center;
+            letter-spacing: 8px;
+            max-width: 200px;
+            margin: 16px auto;
+            display: block;
+            transition: border-color 0.3s;
+            background: var(--gray-50);
+        }
+        .form-input-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(2,128,144,0.1);
+            background: #fff;
+            outline: none;
+        }
+
         .backup-codes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
         .backup-code { background: var(--gray-50); padding: 10px 12px; border-radius: var(--radius-sm); font-family: 'Courier New', monospace; font-size: 13px; text-align: center; border: 1px solid var(--gray-200); letter-spacing: 1px; color: var(--gray-800); user-select: all; cursor: text; }
-
-        .activity-log { max-height: 320px; overflow-y: auto; font-size: 13px; }
-        .activity-log .log-entry { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
-        .log-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-        .log-icon.success { background: #ecfdf5; color: var(--success); }
-        .log-icon.fail { background: #fef2f2; color: var(--danger); }
-        .log-icon.info { background: #eff6ff; color: #3b82f6; }
-        .log-icon.warning { background: #fffbeb; color: var(--warning); }
-        .log-details .log-action { font-weight: 700; color: var(--gray-900); }
-        .log-details .log-meta { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
-        .log-time { font-size: 11px; color: var(--gray-400); white-space: nowrap; }
 
         .notification-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100); gap: 10px; }
         .toggle-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
@@ -214,7 +286,7 @@
 
         .loading-spinner { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--gray-500); }
 
-        /* stepper */
+        /* الخطوات التعليمية */
         .steps-container { margin-top: 8px; }
         .step { display: flex; gap: 14px; margin-bottom: 20px; }
         .step-number {
@@ -231,21 +303,22 @@
             .page-subheader h1 { font-size: 20px; }
             .card { padding: 16px; }
             .info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .devices-table { font-size: 12px; }
             .backup-codes-grid { grid-template-columns: 1fr; }
             .btn-group { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
+            .modal { padding: 24px 18px; }
+            .form-input-control { font-size: 18px; letter-spacing: 4px; }
+            .qr-wrapper { max-width: 200px; padding: 14px; }
+            .manual-key-box { font-size: 12px; padding: 10px 12px; }
         }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: #fff; }
-            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+
+        @media (max-width: 400px) {
+            .info-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <!-- الهيدر -->
     <header class="focused-header no-print">
         <div class="logo"><img src="/images/logo.svg" alt="تيرا"></div>
         <div class="client-info">
@@ -254,15 +327,13 @@
         </div>
     </header>
 
-    <!-- عنوان الصفحة -->
     <div class="page-subheader no-print">
-        <h1><i class="fas fa-shield-haltered"></i> المصادقة الثنائية</h1>
+        <h1><i class="fas fa-shield-alt"></i> المصادقة الثنائية</h1>
         <a href="/pages/dashboard/index.html" class="btn-back">
             <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
         </a>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <main class="page-container" id="main-content">
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-pulse"></i>
@@ -270,28 +341,19 @@
         </div>
     </main>
 
-    <!-- حاوية النافذة المنبثقة -->
     <div id="modal-container"></div>
-
-    <!-- حاوية التنبيهات -->
     <div id="toast-container"></div>
 
     <footer class="page-footer no-print">
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- السكربتات الأساسية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
-
-    <!-- وحدات النظام (اختيارية) -->
     <script src="/assets/js/modules/ui-helpers.js"></script>
     <script src="/assets/js/modules/activity-tracker.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
-
-    <!-- الملف الموحد للمصادقة الثنائية -->
     <script src="/assets/js/security-two-factor-authentication.js"></script>
-
 </body>
 </html>
