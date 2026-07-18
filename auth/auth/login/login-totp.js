@@ -1,13 +1,12 @@
 /**
- * login-totp.js – معالج تبويب المصادقة الثنائية (بريد + كلمة مرور → TOTP)
+ * login-totp.js – معالج تبويب المصادقة الثنائية (بريد فقط ➔ تحقق TOTP)
  */
 (function() {
     const totpEmailInput = document.getElementById('totpEmail');
-    const totpPasswordInput = document.getElementById('totpPassword');
     const totpSubmitBtn = document.getElementById('totpSubmitBtn');
     const errorMsg = document.getElementById('loginError');
 
-    if (!totpEmailInput || !totpPasswordInput || !totpSubmitBtn) return; // نخرج إذا لم تكن العناصر موجودة
+    if (!totpEmailInput || !totpSubmitBtn) return;
 
     function showError(msg) {
         if (errorMsg) {
@@ -24,8 +23,7 @@
         clearError();
 
         const email = totpEmailInput.value.trim();
-        const password = totpPasswordInput.value.trim();
-        if (!email || !password) { showError('يرجى إدخال البريد الإلكتروني وكلمة المرور'); return; }
+        if (!email) { showError('يرجى إدخال البريد الإلكتروني'); return; }
         if (!isValidEmail(email)) { showError('بريد إلكتروني غير صحيح'); return; }
         if (!window.Auth) { showError('خدمة المصادقة غير متاحة'); return; }
 
@@ -33,26 +31,14 @@
         totpSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
         try {
-            const result = await window.Auth.loginWithPassword(email, password);
-
-            if (!result.requiresTwoFactor) {
-                showError('المصادقة الثنائية غير مفعلة لحسابك. الرجاء استخدام تبويب كلمة المرور.');
-                return;
-            }
-
-            // المستخدم مفعل TOTP – تخزين البيانات والانتقال إلى صفحة TOTP
-            sessionStorage.setItem('loginMethod', 'password_totp');
+            sessionStorage.setItem('loginMethod', 'totp_direct');
             sessionStorage.setItem('otpEmail', email);
             sessionStorage.setItem('otpName', email.split('@')[0]);
 
             window.location.href = '/auth/verify-totp.html';
         } catch (error) {
             console.error('خطأ:', error);
-            let message = 'حدث خطأ، حاول مرة أخرى';
-            if (error.message?.includes('Invalid login credentials')) {
-                message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-            }
-            showError(message);
+            showError(error.message || 'حدث خطأ غير متوقع');
         } finally {
             totpSubmitBtn.disabled = false;
             totpSubmitBtn.innerHTML = '<i class="fas fa-shield-alt"></i> متابعة إلى التحقق';
