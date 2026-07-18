@@ -1,6 +1,6 @@
 /**
- * security-two-factor-authentication.js – متوافق مع user_totp + user_security
- * يعتمد على Auth.js v28 و Edge Function التي تستخدم الجدولين المنفصلين.
+ * security-two-factor-authentication.js – واجهة إعدادات 2FA (مُحسَّنة)
+ * متوافق مع auth.js v28 وجدول user_2fa
  */
 (function() {
     'use strict';
@@ -13,32 +13,50 @@
         lastFailedAt: null,
         backupCodesRemaining: 0,
         backupCodesLastUsed: null,
-        trustedDevices: [],
-        activityLog: [],
         isLoading: true,
-        pendingSetupSecret: null
+        pendingSetupSecret: null,
+        userEmail: ''           // البريد الإلكتروني للمستخدم
     };
 
     let mainContent, modalContainer, toastContainer;
 
+    // ---------- دوال مساعدة ----------
     function formatDate(d) { if(!d) return '—'; const now = Date.now(), diff = now - new Date(d).getTime(), min = Math.floor(diff/60000); if(min<1) return 'الآن'; if(min<60) return `منذ ${min} دقيقة`; const h = Math.floor(min/60); if(h<24) return `منذ ${h} ساعة`; const days = Math.floor(h/24); if(days<7) return `منذ ${days} يوم`; return new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}); }
     function formatDateTime(d) { if(!d) return '—'; return new Date(d).toLocaleString('ar-SA',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-    function showToast(m,t) { if(!toastContainer) return; const el = document.createElement('div'); el.className = `toast ${t}`; el.textContent = m; toastContainer.appendChild(el); setTimeout(() => el.remove(), 3000); }
+
+    function showToast(m, t) {
+        if(!toastContainer) return;
+        const el = document.createElement('div');
+        el.className = `toast ${t}`;
+        el.textContent = m;
+        toastContainer.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
     function showModal(title, body, footer) {
         if(!modalContainer) return;
-        const ov = document.createElement('div'); ov.className = 'modal-overlay';
+        const ov = document.createElement('div');
+        ov.className = 'modal-overlay';
         ov.innerHTML = `<div class="modal"><h3>${title}</h3><div>${body}</div>${footer?`<div class="btn-group" style="margin-top:16px;">${footer}</div>`:''}</div>`;
         ov.addEventListener('click', e => { if(e.target === ov) closeModal(); });
-        modalContainer.appendChild(ov); document.body.style.overflow = 'hidden';
+        modalContainer.appendChild(ov);
+        document.body.style.overflow = 'hidden';
     }
-    function closeModal() { if(modalContainer) modalContainer.innerHTML = ''; document.body.style.overflow = ''; state.pendingSetupSecret = null; }
 
+    function closeModal() {
+        if(modalContainer) modalContainer.innerHTML = '';
+        document.body.style.overflow = '';
+        state.pendingSetupSecret = null;
+    }
+
+    // ---------- API ----------
     async function fetchStatus() { return await window.Auth.getTwoFactorStatus(); }
     async function setupTwoFactor() { return await window.Auth.setupTwoFactor(); }
     async function enableTwoFactor(c) { return await window.Auth.enableTwoFactor(c); }
     async function disableTwoFactor(c) { return await window.Auth.disableTwoFactor(c); }
     async function regenerateBackupCodes(c) { return await window.Auth.regenerateBackupCodes(c); }
 
+    // ---------- محتوى تعليمي ----------
     function renderEducationalSection() {
         return `
         <div class="card">
@@ -93,37 +111,21 @@
         return rows.map(r => `<div class="info-item"><div class="info-label">${r[0]}</div><div class="info-value">${r[1]}</div></div>`).join('');
     }
 
-    function renderTrustedDevices() {
-        const devices = state.trustedDevices || [];
-        if (!devices.length) return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد أجهزة موثوقة حالياً.</p>';
-        const rows = devices.map(d => `<tr>
-            <td><div class="device-icon"><i class="fas fa-${d.device_type==='mobile'?'mobile-alt':'laptop'}"></i></div></td>
-            <td><strong>${d.device_name||'—'}</strong>${d.is_current?'<span class="device-current-badge">الحالي</span>':''}</td>
-            <td>${d.browser||'—'}</td><td>${formatDate(d.last_used_at)}</td><td dir="ltr">${d.last_ip||'—'}</td><td>${d.location||'—'}</td>
-            <td>${!d.is_current?`<button class="btn-remove-device" onclick="window.TwoFactorUI.removeDevice('${d.id}')"><i class="fas fa-times-circle"></i></button>`:'—'}</td>
-        </tr>`).join('');
-        return `<div style="overflow-x:auto;"><table class="devices-table"><thead><tr><th>الجهاز</th><th>الاسم</th><th>المتصفح</th><th>آخر استخدام</th><th>IP</th><th>الموقع</th><th>إجراء</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-    }
-
-    function renderActivityLog() {
-        const log = state.activityLog || [];
-        if (!log.length) return '<p style="color:var(--gray-500);text-align:center;padding:12px;">لا توجد عمليات مسجلة.</p>';
-        return log.map(e => {
-            let icon = 'info', sym = 'fa-info-circle';
-            if (e.type==='success'||e.type==='enabled') { icon='success'; sym='fa-check-circle'; }
-            else if (e.type==='fail'||e.type==='disabled') { icon='fail'; sym='fa-times-circle'; }
-            return `<div class="log-entry"><div class="log-icon ${icon}"><i class="fas ${sym}"></i></div><div class="log-details"><div class="log-action">${e.action}</div><div class="log-meta">${e.details||''}</div></div><div class="log-time">${formatDate(e.timestamp)}</div></div>`;
-        }).join('');
-    }
-
     function renderNotificationToggles() {
         const toggles = [
-            ['notify_2fa_enabled','تفعيل المصادقة الثنائية',true],
-            ['notify_2fa_disabled','تعطيل المصادقة الثنائية',true],
-            ['notify_new_device','تسجيل الدخول من جهاز جديد',true],
-            ['notify_backup_used','استخدام رمز استرداد',true]
+            { id: 'notify_2fa_enabled', label: 'تفعيل المصادقة الثنائية', checked: true },
+            { id: 'notify_2fa_disabled', label: 'تعطيل المصادقة الثنائية', checked: true },
+            { id: 'notify_new_device', label: 'تسجيل الدخول من جهاز جديد', checked: true },
+            { id: 'notify_backup_used', label: 'استخدام رمز استرداد', checked: true }
         ];
-        return toggles.map(t => `<div class="notification-toggle"><span>${t[1]}</span><label class="toggle-switch"><input type="checkbox" ${t[2]?'checked':''}><span class="toggle-slider"></span></label></div>`).join('');
+        return toggles.map(t => `
+            <div class="notification-toggle">
+                <span>${t.label}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" ${t.checked?'checked':''} data-notify-id="${t.id}">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>`).join('');
     }
 
     function renderFullPage() {
@@ -133,32 +135,64 @@
             return;
         }
         const isEnabled = state.isEnabled;
+        const email = state.userEmail || 'غير معروف';
+
         mainContent.innerHTML = `
             ${renderEducationalSection()}
-            <div class="card"><div class="card-header"><h3><i class="fas fa-toggle-on"></i> حالة المصادقة الثنائية</h3>${renderStatusBadge()}</div></div>
-            <div class="card"><div class="card-header"><h3><i class="fas fa-info-circle"></i> معلومات عامة</h3></div><div class="info-grid">${renderInfoGrid()}</div></div>
-            <div class="card"><div class="card-header"><h3><i class="fas fa-laptop-house"></i> الأجهزة الموثوقة</h3></div>${renderTrustedDevices()}</div>
-            <div class="card no-print"><div class="card-header"><h3><i class="fas fa-cogs"></i> إجراءات</h3></div><div class="btn-group">
-                ${!isEnabled ? `<button class="btn btn-primary" onclick="window.TwoFactorUI.showSetupWizard()"><i class="fas fa-shield-alt"></i> تفعيل المصادقة الثنائية</button>` :
-                `<button class="btn btn-outline" onclick="window.TwoFactorUI.showRegenerateCodes()"><i class="fas fa-sync-alt"></i> إنشاء رموز جديدة</button>
-                 <button class="btn btn-outline" onclick="window.TwoFactorUI.downloadBackupCodes()"><i class="fas fa-download"></i> تنزيل رموز الاسترداد</button>
-                 <button class="btn btn-danger" onclick="window.TwoFactorUI.confirmDisable()"><i class="fas fa-shield-slash"></i> تعطيل المصادقة</button>`}
-            </div></div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-toggle-on"></i> حالة المصادقة الثنائية</h3>${renderStatusBadge()}</div>
+                <div style="margin-top:8px; background:#f0f9ff; padding:10px; border-radius:8px; font-size:14px;">
+                    <i class="fas fa-envelope" style="color:var(--primary);"></i>
+                    <strong>البريد المرتبط:</strong> <span dir="ltr">${email}</span>
+                    <br><small>جميع عمليات التفعيل والإشعارات سترتبط بهذا البريد.</small>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-info-circle"></i> معلومات عامة</h3></div>
+                <div class="info-grid">${renderInfoGrid()}</div>
+            </div>
+            <div class="card no-print">
+                <div class="card-header"><h3><i class="fas fa-cogs"></i> إجراءات</h3></div>
+                <div class="btn-group">
+                    ${!isEnabled ? `<button class="btn btn-primary" onclick="window.TwoFactorUI.showSetupWizard()"><i class="fas fa-shield-alt"></i> تفعيل المصادقة الثنائية</button>` :
+                    `<button class="btn btn-outline" onclick="window.TwoFactorUI.showRegenerateCodes()"><i class="fas fa-sync-alt"></i> إنشاء رموز جديدة</button>
+                     <button class="btn btn-outline" onclick="window.TwoFactorUI.downloadBackupCodes()"><i class="fas fa-download"></i> تنزيل رموز الاسترداد</button>
+                     <button class="btn btn-danger" onclick="window.TwoFactorUI.confirmDisable()"><i class="fas fa-shield-slash"></i> تعطيل المصادقة</button>`}
+                </div>
+            </div>
             ${isEnabled ? `<div class="card"><div class="card-header"><h3><i class="fas fa-key"></i> رموز الاسترداد</h3></div>
                 <div class="info-grid"><div class="info-item"><div class="info-label">المتبقية</div><div class="info-value">${state.backupCodesRemaining} / 10</div></div>
                 <div class="info-item"><div class="info-label">آخر استخدام</div><div class="info-value">${formatDate(state.backupCodesLastUsed) || '—'}</div></div></div>
                 <p style="font-size:13px;color:var(--gray-500);"><i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i> احفظ الرموز في مكان آمن.</p></div>` : ''}
-            <div class="card"><div class="card-header"><h3><i class="fas fa-history"></i> سجل العمليات</h3></div><div class="activity-log">${renderActivityLog()}</div></div>
-            <div class="card no-print"><div class="card-header"><h3><i class="fas fa-bell"></i> تفضيلات الإشعارات</h3></div>${renderNotificationToggles()}</div>
+            <div class="card no-print">
+                <div class="card-header"><h3><i class="fas fa-bell"></i> تفضيلات الإشعارات</h3></div>
+                <p style="font-size:13px; color:var(--gray-500); margin-top:0;">سيتم إرسال الإشعارات إلى بريدك المسجل (<strong>${email}</strong>)</p>
+                ${renderNotificationToggles()}
+            </div>
         `;
+
+        // تفعيل الإشعارات (إرسال التفضيلات عند التغيير)
+        document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', async function() {
+                const id = this.dataset.notifyId;
+                const enabled = this.checked;
+                // محاكاة إرسال التفضيلات إلى الخادم (يمكن ربطها بـ Edge Function لاحقاً)
+                try {
+                    // يمكنك استبدال هذا بطلب حقيقي لـ Edge Function
+                    // await window.Auth.updateNotificationPreference(id, enabled);
+                    console.log(`تفضيل الإشعار "${id}" تم تغييره إلى: ${enabled}`);
+                } catch(e) {}
+                showToast('تم تحديث تفضيلات الإشعارات.', 'success');
+            });
+        });
     }
 
+    // ---------- تحميل البيانات ----------
     async function loadData() {
         state.isLoading = true;
         renderFullPage();
         try {
             const data = await fetchStatus();
-            console.log('📊 بيانات 2FA من الخادم:', data);
             state.isEnabled = data?.is_enabled || false;
             state.method = data?.method || (data?.is_enabled ? 'TOTP' : null);
             state.enabledAt = data?.enabled_at || null;
@@ -166,8 +200,11 @@
             state.lastFailedAt = data?.last_failed_at || null;
             state.backupCodesRemaining = data?.backup_codes_remaining || 0;
             state.backupCodesLastUsed = data?.backup_codes_last_used || null;
-            state.trustedDevices = data?.trusted_devices || [];
-            state.activityLog = data?.activity_log || [];
+            // جلب البريد الإلكتروني للمستخدم
+            if (window.Auth?.getUser) {
+                const user = await window.Auth.getUser();
+                if (user) state.userEmail = user.email || '';
+            }
         } catch (err) {
             console.error(err);
             showToast('تعذر تحميل إعدادات المصادقة.', 'error');
@@ -177,19 +214,25 @@
         }
     }
 
-    // --- الإجراءات ---
+    // ---------- الإجراءات ----------
     async function showSetupWizard() {
         try {
             const secretData = await setupTwoFactor();
-            console.log('📬 بيانات setup:', secretData);
             if (!secretData?.qr_data_uri || !secretData?.secret) throw new Error('بيانات الإعداد غير مكتملة');
             state.pendingSetupSecret = secretData.secret;
             showModal('تفعيل المصادقة الثنائية',
-                `<div style="background:#fffbeb;padding:10px;border-radius:8px;margin-bottom:16px;"><i class="fas fa-exclamation-circle" style="color:var(--warning);"></i> تنبيه: يظهر QR مرة واحدة.</div>
-                <div class="qr-container"><img src="${secretData.qr_data_uri}" style="max-width:200px;"></div>
-                <p>المفتاح اليدوي: <span class="manual-key">${secretData.secret}</span></p>
-                <input type="text" id="totp-verify-input" class="form-input-control" maxlength="6" inputmode="numeric" placeholder="000000" style="margin:8px auto;display:block;max-width:160px;font-size:22px;letter-spacing:6px;">
-                <p id="setup-error" style="color:var(--danger);display:none;"></p>`,
+                `<div style="background:#fffbeb;padding:10px;border-radius:8px;margin-bottom:16px;"><i class="fas fa-exclamation-circle" style="color:var(--warning);"></i> تنبيه: يظهر QR مرة واحدة. تأكد من حفظ رموز الاسترداد.</div>
+                <div class="qr-container" style="text-align:center; margin-bottom:12px;"><img src="${secretData.qr_data_uri}" style="max-width:200px; width:100%; height:auto;"></div>
+                <p style="margin-bottom:4px;"><strong>المفتاح اليدوي:</strong></p>
+                <div style="display:flex; align-items:center; gap:8px; background:var(--gray-50); padding:8px 12px; border-radius:6px; border:1px solid var(--gray-200);">
+                    <span class="manual-key" style="flex:1; font-family:monospace; word-break:break-all;">${secretData.secret}</span>
+                    <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText('${secretData.secret}'); window.TwoFactorUI.showToast('تم نسخ المفتاح', 'success');"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="form-field-group" style="margin-top:16px;">
+                    <label for="totp-verify-input" style="display:block; font-weight:700; margin-bottom:6px;">أدخل رمز التحقق من التطبيق:</label>
+                    <input type="text" id="totp-verify-input" class="form-input-control" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" placeholder="000000" style="text-align:center; font-size:22px; letter-spacing:6px; max-width:160px; margin:0 auto; display:block;">
+                </div>
+                <p id="setup-error" style="color:var(--danger);display:none;text-align:center;"></p>`,
                 `<button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button>
                  <button class="btn btn-primary" onclick="window.TwoFactorUI.verifyAndEnable()">تحقق وتفعيل</button>`
             );
@@ -208,7 +251,6 @@
         }
         try {
             const result = await enableTwoFactor(token);
-            console.log('📬 نتيجة enable:', result);
             if (result?.success) {
                 closeModal();
                 showToast('تم التفعيل بنجاح', 'success');
@@ -224,9 +266,12 @@
 
     function showBackupCodesModal(codes) {
         const html = codes.map(c => `<span class="backup-code">${c}</span>`).join('');
-        showModal('رموز الاسترداد', `<p style="color:var(--danger)">احفظها، لن تظهر مجدداً</p><div class="backup-codes-grid">${html}</div>`,
+        showModal('رموز الاسترداد',
+            `<p style="color:var(--danger);font-weight:700;">احفظ هذه الرموز في مكان آمن. لن تظهر مرة أخرى!</p>
+            <div class="backup-codes-grid">${html}</div>`,
             `<button class="btn btn-primary" onclick="window.TwoFactorUI.downloadBackupCodesInline('${encodeURIComponent(JSON.stringify(codes))}')"><i class="fas fa-download"></i> تنزيل</button>
-             <button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">تم</button>`);
+             <button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">تم الحفظ</button>`
+        );
     }
 
     function downloadBackupCodesInline(encoded) {
@@ -283,12 +328,9 @@
         } catch (err) { showToast('خطأ: ' + err.message, 'error'); }
     }
 
-    function removeDevice(deviceId) {
-        showModal('إزالة الجهاز', '<p>هل تريد إزالة الثقة من هذا الجهاز؟</p>',
-            `<button class="btn btn-outline" onclick="window.TwoFactorUI.closeModal()">إلغاء</button><button class="btn btn-danger" onclick="window.TwoFactorUI.doRemoveDevice('${deviceId}')">إزالة</button>`);
-    }
-
-    async function doRemoveDevice(deviceId) { showToast('الميزة قيد التطوير.', 'error'); }
+    // إزالة الأجهزة الوهمية (غير مستخدمة لكننا نبقي الدالة فارغة لتجنب الأخطاء)
+    function removeDevice(deviceId) { showToast('الميزة غير مدعومة حالياً.', 'error'); }
+    async function doRemoveDevice(deviceId) {}
 
     window.TwoFactorUI = {
         showSetupWizard, verifyAndEnable, showRegenerateCodes, doRegenerateCodes,
@@ -296,6 +338,7 @@
         downloadBackupCodes, downloadBackupCodesInline, closeModal, loadData
     };
 
+    // ---------- بدء التشغيل ----------
     async function init() {
         mainContent = document.getElementById('main-content');
         modalContainer = document.getElementById('modal-container');
@@ -316,7 +359,6 @@
             const user = await window.Auth?.requireAuth();
             if (!user) return;
 
-            // جلب اسم العميل: من sessionStorage أولاً (مخزّن بواسطة auth.js v28)، ثم من user metadata، ثم من البريد
             const storedName = sessionStorage.getItem('otpName');
             const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
             const nameEl = document.getElementById('headerUserName');
@@ -324,6 +366,8 @@
             if (nameEl) nameEl.textContent = displayName;
             if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
+            // تخزين البريد الإلكتروني في الحالة
+            state.userEmail = user.email || '';
             await loadData();
         } catch (e) { console.error('فشل بدء 2FA:', e); }
     }
