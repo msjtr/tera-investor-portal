@@ -1,5 +1,5 @@
 /**
- * auth.js – v27 (كامل – يدعم loginWithPassword / loginWithTOTP / OTP)
+ * auth.js – v28 (تخزين otpName تلقائياً، دعم كامل لـ loginWithPassword / loginWithTOTP / OTP)
  */
 (function() {
     'use strict';
@@ -21,11 +21,19 @@
         return null;
     }
 
+    // ─── دالة مساعدة لتخزين اسم العميل من بيانات المستخدم ───
+    function storeUserName(user, email) {
+        const name = user?.user_metadata?.full_name || email.split('@')[0];
+        sessionStorage.setItem('otpName', name);
+        return name;
+    }
+
     // 1. Authentication (Core)
     async function login(email, password) {
         const sb = await getSupabase();
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data?.user) storeUserName(data.user, email);
         return data;
     }
 
@@ -85,6 +93,7 @@
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
         const { data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw error;
+        if (data?.session?.user) storeUserName(data.session.user, email);
         return data;
     }
 
@@ -152,9 +161,12 @@
             } catch (e) { console.warn('تعذر التحقق من TOTP:', e); }
 
             if (isTOTPEnabled) {
+                // تخزين اسم العميل من البريد
+                storeUserName(user, email);
                 return { requiresTwoFactor: true, email };
             }
             resetLoginAttempts();
+            storeUserName(user, email);
             return { success: true, user };
         } catch (e) {
             if (getLoginAttempts() >= MAX_ATTEMPTS) throw new Error('تم تجاوز عدد المحاولات. يرجى استخدام المصادقة الثنائية.');
@@ -170,6 +182,8 @@
         const { data: { user } } = await sb.auth.getUser();
         if (!user) throw new Error('فشل في استرداد المستخدم بعد التحقق.');
         resetLoginAttempts();
+        // تحديث الاسم بالاسم الحقيقي من Supabase
+        storeUserName(user, user.email);
         return { success: true, user };
     }
 
@@ -188,6 +202,8 @@
         const sb = await getSupabase();
         await sb.auth.setSession(session);
         resetLoginAttempts();
+        // تخزين الاسم من بيانات الجلسة
+        if (session.user) storeUserName(session.user, email);
         return { success: true };
     }
 
@@ -220,6 +236,8 @@
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) { await logout(); return null; }
+            // تخزين الاسم عند الطلب
+            storeUserName(user, user.email);
             return user;
         } catch (e) { await logout(); return null; }
     }
@@ -240,5 +258,5 @@
         requireAuth, onAuthStateChange, validatePassword
     };
 
-    console.log('✅ auth.js v27 جاهز');
+    console.log('✅ auth.js v28 (تخزين اسم العميل تلقائياً) جاهز');
 })();
