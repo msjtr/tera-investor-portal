@@ -161,7 +161,6 @@
             } catch (e) { console.warn('تعذر التحقق من TOTP:', e); }
 
             if (isTOTPEnabled) {
-                // تخزين اسم العميل من البريد
                 storeUserName(user, email);
                 return { requiresTwoFactor: true, email };
             }
@@ -182,7 +181,6 @@
         const { data: { user } } = await sb.auth.getUser();
         if (!user) throw new Error('فشل في استرداد المستخدم بعد التحقق.');
         resetLoginAttempts();
-        // تحديث الاسم بالاسم الحقيقي من Supabase
         storeUserName(user, user.email);
         return { success: true, user };
     }
@@ -202,7 +200,6 @@
         const sb = await getSupabase();
         await sb.auth.setSession(session);
         resetLoginAttempts();
-        // تخزين الاسم من بيانات الجلسة
         if (session.user) storeUserName(session.user, email);
         return { success: true };
     }
@@ -236,7 +233,6 @@
         try {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) { await logout(); return null; }
-            // تخزين الاسم عند الطلب
             storeUserName(user, user.email);
             return user;
         } catch (e) { await logout(); return null; }
