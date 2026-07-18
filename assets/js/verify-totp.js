@@ -1,5 +1,5 @@
 /**
- * verify-totp.js – v7 (لحالة totp_direct فقط، يستخدم loginWithTOTP)
+ * verify-totp.js – v8 (متوافق مع password_totp: جلسة موجودة، رمز TOTP فقط)
  */
 (function() {
     const OTP_LENGTH = 6;
@@ -16,15 +16,18 @@
         const name = sessionStorage.getItem('otpName');
         const email = sessionStorage.getItem('otpEmail');
         const displayName = name || (email ? email.split('@')[0] : 'مستخدم');
-        document.getElementById('headerUserName').textContent = displayName;
-        document.getElementById('headerAvatar').textContent = displayName.charAt(0).toUpperCase();
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (nameEl) nameEl.textContent = displayName;
+        if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
     }
 
     function showEmail() {
         const email = sessionStorage.getItem('otpEmail');
-        if (email) {
-            document.getElementById('instructionEmailText').textContent = email;
-        } else {
+        const emailEl = document.getElementById('instructionEmailText');
+        if (email && emailEl) {
+            emailEl.textContent = email;
+        } else if (!email) {
             showError('انتهت الجلسة. يرجى العودة لصفحة الدخول.');
             if (verifyBtn) verifyBtn.disabled = true;
         }
@@ -68,23 +71,21 @@
         verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
 
         try {
-            const email = sessionStorage.getItem('otpEmail');
-            if (!email) throw new Error('البريد الإلكتروني غير متوفر');
+            // نستخدم completeLoginWithTOTP لأن الجلسة موجودة (تم إنشاؤها بواسطة loginWithPassword)
+            if (!window.Auth?.completeLoginWithTOTP) throw new Error('خدمة المصادقة غير متاحة');
+            const result = await window.Auth.completeLoginWithTOTP(code);
+            if (!result?.user) throw new Error('فشل التحقق');
 
-            // استخدام loginWithTOTP حصراً (تتصل بـ Edge Function verify-totp-login)
-            const result = await window.Auth.loginWithTOTP(email, code);
-            // loginWithTOTP تعيد { success: true } ولا تعيد user مباشرة، لذا نجلب user
-            const user = await window.Auth.getUser();
-            if (user) {
-                await tryCreateSessionRecord(user.id);
-                if (user.user_metadata?.full_name) {
-                    sessionStorage.setItem('otpName', user.user_metadata.full_name);
-                }
+            const user = result.user;
+            await tryCreateSessionRecord(user.id);
+            if (user.user_metadata?.full_name) {
+                sessionStorage.setItem('otpName', user.user_metadata.full_name);
             }
 
             clearTimeout(totpTimeout);
             sessionStorage.removeItem('loginMethod');
             sessionStorage.removeItem('otpEmail');
+            // نبقي otpName للوحة التحكم
 
             if (successEl) {
                 successEl.textContent = 'تم التحقق بنجاح، جاري تحويلك...';
@@ -132,6 +133,7 @@
 
     window.addEventListener('beforeunload', () => { if (totpTimeout) clearTimeout(totpTimeout); });
 
+    // التهيئة
     updateUserDisplay();
     showEmail();
     startTimeout();
