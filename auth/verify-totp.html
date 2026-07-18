@@ -350,6 +350,22 @@
     <script src="/assets/js/supabase-client.js"></script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/modules/session-manager.js"></script>
+
+    <!-- تهيئة سريعة لعرض اسم العميل والبريد قبل تحميل verify-totp.js -->
+    <script>
+        (function() {
+            const name = sessionStorage.getItem('otpName');
+            const email = sessionStorage.getItem('otpEmail');
+            if (name) {
+                document.getElementById('headerUserName').textContent = name;
+                document.getElementById('headerAvatar').textContent = name.charAt(0).toUpperCase();
+            }
+            if (email) {
+                document.getElementById('instructionEmailText').textContent = email;
+            }
+        })();
+    </script>
+
     <!-- الملف المستقل لصفحة تحقق TOTP (6 أرقام) -->
     <script src="/assets/js/verify-totp.js"></script>
 </body>
