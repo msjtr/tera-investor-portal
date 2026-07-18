@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v4 (متوافق مع تدفق المصادقة الجديد – بدون إنشاء جلسة مكرر)
+ * dashboard.js – v5 (متوافق مع auth.js v28، جلب اسم العميل من الجلسة أولاً)
  */
 (function() {
     let supabase;
@@ -273,12 +273,11 @@
             return;
         }
 
-        // بدء حماية الجلسة إذا كان SessionManager محملاً
+        // بدء حماية الجلسة
         const sessionId = sessionStorage.getItem('currentSessionId');
         if (window.SessionManager && sessionId) {
             window.SessionManager.startSessionGuard(user.id, sessionId);
         } else if (window.SessionManager && !sessionId) {
-            // محاولة إنشاء جلسة جديدة إذا لم تكن موجودة
             try {
                 const result = await window.SessionManager.createSessionRecord(user.id);
                 if (result?.success) {
@@ -292,24 +291,21 @@
 
         document.getElementById('loadingOverlay')?.classList.add('active');
 
-        // تحديث واجهة المستخدم
-        if (window.UIHelpers?.updateHeader) {
-            window.UIHelpers.updateHeader(user);
-        } else {
-            const name = user.user_metadata?.full_name || user.email || 'مستخدم';
-            const nameEl = document.getElementById('headerUserName');
-            const avatarEl = document.getElementById('headerAvatar');
-            if (nameEl) nameEl.textContent = name;
-            if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
-        }
+        // 🟢 تحديث الهيدر – جلب الاسم من الجلسة أولاً
+        const storedName = sessionStorage.getItem('otpName');
+        const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (nameEl) nameEl.textContent = displayName;
+        if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
+        // شعار الترحيب
         const h2 = document.querySelector('.welcome-banner h2');
         if (h2) {
-            const name = user.user_metadata?.full_name || 'مستخدم';
-            h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${name}!`;
+            h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${displayName}!`;
         }
 
-        // طلب الموقع (مرة واحدة)
+        // طلب الموقع
         if (window.Auth?.getCurrentPosition) {
             window.Auth.getCurrentPosition().then(pos => {
                 sessionStorage.setItem('userLat', pos.latitude);
@@ -317,7 +313,7 @@
             }).catch(() => {});
         }
 
-        // تتبع النشاط مع ActivityTracker (إن وجد)
+        // تتبع النشاط
         if (window.ActivityTracker) {
             window.ActivityTracker.startIdleTimer(async () => {
                 if (window.Auth?.logout) await window.Auth.logout();
@@ -341,7 +337,7 @@
         await loadStats(user);
         await loadChartData(user);
 
-        // المؤقتات التاريخية
+        // المؤقتات
         const updateDateTime = () => {
             const now = new Date();
             const dateEl = document.getElementById('currentDate');
