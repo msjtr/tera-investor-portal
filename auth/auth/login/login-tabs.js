@@ -1,5 +1,5 @@
 /**
- * login-tabs.js – إدارة التبويبات وفحص الجلسة (يدعم totp_direct)
+ * login-tabs.js – إدارة التبويبات وفحص الجلسة (يدعم password_totp و password_otp)
  */
 (function() {
     const tabPassword = document.getElementById('tabPassword');
@@ -44,10 +44,16 @@
             const loginMethod = sessionStorage.getItem('loginMethod');
 
             if (sessionId) {
+                // جلسة كاملة – انتقال إلى لوحة التحكم
                 window.location.replace('/pages/dashboard/index.html');
-            } else if (loginMethod === 'password_totp' || loginMethod === 'totp_direct') {
+            } else if (loginMethod === 'password_totp') {
+                // المستخدم في منتصف عملية TOTP
                 window.location.replace('/auth/verify-totp.html');
+            } else if (loginMethod === 'password_otp') {
+                // المستخدم في منتصف عملية OTP بريدي
+                window.location.replace('/auth/verify-otp.html');
             } else {
+                // جلسة قديمة – إنهاء
                 await window.Auth.logout();
             }
         } catch (e) {
