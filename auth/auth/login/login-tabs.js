@@ -32,7 +32,6 @@
 
     // فحص الجلسة عند تحميل الصفحة
     async function checkExistingSession() {
-        // انتظار تحميل Auth إذا تأخر
         if (!window.Auth) {
             await new Promise(resolve => setTimeout(resolve, 300));
             if (!window.Auth) return;
@@ -45,17 +44,13 @@
             const loginMethod = sessionStorage.getItem('loginMethod');
 
             if (sessionId) {
-                // جلسة كاملة – انتقال إلى لوحة التحكم
                 window.location.replace('/pages/dashboard/index.html');
             } else if (loginMethod === 'password_totp' || loginMethod === 'totp_direct') {
-                // المستخدم في منتصف عملية TOTP – انتقل إلى صفحة TOTP
                 window.location.replace('/auth/verify-totp.html');
             } else {
-                // جلسة قديمة بدون علامة – إنهاء الجلسة
                 await window.Auth.logout();
             }
         } catch (e) {
-            // في حال فشل الفحص، نبقى في صفحة الدخول
             console.warn('تعذر فحص الجلسة:', e);
         }
     }
