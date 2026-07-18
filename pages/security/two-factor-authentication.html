@@ -17,12 +17,13 @@
     <!-- أيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ملفات CSS الأساسية -->
+    <!-- ملفات CSS الأساسية (قد تُترك للتوافق) -->
     <link rel="stylesheet" href="/assets/css/core.css">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
     <link rel="stylesheet" href="/assets/css/security.css">
 
+    <!-- ========== تنسيق خاص إضافي للصفحة (يغطي جميع الاحتياجات) ========== -->
     <style>
         :root {
             --primary: #028090;
@@ -67,6 +68,7 @@
             padding: 20px 16px 40px;
         }
 
+        /* رأس الصفحة */
         .page-subheader {
             display: flex;
             flex-wrap: wrap;
@@ -101,7 +103,7 @@
         }
         .btn-back:hover { background: var(--gray-200); color: var(--gray-900); }
 
-        /* بطاقات */
+        /* البطاقات */
         .card {
             background: #fff;
             border-radius: var(--radius-lg);
@@ -151,7 +153,7 @@
         .info-item .info-label { font-size: 12px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
         .info-item .info-value { font-size: 15px; font-weight: 700; color: var(--gray-900); word-break: break-word; }
 
-        /* أزرار */
+        /* الأزرار */
         .btn {
             padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700;
             cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
@@ -168,7 +170,7 @@
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
 
-        /* نافذة منبثقة */
+        /* النافذة المنبثقة */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(10,27,63,0.7);
             backdrop-filter: blur(6px); z-index: 1000;
@@ -211,7 +213,7 @@
             background: #fff; outline: none;
         }
 
-        /* رموز الاسترداد – تنسيق محسّن */
+        /* رموز الاسترداد */
         .backup-codes-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -255,7 +257,7 @@
         .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
         .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-        /* تنبيهات (Toast) */
+        /* التنبيهات (Toast) */
         .toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
             background: var(--gray-900); color: #fff; padding: 12px 24px;
@@ -300,7 +302,16 @@
             line-height: 1.6;
         }
 
-        /* تجاوب */
+        /* شاشة التحميل */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--gray-500);
+        }
+
+        /* تجاوب الشاشات */
         @media (max-width: 600px) {
             .page-subheader h1 { font-size: 20px; }
             .card { padding: 16px; }
@@ -311,9 +322,20 @@
             .modal { padding: 24px 18px; }
             .qr-wrapper img { max-width: 150px; }
         }
+        @media (max-width: 400px) {
+            .info-grid { grid-template-columns: 1fr; }
+        }
+
+        /* طباعة */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+        }
     </style>
 </head>
 <body>
+
     <header class="focused-header no-print">
         <div class="logo"><img src="/images/logo.svg" alt="تيرا"></div>
         <div class="client-info">
