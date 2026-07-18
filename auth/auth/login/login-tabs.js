@@ -1,5 +1,5 @@
 /**
- * login-tabs.js – إدارة التبويبات وفحص الجلسة عند التحميل
+ * login-tabs.js – إدارة التبويبات وفحص الجلسة (يدعم totp_direct)
  */
 (function() {
     const tabPassword = document.getElementById('tabPassword');
@@ -14,7 +14,6 @@
             tabTOTP.classList.remove('active');
             passwordSection.style.display = 'block';
             totpSection.style.display = 'none';
-            // تنظيف أي رسالة خطأ
             const errorMsg = document.getElementById('loginError');
             if (errorMsg) errorMsg.style.display = 'none';
         });
@@ -33,23 +32,32 @@
 
     // فحص الجلسة عند تحميل الصفحة
     async function checkExistingSession() {
+        // انتظار تحميل Auth إذا تأخر
         if (!window.Auth) {
-            await new Promise(resolve => setTimeout(resolve, 300)); // انتظار تحميل Auth
+            await new Promise(resolve => setTimeout(resolve, 300));
             if (!window.Auth) return;
         }
         try {
             const valid = await window.Auth.isSessionValid();
             if (!valid) return;
+
             const sessionId = sessionStorage.getItem('currentSessionId');
             const loginMethod = sessionStorage.getItem('loginMethod');
+
             if (sessionId) {
+                // جلسة كاملة – انتقال إلى لوحة التحكم
                 window.location.replace('/pages/dashboard/index.html');
-            } else if (loginMethod === 'password_totp') {
+            } else if (loginMethod === 'password_totp' || loginMethod === 'totp_direct') {
+                // المستخدم في منتصف عملية TOTP – انتقل إلى صفحة TOTP
                 window.location.replace('/auth/verify-totp.html');
             } else {
+                // جلسة قديمة بدون علامة – إنهاء الجلسة
                 await window.Auth.logout();
             }
-        } catch (e) {}
+        } catch (e) {
+            // في حال فشل الفحص، نبقى في صفحة الدخول
+            console.warn('تعذر فحص الجلسة:', e);
+        }
     }
 
     window.addEventListener('load', () => setTimeout(checkExistingSession, 300));
