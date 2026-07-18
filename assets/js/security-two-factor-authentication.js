@@ -1,6 +1,6 @@
 /**
  * security-two-factor-authentication.js – متوافق مع user_totp + user_security
- * يعتمد على Auth.js v27 و Edge Function التي تستخدم الجدولين المنفصلين.
+ * يعتمد على Auth.js v28 و Edge Function التي تستخدم الجدولين المنفصلين.
  */
 (function() {
     'use strict';
@@ -315,8 +315,15 @@
         try {
             const user = await window.Auth?.requireAuth();
             if (!user) return;
-            document.getElementById('headerUserName').textContent = user.user_metadata?.full_name || user.email || 'مستخدم';
-            document.getElementById('headerAvatar').textContent = (user.user_metadata?.full_name || 'م')[0];
+
+            // جلب اسم العميل: من sessionStorage أولاً (مخزّن بواسطة auth.js v28)، ثم من user metadata، ثم من البريد
+            const storedName = sessionStorage.getItem('otpName');
+            const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
+            const nameEl = document.getElementById('headerUserName');
+            const avatarEl = document.getElementById('headerAvatar');
+            if (nameEl) nameEl.textContent = displayName;
+            if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+
             await loadData();
         } catch (e) { console.error('فشل بدء 2FA:', e); }
     }
