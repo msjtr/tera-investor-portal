@@ -152,17 +152,13 @@
                     <button type="submit" class="btn-submit-login" id="loginBtn"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
                 </form>
             </div>
-            <!-- نموذج المصادقة الثنائية (بريد + كلمة مرور) -->
+            <!-- نموذج المصادقة الثنائية (بريد فقط) -->
             <div id="totpSection" style="display:none;">
-                <p style="margin-bottom:20px; color: var(--gray-700);">أدخل بريدك الإلكتروني وكلمة المرور، ثم أكمل التحقق برمز التطبيق.</p>
+                <p style="margin-bottom:20px; color: var(--gray-700);">أدخل بريدك الإلكتروني المسجل، ثم انتقل لإدخال رمز المصادقة من تطبيقك.</p>
                 <form id="totpForm" novalidate>
                     <div class="form-field-group">
                         <label class="field-label" for="totpEmail">البريد الإلكتروني <span style="color:var(--danger)">*</span></label>
                         <input type="email" id="totpEmail" class="form-input-control" placeholder="أدخل بريدك الإلكتروني" autocomplete="username" required>
-                    </div>
-                    <div class="form-field-group">
-                        <label class="field-label" for="totpPassword">كلمة المرور <span style="color:var(--danger)">*</span></label>
-                        <input type="password" id="totpPassword" class="form-input-control" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
                     </div>
                     <button type="button" class="btn-submit-login" id="totpSubmitBtn">
                         <i class="fas fa-arrow-left"></i> متابعة إلى التحقق
