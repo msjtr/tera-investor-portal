@@ -1,5 +1,5 @@
 /**
- * verify-otp.js – v57 (تحسين معالجة أخطاء OTP البريدي)
+ * verify-otp.js – v58 (مع جلب اسم العميل من البريد الإلكتروني)
  */
 (function() {
     const OTP_LENGTH = 8;
@@ -15,20 +15,18 @@
     const backLink = document.getElementById('backLink');
 
     async function init() {
-        updateUserDisplayFromSession();
+        updateUserDisplay();
         bindEvents();
         startCountdown();
         updateEmailDisplay();
     }
 
-    function updateUserDisplayFromSession() {
+    function updateUserDisplay() {
         const name = sessionStorage.getItem('otpName');
-        if (name) {
-            const nameEl = document.getElementById('headerUserName');
-            if (nameEl) nameEl.textContent = name;
-            const avatarEl = document.getElementById('headerAvatar');
-            if (avatarEl) avatarEl.textContent = name.charAt(0).toUpperCase();
-        }
+        const email = sessionStorage.getItem('otpEmail');
+        const displayName = name || (email ? email.split('@')[0] : 'مستخدم');
+        document.getElementById('headerUserName').textContent = displayName;
+        document.getElementById('headerAvatar').textContent = displayName.charAt(0).toUpperCase();
     }
 
     function bindEvents() {
@@ -64,9 +62,7 @@
         return code;
     }
 
-    function checkComplete() {
-        if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH;
-    }
+    function checkComplete() { if (verifyBtn) verifyBtn.disabled = getOtpCode().length !== OTP_LENGTH; }
 
     function showError(msg) {
         if (errorMsg) { errorMsg.textContent = msg; errorMsg.style.display = 'block'; }
@@ -126,6 +122,10 @@
             if (!data?.session) throw new Error('رمز التحقق غير صحيح');
 
             const user = data.session.user;
+            // تحديث الاسم بالاسم الحقيقي إن وُجد
+            if (user.user_metadata?.full_name) {
+                sessionStorage.setItem('otpName', user.user_metadata.full_name);
+            }
             await tryCreateSessionRecord(user.id);
             clearOtpSession();
 
@@ -147,7 +147,6 @@
             }
             showError(message);
             resetBtn();
-            // تفريغ الحقول ليتمكن من إدخال رمز جديد
             otpInputs.forEach(inp => inp.value = '');
             otpInputs[0]?.focus();
         }
