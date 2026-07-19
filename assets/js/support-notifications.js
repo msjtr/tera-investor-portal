@@ -1,8 +1,8 @@
 /**
  * ============================================================
- * support-notifications.js – الإصدار v6 (باستخدام Edge Functions)
+ * support-notifications.js – الإصدار v7 (جميع الاستعلامات عبر Edge Functions)
  * متوافق مع جدول notifications الحالي
- * يستخدم get-notifications لتجاوز RLS
+ * يستخدم get-notifications و send-notification لتجاوز RLS
  * ============================================================
  */
 
@@ -42,7 +42,8 @@
             status: 'all',
             priority: 'all',
             sort: 'desc'
-        }
+        },
+        allNotificationsCache: [] // تخزين كامل الإشعارات لتجنب الاتصال المتكرر
     };
 
     // ============================================================
@@ -205,14 +206,22 @@
     }
 
     // ============================================================
-    // 6. الحصول على التوكن
+    // 6. الحصول على التوكن (مع تجديد تلقائي)
     // ============================================================
     async function getAccessToken() {
         try {
             const sb = await getSupabase();
             if (!sb) return null;
             const { data: { session }, error } = await sb.auth.getSession();
-            if (error || !session) return null;
+            if (error || !session) {
+                // محاولة تجديد الجلسة
+                const { data: refreshData, error: refreshError } = await sb.auth.refreshSession();
+                if (refreshError || !refreshData.session) {
+                    console.warn('⚠️ فشل تجديد الجلسة، يرجى تسجيل الدخول مجدداً');
+                    return null;
+                }
+                return refreshData.session.access_token;
+            }
             return session.access_token;
         } catch (e) {
             console.warn('⚠️ فشل جلب التوكن:', e);
@@ -221,7 +230,58 @@
     }
 
     // ============================================================
-    // 7. تحميل الإشعارات (باستخدام Edge Function)
+    // 7. جلب جميع الإشعارات من Edge Function
+    // ============================================================
+    async function fetchAllNotifications() {
+        try {
+            const token = await getAccessToken();
+            if (!token) {
+                throw new Error('لا يوجد توكن صالح');
+            }
+
+            const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                // محاولة تجديد التوكن وإعادة المحاولة مرة واحدة
+                const sb = await getSupabase();
+                if (sb) {
+                    const { data: refreshData } = await sb.auth.refreshSession();
+                    if (refreshData.session) {
+                        const retryResponse = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${refreshData.session.access_token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        if (retryResponse.ok) {
+                            return await retryResponse.json();
+                        }
+                    }
+                }
+                throw new Error('جلسة غير صالحة، يرجى تسجيل الدخول مجدداً');
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (err) {
+            console.error('❌ فشل جلب الإشعارات:', err);
+            throw err;
+        }
+    }
+
+    // ============================================================
+    // 8. تحميل الإشعارات (مع تخزين مؤقت)
     // ============================================================
     async function loadNotifications(page = 1, append = false) {
         if (state.isLoading) return;
@@ -235,34 +295,16 @@
                 return;
             }
 
-            const token = await getAccessToken();
-            if (!token) {
-                renderEmptyState('انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول', 'fa-clock', 'warning');
-                state.isLoading = false;
-                return;
+            // جلب البيانات من Edge Function (مع تخزين مؤقت)
+            let allData = state.allNotificationsCache;
+            if (allData.length === 0) {
+                const result = await fetchAllNotifications();
+                allData = result.data || [];
+                state.allNotificationsCache = allData;
             }
 
-            // استدعاء Edge Function get-notifications
-            const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP ${response.status}`);
-            }
-
-            const result = await response.json();
-            if (result.error) throw new Error(result.error);
-
-            const notifications = result.data || [];
-
-            // تطبيق الفلاتر محلياً (لأن Edge Function تجلب الكل)
-            let filtered = notifications;
+            // تطبيق الفلاتر محلياً
+            let filtered = allData;
             const { search, type, status, priority, sort } = state.filters;
 
             if (type !== 'all') filtered = filtered.filter(n => n.type === type);
@@ -299,7 +341,8 @@
             state.totalCount = filtered.length;
             state.hasMore = to < filtered.length;
 
-            await updateStatsAndBadges(notifications);
+            // تحديث الإحصائيات من البيانات الكاملة
+            updateStatsFromData(allData);
             renderNotifications(state.filteredNotifications);
             updatePagination(page);
 
@@ -312,7 +355,97 @@
     }
 
     // ============================================================
-    // 8. عرض الإشعارات
+    // 9. تحديث الإحصائيات من البيانات
+    // ============================================================
+    function updateStatsFromData(notifications) {
+        const stats = {
+            total: notifications.filter(n => n.status !== 'deleted').length,
+            unread: notifications.filter(n => n.status === 'unread').length,
+            read: notifications.filter(n => n.status === 'read').length,
+            archived: notifications.filter(n => n.status === 'archived').length,
+            important: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length
+        };
+
+        if (DOM.stats.total) DOM.stats.total.textContent = stats.total;
+        if (DOM.stats.unread) DOM.stats.unread.textContent = stats.unread;
+        if (DOM.stats.read) DOM.stats.read.textContent = stats.read;
+        if (DOM.stats.archived) DOM.stats.archived.textContent = stats.archived;
+        if (DOM.stats.important) DOM.stats.important.textContent = stats.important;
+
+        state.unreadCount = stats.unread;
+        updateBadges(stats.unread);
+    }
+
+    // ============================================================
+    // 10. تحديث الإحصائيات والعدادات
+    // ============================================================
+    async function updateStatsAndBadges() {
+        try {
+            const user = await getCurrentUser();
+            if (!user) return;
+
+            let notifications = state.allNotificationsCache;
+            if (notifications.length === 0) {
+                const result = await fetchAllNotifications();
+                notifications = result.data || [];
+                state.allNotificationsCache = notifications;
+            }
+            updateStatsFromData(notifications);
+        } catch (e) {
+            console.warn('⚠️ فشل تحديث الإحصائيات:', e);
+        }
+    }
+
+    // ============================================================
+    // 11. تحديث البادجات
+    // ============================================================
+    async function updateBadges(unreadCount = null) {
+        try {
+            if (unreadCount === null) {
+                const user = await getCurrentUser();
+                if (!user) return;
+                let notifications = state.allNotificationsCache;
+                if (notifications.length === 0) {
+                    const result = await fetchAllNotifications();
+                    notifications = result.data || [];
+                    state.allNotificationsCache = notifications;
+                }
+                unreadCount = notifications.filter(n => n.status === 'unread').length;
+            }
+
+            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
+            badges.forEach(el => {
+                if (el) {
+                    el.textContent = unreadCount;
+                    el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                }
+            });
+
+            const tabBadge = document.querySelector('.tab-btn[data-tab="inbox"] .badge-count');
+            if (tabBadge) {
+                tabBadge.textContent = unreadCount;
+                tabBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            const headerBadge = document.querySelector('.header-notification-badge');
+            if (headerBadge) {
+                headerBadge.textContent = unreadCount;
+                headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
+
+            if (window.Support?.updateNotificationBadge) {
+                await window.Support.updateNotificationBadge();
+            }
+
+        } catch (e) {
+            console.warn('⚠️ فشل تحديث البادجات:', e);
+        }
+    }
+
+    // ============================================================
+    // 12. عرض الإشعارات (كما هي)
     // ============================================================
     function renderNotifications(notifications) {
         if (!notifications || notifications.length === 0) {
@@ -371,7 +504,6 @@
                 </div>
             `;
 
-            // ربط الأحداث
             card.querySelector('.view-details')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openDetail(n.id);
@@ -420,7 +552,7 @@
     }
 
     // ============================================================
-    // 9. عرض حالة فارغة
+    // 13. عرض حالة فارغة
     // ============================================================
     function renderEmptyState(message, icon = 'fa-inbox', type = 'info', details = '') {
         const colors = {
@@ -440,98 +572,7 @@
     }
 
     // ============================================================
-    // 10. تحديث الإحصائيات والعدادات
-    // ============================================================
-    async function updateStatsAndBadges(allNotifications = null) {
-        try {
-            const user = await getCurrentUser();
-            if (!user) return;
-
-            let notifications = allNotifications;
-
-            if (!notifications) {
-                const token = await getAccessToken();
-                if (!token) return;
-                const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const result = await response.json();
-                notifications = result.data || [];
-            }
-
-            const stats = {
-                total: notifications.filter(n => n.status !== 'deleted').length,
-                unread: notifications.filter(n => n.status === 'unread').length,
-                read: notifications.filter(n => n.status === 'read').length,
-                archived: notifications.filter(n => n.status === 'archived').length,
-                important: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length
-            };
-
-            if (DOM.stats.total) DOM.stats.total.textContent = stats.total;
-            if (DOM.stats.unread) DOM.stats.unread.textContent = stats.unread;
-            if (DOM.stats.read) DOM.stats.read.textContent = stats.read;
-            if (DOM.stats.archived) DOM.stats.archived.textContent = stats.archived;
-            if (DOM.stats.important) DOM.stats.important.textContent = stats.important;
-
-            state.unreadCount = stats.unread;
-            await updateBadges(stats.unread);
-
-        } catch (e) {
-            console.warn('⚠️ فشل تحديث الإحصائيات:', e);
-        }
-    }
-
-    // ============================================================
-    // 11. تحديث البادجات
-    // ============================================================
-    async function updateBadges(unreadCount = null) {
-        try {
-            if (unreadCount === null) {
-                const user = await getCurrentUser();
-                if (!user) return;
-                const token = await getAccessToken();
-                if (!token) return;
-                const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const result = await response.json();
-                const notifications = result.data || [];
-                unreadCount = notifications.filter(n => n.status === 'unread').length;
-            }
-
-            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
-            badges.forEach(el => {
-                if (el) {
-                    el.textContent = unreadCount;
-                    el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-                }
-            });
-
-            const tabBadge = document.querySelector('.tab-btn[data-tab="inbox"] .badge-count');
-            if (tabBadge) {
-                tabBadge.textContent = unreadCount;
-                tabBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-            }
-
-            const headerBadge = document.querySelector('.header-notification-badge');
-            if (headerBadge) {
-                headerBadge.textContent = unreadCount;
-                headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-            }
-
-            document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
-
-            if (window.Support?.updateNotificationBadge) {
-                await window.Support.updateNotificationBadge();
-            }
-
-        } catch (e) {
-            console.warn('⚠️ فشل تحديث البادجات:', e);
-        }
-    }
-
-    // ============================================================
-    // 12. Pagination
+    // 14. Pagination
     // ============================================================
     function updatePagination(page) {
         const totalPages = Math.ceil(state.totalCount / state.pageSize);
@@ -561,7 +602,7 @@
     }
 
     // ============================================================
-    // 13. تحديد الكل
+    // 15. تحديد الكل
     // ============================================================
     function updateSelectAllState() {
         const cards = DOM.list.querySelectorAll('.notification-card');
@@ -603,7 +644,7 @@
     }
 
     // ============================================================
-    // 14. تعليم كمقروء
+    // 16. عمليات CRUD (markAsRead, archive, delete) - تستخدم Supabase مباشرة
     // ============================================================
     async function markAsRead(id) {
         if (!id) return;
@@ -625,6 +666,15 @@
 
             if (error) throw error;
 
+            // تحديث الكاش المحلي
+            const notif = state.allNotificationsCache.find(n => n.id === id);
+            if (notif) {
+                notif.status = 'read';
+                notif.is_read = true;
+                notif.read_at = now;
+            }
+
+            // تحديث الواجهة
             const card = DOM.list.querySelector(`.notification-card[data-id="${id}"]`);
             if (card) {
                 card.classList.remove('unread');
@@ -638,7 +688,7 @@
             }
 
             state.selectedIds.delete(id);
-            await loadNotifications(state.currentPage);
+            await updateStatsAndBadges();
 
         } catch (err) {
             console.error('❌ خطأ في تعليم كمقروء:', err);
@@ -670,6 +720,16 @@
 
                 if (error) throw error;
 
+                // تحديث الكاش المحلي
+                ids.forEach(id => {
+                    const notif = state.allNotificationsCache.find(n => n.id === id);
+                    if (notif) {
+                        notif.status = 'read';
+                        notif.is_read = true;
+                        notif.read_at = now;
+                    }
+                });
+
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
 
@@ -680,7 +740,7 @@
     }
 
     // ============================================================
-    // 15. أرشفة
+    // 17. أرشفة
     // ============================================================
     async function archiveNotification(id) {
         if (!id) return;
@@ -701,6 +761,12 @@
                 .eq('user_id', user.id);
 
             if (error) throw error;
+
+            const notif = state.allNotificationsCache.find(n => n.id === id);
+            if (notif) {
+                notif.status = 'archived';
+                notif.archived_at = new Date().toISOString();
+            }
 
             state.selectedIds.delete(id);
             await loadNotifications(state.currentPage);
@@ -732,6 +798,14 @@
 
                 if (error) throw error;
 
+                ids.forEach(id => {
+                    const notif = state.allNotificationsCache.find(n => n.id === id);
+                    if (notif) {
+                        notif.status = 'archived';
+                        notif.archived_at = new Date().toISOString();
+                    }
+                });
+
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
 
@@ -742,7 +816,7 @@
     }
 
     // ============================================================
-    // 16. حذف
+    // 18. حذف
     // ============================================================
     async function deleteNotification(id) {
         if (!id) return;
@@ -763,6 +837,9 @@
                 .eq('user_id', user.id);
 
             if (error) throw error;
+
+            // إزالة من الكاش
+            state.allNotificationsCache = state.allNotificationsCache.filter(n => n.id !== id);
 
             state.selectedIds.delete(id);
             await loadNotifications(state.currentPage);
@@ -794,6 +871,7 @@
 
                 if (error) throw error;
 
+                state.allNotificationsCache = state.allNotificationsCache.filter(n => !ids.includes(n.id));
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
 
@@ -804,22 +882,27 @@
     }
 
     // ============================================================
-    // 17. عرض التفاصيل
+    // 19. عرض التفاصيل (Modal)
     // ============================================================
     async function openDetail(id) {
         try {
             const user = await getCurrentUser();
             if (!user) return;
 
-            const sb = await getSupabase();
-            const { data, error } = await sb
-                .from('notifications')
-                .select('*')
-                .eq('id', id)
-                .eq('user_id', user.id)
-                .single();
+            // محاولة الحصول من الكاش أولاً
+            let data = state.allNotificationsCache.find(n => n.id === id);
+            if (!data) {
+                const sb = await getSupabase();
+                const { data: fetched, error } = await sb
+                    .from('notifications')
+                    .select('*')
+                    .eq('id', id)
+                    .eq('user_id', user.id)
+                    .single();
+                if (error) throw error;
+                data = fetched;
+            }
 
-            if (error) throw error;
             if (!data) return alert('الإشعار غير موجود');
 
             DOM.modalTitle.textContent = data.title || 'تفاصيل الإشعار';
@@ -866,17 +949,13 @@
                 await markAsRead(id);
             }
 
-            try {
-                await sb.rpc('increment_view_count', { notif_id: id });
-            } catch (e) { /* تجاهل */ }
-
         } catch (err) {
             alert('خطأ: ' + err.message);
         }
     }
 
     // ============================================================
-    // 18. إغلاق المودال
+    // 20. إغلاق المودال
     // ============================================================
     if (DOM.closeModal) {
         DOM.closeModal.addEventListener('click', () => DOM.modal.classList.remove('active'));
@@ -888,14 +967,17 @@
     }
 
     // ============================================================
-    // 19. تحديث
+    // 21. تحديث
     // ============================================================
     if (DOM.refresh) {
-        DOM.refresh.addEventListener('click', () => loadNotifications(1));
+        DOM.refresh.addEventListener('click', () => {
+            state.allNotificationsCache = [];
+            loadNotifications(1);
+        });
     }
 
     // ============================================================
-    // 20. البحث والفلترة
+    // 22. البحث والفلترة
     // ============================================================
     function saveFilters() {
         try {
@@ -937,7 +1019,7 @@
     });
 
     // ============================================================
-    // 21. تبويبات
+    // 23. تبويبات
     // ============================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -958,7 +1040,7 @@
     });
 
     // ============================================================
-    // 22. تحميل سجل الإشعارات
+    // 24. تحميل سجل الإشعارات (باستخدام Edge Function)
     // ============================================================
     async function loadHistory(page = 1) {
         if (!DOM.history.body) return;
@@ -970,24 +1052,28 @@
                 return;
             }
 
-            const sb = await getSupabase();
-            const { data, count, error } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact' })
-                .eq('user_id', user.id)
-                .in('status', ['read', 'archived'])
-                .order('created_at', { ascending: false })
-                .range((page - 1) * state.pageSize, page * state.pageSize - 1);
+            // استخدام الكاش الموجود وتصفية read/archived
+            let notifications = state.allNotificationsCache;
+            if (notifications.length === 0) {
+                const result = await fetchAllNotifications();
+                notifications = result.data || [];
+                state.allNotificationsCache = notifications;
+            }
 
-            if (error) throw error;
+            const historyData = notifications.filter(n => n.status === 'read' || n.status === 'archived');
+            historyData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            if (!data || data.length === 0) {
+            const from = (page - 1) * state.pageSize;
+            const to = from + state.pageSize;
+            const paginated = historyData.slice(from, to);
+
+            if (paginated.length === 0) {
                 DOM.history.body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">لا توجد إشعارات في السجل</td></tr>';
                 return;
             }
 
             let html = '';
-            data.forEach(n => {
+            paginated.forEach(n => {
                 html += `
                     <tr>
                         <td style="font-size:12px;color:var(--gray-400);">${n.id.substring(0, 8)}</td>
@@ -1005,7 +1091,7 @@
             });
             DOM.history.body.innerHTML = html;
 
-            const totalPages = Math.ceil((count || 0) / state.pageSize);
+            const totalPages = Math.ceil(historyData.length / state.pageSize);
             if (!DOM.history.pagination) return;
             if (totalPages <= 1) { DOM.history.pagination.innerHTML = ''; return; }
 
@@ -1024,7 +1110,7 @@
     }
 
     // ============================================================
-    // 23. Toast Notification
+    // 25. Toast Notification
     // ============================================================
     let toastContainer = null;
 
@@ -1130,7 +1216,7 @@
     }
 
     // ============================================================
-    // 24. OneSignal Integration
+    // 26. OneSignal Integration (مصحح)
     // ============================================================
     async function checkOneSignalStatus() {
         if (!DOM.oneSignal.status) return;
@@ -1143,7 +1229,8 @@
                 attempts++;
             }
 
-            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
+            // التحقق من وجود OneSignal و User
+            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User || !window.OneSignal.Notifications) {
                 DOM.oneSignal.status.textContent = '⏳ غير متاح';
                 DOM.oneSignal.status.className = 'status-value unsubscribed';
                 if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'يرجى تحديث الصفحة';
@@ -1151,7 +1238,14 @@
             }
 
             const OneSignal = window.OneSignal;
-            const subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
+            // استخدام try/catch حول getCurrentSubscription
+            let subscription = null;
+            try {
+                subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
+            } catch (e) {
+                console.warn('⚠️ فشل جلب حالة الاشتراك:', e);
+                subscription = null;
+            }
 
             if (subscription && subscription.id) {
                 DOM.oneSignal.status.textContent = '✅ مفعل';
@@ -1189,20 +1283,25 @@
         }
 
         try {
-            window.OneSignal.Notifications?.addListener('foregroundWillDisplay', async (notification) => {
-                const data = notification.data || notification;
-                const title = data.title || notification.title || 'إشعار جديد';
-                const body = data.body || notification.body || '';
-                const isSilent = data.is_silent === true;
+            if (window.OneSignal.Notifications && typeof window.OneSignal.Notifications.addListener === 'function') {
+                window.OneSignal.Notifications.addListener('foregroundWillDisplay', async (notification) => {
+                    const data = notification.data || notification;
+                    const title = data.title || notification.title || 'إشعار جديد';
+                    const body = data.body || notification.body || '';
+                    const isSilent = data.is_silent === true;
 
-                if (!isSilent) {
-                    showToast(`🔔 ${title}: ${body.substring(0, 60)}${body.length > 60 ? '...' : ''}`, 'info', 8000);
-                }
+                    if (!isSilent) {
+                        showToast(`🔔 ${title}: ${body.substring(0, 60)}${body.length > 60 ? '...' : ''}`, 'info', 8000);
+                    }
 
-                await refreshNotifications();
-            });
-
-            console.log('✅ OneSignal listener ready');
+                    // تحديث الكاش وإعادة التحميل
+                    state.allNotificationsCache = [];
+                    await refreshNotifications();
+                });
+                console.log('✅ OneSignal listener ready');
+            } else {
+                console.warn('⚠️ OneSignal.Notifications غير متوفر');
+            }
 
         } catch (err) {
             console.warn('⚠️ فشل إعداد مستمع OneSignal:', err);
@@ -1210,7 +1309,7 @@
     }
 
     // ============================================================
-    // 25. Supabase Realtime
+    // 27. Supabase Realtime
     // ============================================================
     async function setupRealtime() {
         try {
@@ -1239,6 +1338,9 @@
                         const newNotif = payload.new;
                         if (Utils.isExpired(newNotif.expires_at)) return;
 
+                        // إضافة إلى الكاش
+                        state.allNotificationsCache.unshift(newNotif);
+
                         if (!newNotif.is_silent) {
                             showToast(`🔔 ${newNotif.title || 'إشعار جديد'}: ${(newNotif.body || '').substring(0, 60)}${(newNotif.body || '').length > 60 ? '...' : ''}`, 'info', 8000);
                             try {
@@ -1261,7 +1363,13 @@
                         table: 'notifications',
                         filter: `user_id=eq.${user.id}`
                     },
-                    async () => {
+                    async (payload) => {
+                        // تحديث الكاش
+                        const updated = payload.new;
+                        const idx = state.allNotificationsCache.findIndex(n => n.id === updated.id);
+                        if (idx !== -1) {
+                            state.allNotificationsCache[idx] = updated;
+                        }
                         await updateStatsAndBadges();
                     }
                 )
@@ -1277,15 +1385,16 @@
     }
 
     // ============================================================
-    // 26. تحديث القائمة
+    // 28. تحديث القائمة
     // ============================================================
     async function refreshNotifications() {
+        state.allNotificationsCache = [];
         await loadNotifications(1);
         await updateStatsAndBadges();
     }
 
     // ============================================================
-    // 27. دوال مُصدَّرة
+    // 29. دوال مُصدَّرة
     // ============================================================
     async function __openDetail(id) {
         if (!id) return;
@@ -1331,10 +1440,10 @@
     window.__refreshNotifications = __refreshNotifications;
 
     // ============================================================
-    // 28. التهيئة
+    // 30. التهيئة
     // ============================================================
     async function init() {
-        console.log('🚀 تشغيل مركز الإشعارات (v6 - Edge Functions)');
+        console.log('🚀 تشغيل مركز الإشعارات (v7 - جميع الاستعلامات عبر Edge Functions)');
 
         try {
             const user = await getCurrentUser();
@@ -1365,7 +1474,7 @@
             await setupRealtime();
             await loadHistory(1);
 
-            console.log('✅ مركز الإشعارات جاهز (v6)');
+            console.log('✅ مركز الإشعارات جاهز (v7)');
 
         } catch (err) {
             console.error('❌ فشل التهيئة:', err);
@@ -1374,7 +1483,7 @@
     }
 
     // ============================================================
-    // 29. التشغيل
+    // 31. التشغيل
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
