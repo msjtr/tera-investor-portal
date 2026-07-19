@@ -1,24 +1,38 @@
 /**
- * dashboard.js – v6 (مع نظام التنبيهات المتقدم)
- * متوافق مع auth.js v28، جلب اسم العميل من الجلسة أولاً
+ * dashboard.js – v7 (متكامل مع نظام الإشعارات الجديد)
+ * متوافق مع auth.js v29، supabase-client.js المُحسَّن
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
+ * متكامل مع نظام الإشعارات Realtime
  */
 
 (function() {
-    let supabase;
+    let supabase = null;
     let chartInstance = null;
     let requestData = null;
     const sessionStart = new Date();
     let updateActivityInterval = null;
     let alertsData = [];
+    let unreadCount = 0;
+    let realtimeChannel = null;
 
+    // ===== الحصول على Supabase =====
     async function getSupabase() {
         if (supabase) return supabase;
-        supabase = window.teraSupabase || await window.waitForSupabase?.();
-        return supabase;
+        // استخدام العميل من window أو الانتظار
+        if (window.teraSupabase) {
+            supabase = window.teraSupabase;
+            return supabase;
+        }
+        try {
+            supabase = await window.waitForSupabase?.();
+            return supabase;
+        } catch (e) {
+            console.warn('⚠️ Supabase غير جاهز:', e);
+            return null;
+        }
     }
 
-    // ---------- دوال مساعدة ----------
+    // ===== الأدوات المساعدة (مستوردة من support-notifications.js للتوحيد) =====
     function formatDateTime(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString('ar-SA', {
@@ -32,7 +46,8 @@
         if (diff < 60) return 'الآن';
         if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
         if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
-        return `${Math.floor(diff / 86400)} يوم`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
+        return formatDateTime(iso);
     }
 
     function getElapsedDays(iso) {
@@ -65,7 +80,8 @@
             investment: 'fa-chart-line',
             profit: 'fa-coins',
             security: 'fa-shield-alt',
-            system: 'fa-server'
+            system: 'fa-server',
+            general: 'fa-bell'
         };
         return icons[type] || 'fa-bell';
     }
@@ -81,7 +97,12 @@
         return classes[type] || 'alert-info';
     }
 
-    // ---------- عرض التنبيهات ----------
+    function getPriorityLabel(p) {
+        const map = { urgent: 'عاجل', high: 'مرتفع', medium: 'متوسط', normal: 'عادي', low: 'منخفض' };
+        return map[p] || p;
+    }
+
+    // ===== عرض التنبيهات (محسّن مع توافق قاعدة البيانات) =====
     async function loadAlerts(user) {
         const container = document.getElementById('alertsPanel');
         if (!container) return;
@@ -97,7 +118,6 @@
                 .maybeSingle();
 
             if (!reqError) {
-                // التحقق من اكتمال الملف الشخصي
                 const profileSteps = [
                     { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
                     { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
@@ -122,7 +142,6 @@
                     });
                 }
 
-                // تنبيه حالة الطلب
                 if (req?.submitted) {
                     const statusMap = {
                         'under_review': { type: 'info', title: 'طلبك قيد المراجعة', description: 'تم استلام طلب التحقق وهو قيد المراجعة من قبل الفريق.' },
@@ -149,7 +168,7 @@
                 }
             }
 
-            // 2. تنبيهات من جدول الإشعارات (إذا كان موجوداً)
+            // 2. تنبيهات من جدول الإشعارات (غير المقروءة)
             try {
                 const { data: notifications, error: notifError } = await supabase
                     .from('notifications')
@@ -182,10 +201,9 @@
                         });
                     });
                 }
-            } catch (e) {}
+            } catch (e) { /* تجاهل */ }
 
             // 3. تنبيهات النظام العامة
-            // 3.1 تنبيه التحقق من البريد الإلكتروني
             if (user && !user.email_confirmed_at) {
                 alerts.push({
                     id: 'email_verification',
@@ -201,28 +219,7 @@
                 });
             }
 
-            // 3.2 تنبيه OneSignal (إذا كان متاحاً)
-            if (window.OneSignal && window.OneSignal.User) {
-                try {
-                    const subscription = await window.OneSignal.User.pushSubscription.getCurrentSubscription();
-                    if (!subscription || !subscription.id) {
-                        alerts.push({
-                            id: 'push_notifications',
-                            type: 'info',
-                            icon: 'fa-bell',
-                            title: 'تفعيل الإشعارات الفورية',
-                            description: 'فعّل الإشعارات الفورية لتلقي التحديثات الهامة لحظياً.',
-                            link: '/pages/support/notifications.html',
-                            linkText: 'إدارة الإشعارات',
-                            readMore: 'يمكنك تفعيل الإشعارات الفورية من خلال متصفحك أو من إعدادات الحساب.',
-                            date: new Date().toISOString(),
-                            priority: 'low'
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            // 4. تنبيهات مخصصة من localStorage (مثال: عرض رسالة بعد تحديث النظام)
+            // 4. تنبيهات مخصصة من localStorage
             const dismissedAlerts = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
             const systemMessage = localStorage.getItem('systemMessage');
             if (systemMessage && !dismissedAlerts.includes('system_message')) {
@@ -241,10 +238,10 @@
                         priority: msg.priority || 'medium',
                         dismissible: true
                     });
-                } catch (e) {}
+                } catch (e) { /* تجاهل */ }
             }
 
-            // ترتيب التنبيهات حسب الأولوية والتاريخ
+            // ترتيب التنبيهات
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
             alerts.sort((a, b) => {
                 const pa = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 3;
@@ -270,7 +267,6 @@
 
         container.style.display = 'block';
 
-        // تصفية التنبيهات التي تم تجاهلها
         const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
         const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
 
@@ -293,7 +289,7 @@
         const showAll = visibleAlerts.length <= 3;
         const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
 
-        alertsToShow.forEach((alert, index) => {
+        alertsToShow.forEach((alert) => {
             const alertClass = getAlertClass(alert.type);
             const icon = alert.icon || getAlertIcon(alert.type);
             const isDismissible = alert.dismissible !== false;
@@ -330,7 +326,6 @@
                 <div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">
             `;
             visibleAlerts.slice(3).forEach(alert => {
-                // نفس الكود أعلاه مع إعادة استخدام المنطق
                 const alertClass = getAlertClass(alert.type);
                 const icon = alert.icon || getAlertIcon(alert.type);
                 const isDismissible = alert.dismissible !== false;
@@ -376,8 +371,7 @@
         container.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                const alertId = this.dataset.alertId;
-                dismissAlert(alertId);
+                dismissAlert(this.dataset.alertId);
             });
         });
 
@@ -426,19 +420,106 @@
             dismissed.push(alertId);
             localStorage.setItem('dismissedAlerts', JSON.stringify(dismissed));
         }
-        // إعادة تحميل التنبيهات
         const container = document.getElementById('alertsPanel');
         if (container && alertsData.length > 0) {
             renderAlerts(alertsData, container);
         }
-        // إذا كان هناك تنبيهات مرئية لا تزال، إخفاء الحاوية إذا كانت فارغة
         const visibleAlerts = alertsData.filter(a => !dismissed.includes(a.id));
         if (visibleAlerts.length === 0 && container) {
             container.style.display = 'none';
         }
     }
 
-    // ---------- حالة الطلب والملف الشخصي ----------
+    // ===== تحديث عداد الإشعارات (متكامل مع نظام الإشعارات) =====
+    async function updateNotificationBadge() {
+        try {
+            const user = await window.Auth.getCurrentUser?.();
+            if (!user) return;
+
+            const sb = await getSupabase();
+            if (!sb) return;
+
+            const { count, error } = await sb
+                .from('notifications')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'unread');
+
+            if (error) throw error;
+
+            unreadCount = count || 0;
+            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
+            badges.forEach(el => {
+                if (el) {
+                    el.textContent = unreadCount;
+                    el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                }
+            });
+
+            // تحديث عداد الهيدر
+            const headerBadge = document.querySelector('.header-notification-badge');
+            if (headerBadge) {
+                headerBadge.textContent = unreadCount;
+                headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            return unreadCount;
+        } catch (e) {
+            console.warn('⚠️ فشل تحديث عداد الإشعارات:', e);
+            return 0;
+        }
+    }
+
+    // ===== إعداد Realtime للإشعارات =====
+    async function setupRealtime(user) {
+        try {
+            const sb = await getSupabase();
+            if (!sb) return;
+
+            if (realtimeChannel) {
+                await sb.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+
+            realtimeChannel = sb
+                .channel('dashboard-notifications')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    async () => {
+                        await updateNotificationBadge();
+                        // إعادة تحميل التنبيهات إذا كانت اللوحة مفتوحة
+                        await loadAlerts(user);
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    async () => {
+                        await updateNotificationBadge();
+                        await loadAlerts(user);
+                    }
+                )
+                .subscribe();
+
+            console.log('✅ Realtime (dashboard) connected');
+
+        } catch (err) {
+            console.warn('⚠️ فشل إعداد Realtime في لوحة التحكم:', err);
+        }
+    }
+
+    // ===== حالة الطلب والملف الشخصي =====
     async function loadCustomerJourney(user) {
         try {
             const { data: req, error: reqError } = await supabase
@@ -565,7 +646,7 @@
         panel.innerHTML = html;
     }
 
-    // ---------- الإحصائيات والمخطط ----------
+    // ===== الإحصائيات والمخطط =====
     async function loadStats(user) {
         try {
             const { data, error } = await supabase
@@ -652,7 +733,7 @@
         });
     }
 
-    // ---------- التهيئة ----------
+    // ===== التهيئة =====
     async function init() {
         if (!window.Auth) {
             console.error('نظام المصادقة غير متوفر');
@@ -687,7 +768,7 @@
 
         document.getElementById('loadingOverlay')?.classList.add('active');
 
-        // 🟢 تحديث الهيدر – جلب الاسم من الجلسة أولاً
+        // تحديث الهيدر – جلب الاسم من الجلسة أولاً
         const storedName = sessionStorage.getItem('otpName');
         const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
         const nameEl = document.getElementById('headerUserName');
@@ -732,7 +813,9 @@
         await loadCustomerJourney(user);
         await loadStats(user);
         await loadChartData(user);
-        await loadAlerts(user); // ✅ نظام التنبيهات الجديد
+        await loadAlerts(user);
+        await updateNotificationBadge();
+        await setupRealtime(user);
 
         // المؤقتات
         const updateDateTime = () => {
@@ -753,11 +836,16 @@
         setInterval(updateDateTime, 30000);
 
         document.getElementById('loadingOverlay')?.classList.remove('active');
-        console.log('✅ dashboard.js v6 ready');
+        console.log('✅ dashboard.js v7 ready (متكامل مع نظام الإشعارات)');
     }
 
     window.addEventListener('beforeunload', () => {
         if (updateActivityInterval) clearInterval(updateActivityInterval);
+        if (realtimeChannel) {
+            getSupabase().then(sb => {
+                if (sb) sb.removeChannel(realtimeChannel);
+            }).catch(() => {});
+        }
     });
 
     document.addEventListener('DOMContentLoaded', init);
