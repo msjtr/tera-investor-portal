@@ -193,40 +193,58 @@
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid var(--gray-100); padding-bottom: 14px; flex-wrap: wrap; gap: 8px; }
         .panel-header h3 { margin: 0; font-size: 17px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 8px; }
         .panel-header h3 i { color: var(--primary); }
-        .btn-text-action { background: transparent; border: none; color: var(--primary); font-weight: 700; font-size: 13px; cursor: pointer; }
+        .panel-header .panel-badge {
+            font-size: 11px; font-weight: 700; color: #64748b; background: #f1f5f9;
+            padding: 2px 10px; border-radius: 20px;
+        }
+        .btn-text-action { background: transparent; border: none; color: var(--primary); font-weight: 700; font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: var(--transition-fast); }
+        .btn-text-action:hover { background: rgba(2,128,144,0.08); }
         .filter-select { padding: 6px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; cursor: pointer; background: #fff; color: var(--gray-700); }
-        .alert-item-box { padding: 14px 18px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 14px; font-weight: 700; display: flex; align-items: flex-start; gap: 12px; border: 1px solid transparent; }
+
+        /* ===== تنبيهات محسّنة ===== */
+        .alert-item-box {
+            padding: 14px 18px; border-radius: var(--radius-md); margin-bottom: 12px;
+            font-size: 14px; font-weight: 700; display: flex; align-items: flex-start;
+            gap: 12px; border: 1px solid transparent; transition: var(--transition-fast);
+        }
+        .alert-item-box:hover { transform: translateX(-4px); }
         .alert-success { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
         .alert-warning { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
         .alert-info { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+        .alert-danger { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+        .alert-primary { background: #f0fdfa; border-color: #99f6e4; color: #065f46; }
 
-        /* الجداول */
-        .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 0 6px; }
-        .data-table-list { width: 100%; min-width: 500px; border-collapse: collapse; text-align: right; font-size: 14px; }
-        .data-table-list th { padding: 12px 14px; font-size: 13px; color: var(--gray-500); font-weight: 800; border-bottom: 2px solid var(--gray-100); white-space: nowrap; }
-        .data-table-list td { padding: 14px; font-size: 14px; color: var(--gray-700); font-weight: 600; border-bottom: 1px solid var(--gray-100); }
-        .data-table-list tbody tr:hover td { background: var(--gray-50); }
-        .btn-table-link { background: var(--primary); color: #fff; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 13px; text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap; }
-        .btn-table-link:hover { background: var(--primary-dark); }
-
-        /* المخطط */
-        #mainChart { width: 100% !important; height: 100% !important; max-height: 280px; }
-
-        /* تنبيهات الملف الشخصي */
-        .profile-alert {
-            background: #fef3c7; border: 1px solid #fcd34d; padding: 16px 20px;
-            margin-bottom: 20px; border-radius: 12px; display: flex; align-items: center; gap: 12px;
-            flex-wrap: wrap; font-size: 14px;
+        .alert-item-box .read-more-btn {
+            background: transparent; border: none; color: var(--primary);
+            font-weight: 700; font-size: 13px; cursor: pointer; padding: 4px 8px;
+            border-radius: var(--radius-sm); transition: var(--transition-fast);
         }
-        .profile-alert i { color: #d97706; font-size: 20px; }
-        .profile-alert .alert-text { flex: 1; min-width: 200px; }
-        .profile-alert .alert-text strong { display: block; color: #92400e; margin-bottom: 4px; }
-        .profile-alert .alert-text p { margin: 0; color: #78350f; }
-        .profile-alert .alert-action {
-            background: #d97706; color: #fff; padding: 10px 24px; border-radius: 8px;
-            text-decoration: none; font-weight: 700; transition: background 0.2s; white-space: nowrap;
+        .alert-item-box .read-more-btn:hover { background: rgba(2,128,144,0.08); }
+
+        .alert-item-box .dismiss-alert-btn {
+            background: transparent; border: none; color: var(--gray-400);
+            cursor: pointer; font-size: 14px; padding: 4px; border-radius: 50%;
+            transition: var(--transition-fast); width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
         }
-        .profile-alert .alert-action:hover { background: #b45309; }
+        .alert-item-box .dismiss-alert-btn:hover { background: rgba(0,0,0,0.05); color: var(--gray-700); }
+
+        .alert-item-box .read-more-content {
+            padding: 12px 16px; background: rgba(0,0,0,0.03);
+            border-radius: var(--radius-sm); font-size: 13px;
+            color: var(--gray-700); line-height: 1.8; margin-top: 8px;
+        }
+        .alert-item-box .read-more-content ul { margin: 8px 0 0 16px; padding: 0; list-style-type: disc; }
+        .alert-item-box .read-more-content ul li { margin-bottom: 4px; }
+        .alert-item-box .read-more-content ul li a { color: var(--primary); text-decoration: underline; }
+
+        .alert-item-box .btn-table-link {
+            background: var(--primary); color: #fff; padding: 4px 14px;
+            border-radius: var(--radius-sm); font-size: 12px; text-decoration: none;
+            font-weight: 800; display: inline-flex; align-items: center; gap: 4px;
+            transition: var(--transition-fast);
+        }
+        .alert-item-box .btn-table-link:hover { background: var(--primary-dark); }
 
         /* ====== تنسيقات قسم حالة الطلب ====== */
         .request-status-card-full {
@@ -285,6 +303,34 @@
         .stage-item .stage-label { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
         .stage-item .stage-status { font-size: 12px; font-weight: 600; }
 
+        /* الجداول */
+        .data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 0 6px; }
+        .data-table-list { width: 100%; min-width: 500px; border-collapse: collapse; text-align: right; font-size: 14px; }
+        .data-table-list th { padding: 12px 14px; font-size: 13px; color: var(--gray-500); font-weight: 800; border-bottom: 2px solid var(--gray-100); white-space: nowrap; }
+        .data-table-list td { padding: 14px; font-size: 14px; color: var(--gray-700); font-weight: 600; border-bottom: 1px solid var(--gray-100); }
+        .data-table-list tbody tr:hover td { background: var(--gray-50); }
+        .btn-table-link { background: var(--primary); color: #fff; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 13px; text-decoration: none; font-weight: 800; display: inline-flex; align-items: center; white-space: nowrap; }
+        .btn-table-link:hover { background: var(--primary-dark); }
+
+        /* المخطط */
+        #mainChart { width: 100% !important; height: 100% !important; max-height: 280px; }
+
+        /* تنبيهات الملف الشخصي */
+        .profile-alert {
+            background: #fef3c7; border: 1px solid #fcd34d; padding: 16px 20px;
+            margin-bottom: 20px; border-radius: 12px; display: flex; align-items: center; gap: 12px;
+            flex-wrap: wrap; font-size: 14px;
+        }
+        .profile-alert i { color: #d97706; font-size: 20px; }
+        .profile-alert .alert-text { flex: 1; min-width: 200px; }
+        .profile-alert .alert-text strong { display: block; color: #92400e; margin-bottom: 4px; }
+        .profile-alert .alert-text p { margin: 0; color: #78350f; }
+        .profile-alert .alert-action {
+            background: #d97706; color: #fff; padding: 10px 24px; border-radius: 8px;
+            text-decoration: none; font-weight: 700; transition: background 0.2s; white-space: nowrap;
+        }
+        .profile-alert .alert-action:hover { background: #b45309; }
+
         /* اللودر والفوتر */
         .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
         .loading-overlay.active { display: flex; }
@@ -336,6 +382,54 @@
             .page-footer { font-size: 12px; padding: 14px; }
             .profile-alert { padding: 12px; flex-direction: column; align-items: flex-start; }
             .profile-alert .alert-action { width: 100%; text-align: center; }
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #0f172a; }
+            .top-header { background: #1e293b; border-bottom-color: #334155; }
+            .top-header .user-meta h5 { color: #f8fafc; }
+            .top-header .user-avatar-circle { background: #0f172a; border-color: #14b8a6; }
+            .stat-card { background: #1e293b; border-color: #334155; }
+            .stat-card .stat-value { color: #f8fafc; }
+            .stat-card .stat-label { color: #94a3b8; }
+            .panel-card { background: #1e293b; border-color: #334155; }
+            .panel-header { border-bottom-color: #334155; }
+            .panel-header h3 { color: #f8fafc; }
+            .panel-header .panel-badge { background: #334155; color: #94a3b8; }
+            .data-table-list th { color: #94a3b8; border-bottom-color: #334155; }
+            .data-table-list td { color: #e2e8f0; border-bottom-color: #1e293b; }
+            .data-table-list tbody tr:hover td { background: #334155; }
+            .alert-item-box.alert-info { background: rgba(3,105,161,0.15); border-color: #0c4a6e; color: #7dd3fc; }
+            .alert-item-box.alert-success { background: rgba(22,101,52,0.15); border-color: #166534; color: #86efac; }
+            .alert-item-box.alert-warning { background: rgba(154,52,18,0.15); border-color: #9a3412; color: #fed7aa; }
+            .alert-item-box.alert-danger { background: rgba(153,27,27,0.15); border-color: #991b1b; color: #fca5a5; }
+            .alert-item-box.alert-primary { background: rgba(6,95,70,0.15); border-color: #065f46; color: #6ee7b7; }
+            .profile-alert { background: rgba(154,52,18,0.15); border-color: #9a3412; }
+            .profile-alert .alert-text strong { color: #fed7aa; }
+            .profile-alert .alert-text p { color: #fde68a; }
+            .request-status-card-full { background: #1e293b; border-color: #334155; }
+            .request-header { border-bottom-color: #334155; }
+            .request-header h3 { color: #f8fafc; }
+            .request-details-list { background: #0f172a; }
+            .request-detail-item { color: #e2e8f0; }
+            .request-detail-item strong { color: #f8fafc; }
+            .request-detail-item i { color: #14b8a6; }
+            .progress-bar-outer { background: #334155; }
+            .stage-item.pending { background: #0f172a; border-color: #334155; }
+            .stage-item.completed { background: rgba(22,101,52,0.15); border-color: #166534; }
+            .stage-item .stage-label { color: #e2e8f0; }
+            .stage-item .stage-status { color: #94a3b8; }
+            .welcome-banner { background: linear-gradient(135deg, #0f172a, #1a3a6b); }
+            .date-badge-item { color: #94a3b8; }
+            .btn-quick { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.05); }
+            .btn-quick:hover { background: var(--primary); }
+            .page-footer { background: #1e293b; border-top-color: #334155; color: #64748b; }
+            .alert-warning-box { background: rgba(154,52,18,0.15); border-color: #9a3412; }
+            .alert-warning-box strong { color: #fed7aa; }
+            .alert-warning-box ul { color: #fde68a; }
+            .alert-warning-box ul li a { color: #fbbf24; }
+            .btn-text-action { color: #14b8a6; }
+            .btn-text-action:hover { background: rgba(20,184,166,0.15); }
+            .filter-select { background: #0f172a; border-color: #334155; color: #e2e8f0; }
         }
     </style>
 </head>
@@ -423,7 +517,14 @@
 
             <div class="dashboard-layout-grid">
                 <div class="panel-card"><div class="panel-header"><h3><i class="fas fa-chart-area"></i> نمو المحفظة والأرباح الصافية</h3></div><div style="height:280px;"><canvas id="mainChart"></canvas></div></div>
-                <div class="panel-card"><div class="panel-header"><h3><i class="fas fa-bell"></i> التنبيهات الذكية</h3></div><div class="alert-item-box alert-info"><i class="fas fa-info-circle"></i><span>مرحباً بك في منصة تيرا.</span></div></div>
+                <!-- ===== لوحة التنبيهات الذكية – ديناميكية بالكامل ===== -->
+                <div class="panel-card" id="alertsPanel" style="display:none;">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-bell"></i> التنبيهات الذكية</h3>
+                        <span class="panel-badge" id="alertsCount">0</span>
+                    </div>
+                    <div id="alertsContainer"></div>
+                </div>
             </div>
 
             <div class="dashboard-layout-grid">
@@ -512,9 +613,8 @@
                     logoutBtn.disabled = true;
                     try {
                         if (window.Auth && window.Auth.logout) {
-                            await window.Auth.logout(); // v13 تنهي الجلسة وتنظف SessionManager
+                            await window.Auth.logout();
                         } else {
-                            // خطة طوارئ
                             localStorage.clear();
                             sessionStorage.clear();
                             window.location.replace('/auth/auth/login/login.html');
@@ -536,7 +636,7 @@
     })();
     </script>
 
-    <!-- سكريبت لوحة التحكم -->
+    <!-- سكريبت لوحة التحكم (v6 مع نظام التنبيهات المتقدم) -->
     <script src="/assets/js/dashboard.js"></script>
 </body>
 </html>
