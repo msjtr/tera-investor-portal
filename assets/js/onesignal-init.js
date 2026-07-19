@@ -10,7 +10,7 @@ OneSignalDeferred.push(async function (OneSignal) {
         }
     });
 
-    // ✅ تعيين OneSignal على window للاستخدام في ملفات أخرى
+    // ✅ جعل OneSignal متاحاً عالمياً
     window.OneSignal = OneSignal;
 
     console.log("✅ OneSignal Initialized");
