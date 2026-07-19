@@ -11,10 +11,4 @@ OneSignalDeferred.push(async function (OneSignal) {
     });
 
     console.log("✅ OneSignal Initialized");
-
-    const permission = await OneSignal.Notifications.permission;
-    console.log("Notification Permission:", permission);
-
-    const subscribed = await OneSignal.User.PushSubscription.optedIn;
-    console.log("Push Subscribed:", subscribed);
 });
