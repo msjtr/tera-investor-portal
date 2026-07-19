@@ -1,7 +1,8 @@
 /**
  * ============================================================
- * support-notifications.js – الإصدار النهائي v4
- * متوافق مع جدول notifications الحالي (بعد التعديلات)
+ * support-notifications.js – الإصدار المحسّن v5
+ * متوافق مع جدول notifications الحالي
+ * تم تحسين الأداء، إدارة الحالة، والأمان
  * ============================================================
  */
 
@@ -11,208 +12,258 @@
     if (window.__notificationsInitialized) return;
     window.__notificationsInitialized = true;
 
-    // ===== الحالة العامة =====
-    let supabase = null;
-    let currentUser = null;
-    let allNotifications = [];
-    let filteredNotifications = [];
-    let currentPage = 1;
-    const pageSize = 20;
-    let hasMore = true;
-    let isLoading = false;
-    let selectedIds = new Set();
-    let realtimeChannel = null;
-    let audioElement = null;
-    let toastTimeout = null;
-    let unreadCount = 0;
-    let isInfiniteScroll = true;
+    // ============================================================
+    // 1. إدارة الحالة المركزية (State Management)
+    // ============================================================
+    const state = {
+        supabase: null,
+        currentUser: null,
+        allNotifications: [],
+        filteredNotifications: [],
+        currentPage: 1,
+        pageSize: 20,
+        hasMore: true,
+        isLoading: false,
+        selectedIds: new Set(),
+        realtimeChannel: null,
+        audioElement: null,
+        toastTimeout: null,
+        unreadCount: 0,
+        isInfiniteScroll: true,
+        filters: {
+            search: '',
+            type: 'all',
+            status: 'all',
+            priority: 'all',
+            sort: 'desc'
+        },
+        isRealtimeConnected: false,
+        reconnectAttempts: 0,
+        maxReconnectAttempts: 5
+    };
 
-    // ===== المراجع DOM =====
-    const $ = id => document.getElementById(id);
-    const listEl = $('notificationsList');
-    const paginationEl = $('pagination');
-    const searchInput = $('searchInput');
-    const filterType = $('filterType');
-    const filterStatus = $('filterStatus');
-    const filterPriority = $('filterPriority');
-    const sortOrder = $('sortOrder');
-    const refreshBtn = $('refreshBtn');
-    const selectAllBtn = $('selectAllBtn');
-    const markReadBtn = $('markReadBtn');
-    const archiveBtn = $('archiveBtn');
-    const deleteBtn = $('deleteBtn');
-    const unreadBadge = $('unreadBadge');
-    const modal = $('detailModal');
-    const modalBody = $('modalBody');
-    const modalTitle = $('modalTitle');
-    const closeDetailModal = $('closeDetailModal');
-    const statsTotal = $('statTotal');
-    const statsUnread = $('statUnread');
-    const statsRead = $('statRead');
-    const statsArchived = $('statArchived');
-    const statsImportant = $('statImportant');
-    const historyTableBody = $('historyTableBody');
-    const historyPagination = $('historyPagination');
+    // ============================================================
+    // 2. المراجع DOM (محسّنة)
+    // ============================================================
+    const DOM = {
+        list: document.getElementById('notificationsList'),
+        pagination: document.getElementById('pagination'),
+        search: document.getElementById('searchInput'),
+        filterType: document.getElementById('filterType'),
+        filterStatus: document.getElementById('filterStatus'),
+        filterPriority: document.getElementById('filterPriority'),
+        sortOrder: document.getElementById('sortOrder'),
+        refresh: document.getElementById('refreshBtn'),
+        selectAll: document.getElementById('selectAllBtn'),
+        markRead: document.getElementById('markReadBtn'),
+        archive: document.getElementById('archiveBtn'),
+        delete: document.getElementById('deleteBtn'),
+        unreadBadge: document.getElementById('unreadBadge'),
+        modal: document.getElementById('detailModal'),
+        modalBody: document.getElementById('modalBody'),
+        modalTitle: document.getElementById('modalTitle'),
+        closeModal: document.getElementById('closeDetailModal'),
+        stats: {
+            total: document.getElementById('statTotal'),
+            unread: document.getElementById('statUnread'),
+            read: document.getElementById('statRead'),
+            archived: document.getElementById('statArchived'),
+            important: document.getElementById('statImportant')
+        },
+        history: {
+            body: document.getElementById('historyTableBody'),
+            pagination: document.getElementById('historyPagination')
+        },
+        oneSignal: {
+            status: document.getElementById('osStatusText'),
+            playerId: document.getElementById('osPlayerId')
+        }
+    };
 
-    // ===== الأدوات المساعدة =====
-    function formatDate(iso) {
-        if (!iso) return '—';
-        const d = new Date(iso);
-        return d.toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-            ' ' + d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    }
+    // ============================================================
+    // 3. الأدوات المساعدة (محسّنة)
+    // ============================================================
+    const Utils = {
+        formatDate(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            return d.toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+                ' ' + d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        },
 
-    function formatTimeAgo(iso) {
-        if (!iso) return '';
-        const diff = Math.floor((new Date() - new Date(iso)) / 1000);
-        if (diff < 60) return 'الآن';
-        if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
-        if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
-        return formatDate(iso);
-    }
+        formatTimeAgo(iso) {
+            if (!iso) return '';
+            const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+            if (diff < 60) return 'الآن';
+            if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
+            if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
+            return this.formatDate(iso);
+        },
 
-    function getTypeIcon(type) {
-        const map = {
-            general: 'fa-bell',
-            system: 'fa-server',
-            investment: 'fa-chart-line',
-            contract: 'fa-file-contract',
-            payment: 'fa-hand-holding-usd',
-            profit: 'fa-coins',
-            kyc: 'fa-id-card',
-            security: 'fa-shield-alt',
-            support: 'fa-headset',
-            promotion: 'fa-gift'
-        };
-        return map[type] || 'fa-bell';
-    }
+        getTypeIcon(type) {
+            const map = {
+                general: 'fa-bell',
+                system: 'fa-server',
+                investment: 'fa-chart-line',
+                contract: 'fa-file-contract',
+                payment: 'fa-hand-holding-usd',
+                profit: 'fa-coins',
+                kyc: 'fa-id-card',
+                security: 'fa-shield-alt',
+                support: 'fa-headset',
+                promotion: 'fa-gift'
+            };
+            return map[type] || 'fa-bell';
+        },
 
-    function getTypeLabel(type) {
-        const map = {
-            general: 'عام',
-            system: 'نظام',
-            investment: 'استثمار',
-            contract: 'عقد',
-            payment: 'دفعة',
-            profit: 'أرباح',
-            kyc: 'التحقق من الهوية',
-            security: 'أمان',
-            support: 'دعم فني',
-            promotion: 'ترويجي'
-        };
-        return map[type] || type;
-    }
+        getTypeLabel(type) {
+            const map = {
+                general: 'عام',
+                system: 'نظام',
+                investment: 'استثمار',
+                contract: 'عقد',
+                payment: 'دفعة',
+                profit: 'أرباح',
+                kyc: 'التحقق من الهوية',
+                security: 'أمان',
+                support: 'دعم فني',
+                promotion: 'ترويجي'
+            };
+            return map[type] || type;
+        },
 
-    function getTypeClass(type) {
-        return 'type-' + (type || 'general');
-    }
+        getTypeClass(type) {
+            return 'type-' + (type || 'general');
+        },
 
-    function getPriorityLabel(p) {
-        // توحيد القيم: إذا كانت 'medium' نعرضها كـ 'متوسط'، وإذا كانت 'normal' نعرضها 'عادي'
-        const map = {
-            urgent: 'عاجل',
-            high: 'مرتفع',
-            medium: 'متوسط',
-            normal: 'عادي',
-            low: 'منخفض'
-        };
-        return map[p] || p;
-    }
+        getPriorityLabel(p) {
+            const map = { urgent: 'عاجل', high: 'مرتفع', medium: 'متوسط', normal: 'عادي', low: 'منخفض' };
+            return map[p] || p;
+        },
 
-    function getPriorityClass(p) {
-        // تحويل priority إلى class للتلوين
-        const map = {
-            urgent: 'critical',
-            high: 'high',
-            medium: 'medium',
-            normal: 'medium',
-            low: 'low'
-        };
-        return map[p] || 'medium';
-    }
+        getPriorityClass(p) {
+            const map = { urgent: 'critical', high: 'high', medium: 'medium', normal: 'medium', low: 'low' };
+            return map[p] || 'medium';
+        },
 
-    function getStatusLabel(s) {
-        const map = { unread: 'غير مقروء', read: 'مقروء', archived: 'مؤرشف', deleted: 'محذوف' };
-        return map[s] || s;
-    }
+        getStatusLabel(s) {
+            const map = { unread: 'غير مقروء', read: 'مقروء', archived: 'مؤرشف', deleted: 'محذوف' };
+            return map[s] || s;
+        },
 
-    function isExpired(expiresAt) {
-        if (!expiresAt) return false;
-        return new Date(expiresAt) < new Date();
-    }
+        isExpired(expiresAt) {
+            if (!expiresAt) return false;
+            return new Date(expiresAt) < new Date();
+        },
 
-    // ===== الحصول على Supabase والمستخدم =====
+        // توليد معرف فريد للـ Toast
+        generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+        }
+    };
+
+    // ============================================================
+    // 4. إدارة السجلات (Logging)
+    // ============================================================
+    const Logger = {
+        levels: { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 },
+        currentLevel: 0, // DEBUG
+
+        log(level, message, data = null) {
+            if (level < this.currentLevel) return;
+            const prefix = {
+                0: '🔍 [DEBUG]',
+                1: 'ℹ️ [INFO]',
+                2: '⚠️ [WARN]',
+                3: '❌ [ERROR]'
+            } [level] || '[LOG]';
+            console.log(prefix, message, data || '');
+        },
+
+        debug(msg, data) { this.log(0, msg, data); },
+        info(msg, data) { this.log(1, msg, data); },
+        warn(msg, data) { this.log(2, msg, data); },
+        error(msg, data) { this.log(3, msg, data); }
+    };
+
+    // ============================================================
+    // 5. الحصول على Supabase والمستخدم (محسّن مع التخزين المؤقت)
+    // ============================================================
     async function getSupabase() {
-        if (supabase) return supabase;
+        if (state.supabase) return state.supabase;
         try {
-            if (window.Support && window.Support.getSupabase) {
-                supabase = await window.Support.getSupabase();
-            } else {
-                supabase = window.teraSupabase || await window.waitForSupabase?.();
+            if (window.Support?.getSupabase) {
+                state.supabase = await window.Support.getSupabase();
+            } else if (window.teraSupabase) {
+                state.supabase = window.teraSupabase;
+            } else if (window.waitForSupabase) {
+                state.supabase = await window.waitForSupabase();
             }
-            return supabase;
+            if (!state.supabase) throw new Error('Supabase غير متوفر');
+            return state.supabase;
         } catch (e) {
-            console.error('❌ Supabase غير متوفر:', e);
+            Logger.error('فشل الحصول على Supabase', e);
             return null;
         }
     }
 
-    async function getCurrentUser() {
-        if (currentUser) return currentUser;
+    async function getCurrentUser(force = false) {
+        if (state.currentUser && !force) return state.currentUser;
         try {
-            if (window.Support && window.Support.getCurrentUser) {
-                currentUser = await window.Support.getCurrentUser();
-                return currentUser;
+            // محاولة من مصادر متعددة
+            if (window.Support?.getCurrentUser) {
+                state.currentUser = await window.Support.getCurrentUser();
+                if (state.currentUser) return state.currentUser;
             }
-            if (window.Auth && window.Auth.getCurrentUser) {
-                currentUser = await window.Auth.getCurrentUser();
-                return currentUser;
+            if (window.Auth?.getCurrentUser) {
+                state.currentUser = await window.Auth.getCurrentUser();
+                if (state.currentUser) return state.currentUser;
             }
             const sb = await getSupabase();
             if (!sb) return null;
             const { data: { user }, error } = await sb.auth.getUser();
-            if (error || !user) return null;
-            currentUser = user;
+            if (error || !user) {
+                Logger.warn('فشل جلب المستخدم', error);
+                return null;
+            }
+            state.currentUser = user;
             return user;
         } catch (e) {
-            console.warn('⚠️ فشل جلب المستخدم:', e);
+            Logger.error('فشل جلب المستخدم', e);
             return null;
         }
     }
 
-    // ===== تحميل الإشعارات =====
+    // ============================================================
+    // 6. تحميل الإشعارات (محسّن)
+    // ============================================================
     async function loadNotifications(page = 1, append = false) {
-        if (isLoading) return;
-        isLoading = true;
+        if (state.isLoading) return;
+        state.isLoading = true;
 
         try {
             const user = await getCurrentUser();
             if (!user) {
                 renderEmptyState('يجب تسجيل الدخول لعرض الإشعارات', 'fa-sign-in-alt');
-                isLoading = false;
+                state.isLoading = false;
                 return;
             }
 
             const sb = await getSupabase();
             if (!sb) {
                 renderEmptyState('Supabase غير متصل', 'fa-database', 'error');
-                isLoading = false;
+                state.isLoading = false;
                 return;
             }
 
-            const search = searchInput.value.trim();
-            const type = filterType.value;
-            const status = filterStatus.value;
-            const priority = filterPriority.value;
-            const sort = sortOrder.value;
+            const { search, type, status, priority, sort } = state.filters;
 
-            // بناء الاستعلام مع مراعاة الحقول الفعلية في الجدول
             let query = sb
                 .from('notifications')
                 .select('*', { count: 'exact' })
                 .eq('user_id', user.id)
-                .neq('status', 'deleted')   // استبعاد المحذوف
+                .neq('status', 'deleted')
                 .order('created_at', { ascending: sort === 'asc' });
 
             if (type !== 'all') query = query.eq('type', type);
@@ -223,11 +274,11 @@
                 query = query.or(`title.ilike.%${search}%,body.ilike.%${search}%`);
             }
 
-            // إضافة شرط صلاحية الإشعار (expires_at)
+            // إضافة شرط صلاحية الإشعار
             query = query.or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-            const from = (page - 1) * pageSize;
-            const to = from + pageSize - 1;
+            const from = (page - 1) * state.pageSize;
+            const to = from + state.pageSize - 1;
             query = query.range(from, to);
 
             const { data, count, error } = await query;
@@ -238,136 +289,129 @@
                 } else {
                     throw error;
                 }
-                isLoading = false;
+                state.isLoading = false;
                 return;
             }
 
             const newNotifications = data || [];
             if (append) {
-                allNotifications = [...allNotifications, ...newNotifications];
+                state.allNotifications = [...state.allNotifications, ...newNotifications];
             } else {
-                allNotifications = newNotifications;
-                currentPage = page;
+                state.allNotifications = newNotifications;
+                state.currentPage = page;
             }
 
-            filteredNotifications = allNotifications;
-            totalCount = count || 0;
-            hasMore = (page * pageSize) < totalCount;
+            state.filteredNotifications = state.allNotifications;
+            state.totalCount = count || 0;
+            state.hasMore = (page * state.pageSize) < state.totalCount;
 
-            // تحديث الإحصائيات والعدادات
             await updateStatsAndBadges();
-            renderNotifications(filteredNotifications);
+            renderNotifications(state.filteredNotifications);
             updatePagination(page);
 
         } catch (err) {
-            console.error('❌ خطأ في تحميل الإشعارات:', err);
+            Logger.error('خطأ في تحميل الإشعارات', err);
             renderEmptyState('حدث خطأ في تحميل الإشعارات', 'fa-exclamation-circle', 'error', err.message);
         } finally {
-            isLoading = false;
+            state.isLoading = false;
         }
     }
 
-    // ===== عرض الإشعارات =====
+    // ============================================================
+    // 7. عرض الإشعارات (محسّن مع DocumentFragment)
+    // ============================================================
     function renderNotifications(notifications) {
         if (!notifications || notifications.length === 0) {
             renderEmptyState('لا توجد إشعارات حالياً', 'fa-inbox');
             return;
         }
 
-        let html = '';
+        const fragment = document.createDocumentFragment();
+
         notifications.forEach(n => {
-            // تجاهل الإشعارات المنتهية الصلاحية
-            if (isExpired(n.expires_at)) return;
+            if (Utils.isExpired(n.expires_at)) return;
 
             const isUnread = n.status === 'unread';
-            const priorityClass = getPriorityClass(n.priority || 'normal');
-            const icon = getTypeIcon(n.type);
-            const typeLabel = getTypeLabel(n.type);
-            const typeClass = getTypeClass(n.type);
-            const statusLabel = getStatusLabel(n.status);
-            const isSelected = selectedIds.has(n.id);
+            const priorityClass = Utils.getPriorityClass(n.priority || 'normal');
+            const icon = Utils.getTypeIcon(n.type);
+            const typeLabel = Utils.getTypeLabel(n.type);
+            const typeClass = Utils.getTypeClass(n.type);
+            const statusLabel = Utils.getStatusLabel(n.status);
+            const isSelected = state.selectedIds.has(n.id);
 
-            // عرض الصورة إن وجدت (نستخدم image_url لأن image تم دمجه)
-            const imageHtml = n.image_url ? `<img src="${n.image_url}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;margin-left:12px;">` : '';
+            const imageHtml = n.image_url ?
+                `<img src="${n.image_url}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;margin-left:12px;">` :
+                '';
 
-            html += `
-                <div class="notification-card ${isUnread ? 'unread' : ''} ${isSelected ? 'selected' : ''}" 
-                     data-id="${n.id}" 
-                     style="${isSelected ? 'border-left:4px solid var(--primary);' : ''}">
-                    <div class="notif-icon ${typeClass}">
-                        <i class="fas ${icon}"></i>
+            const card = document.createElement('div');
+            card.className = `notification-card ${isUnread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
+            card.dataset.id = n.id;
+            if (isSelected) card.style.borderLeft = '4px solid var(--primary)';
+
+            card.innerHTML = `
+                <div class="notif-icon ${typeClass}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                ${imageHtml}
+                <div class="notif-content">
+                    <div class="notif-title">
+                        ${n.title || 'بدون عنوان'}
+                        <span class="priority-badge ${priorityClass}">${Utils.getPriorityLabel(n.priority)}</span>
+                        ${isUnread ? '<span class="new-badge" style="font-size:10px;color:var(--primary);font-weight:800;">● جديد</span>' : ''}
                     </div>
-                    ${imageHtml}
-                    <div class="notif-content">
-                        <div class="notif-title">
-                            ${n.title || 'بدون عنوان'}
-                            <span class="priority-badge ${priorityClass}">${getPriorityLabel(n.priority)}</span>
-                            ${isUnread ? '<span style="font-size:10px;color:var(--primary);font-weight:800;">● جديد</span>' : ''}
-                        </div>
-                        <div class="notif-desc">${n.body || ''}</div>
-                        <div class="notif-meta">
-                            <span><i class="far fa-clock"></i> ${formatTimeAgo(n.created_at)}</span>
-                            <span class="type-badge"><i class="fas ${icon}"></i> ${typeLabel}</span>
-                            <span>الحالة: ${statusLabel}</span>
-                            ${n.sender ? `<span><i class="fas fa-user"></i> ${n.sender}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="notif-actions">
-                        <button class="view-details" data-id="${n.id}" title="عرض التفاصيل">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        ${isUnread ? `<button class="mark-read-btn" data-id="${n.id}" title="تعليم كمقروء"><i class="fas fa-envelope-open"></i></button>` : ''}
-                        ${n.status !== 'archived' ? `<button class="archive-btn" data-id="${n.id}" title="أرشفة"><i class="fas fa-archive"></i></button>` : ''}
-                        <button class="delete-btn danger" data-id="${n.id}" title="حذف"><i class="fas fa-trash"></i></button>
+                    <div class="notif-desc">${n.body || ''}</div>
+                    <div class="notif-meta">
+                        <span><i class="far fa-clock"></i> ${Utils.formatTimeAgo(n.created_at)}</span>
+                        <span class="type-badge"><i class="fas ${icon}"></i> ${typeLabel}</span>
+                        <span>الحالة: ${statusLabel}</span>
+                        ${n.sender ? `<span><i class="fas fa-user"></i> ${n.sender}</span>` : ''}
                     </div>
                 </div>
+                <div class="notif-actions">
+                    <button class="view-details" data-id="${n.id}" title="عرض التفاصيل">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${isUnread ? `<button class="mark-read-btn" data-id="${n.id}" title="تعليم كمقروء"><i class="fas fa-envelope-open"></i></button>` : ''}
+                    ${n.status !== 'archived' ? `<button class="archive-btn" data-id="${n.id}" title="أرشفة"><i class="fas fa-archive"></i></button>` : ''}
+                    <button class="delete-btn danger" data-id="${n.id}" title="حذف"><i class="fas fa-trash"></i></button>
+                </div>
             `;
-        });
 
-        listEl.innerHTML = html;
+            // ربط الأحداث مباشرة على البطاقة
+            card.querySelector('.view-details')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDetail(n.id);
+            });
+            card.querySelector('.mark-read-btn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                markAsRead(n.id);
+            });
+            card.querySelector('.archive-btn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                archiveNotification(n.id);
+            });
+            card.querySelector('.delete-btn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteNotification(n.id);
+            });
 
-        // ربط الأحداث
-        listEl.querySelectorAll('.view-details').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openDetail(btn.dataset.id);
-            });
-        });
-        listEl.querySelectorAll('.mark-read-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                markAsRead(btn.dataset.id);
-            });
-        });
-        listEl.querySelectorAll('.archive-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                archiveNotification(btn.dataset.id);
-            });
-        });
-        listEl.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteNotification(btn.dataset.id);
-            });
-        });
-
-        // النقر على البطاقة لفتح التفاصيل
-        listEl.querySelectorAll('.notification-card').forEach(card => {
+            // النقر على البطاقة لفتح التفاصيل
             card.addEventListener('click', function() {
-                const id = this.dataset.id;
-                if (id) openDetail(id);
+                openDetail(this.dataset.id);
             });
+
+            fragment.appendChild(card);
         });
 
-        // تحديث حالة التحديد
-        updateSelectAllState();
+        // استبدال المحتوى دفعة واحدة
+        DOM.list.innerHTML = '';
+        DOM.list.appendChild(fragment);
 
         // Infinite Scroll
-        if (hasMore && isInfiniteScroll) {
+        if (state.hasMore && state.isInfiniteScroll) {
             const observer = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && !isLoading && hasMore) {
-                    loadNotifications(currentPage + 1, true);
+                if (entries[0].isIntersecting && !state.isLoading && state.hasMore) {
+                    loadNotifications(state.currentPage + 1, true);
                 }
             }, { rootMargin: '100px' });
             const trigger = document.createElement('div');
@@ -376,12 +420,16 @@
             trigger.style.padding = '20px';
             trigger.style.color = 'var(--gray-400)';
             trigger.textContent = 'جاري تحميل المزيد...';
-            listEl.appendChild(trigger);
+            DOM.list.appendChild(trigger);
             observer.observe(trigger);
         }
+
+        updateSelectAllState();
     }
 
-    // ===== عرض حالة فارغة =====
+    // ============================================================
+    // 8. عرض حالة فارغة
+    // ============================================================
     function renderEmptyState(message, icon = 'fa-inbox', type = 'info', details = '') {
         const colors = {
             info: 'var(--gray-400)',
@@ -389,7 +437,7 @@
             error: 'var(--danger)'
         };
         const color = colors[type] || colors.info;
-        listEl.innerHTML = `
+        DOM.list.innerHTML = `
             <div style="text-align:center;padding:80px 20px;color:${color};">
                 <i class="fas ${icon}" style="font-size:64px;display:block;margin-bottom:20px;color:${color};"></i>
                 <span style="font-weight:700;font-size:20px;display:block;">${message}</span>
@@ -399,7 +447,9 @@
         `;
     }
 
-    // ===== تحديث الإحصائيات والعدادات =====
+    // ============================================================
+    // 9. تحديث الإحصائيات والعدادات (محسّن – استعلام واحد)
+    // ============================================================
     async function updateStatsAndBadges() {
         try {
             const user = await getCurrentUser();
@@ -408,64 +458,45 @@
             const sb = await getSupabase();
             if (!sb) return;
 
-            // إجمالي الإشعارات (غير المحذوفة وغير المنتهية)
-            const { count: total } = await sb
+            // استعلام واحد يجمع جميع الإحصائيات
+            const { data, error } = await sb
                 .from('notifications')
-                .select('*', { count: 'exact', head: true })
+                .select('status, priority', { count: 'exact' })
                 .eq('user_id', user.id)
                 .neq('status', 'deleted')
                 .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
-            // غير المقروءة
-            const { count: unread } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('status', 'unread')
-                .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+            if (error) throw error;
 
-            // المقروءة
-            const { count: read } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('status', 'read')
-                .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+            // حساب الإحصائيات من البيانات المسترجعة
+            const stats = {
+                total: data?.length || 0,
+                unread: data?.filter(n => n.status === 'unread').length || 0,
+                read: data?.filter(n => n.status === 'read').length || 0,
+                archived: data?.filter(n => n.status === 'archived').length || 0,
+                important: data?.filter(n => n.priority === 'urgent' || n.priority === 'high').length || 0
+            };
 
-            // المؤرشفة
-            const { count: archived } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('status', 'archived')
-                .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+            // تحديث الواجهة
+            if (DOM.stats.total) DOM.stats.total.textContent = stats.total;
+            if (DOM.stats.unread) DOM.stats.unread.textContent = stats.unread;
+            if (DOM.stats.read) DOM.stats.read.textContent = stats.read;
+            if (DOM.stats.archived) DOM.stats.archived.textContent = stats.archived;
+            if (DOM.stats.important) DOM.stats.important.textContent = stats.important;
 
-            // المهمة (urgent أو high)
-            const { count: important } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .in('priority', ['urgent', 'high'])
-                .neq('status', 'deleted')
-                .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-
-            if (statsTotal) statsTotal.textContent = total || 0;
-            if (statsUnread) statsUnread.textContent = unread || 0;
-            if (statsRead) statsRead.textContent = read || 0;
-            if (statsArchived) statsArchived.textContent = archived || 0;
-            if (statsImportant) statsImportant.textContent = important || 0;
-
-            unreadCount = unread || 0;
+            state.unreadCount = stats.unread;
 
             // تحديث البادجات
-            await updateBadges(unread);
+            await updateBadges(stats.unread);
 
         } catch (err) {
-            console.warn('⚠️ فشل تحديث الإحصائيات:', err);
+            Logger.warn('فشل تحديث الإحصائيات', err);
         }
     }
 
-    // ===== تحديث البادجات =====
+    // ============================================================
+    // 10. تحديث البادجات
+    // ============================================================
     async function updateBadges(unreadCount = null) {
         try {
             if (unreadCount === null) {
@@ -508,20 +539,22 @@
             document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
 
             // تحديث العداد العام عبر support.js
-            if (window.Support && window.Support.updateNotificationBadge) {
+            if (window.Support?.updateNotificationBadge) {
                 await window.Support.updateNotificationBadge();
             }
 
         } catch (e) {
-            console.warn('⚠️ فشل تحديث البادجات:', e);
+            Logger.warn('فشل تحديث البادجات', e);
         }
     }
 
-    // ===== Pagination =====
+    // ============================================================
+    // 11. Pagination
+    // ============================================================
     function updatePagination(page) {
-        const totalPages = Math.ceil(totalCount / pageSize);
-        if (totalPages <= 1 || isInfiniteScroll) {
-            paginationEl.innerHTML = '';
+        const totalPages = Math.ceil(state.totalCount / state.pageSize);
+        if (totalPages <= 1 || state.isInfiniteScroll) {
+            DOM.pagination.innerHTML = '';
             return;
         }
 
@@ -531,13 +564,13 @@
             html += `<button class="${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
         }
         html += `<button ${page >= totalPages ? 'disabled' : ''} data-page="${page+1}">›</button>`;
-        paginationEl.innerHTML = html;
+        DOM.pagination.innerHTML = html;
 
-        paginationEl.querySelectorAll('button[data-page]').forEach(btn => {
+        DOM.pagination.querySelectorAll('button[data-page]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const p = parseInt(btn.dataset.page);
-                if (p && p !== currentPage) {
-                    currentPage = p;
+                if (p && p !== state.currentPage) {
+                    state.currentPage = p;
                     loadNotifications(p);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -545,34 +578,36 @@
         });
     }
 
-    // ===== تحديد الكل =====
+    // ============================================================
+    // 12. تحديد الكل
+    // ============================================================
     function updateSelectAllState() {
-        const cards = listEl.querySelectorAll('.notification-card');
+        const cards = DOM.list.querySelectorAll('.notification-card');
         const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
-        const allSelected = allIds.length > 0 && allIds.every(id => selectedIds.has(id));
-        if (selectAllBtn) {
-            selectAllBtn.innerHTML = allSelected ?
+        const allSelected = allIds.length > 0 && allIds.every(id => state.selectedIds.has(id));
+        if (DOM.selectAll) {
+            DOM.selectAll.innerHTML = allSelected ?
                 '<i class="fas fa-check-square"></i> إلغاء التحديد' :
                 '<i class="fas fa-check-double"></i> تحديد الكل';
         }
     }
 
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', () => {
-            const cards = listEl.querySelectorAll('.notification-card');
+    if (DOM.selectAll) {
+        DOM.selectAll.addEventListener('click', () => {
+            const cards = DOM.list.querySelectorAll('.notification-card');
             const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
             if (allIds.length === 0) return;
 
-            const allSelected = allIds.every(id => selectedIds.has(id));
+            const allSelected = allIds.every(id => state.selectedIds.has(id));
             if (allSelected) {
-                selectedIds.clear();
+                state.selectedIds.clear();
             } else {
-                allIds.forEach(id => selectedIds.add(id));
+                allIds.forEach(id => state.selectedIds.add(id));
             }
 
             cards.forEach(el => {
                 const id = el.dataset.id;
-                if (selectedIds.has(id)) {
+                if (state.selectedIds.has(id)) {
                     el.style.borderLeft = '4px solid var(--primary)';
                     el.classList.add('selected');
                 } else {
@@ -585,7 +620,9 @@
         });
     }
 
-    // ===== تعليم كمقروء (فردي) =====
+    // ============================================================
+    // 13. تعليم كمقروء (مع تحسينات)
+    // ============================================================
     async function markAsRead(id) {
         if (!id) return;
         try {
@@ -598,7 +635,7 @@
                 .from('notifications')
                 .update({
                     status: 'read',
-                    is_read: true,    // تحديث كلا الحقلين للتوافق
+                    is_read: true,
                     read_at: now
                 })
                 .eq('id', id)
@@ -607,7 +644,7 @@
             if (error) throw error;
 
             // تحديث الواجهة
-            const card = listEl.querySelector(`.notification-card[data-id="${id}"]`);
+            const card = DOM.list.querySelector(`.notification-card[data-id="${id}"]`);
             if (card) {
                 card.classList.remove('unread');
                 card.style.borderRight = '';
@@ -615,21 +652,22 @@
                 if (readBtn) readBtn.remove();
                 const statusSpan = card.querySelector('.notif-meta span:last-child');
                 if (statusSpan) statusSpan.textContent = 'الحالة: مقروء';
+                const newBadge = card.querySelector('.new-badge');
+                if (newBadge) newBadge.remove();
             }
 
-            selectedIds.delete(id);
+            state.selectedIds.delete(id);
             await updateStatsAndBadges();
 
         } catch (err) {
-            console.error('❌ خطأ في تعليم كمقروء:', err);
+            Logger.error('خطأ في تعليم كمقروء', err);
             alert('خطأ: ' + err.message);
         }
     }
 
-    // ===== تعليم كمقروء (جماعي) =====
-    if (markReadBtn) {
-        markReadBtn.addEventListener('click', async () => {
-            const ids = Array.from(selectedIds);
+    if (DOM.markRead) {
+        DOM.markRead.addEventListener('click', async () => {
+            const ids = Array.from(state.selectedIds);
             if (ids.length === 0) return alert('يرجى تحديد إشعارات أولاً');
             if (!confirm(`هل تريد تعليم ${ids.length} إشعار كمقروء؟`)) return;
 
@@ -651,8 +689,8 @@
 
                 if (error) throw error;
 
-                selectedIds.clear();
-                await loadNotifications(currentPage);
+                state.selectedIds.clear();
+                await loadNotifications(state.currentPage);
                 await updateStatsAndBadges();
 
             } catch (err) {
@@ -661,7 +699,9 @@
         });
     }
 
-    // ===== أرشفة (فردي) =====
+    // ============================================================
+    // 14. أرشفة
+    // ============================================================
     async function archiveNotification(id) {
         if (!id) return;
         if (!confirm('هل تريد أرشفة هذا الإشعار؟')) return;
@@ -682,8 +722,8 @@
 
             if (error) throw error;
 
-            selectedIds.delete(id);
-            await loadNotifications(currentPage);
+            state.selectedIds.delete(id);
+            await loadNotifications(state.currentPage);
             await updateStatsAndBadges();
 
         } catch (err) {
@@ -691,9 +731,9 @@
         }
     }
 
-    if (archiveBtn) {
-        archiveBtn.addEventListener('click', async () => {
-            const ids = Array.from(selectedIds);
+    if (DOM.archive) {
+        DOM.archive.addEventListener('click', async () => {
+            const ids = Array.from(state.selectedIds);
             if (ids.length === 0) return alert('يرجى تحديد إشعارات أولاً');
             if (!confirm(`هل تريد أرشفة ${ids.length} إشعار؟`)) return;
 
@@ -713,8 +753,8 @@
 
                 if (error) throw error;
 
-                selectedIds.clear();
-                await loadNotifications(currentPage);
+                state.selectedIds.clear();
+                await loadNotifications(state.currentPage);
                 await updateStatsAndBadges();
 
             } catch (err) {
@@ -723,7 +763,9 @@
         });
     }
 
-    // ===== حذف (فردي) =====
+    // ============================================================
+    // 15. حذف
+    // ============================================================
     async function deleteNotification(id) {
         if (!id) return;
         if (!confirm('هل أنت متأكد من حذف هذا الإشعار نهائياً؟')) return;
@@ -744,8 +786,8 @@
 
             if (error) throw error;
 
-            selectedIds.delete(id);
-            await loadNotifications(currentPage);
+            state.selectedIds.delete(id);
+            await loadNotifications(state.currentPage);
             await updateStatsAndBadges();
 
         } catch (err) {
@@ -753,9 +795,9 @@
         }
     }
 
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', async () => {
-            const ids = Array.from(selectedIds);
+    if (DOM.delete) {
+        DOM.delete.addEventListener('click', async () => {
+            const ids = Array.from(state.selectedIds);
             if (ids.length === 0) return alert('يرجى تحديد إشعارات أولاً');
             if (!confirm(`هل تريد حذف ${ids.length} إشعار نهائياً؟`)) return;
 
@@ -775,8 +817,8 @@
 
                 if (error) throw error;
 
-                selectedIds.clear();
-                await loadNotifications(currentPage);
+                state.selectedIds.clear();
+                await loadNotifications(state.currentPage);
                 await updateStatsAndBadges();
 
             } catch (err) {
@@ -785,7 +827,9 @@
         });
     }
 
-    // ===== عرض التفاصيل (Modal) =====
+    // ============================================================
+    // 16. عرض التفاصيل (Modal)
+    // ============================================================
     async function openDetail(id) {
         try {
             const user = await getCurrentUser();
@@ -802,7 +846,7 @@
             if (error) throw error;
             if (!data) return alert('الإشعار غير موجود');
 
-            modalTitle.textContent = data.title || 'تفاصيل الإشعار';
+            DOM.modalTitle.textContent = data.title || 'تفاصيل الإشعار';
 
             const imageHtml = data.image_url ? `
                 <div class="detail-row">
@@ -826,29 +870,28 @@
                     <span class="value" style="font-size:12px;font-family:monospace;direction:ltr;text-align:left;">${JSON.stringify(data.metadata, null, 2)}</span>
                 </div>` : '';
 
-            const html = `
+            DOM.modalBody.innerHTML = `
                 <div class="detail-row"><span class="label">العنوان</span><span class="value">${data.title || '—'}</span></div>
                 <div class="detail-row"><span class="label">الوصف</span><span class="value">${data.body || '—'}</span></div>
                 ${imageHtml}
-                <div class="detail-row"><span class="label">التاريخ والوقت</span><span class="value">${formatDate(data.created_at)}</span></div>
+                <div class="detail-row"><span class="label">التاريخ والوقت</span><span class="value">${Utils.formatDate(data.created_at)}</span></div>
                 <div class="detail-row"><span class="label">المرسل</span><span class="value">${data.sender || 'النظام'}</span></div>
-                <div class="detail-row"><span class="label">النوع</span><span class="value">${getTypeLabel(data.type)}</span></div>
-                <div class="detail-row"><span class="label">الأولوية</span><span class="value">${getPriorityLabel(data.priority)}</span></div>
-                <div class="detail-row"><span class="label">الحالة</span><span class="value">${getStatusLabel(data.status)}</span></div>
-                ${data.expires_at ? `<div class="detail-row"><span class="label">تنتهي في</span><span class="value">${formatDate(data.expires_at)}</span></div>` : ''}
+                <div class="detail-row"><span class="label">النوع</span><span class="value">${Utils.getTypeLabel(data.type)}</span></div>
+                <div class="detail-row"><span class="label">الأولوية</span><span class="value">${Utils.getPriorityLabel(data.priority)}</span></div>
+                <div class="detail-row"><span class="label">الحالة</span><span class="value">${Utils.getStatusLabel(data.status)}</span></div>
+                ${data.expires_at ? `<div class="detail-row"><span class="label">تنتهي في</span><span class="value">${Utils.formatDate(data.expires_at)}</span></div>` : ''}
                 ${actionHtml}
                 ${metaHtml}
             `;
 
-            modalBody.innerHTML = html;
-            modal.classList.add('active');
+            DOM.modal.classList.add('active');
 
-            // تعليم كمقروء تلقائياً عند الفتح (تحديث كلا الحقلين)
+            // تعليم كمقروء تلقائياً
             if (data.status === 'unread') {
                 await markAsRead(id);
             }
 
-            // زيادة عدد المشاهدات (اختياري)
+            // زيادة عدد المشاهدات
             try {
                 await sb.rpc('increment_view_count', { notif_id: id });
             } catch (e) { /* تجاهل */ }
@@ -858,32 +901,72 @@
         }
     }
 
-    // ===== إغلاق المودال =====
-    if (closeDetailModal) {
-        closeDetailModal.addEventListener('click', () => modal.classList.remove('active'));
+    // ============================================================
+    // 17. إغلاق المودال
+    // ============================================================
+    if (DOM.closeModal) {
+        DOM.closeModal.addEventListener('click', () => DOM.modal.classList.remove('active'));
     }
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('active');
+    if (DOM.modal) {
+        DOM.modal.addEventListener('click', (e) => {
+            if (e.target === DOM.modal) DOM.modal.classList.remove('active');
         });
     }
 
-    // ===== تحديث =====
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => loadNotifications(1));
+    // ============================================================
+    // 18. تحديث
+    // ============================================================
+    if (DOM.refresh) {
+        DOM.refresh.addEventListener('click', () => loadNotifications(1));
     }
 
-    // ===== البحث والفلترة =====
-    [searchInput, filterType, filterStatus, filterPriority, sortOrder].forEach(el => {
+    // ============================================================
+    // 19. البحث والفلترة مع حفظ التفضيلات
+    // ============================================================
+    function saveFilters() {
+        try {
+            localStorage.setItem('notificationFilters', JSON.stringify(state.filters));
+        } catch (e) { /* تجاهل */ }
+    }
+
+    function loadFilters() {
+        try {
+            const saved = localStorage.getItem('notificationFilters');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                state.filters = { ...state.filters, ...parsed };
+            }
+        } catch (e) { /* تجاهل */ }
+    }
+
+    // تطبيق الفلاتر على الواجهة
+    function applyFiltersToUI() {
+        if (DOM.search) DOM.search.value = state.filters.search || '';
+        if (DOM.filterType) DOM.filterType.value = state.filters.type || 'all';
+        if (DOM.filterStatus) DOM.filterStatus.value = state.filters.status || 'all';
+        if (DOM.filterPriority) DOM.filterPriority.value = state.filters.priority || 'all';
+        if (DOM.sortOrder) DOM.sortOrder.value = state.filters.sort || 'desc';
+    }
+
+    // ربط أحداث الفلاتر
+    [DOM.search, DOM.filterType, DOM.filterStatus, DOM.filterPriority, DOM.sortOrder].forEach(el => {
         if (!el) return;
         const eventType = el.tagName === 'INPUT' ? 'input' : 'change';
         el.addEventListener(eventType, () => {
-            currentPage = 1;
+            state.filters.search = DOM.search ? DOM.search.value.trim() : '';
+            state.filters.type = DOM.filterType ? DOM.filterType.value : 'all';
+            state.filters.status = DOM.filterStatus ? DOM.filterStatus.value : 'all';
+            state.filters.priority = DOM.filterPriority ? DOM.filterPriority.value : 'all';
+            state.filters.sort = DOM.sortOrder ? DOM.sortOrder.value : 'desc';
+            saveFilters();
+            state.currentPage = 1;
             loadNotifications(1);
         });
     });
 
-    // ===== تبويبات =====
+    // ============================================================
+    // 20. تبويبات
+    // ============================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -902,14 +985,16 @@
         });
     });
 
-    // ===== تحميل سجل الإشعارات =====
+    // ============================================================
+    // 21. تحميل سجل الإشعارات
+    // ============================================================
     async function loadHistory(page = 1) {
-        if (!historyTableBody) return;
+        if (!DOM.history.body) return;
 
         try {
             const user = await getCurrentUser();
             if (!user) {
-                historyTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">يرجى تسجيل الدخول</td></tr>';
+                DOM.history.body.innerHTML = '<tr><td colspan="7" style="text-align:center;">يرجى تسجيل الدخول</td></tr>';
                 return;
             }
 
@@ -920,12 +1005,12 @@
                 .eq('user_id', user.id)
                 .in('status', ['read', 'archived'])
                 .order('created_at', { ascending: false })
-                .range((page - 1) * pageSize, page * pageSize - 1);
+                .range((page - 1) * state.pageSize, page * state.pageSize - 1);
 
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                historyTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">لا توجد إشعارات في السجل</td></tr>';
+                DOM.history.body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;">لا توجد إشعارات في السجل</td></tr>';
                 return;
             }
 
@@ -934,11 +1019,11 @@
                 html += `
                     <tr>
                         <td style="font-size:12px;color:var(--gray-400);">${n.id.substring(0, 8)}</td>
-                        <td>${getTypeLabel(n.type)}</td>
+                        <td>${Utils.getTypeLabel(n.type)}</td>
                         <td>${n.title || '—'}</td>
                         <td>${n.sender || 'النظام'}</td>
-                        <td><span class="status-badge ${n.status === 'archived' ? 'status-archived' : 'status-read'}">${getStatusLabel(n.status)}</span></td>
-                        <td>${formatDate(n.created_at)}</td>
+                        <td><span class="status-badge ${n.status === 'archived' ? 'status-archived' : 'status-read'}">${Utils.getStatusLabel(n.status)}</span></td>
+                        <td>${Utils.formatDate(n.created_at)}</td>
                         <td>
                             <button class="action-btn view" onclick="window.__openDetail('${n.id}')"><i class="fas fa-eye"></i></button>
                             <button class="action-btn danger" onclick="window.__deleteNotification('${n.id}')"><i class="fas fa-trash"></i></button>
@@ -946,33 +1031,56 @@
                     </tr>
                 `;
             });
-            historyTableBody.innerHTML = html;
+            DOM.history.body.innerHTML = html;
 
             // Pagination للسجل
-            const totalPages = Math.ceil((count || 0) / pageSize);
-            if (!historyPagination) return;
-            if (totalPages <= 1) { historyPagination.innerHTML = ''; return; }
+            const totalPages = Math.ceil((count || 0) / state.pageSize);
+            if (!DOM.history.pagination) return;
+            if (totalPages <= 1) { DOM.history.pagination.innerHTML = ''; return; }
 
             let ph = '';
             for (let i = 1; i <= totalPages; i++) {
                 ph += `<button class="${i === page ? 'active' : ''}" data-hpage="${i}">${i}</button>`;
             }
-            historyPagination.innerHTML = ph;
-            historyPagination.querySelectorAll('button[data-hpage]').forEach(b => {
+            DOM.history.pagination.innerHTML = ph;
+            DOM.history.pagination.querySelectorAll('button[data-hpage]').forEach(b => {
                 b.addEventListener('click', () => loadHistory(parseInt(b.dataset.hpage)));
             });
 
         } catch (err) {
-            historyTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);">خطأ: ${err.message}</td></tr>`;
+            DOM.history.body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--danger);">خطأ: ${err.message}</td></tr>`;
         }
     }
 
-    // ===== Toast Notification =====
-    function showToast(message, type = 'info', duration = 5000) {
-        const existingToast = document.querySelector('.tera-toast');
-        if (existingToast) existingToast.remove();
-        if (toastTimeout) clearTimeout(toastTimeout);
+    // ============================================================
+    // 22. Toast Notification (مع دعم التراص)
+    // ============================================================
+    let toastContainer = null;
 
+    function getToastContainer() {
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.cssText = `
+                position: fixed;
+                top: 90px;
+                right: 50%;
+                transform: translateX(50%);
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 90%;
+                width: 500px;
+                pointer-events: none;
+            `;
+            document.body.appendChild(toastContainer);
+        }
+        return toastContainer;
+    }
+
+    function showToast(message, type = 'info', duration = 5000) {
+        const container = getToastContainer();
         const colors = {
             info: { bg: '#028090', icon: 'fa-info-circle' },
             success: { bg: '#10b981', icon: 'fa-check-circle' },
@@ -982,66 +1090,89 @@
         const color = colors[type] || colors.info;
 
         const toast = document.createElement('div');
+        const toastId = Utils.generateId();
         toast.className = 'tera-toast';
+        toast.dataset.id = toastId;
         toast.style.cssText = `
-            position: fixed; top: 90px; right: 50%; transform: translateX(50%);
-            background: ${color.bg}; color: #fff; padding: 16px 24px; border-radius: 12px;
-            font-weight: 700; font-size: 15px; z-index: 10000;
+            background: ${color.bg};
+            color: #fff;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            display: flex; align-items: center; gap: 12px;
-            max-width: 90%; min-width: 300px;
-            animation: slideDown 0.4s ease; direction: rtl;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             border: 1px solid rgba(255,255,255,0.15);
+            animation: slideDown 0.4s ease;
+            direction: rtl;
+            pointer-events: auto;
+            min-width: 200px;
         `;
 
+        // إضافة أنماط إذا لم تكن موجودة
         if (!document.getElementById('toastStyles')) {
             const style = document.createElement('style');
             style.id = 'toastStyles';
             style.textContent = `
-                @keyframes slideDown { from { opacity:0; transform:translateX(50%) translateY(-30px); } to { opacity:1; transform:translateX(50%) translateY(0); } }
-                @keyframes slideUp { from { opacity:1; transform:translateX(50%) translateY(0); } to { opacity:0; transform:translateX(50%) translateY(-30px); } }
+                @keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+                @keyframes slideUp { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-30px); } }
             `;
             document.head.appendChild(style);
         }
 
         toast.innerHTML = `
-            <i class="fas ${color.icon}" style="font-size:20px;"></i>
-            <span>${message}</span>
-            <button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:18px;margin-right:auto;">✕</button>
+            <i class="fas ${color.icon}" style="font-size:20px;flex-shrink:0;"></i>
+            <span style="flex:1;">${message}</span>
+            <button onclick="this.closest('.tera-toast').remove()" style="background:transparent;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:18px;padding:0 4px;">✕</button>
         `;
 
-        document.body.appendChild(toast);
+        container.appendChild(toast);
 
-        // تشغيل الصوت إذا لم يكن الإشعار صامتاً
-        try {
-            if (!audioElement) {
-                audioElement = new Audio('/sounds/notification.mp3');
-                audioElement.volume = 0.5;
-            }
-            audioElement.play().catch(() => {});
-        } catch (e) {}
-
-        toastTimeout = setTimeout(() => {
+        // إزالة تلقائية
+        const timeoutId = setTimeout(() => {
             if (toast && toast.parentElement) {
                 toast.style.animation = 'slideUp 0.4s ease forwards';
-                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 400);
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                    if (container.children.length === 0 && container.parentElement) {
+                        // نترك الحاوية موجودة
+                    }
+                }, 400);
             }
         }, duration);
 
-        toast.addEventListener('click', () => {
-            if (toast.parentElement) {
-                toast.style.animation = 'slideUp 0.4s ease forwards';
-                setTimeout(() => { if (toast.parentElement) toast.remove(); }, 400);
-            }
-            if (toastTimeout) clearTimeout(toastTimeout);
+        // إلغاء المؤقت عند النقر على الإغلاق
+        toast.querySelector('button')?.addEventListener('click', () => {
+            clearTimeout(timeoutId);
         });
+
+        // النقر على الـ Toast لإزالته
+        toast.addEventListener('click', (e) => {
+            if (e.target.closest('button')) return;
+            clearTimeout(timeoutId);
+            toast.style.animation = 'slideUp 0.4s ease forwards';
+            setTimeout(() => {
+                if (toast.parentElement) toast.remove();
+            }, 400);
+        });
+
+        // تشغيل الصوت
+        try {
+            if (!state.audioElement) {
+                state.audioElement = new Audio('/sounds/notification.mp3');
+                state.audioElement.volume = 0.5;
+            }
+            state.audioElement.play().catch(() => {});
+        } catch (e) { /* تجاهل */ }
     }
 
-    // ===== OneSignal Integration =====
+    // ============================================================
+    // 23. OneSignal Integration
+    // ============================================================
     async function checkOneSignalStatus() {
-        const statusEl = document.getElementById('osStatusText');
-        const playerIdEl = document.getElementById('osPlayerId');
-        if (!statusEl) return;
+        if (!DOM.oneSignal.status) return;
 
         try {
             let attempts = 0;
@@ -1052,9 +1183,9 @@
             }
 
             if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
-                statusEl.textContent = '⏳ غير متاح';
-                statusEl.className = 'status-value unsubscribed';
-                if (playerIdEl) playerIdEl.textContent = 'يرجى تحديث الصفحة';
+                DOM.oneSignal.status.textContent = '⏳ غير متاح';
+                DOM.oneSignal.status.className = 'status-value unsubscribed';
+                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'يرجى تحديث الصفحة';
                 return;
             }
 
@@ -1062,36 +1193,34 @@
             const subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
 
             if (subscription && subscription.id) {
-                statusEl.textContent = '✅ مفعل';
-                statusEl.className = 'status-value subscribed';
-                if (playerIdEl) playerIdEl.textContent = `Player ID: ${subscription.id}`;
+                DOM.oneSignal.status.textContent = '✅ مفعل';
+                DOM.oneSignal.status.className = 'status-value subscribed';
+                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = `Player ID: ${subscription.id}`;
 
-                // ربط المستخدم الحالي مع OneSignal (External ID)
                 try {
                     const user = await getCurrentUser();
-                    if (user && user.id) {
+                    if (user?.id) {
                         await OneSignal.User.addAlias({ external_id: user.id });
-                        console.log('✅ OneSignal External ID set:', user.id);
+                        Logger.info('OneSignal External ID set', user.id);
                     }
                 } catch (e) {
-                    console.warn('⚠️ فشل تعيين External ID:', e);
+                    Logger.warn('فشل تعيين External ID', e);
                 }
 
             } else {
-                statusEl.textContent = '❌ غير مفعل';
-                statusEl.className = 'status-value unsubscribed';
-                if (playerIdEl) playerIdEl.textContent = 'يرجى تفعيل الإشعارات في المتصفح';
+                DOM.oneSignal.status.textContent = '❌ غير مفعل';
+                DOM.oneSignal.status.className = 'status-value unsubscribed';
+                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'يرجى تفعيل الإشعارات في المتصفح';
             }
 
         } catch (err) {
-            console.error('❌ OneSignal error:', err);
-            statusEl.textContent = '⚠️ خطأ';
-            statusEl.className = 'status-value unsubscribed';
-            if (playerIdEl) playerIdEl.textContent = err.message || 'حدث خطأ في التحقق';
+            Logger.error('OneSignal error', err);
+            DOM.oneSignal.status.textContent = '⚠️ خطأ';
+            DOM.oneSignal.status.className = 'status-value unsubscribed';
+            if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = err.message || 'حدث خطأ في التحقق';
         }
     }
 
-    // ===== استقبال الإشعارات من OneSignal =====
     function setupOneSignalListener() {
         if (typeof window.OneSignal === 'undefined') {
             setTimeout(setupOneSignalListener, 2000);
@@ -1107,33 +1236,21 @@
 
                 if (!isSilent) {
                     showToast(`🔔 ${title}: ${body.substring(0, 60)}${body.length > 60 ? '...' : ''}`, 'info', 8000);
-                    try {
-                        if (!audioElement) {
-                            audioElement = new Audio('/sounds/notification.mp3');
-                            audioElement.volume = 0.5;
-                        }
-                        audioElement.play().catch(() => {});
-                    } catch (e) {}
                 }
 
-                // تحديث القائمة والعدادات
                 await refreshNotifications();
             });
 
-            console.log('✅ OneSignal listener ready');
+            Logger.info('OneSignal listener ready');
 
         } catch (err) {
-            console.warn('⚠️ فشل إعداد مستمع OneSignal:', err);
+            Logger.warn('فشل إعداد مستمع OneSignal', err);
         }
     }
 
-    // ===== تحديث القائمة (يُستخدم من Realtime و OneSignal) =====
-    async function refreshNotifications() {
-        await loadNotifications(1);
-        await updateStatsAndBadges();
-    }
-
-    // ===== Supabase Realtime =====
+    // ============================================================
+    // 24. Supabase Realtime (مع إعادة الاتصال التلقائي)
+    // ============================================================
     async function setupRealtime() {
         try {
             const user = await getCurrentUser();
@@ -1142,12 +1259,13 @@
             const sb = await getSupabase();
             if (!sb) return;
 
-            if (realtimeChannel) {
-                await sb.removeChannel(realtimeChannel);
-                realtimeChannel = null;
+            // إلغاء القناة السابقة
+            if (state.realtimeChannel) {
+                await sb.removeChannel(state.realtimeChannel);
+                state.realtimeChannel = null;
             }
 
-            realtimeChannel = sb
+            state.realtimeChannel = sb
                 .channel('notifications-realtime')
                 .on(
                     'postgres_changes',
@@ -1159,17 +1277,10 @@
                     },
                     async (payload) => {
                         const newNotif = payload.new;
-                        if (isExpired(newNotif.expires_at)) return;
+                        if (Utils.isExpired(newNotif.expires_at)) return;
 
                         if (!newNotif.is_silent) {
                             showToast(`🔔 ${newNotif.title || 'إشعار جديد'}: ${(newNotif.body || '').substring(0, 60)}${(newNotif.body || '').length > 60 ? '...' : ''}`, 'info', 8000);
-                            try {
-                                if (!audioElement) {
-                                    audioElement = new Audio('/sounds/notification.mp3');
-                                    audioElement.volume = 0.5;
-                                }
-                                audioElement.play().catch(() => {});
-                            } catch (e) {}
                         }
 
                         await refreshNotifications();
@@ -1188,19 +1299,95 @@
                     }
                 )
                 .subscribe((status) => {
-                    console.log('📡 Realtime status:', status);
+                    state.isRealtimeConnected = status === 'SUBSCRIBED';
+                    if (status === 'SUBSCRIBED') {
+                        state.reconnectAttempts = 0;
+                        Logger.info('Realtime connected');
+                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        Logger.warn('Realtime connection lost, attempting to reconnect...');
+                        handleRealtimeReconnect();
+                    }
                 });
 
-            console.log('✅ Realtime connected');
+            Logger.info('Realtime setup complete');
 
         } catch (err) {
-            console.warn('⚠️ فشل إعداد Realtime:', err);
+            Logger.error('فشل إعداد Realtime', err);
+            setTimeout(setupRealtime, 5000);
         }
     }
 
-    // ===== التهيئة =====
+    function handleRealtimeReconnect() {
+        if (state.reconnectAttempts >= state.maxReconnectAttempts) {
+            Logger.warn('Max reconnect attempts reached');
+            return;
+        }
+        state.reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, state.reconnectAttempts), 30000);
+        Logger.info(`Reconnecting in ${delay}ms (attempt ${state.reconnectAttempts})`);
+        setTimeout(setupRealtime, delay);
+    }
+
+    // ============================================================
+    // 25. تحديث القائمة (مستعمل من Realtime و OneSignal)
+    // ============================================================
+    async function refreshNotifications() {
+        await loadNotifications(1);
+        await updateStatsAndBadges();
+    }
+
+    // ============================================================
+    // 26. دوال مُصدَّرة مع تحقق من الصلاحية
+    // ============================================================
+    async function __openDetail(id) {
+        if (!id) return;
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('يرجى تسجيل الدخول');
+            return;
+        }
+        await openDetail(id);
+    }
+
+    async function __deleteNotification(id) {
+        if (!id) return;
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('يرجى تسجيل الدخول');
+            return;
+        }
+        await deleteNotification(id);
+    }
+
+    async function __loadNotifications(page) {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('يرجى تسجيل الدخول');
+            return;
+        }
+        await loadNotifications(page || 1);
+    }
+
+    async function __refreshNotifications() {
+        const user = await getCurrentUser();
+        if (!user) {
+            alert('يرجى تسجيل الدخول');
+            return;
+        }
+        await refreshNotifications();
+    }
+
+    // تصدير الدوال
+    window.__openDetail = __openDetail;
+    window.__deleteNotification = __deleteNotification;
+    window.__loadNotifications = __loadNotifications;
+    window.__refreshNotifications = __refreshNotifications;
+
+    // ============================================================
+    // 27. التهيئة
+    // ============================================================
     async function init() {
-        console.log('🚀 تشغيل مركز الإشعارات...');
+        Logger.info('🚀 تشغيل مركز الإشعارات (v5)');
 
         try {
             const user = await getCurrentUser();
@@ -1221,29 +1408,31 @@
                 avatarEl.textContent = name.charAt(0).toUpperCase();
             }
 
+            // تحميل الفلاتر المحفوظة
+            loadFilters();
+            applyFiltersToUI();
+
             // تحميل البيانات
             await loadNotifications(1);
             await updateStatsAndBadges();
             await checkOneSignalStatus();
+
+            // إعداد المستمعات
             setupOneSignalListener();
             await setupRealtime();
             await loadHistory(1);
 
-            // تصدير الدوال العامة
-            window.__openDetail = openDetail;
-            window.__deleteNotification = deleteNotification;
-            window.__loadNotifications = loadNotifications;
-            window.__refreshNotifications = refreshNotifications;
-
-            console.log('✅ مركز الإشعارات جاهز');
+            Logger.info('✅ مركز الإشعارات جاهز');
 
         } catch (err) {
-            console.error('❌ فشل التهيئة:', err);
+            Logger.error('فشل التهيئة', err);
             renderEmptyState('فشل تحميل الإشعارات', 'fa-exclamation-circle', 'error', err.message);
         }
     }
 
-    // ===== التشغيل =====
+    // ============================================================
+    // 28. التشغيل
+    // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
