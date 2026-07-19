@@ -1,12 +1,16 @@
 /**
- * dashboard.js – v5 (متوافق مع auth.js v28، جلب اسم العميل من الجلسة أولاً)
+ * dashboard.js – v6 (مع نظام التنبيهات المتقدم)
+ * متوافق مع auth.js v28، جلب اسم العميل من الجلسة أولاً
+ * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  */
+
 (function() {
     let supabase;
     let chartInstance = null;
     let requestData = null;
     const sessionStart = new Date();
     let updateActivityInterval = null;
+    let alertsData = [];
 
     async function getSupabase() {
         if (supabase) return supabase;
@@ -20,6 +24,15 @@
         return new Date(iso).toLocaleDateString('ar-SA', {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
+    }
+
+    function formatTimeAgo(iso) {
+        if (!iso) return '';
+        const diff = Math.floor((new Date() - new Date(iso)) / 1000);
+        if (diff < 60) return 'الآن';
+        if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
+        return `${Math.floor(diff / 86400)} يوم`;
     }
 
     function getElapsedDays(iso) {
@@ -40,6 +53,389 @@
             suspended: 'موقوف'
         };
         return labels[status] || status;
+    }
+
+    function getAlertIcon(type) {
+        const icons = {
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle',
+            success: 'fa-check-circle',
+            danger: 'fa-times-circle',
+            primary: 'fa-bell',
+            investment: 'fa-chart-line',
+            profit: 'fa-coins',
+            security: 'fa-shield-alt',
+            system: 'fa-server'
+        };
+        return icons[type] || 'fa-bell';
+    }
+
+    function getAlertClass(type) {
+        const classes = {
+            warning: 'alert-warning',
+            info: 'alert-info',
+            success: 'alert-success',
+            danger: 'alert-danger',
+            primary: 'alert-primary'
+        };
+        return classes[type] || 'alert-info';
+    }
+
+    // ---------- عرض التنبيهات ----------
+    async function loadAlerts(user) {
+        const container = document.getElementById('alertsPanel');
+        if (!container) return;
+
+        try {
+            const alerts = [];
+
+            // 1. تنبيهات الملف الشخصي
+            const { data: req, error: reqError } = await supabase
+                .from('verification_requests')
+                .select('*')
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+            if (!reqError) {
+                // التحقق من اكتمال الملف الشخصي
+                const profileSteps = [
+                    { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
+                    { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
+                    { key: 'national_address_completed', label: 'العنوان الوطني', link: '/pages/profile/national-address.html' },
+                    { key: 'bank_info_completed', label: 'المعلومات البنكية', link: '/pages/profile/bank-information.html' },
+                    { key: 'attachments_completed', label: 'المرفقات والوثائق', link: '/pages/profile/attachments.html' }
+                ];
+                const missingSteps = profileSteps.filter(s => !req?.[s.key]);
+
+                if (missingSteps.length > 0) {
+                    alerts.push({
+                        id: 'profile_incomplete',
+                        type: 'warning',
+                        icon: 'fa-user-edit',
+                        title: 'استكمال الملف الشخصي',
+                        description: `يجب استكمال ${missingSteps.length} مرحلة لإتمام طلب التحقق: ${missingSteps.map(s => s.label).join('، ')}`,
+                        link: '/pages/profile/personal-information.html',
+                        linkText: 'استكمال الملف',
+                        readMore: `المراحل المطلوبة: <ul>${missingSteps.map(s => `<li><a href="${s.link}">${s.label}</a></li>`).join('')}</ul>`,
+                        date: req?.updated_at || new Date().toISOString(),
+                        priority: 'high'
+                    });
+                }
+
+                // تنبيه حالة الطلب
+                if (req?.submitted) {
+                    const statusMap = {
+                        'under_review': { type: 'info', title: 'طلبك قيد المراجعة', description: 'تم استلام طلب التحقق وهو قيد المراجعة من قبل الفريق.' },
+                        'approved': { type: 'success', title: 'تم اعتماد طلبك 🎉', description: 'تم اعتماد طلب التحقق بنجاح. يمكنك الآن الاستفادة من جميع خدمات المنصة.' },
+                        'rejected': { type: 'danger', title: 'تم رفض الطلب', description: req.notes || 'لم يتم قبول طلب التحقق. يرجى التواصل مع الدعم.' },
+                        'needs_revision': { type: 'warning', title: 'طلبك يحتاج تعديل', description: req.notes || 'يحتاج طلبك إلى تعديلات قبل الموافقة.' },
+                        'pending_information': { type: 'info', title: 'بانتظار استكمال البيانات', description: 'يرجى استكمال البيانات المطلوبة لإتمام الطلب.' }
+                    };
+                    const statusInfo = statusMap[req.status];
+                    if (statusInfo) {
+                        alerts.push({
+                            id: `request_status_${req.status}`,
+                            type: statusInfo.type,
+                            icon: 'fa-clipboard-check',
+                            title: statusInfo.title,
+                            description: statusInfo.description,
+                            link: req.status === 'needs_revision' || req.status === 'pending_information' ? '/pages/profile/personal-information.html' : null,
+                            linkText: req.status === 'needs_revision' || req.status === 'pending_information' ? 'تعديل البيانات' : null,
+                            readMore: req.notes ? `<strong>ملاحظات:</strong> ${req.notes}` : null,
+                            date: req.updated_at,
+                            priority: req.status === 'rejected' ? 'critical' : (req.status === 'needs_revision' ? 'high' : 'medium')
+                        });
+                    }
+                }
+            }
+
+            // 2. تنبيهات من جدول الإشعارات (إذا كان موجوداً)
+            try {
+                const { data: notifications, error: notifError } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'unread')
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (!notifError && notifications && notifications.length > 0) {
+                    notifications.forEach(n => {
+                        const typeMap = {
+                            'investment': 'investment',
+                            'profit': 'profit',
+                            'security': 'security',
+                            'system': 'system',
+                            'general': 'info'
+                        };
+                        alerts.push({
+                            id: `notif_${n.id}`,
+                            type: typeMap[n.type] || 'info',
+                            icon: getAlertIcon(n.type),
+                            title: n.title || 'إشعار جديد',
+                            description: n.body || '',
+                            link: n.action_url || null,
+                            linkText: 'عرض التفاصيل',
+                            readMore: n.body || null,
+                            date: n.created_at,
+                            priority: n.priority || 'medium'
+                        });
+                    });
+                }
+            } catch (e) {}
+
+            // 3. تنبيهات النظام العامة
+            // 3.1 تنبيه التحقق من البريد الإلكتروني
+            if (user && !user.email_confirmed_at) {
+                alerts.push({
+                    id: 'email_verification',
+                    type: 'warning',
+                    icon: 'fa-envelope',
+                    title: 'تأكيد البريد الإلكتروني',
+                    description: 'لم يتم تأكيد بريدك الإلكتروني بعد. يرجى التحقق من صندوق الوارد.',
+                    link: '/auth/verify-email.html',
+                    linkText: 'إعادة إرسال التأكيد',
+                    readMore: 'تأكيد البريد الإلكتروني ضروري لتفعيل جميع خدمات المنصة.',
+                    date: new Date().toISOString(),
+                    priority: 'high'
+                });
+            }
+
+            // 3.2 تنبيه OneSignal (إذا كان متاحاً)
+            if (window.OneSignal && window.OneSignal.User) {
+                try {
+                    const subscription = await window.OneSignal.User.pushSubscription.getCurrentSubscription();
+                    if (!subscription || !subscription.id) {
+                        alerts.push({
+                            id: 'push_notifications',
+                            type: 'info',
+                            icon: 'fa-bell',
+                            title: 'تفعيل الإشعارات الفورية',
+                            description: 'فعّل الإشعارات الفورية لتلقي التحديثات الهامة لحظياً.',
+                            link: '/pages/support/notifications.html',
+                            linkText: 'إدارة الإشعارات',
+                            readMore: 'يمكنك تفعيل الإشعارات الفورية من خلال متصفحك أو من إعدادات الحساب.',
+                            date: new Date().toISOString(),
+                            priority: 'low'
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            // 4. تنبيهات مخصصة من localStorage (مثال: عرض رسالة بعد تحديث النظام)
+            const dismissedAlerts = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+            const systemMessage = localStorage.getItem('systemMessage');
+            if (systemMessage && !dismissedAlerts.includes('system_message')) {
+                try {
+                    const msg = JSON.parse(systemMessage);
+                    alerts.push({
+                        id: 'system_message',
+                        type: msg.type || 'info',
+                        icon: 'fa-server',
+                        title: msg.title || 'تحديث النظام',
+                        description: msg.body || '',
+                        link: msg.link || null,
+                        linkText: msg.linkText || 'قراءة المزيد',
+                        readMore: msg.fullText || null,
+                        date: msg.date || new Date().toISOString(),
+                        priority: msg.priority || 'medium',
+                        dismissible: true
+                    });
+                } catch (e) {}
+            }
+
+            // ترتيب التنبيهات حسب الأولوية والتاريخ
+            const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+            alerts.sort((a, b) => {
+                const pa = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 3;
+                const pb = priorityOrder[b.priority] !== undefined ? priorityOrder[b.priority] : 3;
+                if (pa !== pb) return pa - pb;
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            alertsData = alerts;
+            renderAlerts(alerts, container);
+
+        } catch (e) {
+            console.warn('⚠️ تعذر تحميل التنبيهات:', e);
+        }
+    }
+
+    function renderAlerts(alerts, container) {
+        if (!alerts || alerts.length === 0) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+
+        // تصفية التنبيهات التي تم تجاهلها
+        const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+        const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
+
+        if (visibleAlerts.length === 0) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+            return;
+        }
+
+        let html = `
+            <div class="panel-card" id="alertsContainer">
+                <div class="panel-header">
+                    <i class="fas fa-bell"></i>
+                    <h3>التنبيهات <span class="panel-badge" style="background:var(--danger);color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">${visibleAlerts.length}</span></h3>
+                    ${visibleAlerts.length > 3 ? `<button class="btn-text-action" id="toggleAllAlerts">عرض الكل</button>` : ''}
+                </div>
+                <div id="alertsList" style="display:flex;flex-direction:column;gap:12px;">
+        `;
+
+        const showAll = visibleAlerts.length <= 3;
+        const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
+
+        alertsToShow.forEach((alert, index) => {
+            const alertClass = getAlertClass(alert.type);
+            const icon = alert.icon || getAlertIcon(alert.type);
+            const isDismissible = alert.dismissible !== false;
+
+            html += `
+                <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}" style="position:relative;padding:16px 20px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
+                        <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);flex-shrink:0;">
+                            <i class="fas ${icon}" style="font-size:18px;"></i>
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+                                <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
+                                ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
+                                ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
+                                <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${formatTimeAgo(alert.date)}</span>
+                            </div>
+                            <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
+                                ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
+                                ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
+                                ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل التنبيه"><i class="fas fa-times"></i></button>` : ''}
+                            </div>
+                            ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;color:var(--gray-700);line-height:1.8;">${alert.readMore}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (!showAll && visibleAlerts.length > 3) {
+            const hiddenCount = visibleAlerts.length - 3;
+            html += `
+                <div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">
+            `;
+            visibleAlerts.slice(3).forEach(alert => {
+                // نفس الكود أعلاه مع إعادة استخدام المنطق
+                const alertClass = getAlertClass(alert.type);
+                const icon = alert.icon || getAlertIcon(alert.type);
+                const isDismissible = alert.dismissible !== false;
+                html += `
+                    <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}" style="position:relative;padding:16px 20px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
+                            <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);flex-shrink:0;">
+                                <i class="fas ${icon}" style="font-size:18px;"></i>
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+                                    <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
+                                    ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
+                                    ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
+                                    <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${formatTimeAgo(alert.date)}</span>
+                                </div>
+                                <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
+                                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
+                                    ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
+                                    ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
+                                    ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل التنبيه"><i class="fas fa-times"></i></button>` : ''}
+                                </div>
+                                ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;color:var(--gray-700);line-height:1.8;">${alert.readMore}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>
+                <button class="btn-text-action" id="showMoreAlerts" style="text-align:center;width:100%;padding:8px;font-size:13px;">
+                    <i class="fas fa-chevron-down"></i> عرض ${hiddenCount} تنبيهات إضافية
+                </button>
+                <button class="btn-text-action" id="showLessAlerts" style="display:none;text-align:center;width:100%;padding:8px;font-size:13px;">
+                    <i class="fas fa-chevron-up"></i> عرض أقل
+                </button>
+            `;
+        }
+
+        html += `</div></div>`;
+        container.innerHTML = html;
+
+        // ربط الأحداث
+        container.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const alertId = this.dataset.alertId;
+                dismissAlert(alertId);
+            });
+        });
+
+        container.querySelectorAll('.read-more-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const alertId = this.dataset.alertId;
+                const content = document.getElementById(`readmore_${alertId}`);
+                const icon = this.querySelector('i');
+                if (content) {
+                    if (content.style.display === 'none' || content.style.display === '') {
+                        content.style.display = 'block';
+                        if (icon) icon.className = 'fas fa-chevron-up';
+                    } else {
+                        content.style.display = 'none';
+                        if (icon) icon.className = 'fas fa-chevron-down';
+                    }
+                }
+            });
+        });
+
+        const showMoreBtn = document.getElementById('showMoreAlerts');
+        const showLessBtn = document.getElementById('showLessAlerts');
+        const hiddenAlerts = document.getElementById('hiddenAlerts');
+
+        if (showMoreBtn && hiddenAlerts) {
+            showMoreBtn.addEventListener('click', () => {
+                hiddenAlerts.style.display = 'flex';
+                showMoreBtn.style.display = 'none';
+                if (showLessBtn) showLessBtn.style.display = 'block';
+            });
+        }
+
+        if (showLessBtn && hiddenAlerts) {
+            showLessBtn.addEventListener('click', () => {
+                hiddenAlerts.style.display = 'none';
+                showLessBtn.style.display = 'none';
+                if (showMoreBtn) showMoreBtn.style.display = 'block';
+            });
+        }
+    }
+
+    function dismissAlert(alertId) {
+        const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+        if (!dismissed.includes(alertId)) {
+            dismissed.push(alertId);
+            localStorage.setItem('dismissedAlerts', JSON.stringify(dismissed));
+        }
+        // إعادة تحميل التنبيهات
+        const container = document.getElementById('alertsPanel');
+        if (container && alertsData.length > 0) {
+            renderAlerts(alertsData, container);
+        }
+        // إذا كان هناك تنبيهات مرئية لا تزال، إخفاء الحاوية إذا كانت فارغة
+        const visibleAlerts = alertsData.filter(a => !dismissed.includes(a.id));
+        if (visibleAlerts.length === 0 && container) {
+            container.style.display = 'none';
+        }
     }
 
     // ---------- حالة الطلب والملف الشخصي ----------
@@ -336,6 +732,7 @@
         await loadCustomerJourney(user);
         await loadStats(user);
         await loadChartData(user);
+        await loadAlerts(user); // ✅ نظام التنبيهات الجديد
 
         // المؤقتات
         const updateDateTime = () => {
@@ -356,6 +753,7 @@
         setInterval(updateDateTime, 30000);
 
         document.getElementById('loadingOverlay')?.classList.remove('active');
+        console.log('✅ dashboard.js v6 ready');
     }
 
     window.addEventListener('beforeunload', () => {
