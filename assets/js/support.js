@@ -1,115 +1,96 @@
-/* ================================================= */
-/* TERA SUPPORT MODULE (support.js) */
-/* ================================================= */
-'use strict';
+/**
+ * ========================================================
+ * support.js – الوظائف المشتركة لقسم الدعم
+ * ========================================================
+ */
 
-const SupportManager = {
-    init() {
-        console.log('Support Module Initialized');
-        this.cacheDOM();
-        this.bindEvents();
-    },
+(function() {
+    'use strict';
 
-    cacheDOM() {
-        // نموذج إرسال التذاكر
-        this.ticketForm = document.getElementById('ticketForm');
-    },
+    if (window.__supportInitialized) return;
+    window.__supportInitialized = true;
 
-    bindEvents() {
-        // 1. إدارة الأسئلة الشائعة (FAQ Accordion) باستخدام Event Delegation
-        document.addEventListener('click', (e) => {
-            const faqHeader = e.target.closest('.faq-trigger-header');
-            
-            if (faqHeader) {
-                const parentItem = faqHeader.closest('.faq-accordion-item');
-                const content = parentItem.querySelector('.faq-panel-content');
-                const icon = faqHeader.querySelector('i'); // لتدوير أيقونة السهم إن وجدت
-
-                // إغلاق جميع العناصر الأخرى المفتوحة (تصميم الأكورديون)
-                document.querySelectorAll('.faq-accordion-item').forEach(item => {
-                    if (item !== parentItem) {
-                        item.classList.remove('active');
-                        const otherContent = item.querySelector('.faq-panel-content');
-                        const otherIcon = item.querySelector('.faq-trigger-header i');
-                        
-                        if (otherContent) otherContent.style.display = 'none';
-                        if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
-                    }
-                });
-
-                // تبديل حالة العنصر الحالي (فتح / إغلاق)
-                const isActive = parentItem.classList.contains('active');
-                
-                if (isActive) {
-                    parentItem.classList.remove('active');
-                    if (content) content.style.display = 'none';
-                    if (icon) icon.style.transform = 'rotate(0deg)';
-                } else {
-                    parentItem.classList.add('active');
-                    if (content) content.style.display = 'block';
-                    if (icon) icon.style.transform = 'rotate(180deg)';
-                }
+    // ===== تهيئة اسم المستخدم =====
+    function initUserHeader() {
+        const nameEl = document.getElementById('headerUserName');
+        const avatarEl = document.getElementById('headerAvatar');
+        if (nameEl && window.Auth && window.Auth.getCurrentUser) {
+            const user = window.Auth.getCurrentUser();
+            if (user && user.user_metadata) {
+                const fullName = user.user_metadata.full_name || user.email || 'مستخدم';
+                nameEl.textContent = fullName;
+                avatarEl.textContent = fullName.charAt(0).toUpperCase();
             }
-        });
+        }
+    }
 
-        // 2. معالجة نموذج إرسال التذاكر
-        if (this.ticketForm) {
-            this.ticketForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleTicketSubmit();
+    // ===== القائمة الجانبية (إن وجدت) =====
+    function initSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                if (window.innerWidth < 992) {
+                    sidebar.classList.toggle('sidebar-open');
+                    if (overlay) overlay.classList.toggle('active');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                }
             });
         }
-    },
-
-    handleTicketSubmit() {
-        // التحقق المبدئي من الحقول
-        const subject = document.getElementById('subject');
-        const message = document.getElementById('message');
-
-        if ((subject && subject.value.trim() === '') || (message && message.value.trim() === '')) {
-            alert('يرجى تعبئة جميع الحقول المطلوبة (عنوان ومحتوى التذكرة).');
-            return;
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('active');
+            });
         }
-
-        // إعداد حالة التحميل للزر
-        const submitBtn = this.ticketForm.querySelector('button[type="submit"]');
-        let originalText = '';
-
-        if (submitBtn) {
-            originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-left: 8px;"></i> جاري الإرسال...';
-            submitBtn.style.opacity = '0.7';
-        }
-
-        // تجميع البيانات
-        const formData = {
-            subject: subject ? subject.value : '',
-            priority: document.getElementById('priority') ? document.getElementById('priority').value : 'normal',
-            message: message ? message.value : '',
-            date: new Date().toISOString()
-        };
-
-        console.log('Sending Ticket:', formData);
-
-        // محاكاة الاتصال بالخادم (API Call)
-        setTimeout(() => {
-            alert('تم إرسال تذكرتك بنجاح، سيقوم فريق الدعم الفني بالرد عليك في أقرب وقت.');
-            
-            // إعادة ضبط النموذج والزر
-            this.ticketForm.reset();
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-                submitBtn.style.opacity = '1';
-            }
-        }, 1500);
+        // القوائم الفرعية
+        document.querySelectorAll('.has-submenu > a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href && href !== '#' && href !== 'javascript:void(0)') return;
+                e.preventDefault();
+                this.closest('.has-submenu').classList.toggle('submenu-open');
+            });
+        });
     }
-};
 
-/* ================================================= */
-/* التهيئة عند تحميل الصفحة */
-/* ================================================= */
-document.addEventListener('DOMContentLoaded', () => {
-    SupportManager.init();
-});
+    // ===== زر الخروج =====
+    function initLogout() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+                logoutBtn.disabled = true;
+                try {
+                    if (window.Auth && window.Auth.logout) {
+                        await window.Auth.logout();
+                    } else {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        window.location.replace('/auth/auth/login/login.html');
+                    }
+                } catch (err) {
+                    window.location.replace('/auth/auth/login/login.html');
+                }
+            });
+        }
+    }
+
+    // ===== تهيئة عامة =====
+    function init() {
+        initUserHeader();
+        initSidebar();
+        initLogout();
+        console.log('✅ support.js ready');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
