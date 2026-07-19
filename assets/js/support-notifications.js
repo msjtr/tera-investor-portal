@@ -1216,32 +1216,50 @@
     }
 
     // ============================================================
-    // 26. OneSignal Integration (مصحح)
+    // 26. OneSignal Integration (محسّن ومقاوم للأخطاء)
     // ============================================================
     async function checkOneSignalStatus() {
         if (!DOM.oneSignal.status) return;
 
         try {
+            // الانتظار حتى تحميل OneSignal SDK (زيادة عدد المحاولات)
             let attempts = 0;
-            const maxAttempts = 20;
+            const maxAttempts = 30; // 15 ثانية كحد أقصى
             while (typeof window.OneSignal === 'undefined' && attempts < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 attempts++;
             }
 
-            // التحقق من وجود OneSignal و User
-            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User || !window.OneSignal.Notifications) {
+            const OneSignal = window.OneSignal;
+
+            // إذا لم يتم تحميل OneSignal
+            if (!OneSignal) {
                 DOM.oneSignal.status.textContent = '⏳ غير متاح';
                 DOM.oneSignal.status.className = 'status-value unsubscribed';
-                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'يرجى تحديث الصفحة';
+                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'جاري تحميل OneSignal...';
                 return;
             }
 
-            const OneSignal = window.OneSignal;
-            // استخدام try/catch حول getCurrentSubscription
+            // التحقق من توفر User و Notifications
+            if (!OneSignal.User || !OneSignal.Notifications) {
+                DOM.oneSignal.status.textContent = '⏳ جاري التهيئة...';
+                DOM.oneSignal.status.className = 'status-value unsubscribed';
+                if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = 'يرجى الانتظار...';
+                // إعادة المحاولة بعد 3 ثوانٍ
+                setTimeout(checkOneSignalStatus, 3000);
+                return;
+            }
+
+            // محاولة الحصول على الاشتراك
             let subscription = null;
             try {
-                subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
+                // التحقق من وجود pushSubscription قبل استخدامه
+                if (OneSignal.User.pushSubscription && 
+                    typeof OneSignal.User.pushSubscription.getCurrentSubscription === 'function') {
+                    subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
+                } else {
+                    console.warn('⚠️ OneSignal.User.pushSubscription غير متوفر');
+                }
             } catch (e) {
                 console.warn('⚠️ فشل جلب حالة الاشتراك:', e);
                 subscription = null;
@@ -1252,6 +1270,7 @@
                 DOM.oneSignal.status.className = 'status-value subscribed';
                 if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = `Player ID: ${subscription.id}`;
 
+                // ربط المستخدم الحالي بـ OneSignal (External ID)
                 try {
                     const user = await getCurrentUser();
                     if (user?.id) {
@@ -1276,15 +1295,39 @@
         }
     }
 
+    // ============================================================
+    // 26b. إعداد مستمع OneSignal (محسّن)
+    // ============================================================
     function setupOneSignalListener() {
-        if (typeof window.OneSignal === 'undefined') {
-            setTimeout(setupOneSignalListener, 2000);
-            return;
-        }
+        let attempts = 0;
+        const maxAttempts = 20;
 
-        try {
-            if (window.OneSignal.Notifications && typeof window.OneSignal.Notifications.addListener === 'function') {
-                window.OneSignal.Notifications.addListener('foregroundWillDisplay', async (notification) => {
+        const trySetup = () => {
+            const OneSignal = window.OneSignal;
+
+            if (!OneSignal) {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(trySetup, 1000);
+                } else {
+                    console.warn('⚠️ OneSignal غير متوفر بعد المحاولات المتكررة');
+                }
+                return;
+            }
+
+            try {
+                // التحقق من وجود Notifications و addListener
+                if (!OneSignal.Notifications || typeof OneSignal.Notifications.addListener !== 'function') {
+                    console.warn('⚠️ OneSignal.Notifications غير متوفر');
+                    if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(trySetup, 2000);
+                    }
+                    return;
+                }
+
+                // إضافة المستمع
+                OneSignal.Notifications.addListener('foregroundWillDisplay', async (notification) => {
                     const data = notification.data || notification;
                     const title = data.title || notification.title || 'إشعار جديد';
                     const body = data.body || notification.body || '';
@@ -1298,14 +1341,20 @@
                     state.allNotificationsCache = [];
                     await refreshNotifications();
                 });
-                console.log('✅ OneSignal listener ready');
-            } else {
-                console.warn('⚠️ OneSignal.Notifications غير متوفر');
-            }
 
-        } catch (err) {
-            console.warn('⚠️ فشل إعداد مستمع OneSignal:', err);
-        }
+                console.log('✅ OneSignal listener ready');
+
+            } catch (err) {
+                console.warn('⚠️ فشل إعداد مستمع OneSignal:', err);
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(trySetup, 3000);
+                }
+            }
+        };
+
+        // بدء المحاولات بعد تأخير بسيط
+        setTimeout(trySetup, 1000);
     }
 
     // ============================================================
