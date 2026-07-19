@@ -1,11 +1,16 @@
 /**
- * dashboard.js – v8 (متكامل مع نظام الإشعارات الجديد)
- * متوافق مع auth.js v29، supabase-client.js المُحسَّن
+ * dashboard.js – v9 (محسّن الأداء والتوافق)
+ * متوافق مع auth.js v29، supabase-client.js، support.js v2
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
  */
 
 (function() {
+    'use strict';
+
+    // ============================================================
+    // 1. الحالة والمتغيرات العامة
+    // ============================================================
     let supabase = null;
     let chartInstance = null;
     let requestData = null;
@@ -14,16 +19,92 @@
     let alertsData = [];
     let unreadCount = 0;
     let realtimeChannel = null;
+    let isRealtimeConnected = false;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
 
-    // ===== الحصول على Supabase =====
+    // ============================================================
+    // 2. الأدوات المساعدة (متوافقة مع support-notifications.js)
+    // ============================================================
+    const Utils = {
+        formatDateTime(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleDateString('ar-SA', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        },
+
+        formatTimeAgo(iso) {
+            if (!iso) return '';
+            const diff = Math.floor((new Date() - new Date(iso)) / 1000);
+            if (diff < 60) return 'الآن';
+            if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
+            if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
+            return this.formatDateTime(iso);
+        },
+
+        getElapsedDays(iso) {
+            if (!iso) return '';
+            const diff = Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24));
+            return diff < 1 ? 'أقل من يوم' : `${diff} يوم`;
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                draft: 'مسودة',
+                pending_information: 'بانتظار استكمال البيانات',
+                under_review: 'قيد المراجعة',
+                needs_revision: 'يحتاج تعديل',
+                has_notes: 'توجد ملاحظات',
+                approved: 'معتمد',
+                rejected: 'مرفوض',
+                suspended: 'موقوف'
+            };
+            return labels[status] || status;
+        },
+
+        getAlertIcon(type) {
+            const icons = {
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                danger: 'fa-times-circle',
+                primary: 'fa-bell',
+                investment: 'fa-chart-line',
+                profit: 'fa-coins',
+                security: 'fa-shield-alt',
+                system: 'fa-server',
+                general: 'fa-bell'
+            };
+            return icons[type] || 'fa-bell';
+        },
+
+        getAlertClass(type) {
+            const classes = {
+                warning: 'alert-warning',
+                info: 'alert-info',
+                success: 'alert-success',
+                danger: 'alert-danger',
+                primary: 'alert-primary'
+            };
+            return classes[type] || 'alert-info';
+        }
+    };
+
+    // ============================================================
+    // 3. الحصول على Supabase والمستخدم (باستخدام window.Support)
+    // ============================================================
     async function getSupabase() {
         if (supabase) return supabase;
-        if (window.teraSupabase) {
-            supabase = window.teraSupabase;
-            return supabase;
-        }
         try {
-            supabase = await window.waitForSupabase?.();
+            if (window.Support?.getSupabase) {
+                supabase = await window.Support.getSupabase();
+            } else if (window.teraSupabase) {
+                supabase = window.teraSupabase;
+            } else if (window.waitForSupabase) {
+                supabase = await window.waitForSupabase();
+            }
             return supabase;
         } catch (e) {
             console.warn('⚠️ Supabase غير جاهز:', e);
@@ -31,10 +112,12 @@
         }
     }
 
-    // ===== الحصول على المستخدم =====
-    async function getCurrentUser() {
+    async function getCurrentUser(force = false) {
         try {
-            if (window.Auth && window.Auth.getCurrentUser) {
+            if (window.Support?.getCurrentUser) {
+                return await window.Support.getCurrentUser(force);
+            }
+            if (window.Auth?.getCurrentUser) {
                 return await window.Auth.getCurrentUser();
             }
             const sb = await getSupabase();
@@ -48,72 +131,134 @@
         }
     }
 
-    // ===== الأدوات المساعدة (متوافقة مع support-notifications.js) =====
-    function formatDateTime(iso) {
-        if (!iso) return '';
-        return new Date(iso).toLocaleDateString('ar-SA', {
-            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+    // ============================================================
+    // 4. إدارة Realtime (مع إعادة الاتصال التلقائي)
+    // ============================================================
+    async function setupRealtime(user) {
+        try {
+            const sb = await getSupabase();
+            if (!sb) return;
+
+            if (realtimeChannel) {
+                try { await sb.removeChannel(realtimeChannel); } catch (e) { /* تجاهل */ }
+                realtimeChannel = null;
+            }
+
+            realtimeChannel = sb
+                .channel('dashboard-notifications')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    async () => {
+                        await onNotificationChanged(user);
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    async () => {
+                        await onNotificationChanged(user);
+                    }
+                )
+                .subscribe((status) => {
+                    isRealtimeConnected = status === 'SUBSCRIBED';
+                    if (status === 'SUBSCRIBED') {
+                        reconnectAttempts = 0;
+                        console.log('✅ Realtime (dashboard) connected');
+                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        console.warn('⚠️ Realtime lost, reconnecting...');
+                        handleRealtimeReconnect(user);
+                    }
+                });
+
+        } catch (err) {
+            console.warn('⚠️ فشل إعداد Realtime:', err);
+            setTimeout(() => setupRealtime(user), 5000);
+        }
     }
 
-    function formatTimeAgo(iso) {
-        if (!iso) return '';
-        const diff = Math.floor((new Date() - new Date(iso)) / 1000);
-        if (diff < 60) return 'الآن';
-        if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
-        if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
-        return formatDateTime(iso);
+    function handleRealtimeReconnect(user) {
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            console.warn('⚠️ Max reconnect attempts reached');
+            return;
+        }
+        reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+        setTimeout(() => setupRealtime(user), delay);
     }
 
-    function getElapsedDays(iso) {
-        if (!iso) return '';
-        const diff = Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24));
-        return diff < 1 ? 'أقل من يوم' : `${diff} يوم`;
+    async function onNotificationChanged(user) {
+        await Promise.all([
+            updateNotificationBadge(),
+            loadAlerts(user)
+        ]);
     }
 
-    function getStatusLabel(status) {
-        const labels = {
-            draft: 'مسودة',
-            pending_information: 'بانتظار استكمال البيانات',
-            under_review: 'قيد المراجعة',
-            needs_revision: 'يحتاج تعديل',
-            has_notes: 'توجد ملاحظات',
-            approved: 'معتمد',
-            rejected: 'مرفوض',
-            suspended: 'موقوف'
-        };
-        return labels[status] || status;
+    // ============================================================
+    // 5. تحديث عداد الإشعارات (باستخدام Support)
+    // ============================================================
+    async function updateNotificationBadge() {
+        try {
+            if (window.Support?.updateNotificationBadge) {
+                unreadCount = await window.Support.updateNotificationBadge() || 0;
+            } else {
+                // طريقة احتياطية
+                const user = await getCurrentUser();
+                if (!user) return 0;
+                const sb = await getSupabase();
+                if (!sb) return 0;
+                const { count, error } = await sb
+                    .from('notifications')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id)
+                    .eq('status', 'unread');
+                if (error) throw error;
+                unreadCount = count || 0;
+            }
+
+            // تحديث البادجات في كل مكان
+            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
+            badges.forEach(el => {
+                if (el) {
+                    el.textContent = unreadCount;
+                    el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+                }
+            });
+
+            // عداد الهيدر
+            const headerBadge = document.querySelector('.header-notification-badge');
+            if (headerBadge) {
+                headerBadge.textContent = unreadCount;
+                headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            // عداد القائمة الجانبية
+            const sidebarBadge = document.querySelector('.sidebar-notification-badge');
+            if (sidebarBadge) {
+                sidebarBadge.textContent = unreadCount;
+                sidebarBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            return unreadCount;
+        } catch (e) {
+            console.warn('⚠️ فشل تحديث عداد الإشعارات:', e);
+            return 0;
+        }
     }
 
-    function getAlertIcon(type) {
-        const icons = {
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle',
-            success: 'fa-check-circle',
-            danger: 'fa-times-circle',
-            primary: 'fa-bell',
-            investment: 'fa-chart-line',
-            profit: 'fa-coins',
-            security: 'fa-shield-alt',
-            system: 'fa-server',
-            general: 'fa-bell'
-        };
-        return icons[type] || 'fa-bell';
-    }
-
-    function getAlertClass(type) {
-        const classes = {
-            warning: 'alert-warning',
-            info: 'alert-info',
-            success: 'alert-success',
-            danger: 'alert-danger',
-            primary: 'alert-primary'
-        };
-        return classes[type] || 'alert-info';
-    }
-
-    // ===== عرض التنبيهات =====
+    // ============================================================
+    // 6. تحميل وعرض التنبيهات
+    // ============================================================
     async function loadAlerts(user) {
         const container = document.getElementById('alertsPanel');
         if (!container) return;
@@ -179,7 +324,7 @@
                 }
             }
 
-            // 2. تنبيهات من جدول الإشعارات (غير المقروءة)
+            // 2. تنبيهات من الإشعارات غير المقروءة (آخر 5)
             try {
                 const { data: notifications, error: notifError } = await supabase
                     .from('notifications')
@@ -201,7 +346,7 @@
                         alerts.push({
                             id: `notif_${n.id}`,
                             type: typeMap[n.type] || 'info',
-                            icon: getAlertIcon(n.type),
+                            icon: Utils.getAlertIcon(n.type),
                             title: n.title || 'إشعار جديد',
                             description: n.body || '',
                             link: n.action_url || null,
@@ -214,7 +359,7 @@
                 }
             } catch (e) { /* تجاهل */ }
 
-            // 3. تنبيهات النظام العامة
+            // 3. تنبيهات النظام
             if (user && !user.email_confirmed_at) {
                 alerts.push({
                     id: 'email_verification',
@@ -252,7 +397,7 @@
                 } catch (e) { /* تجاهل */ }
             }
 
-            // ترتيب التنبيهات حسب الأولوية
+            // ترتيب حسب الأولوية والتاريخ
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
             alerts.sort((a, b) => {
                 const pa = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 3;
@@ -301,8 +446,8 @@
         const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
 
         alertsToShow.forEach((alert) => {
-            const alertClass = getAlertClass(alert.type);
-            const icon = alert.icon || getAlertIcon(alert.type);
+            const alertClass = Utils.getAlertClass(alert.type);
+            const icon = alert.icon || Utils.getAlertIcon(alert.type);
             const isDismissible = alert.dismissible !== false;
 
             html += `
@@ -316,7 +461,7 @@
                                 <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
                                 ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
                                 ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
-                                <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${formatTimeAgo(alert.date)}</span>
+                                <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
                             </div>
                             <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
                             <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
@@ -337,8 +482,8 @@
                 <div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">
             `;
             visibleAlerts.slice(3).forEach(alert => {
-                const alertClass = getAlertClass(alert.type);
-                const icon = alert.icon || getAlertIcon(alert.type);
+                const alertClass = Utils.getAlertClass(alert.type);
+                const icon = alert.icon || Utils.getAlertIcon(alert.type);
                 const isDismissible = alert.dismissible !== false;
                 html += `
                     <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}" style="position:relative;padding:16px 20px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;gap:8px;">
@@ -351,7 +496,7 @@
                                     <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
                                     ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
                                     ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
-                                    <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${formatTimeAgo(alert.date)}</span>
+                                    <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
                                 </div>
                                 <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
                                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
@@ -441,102 +586,9 @@
         }
     }
 
-    // ===== تحديث عداد الإشعارات (متكامل مع نظام الإشعارات) =====
-    async function updateNotificationBadge() {
-        try {
-            const user = await getCurrentUser();
-            if (!user) return;
-
-            const sb = await getSupabase();
-            if (!sb) return;
-
-            const { count, error } = await sb
-                .from('notifications')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('status', 'unread');
-
-            if (error) throw error;
-
-            unreadCount = count || 0;
-            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
-            badges.forEach(el => {
-                if (el) {
-                    el.textContent = unreadCount;
-                    el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-                }
-            });
-
-            // تحديث عداد الهيدر
-            const headerBadge = document.querySelector('.header-notification-badge');
-            if (headerBadge) {
-                headerBadge.textContent = unreadCount;
-                headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-            }
-
-            // تحديث عداد التاب في القائمة الجانبية
-            const sidebarBadge = document.querySelector('.sidebar-notification-badge');
-            if (sidebarBadge) {
-                sidebarBadge.textContent = unreadCount;
-                sidebarBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-            }
-
-            return unreadCount;
-        } catch (e) {
-            console.warn('⚠️ فشل تحديث عداد الإشعارات:', e);
-            return 0;
-        }
-    }
-
-    // ===== إعداد Realtime للإشعارات =====
-    async function setupRealtime(user) {
-        try {
-            const sb = await getSupabase();
-            if (!sb) return;
-
-            if (realtimeChannel) {
-                await sb.removeChannel(realtimeChannel);
-                realtimeChannel = null;
-            }
-
-            realtimeChannel = sb
-                .channel('dashboard-notifications')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    async () => {
-                        await updateNotificationBadge();
-                        await loadAlerts(user);
-                    }
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    async () => {
-                        await updateNotificationBadge();
-                        await loadAlerts(user);
-                    }
-                )
-                .subscribe();
-
-            console.log('✅ Realtime (dashboard) connected');
-
-        } catch (err) {
-            console.warn('⚠️ فشل إعداد Realtime في لوحة التحكم:', err);
-        }
-    }
-
-    // ===== حالة الطلب والملف الشخصي =====
+    // ============================================================
+    // 7. حالة الطلب والملف الشخصي
+    // ============================================================
     async function loadCustomerJourney(user) {
         try {
             const { data: req, error: reqError } = await supabase
@@ -620,7 +672,7 @@
         };
         const statusIcon = statusIcons[req.status] || 'fa-clock';
         const statusColor = req.status === 'approved' ? '#10b981' : (req.status === 'rejected' ? '#dc2626' : '#f59e0b');
-        const statusLabel = getStatusLabel(req.status);
+        const statusLabel = Utils.getStatusLabel(req.status);
 
         let html = `<div class="request-status-card-full">
             <div class="request-header">
@@ -632,9 +684,9 @@
                 <div><span class="status-badge-large" style="background:${statusColor}20; color:${statusColor};">${statusLabel}</span></div>
             </div>
             <div class="request-details-list">
-                <div class="request-detail-item"><i class="fas fa-calendar-plus"></i><strong>تاريخ التقديم:</strong><span>${formatDateTime(req.submitted_at)}</span></div>
-                <div class="request-detail-item"><i class="fas fa-history"></i><strong>آخر تحديث:</strong><span>${formatDateTime(req.updated_at)}</span></div>
-                <div class="request-detail-item"><i class="fas fa-hourglass-half"></i><strong>المدة المنقضية:</strong><span>${getElapsedDays(req.submitted_at)}</span></div>
+                <div class="request-detail-item"><i class="fas fa-calendar-plus"></i><strong>تاريخ التقديم:</strong><span>${Utils.formatDateTime(req.submitted_at)}</span></div>
+                <div class="request-detail-item"><i class="fas fa-history"></i><strong>آخر تحديث:</strong><span>${Utils.formatDateTime(req.updated_at)}</span></div>
+                <div class="request-detail-item"><i class="fas fa-hourglass-half"></i><strong>المدة المنقضية:</strong><span>${Utils.getElapsedDays(req.submitted_at)}</span></div>
                 <div class="request-detail-item"><i class="fas fa-chart-line"></i><strong>نسبة الإنجاز:</strong><span>${req.progress || 0}%</span></div>
                 <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${req.progress || 0}%;"></div></div>
                 ${req.notes ? `<div class="request-detail-item" style="margin-top:10px;"><i class="fas fa-sticky-note"></i><strong>ملاحظات:</strong><span>${req.notes}</span></div>` : ''}
@@ -663,7 +715,9 @@
         panel.innerHTML = html;
     }
 
-    // ===== الإحصائيات والمخطط =====
+    // ============================================================
+    // 8. الإحصائيات والمخطط
+    // ============================================================
     async function loadStats(user) {
         try {
             const { data, error } = await supabase
@@ -750,7 +804,9 @@
         });
     }
 
-    // ===== التهيئة =====
+    // ============================================================
+    // 9. التهيئة
+    // ============================================================
     async function init() {
         if (!window.Auth) {
             console.error('نظام المصادقة غير متوفر');
@@ -825,12 +881,16 @@
             }, 60000);
         }
 
-        // تحميل البيانات
-        await loadCustomerJourney(user);
-        await loadStats(user);
-        await loadChartData(user);
-        await loadAlerts(user);
-        await updateNotificationBadge();
+        // تحميل البيانات بالتوازي لتحسين الأداء
+        await Promise.all([
+            loadCustomerJourney(user),
+            loadStats(user),
+            loadChartData(user),
+            loadAlerts(user),
+            updateNotificationBadge()
+        ]);
+
+        // إعداد Realtime بعد تحميل البيانات
         await setupRealtime(user);
 
         // تحديث الوقت
@@ -852,17 +912,34 @@
         setInterval(updateDateTime, 30000);
 
         document.getElementById('loadingOverlay')?.classList.remove('active');
-        console.log('✅ dashboard.js v8 ready (متكامل مع نظام الإشعارات)');
+        console.log('✅ dashboard.js v9 ready (محسّن الأداء والتوافق)');
     }
 
+    // ============================================================
+    // 10. التنظيف عند إغلاق الصفحة
+    // ============================================================
     window.addEventListener('beforeunload', () => {
-        if (updateActivityInterval) clearInterval(updateActivityInterval);
+        if (updateActivityInterval) {
+            clearInterval(updateActivityInterval);
+            updateActivityInterval = null;
+        }
         if (realtimeChannel) {
             getSupabase().then(sb => {
-                if (sb) sb.removeChannel(realtimeChannel);
+                if (sb && realtimeChannel) {
+                    sb.removeChannel(realtimeChannel).catch(() => {});
+                    realtimeChannel = null;
+                }
             }).catch(() => {});
         }
     });
 
-    document.addEventListener('DOMContentLoaded', init);
+    // ============================================================
+    // 11. تشغيل التهيئة
+    // ============================================================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
 })();
