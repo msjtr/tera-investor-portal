@@ -1,8 +1,8 @@
 /**
  * ============================================================
- * support-notifications.js – الإصدار المحسّن v5
+ * support-notifications.js – الإصدار v6 (باستخدام Edge Functions)
  * متوافق مع جدول notifications الحالي
- * تم تحسين الأداء، إدارة الحالة، والأمان
+ * يستخدم get-notifications لتجاوز RLS
  * ============================================================
  */
 
@@ -13,7 +13,13 @@
     window.__notificationsInitialized = true;
 
     // ============================================================
-    // 1. إدارة الحالة المركزية (State Management)
+    // 1. الإعدادات العامة
+    // ============================================================
+    const SUPABASE_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
+    const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+
+    // ============================================================
+    // 2. إدارة الحالة المركزية
     // ============================================================
     const state = {
         supabase: null,
@@ -36,14 +42,11 @@
             status: 'all',
             priority: 'all',
             sort: 'desc'
-        },
-        isRealtimeConnected: false,
-        reconnectAttempts: 0,
-        maxReconnectAttempts: 5
+        }
     };
 
     // ============================================================
-    // 2. المراجع DOM (محسّنة)
+    // 3. المراجع DOM
     // ============================================================
     const DOM = {
         list: document.getElementById('notificationsList'),
@@ -81,7 +84,7 @@
     };
 
     // ============================================================
-    // 3. الأدوات المساعدة (محسّنة)
+    // 4. الأدوات المساعدة
     // ============================================================
     const Utils = {
         formatDate(iso) {
@@ -155,40 +158,11 @@
         isExpired(expiresAt) {
             if (!expiresAt) return false;
             return new Date(expiresAt) < new Date();
-        },
-
-        // توليد معرف فريد للـ Toast
-        generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
         }
     };
 
     // ============================================================
-    // 4. إدارة السجلات (Logging)
-    // ============================================================
-    const Logger = {
-        levels: { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 },
-        currentLevel: 0, // DEBUG
-
-        log(level, message, data = null) {
-            if (level < this.currentLevel) return;
-            const prefix = {
-                0: '🔍 [DEBUG]',
-                1: 'ℹ️ [INFO]',
-                2: '⚠️ [WARN]',
-                3: '❌ [ERROR]'
-            } [level] || '[LOG]';
-            console.log(prefix, message, data || '');
-        },
-
-        debug(msg, data) { this.log(0, msg, data); },
-        info(msg, data) { this.log(1, msg, data); },
-        warn(msg, data) { this.log(2, msg, data); },
-        error(msg, data) { this.log(3, msg, data); }
-    };
-
-    // ============================================================
-    // 5. الحصول على Supabase والمستخدم (محسّن مع التخزين المؤقت)
+    // 5. الحصول على Supabase والمستخدم
     // ============================================================
     async function getSupabase() {
         if (state.supabase) return state.supabase;
@@ -200,10 +174,9 @@
             } else if (window.waitForSupabase) {
                 state.supabase = await window.waitForSupabase();
             }
-            if (!state.supabase) throw new Error('Supabase غير متوفر');
             return state.supabase;
         } catch (e) {
-            Logger.error('فشل الحصول على Supabase', e);
+            console.error('❌ Supabase غير متوفر:', e);
             return null;
         }
     }
@@ -211,7 +184,6 @@
     async function getCurrentUser(force = false) {
         if (state.currentUser && !force) return state.currentUser;
         try {
-            // محاولة من مصادر متعددة
             if (window.Support?.getCurrentUser) {
                 state.currentUser = await window.Support.getCurrentUser();
                 if (state.currentUser) return state.currentUser;
@@ -223,20 +195,33 @@
             const sb = await getSupabase();
             if (!sb) return null;
             const { data: { user }, error } = await sb.auth.getUser();
-            if (error || !user) {
-                Logger.warn('فشل جلب المستخدم', error);
-                return null;
-            }
+            if (error || !user) return null;
             state.currentUser = user;
             return user;
         } catch (e) {
-            Logger.error('فشل جلب المستخدم', e);
+            console.warn('⚠️ فشل جلب المستخدم:', e);
             return null;
         }
     }
 
     // ============================================================
-    // 6. تحميل الإشعارات (محسّن)
+    // 6. الحصول على التوكن
+    // ============================================================
+    async function getAccessToken() {
+        try {
+            const sb = await getSupabase();
+            if (!sb) return null;
+            const { data: { session }, error } = await sb.auth.getSession();
+            if (error || !session) return null;
+            return session.access_token;
+        } catch (e) {
+            console.warn('⚠️ فشل جلب التوكن:', e);
+            return null;
+        }
+    }
+
+    // ============================================================
+    // 7. تحميل الإشعارات (باستخدام Edge Function)
     // ============================================================
     async function loadNotifications(page = 1, append = false) {
         if (state.isLoading) return;
@@ -250,67 +235,76 @@
                 return;
             }
 
-            const sb = await getSupabase();
-            if (!sb) {
-                renderEmptyState('Supabase غير متصل', 'fa-database', 'error');
+            const token = await getAccessToken();
+            if (!token) {
+                renderEmptyState('انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول', 'fa-clock', 'warning');
                 state.isLoading = false;
                 return;
             }
 
+            // استدعاء Edge Function get-notifications
+            const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
+
+            const notifications = result.data || [];
+
+            // تطبيق الفلاتر محلياً (لأن Edge Function تجلب الكل)
+            let filtered = notifications;
             const { search, type, status, priority, sort } = state.filters;
 
-            let query = sb
-                .from('notifications')
-                .select('*', { count: 'exact' })
-                .eq('user_id', user.id)
-                .neq('status', 'deleted')
-                .order('created_at', { ascending: sort === 'asc' });
-
-            if (type !== 'all') query = query.eq('type', type);
-            if (status !== 'all') query = query.eq('status', status);
-            if (priority !== 'all') query = query.eq('priority', priority);
-
+            if (type !== 'all') filtered = filtered.filter(n => n.type === type);
+            if (status !== 'all') filtered = filtered.filter(n => n.status === status);
+            if (priority !== 'all') filtered = filtered.filter(n => n.priority === priority);
             if (search) {
-                query = query.or(`title.ilike.%${search}%,body.ilike.%${search}%`);
+                const s = search.toLowerCase();
+                filtered = filtered.filter(n =>
+                    (n.title?.toLowerCase().includes(s)) ||
+                    (n.body?.toLowerCase().includes(s))
+                );
             }
 
-            // إضافة شرط صلاحية الإشعار
-            query = query.or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+            // ترتيب
+            filtered.sort((a, b) => {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+                return sort === 'asc' ? dateA - dateB : dateB - dateA;
+            });
 
+            // Pagination محلي
             const from = (page - 1) * state.pageSize;
-            const to = from + state.pageSize - 1;
-            query = query.range(from, to);
+            const to = from + state.pageSize;
+            const paginated = filtered.slice(from, to);
 
-            const { data, count, error } = await query;
-
-            if (error) {
-                if (error.code === 'PGRST301' || error.message?.includes('permission denied')) {
-                    renderEmptyState('ليس لديك صلاحية لعرض الإشعارات', 'fa-lock', 'warning');
-                } else {
-                    throw error;
-                }
-                state.isLoading = false;
-                return;
-            }
-
-            const newNotifications = data || [];
             if (append) {
-                state.allNotifications = [...state.allNotifications, ...newNotifications];
+                state.allNotifications = [...state.allNotifications, ...paginated];
             } else {
-                state.allNotifications = newNotifications;
+                state.allNotifications = paginated;
                 state.currentPage = page;
             }
 
             state.filteredNotifications = state.allNotifications;
-            state.totalCount = count || 0;
-            state.hasMore = (page * state.pageSize) < state.totalCount;
+            state.totalCount = filtered.length;
+            state.hasMore = to < filtered.length;
 
-            await updateStatsAndBadges();
+            await updateStatsAndBadges(notifications);
             renderNotifications(state.filteredNotifications);
             updatePagination(page);
 
         } catch (err) {
-            Logger.error('خطأ في تحميل الإشعارات', err);
+            console.error('❌ خطأ في تحميل الإشعارات:', err);
             renderEmptyState('حدث خطأ في تحميل الإشعارات', 'fa-exclamation-circle', 'error', err.message);
         } finally {
             state.isLoading = false;
@@ -318,7 +312,7 @@
     }
 
     // ============================================================
-    // 7. عرض الإشعارات (محسّن مع DocumentFragment)
+    // 8. عرض الإشعارات
     // ============================================================
     function renderNotifications(notifications) {
         if (!notifications || notifications.length === 0) {
@@ -377,7 +371,7 @@
                 </div>
             `;
 
-            // ربط الأحداث مباشرة على البطاقة
+            // ربط الأحداث
             card.querySelector('.view-details')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 openDetail(n.id);
@@ -395,7 +389,6 @@
                 deleteNotification(n.id);
             });
 
-            // النقر على البطاقة لفتح التفاصيل
             card.addEventListener('click', function() {
                 openDetail(this.dataset.id);
             });
@@ -403,7 +396,6 @@
             fragment.appendChild(card);
         });
 
-        // استبدال المحتوى دفعة واحدة
         DOM.list.innerHTML = '';
         DOM.list.appendChild(fragment);
 
@@ -428,7 +420,7 @@
     }
 
     // ============================================================
-    // 8. عرض حالة فارغة
+    // 9. عرض حالة فارغة
     // ============================================================
     function renderEmptyState(message, icon = 'fa-inbox', type = 'info', details = '') {
         const colors = {
@@ -448,36 +440,33 @@
     }
 
     // ============================================================
-    // 9. تحديث الإحصائيات والعدادات (محسّن – استعلام واحد)
+    // 10. تحديث الإحصائيات والعدادات
     // ============================================================
-    async function updateStatsAndBadges() {
+    async function updateStatsAndBadges(allNotifications = null) {
         try {
             const user = await getCurrentUser();
             if (!user) return;
 
-            const sb = await getSupabase();
-            if (!sb) return;
+            let notifications = allNotifications;
 
-            // استعلام واحد يجمع جميع الإحصائيات
-            const { data, error } = await sb
-                .from('notifications')
-                .select('status, priority', { count: 'exact' })
-                .eq('user_id', user.id)
-                .neq('status', 'deleted')
-                .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+            if (!notifications) {
+                const token = await getAccessToken();
+                if (!token) return;
+                const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                notifications = result.data || [];
+            }
 
-            if (error) throw error;
-
-            // حساب الإحصائيات من البيانات المسترجعة
             const stats = {
-                total: data?.length || 0,
-                unread: data?.filter(n => n.status === 'unread').length || 0,
-                read: data?.filter(n => n.status === 'read').length || 0,
-                archived: data?.filter(n => n.status === 'archived').length || 0,
-                important: data?.filter(n => n.priority === 'urgent' || n.priority === 'high').length || 0
+                total: notifications.filter(n => n.status !== 'deleted').length,
+                unread: notifications.filter(n => n.status === 'unread').length,
+                read: notifications.filter(n => n.status === 'read').length,
+                archived: notifications.filter(n => n.status === 'archived').length,
+                important: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length
             };
 
-            // تحديث الواجهة
             if (DOM.stats.total) DOM.stats.total.textContent = stats.total;
             if (DOM.stats.unread) DOM.stats.unread.textContent = stats.unread;
             if (DOM.stats.read) DOM.stats.read.textContent = stats.read;
@@ -485,32 +474,29 @@
             if (DOM.stats.important) DOM.stats.important.textContent = stats.important;
 
             state.unreadCount = stats.unread;
-
-            // تحديث البادجات
             await updateBadges(stats.unread);
 
-        } catch (err) {
-            Logger.warn('فشل تحديث الإحصائيات', err);
+        } catch (e) {
+            console.warn('⚠️ فشل تحديث الإحصائيات:', e);
         }
     }
 
     // ============================================================
-    // 10. تحديث البادجات
+    // 11. تحديث البادجات
     // ============================================================
     async function updateBadges(unreadCount = null) {
         try {
             if (unreadCount === null) {
                 const user = await getCurrentUser();
                 if (!user) return;
-                const sb = await getSupabase();
-                if (!sb) return;
-                const { count } = await sb
-                    .from('notifications')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('user_id', user.id)
-                    .eq('status', 'unread')
-                    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
-                unreadCount = count || 0;
+                const token = await getAccessToken();
+                if (!token) return;
+                const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                const notifications = result.data || [];
+                unreadCount = notifications.filter(n => n.status === 'unread').length;
             }
 
             const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
@@ -521,35 +507,31 @@
                 }
             });
 
-            // تحديث عداد التاب
             const tabBadge = document.querySelector('.tab-btn[data-tab="inbox"] .badge-count');
             if (tabBadge) {
                 tabBadge.textContent = unreadCount;
                 tabBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
             }
 
-            // عداد الهيدر
             const headerBadge = document.querySelector('.header-notification-badge');
             if (headerBadge) {
                 headerBadge.textContent = unreadCount;
                 headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
             }
 
-            // تحديث عنوان الصفحة
             document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
 
-            // تحديث العداد العام عبر support.js
             if (window.Support?.updateNotificationBadge) {
                 await window.Support.updateNotificationBadge();
             }
 
         } catch (e) {
-            Logger.warn('فشل تحديث البادجات', e);
+            console.warn('⚠️ فشل تحديث البادجات:', e);
         }
     }
 
     // ============================================================
-    // 11. Pagination
+    // 12. Pagination
     // ============================================================
     function updatePagination(page) {
         const totalPages = Math.ceil(state.totalCount / state.pageSize);
@@ -579,7 +561,7 @@
     }
 
     // ============================================================
-    // 12. تحديد الكل
+    // 13. تحديد الكل
     // ============================================================
     function updateSelectAllState() {
         const cards = DOM.list.querySelectorAll('.notification-card');
@@ -621,7 +603,7 @@
     }
 
     // ============================================================
-    // 13. تعليم كمقروء (مع تحسينات)
+    // 14. تعليم كمقروء
     // ============================================================
     async function markAsRead(id) {
         if (!id) return;
@@ -643,7 +625,6 @@
 
             if (error) throw error;
 
-            // تحديث الواجهة
             const card = DOM.list.querySelector(`.notification-card[data-id="${id}"]`);
             if (card) {
                 card.classList.remove('unread');
@@ -657,10 +638,10 @@
             }
 
             state.selectedIds.delete(id);
-            await updateStatsAndBadges();
+            await loadNotifications(state.currentPage);
 
         } catch (err) {
-            Logger.error('خطأ في تعليم كمقروء', err);
+            console.error('❌ خطأ في تعليم كمقروء:', err);
             alert('خطأ: ' + err.message);
         }
     }
@@ -691,7 +672,6 @@
 
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
-                await updateStatsAndBadges();
 
             } catch (err) {
                 alert('خطأ: ' + err.message);
@@ -700,7 +680,7 @@
     }
 
     // ============================================================
-    // 14. أرشفة
+    // 15. أرشفة
     // ============================================================
     async function archiveNotification(id) {
         if (!id) return;
@@ -724,7 +704,6 @@
 
             state.selectedIds.delete(id);
             await loadNotifications(state.currentPage);
-            await updateStatsAndBadges();
 
         } catch (err) {
             alert('خطأ: ' + err.message);
@@ -755,7 +734,6 @@
 
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
-                await updateStatsAndBadges();
 
             } catch (err) {
                 alert('خطأ: ' + err.message);
@@ -764,7 +742,7 @@
     }
 
     // ============================================================
-    // 15. حذف
+    // 16. حذف
     // ============================================================
     async function deleteNotification(id) {
         if (!id) return;
@@ -788,7 +766,6 @@
 
             state.selectedIds.delete(id);
             await loadNotifications(state.currentPage);
-            await updateStatsAndBadges();
 
         } catch (err) {
             alert('خطأ: ' + err.message);
@@ -819,7 +796,6 @@
 
                 state.selectedIds.clear();
                 await loadNotifications(state.currentPage);
-                await updateStatsAndBadges();
 
             } catch (err) {
                 alert('خطأ: ' + err.message);
@@ -828,7 +804,7 @@
     }
 
     // ============================================================
-    // 16. عرض التفاصيل (Modal)
+    // 17. عرض التفاصيل
     // ============================================================
     async function openDetail(id) {
         try {
@@ -886,12 +862,10 @@
 
             DOM.modal.classList.add('active');
 
-            // تعليم كمقروء تلقائياً
             if (data.status === 'unread') {
                 await markAsRead(id);
             }
 
-            // زيادة عدد المشاهدات
             try {
                 await sb.rpc('increment_view_count', { notif_id: id });
             } catch (e) { /* تجاهل */ }
@@ -902,7 +876,7 @@
     }
 
     // ============================================================
-    // 17. إغلاق المودال
+    // 18. إغلاق المودال
     // ============================================================
     if (DOM.closeModal) {
         DOM.closeModal.addEventListener('click', () => DOM.modal.classList.remove('active'));
@@ -914,14 +888,14 @@
     }
 
     // ============================================================
-    // 18. تحديث
+    // 19. تحديث
     // ============================================================
     if (DOM.refresh) {
         DOM.refresh.addEventListener('click', () => loadNotifications(1));
     }
 
     // ============================================================
-    // 19. البحث والفلترة مع حفظ التفضيلات
+    // 20. البحث والفلترة
     // ============================================================
     function saveFilters() {
         try {
@@ -939,7 +913,6 @@
         } catch (e) { /* تجاهل */ }
     }
 
-    // تطبيق الفلاتر على الواجهة
     function applyFiltersToUI() {
         if (DOM.search) DOM.search.value = state.filters.search || '';
         if (DOM.filterType) DOM.filterType.value = state.filters.type || 'all';
@@ -948,7 +921,6 @@
         if (DOM.sortOrder) DOM.sortOrder.value = state.filters.sort || 'desc';
     }
 
-    // ربط أحداث الفلاتر
     [DOM.search, DOM.filterType, DOM.filterStatus, DOM.filterPriority, DOM.sortOrder].forEach(el => {
         if (!el) return;
         const eventType = el.tagName === 'INPUT' ? 'input' : 'change';
@@ -965,7 +937,7 @@
     });
 
     // ============================================================
-    // 20. تبويبات
+    // 21. تبويبات
     // ============================================================
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -986,7 +958,7 @@
     });
 
     // ============================================================
-    // 21. تحميل سجل الإشعارات
+    // 22. تحميل سجل الإشعارات
     // ============================================================
     async function loadHistory(page = 1) {
         if (!DOM.history.body) return;
@@ -1033,7 +1005,6 @@
             });
             DOM.history.body.innerHTML = html;
 
-            // Pagination للسجل
             const totalPages = Math.ceil((count || 0) / state.pageSize);
             if (!DOM.history.pagination) return;
             if (totalPages <= 1) { DOM.history.pagination.innerHTML = ''; return; }
@@ -1053,7 +1024,7 @@
     }
 
     // ============================================================
-    // 22. Toast Notification (مع دعم التراص)
+    // 23. Toast Notification
     // ============================================================
     let toastContainer = null;
 
@@ -1090,9 +1061,7 @@
         const color = colors[type] || colors.info;
 
         const toast = document.createElement('div');
-        const toastId = Utils.generateId();
         toast.className = 'tera-toast';
-        toast.dataset.id = toastId;
         toast.style.cssText = `
             background: ${color.bg};
             color: #fff;
@@ -1111,7 +1080,6 @@
             min-width: 200px;
         `;
 
-        // إضافة أنماط إذا لم تكن موجودة
         if (!document.getElementById('toastStyles')) {
             const style = document.createElement('style');
             style.id = 'toastStyles';
@@ -1130,25 +1098,19 @@
 
         container.appendChild(toast);
 
-        // إزالة تلقائية
         const timeoutId = setTimeout(() => {
             if (toast && toast.parentElement) {
                 toast.style.animation = 'slideUp 0.4s ease forwards';
                 setTimeout(() => {
                     if (toast.parentElement) toast.remove();
-                    if (container.children.length === 0 && container.parentElement) {
-                        // نترك الحاوية موجودة
-                    }
                 }, 400);
             }
         }, duration);
 
-        // إلغاء المؤقت عند النقر على الإغلاق
         toast.querySelector('button')?.addEventListener('click', () => {
             clearTimeout(timeoutId);
         });
 
-        // النقر على الـ Toast لإزالته
         toast.addEventListener('click', (e) => {
             if (e.target.closest('button')) return;
             clearTimeout(timeoutId);
@@ -1158,7 +1120,6 @@
             }, 400);
         });
 
-        // تشغيل الصوت
         try {
             if (!state.audioElement) {
                 state.audioElement = new Audio('/sounds/notification.mp3');
@@ -1169,7 +1130,7 @@
     }
 
     // ============================================================
-    // 23. OneSignal Integration
+    // 24. OneSignal Integration
     // ============================================================
     async function checkOneSignalStatus() {
         if (!DOM.oneSignal.status) return;
@@ -1201,10 +1162,10 @@
                     const user = await getCurrentUser();
                     if (user?.id) {
                         await OneSignal.User.addAlias({ external_id: user.id });
-                        Logger.info('OneSignal External ID set', user.id);
+                        console.log('✅ OneSignal External ID set:', user.id);
                     }
                 } catch (e) {
-                    Logger.warn('فشل تعيين External ID', e);
+                    console.warn('⚠️ فشل تعيين External ID:', e);
                 }
 
             } else {
@@ -1214,7 +1175,7 @@
             }
 
         } catch (err) {
-            Logger.error('OneSignal error', err);
+            console.error('❌ OneSignal error:', err);
             DOM.oneSignal.status.textContent = '⚠️ خطأ';
             DOM.oneSignal.status.className = 'status-value unsubscribed';
             if (DOM.oneSignal.playerId) DOM.oneSignal.playerId.textContent = err.message || 'حدث خطأ في التحقق';
@@ -1241,15 +1202,15 @@
                 await refreshNotifications();
             });
 
-            Logger.info('OneSignal listener ready');
+            console.log('✅ OneSignal listener ready');
 
         } catch (err) {
-            Logger.warn('فشل إعداد مستمع OneSignal', err);
+            console.warn('⚠️ فشل إعداد مستمع OneSignal:', err);
         }
     }
 
     // ============================================================
-    // 24. Supabase Realtime (مع إعادة الاتصال التلقائي)
+    // 25. Supabase Realtime
     // ============================================================
     async function setupRealtime() {
         try {
@@ -1259,7 +1220,6 @@
             const sb = await getSupabase();
             if (!sb) return;
 
-            // إلغاء القناة السابقة
             if (state.realtimeChannel) {
                 await sb.removeChannel(state.realtimeChannel);
                 state.realtimeChannel = null;
@@ -1281,6 +1241,13 @@
 
                         if (!newNotif.is_silent) {
                             showToast(`🔔 ${newNotif.title || 'إشعار جديد'}: ${(newNotif.body || '').substring(0, 60)}${(newNotif.body || '').length > 60 ? '...' : ''}`, 'info', 8000);
+                            try {
+                                if (!state.audioElement) {
+                                    state.audioElement = new Audio('/sounds/notification.mp3');
+                                    state.audioElement.volume = 0.5;
+                                }
+                                state.audioElement.play().catch(() => {});
+                            } catch (e) {}
                         }
 
                         await refreshNotifications();
@@ -1299,37 +1266,18 @@
                     }
                 )
                 .subscribe((status) => {
-                    state.isRealtimeConnected = status === 'SUBSCRIBED';
-                    if (status === 'SUBSCRIBED') {
-                        state.reconnectAttempts = 0;
-                        Logger.info('Realtime connected');
-                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                        Logger.warn('Realtime connection lost, attempting to reconnect...');
-                        handleRealtimeReconnect();
-                    }
+                    console.log('📡 Realtime status:', status);
                 });
 
-            Logger.info('Realtime setup complete');
+            console.log('✅ Realtime connected');
 
         } catch (err) {
-            Logger.error('فشل إعداد Realtime', err);
-            setTimeout(setupRealtime, 5000);
+            console.warn('⚠️ فشل إعداد Realtime:', err);
         }
-    }
-
-    function handleRealtimeReconnect() {
-        if (state.reconnectAttempts >= state.maxReconnectAttempts) {
-            Logger.warn('Max reconnect attempts reached');
-            return;
-        }
-        state.reconnectAttempts++;
-        const delay = Math.min(1000 * Math.pow(2, state.reconnectAttempts), 30000);
-        Logger.info(`Reconnecting in ${delay}ms (attempt ${state.reconnectAttempts})`);
-        setTimeout(setupRealtime, delay);
     }
 
     // ============================================================
-    // 25. تحديث القائمة (مستعمل من Realtime و OneSignal)
+    // 26. تحديث القائمة
     // ============================================================
     async function refreshNotifications() {
         await loadNotifications(1);
@@ -1337,7 +1285,7 @@
     }
 
     // ============================================================
-    // 26. دوال مُصدَّرة مع تحقق من الصلاحية
+    // 27. دوال مُصدَّرة
     // ============================================================
     async function __openDetail(id) {
         if (!id) return;
@@ -1377,17 +1325,16 @@
         await refreshNotifications();
     }
 
-    // تصدير الدوال
     window.__openDetail = __openDetail;
     window.__deleteNotification = __deleteNotification;
     window.__loadNotifications = __loadNotifications;
     window.__refreshNotifications = __refreshNotifications;
 
     // ============================================================
-    // 27. التهيئة
+    // 28. التهيئة
     // ============================================================
     async function init() {
-        Logger.info('🚀 تشغيل مركز الإشعارات (v5)');
+        console.log('🚀 تشغيل مركز الإشعارات (v6 - Edge Functions)');
 
         try {
             const user = await getCurrentUser();
@@ -1396,7 +1343,6 @@
                 return;
             }
 
-            // تحديث اسم المستخدم في الهيدر
             const nameEl = document.getElementById('headerUserName');
             const avatarEl = document.getElementById('headerAvatar');
             if (nameEl) {
@@ -1408,30 +1354,27 @@
                 avatarEl.textContent = name.charAt(0).toUpperCase();
             }
 
-            // تحميل الفلاتر المحفوظة
             loadFilters();
             applyFiltersToUI();
 
-            // تحميل البيانات
             await loadNotifications(1);
             await updateStatsAndBadges();
             await checkOneSignalStatus();
 
-            // إعداد المستمعات
             setupOneSignalListener();
             await setupRealtime();
             await loadHistory(1);
 
-            Logger.info('✅ مركز الإشعارات جاهز');
+            console.log('✅ مركز الإشعارات جاهز (v6)');
 
         } catch (err) {
-            Logger.error('فشل التهيئة', err);
+            console.error('❌ فشل التهيئة:', err);
             renderEmptyState('فشل تحميل الإشعارات', 'fa-exclamation-circle', 'error', err.message);
         }
     }
 
     // ============================================================
-    // 28. التشغيل
+    // 29. التشغيل
     // ============================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
