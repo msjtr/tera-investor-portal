@@ -318,7 +318,6 @@
         } else {
             allIds.forEach(id => selectedIds.add(id));
         }
-        // تحديث المظهر
         cards.forEach(el => {
             const id = el.dataset.id;
             if (selectedIds.has(id)) {
@@ -483,7 +482,6 @@
             modalBody.innerHTML = html;
             modal.classList.add('active');
 
-            // تعليم كمقروء تلقائياً عند الفتح
             if (data.status === 'unread') {
                 await markAsRead(id);
             }
@@ -574,7 +572,6 @@
             });
             tbody.innerHTML = html;
 
-            // Pagination للسجل
             const totalPages = Math.ceil((count || 0) / pageSize);
             const hp = $('historyPagination');
             if (totalPages <= 1) { hp.innerHTML = ''; return; }
@@ -593,40 +590,37 @@
     }
 
     // ============================================================
-    // 🔧 الجزء المُصلَح: التكامل مع OneSignal
+    // 🔧 OneSignal التكامل مع – الإصدار المتوافق مع v16
     // ============================================================
     async function checkOneSignalStatus() {
         const statusEl = document.getElementById('osStatusText');
         const playerIdEl = document.getElementById('osPlayerId');
 
         try {
-            // الانتظار حتى يصبح OneSignal متاحاً (مع timeout 10 ثوانٍ)
+            // الانتظار حتى يصبح OneSignal متاحاً
             let attempts = 0;
-            const maxAttempts = 20; // 20 * 500ms = 10 ثوانٍ
+            const maxAttempts = 20;
 
             while (typeof window.OneSignal === 'undefined' && attempts < maxAttempts) {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 attempts++;
             }
 
-            // إذا لم يتم تحميل OneSignal بعد المحاولات
-            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.Notifications) {
-                statusEl.textContent = '⏳ لم يتم التحميل بعد';
+            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
+                statusEl.textContent = '⏳ غير متاح';
                 statusEl.className = 'status-value unsubscribed';
-                playerIdEl.textContent = 'حاول تحديث الصفحة';
+                playerIdEl.textContent = 'OneSignal غير محمل';
                 console.warn('⚠️ OneSignal not loaded after waiting');
                 return;
             }
 
             const OneSignal = window.OneSignal;
-            const isSubscribed = await OneSignal.Notifications.getPermissionAsync();
             const subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
 
-            if (isSubscribed && subscription) {
+            if (subscription && subscription.id) {
                 statusEl.textContent = '✅ مفعل';
                 statusEl.className = 'status-value subscribed';
-                const pid = subscription.id || 'غير متاح';
-                playerIdEl.textContent = `Player ID: ${pid}`;
+                playerIdEl.textContent = `Player ID: ${subscription.id}`;
             } else {
                 statusEl.textContent = '❌ غير مفعل';
                 statusEl.className = 'status-value unsubscribed';
@@ -687,7 +681,6 @@
 
     // ===== التهيئة =====
     async function init() {
-        // تحديث اسم المستخدم
         const user = await getCurrentUser();
         if (user) {
             const nameEl = document.getElementById('headerUserName');
@@ -700,7 +693,6 @@
         loadSettings();
         await checkOneSignalStatus();
         await loadNotifications(1);
-        // تحميل السجل مبدئياً
         await loadHistory(1);
 
         console.log('✅ support-notifications.js ready');
