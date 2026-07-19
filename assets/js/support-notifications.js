@@ -305,7 +305,6 @@
         const cards = listEl.querySelectorAll('.notification-card');
         const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
         const allSelected = allIds.every(id => selectedIds.has(id));
-        // يمكن تحديث واجهة زر التحديد
     }
 
     // ===== تحديد الكل =====
@@ -593,19 +592,33 @@
         }
     }
 
-    // ===== OneSignal التكامل مع =====
+    // ============================================================
+    // 🔧 الجزء المُصلَح: التكامل مع OneSignal
+    // ============================================================
     async function checkOneSignalStatus() {
         const statusEl = document.getElementById('osStatusText');
         const playerIdEl = document.getElementById('osPlayerId');
 
         try {
-            if (typeof OneSignal === 'undefined' || !OneSignal.Notifications) {
-                statusEl.textContent = 'غير متاح';
+            // الانتظار حتى يصبح OneSignal متاحاً (مع timeout 10 ثوانٍ)
+            let attempts = 0;
+            const maxAttempts = 20; // 20 * 500ms = 10 ثوانٍ
+
+            while (typeof window.OneSignal === 'undefined' && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+            }
+
+            // إذا لم يتم تحميل OneSignal بعد المحاولات
+            if (typeof window.OneSignal === 'undefined' || !window.OneSignal.Notifications) {
+                statusEl.textContent = '⏳ لم يتم التحميل بعد';
                 statusEl.className = 'status-value unsubscribed';
-                playerIdEl.textContent = 'OneSignal غير محمل';
+                playerIdEl.textContent = 'حاول تحديث الصفحة';
+                console.warn('⚠️ OneSignal not loaded after waiting');
                 return;
             }
 
+            const OneSignal = window.OneSignal;
             const isSubscribed = await OneSignal.Notifications.getPermissionAsync();
             const subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
 
@@ -621,9 +634,10 @@
             }
 
         } catch (err) {
-            statusEl.textContent = '⚠️ خطأ في التحقق';
+            console.error('❌ OneSignal error:', err);
+            statusEl.textContent = '⚠️ خطأ';
             statusEl.className = 'status-value unsubscribed';
-            playerIdEl.textContent = err.message;
+            playerIdEl.textContent = err.message || 'حدث خطأ في التحقق';
         }
     }
 
