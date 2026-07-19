@@ -1,5 +1,5 @@
 /**
- * auth.js – v29 (متوافق مع OneSignal، إدارة جلسات متقدمة، دعم كامل لـ TOTP)
+ * auth.js – v30 (محسّن بالكامل)
  * 
  * الميزات:
  * - تخزين اسم العميل تلقائياً (otpName) في sessionStorage
@@ -8,6 +8,8 @@
  * - دوال مساعدة للتحقق من صحة البريد الإلكتروني وكلمة المرور
  * - تكامل مع SessionManager و ActivityTracker
  * - دعم تسجيل الخروج الآمن مع تنظيف شامل
+ * - تحسينات الأمان والأداء
+ * - دمج OneSignal
  */
 
 (function() {
@@ -16,15 +18,65 @@
     // ─── متغيرات خاصة ───
     let supabaseInstance = null;
     let currentUser = null;
+    let currentUserCacheTime = 0;
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 دقائق
     let sessionRefreshInterval = null;
     const REFRESH_INTERVAL = 4 * 60 * 1000; // 4 دقائق
+
+    // ─── المفاتيح المحفوظة في sessionStorage ───
+    const STORAGE_KEYS = {
+        OTP_NAME: 'otpName',
+        USER_EMAIL: 'userEmail',
+        LOGIN_ATTEMPTS: 'loginAttempts',
+        USER_LAT: 'userLat',
+        USER_LON: 'userLon',
+        CURRENT_SESSION_ID: 'currentSessionId'
+    };
 
     // ─── الحصول على Supabase ───
     async function getSupabase() {
         if (supabaseInstance) return supabaseInstance;
-        supabaseInstance = window.teraSupabase || await window.waitForSupabase?.();
-        if (!supabaseInstance) throw new Error('❌ Supabase غير متوفر');
-        return supabaseInstance;
+        
+        try {
+            if (window.teraSupabase) {
+                supabaseInstance = window.teraSupabase;
+                return supabaseInstance;
+            }
+            
+            if (window.waitForSupabase) {
+                // إضافة مهلة 10 ثوانٍ لتجنب التجميد
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Supabase initialization timeout')), 10000)
+                );
+                supabaseInstance = await Promise.race([
+                    window.waitForSupabase(),
+                    timeoutPromise
+                ]);
+                return supabaseInstance;
+            }
+            
+            throw new Error('❌ Supabase غير متوفر');
+        } catch (e) {
+            console.error('❌ فشل في الحصول على Supabase:', e);
+            throw e;
+        }
+    }
+
+    // ─── تنظيف التخزين المحلي (بدلاً من clear) ───
+    function clearStorage() {
+        // حذف المفاتيح المعروفة فقط
+        Object.values(STORAGE_KEYS).forEach(key => {
+            sessionStorage.removeItem(key);
+        });
+        // حذف مفاتيح Supabase من localStorage
+        ['supabase.auth.token', 'supabase.auth.refreshToken'].forEach(key => {
+            localStorage.removeItem(key);
+        });
+        // حذف أي مفاتيح إضافية متعلقة بالمستخدم
+        const keysToRemove = ['dismissedAlerts', 'notificationFilters', 'systemMessage'];
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+        });
     }
 
     // ─── تخزين اسم العميل ───
@@ -34,8 +86,14 @@
                      user?.user_metadata?.name || 
                      email?.split('@')[0] || 
                      'مستخدم';
-        sessionStorage.setItem('otpName', name);
-        sessionStorage.setItem('userEmail', email || user?.email || '');
+        sessionStorage.setItem(STORAGE_KEYS.OTP_NAME, name);
+        if (email || user?.email) {
+            sessionStorage.setItem(STORAGE_KEYS.USER_EMAIL, email || user?.email || '');
+        }
+        // إطلاق حدث لتحديث واجهة المستخدم
+        document.dispatchEvent(new CustomEvent('user:updated', { 
+            detail: { name, email: email || user?.email || '' } 
+        }));
         return name;
     }
 
@@ -57,17 +115,29 @@
         return null;
     }
 
-    // ─── الحصول على المستخدم الحالي مع تخزين الاسم ───
-    async function getCurrentUser() {
+    // ─── الحصول على المستخدم الحالي مع تخزين مؤقت ───
+    async function getCurrentUser(forceRefresh = false) {
+        // استخدام التخزين المؤقت إذا كان صالحاً
+        if (!forceRefresh && currentUser && (Date.now() - currentUserCacheTime) < CACHE_DURATION) {
+            return currentUser;
+        }
+
         try {
             const sb = await getSupabase();
             const { data: { user }, error } = await sb.auth.getUser();
-            if (error || !user) return null;
+            if (error || !user) {
+                currentUser = null;
+                currentUserCacheTime = 0;
+                return null;
+            }
             currentUser = user;
+            currentUserCacheTime = Date.now();
             storeUserName(user, user.email);
             return user;
         } catch (e) {
             console.warn('⚠️ فشل في جلب المستخدم:', e);
+            currentUser = null;
+            currentUserCacheTime = 0;
             return null;
         }
     }
@@ -80,6 +150,12 @@
             if (error || !session) {
                 console.warn('⚠️ فشل تجديد الجلسة:', error?.message);
                 return false;
+            }
+            // تحديث التخزين المؤقت
+            if (session.user) {
+                currentUser = session.user;
+                currentUserCacheTime = Date.now();
+                storeUserName(session.user, session.user.email);
             }
             return true;
         } catch (e) {
@@ -94,8 +170,13 @@
         sessionRefreshInterval = setInterval(async () => {
             const refreshed = await refreshSession();
             if (!refreshed) {
-                // إذا فشل التجديد، قد تكون الجلسة منتهية
                 console.warn('⚠️ فشل تجديد الجلسة، قد تكون منتهية');
+                // محاولة إعادة الاتصال
+                if (window.SessionManager) {
+                    try {
+                        await window.SessionManager.handleSessionExpired?.();
+                    } catch (e) { /* تجاهل */ }
+                }
             }
         }, REFRESH_INTERVAL);
     }
@@ -116,6 +197,7 @@
         if (data?.user) {
             storeUserName(data.user, email);
             currentUser = data.user;
+            currentUserCacheTime = Date.now();
             startSessionRefresh();
         }
         return data;
@@ -148,10 +230,13 @@
             try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
         }
 
-        // تنظيف التخزين المحلي
-        localStorage.clear();
-        sessionStorage.clear();
+        // تنظيف التخزين المحلي (بدلاً من clear)
+        clearStorage();
         currentUser = null;
+        currentUserCacheTime = 0;
+
+        // إطلاق حدث تسجيل الخروج
+        document.dispatchEvent(new CustomEvent('user:loggedOut'));
 
         // إعادة التوجيه إلى صفحة تسجيل الدخول
         window.location.replace('/auth/auth/login/login.html');
@@ -173,6 +258,7 @@
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) return false;
             currentUser = user;
+            currentUserCacheTime = Date.now();
             storeUserName(user, user.email);
             return true;
         } catch (e) {
@@ -200,13 +286,15 @@
         if (data?.session?.user) {
             storeUserName(data.session.user, email);
             currentUser = data.session.user;
+            currentUserCacheTime = Date.now();
             startSessionRefresh();
         }
         return data;
     }
 
     // ─── دوال TOTP (المصادقة الثنائية) ───
-    const TOTP_FUNCTION_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
+    const TOTP_FUNCTION_URL = window._env?.TOTP_FUNCTION_URL || 
+        'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
 
     async function callTOTPFunction(endpoint, body = {}, session = null) {
         const sb = await getSupabase();
@@ -217,7 +305,7 @@
         }
         if (!currentSession) throw new Error('NO_SESSION');
 
-        const makeRequest = async (sess) => {
+        const makeRequest = async (sess, retryCount = 0) => {
             const res = await fetch(`${TOTP_FUNCTION_URL}/${endpoint}`, {
                 method: 'POST',
                 headers: {
@@ -226,11 +314,16 @@
                 },
                 body: JSON.stringify(body)
             });
+            
             if (res.status === 401) {
+                if (retryCount > 1) throw new Error('SESSION_EXPIRED');
                 const { data: { session: newSession }, error: refreshError } = await sb.auth.refreshSession();
-                if (!refreshError && newSession) return makeRequest(newSession);
+                if (!refreshError && newSession) {
+                    return makeRequest(newSession, retryCount + 1);
+                }
                 throw new Error('SESSION_EXPIRED');
             }
+            
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
                 throw new Error(err.error || 'فشل الطلب');
@@ -249,9 +342,9 @@
 
     // ─── تسجيل الدخول الذكي ───
     const MAX_ATTEMPTS = 5;
-    function getLoginAttempts() { return parseInt(sessionStorage.getItem('loginAttempts') || '0'); }
-    function incrementLoginAttempts() { sessionStorage.setItem('loginAttempts', getLoginAttempts() + 1); }
-    function resetLoginAttempts() { sessionStorage.setItem('loginAttempts', '0'); }
+    function getLoginAttempts() { return parseInt(sessionStorage.getItem(STORAGE_KEYS.LOGIN_ATTEMPTS) || '0'); }
+    function incrementLoginAttempts() { sessionStorage.setItem(STORAGE_KEYS.LOGIN_ATTEMPTS, getLoginAttempts() + 1); }
+    function resetLoginAttempts() { sessionStorage.removeItem(STORAGE_KEYS.LOGIN_ATTEMPTS); }
 
     async function loginWithPassword(email, password) {
         const sb = await getSupabase();
@@ -260,7 +353,10 @@
         }
         try {
             const { data, error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) { incrementLoginAttempts(); throw error; }
+            if (error) { 
+                incrementLoginAttempts(); 
+                throw error; 
+            }
             const user = data.user;
             let isTOTPEnabled = false;
             try {
@@ -271,11 +367,13 @@
             if (isTOTPEnabled) {
                 storeUserName(user, email);
                 currentUser = user;
+                currentUserCacheTime = Date.now();
                 return { requiresTwoFactor: true, email };
             }
             resetLoginAttempts();
             storeUserName(user, email);
             currentUser = user;
+            currentUserCacheTime = Date.now();
             startSessionRefresh();
             return { success: true, user };
         } catch (e) {
@@ -294,6 +392,7 @@
         resetLoginAttempts();
         storeUserName(user, user.email);
         currentUser = user;
+        currentUserCacheTime = Date.now();
         startSessionRefresh();
         return { success: true, user };
     }
@@ -316,6 +415,7 @@
         if (session.user) {
             storeUserName(session.user, email);
             currentUser = session.user;
+            currentUserCacheTime = Date.now();
             startSessionRefresh();
         }
         return { success: true };
@@ -326,6 +426,7 @@
         try { await sb.auth.signOut(); } catch (e) { console.warn('فشل تسجيل الخروج أثناء إلغاء TOTP:', e); }
         stopSessionRefresh();
         currentUser = null;
+        currentUserCacheTime = 0;
     }
 
     // ─── إعادة تعيين كلمة المرور ───
@@ -334,6 +435,7 @@
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
         const { error } = await sb.auth.resetPasswordForEmail(email);
         if (error) throw error;
+        return { success: true, message: 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني' };
     }
 
     async function updatePassword(newPassword) {
@@ -343,6 +445,39 @@
         if (passwordError) throw new Error(passwordError);
         const { error } = await sb.auth.updateUser({ password: newPassword });
         if (error) throw error;
+        return { success: true };
+    }
+
+    // ─── تغيير كلمة المرور (مع التحقق من القديمة) ───
+    async function changePassword(oldPassword, newPassword) {
+        // هذه الدالة تتطلب من المستخدم إعادة المصادقة
+        // يتم تنفيذها عبر تسجيل الدخول مؤقتاً ثم التحديث
+        const user = await getCurrentUser();
+        if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+        
+        // التحقق من صحة كلمة المرور الجديدة
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) throw new Error(passwordError);
+        
+        // لا يمكن التحقق من كلمة المرور القديمة مباشرة عبر API،
+        // لذلك نستخدم signInWithPassword كطريقة للتحقق
+        const sb = await getSupabase();
+        try {
+            // محاولة تسجيل الدخول بكلمة المرور القديمة للتحقق
+            const { error: signError } = await sb.auth.signInWithPassword({
+                email: user.email,
+                password: oldPassword
+            });
+            if (signError) throw new Error('كلمة المرور الحالية غير صحيحة');
+            
+            // تحديث كلمة المرور
+            const { error } = await sb.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            
+            return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
+        } catch (e) {
+            throw new Error(e.message || 'فشل تغيير كلمة المرور');
+        }
     }
 
     // ─── تحديث بيانات المستخدم ───
@@ -353,28 +488,71 @@
         if (error) throw error;
         if (data?.user) {
             currentUser = data.user;
+            currentUserCacheTime = Date.now();
             storeUserName(data.user, data.user.email);
         }
         return data;
     }
 
+    // ─── ربط OneSignal ───
+    async function registerPushNotifications() {
+        try {
+            const user = await getCurrentUser();
+            if (!user) return { success: false, error: 'يجب تسجيل الدخول أولاً' };
+            
+            if (typeof window.OneSignal === 'undefined') {
+                return { success: false, error: 'OneSignal غير متوفر' };
+            }
+            
+            if (!window.OneSignal.User) {
+                return { success: false, error: 'OneSignal User غير متوفر' };
+            }
+            
+            await window.OneSignal.User.addAlias({ external_id: user.id });
+            console.log('✅ OneSignal External ID set:', user.id);
+            return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
+        } catch (e) {
+            console.error('❌ فشل ربط OneSignal:', e);
+            return { success: false, error: e.message };
+        }
+    }
+
+    // ─── إلغاء ربط OneSignal ───
+    async function unregisterPushNotifications() {
+        try {
+            if (typeof window.OneSignal === 'undefined') {
+                return { success: false, error: 'OneSignal غير متوفر' };
+            }
+            // إزالة External ID
+            await window.OneSignal.User.removeAlias('external_id');
+            console.log('✅ OneSignal External ID removed');
+            return { success: true };
+        } catch (e) {
+            console.error('❌ فشل إلغاء ربط OneSignal:', e);
+            return { success: false, error: e.message };
+        }
+    }
+
     // ─── طلب المصادقة الإلزامية ───
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         try {
-            const user = await getCurrentUser();
+            // محاولة جلب المستخدم من التخزين المؤقت
+            let user = await getCurrentUser();
             if (user) {
                 startSessionRefresh();
                 return user;
             }
+            
             // محاولة تجديد الجلسة
             const refreshed = await refreshSession();
             if (refreshed) {
-                const userAgain = await getCurrentUser();
-                if (userAgain) {
+                user = await getCurrentUser(true); // فرض التحديث
+                if (user) {
                     startSessionRefresh();
-                    return userAgain;
+                    return user;
                 }
             }
+            
             // إذا فشل كل شيء، إعادة التوجيه
             window.location.replace(redirectUrl);
             return null;
@@ -393,11 +571,14 @@
                 if (event === 'SIGNED_IN' && session?.user) {
                     storeUserName(session.user, session.user.email);
                     currentUser = session.user;
+                    currentUserCacheTime = Date.now();
                     startSessionRefresh();
                 }
                 if (event === 'SIGNED_OUT') {
                     stopSessionRefresh();
                     currentUser = null;
+                    currentUserCacheTime = 0;
+                    clearStorage();
                 }
                 callback(event, session);
             });
@@ -407,16 +588,24 @@
     // ─── الحصول على موقع المستخدم ───
     function getCurrentPosition() {
         return new Promise((resolve, reject) => {
+            // التحقق من التخزين المؤقت
+            const lat = sessionStorage.getItem(STORAGE_KEYS.USER_LAT);
+            const lon = sessionStorage.getItem(STORAGE_KEYS.USER_LON);
+            if (lat && lon) {
+                resolve({ latitude: parseFloat(lat), longitude: parseFloat(lon), fromCache: true });
+                return;
+            }
+            
             if (!navigator.geolocation) {
                 reject(new Error('Geolocation not supported'));
                 return;
             }
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
+                    const { latitude, longitude } = position.coords;
+                    sessionStorage.setItem(STORAGE_KEYS.USER_LAT, latitude.toString());
+                    sessionStorage.setItem(STORAGE_KEYS.USER_LON, longitude.toString());
+                    resolve({ latitude, longitude, fromCache: false });
                 },
                 (error) => reject(error),
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
@@ -457,6 +646,7 @@
         // كلمة المرور
         resetPassword,
         updatePassword,
+        changePassword, // جديد: تغيير كلمة المرور مع التحقق
 
         // بيانات المستخدم
         updateUserMetadata,
@@ -471,8 +661,12 @@
         // الجلسة
         refreshSession,
         startSessionRefresh,
-        stopSessionRefresh
+        stopSessionRefresh,
+
+        // OneSignal
+        registerPushNotifications,
+        unregisterPushNotifications
     };
 
-    console.log('✅ auth.js v29 جاهز (دعم كامل للجلسات و TOTP و OneSignal)');
+    console.log('✅ auth.js v30 جاهز (محسّن بالكامل مع دعم OneSignal)');
 })();
