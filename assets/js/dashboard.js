@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v7 (متكامل مع نظام الإشعارات الجديد)
+ * dashboard.js – v8 (متكامل مع نظام الإشعارات الجديد)
  * متوافق مع auth.js v29، supabase-client.js المُحسَّن
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
@@ -18,7 +18,6 @@
     // ===== الحصول على Supabase =====
     async function getSupabase() {
         if (supabase) return supabase;
-        // استخدام العميل من window أو الانتظار
         if (window.teraSupabase) {
             supabase = window.teraSupabase;
             return supabase;
@@ -32,7 +31,24 @@
         }
     }
 
-    // ===== الأدوات المساعدة (مستوردة من support-notifications.js للتوحيد) =====
+    // ===== الحصول على المستخدم =====
+    async function getCurrentUser() {
+        try {
+            if (window.Auth && window.Auth.getCurrentUser) {
+                return await window.Auth.getCurrentUser();
+            }
+            const sb = await getSupabase();
+            if (!sb) return null;
+            const { data: { user }, error } = await sb.auth.getUser();
+            if (error || !user) return null;
+            return user;
+        } catch (e) {
+            console.warn('⚠️ فشل جلب المستخدم:', e);
+            return null;
+        }
+    }
+
+    // ===== الأدوات المساعدة (متوافقة مع support-notifications.js) =====
     function formatDateTime(iso) {
         if (!iso) return '';
         return new Date(iso).toLocaleDateString('ar-SA', {
@@ -97,12 +113,7 @@
         return classes[type] || 'alert-info';
     }
 
-    function getPriorityLabel(p) {
-        const map = { urgent: 'عاجل', high: 'مرتفع', medium: 'متوسط', normal: 'عادي', low: 'منخفض' };
-        return map[p] || p;
-    }
-
-    // ===== عرض التنبيهات (محسّن مع توافق قاعدة البيانات) =====
+    // ===== عرض التنبيهات =====
     async function loadAlerts(user) {
         const container = document.getElementById('alertsPanel');
         if (!container) return;
@@ -241,7 +252,7 @@
                 } catch (e) { /* تجاهل */ }
             }
 
-            // ترتيب التنبيهات
+            // ترتيب التنبيهات حسب الأولوية
             const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
             alerts.sort((a, b) => {
                 const pa = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 3;
@@ -433,7 +444,7 @@
     // ===== تحديث عداد الإشعارات (متكامل مع نظام الإشعارات) =====
     async function updateNotificationBadge() {
         try {
-            const user = await window.Auth.getCurrentUser?.();
+            const user = await getCurrentUser();
             if (!user) return;
 
             const sb = await getSupabase();
@@ -461,6 +472,13 @@
             if (headerBadge) {
                 headerBadge.textContent = unreadCount;
                 headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+
+            // تحديث عداد التاب في القائمة الجانبية
+            const sidebarBadge = document.querySelector('.sidebar-notification-badge');
+            if (sidebarBadge) {
+                sidebarBadge.textContent = unreadCount;
+                sidebarBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
             }
 
             return unreadCount;
@@ -493,7 +511,6 @@
                     },
                     async () => {
                         await updateNotificationBadge();
-                        // إعادة تحميل التنبيهات إذا كانت اللوحة مفتوحة
                         await loadAlerts(user);
                     }
                 )
@@ -768,7 +785,7 @@
 
         document.getElementById('loadingOverlay')?.classList.add('active');
 
-        // تحديث الهيدر – جلب الاسم من الجلسة أولاً
+        // تحديث الهيدر
         const storedName = sessionStorage.getItem('otpName');
         const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
         const nameEl = document.getElementById('headerUserName');
@@ -776,7 +793,6 @@
         if (nameEl) nameEl.textContent = displayName;
         if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
-        // شعار الترحيب
         const h2 = document.querySelector('.welcome-banner h2');
         if (h2) {
             h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${displayName}!`;
@@ -817,7 +833,7 @@
         await updateNotificationBadge();
         await setupRealtime(user);
 
-        // المؤقتات
+        // تحديث الوقت
         const updateDateTime = () => {
             const now = new Date();
             const dateEl = document.getElementById('currentDate');
@@ -836,7 +852,7 @@
         setInterval(updateDateTime, 30000);
 
         document.getElementById('loadingOverlay')?.classList.remove('active');
-        console.log('✅ dashboard.js v7 ready (متكامل مع نظام الإشعارات)');
+        console.log('✅ dashboard.js v8 ready (متكامل مع نظام الإشعارات)');
     }
 
     window.addEventListener('beforeunload', () => {
