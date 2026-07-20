@@ -55,6 +55,142 @@
         }
     }
 
+    // ─── ربط أزرار شريط الأدوات ───
+    function bindToolbarButtons() {
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const markReadBtn = document.getElementById('markReadBtn');
+        const archiveBtn = document.getElementById('archiveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        // تحديد الكل
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
+                const cards = document.querySelectorAll('.notification-card');
+                const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
+                if (allIds.length === 0) return;
+
+                const manager = window.NotificationManager;
+                if (!manager) return;
+                const state = manager.getState();
+                const allSelected = allIds.every(id => state.selected.has(id));
+
+                if (allSelected) {
+                    state.selected.clear();
+                } else {
+                    allIds.forEach(id => state.selected.add(id));
+                }
+
+                cards.forEach(el => {
+                    const id = el.dataset.id;
+                    if (state.selected.has(id)) {
+                        el.style.borderLeft = '4px solid var(--primary)';
+                        el.classList.add('selected');
+                    } else {
+                        el.style.borderLeft = '';
+                        el.classList.remove('selected');
+                    }
+                });
+
+                selectAllBtn.innerHTML = state.selected.size > 0 ?
+                    '<i class="fas fa-check-square"></i> إلغاء التحديد' :
+                    '<i class="fas fa-check-double"></i> تحديد الكل';
+            });
+        }
+
+        // تعليم كمقروء (للمحددين)
+        if (markReadBtn) {
+            markReadBtn.addEventListener('click', async () => {
+                const manager = window.NotificationManager;
+                if (!manager) return;
+                const selected = Array.from(manager.getState().selected);
+                if (selected.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد تعليم ${selected.length} إشعار كمقروء؟`)) return;
+
+                for (const id of selected) {
+                    await window.NotificationActions.markAsRead(id);
+                }
+                manager.getState().selected.clear();
+                // تحديث القائمة
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    window.NotificationUI.refresh();
+                }
+                // تحديث العداد
+                await window.Support?.updateNotificationBadge?.();
+            });
+        }
+
+        // أرشفة (للمحددين)
+        if (archiveBtn) {
+            archiveBtn.addEventListener('click', async () => {
+                const manager = window.NotificationManager;
+                if (!manager) return;
+                const selected = Array.from(manager.getState().selected);
+                if (selected.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد أرشفة ${selected.length} إشعار؟`)) return;
+
+                for (const id of selected) {
+                    await window.NotificationActions.archive(id);
+                }
+                manager.getState().selected.clear();
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    window.NotificationUI.refresh();
+                }
+                await window.Support?.updateNotificationBadge?.();
+            });
+        }
+
+        // حذف (للمحددين)
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async () => {
+                const manager = window.NotificationManager;
+                if (!manager) return;
+                const selected = Array.from(manager.getState().selected);
+                if (selected.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد حذف ${selected.length} إشعار نهائياً؟`)) return;
+
+                for (const id of selected) {
+                    await window.NotificationActions.deleteNotification(id);
+                }
+                manager.getState().selected.clear();
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    window.NotificationUI.refresh();
+                }
+                await window.Support?.updateNotificationBadge?.();
+            });
+        }
+
+        // تحديث (Refresh)
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    window.NotificationUI.refresh();
+                }
+                // إعادة تحميل من الخادم
+                window.NotificationAPI?.fetchNotifications(true).then(result => {
+                    if (result?.data) {
+                        const manager = window.NotificationManager;
+                        if (manager) {
+                            manager.getState().cache = [];
+                            result.data.forEach(n => manager.addNotification(n));
+                        }
+                    }
+                });
+            });
+        }
+
+        console.log('✅ Toolbar buttons bound');
+    }
+
     // ─── التهيئة ───
     async function init() {
         console.log('🚀 Initializing Notification System...');
@@ -107,7 +243,23 @@
                 console.warn('⚠️ Failed to fetch initial notifications:', err.message);
             }
 
-            // 5. بدء Realtime
+            // 5. عرض الإشعارات في الواجهة
+            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                const cache = window.NotificationCache;
+                if (cache) {
+                    const all = cache.getAll();
+                    window.NotificationUI.render(all, 1, 20);
+                } else {
+                    // إذا لم يكن الكاش جاهزاً، استخدم المدير
+                    const state = manager.getState();
+                    window.NotificationUI.render(state.cache, 1, 20);
+                }
+            }
+
+            // 6. ربط أزرار شريط الأدوات
+            bindToolbarButtons();
+
+            // 7. بدء Realtime
             try {
                 const user = await window.Auth?.getCurrentUser?.();
                 if (user?.id && realtime && typeof realtime.start === 'function') {
@@ -115,9 +267,16 @@
                         user.id,
                         (newNotif) => {
                             manager.addNotification(newNotif);
+                            // تحديث الواجهة عند إضافة جديد
+                            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                                window.NotificationUI.refresh();
+                            }
                         },
                         (updatedNotif) => {
                             manager.updateNotification(updatedNotif.id, updatedNotif);
+                            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                                window.NotificationUI.refresh();
+                            }
                         }
                     );
                 }
@@ -125,12 +284,16 @@
                 console.warn('⚠️ Realtime connection failed:', err.message);
             }
 
-            // 6. الاستماع لتغييرات الحالة
+            // 8. الاستماع لتغييرات الحالة
             manager.on('state:changed', (state) => {
                 updateUI(state);
+                // تحديث الواجهة عند تغير الحالة
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    window.NotificationUI.refresh();
+                }
             });
 
-            // 7. الاستماع لتغييرات تسجيل الدخول/الخروج لتحديث OneSignal
+            // 9. الاستماع لتغييرات تسجيل الدخول/الخروج لتحديث OneSignal
             if (window.Auth && typeof window.Auth.onAuthStateChange === 'function') {
                 window.Auth.onAuthStateChange(async (event, session) => {
                     if (event === 'SIGNED_IN' && session?.user) {
@@ -152,7 +315,7 @@
         }
     }
 
-    // ─── تحديث الواجهة ───
+    // ─── تحديث الواجهة (الإحصائيات والعدادات) ───
     function updateUI(state) {
         // تحديث العداد
         const badges = document.querySelectorAll('.badge-count, #unreadBadge');
@@ -216,6 +379,9 @@
         if (manager) {
             await window.NotificationAPI?.updateNotification?.(id, { status: 'deleted' });
             manager.deleteNotification(id);
+            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                window.NotificationUI.refresh();
+            }
         }
     };
 
