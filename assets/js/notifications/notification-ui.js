@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * notification-ui.js – عرض الواجهة والتفاعل (مُصلح بالكامل)
+ * notification-ui.js – عرض الواجهة والتفاعل (الإصدار النهائي)
  * ============================================================
  */
 
@@ -10,7 +10,7 @@
     if (window.__notificationUI) return;
     window.__notificationUI = true;
 
-    // ─── المراجع – نعيد تعريفها بشكل آمن ───
+    // ─── المراجع ───
     let DOM = {};
 
     function refreshDOMReferences() {
@@ -41,11 +41,10 @@
         };
 
         if (!DOM.list) {
-            console.warn('⚠️ notificationsList not found, will retry on next render');
+            console.warn('⚠️ notificationsList not found');
         }
     }
 
-    // ─── تحديث المراجع عند الحاجة ───
     refreshDOMReferences();
 
     let allNotifications = [];
@@ -93,28 +92,49 @@
         }
     };
 
+    // ─── إنشاء عنصر القائمة إذا لم يكن موجوداً ───
+    function ensureListElement() {
+        if (DOM.list) return true;
+
+        // البحث مرة أخرى
+        DOM.list = document.getElementById('notificationsList');
+        if (DOM.list) return true;
+
+        // البحث في جميع الإطارات
+        const allLists = document.querySelectorAll('.notifications-list');
+        if (allLists.length > 0) {
+            DOM.list = allLists[0];
+            DOM.list.id = 'notificationsList';
+            return true;
+        }
+
+        // إنشاء العنصر
+        const container = document.querySelector('.tab-panel.active') || 
+                         document.querySelector('#panel-inbox') ||
+                         document.querySelector('.content-container');
+
+        if (container) {
+            DOM.list = document.createElement('div');
+            DOM.list.id = 'notificationsList';
+            DOM.list.className = 'notifications-list';
+            container.appendChild(DOM.list);
+            console.log('✅ Created notificationsList element');
+            return true;
+        }
+
+        return false;
+    }
+
     // ─── عرض الإشعارات ───
     function render(notifications, page = 1) {
-        // تحديث المراجع قبل الاستخدام
-        refreshDOMReferences();
-
-        if (!DOM.list) {
-            console.warn('⚠️ notificationsList element not found, cannot render');
-            // محاولة مرة أخرى بعد تأخير (مرة واحدة فقط)
-            if (!render._retry) {
-                render._retry = true;
-                setTimeout(() => {
-                    render._retry = false;
-                    refreshDOMReferences();
-                    if (DOM.list) {
-                        render(notifications, page);
-                    } else {
-                        console.error('❌ notificationsList still not found after retry');
-                    }
-                }, 500);
-            }
+        // تأكد من وجود العنصر
+        if (!ensureListElement()) {
+            console.warn('⏳ Waiting for notificationsList...');
+            setTimeout(() => render(notifications, page), 300);
             return;
         }
+
+        refreshDOMReferences();
 
         allNotifications = notifications || [];
         currentPage = page;
@@ -221,8 +241,6 @@
         renderPagination(filtered.length);
         updateSelectAllButton();
     }
-    // منع إعادة المحاولة المتكررة
-    render._retry = false;
 
     // ─── معالج النقر على الأزرار ───
     function handleCardClick(e) {
@@ -481,8 +499,7 @@
     // ─── التهيئة ───
     function init() {
         // تأكد من وجود العنصر
-        const list = document.getElementById('notificationsList');
-        if (!list) {
+        if (!ensureListElement()) {
             console.warn('⏳ notificationsList not ready, retrying in 500ms');
             setTimeout(init, 500);
             return;
@@ -521,7 +538,6 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        // إذا كان DOM جاهزاً بالفعل، حاول التهيئة فوراً
         init();
     }
 
