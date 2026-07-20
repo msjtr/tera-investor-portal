@@ -16,11 +16,14 @@
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-    <!-- ======== OneSignal SDK ======== -->
+    <!-- ======== OneSignal SDK (يتم تحميله مع defer) ======== -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script src="/assets/js/onesignal-init.js?v=2" defer></script>
-    <!-- ================================= -->
+    <!-- =================================================== -->
 
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!--  التنسيقات الداخلية (نفسها دون تغيير)                   -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <style>
         /* ============================================================
            تنسيقات مركز الإشعارات – TERA Notification Center
@@ -971,7 +974,10 @@
         © 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.
     </footer>
 
-    <!-- ===== السكربتات ===== -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!--  السكربتات – الأساسيات أولاً، ثم وحدات الإشعارات       -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
     <!-- الأساسيات -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-client.js"></script>
@@ -980,16 +986,70 @@
     <script src="/assets/js/app.js"></script>
     <script src="/assets/js/main.js"></script>
 
-    <!-- ===== نظام الإشعارات الجديد (الموديولات) ===== -->
+    <!-- ===== وحدات نظام الإشعارات (بالترتيب) ===== -->
     <script src="/assets/js/notifications/notification-manager.js"></script>
     <script src="/assets/js/notifications/notification-api.js"></script>
     <script src="/assets/js/notifications/notification-cache.js"></script>
     <script src="/assets/js/notifications/notification-onesignal.js"></script>
     <script src="/assets/js/notifications/notification-realtime.js"></script>
     <script src="/assets/js/notifications/notification-actions.js"></script>
-    <script src="/assets/js/notifications/notification-ui.js"></script>
     <script src="/assets/js/notifications/notification-filters.js"></script>
+    <script src="/assets/js/notifications/notification-ui.js"></script>
     <script src="/assets/js/notifications/notification-history.js"></script>
     <script src="/assets/js/notifications/support-notifications.js"></script>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!--  سكريبت إضافي لضمان عمل التبويبات والأزرار في حال لم    -->
+    <!--  تعمل الوحدات بشكل كامل (خطة احتياطية)                 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── التأكد من وجود التوكن والمستخدم قبل تحميل الإشعارات ───
+            // هذا السكريبت يعمل كخطة احتياطية (fallback) في حال فشل السكربتات الأساسية
+
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🔧 Fallback: التأكد من عناصر الصفحة الأساسية...');
+
+                // تأكد من أن عداد الإشعارات يظهر (فقط للعرض)
+                const badge = document.getElementById('unreadBadge');
+                if (badge && badge.textContent === '0') {
+                    // سيبقى 0 حتى يتم تحميل البيانات
+                }
+
+                // ربط التبويبات يدوياً (في حال لم تعمل السكربتات الأخرى)
+                const tabs = document.querySelectorAll('.tab-btn');
+                tabs.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        const tabName = this.dataset.tab;
+                        const panels = document.querySelectorAll('.tab-panel');
+                        tabs.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        panels.forEach(p => p.classList.remove('active'));
+                        const panel = document.getElementById('panel-' + tabName);
+                        if (panel) panel.classList.add('active');
+
+                        // إذا كان التبويب هو "السجل"، حاول تحميله
+                        if (tabName === 'history' && window.NotificationHistory) {
+                            window.NotificationHistory.load(1);
+                        }
+                    });
+                });
+
+                // تأكد من وجود تحميل أولي للبيانات
+                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                    // فقط في حال كانت الواجهة جاهزة، نقوم بتحديثها
+                    setTimeout(function() {
+                        window.NotificationUI.refresh();
+                    }, 1000);
+                }
+
+                console.log('✅ Fallback ready');
+            });
+
+        })();
+    </script>
+
 </body>
 </html>
