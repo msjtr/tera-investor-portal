@@ -17,7 +17,12 @@
             'NotificationManager',
             'NotificationAPI',
             'OneSignalManager',
-            'RealtimeManager'
+            'RealtimeManager',
+            'NotificationCache',
+            'NotificationActions',
+            'NotificationUI',
+            'NotificationFilters',
+            'NotificationHistory'
         ];
 
         for (const name of modules) {
@@ -48,21 +53,20 @@
             // 2. تهيئة المدير
             await manager.init();
 
-            // 3. تهيئة OneSignal
-            const os = await onesignal.init();
-
-            if (os) {
-                // ربط المستخدم إذا كان مسجلاً
-                const user = await window.Auth?.getCurrentUser?.();
-                if (user?.id) {
-                    await onesignal.setExternalId(user.id);
+            // 3. انتظار OneSignal (بدون تهيئة)
+            try {
+                const OneSignal = await onesignal.waitForOneSignal();
+                if (OneSignal) {
+                    const user = await window.Auth?.getCurrentUser?.();
+                    if (user?.id) {
+                        await onesignal.setExternalId(user.id);
+                    }
+                    onesignal.addListener(async (notification) => {
+                        manager.addNotification(notification);
+                    });
                 }
-
-                // إضافة مستمع للإشعارات
-                onesignal.addListener(async (notification) => {
-                    // إضافة الإشعار عبر المدير
-                    manager.addNotification(notification);
-                });
+            } catch (err) {
+                console.warn('⚠️ OneSignal not available:', err.message);
             }
 
             // 4. جلب الإشعارات الأولية
@@ -77,11 +81,9 @@
                 await realtime.start(
                     user.id,
                     (newNotif) => {
-                        // على INSERT
                         manager.addNotification(newNotif);
                     },
                     (updatedNotif) => {
-                        // على UPDATE
                         manager.updateNotification(updatedNotif.id, updatedNotif);
                     }
                 );
@@ -138,19 +140,16 @@
 
     // ─── تصدير API عامة للاستخدام في HTML ───
     window.__openDetail = (id) => {
-        // سيتم تنفيذها من خلال المدير
         console.log('📖 Open notification detail:', id);
     };
 
     window.__deleteNotification = async (id) => {
         const manager = window.NotificationManager;
         if (manager) {
-            // تحديث عبر API
             await window.NotificationAPI.updateNotification(id, { status: 'deleted' });
             manager.deleteNotification(id);
         }
     };
 
     console.log('✅ support-notifications.js ready');
-
 })();
