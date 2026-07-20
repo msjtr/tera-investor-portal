@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * support-notifications.js – التهيئة النهائية
+ * support-notifications.js – التهيئة النهائية + إعدادات الإشعارات
  * ============================================================
  */
 
@@ -10,6 +10,61 @@
     if (window.__supportNotificationsReady) return;
     window.__supportNotificationsReady = true;
 
+    // ─── إعدادات الإشعارات (التبديلات والحفظ) ───
+    function loadSettings() {
+        try {
+            const saved = localStorage.getItem('notificationSettings');
+            if (!saved) return;
+            const settings = JSON.parse(saved);
+            document.querySelectorAll('.toggle-switch').forEach(el => {
+                const key = el.dataset.key;
+                if (settings[key] !== undefined) {
+                    if (settings[key]) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+            });
+        } catch (e) { /* ignore */ }
+    }
+
+    function saveSettings() {
+        const toggles = document.querySelectorAll('.toggle-switch');
+        const settings = {};
+        toggles.forEach(el => {
+            const key = el.dataset.key;
+            settings[key] = el.classList.contains('active');
+        });
+        try {
+            localStorage.setItem('notificationSettings', JSON.stringify(settings));
+            alert('✅ تم حفظ الإعدادات بنجاح');
+        } catch (e) {
+            alert('⚠️ حدث خطأ أثناء الحفظ');
+        }
+    }
+
+    function bindToggles() {
+        document.querySelectorAll('.toggle-switch').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+            });
+        });
+    }
+
+    function bindSaveButton() {
+        const saveBtn = document.getElementById('saveSettingsBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', saveSettings);
+        }
+    }
+
+    function initSettings() {
+        loadSettings();
+        bindToggles();
+        bindSaveButton();
+        console.log('✅ Notification settings ready');
+    }
+
+    // ─── التهيئة الرئيسية ───
     async function init() {
         console.log('🚀 Initializing Notification System (modules)...');
 
@@ -94,6 +149,9 @@
             // 9. تحميل السجل إذا كان التبويب نشطاً
             window.NotificationHistory?.load(1);
 
+            // 10. تهيئة إعدادات الإشعارات (التبديلات)
+            initSettings();
+
             console.log('✅ Notification System ready (modules)');
 
         } catch (err) {
@@ -101,7 +159,7 @@
         }
     }
 
-    // تصدير دوال مساعدة للاستخدام في HTML
+    // ─── تصدير دوال مساعدة للاستخدام في HTML ───
     window.__openDetail = (id) => {
         const cache = window.NotificationCache;
         if (cache) {
@@ -115,7 +173,7 @@
         window.NotificationUI?.refresh();
     };
 
-    // بدء التهيئة
+    // ─── بدء التهيئة ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
