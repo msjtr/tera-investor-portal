@@ -1,8 +1,6 @@
 /**
  * ============================================================
- * support-notifications.js – تهيئة نظام الإشعارات (مُصلح بالكامل)
- * ============================================================
- * ملف التهيئة فقط، جميع المنطق في الوحدات المستقلة
+ * support-notifications.js – التهيئة النهائية
  * ============================================================
  */
 
@@ -12,503 +10,117 @@
     if (window.__supportNotificationsReady) return;
     window.__supportNotificationsReady = true;
 
-    // ─── انتظار تحميل جميع الوحدات ───
-    async function waitForModules(timeout = 10000) {
-        const modules = [
-            'NotificationManager',
-            'NotificationAPI',
-            'OneSignalManager',
-            'RealtimeManager',
-            'NotificationCache',
-            'NotificationActions',
-            'NotificationUI',
-            'NotificationFilters',
-            'NotificationHistory'
-        ];
-
-        const startTime = Date.now();
-
-        for (const name of modules) {
-            let attempts = 0;
-            while (!window[name] && attempts < 20 && (Date.now() - startTime) < timeout) {
-                await new Promise(resolve => setTimeout(resolve, 300));
-                attempts++;
-            }
-            if (!window[name]) {
-                console.warn(`⚠️ Module ${name} not loaded after waiting`);
-            }
-        }
-    }
-
-    // ─── ربط OneSignal بالمستخدم الحالي ───
-    async function linkOneSignalUser(onesignal) {
-        try {
-            const user = await window.Auth?.getCurrentUser?.();
-            if (user?.id) {
-                await onesignal.setExternalId(user.id);
-                return true;
-            }
-            return false;
-        } catch (err) {
-            console.warn('⚠️ Failed to link OneSignal user:', err.message);
-            return false;
-        }
-    }
-
-    // ─── ربط أزرار شريط الأدوات ───
-    function bindToolbarButtons() {
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const markReadBtn = document.getElementById('markReadBtn');
-        const archiveBtn = document.getElementById('archiveBtn');
-        const deleteBtn = document.getElementById('deleteBtn');
-        const refreshBtn = document.getElementById('refreshBtn');
-
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => {
-                const cards = document.querySelectorAll('.notification-card');
-                const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
-                if (allIds.length === 0) return;
-
-                const manager = window.NotificationManager;
-                if (!manager) return;
-                const state = manager.getState();
-                const allSelected = allIds.every(id => state.selected.has(id));
-
-                if (allSelected) {
-                    state.selected.clear();
-                } else {
-                    allIds.forEach(id => state.selected.add(id));
-                }
-
-                cards.forEach(el => {
-                    const id = el.dataset.id;
-                    if (state.selected.has(id)) {
-                        el.style.borderLeft = '4px solid var(--primary)';
-                        el.classList.add('selected');
-                    } else {
-                        el.style.borderLeft = '';
-                        el.classList.remove('selected');
-                    }
-                });
-
-                selectAllBtn.innerHTML = state.selected.size > 0 ?
-                    '<i class="fas fa-check-square"></i> إلغاء التحديد' :
-                    '<i class="fas fa-check-double"></i> تحديد الكل';
-            });
-        }
-
-        if (markReadBtn) {
-            markReadBtn.addEventListener('click', async () => {
-                const manager = window.NotificationManager;
-                if (!manager) return;
-                const selected = Array.from(manager.getState().selected);
-                if (selected.length === 0) {
-                    alert('يرجى تحديد إشعارات أولاً');
-                    return;
-                }
-                if (!confirm(`هل تريد تعليم ${selected.length} إشعار كمقروء؟`)) return;
-
-                for (const id of selected) {
-                    await window.NotificationActions.markAsRead(id);
-                }
-                manager.getState().selected.clear();
-                await refreshUI();
-            });
-        }
-
-        if (archiveBtn) {
-            archiveBtn.addEventListener('click', async () => {
-                const manager = window.NotificationManager;
-                if (!manager) return;
-                const selected = Array.from(manager.getState().selected);
-                if (selected.length === 0) {
-                    alert('يرجى تحديد إشعارات أولاً');
-                    return;
-                }
-                if (!confirm(`هل تريد أرشفة ${selected.length} إشعار؟`)) return;
-
-                for (const id of selected) {
-                    await window.NotificationActions.archive(id);
-                }
-                manager.getState().selected.clear();
-                await refreshUI();
-            });
-        }
-
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', async () => {
-                const manager = window.NotificationManager;
-                if (!manager) return;
-                const selected = Array.from(manager.getState().selected);
-                if (selected.length === 0) {
-                    alert('يرجى تحديد إشعارات أولاً');
-                    return;
-                }
-                if (!confirm(`هل تريد حذف ${selected.length} إشعار نهائياً؟`)) return;
-
-                for (const id of selected) {
-                    await window.NotificationActions.deleteNotification(id);
-                }
-                manager.getState().selected.clear();
-                await refreshUI();
-            });
-        }
-
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', async () => {
-                const result = await window.NotificationAPI?.fetchNotifications(true);
-                if (result?.data) {
-                    const manager = window.NotificationManager;
-                    if (manager) {
-                        manager.getState().cache = [];
-                        result.data.forEach(n => manager.addNotification(n));
-                    }
-                }
-                await refreshUI();
-            });
-        }
-
-        console.log('✅ Toolbar buttons bound');
-    }
-
-    // ─── ربط التبويبات ───
-    function bindTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        if (!tabs || tabs.length === 0) {
-            console.warn('⚠️ No tabs found');
-            return;
-        }
-
-        tabs.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                tabs.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-
-                const panels = document.querySelectorAll('.tab-panel');
-                panels.forEach(p => p.classList.remove('active'));
-
-                const tabName = this.dataset.tab;
-                const targetPanel = document.getElementById(`panel-${tabName}`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                } else {
-                    console.warn(`⚠️ Panel panel-${tabName} not found`);
-                }
-
-                if (tabName === 'inbox') {
-                    refreshUI();
-                } else if (tabName === 'history') {
-                    if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
-                        window.NotificationHistory.load(1);
-                    } else {
-                        console.warn('⚠️ NotificationHistory not available');
-                    }
-                } else if (tabName === 'settings') {
-                    // nothing
-                }
-            });
-        });
-
-        // تفعيل التبويب النشط افتراضياً
-        const activeTab = document.querySelector('.tab-btn.active');
-        if (activeTab) {
-            const tabName = activeTab.dataset.tab;
-            const targetPanel = document.getElementById(`panel-${tabName}`);
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-            }
-        } else {
-            // إذا لم يكن هناك تبويب نشط، فعّل الوارد
-            const inboxTab = document.querySelector('.tab-btn[data-tab="inbox"]');
-            if (inboxTab) {
-                inboxTab.classList.add('active');
-                const panel = document.getElementById('panel-inbox');
-                if (panel) panel.classList.add('active');
-            }
-        }
-
-        console.log('✅ Tabs bound');
-    }
-
-    // ─── تحديث الواجهة ───
-    async function refreshUI() {
-        const manager = window.NotificationManager;
-        if (!manager) return;
-
-        const cache = window.NotificationCache;
-        let notifications = [];
-        if (cache && typeof cache.getAll === 'function') {
-            notifications = cache.getAll();
-        } else {
-            notifications = manager.getState().cache || [];
-        }
-
-        // تحديث الإحصائيات
-        updateUI(manager.getState());
-
-        // عرض القائمة فقط إذا كان التبويب النشط هو الوارد
-        const activeTab = document.querySelector('.tab-btn.active');
-        const tabName = activeTab ? activeTab.dataset.tab : 'inbox';
-        if (tabName === 'inbox') {
-            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                window.NotificationUI.render(notifications, 1, 20);
-            } else {
-                console.warn('⚠️ NotificationUI.render not available');
-                // محاولة عرض مباشر إذا كانت الـ UI غير جاهزة
-                const list = document.getElementById('notificationsList');
-                if (list) {
-                    if (notifications.length === 0) {
-                        list.innerHTML = `
-                            <div style="text-align:center;padding:80px 20px;color:var(--gray-400);">
-                                <i class="fas fa-inbox" style="font-size:64px;display:block;margin-bottom:20px;color:var(--gray-300);"></i>
-                                <span style="font-weight:700;font-size:20px;color:var(--gray-600);">لا توجد إشعارات</span>
-                                <p style="margin-top:8px;font-size:14px;">سيتم عرض الإشعارات هنا عند ورودها.</p>
-                            </div>
-                        `;
-                    } else {
-                        // عرض بسيط مؤقت
-                        let html = '';
-                        notifications.slice(0, 20).forEach(n => {
-                            html += `<div class="notification-card" data-id="${n.id}">
-                                <div class="notif-content">
-                                    <div class="notif-title">${n.title || 'بدون عنوان'}</div>
-                                    <div class="notif-desc">${n.body || ''}</div>
-                                    <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
-                                </div>
-                            </div>`;
-                        });
-                        list.innerHTML = html;
-                    }
-                }
-            }
-        }
-
-        // تحديث العداد
-        await window.Support?.updateNotificationBadge?.();
-    }
-
-    // ─── تحديث الإحصائيات والعدادات (UI) ───
-    function updateUI(state) {
-        const badges = document.querySelectorAll('.badge-count, #unreadBadge');
-        badges.forEach(el => {
-            if (el) {
-                el.textContent = state.unreadCount;
-                el.style.display = state.unreadCount > 0 ? 'inline-block' : 'none';
-            }
-        });
-
-        const stats = {
-            total: document.getElementById('statTotal'),
-            unread: document.getElementById('statUnread'),
-            read: document.getElementById('statRead'),
-            archived: document.getElementById('statArchived'),
-            important: document.getElementById('statImportant')
-        };
-
-        const cache = state.cache || [];
-        const unreadCount = state.unreadCount || 0;
-        const totalCount = state.totalCount || cache.length;
-        const readCount = cache.filter(n => n.status === 'read').length;
-        const archivedCount = cache.filter(n => n.status === 'archived').length;
-        const importantCount = cache.filter(n => n.priority === 'urgent' || n.priority === 'high').length;
-
-        if (stats.total) stats.total.textContent = totalCount;
-        if (stats.unread) stats.unread.textContent = unreadCount;
-        if (stats.read) stats.read.textContent = readCount;
-        if (stats.archived) stats.archived.textContent = archivedCount;
-        if (stats.important) stats.important.textContent = importantCount;
-
-        document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
-    }
-
-    // ─── التهيئة ───
     async function init() {
-        console.log('🚀 Initializing Notification System...');
+        console.log('🚀 Initializing Notification System (modules)...');
 
         try {
-            await waitForModules();
-
+            // 1. تهيئة المدير
             const manager = window.NotificationManager;
-            const api = window.NotificationAPI;
-            const onesignal = window.OneSignalManager;
-            const realtime = window.RealtimeManager;
+            if (manager) manager.init();
 
-            if (!manager || !api) {
-                throw new Error('Core modules not loaded');
-            }
-
-            await manager.init();
-
-            // OneSignal
-            let oneSignalReady = false;
-            try {
-                if (onesignal && typeof onesignal.waitForOneSignal === 'function') {
-                    const OneSignalInstance = await onesignal.waitForOneSignal(10000);
-                    if (OneSignalInstance) {
-                        await linkOneSignalUser(onesignal);
-                        await onesignal.addListener(async (notification) => {
-                            manager.addNotification(notification);
-                            await refreshUI();
-                        });
-                        oneSignalReady = true;
-                    }
-                }
-            } catch (err) {
-                console.warn('⚠️ OneSignal initialization skipped:', err.message);
-            }
-
-            // جلب الإشعارات الأولية
+            // 2. جلب الإشعارات الأولية
             let initialData = [];
             try {
-                const result = await api.fetchNotifications();
+                const result = await window.NotificationAPI?.fetchNotifications();
                 if (result?.data) {
                     initialData = result.data;
-                    initialData.forEach(n => manager.addNotification(n));
+                    window.NotificationCache?.init(initialData);
+                    // إضافة إلى المدير
+                    initialData.forEach(n => window.NotificationManager?.addNotification(n));
                 }
-            } catch (err) {
-                console.warn('⚠️ Failed to fetch initial notifications:', err.message);
+            } catch (e) {
+                console.warn('⚠️ Initial fetch failed:', e.message);
             }
 
-            // ربط التبويبات (يجب أن يتم قبل عرض القائمة)
-            bindTabs();
+            // 3. تهيئة الواجهة
+            window.NotificationUI?.init();
 
-            // عرض الإشعارات مباشرة
-            // تأكد من أن NotificationUI جاهزة
-            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                // الحصول على البيانات من المدير أو الكاش
-                const cache = window.NotificationCache;
-                let data = [];
-                if (cache && typeof cache.getAll === 'function') {
-                    data = cache.getAll();
-                } else {
-                    data = manager.getState().cache || [];
-                }
-                console.log(`📊 Rendering ${data.length} notifications`);
-                window.NotificationUI.render(data, 1, 20);
-            } else {
-                // عرض مباشر احتياطي
-                const list = document.getElementById('notificationsList');
-                if (list) {
-                    const data = manager.getState().cache || [];
-                    if (data.length === 0) {
-                        list.innerHTML = `
-                            <div style="text-align:center;padding:80px 20px;color:var(--gray-400);">
-                                <i class="fas fa-inbox" style="font-size:64px;display:block;margin-bottom:20px;color:var(--gray-300);"></i>
-                                <span style="font-weight:700;font-size:20px;color:var(--gray-600);">لا توجد إشعارات</span>
-                                <p style="margin-top:8px;font-size:14px;">سيتم عرض الإشعارات هنا عند ورودها.</p>
-                            </div>
-                        `;
-                    } else {
-                        let html = '';
-                        data.slice(0, 20).forEach(n => {
-                            const isUnread = n.status === 'unread';
-                            html += `<div class="notification-card ${isUnread ? 'unread' : ''}" data-id="${n.id}">
-                                <div class="notif-content">
-                                    <div class="notif-title">${n.title || 'بدون عنوان'} ${isUnread ? '🔵' : ''}</div>
-                                    <div class="notif-desc">${n.body || ''}</div>
-                                    <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
-                                </div>
-                            </div>`;
-                        });
-                        list.innerHTML = html;
-                    }
-                }
+            // 4. عرض الإشعارات
+            const cache = window.NotificationCache;
+            if (cache) {
+                const all = cache.getAll();
+                const filtered = window.NotificationFilters?.apply(all) || all;
+                window.NotificationUI?.render(filtered, 1);
+                window.NotificationUI?.updateStats(cache.getStats());
             }
 
-            // ربط أزرار شريط الأدوات
-            bindToolbarButtons();
-
-            // بدء Realtime
+            // 5. ربط Realtime
             try {
                 const user = await window.Auth?.getCurrentUser?.();
-                if (user?.id && realtime && typeof realtime.start === 'function') {
-                    await realtime.start(
+                if (user?.id && window.RealtimeManager) {
+                    await window.RealtimeManager.start(
                         user.id,
-                        async (newNotif) => {
-                            manager.addNotification(newNotif);
-                            await refreshUI();
+                        (newNotif) => {
+                            // INSERT
+                            window.NotificationCache?.add(newNotif);
+                            window.NotificationManager?.addNotification(newNotif);
+                            window.NotificationUI?.refresh();
                         },
-                        async (updatedNotif) => {
-                            manager.updateNotification(updatedNotif.id, updatedNotif);
-                            await refreshUI();
+                        (updatedNotif) => {
+                            // UPDATE
+                            window.NotificationCache?.update(updatedNotif.id, updatedNotif);
+                            window.NotificationManager?.updateNotification(updatedNotif.id, updatedNotif);
+                            window.NotificationUI?.refresh();
                         }
                     );
                 }
-            } catch (err) {
-                console.warn('⚠️ Realtime connection failed:', err.message);
+            } catch (e) {
+                console.warn('⚠️ Realtime setup failed:', e.message);
             }
 
-            // الاستماع لتغييرات الحالة
-            manager.on('state:changed', async (state) => {
-                updateUI(state);
-                // تحديث القائمة عند تغير الحالة
-                const activeTab = document.querySelector('.tab-btn.active');
-                const tabName = activeTab ? activeTab.dataset.tab : 'inbox';
-                if (tabName === 'inbox') {
-                    const cache = window.NotificationCache;
-                    if (cache && typeof cache.getAll === 'function') {
-                        const all = cache.getAll();
-                        if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                            window.NotificationUI.render(all, 1, 20);
-                        }
-                    }
+            // 6. OneSignal (بدون إلزام)
+            try {
+                const os = window.OneSignalManager;
+                if (os) {
+                    const user = await window.Auth?.getCurrentUser?.();
+                    if (user?.id) await os.setExternalId(user.id);
+                    await os.addListener((notification) => {
+                        window.NotificationManager?.addNotification(notification);
+                        window.NotificationUI?.refresh();
+                    });
                 }
+            } catch (e) {
+                console.warn('⚠️ OneSignal setup skipped:', e.message);
+            }
+
+            // 7. الاستماع لتغييرات المدير
+            window.NotificationManager?.on('state:changed', () => {
+                window.NotificationUI?.refresh();
             });
 
-            // Auth state change
-            if (window.Auth && typeof window.Auth.onAuthStateChange === 'function') {
-                window.Auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'SIGNED_IN' && session?.user) {
-                        if (oneSignalReady && onesignal) {
-                            await linkOneSignalUser(onesignal);
-                        }
-                        await refreshUI();
-                    } else if (event === 'SIGNED_OUT') {
-                        if (oneSignalReady && onesignal && typeof onesignal.logout === 'function') {
-                            await onesignal.logout();
-                        }
-                    }
-                });
-            }
+            // 8. تحديث العداد العام
+            await window.Support?.updateNotificationBadge?.();
 
-            console.log('✅ Notification System ready');
-            console.log(`📊 Total notifications: ${initialData.length}`);
+            // 9. تحميل السجل إذا كان التبويب نشطاً
+            window.NotificationHistory?.load(1);
+
+            console.log('✅ Notification System ready (modules)');
 
         } catch (err) {
-            console.error('❌ Notification System initialization failed:', err);
+            console.error('❌ Notification System init failed:', err);
         }
     }
 
-    // ─── التشغيل ───
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-    // ─── تصدير API عامة ───
+    // تصدير دوال مساعدة للاستخدام في HTML
     window.__openDetail = (id) => {
-        const manager = window.NotificationManager;
-        if (manager) {
-            const notification = manager.getState().cache.find(n => n.id === id);
-            if (notification && window.NotificationUI && typeof window.NotificationUI.openDetail === 'function') {
-                window.NotificationUI.openDetail(notification);
-            }
+        const cache = window.NotificationCache;
+        if (cache) {
+            const n = cache.get(id);
+            if (n) window.NotificationUI?.openDetail(n);
         }
     };
 
     window.__deleteNotification = async (id) => {
         await window.NotificationActions?.deleteNotification(id);
-        await refreshUI();
+        window.NotificationUI?.refresh();
     };
 
-    window.__refreshNotifications = async () => {
-        await refreshUI();
-    };
-
-    window.__refreshUI = refreshUI;
+    // بدء التهيئة
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     console.log('✅ support-notifications.js ready');
 })();
