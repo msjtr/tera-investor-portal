@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * notification-onesignal.js – OneSignal SDK v16 (مُحسّن)
+ * notification-onesignal.js – OneSignal SDK v16 (محسّن)
  * ============================================================
  */
 
@@ -13,7 +13,7 @@
     // ─── انتظار جاهزية OneSignal مع معالجة أفضل ───
     function waitForOneSignal(timeout = 15000) {
         return new Promise((resolve, reject) => {
-            // ✅ تحقق فوري إذا كان OneSignal جاهزاً
+            // تحقق فوري إذا كان OneSignal جاهزاً
             if (window.OneSignal && window.OneSignal.User && window.OneSignal.Notifications) {
                 resolve(window.OneSignal);
                 return;
@@ -31,24 +31,28 @@
                 }
             }, 300);
 
+            // استماع لحدث الجاهزية من onesignal-init.js
             document.addEventListener('onesignal:ready', () => {
                 clearInterval(interval);
                 clearTimeout(timer);
-                if (window.OneSignal) resolve(window.OneSignal);
-                else reject(new Error('OneSignal event fired but instance missing'));
+                if (window.OneSignal) {
+                    resolve(window.OneSignal);
+                } else {
+                    reject(new Error('OneSignal event fired but instance missing'));
+                }
             }, { once: true });
         });
     }
 
-    // ─── ربط المستخدم (مع معالجة أفضل للأخطاء) ───
-    async function setExternalId(userId) {
+    // ─── ربط المستخدم (مع إعادة المحاولة) ───
+    async function setExternalId(userId, retries = 2) {
         try {
             if (!userId) {
                 console.warn('⚠️ OneSignal: No userId provided');
                 return false;
             }
 
-            // ✅ انتظار OneSignal مع مهلة أطول
+            // انتظار OneSignal مع مهلة
             const OneSignal = await waitForOneSignal(15000);
             
             if (!OneSignal || !OneSignal.User) {
@@ -56,20 +60,25 @@
                 return false;
             }
 
-            // ✅ التحقق من وجود دالة login قبل استدعائها
+            // التحقق من وجود دالة login
             if (typeof OneSignal.login !== 'function') {
                 console.warn('⚠️ OneSignal.login is not a function');
                 return false;
             }
 
-            // ✅ محاولة تسجيل الدخول
+            // محاولة تسجيل الدخول
             await OneSignal.login(userId);
             console.log('✅ OneSignal user logged in:', userId);
             return true;
 
         } catch (err) {
-            // ✅ لا نسمح للخطأ بإيقاف التطبيق
-            console.warn('⚠️ OneSignal login skipped (non-critical):', err.message);
+            console.warn(`⚠️ OneSignal login failed (${retries} retries left):`, err.message);
+            if (retries > 0) {
+                // إعادة المحاولة بعد تأخير
+                await new Promise(r => setTimeout(r, 1000));
+                return setExternalId(userId, retries - 1);
+            }
+            console.error('❌ OneSignal login failed after retries');
             return false;
         }
     }
@@ -177,5 +186,5 @@
         removeAllListeners
     };
 
-    console.log('✅ notification-onesignal.js ready (with safe error handling)');
+    console.log('✅ notification-onesignal.js ready (with retry)');
 })();
