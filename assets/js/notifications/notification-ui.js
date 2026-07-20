@@ -99,9 +99,14 @@
         }
     };
 
-    // ─── عرض الإشعارات ───
+    // ─── عرض الإشعارات (الدالة الرئيسية) ───
     function renderNotifications(notifications, page = 1, pageSize = 20) {
-        if (!DOM.list) return;
+        console.log('🔔 renderNotifications called with', notifications?.length, 'items');
+        
+        if (!DOM.list) {
+            console.warn('⚠️ notificationsList element not found!');
+            return;
+        }
 
         allNotifications = notifications || [];
         currentPage = page;
@@ -171,15 +176,15 @@
 
         DOM.list.innerHTML = html;
 
-        // ✅ ربط الأحداث باستخدام Delegation (حدث واحد على القائمة)
+        // ربط الأحداث باستخدام Delegation
         DOM.list.removeEventListener('click', handleCardClick);
         DOM.list.addEventListener('click', handleCardClick);
 
-        // تحديث Pagination
         renderPagination(filtered.length, page, pageSize);
+        console.log(`✅ Rendered ${pageItems.length} notifications`);
     }
 
-    // ─── معالج أحداث البطاقات (Delegation) ───
+    // ─── معالج أحداث البطاقات ───
     function handleCardClick(e) {
         const target = e.target.closest('button');
         if (!target) return;
@@ -190,7 +195,6 @@
         const id = card.dataset.id;
         if (!id) return;
 
-        // عرض التفاصيل
         if (target.classList.contains('view-details')) {
             e.stopPropagation();
             const notification = allNotifications.find(n => n.id === id);
@@ -200,47 +204,37 @@
             return;
         }
 
-        // تعليم كمقروء
         if (target.classList.contains('mark-read-btn')) {
             e.stopPropagation();
             if (window.NotificationActions && typeof window.NotificationActions.markAsRead === 'function') {
                 window.NotificationActions.markAsRead(id).then(() => {
-                    // تحديث القائمة بعد العملية
                     refreshCurrentList();
                 });
-            } else {
-                console.warn('⚠️ NotificationActions.markAsRead غير متوفر');
             }
             return;
         }
 
-        // أرشفة
         if (target.classList.contains('archive-btn')) {
             e.stopPropagation();
             if (window.NotificationActions && typeof window.NotificationActions.archive === 'function') {
                 window.NotificationActions.archive(id).then(() => {
                     refreshCurrentList();
                 });
-            } else {
-                console.warn('⚠️ NotificationActions.archive غير متوفر');
             }
             return;
         }
 
-        // حذف
         if (target.classList.contains('delete-btn')) {
             e.stopPropagation();
             if (window.NotificationActions && typeof window.NotificationActions.deleteNotification === 'function') {
                 window.NotificationActions.deleteNotification(id).then(() => {
                     refreshCurrentList();
                 });
-            } else {
-                console.warn('⚠️ NotificationActions.deleteNotification غير متوفر');
             }
             return;
         }
 
-        // النقر على البطاقة نفسها (غير الزر) لفتح التفاصيل
+        // النقر على البطاقة نفسها
         if (target === card || target.closest('.notif-content')) {
             const notification = allNotifications.find(n => n.id === id);
             if (notification) {
@@ -251,13 +245,12 @@
 
     // ─── تحديث القائمة الحالية ───
     function refreshCurrentList() {
-        // جلب البيانات من الكاش وإعادة العرض
         const cache = window.NotificationCache;
         if (cache) {
             const all = cache.getAll();
             renderNotifications(all, currentPage, pageSize);
         } else {
-            console.warn('⚠️ NotificationCache غير متوفر');
+            console.warn('⚠️ NotificationCache not available');
         }
     }
 
@@ -308,9 +301,12 @@
         document.title = stats.unread > 0 ? `(${stats.unread}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
     }
 
-    // ─── عرض التفاصيل (Modal) ───
+    // ─── عرض التفاصيل ───
     function openDetail(notification) {
-        if (!DOM.modal || !DOM.modalBody || !DOM.modalTitle) return;
+        if (!DOM.modal || !DOM.modalBody || !DOM.modalTitle) {
+            console.warn('⚠️ Modal elements missing');
+            return;
+        }
 
         if (!notification) {
             console.warn('⚠️ Notification not found for detail');
@@ -392,18 +388,17 @@
         DOM
     };
 
-    // ─── إغلاق المودال عند النقر على الخلفية ───
+    // ─── إغلاق المودال ───
     if (DOM.modal) {
         DOM.modal.addEventListener('click', (e) => {
             if (e.target === DOM.modal) closeDetail();
         });
     }
 
-    // ─── زر إغلاق المودال ───
     const closeBtn = document.getElementById('closeDetailModal');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeDetail);
     }
 
-    console.log('✅ notification-ui.js ready (with event delegation)');
+    console.log('✅ notification-ui.js ready');
 })();
