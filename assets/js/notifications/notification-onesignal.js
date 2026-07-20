@@ -40,7 +40,7 @@
         });
     }
 
-    // ─── ربط المستخدم ───
+    // ─── ربط المستخدم ─── (الصيغة الصحيحة)
     async function setExternalId(userId) {
         try {
             const OneSignal = await waitForOneSignal();
@@ -48,7 +48,8 @@
                 console.warn('⚠️ OneSignal not ready');
                 return false;
             }
-            await OneSignal.User.addAlias({ label: 'external_id', id: userId });
+            // الصيغة الصحيحة: { external_id: userId }
+            await OneSignal.User.addAlias({ external_id: userId });
             console.log('✅ OneSignal External ID set:', userId);
             return true;
         } catch (err) {
@@ -75,7 +76,7 @@
         }
     }
 
-    // ─── إضافة مستمع للإشعارات الواردة ───
+    // ─── إضافة مستمع للإشعارات الواردة ─── (طريقة v16)
     async function addListener(callback) {
         try {
             const OneSignal = await waitForOneSignal();
@@ -83,7 +84,8 @@
                 console.warn('⚠️ OneSignal Notifications not available');
                 return false;
             }
-            OneSignal.Notifications.addListener('foregroundWillDisplay', async (notification) => {
+            // في v16 نستخدم addEventListener مع الحدث "notificationDisplay"
+            OneSignal.Notifications.addEventListener('notificationDisplay', (notification) => {
                 const data = notification.data || notification;
                 const payload = {
                     id: data.id || notification.id,
@@ -110,7 +112,7 @@
         const OneSignal = window.OneSignal;
         if (!OneSignal || !OneSignal.Notifications) return;
         try {
-            OneSignal.Notifications.removeAllListeners();
+            OneSignal.Notifications.removeAllListeners?.();
             console.log('✅ OneSignal listeners removed');
         } catch (err) {
             console.warn('⚠️ OneSignal removeAllListeners error:', err);
