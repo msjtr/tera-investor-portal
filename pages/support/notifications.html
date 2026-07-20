@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
+    <!-- الأنماط الأساسية -->
     <link rel="stylesheet" href="/assets/css/core.css" />
     <link rel="stylesheet" href="/assets/css/app.css" />
     <link rel="stylesheet" href="/assets/css/main.css" />
@@ -22,7 +23,7 @@
 
     <style>
         /* ============================================================
-           تصميم محسّن ومتطور لمركز الإشعارات
+           تصميم محترف ومتطور لمركز الإشعارات
            ============================================================ */
         :root {
             --primary: #028090;
@@ -215,7 +216,7 @@
         /* ===== الإحصائيات ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 16px;
             margin-bottom: 28px;
         }
@@ -366,24 +367,24 @@
             gap: 14px;
         }
 
-        /* ===== بطاقة الإشعار (محسّنة) ===== */
+        /* ===== بطاقة الإشعار المحسنة ===== */
         .notification-card {
             background: #fff;
             border-radius: var(--radius-md);
             border: 1px solid var(--gray-200);
-            padding: 18px 22px;
+            padding: 16px 20px;
             display: flex;
             align-items: flex-start;
             gap: 16px;
             transition: var(--transition);
             box-shadow: var(--shadow-sm);
             position: relative;
-            cursor: pointer;
+            cursor: default;
         }
         .notification-card:hover {
             box-shadow: var(--shadow-md);
             border-color: var(--gray-300);
-            transform: translateX(-4px);
+            transform: translateY(-2px);
         }
         .notification-card.unread {
             border-right: 4px solid var(--primary);
@@ -405,6 +406,21 @@
             background: #f0fdfa;
         }
 
+        /* Checkbox فردي */
+        .notification-card .notif-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .notification-card .notif-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
         .notification-card .notif-icon {
             width: 44px;
             height: 44px;
@@ -416,6 +432,10 @@
             flex-shrink: 0;
             color: #fff;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .notification-card:hover .notif-icon {
+            transform: scale(1.05);
         }
         .notification-card .notif-icon.type-general { background: #3b82f6; }
         .notification-card .notif-icon.type-investment { background: #10b981; }
@@ -510,6 +530,7 @@
         .notification-card .notif-actions button:hover {
             background: var(--gray-100);
             color: var(--gray-700);
+            transform: scale(1.1);
         }
         .notification-card .notif-actions button.danger:hover { background: #fef2f2; color: var(--danger); }
         .notification-card .notif-actions button.primary:hover { background: #e0f2fe; color: var(--primary); }
@@ -525,6 +546,7 @@
         }
         .notification-card .notif-actions button.view-details:hover {
             background: var(--primary-dark);
+            transform: scale(1.05);
         }
 
         /* ===== Loader ===== */
@@ -619,6 +641,7 @@
             color: var(--gray-800);
             font-weight: 600;
             flex: 1;
+            word-break: break-word;
         }
         .modal-body .detail-row .value .action-link {
             display: inline-block;
@@ -755,6 +778,17 @@
             vertical-align: middle;
         }
         .data-table tbody tr:hover td { background: var(--gray-50); }
+        .data-table .status-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+        .data-table .status-badge.status-archived { background: #fef2f2; color: #991b1b; }
+        .data-table .status-badge.status-read { background: #d1fae5; color: #065f46; }
 
         /* ===== Pagination ===== */
         .pagination {
@@ -1055,13 +1089,14 @@
     <script src="/assets/js/notifications/notification-history.js"></script>
     <script src="/assets/js/notifications/support-notifications.js"></script>
 
-    <!-- خطة احتياطية للتبويبات -->
+    <!-- خطة احتياطية للتبويبات والأزرار -->
     <script>
         (function() {
             'use strict';
             document.addEventListener('DOMContentLoaded', function() {
                 console.log('🔧 Fallback ready');
 
+                // ربط التبويبات
                 const tabs = document.querySelectorAll('.tab-btn');
                 tabs.forEach(btn => {
                     btn.addEventListener('click', function(e) {
@@ -1078,11 +1113,61 @@
                     });
                 });
 
+                // تحديث الواجهة بعد تحميل البيانات
                 if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
                     setTimeout(function() {
                         window.NotificationUI.refresh();
                     }, 1000);
                 }
+
+                // إعدادات التبديلات (Toggle Switches)
+                function loadSettings() {
+                    try {
+                        const saved = localStorage.getItem('notificationSettings');
+                        if (!saved) return;
+                        const settings = JSON.parse(saved);
+                        document.querySelectorAll('.toggle-switch').forEach(el => {
+                            const key = el.dataset.key;
+                            if (settings[key] !== undefined) {
+                                if (settings[key]) el.classList.add('active');
+                                else el.classList.remove('active');
+                            }
+                        });
+                    } catch (e) { /* ignore */ }
+                }
+
+                function saveSettings() {
+                    const toggles = document.querySelectorAll('.toggle-switch');
+                    const settings = {};
+                    toggles.forEach(el => {
+                        const key = el.dataset.key;
+                        settings[key] = el.classList.contains('active');
+                    });
+                    try {
+                        localStorage.setItem('notificationSettings', JSON.stringify(settings));
+                        alert('✅ تم حفظ الإعدادات بنجاح');
+                    } catch (e) {
+                        alert('⚠️ حدث خطأ أثناء الحفظ');
+                    }
+                }
+
+                function bindToggles() {
+                    document.querySelectorAll('.toggle-switch').forEach(el => {
+                        el.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            this.classList.toggle('active');
+                        });
+                    });
+                }
+
+                const saveBtn = document.getElementById('saveSettingsBtn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', saveSettings);
+                }
+                loadSettings();
+                bindToggles();
+
+                console.log('✅ Fallback ready with settings');
             });
         })();
     </script>
