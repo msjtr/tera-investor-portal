@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v10 (محسّن الأداء والتوافق)
+ * dashboard.js – v10.1 (إصلاحات وتحسينات)
  * متوافق مع auth.js v31، supabase-client.js، support.js v2
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
@@ -26,7 +26,7 @@
     let refreshInterval = null;
 
     // ============================================================
-    // 2. الأدوات المساعدة (متوافقة مع support-notifications.js)
+    // 2. الأدوات المساعدة
     // ============================================================
     const Utils = {
         formatDateTime(iso) {
@@ -91,20 +91,11 @@
                 primary: 'alert-primary'
             };
             return classes[type] || 'alert-info';
-        },
-
-        // دالة مساعدة للتحقق من صحة الكائنات
-        safeGet(obj, path, fallback = null) {
-            try {
-                return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
-            } catch {
-                return fallback;
-            }
         }
     };
 
     // ============================================================
-    // 3. الحصول على Supabase والمستخدم (باستخدام window.Support)
+    // 3. الحصول على Supabase والمستخدم
     // ============================================================
     async function getSupabase() {
         if (supabase) return supabase;
@@ -143,7 +134,7 @@
     }
 
     // ============================================================
-    // 4. إدارة Realtime (مع إعادة الاتصال التلقائي)
+    // 4. إدارة Realtime
     // ============================================================
     async function setupRealtime(user) {
         if (!user?.id) {
@@ -164,27 +155,13 @@
                 .channel('dashboard-notifications')
                 .on(
                     'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    async () => {
-                        await onNotificationChanged(user);
-                    }
+                    { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+                    async () => await onNotificationChanged(user)
                 )
                 .on(
                     'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    async () => {
-                        await onNotificationChanged(user);
-                    }
+                    { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+                    async () => await onNotificationChanged(user)
                 )
                 .subscribe((status) => {
                     isRealtimeConnected = status === 'SUBSCRIBED';
@@ -221,14 +198,13 @@
     }
 
     // ============================================================
-    // 5. تحديث عداد الإشعارات (باستخدام Support)
+    // 5. تحديث عداد الإشعارات
     // ============================================================
     async function updateNotificationBadge() {
         try {
             if (window.Support?.updateNotificationBadge) {
                 unreadCount = await window.Support.updateNotificationBadge() || 0;
             } else {
-                // طريقة احتياطية
                 const user = await getCurrentUser();
                 if (!user) return 0;
                 const sb = await getSupabase();
@@ -243,22 +219,19 @@
             }
 
             // تحديث البادجات في كل مكان
-            const badges = document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge');
-            badges.forEach(el => {
+            document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge').forEach(el => {
                 if (el) {
                     el.textContent = unreadCount;
                     el.style.display = unreadCount > 0 ? 'inline-block' : 'none';
                 }
             });
 
-            // عداد الهيدر
             const headerBadge = document.querySelector('.header-notification-badge');
             if (headerBadge) {
                 headerBadge.textContent = unreadCount;
                 headerBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
             }
 
-            // عداد القائمة الجانبية
             const sidebarBadge = document.querySelector('.sidebar-notification-badge');
             if (sidebarBadge) {
                 sidebarBadge.textContent = unreadCount;
@@ -273,20 +246,32 @@
     }
 
     // ============================================================
-    // 6. تحميل وعرض التنبيهات (محسّن مع التحقق من العناصر)
+    // 6. تحميل وعرض التنبيهات (محسّن)
     // ============================================================
     async function loadAlerts(user) {
-        const container = document.getElementById('alertsPanel');
+        // البحث عن الحاوية أو إنشائها تلقائياً إذا لم توجد
+        let container = document.getElementById('alertsPanel');
         if (!container) {
-            console.debug('⚠️ alertsPanel element not found');
-            return;
+            // حاول إنشاء الحاوية في مكان مناسب
+            const parent = document.querySelector('.dashboard-content') || document.body;
+            container = document.createElement('div');
+            container.id = 'alertsPanel';
+            parent.prepend(container); // ضعها في الأعلى
+            console.log('✅ تم إنشاء alertsPanel تلقائياً');
         }
 
         try {
+            // تأكد من توفر Supabase
+            const sb = await getSupabase();
+            if (!sb) {
+                console.warn('⚠️ Supabase غير متاح لتحميل التنبيهات');
+                return;
+            }
+
             const alerts = [];
 
             // 1. تنبيهات الملف الشخصي
-            const { data: req, error: reqError } = await supabase
+            const { data: req, error: reqError } = await sb
                 .from('verification_requests')
                 .select('*')
                 .eq('user_id', user.id)
@@ -345,7 +330,7 @@
 
             // 2. تنبيهات من الإشعارات غير المقروءة (آخر 5)
             try {
-                const { data: notifications, error: notifError } = await supabase
+                const { data: notifications, error: notifError } = await sb
                     .from('notifications')
                     .select('*')
                     .eq('user_id', user.id)
@@ -378,7 +363,7 @@
                 }
             } catch (e) { /* تجاهل */ }
 
-            // 3. تنبيهات النظام
+            // 3. تنبيهات النظام (بريد إلكتروني غير مؤكد)
             if (user && !user.email_confirmed_at) {
                 alerts.push({
                     id: 'email_verification',
@@ -434,8 +419,11 @@
     }
 
     function renderAlerts(alerts, container) {
-        if (!container || !alerts || alerts.length === 0) {
-            if (container) container.style.display = 'none';
+        if (!container) return;
+
+        if (!alerts || alerts.length === 0) {
+            container.innerHTML = ''; // أفرغ المحتوى
+            container.style.display = 'none';
             return;
         }
 
@@ -445,10 +433,12 @@
         const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
 
         if (visibleAlerts.length === 0) {
+            container.innerHTML = '';
             container.style.display = 'none';
             return;
         }
 
+        // إنشاء HTML للقائمة
         let html = `
             <div class="panel-card" id="alertsContainer">
                 <div class="panel-header">
@@ -597,18 +587,16 @@
         if (container && alertsData.length > 0) {
             renderAlerts(alertsData, container);
         }
-        const visibleAlerts = alertsData.filter(a => !dismissed.includes(a.id));
-        if (visibleAlerts.length === 0 && container) {
-            container.style.display = 'none';
-        }
     }
 
     // ============================================================
-    // 7. حالة الطلب والملف الشخصي
+    // 7. حالة الطلب والملف الشخصي (استخدام sb المحلي)
     // ============================================================
     async function loadCustomerJourney(user) {
         try {
-            const { data: req, error: reqError } = await supabase
+            const sb = await getSupabase();
+            if (!sb) return;
+            const { data: req, error: reqError } = await sb
                 .from('verification_requests')
                 .select('*')
                 .eq('user_id', user.id)
@@ -739,7 +727,9 @@
     // ============================================================
     async function loadStats(user) {
         try {
-            const { data, error } = await supabase
+            const sb = await getSupabase();
+            if (!sb) return;
+            const { data, error } = await sb
                 .from('user_portfolio')
                 .select('total_value, active_contracts, available_balance')
                 .eq('user_id', user.id)
@@ -762,69 +752,70 @@
         const ctx = document.getElementById('mainChart');
         if (!ctx || typeof Chart === 'undefined') return;
 
-        let labels = [], values = [];
         try {
-            const { data, error } = await supabase
+            const sb = await getSupabase();
+            if (!sb) return;
+            const { data, error } = await sb
                 .from('portfolio_history')
                 .select('month, value')
                 .eq('user_id', user.id)
                 .order('month', { ascending: true });
 
             if (error) throw error;
+            let labels = [], values = [];
             if (data && data.length > 0) {
                 labels = data.map(r => r.month);
                 values = data.map(r => r.value);
             }
+            if (labels.length === 0) {
+                labels = ['لا توجد بيانات'];
+                values = [0];
+            }
+
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'قيمة المحفظة (ر.س)',
+                        data: values,
+                        borderColor: '#028090',
+                        backgroundColor: 'rgba(2, 128, 144, 0.1)',
+                        tension: 0.3, fill: true,
+                        pointBackgroundColor: '#028090',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { font: { family: 'Tajawal', size: 12 }, color: '#334155', padding: 20 } },
+                        tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' ر.س' } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b', callback: v => v.toLocaleString() + ' ر.س' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b' }
+                        }
+                    }
+                }
+            });
         } catch (e) {
             console.warn('تعذر تحميل المخطط:', e);
         }
-
-        if (labels.length === 0) {
-            labels = ['لا توجد بيانات'];
-            values = [0];
-        }
-
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'قيمة المحفظة (ر.س)',
-                    data: values,
-                    borderColor: '#028090',
-                    backgroundColor: 'rgba(2, 128, 144, 0.1)',
-                    tension: 0.3, fill: true,
-                    pointBackgroundColor: '#028090',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { font: { family: 'Tajawal', size: 12 }, color: '#334155', padding: 20 } },
-                    tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' ر.س' } }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                        ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b', callback: v => v.toLocaleString() + ' ر.س' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b' }
-                    }
-                }
-            }
-        });
     }
 
     // ============================================================
-    // 9. التهيئة
+    // 9. التهيئة الرئيسية
     // ============================================================
     async function init() {
         if (isInitialized) return;
@@ -882,6 +873,9 @@
             h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${displayName}!`;
         }
 
+        // تحديث عنوان التبويب (المتصفح)
+        document.title = 'لوحة التحكم | Tera';
+
         // طلب الموقع
         if (window.Auth?.getCurrentPosition) {
             window.Auth.getCurrentPosition().then(pos => {
@@ -909,7 +903,7 @@
             }, 60000);
         }
 
-        // تحميل البيانات بالتوازي لتحسين الأداء
+        // تحميل البيانات بالتوازي
         try {
             await Promise.all([
                 loadCustomerJourney(user),
@@ -922,7 +916,7 @@
             console.warn('⚠️ بعض البيانات لم تُحمّل:', e);
         }
 
-        // إعداد Realtime بعد تحميل البيانات
+        // إعداد Realtime
         await setupRealtime(user);
 
         // تحديث الوقت
@@ -944,7 +938,7 @@
         refreshInterval = setInterval(updateDateTime, 30000);
 
         if (loadingOverlay) loadingOverlay.classList.remove('active');
-        console.log('✅ dashboard.js v10 ready (محسّن الأداء والتوافق)');
+        console.log('✅ dashboard.js v10.1 جاهز (محسّن)');
     }
 
     // ============================================================
@@ -963,9 +957,9 @@
             getSupabase().then(sb => {
                 if (sb && realtimeChannel) {
                     sb.removeChannel(realtimeChannel).catch(() => {});
-                    realtimeChannel = null;
                 }
             }).catch(() => {});
+            realtimeChannel = null;
         }
         isInitialized = false;
     }
@@ -978,7 +972,6 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        // إذا كان DOM جاهزاً، انتظر قليلاً للتأكد من تحميل جميع المكونات
         setTimeout(init, 100);
     }
 
