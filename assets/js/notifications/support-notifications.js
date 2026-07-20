@@ -1,6 +1,7 @@
 /**
  * ============================================================
  * support-notifications.js – التهيئة النهائية + إعدادات الإشعارات
+ * يعمل فقط في الصفحات التي تحتوي على عنصر #notificationsList
  * ============================================================
  */
 
@@ -64,8 +65,14 @@
         console.log('✅ Notification settings ready');
     }
 
-    // ─── التهيئة الرئيسية ───
+    // ─── التهيئة الرئيسية (فقط في صفحات الإشعارات) ───
     async function init() {
+        // ← توقف إذا لم تكن في صفحة مركز الإشعارات (منع التداخل مع dashboard)
+        if (!document.getElementById('notificationsList')) {
+            console.log('ℹ️ support-notifications: skipped – no notificationsList element.');
+            return;
+        }
+
         console.log('🚀 Initializing Notification System (modules)...');
 
         try {
@@ -80,7 +87,6 @@
                 if (result?.data) {
                     initialData = result.data;
                     window.NotificationCache?.init(initialData);
-                    // إضافة إلى المدير
                     initialData.forEach(n => window.NotificationManager?.addNotification(n));
                 }
             } catch (e) {
@@ -99,20 +105,18 @@
                 window.NotificationUI?.updateStats(cache.getStats());
             }
 
-            // 5. ربط Realtime
+            // 5. ربط Realtime (باستخدام RealtimeManager إن وُجد)
             try {
                 const user = await window.Auth?.getCurrentUser?.();
                 if (user?.id && window.RealtimeManager) {
                     await window.RealtimeManager.start(
                         user.id,
                         (newNotif) => {
-                            // INSERT
                             window.NotificationCache?.add(newNotif);
                             window.NotificationManager?.addNotification(newNotif);
                             window.NotificationUI?.refresh();
                         },
                         (updatedNotif) => {
-                            // UPDATE
                             window.NotificationCache?.update(updatedNotif.id, updatedNotif);
                             window.NotificationManager?.updateNotification(updatedNotif.id, updatedNotif);
                             window.NotificationUI?.refresh();
@@ -123,7 +127,7 @@
                 console.warn('⚠️ Realtime setup failed:', e.message);
             }
 
-            // 6. OneSignal (بدون إلزام)
+            // 6. OneSignal (اختياري)
             try {
                 const os = window.OneSignalManager;
                 if (os) {
