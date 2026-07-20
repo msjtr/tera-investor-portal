@@ -1,7 +1,8 @@
 /**
  * ========================================================
- * support.js – الوظائف المشتركة لقسم الدعم (الإصدار المحسّن v2)
+ * support.js – الوظائف المشتركة لقسم الدعم (الإصدار المحسّن v3)
  * متوافق مع النظام الحالي، يدعم عدة مصادر للحصول على المستخدم
+ * متكامل مع auth.js v31 وإدارة OneSignal
  * ========================================================
  */
 
@@ -63,10 +64,6 @@
                 state.supabase = await window.waitForSupabase();
                 return state.supabase;
             }
-            if (window.Support?.getSupabase) {
-                state.supabase = await window.Support.getSupabase();
-                return state.supabase;
-            }
             Logger.warn('Supabase غير متوفر');
             return null;
         } catch (e) {
@@ -79,8 +76,7 @@
         if (state.currentUser && !force) return state.currentUser;
 
         try {
-            // محاولة من مصادر متعددة
-            // 1. عبر window.Auth
+            // 1. عبر window.Auth.getCurrentUser (الطريقة الأساسية)
             if (window.Auth && typeof window.Auth.getCurrentUser === 'function') {
                 const user = await window.Auth.getCurrentUser();
                 if (user) {
@@ -139,7 +135,6 @@
         if (!nameEl && !avatarEl) return;
 
         try {
-            // محاولة من sessionStorage أولاً (الأسرع)
             let displayName = sessionStorage.getItem('otpName');
 
             if (!displayName) {
@@ -149,17 +144,14 @@
                                  user.user_metadata?.name ||
                                  user.email ||
                                  'مستخدم';
-                    // تخزين للاستخدام السريع
                     sessionStorage.setItem('otpName', displayName);
                 } else {
                     displayName = 'مستخدم';
                 }
             }
 
-            // تحديث الواجهة
             if (nameEl) {
                 nameEl.textContent = displayName;
-                // إضافة Attribute للتصميم
                 nameEl.setAttribute('data-user-name', displayName);
             }
             if (avatarEl) {
@@ -172,7 +164,6 @@
 
         } catch (e) {
             Logger.warn('فشل تحديث اسم المستخدم', e);
-            // قيم افتراضية
             if (nameEl) nameEl.textContent = 'مستخدم';
             if (avatarEl) avatarEl.textContent = 'م';
         }
@@ -187,10 +178,8 @@
         const closeBtn = document.getElementById('closeSidebarBtn');
         const overlay = document.getElementById('sidebarOverlay');
 
-        // إذا لم توجد القائمة، نخرج بدون أخطاء
         if (!sidebar) return;
 
-        // فتح/إغلاق القائمة
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
                 const isMobile = window.innerWidth < 992;
@@ -205,7 +194,6 @@
             });
         }
 
-        // زر الإغلاق (للجوال)
         if (closeBtn && overlay) {
             closeBtn.addEventListener('click', () => {
                 sidebar.classList.remove('sidebar-open');
@@ -214,7 +202,6 @@
             });
         }
 
-        // إغلاق عند النقر على الخلفية
         if (overlay) {
             overlay.addEventListener('click', () => {
                 sidebar.classList.remove('sidebar-open');
@@ -223,11 +210,9 @@
             });
         }
 
-        // القوائم الفرعية (القابلة للطي)
         document.querySelectorAll('.has-submenu > a').forEach(link => {
             link.addEventListener('click', function(e) {
                 const href = this.getAttribute('href');
-                // إذا كان الرابط يشير إلى صفحة فعلية، نسمح بالتنقل
                 if (href && href !== '#' && href !== 'javascript:void(0)') return;
                 e.preventDefault();
                 const parent = this.closest('.has-submenu');
@@ -237,13 +222,11 @@
             });
         });
 
-        // حفظ حالة القائمة عند تغيير حجم الشاشة
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 if (window.innerWidth >= 992) {
-                    // إلغاء وضع الجوال
                     sidebar.classList.remove('sidebar-open');
                     if (overlay) overlay.classList.remove('active');
                     state.sidebar.isOpen = false;
@@ -255,7 +238,7 @@
     }
 
     // ============================================================
-    // 6. زر الخروج (محسّن)
+    // 6. زر الخروج (محسّن بالتوافق مع Auth.logout)
     // ============================================================
     function initLogout() {
         const logoutBtn = document.getElementById('logoutBtn');
@@ -273,32 +256,25 @@
             logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الخروج...';
 
             try {
-                // محاولة تسجيل الخروج عبر Auth
+                // استخدام Auth.logout الموحدة (التي تدير OneSignal)
                 if (window.Auth && typeof window.Auth.logout === 'function') {
                     await window.Auth.logout();
-                } else if (window.Auth && typeof window.Auth.signOut === 'function') {
-                    await window.Auth.signOut();
                 } else {
-                    // تنظيف يدوي
+                    // خطة احتياطية: تنظيف يدوي
                     const sb = await getSupabase();
                     if (sb) {
                         try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
                     }
-                    // تنظيف التخزين
                     localStorage.clear();
                     sessionStorage.clear();
-                    // تنظيف الكوكيز
                     document.cookie.split(';').forEach(c => {
                         document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
                     });
+                    window.location.replace('/auth/auth/login/login.html');
                 }
-
-                // إعادة التوجيه
-                window.location.replace('/auth/auth/login/login.html');
-
             } catch (err) {
                 Logger.error('فشل تسجيل الخروج', err);
-                // تنظيف التخزين كحل احتياطي
+                // تنظيف احتياطي
                 localStorage.clear();
                 sessionStorage.clear();
                 window.location.replace('/auth/auth/login/login.html');
@@ -316,10 +292,10 @@
     async function updateNotificationBadge() {
         try {
             const user = await getCurrentUser();
-            if (!user) return;
+            if (!user) return 0;
 
             const sb = await getSupabase();
-            if (!sb) return;
+            if (!sb) return 0;
 
             const { count, error } = await sb
                 .from('notifications')
@@ -340,14 +316,14 @@
                 }
             });
 
-            // تحديث عداد التاب
+            // عداد التاب
             const tabBadge = document.querySelector('.tab-btn[data-tab="inbox"] .badge-count');
             if (tabBadge) {
                 tabBadge.textContent = unreadCount;
                 tabBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
             }
 
-            // تحديث عداد الهيدر (إذا وجد)
+            // عداد الهيدر
             const headerBadge = document.querySelector('.header-notification-badge');
             if (headerBadge) {
                 headerBadge.textContent = unreadCount;
@@ -369,24 +345,16 @@
         if (state.isInitialized) return;
 
         try {
-            // تهيئة الهيدر
             await initUserHeader();
-
-            // تهيئة القائمة الجانبية
             initSidebar();
-
-            // تهيئة زر الخروج
             initLogout();
-
-            // تحديث عداد الإشعارات (إذا كانت الصفحة تحتوي عليه)
             await updateNotificationBadge();
 
             state.isInitialized = true;
-            Logger.info('✅ support.js v2 ready');
+            Logger.info('✅ support.js v3 ready');
 
         } catch (err) {
             Logger.error('فشل تهيئة support.js', err);
-            // محاولة التهيئة بعد فترة
             setTimeout(() => {
                 state.isInitialized = false;
                 init();
@@ -408,7 +376,7 @@
     };
 
     // ============================================================
-    // 10. مستمع لتحديث اسم المستخدم من الصفحات الأخرى
+    // 10. مستمعات الأحداث
     // ============================================================
     document.addEventListener('user:updated', async (e) => {
         if (e.detail?.name) {
@@ -422,7 +390,6 @@
         }
     });
 
-    // مستمع لتحديث عداد الإشعارات
     document.addEventListener('notifications:updated', async () => {
         await updateNotificationBadge();
     });
