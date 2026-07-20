@@ -1,10 +1,12 @@
 /**
  * ============================================================
- * notification-onesignal.js – OneSignal SDK v16 (الإصدار النهائي المُصلح)
+ * notification-onesignal.js – OneSignal SDK v16 (إصلاح external_id)
  * ============================================================
  * 
- * تم إصلاح خطأ "label is the wrong type" في addAlias.
- * الصيغة الصحيحة: addAlias(label, id) وليس addAlias({ label, id })
+ * التغيير:
+ * - تم استبدال OneSignal.User.addAlias بـ OneSignal.login(userId)
+ * - إزالة أي استخدام لـ "external_id" يدوياً، لأنه أصبح محجوزاً في SDK v16
+ * - OneSignal.login() يتولى ربط المستخدم تلقائياً
  */
 
 (function() {
@@ -42,34 +44,31 @@
         });
     }
 
-    // ─── ربط المستخدم (باستخدام addAlias بطريقة صحيحة) ───
+    // ─── ربط المستخدم (باستخدام OneSignal.login) ───
     async function setExternalId(userId) {
         if (!userId) {
             console.warn('⚠️ OneSignal: No userId');
             return false;
         }
 
-        // التأكد من أن userId نصي
-        const userIdStr = String(userId);
-
         try {
             const OneSignal = await waitForOneSignal(5000);
-            if (!OneSignal || !OneSignal.User) {
-                console.warn('⚠️ OneSignal not ready, skipping');
+            if (!OneSignal) {
+                console.warn('⚠️ OneSignal not ready, skipping login');
                 return false;
             }
 
-            // ✅ الإصلاح: استخدام addAlias بوسيطين منفصلين
-            if (typeof OneSignal.User.addAlias === 'function') {
-                await OneSignal.User.addAlias('external_id', userIdStr);
-                console.log('✅ OneSignal external_id set for user:', userIdStr);
+            // ✅ استخدام OneSignal.login بدلاً من addAlias
+            if (typeof OneSignal.login === 'function') {
+                await OneSignal.login(userId);
+                console.log('✅ OneSignal login successful for user:', userId);
                 return true;
             } else {
-                console.warn('⚠️ OneSignal.User.addAlias not available');
+                console.warn('⚠️ OneSignal.login not available');
                 return false;
             }
         } catch (err) {
-            console.warn('⚠️ OneSignal setExternalId failed (non-critical):', err.message);
+            console.warn('⚠️ OneSignal login failed (non-critical):', err.message);
             return false;
         }
     }
@@ -157,5 +156,5 @@
         removeAllListeners
     };
 
-    console.log('✅ notification-onesignal.js ready (addAlias fixed)');
+    console.log('✅ notification-onesignal.js ready (using OneSignal.login)');
 })();
