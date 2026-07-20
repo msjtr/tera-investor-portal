@@ -40,6 +40,21 @@
         }
     }
 
+    // ─── ربط OneSignal بالمستخدم الحالي ───
+    async function linkOneSignalUser(onesignal) {
+        try {
+            const user = await window.Auth?.getCurrentUser?.();
+            if (user?.id) {
+                await onesignal.setExternalId(user.id); // يستخدم OneSignal.login()
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.warn('⚠️ Failed to link OneSignal user:', err.message);
+            return false;
+        }
+    }
+
     // ─── التهيئة ───
     async function init() {
         console.log('🚀 Initializing Notification System...');
@@ -61,18 +76,19 @@
             await manager.init();
 
             // 3. OneSignal (استخدام التهيئة الموجودة فقط)
+            let oneSignalReady = false;
             try {
                 if (onesignal && typeof onesignal.waitForOneSignal === 'function') {
                     const OneSignalInstance = await onesignal.waitForOneSignal(10000);
                     if (OneSignalInstance) {
-                        const user = await window.Auth?.getCurrentUser?.();
-                        if (user?.id) {
-                            await onesignal.setExternalId(user.id);
-                        }
+                        await linkOneSignalUser(onesignal);
+
                         // إضافة مستمع للإشعارات الواردة
                         await onesignal.addListener(async (notification) => {
                             manager.addNotification(notification);
                         });
+
+                        oneSignalReady = true;
                     }
                 } else {
                     console.warn('⚠️ OneSignalManager not available or missing waitForOneSignal');
@@ -113,6 +129,21 @@
             manager.on('state:changed', (state) => {
                 updateUI(state);
             });
+
+            // 7. الاستماع لتغييرات تسجيل الدخول/الخروج لتحديث OneSignal
+            if (window.Auth && typeof window.Auth.onAuthStateChange === 'function') {
+                window.Auth.onAuthStateChange(async (event, session) => {
+                    if (event === 'SIGNED_IN' && session?.user) {
+                        if (oneSignalReady && onesignal) {
+                            await linkOneSignalUser(onesignal);
+                        }
+                    } else if (event === 'SIGNED_OUT') {
+                        if (oneSignalReady && onesignal && typeof onesignal.logout === 'function') {
+                            await onesignal.logout();
+                        }
+                    }
+                });
+            }
 
             console.log('✅ Notification System ready');
 
@@ -169,12 +200,13 @@
     // ─── تصدير API عامة للاستخدام في HTML ───
     window.__openDetail = (id) => {
         console.log('📖 Open notification detail:', id);
-        // يمكن توسيعها لفتح الـ Modal
         const manager = window.NotificationManager;
         if (manager) {
             const notification = manager.getState().cache.find(n => n.id === id);
-            if (notification) {
-                window.NotificationUI?.openDetail?.(notification);
+            if (notification && window.NotificationUI && typeof window.NotificationUI.openDetail === 'function') {
+                window.NotificationUI.openDetail(notification);
+            } else if (notification) {
+                console.warn('⚠️ NotificationUI not available, cannot open detail');
             }
         }
     };
