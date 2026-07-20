@@ -1,6 +1,6 @@
 /**
- * dashboard.js – v9 (محسّن الأداء والتوافق)
- * متوافق مع auth.js v29، supabase-client.js، support.js v2
+ * dashboard.js – v9.1 (محسّن الأداء والتوافق)
+ * متوافق مع auth.js v31، supabase-client.js، support.js v2
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
  */
@@ -36,7 +36,7 @@
 
         formatTimeAgo(iso) {
             if (!iso) return '';
-            const diff = Math.floor((new Date() - new Date(iso)) / 1000);
+            const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
             if (diff < 60) return 'الآن';
             if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;
             if (diff < 86400) return `${Math.floor(diff / 3600)} ساعة`;
@@ -46,7 +46,7 @@
 
         getElapsedDays(iso) {
             if (!iso) return '';
-            const diff = Math.floor((new Date() - new Date(iso)) / (1000 * 60 * 60 * 24));
+            const diff = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
             return diff < 1 ? 'أقل من يوم' : `${diff} يوم`;
         },
 
@@ -808,8 +808,9 @@
     // 9. التهيئة
     // ============================================================
     async function init() {
-        if (!window.Auth) {
-            console.error('نظام المصادقة غير متوفر');
+        // التحقق من وجود Auth
+        if (!window.Auth || typeof window.Auth.requireAuth !== 'function') {
+            console.error('❌ نظام المصادقة غير متوفر');
             window.location.replace('/auth/auth/login/login.html');
             return;
         }
@@ -819,14 +820,14 @@
 
         supabase = await getSupabase();
         if (!supabase) {
-            console.error('Supabase غير متوفر');
+            console.error('❌ Supabase غير متوفر');
             return;
         }
 
         // بدء حماية الجلسة
         const sessionId = sessionStorage.getItem('currentSessionId');
         if (window.SessionManager && sessionId) {
-            window.SessionManager.startSessionGuard(user.id, sessionId);
+            try { window.SessionManager.startSessionGuard(user.id, sessionId); } catch (e) { console.warn('Session guard start failed:', e); }
         } else if (window.SessionManager && !sessionId) {
             try {
                 const result = await window.SessionManager.createSessionRecord(user.id);
@@ -839,7 +840,8 @@
             }
         }
 
-        document.getElementById('loadingOverlay')?.classList.add('active');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) loadingOverlay.classList.add('active');
 
         // تحديث الهيدر
         const storedName = sessionStorage.getItem('otpName');
@@ -882,13 +884,17 @@
         }
 
         // تحميل البيانات بالتوازي لتحسين الأداء
-        await Promise.all([
-            loadCustomerJourney(user),
-            loadStats(user),
-            loadChartData(user),
-            loadAlerts(user),
-            updateNotificationBadge()
-        ]);
+        try {
+            await Promise.all([
+                loadCustomerJourney(user),
+                loadStats(user),
+                loadChartData(user),
+                loadAlerts(user),
+                updateNotificationBadge()
+            ]);
+        } catch (e) {
+            console.warn('⚠️ بعض البيانات لم تُحمّل:', e);
+        }
 
         // إعداد Realtime بعد تحميل البيانات
         await setupRealtime(user);
@@ -911,8 +917,8 @@
         updateDateTime();
         setInterval(updateDateTime, 30000);
 
-        document.getElementById('loadingOverlay')?.classList.remove('active');
-        console.log('✅ dashboard.js v9 ready (محسّن الأداء والتوافق)');
+        if (loadingOverlay) loadingOverlay.classList.remove('active');
+        console.log('✅ dashboard.js v9.1 ready (محسّن الأداء والتوافق)');
     }
 
     // ============================================================
