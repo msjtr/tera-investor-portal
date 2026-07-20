@@ -1,8 +1,8 @@
 /**
  * ============================================================
- * notification-onesignal.js – OneSignal SDK v16
+ * notification-onesignal.js – OneSignal SDK v16 (Integration)
  * ============================================================
- * متوافق بالكامل مع OneSignal Web SDK v16
+ * يستخدم الكائن الموجود من onesignal-init.js ولا يهيئ مرة أخرى
  */
 
 (function() {
@@ -11,47 +11,43 @@
     if (window.__notificationOneSignal) return;
     window.__notificationOneSignal = true;
 
-    const ONE_SIGNAL_CONFIG = {
-        appId: "512d9b65-ec50-41a5-ac12-059a83441a72",
-        serviceWorkerPath: "/OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/" },
-        notifyButton: { enable: false }
-    };
+    // ─── انتظار جاهزية OneSignal ───
+    function waitForOneSignal(timeout = 15000) {
+        return new Promise((resolve, reject) => {
+            if (window.OneSignal && window.OneSignal.User) {
+                resolve(window.OneSignal);
+                return;
+            }
 
-    // ─── تهيئة OneSignal ───
-    async function initOneSignal() {
-        try {
-            const OneSignal = await new Promise((resolve, reject) => {
-                window.OneSignalDeferred = window.OneSignalDeferred || [];
-                window.OneSignalDeferred.push(async (OS) => {
-                    try {
-                        await OS.init(ONE_SIGNAL_CONFIG);
-                        window.OneSignal = OS;
-                        resolve(OS);
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-            });
+            const timer = setTimeout(() => {
+                reject(new Error('OneSignal not ready after timeout'));
+            }, timeout);
 
-            console.log('✅ OneSignal initialized');
-            return OneSignal;
-        } catch (err) {
-            console.error('❌ OneSignal initialization failed:', err);
-            return null;
-        }
+            const interval = setInterval(() => {
+                if (window.OneSignal && window.OneSignal.User) {
+                    clearInterval(interval);
+                    clearTimeout(timer);
+                    resolve(window.OneSignal);
+                }
+            }, 500);
+
+            document.addEventListener('onesignal:ready', () => {
+                clearInterval(interval);
+                clearTimeout(timer);
+                if (window.OneSignal) resolve(window.OneSignal);
+                else reject(new Error('OneSignal event fired but instance missing'));
+            }, { once: true });
+        });
     }
 
     // ─── ربط المستخدم ───
     async function setExternalId(userId) {
         try {
-            const OneSignal = window.OneSignal;
+            const OneSignal = await waitForOneSignal();
             if (!OneSignal || !OneSignal.User) {
                 console.warn('⚠️ OneSignal not ready');
                 return false;
             }
-
-            // ✅ الصيغة الصحيحة لـ addAlias في v16
             await OneSignal.User.addAlias({ label: 'external_id', id: userId });
             console.log('✅ OneSignal External ID set:', userId);
             return true;
@@ -64,11 +60,10 @@
     // ─── الحصول على حالة الاشتراك ───
     async function getSubscriptionStatus() {
         try {
-            const OneSignal = window.OneSignal;
+            const OneSignal = await waitForOneSignal();
             if (!OneSignal || !OneSignal.User || !OneSignal.User.pushSubscription) {
                 return { subscribed: false, error: 'OneSignal not ready' };
             }
-
             const subscription = await OneSignal.User.pushSubscription.getCurrentSubscription();
             return {
                 subscribed: !!subscription?.id,
@@ -81,14 +76,13 @@
     }
 
     // ─── إضافة مستمع للإشعارات الواردة ───
-    function addListener(callback) {
-        const OneSignal = window.OneSignal;
-        if (!OneSignal || !OneSignal.Notifications) {
-            console.warn('⚠️ OneSignal Notifications not available');
-            return false;
-        }
-
+    async function addListener(callback) {
         try {
+            const OneSignal = await waitForOneSignal();
+            if (!OneSignal || !OneSignal.Notifications) {
+                console.warn('⚠️ OneSignal Notifications not available');
+                return false;
+            }
             OneSignal.Notifications.addListener('foregroundWillDisplay', async (notification) => {
                 const data = notification.data || notification;
                 const payload = {
@@ -125,14 +119,12 @@
 
     // ─── API العامة ───
     window.OneSignalManager = {
-        init: initOneSignal,
+        waitForOneSignal,
         setExternalId,
         getSubscriptionStatus,
         addListener,
-        removeAllListeners,
-        config: ONE_SIGNAL_CONFIG
+        removeAllListeners
     };
 
-    console.log('✅ notification-onesignal.js ready');
-
+    console.log('✅ notification-onesignal.js ready (uses existing OneSignal instance)');
 })();
