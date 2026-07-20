@@ -24,6 +24,7 @@
     const MAX_RECONNECT_ATTEMPTS = 5;
     let isInitialized = false;
     let refreshInterval = null;
+    let isSettingUpRealtime = false; // لمنع التداخل
 
     // ============================================================
     // 2. الأدوات المساعدة
@@ -134,7 +135,7 @@
     }
 
     // ============================================================
-    // 4. إدارة Realtime
+    // 4. إدارة Realtime (مُصلحة)
     // ============================================================
     async function setupRealtime(user) {
         if (!user?.id) {
@@ -142,15 +143,29 @@
             return;
         }
 
+        // منع تشغيل الدالة بشكل متداخل
+        if (isSettingUpRealtime) {
+            console.warn('⏳ Realtime setup already in progress, skipping');
+            return;
+        }
+        isSettingUpRealtime = true;
+
         try {
             const sb = await getSupabase();
             if (!sb) return;
 
+            // تنظيف القناة القديمة بشكل كامل
             if (realtimeChannel) {
-                try { await sb.removeChannel(realtimeChannel); } catch (e) { /* تجاهل */ }
+                try {
+                    realtimeChannel.unsubscribe();
+                    await sb.removeChannel(realtimeChannel);
+                } catch (e) {
+                    console.warn('⚠️ خطأ أثناء إزالة القناة القديمة:', e);
+                }
                 realtimeChannel = null;
             }
 
+            // إنشاء قناة جديدة
             realtimeChannel = sb
                 .channel('dashboard-notifications')
                 .on(
@@ -177,6 +192,8 @@
         } catch (err) {
             console.warn('⚠️ فشل إعداد Realtime:', err);
             setTimeout(() => setupRealtime(user), 5000);
+        } finally {
+            isSettingUpRealtime = false;
         }
     }
 
@@ -255,7 +272,6 @@
             container.id = 'alertsPanel';
             container.className = 'panel-card';
             container.style.display = 'none';
-            // إنشاء هيكل افتراضي
             container.innerHTML = `
                 <div class="panel-header">
                     <h3><i class="fas fa-bell"></i> التنبيهات الذكية</h3>
@@ -432,13 +448,11 @@
         const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
         const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
 
-        // تحديث العداد في الهيدر (إذا كان موجوداً)
         const countBadge = document.getElementById('alertsCount');
         if (countBadge) countBadge.textContent = visibleAlerts.length;
 
         if (visibleAlerts.length === 0) {
             container.style.display = 'none';
-            // تفريغ الحاوية الداخلية
             const alertsContainer = document.getElementById('alertsContainer');
             if (alertsContainer) alertsContainer.innerHTML = '';
             return;
@@ -446,12 +460,10 @@
 
         container.style.display = 'block';
 
-        // الحصول على الحاوية الداخلية (أو إنشائها إن لم توجد)
         let alertsContainer = document.getElementById('alertsContainer');
         if (!alertsContainer) {
             alertsContainer = document.createElement('div');
             alertsContainer.id = 'alertsContainer';
-            // إذا كانت الـ container هي panel-card الأصلية، نضيف بعد الهيدر
             const header = container.querySelector('.panel-header');
             if (header) {
                 header.after(alertsContainer);
@@ -471,7 +483,7 @@
             html += `
                 <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
                     <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
-                        <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);flex-shrink:0;">
+                        <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                             <i class="fas ${icon}" style="font-size:18px;"></i>
                         </div>
                         <div style="flex:1;min-width:0;">
@@ -500,15 +512,16 @@
             visibleAlerts.slice(3).forEach(alert => {
                 const alertClass = Utils.getAlertClass(alert.type);
                 const icon = alert.icon || Utils.getAlertIcon(alert.type);
-                const isDismissible = alert.dismissible !== false;
                 html += `
                     <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
                         <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
-                            <div style="width:36px;height:36px;..."><i class="fas ${icon}"></i></div>
+                            <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="fas ${icon}" style="font-size:18px;"></i>
+                            </div>
                             <div style="flex:1;">
-                                <strong>${alert.title}</strong>
-                                <p>${alert.description}</p>
-                                <div>${alert.link ? `<a href="${alert.link}" class="btn-table-link">${alert.linkText||'عرض'}</a>` : ''}</div>
+                                <strong style="font-size:15px;">${alert.title}</strong>
+                                <p style="margin:4px 0;font-size:14px;color:var(--gray-600);">${alert.description}</p>
+                                ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="margin-top:4px;">${alert.linkText||'عرض'}</a>` : ''}
                             </div>
                         </div>
                     </div>
@@ -525,7 +538,6 @@
 
         alertsContainer.innerHTML = html;
 
-        // ربط الأحداث
         alertsContainer.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -610,7 +622,6 @@
     }
 
     function renderIncompleteProfile(panel, req) {
-        // (نفس الكود السابق لم يتغير)
         if (!panel) return;
         const stages = [
             { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
@@ -638,7 +649,6 @@
     }
 
     function renderRequestStatus(panel, req) {
-        // (نفس الكود السابق لم يتغير)
         if (!panel || !req) return;
         const statusIcons = {
             'under_review': 'fa-search', 'approved': 'fa-check-circle', 'rejected': 'fa-times-circle',
@@ -681,7 +691,7 @@
     }
 
     // ============================================================
-    // 8. الإحصائيات والمخطط
+    // 8. الإحصائيات والمخطط (مُصلح)
     // ============================================================
     async function loadStats(user) {
         try {
@@ -709,7 +719,14 @@
             let labels = [], values = [];
             if (data?.length) { labels = data.map(r => r.month); values = data.map(r => r.value); }
             if (!labels.length) { labels = ['لا توجد بيانات']; values = [0]; }
-            if (chartInstance) chartInstance.destroy();
+
+            // تدمير المخطط القديم بطريقة آمنة
+            let existingChart = Chart.getChart('mainChart');
+            if (existingChart) {
+                existingChart.destroy();
+            }
+            chartInstance = null;
+
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: { labels, datasets: [{ label: 'قيمة المحفظة (ر.س)', data: values, borderColor: '#028090', backgroundColor: 'rgba(2,128,144,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#028090' }] },
@@ -818,7 +835,7 @@
         clearInterval(updateActivityInterval);
         clearInterval(refreshInterval);
         if (realtimeChannel) {
-            getSupabase().then(sb => sb && realtimeChannel && sb.removeChannel(realtimeChannel).catch(() => {})).catch(() => {});
+            getSupabase().then(sb => sb && realtimeChannel && sb.removeChannel(realtimeChannel).catch(() => {}));
             realtimeChannel = null;
         }
         isInitialized = false;
