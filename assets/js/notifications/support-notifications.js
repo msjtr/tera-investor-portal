@@ -183,17 +183,12 @@
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
 
-                // إزالة التنشيط عن جميع التبويبات
                 tabs.forEach(b => b.classList.remove('active'));
-
-                // تفعيل التبويب المحدد
                 this.classList.add('active');
 
-                // إخفاء جميع الألواح
                 const panels = document.querySelectorAll('.tab-panel');
                 panels.forEach(p => p.classList.remove('active'));
 
-                // إظهار اللوحة المطابقة
                 const tabName = this.dataset.tab;
                 const targetPanel = document.getElementById(`panel-${tabName}`);
                 if (targetPanel) {
@@ -202,30 +197,35 @@
                     console.warn(`⚠️ Panel panel-${tabName} not found`);
                 }
 
-                // تحميل المحتوى حسب التبويب
                 if (tabName === 'inbox') {
-                    // تحديث قائمة الوارد
                     refreshUI();
                 } else if (tabName === 'history') {
-                    // تحميل السجل
                     if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
                         window.NotificationHistory.load(1);
                     } else {
                         console.warn('⚠️ NotificationHistory not available');
                     }
                 } else if (tabName === 'settings') {
-                    // لا حاجة لتحميل شيء
+                    // nothing
                 }
             });
         });
 
-        // تفعيل التبويب النشط افتراضياً (على أساس class active)
+        // تفعيل التبويب النشط افتراضياً
         const activeTab = document.querySelector('.tab-btn.active');
         if (activeTab) {
             const tabName = activeTab.dataset.tab;
             const targetPanel = document.getElementById(`panel-${tabName}`);
             if (targetPanel) {
                 targetPanel.classList.add('active');
+            }
+        } else {
+            // إذا لم يكن هناك تبويب نشط، فعّل الوارد
+            const inboxTab = document.querySelector('.tab-btn[data-tab="inbox"]');
+            if (inboxTab) {
+                inboxTab.classList.add('active');
+                const panel = document.getElementById('panel-inbox');
+                if (panel) panel.classList.add('active');
             }
         }
 
@@ -256,6 +256,32 @@
                 window.NotificationUI.render(notifications, 1, 20);
             } else {
                 console.warn('⚠️ NotificationUI.render not available');
+                // محاولة عرض مباشر إذا كانت الـ UI غير جاهزة
+                const list = document.getElementById('notificationsList');
+                if (list) {
+                    if (notifications.length === 0) {
+                        list.innerHTML = `
+                            <div style="text-align:center;padding:80px 20px;color:var(--gray-400);">
+                                <i class="fas fa-inbox" style="font-size:64px;display:block;margin-bottom:20px;color:var(--gray-300);"></i>
+                                <span style="font-weight:700;font-size:20px;color:var(--gray-600);">لا توجد إشعارات</span>
+                                <p style="margin-top:8px;font-size:14px;">سيتم عرض الإشعارات هنا عند ورودها.</p>
+                            </div>
+                        `;
+                    } else {
+                        // عرض بسيط مؤقت
+                        let html = '';
+                        notifications.slice(0, 20).forEach(n => {
+                            html += `<div class="notification-card" data-id="${n.id}">
+                                <div class="notif-content">
+                                    <div class="notif-title">${n.title || 'بدون عنوان'}</div>
+                                    <div class="notif-desc">${n.body || ''}</div>
+                                    <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
+                                </div>
+                            </div>`;
+                        });
+                        list.innerHTML = html;
+                    }
+                }
             }
         }
 
@@ -348,8 +374,48 @@
             // ربط التبويبات (يجب أن يتم قبل عرض القائمة)
             bindTabs();
 
-            // عرض الإشعارات
-            await refreshUI();
+            // عرض الإشعارات مباشرة
+            // تأكد من أن NotificationUI جاهزة
+            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                // الحصول على البيانات من المدير أو الكاش
+                const cache = window.NotificationCache;
+                let data = [];
+                if (cache && typeof cache.getAll === 'function') {
+                    data = cache.getAll();
+                } else {
+                    data = manager.getState().cache || [];
+                }
+                console.log(`📊 Rendering ${data.length} notifications`);
+                window.NotificationUI.render(data, 1, 20);
+            } else {
+                // عرض مباشر احتياطي
+                const list = document.getElementById('notificationsList');
+                if (list) {
+                    const data = manager.getState().cache || [];
+                    if (data.length === 0) {
+                        list.innerHTML = `
+                            <div style="text-align:center;padding:80px 20px;color:var(--gray-400);">
+                                <i class="fas fa-inbox" style="font-size:64px;display:block;margin-bottom:20px;color:var(--gray-300);"></i>
+                                <span style="font-weight:700;font-size:20px;color:var(--gray-600);">لا توجد إشعارات</span>
+                                <p style="margin-top:8px;font-size:14px;">سيتم عرض الإشعارات هنا عند ورودها.</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '';
+                        data.slice(0, 20).forEach(n => {
+                            const isUnread = n.status === 'unread';
+                            html += `<div class="notification-card ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+                                <div class="notif-content">
+                                    <div class="notif-title">${n.title || 'بدون عنوان'} ${isUnread ? '🔵' : ''}</div>
+                                    <div class="notif-desc">${n.body || ''}</div>
+                                    <div class="notif-meta">${new Date(n.created_at).toLocaleString()}</div>
+                                </div>
+                            </div>`;
+                        });
+                        list.innerHTML = html;
+                    }
+                }
+            }
 
             // ربط أزرار شريط الأدوات
             bindToolbarButtons();
@@ -377,6 +443,7 @@
             // الاستماع لتغييرات الحالة
             manager.on('state:changed', async (state) => {
                 updateUI(state);
+                // تحديث القائمة عند تغير الحالة
                 const activeTab = document.querySelector('.tab-btn.active');
                 const tabName = activeTab ? activeTab.dataset.tab : 'inbox';
                 if (tabName === 'inbox') {
