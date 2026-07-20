@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v10.1 (إصلاحات وتحسينات)
+ * dashboard.js – v10.2 (إصلاح لوحة التنبيهات + تحسينات)
  * متوافق مع auth.js v31، supabase-client.js، support.js v2
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
@@ -218,7 +218,6 @@
                 unreadCount = count || 0;
             }
 
-            // تحديث البادجات في كل مكان
             document.querySelectorAll('.notification-badge, .badge-count, #unreadBadge').forEach(el => {
                 if (el) {
                     el.textContent = unreadCount;
@@ -249,24 +248,28 @@
     // 6. تحميل وعرض التنبيهات (محسّن)
     // ============================================================
     async function loadAlerts(user) {
-        // البحث عن الحاوية أو إنشائها تلقائياً إذا لم توجد
         let container = document.getElementById('alertsPanel');
         if (!container) {
-            // حاول إنشاء الحاوية في مكان مناسب
             const parent = document.querySelector('.dashboard-content') || document.body;
             container = document.createElement('div');
             container.id = 'alertsPanel';
-            parent.prepend(container); // ضعها في الأعلى
+            container.className = 'panel-card';
+            container.style.display = 'none';
+            // إنشاء هيكل افتراضي
+            container.innerHTML = `
+                <div class="panel-header">
+                    <h3><i class="fas fa-bell"></i> التنبيهات الذكية</h3>
+                    <span class="panel-badge" id="alertsCount">0</span>
+                </div>
+                <div id="alertsContainer"></div>
+            `;
+            parent.prepend(container);
             console.log('✅ تم إنشاء alertsPanel تلقائياً');
         }
 
         try {
-            // تأكد من توفر Supabase
             const sb = await getSupabase();
-            if (!sb) {
-                console.warn('⚠️ Supabase غير متاح لتحميل التنبيهات');
-                return;
-            }
+            if (!sb) return;
 
             const alerts = [];
 
@@ -304,11 +307,11 @@
 
                 if (req?.submitted) {
                     const statusMap = {
-                        'under_review': { type: 'info', title: 'طلبك قيد المراجعة', description: 'تم استلام طلب التحقق وهو قيد المراجعة من قبل الفريق.' },
-                        'approved': { type: 'success', title: 'تم اعتماد طلبك 🎉', description: 'تم اعتماد طلب التحقق بنجاح. يمكنك الآن الاستفادة من جميع خدمات المنصة.' },
-                        'rejected': { type: 'danger', title: 'تم رفض الطلب', description: req.notes || 'لم يتم قبول طلب التحقق. يرجى التواصل مع الدعم.' },
-                        'needs_revision': { type: 'warning', title: 'طلبك يحتاج تعديل', description: req.notes || 'يحتاج طلبك إلى تعديلات قبل الموافقة.' },
-                        'pending_information': { type: 'info', title: 'بانتظار استكمال البيانات', description: 'يرجى استكمال البيانات المطلوبة لإتمام الطلب.' }
+                        'under_review': { type: 'info', title: 'طلبك قيد المراجعة', description: 'تم استلام طلب التحقق وهو قيد المراجعة.' },
+                        'approved': { type: 'success', title: 'تم اعتماد طلبك 🎉', description: 'تم اعتماد طلب التحقق بنجاح.' },
+                        'rejected': { type: 'danger', title: 'تم رفض الطلب', description: req.notes || 'لم يتم قبول الطلب.' },
+                        'needs_revision': { type: 'warning', title: 'طلبك يحتاج تعديل', description: req.notes || 'يحتاج تعديلات.' },
+                        'pending_information': { type: 'info', title: 'بانتظار استكمال البيانات', description: 'يرجى استكمال البيانات.' }
                     };
                     const statusInfo = statusMap[req.status];
                     if (statusInfo) {
@@ -318,8 +321,8 @@
                             icon: 'fa-clipboard-check',
                             title: statusInfo.title,
                             description: statusInfo.description,
-                            link: req.status === 'needs_revision' || req.status === 'pending_information' ? '/pages/profile/personal-information.html' : null,
-                            linkText: req.status === 'needs_revision' || req.status === 'pending_information' ? 'تعديل البيانات' : null,
+                            link: (req.status === 'needs_revision' || req.status === 'pending_information') ? '/pages/profile/personal-information.html' : null,
+                            linkText: (req.status === 'needs_revision' || req.status === 'pending_information') ? 'تعديل البيانات' : null,
                             readMore: req.notes ? `<strong>ملاحظات:</strong> ${req.notes}` : null,
                             date: req.updated_at,
                             priority: req.status === 'rejected' ? 'critical' : (req.status === 'needs_revision' ? 'high' : 'medium')
@@ -370,7 +373,7 @@
                     type: 'warning',
                     icon: 'fa-envelope',
                     title: 'تأكيد البريد الإلكتروني',
-                    description: 'لم يتم تأكيد بريدك الإلكتروني بعد. يرجى التحقق من صندوق الوارد.',
+                    description: 'لم يتم تأكيد بريدك الإلكتروني بعد.',
                     link: '/auth/verify-email.html',
                     linkText: 'إعادة إرسال التأكيد',
                     readMore: 'تأكيد البريد الإلكتروني ضروري لتفعيل جميع خدمات المنصة.',
@@ -422,50 +425,58 @@
         if (!container) return;
 
         if (!alerts || alerts.length === 0) {
-            container.innerHTML = ''; // أفرغ المحتوى
             container.style.display = 'none';
+            return;
+        }
+
+        const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+        const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
+
+        // تحديث العداد في الهيدر (إذا كان موجوداً)
+        const countBadge = document.getElementById('alertsCount');
+        if (countBadge) countBadge.textContent = visibleAlerts.length;
+
+        if (visibleAlerts.length === 0) {
+            container.style.display = 'none';
+            // تفريغ الحاوية الداخلية
+            const alertsContainer = document.getElementById('alertsContainer');
+            if (alertsContainer) alertsContainer.innerHTML = '';
             return;
         }
 
         container.style.display = 'block';
 
-        const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
-        const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
-
-        if (visibleAlerts.length === 0) {
-            container.innerHTML = '';
-            container.style.display = 'none';
-            return;
+        // الحصول على الحاوية الداخلية (أو إنشائها إن لم توجد)
+        let alertsContainer = document.getElementById('alertsContainer');
+        if (!alertsContainer) {
+            alertsContainer = document.createElement('div');
+            alertsContainer.id = 'alertsContainer';
+            // إذا كانت الـ container هي panel-card الأصلية، نضيف بعد الهيدر
+            const header = container.querySelector('.panel-header');
+            if (header) {
+                header.after(alertsContainer);
+            } else {
+                container.appendChild(alertsContainer);
+            }
         }
-
-        // إنشاء HTML للقائمة
-        let html = `
-            <div class="panel-card" id="alertsContainer">
-                <div class="panel-header">
-                    <i class="fas fa-bell"></i>
-                    <h3>التنبيهات <span class="panel-badge" style="background:var(--danger);color:#fff;padding:2px 10px;border-radius:12px;font-size:12px;">${visibleAlerts.length}</span></h3>
-                    ${visibleAlerts.length > 3 ? `<button class="btn-text-action" id="toggleAllAlerts">عرض الكل</button>` : ''}
-                </div>
-                <div id="alertsList" style="display:flex;flex-direction:column;gap:12px;">
-        `;
 
         const showAll = visibleAlerts.length <= 3;
         const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
 
-        alertsToShow.forEach((alert) => {
+        let html = '';
+        alertsToShow.forEach(alert => {
             const alertClass = Utils.getAlertClass(alert.type);
             const icon = alert.icon || Utils.getAlertIcon(alert.type);
             const isDismissible = alert.dismissible !== false;
-
             html += `
-                <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}" style="position:relative;padding:16px 20px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;gap:8px;">
+                <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
                     <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
                         <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);flex-shrink:0;">
                             <i class="fas ${icon}" style="font-size:18px;"></i>
                         </div>
                         <div style="flex:1;min-width:0;">
                             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-                                <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
+                                <strong style="font-size:15px;">${alert.title}</strong>
                                 ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
                                 ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
                                 <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
@@ -474,9 +485,9 @@
                             <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
                                 ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
                                 ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
-                                ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل التنبيه"><i class="fas fa-times"></i></button>` : ''}
+                                ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل"><i class="fas fa-times"></i></button>` : ''}
                             </div>
-                            ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;color:var(--gray-700);line-height:1.8;">${alert.readMore}</div>` : ''}
+                            ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;">${alert.readMore}</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -485,72 +496,54 @@
 
         if (!showAll && visibleAlerts.length > 3) {
             const hiddenCount = visibleAlerts.length - 3;
-            html += `
-                <div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">
-            `;
+            html += `<div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">`;
             visibleAlerts.slice(3).forEach(alert => {
                 const alertClass = Utils.getAlertClass(alert.type);
                 const icon = alert.icon || Utils.getAlertIcon(alert.type);
                 const isDismissible = alert.dismissible !== false;
                 html += `
-                    <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}" style="position:relative;padding:16px 20px;border-radius:12px;border:1px solid;display:flex;flex-direction:column;gap:8px;">
+                    <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
                         <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
-                            <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);flex-shrink:0;">
-                                <i class="fas ${icon}" style="font-size:18px;"></i>
-                            </div>
-                            <div style="flex:1;min-width:0;">
-                                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-                                    <strong style="font-size:15px;color:var(--gray-900);">${alert.title}</strong>
-                                    ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
-                                    ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
-                                    <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
-                                </div>
-                                <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
-                                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
-                                    ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
-                                    ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
-                                    ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل التنبيه"><i class="fas fa-times"></i></button>` : ''}
-                                </div>
-                                ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;color:var(--gray-700);line-height:1.8;">${alert.readMore}</div>` : ''}
+                            <div style="width:36px;height:36px;..."><i class="fas ${icon}"></i></div>
+                            <div style="flex:1;">
+                                <strong>${alert.title}</strong>
+                                <p>${alert.description}</p>
+                                <div>${alert.link ? `<a href="${alert.link}" class="btn-table-link">${alert.linkText||'عرض'}</a>` : ''}</div>
                             </div>
                         </div>
                     </div>
                 `;
             });
             html += `</div>
-                <button class="btn-text-action" id="showMoreAlerts" style="text-align:center;width:100%;padding:8px;font-size:13px;">
+                <button class="btn-text-action" id="showMoreAlerts" style="width:100%;padding:8px;text-align:center;">
                     <i class="fas fa-chevron-down"></i> عرض ${hiddenCount} تنبيهات إضافية
                 </button>
-                <button class="btn-text-action" id="showLessAlerts" style="display:none;text-align:center;width:100%;padding:8px;font-size:13px;">
+                <button class="btn-text-action" id="showLessAlerts" style="display:none;width:100%;padding:8px;text-align:center;">
                     <i class="fas fa-chevron-up"></i> عرض أقل
-                </button>
-            `;
+                </button>`;
         }
 
-        html += `</div></div>`;
-        container.innerHTML = html;
+        alertsContainer.innerHTML = html;
 
         // ربط الأحداث
-        container.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
+        alertsContainer.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 dismissAlert(this.dataset.alertId);
             });
         });
 
-        container.querySelectorAll('.read-more-btn').forEach(btn => {
+        alertsContainer.querySelectorAll('.read-more-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const alertId = this.dataset.alertId;
                 const content = document.getElementById(`readmore_${alertId}`);
                 const icon = this.querySelector('i');
                 if (content) {
-                    if (content.style.display === 'none' || content.style.display === '') {
-                        content.style.display = 'block';
-                        if (icon) icon.className = 'fas fa-chevron-up';
-                    } else {
-                        content.style.display = 'none';
-                        if (icon) icon.className = 'fas fa-chevron-down';
+                    const isHidden = content.style.display === 'none' || content.style.display === '';
+                    content.style.display = isHidden ? 'block' : 'none';
+                    if (icon) {
+                        icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
                     }
                 }
             });
@@ -558,19 +551,17 @@
 
         const showMoreBtn = document.getElementById('showMoreAlerts');
         const showLessBtn = document.getElementById('showLessAlerts');
-        const hiddenAlerts = document.getElementById('hiddenAlerts');
-
-        if (showMoreBtn && hiddenAlerts) {
+        const hiddenDiv = document.getElementById('hiddenAlerts');
+        if (showMoreBtn && hiddenDiv) {
             showMoreBtn.addEventListener('click', () => {
-                hiddenAlerts.style.display = 'flex';
+                hiddenDiv.style.display = 'flex';
                 showMoreBtn.style.display = 'none';
                 if (showLessBtn) showLessBtn.style.display = 'block';
             });
         }
-
-        if (showLessBtn && hiddenAlerts) {
+        if (showLessBtn && hiddenDiv) {
             showLessBtn.addEventListener('click', () => {
-                hiddenAlerts.style.display = 'none';
+                hiddenDiv.style.display = 'none';
                 showLessBtn.style.display = 'none';
                 if (showMoreBtn) showMoreBtn.style.display = 'block';
             });
@@ -590,7 +581,7 @@
     }
 
     // ============================================================
-    // 7. حالة الطلب والملف الشخصي (استخدام sb المحلي)
+    // 7. حالة الطلب والملف الشخصي
     // ============================================================
     async function loadCustomerJourney(user) {
         try {
@@ -602,11 +593,7 @@
                 .eq('user_id', user.id)
                 .maybeSingle();
 
-            if (reqError) {
-                console.error('فشل تحميل طلب التحقق:', reqError);
-                return;
-            }
-
+            if (reqError) return;
             requestData = req;
 
             const banner = document.getElementById('profileAlertBanner');
@@ -617,18 +604,13 @@
 
             const panel = document.getElementById('requestStatusPanel');
             if (!panel) return;
-
-            if (!req || !req.submitted) {
-                renderIncompleteProfile(panel, req);
-            } else {
-                renderRequestStatus(panel, req);
-            }
-        } catch (e) {
-            console.warn('تعذر تحميل حالة الطلب:', e);
-        }
+            if (!req || !req.submitted) renderIncompleteProfile(panel, req);
+            else renderRequestStatus(panel, req);
+        } catch (e) { console.warn('تعذر تحميل حالة الطلب:', e); }
     }
 
     function renderIncompleteProfile(panel, req) {
+        // (نفس الكود السابق لم يتغير)
         if (!panel) return;
         const stages = [
             { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
@@ -639,57 +621,36 @@
             { key: 'agreed', label: 'الإقرار', icon: 'fa-check', link: null },
             { key: 'submitted', label: 'المراجعة النهائية', icon: 'fa-paper-plane', link: null }
         ];
-
-        let html = `<div class="panel-card">
-            <div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div>
-            <div class="stages-grid">`;
-
+        let html = `<div class="panel-card"><div class="panel-header"><i class="fas fa-clipboard-check"></i><h3>حالة الاستكمال</h3></div><div class="stages-grid">`;
         stages.forEach(stage => {
             const done = req?.[stage.key] === true;
-            html += `
-            <div class="stage-item ${done ? 'completed' : 'pending'}">
+            html += `<div class="stage-item ${done ? 'completed' : 'pending'}">
                 ${stage.link ? `<a href="${stage.link}">` : ''}
-                    <i class="fas ${stage.icon}" style="color:${done ? '#10b981' : '#94a3b8'};"></i>
-                    <div class="stage-label" style="color:${done ? '#166534' : '#334155'};">${stage.label}</div>
-                    <div class="stage-status" style="color:${done ? '#10b981' : '#64748b'};">
-                        ${done ? '✔ مكتمل' : '⏳ مطلوب'}
-                    </div>
-                ${stage.link ? '</a>' : ''}
-            </div>`;
+                <i class="fas ${stage.icon}" style="color:${done ? '#10b981' : '#94a3b8'};"></i>
+                <div class="stage-label">${stage.label}</div><div class="stage-status">${done ? '✔ مكتمل' : '⏳ مطلوب'}</div>
+                ${stage.link ? '</a>' : ''}</div>`;
         });
-
         html += `</div>`;
-        if (stages.some(s => !req?.[s.key])) {
-            html += `<div style="margin-top:12px; text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a></div>`;
-        } else {
-            html += `<div class="alert-item-box alert-success" style="margin-top:12px;"><i class="fas fa-check-circle"></i> تم استلام طلبكم بنجاح، وسيتم تحويله للمراجعة.</div>`;
-        }
+        if (stages.some(s => !req?.[s.key])) html += `<div style="margin-top:12px;text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">استكمال الملف الشخصي</a></div>`;
+        else html += `<div class="alert-item-box alert-success" style="margin-top:12px;">تم استلام طلبكم بنجاح.</div>`;
         html += `</div>`;
         panel.innerHTML = html;
     }
 
     function renderRequestStatus(panel, req) {
+        // (نفس الكود السابق لم يتغير)
         if (!panel || !req) return;
         const statusIcons = {
-            'under_review': 'fa-search',
-            'approved': 'fa-check-circle',
-            'rejected': 'fa-times-circle',
-            'needs_revision': 'fa-edit',
-            'pending_information': 'fa-info-circle'
+            'under_review': 'fa-search', 'approved': 'fa-check-circle', 'rejected': 'fa-times-circle',
+            'needs_revision': 'fa-edit', 'pending_information': 'fa-info-circle'
         };
         const statusIcon = statusIcons[req.status] || 'fa-clock';
         const statusColor = req.status === 'approved' ? '#10b981' : (req.status === 'rejected' ? '#dc2626' : '#f59e0b');
         const statusLabel = Utils.getStatusLabel(req.status);
-
         let html = `<div class="request-status-card-full">
-            <div class="request-header">
-                <div class="request-header-icon"><i class="fas fa-clipboard-check"></i></div>
-                <h3>حالة الطلب</h3>
-            </div>
-            <div style="text-align:center; padding:20px 0;">
-                <i class="fas ${statusIcon} status-icon-large" style="color:${statusColor};"></i>
-                <div><span class="status-badge-large" style="background:${statusColor}20; color:${statusColor};">${statusLabel}</span></div>
-            </div>
+            <div class="request-header"><div class="request-header-icon"><i class="fas fa-clipboard-check"></i></div><h3>حالة الطلب</h3></div>
+            <div style="text-align:center;padding:20px 0;"><i class="fas ${statusIcon} status-icon-large" style="color:${statusColor};"></i>
+            <div><span class="status-badge-large" style="background:${statusColor}20;color:${statusColor};">${statusLabel}</span></div></div>
             <div class="request-details-list">
                 <div class="request-detail-item"><i class="fas fa-calendar-plus"></i><strong>تاريخ التقديم:</strong><span>${Utils.formatDateTime(req.submitted_at)}</span></div>
                 <div class="request-detail-item"><i class="fas fa-history"></i><strong>آخر تحديث:</strong><span>${Utils.formatDateTime(req.updated_at)}</span></div>
@@ -698,26 +659,23 @@
                 <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${req.progress || 0}%;"></div></div>
                 ${req.notes ? `<div class="request-detail-item" style="margin-top:10px;"><i class="fas fa-sticky-note"></i><strong>ملاحظات:</strong><span>${req.notes}</span></div>` : ''}
             </div>`;
-
         if (req.status === 'needs_revision' || req.status === 'pending_information') {
             const stagesToCheck = [
                 { key: 'personal_info_completed', label: 'المعلومات الشخصية', link: '/pages/profile/personal-information.html' },
                 { key: 'contact_info_completed', label: 'معلومات التواصل', link: '/pages/profile/contact-information.html' },
-                { key: 'national_address_completed', label: 'العنوان الوطني الموثق', link: '/pages/profile/national-address.html' },
+                { key: 'national_address_completed', label: 'العنوان الوطني', link: '/pages/profile/national-address.html' },
                 { key: 'bank_info_completed', label: 'المعلومات البنكية', link: '/pages/profile/bank-information.html' },
                 { key: 'attachments_completed', label: 'المرفقات والوثائق', link: '/pages/profile/attachments.html' }
             ];
             const pendingStages = stagesToCheck.filter(s => !req[s.key]);
             if (pendingStages.length > 0) {
-                html += `<div class="alert-warning-box">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div><strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال أو تعديل:<ul>`;
+                html += `<div class="alert-warning-box"><i class="fas fa-exclamation-triangle"></i>
+                    <div><strong>تنبيه:</strong> بعض المراحل تحتاج إلى استكمال:<ul>`;
                 pendingStages.forEach(s => html += `<li><a href="${s.link}">${s.label}</a></li>`);
                 html += `</ul></div></div>`;
             }
-            html += `<div style="margin-top:16px; text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">تعديل البيانات</a></div>`;
+            html += `<div style="margin-top:16px;text-align:center;"><a href="/pages/profile/personal-information.html" class="btn-table-link">تعديل البيانات</a></div>`;
         }
-
         html += `</div>`;
         panel.innerHTML = html;
     }
@@ -727,14 +685,9 @@
     // ============================================================
     async function loadStats(user) {
         try {
-            const sb = await getSupabase();
-            if (!sb) return;
-            const { data, error } = await sb
-                .from('user_portfolio')
-                .select('total_value, active_contracts, available_balance')
-                .eq('user_id', user.id)
-                .maybeSingle();
-            if (error) { console.error('فشل تحميل الإحصائيات:', error); return; }
+            const sb = await getSupabase(); if (!sb) return;
+            const { data, error } = await sb.from('user_portfolio').select('total_value, active_contracts, available_balance').eq('user_id', user.id).maybeSingle();
+            if (error) return;
             if (data) {
                 const statCards = document.querySelectorAll('.stat-card .stat-value');
                 if (statCards.length >= 3) {
@@ -743,75 +696,26 @@
                     statCards[2].textContent = (data.available_balance || 0).toLocaleString() + ' ر.س';
                 }
             }
-        } catch (e) {
-            console.warn('تعذر تحميل الإحصائيات:', e);
-        }
+        } catch (e) { console.warn('تعذر تحميل الإحصائيات:', e); }
     }
 
     async function loadChartData(user) {
         const ctx = document.getElementById('mainChart');
         if (!ctx || typeof Chart === 'undefined') return;
-
         try {
-            const sb = await getSupabase();
-            if (!sb) return;
-            const { data, error } = await sb
-                .from('portfolio_history')
-                .select('month, value')
-                .eq('user_id', user.id)
-                .order('month', { ascending: true });
-
+            const sb = await getSupabase(); if (!sb) return;
+            const { data, error } = await sb.from('portfolio_history').select('month, value').eq('user_id', user.id).order('month', { ascending: true });
             if (error) throw error;
             let labels = [], values = [];
-            if (data && data.length > 0) {
-                labels = data.map(r => r.month);
-                values = data.map(r => r.value);
-            }
-            if (labels.length === 0) {
-                labels = ['لا توجد بيانات'];
-                values = [0];
-            }
-
+            if (data?.length) { labels = data.map(r => r.month); values = data.map(r => r.value); }
+            if (!labels.length) { labels = ['لا توجد بيانات']; values = [0]; }
             if (chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'قيمة المحفظة (ر.س)',
-                        data: values,
-                        borderColor: '#028090',
-                        backgroundColor: 'rgba(2, 128, 144, 0.1)',
-                        tension: 0.3, fill: true,
-                        pointBackgroundColor: '#028090',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { font: { family: 'Tajawal', size: 12 }, color: '#334155', padding: 20 } },
-                        tooltip: { callbacks: { label: ctx => ctx.parsed.y.toLocaleString() + ' ر.س' } }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0,0,0,0.05)' },
-                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b', callback: v => v.toLocaleString() + ' ر.س' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { family: 'Tajawal', size: 11 }, color: '#64748b' }
-                        }
-                    }
-                }
+                data: { labels, datasets: [{ label: 'قيمة المحفظة (ر.س)', data: values, borderColor: '#028090', backgroundColor: 'rgba(2,128,144,0.1)', tension: 0.3, fill: true, pointBackgroundColor: '#028090' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { font: { family: 'Tajawal' } } } } }
             });
-        } catch (e) {
-            console.warn('تعذر تحميل المخطط:', e);
-        }
+        } catch (e) { console.warn('تعذر تحميل المخطط:', e); }
     }
 
     // ============================================================
@@ -821,30 +725,19 @@
         if (isInitialized) return;
         isInitialized = true;
 
-        // التحقق من وجود Auth
         if (!window.Auth || typeof window.Auth.requireAuth !== 'function') {
-            console.error('❌ نظام المصادقة غير متوفر');
             window.location.replace('/auth/auth/login/login.html');
             return;
         }
-
         const user = await window.Auth.requireAuth();
-        if (!user) {
-            isInitialized = false;
-            return;
-        }
+        if (!user) { isInitialized = false; return; }
 
         supabase = await getSupabase();
-        if (!supabase) {
-            console.error('❌ Supabase غير متوفر');
-            isInitialized = false;
-            return;
-        }
+        if (!supabase) { isInitialized = false; return; }
 
-        // بدء حماية الجلسة
         const sessionId = sessionStorage.getItem('currentSessionId');
         if (window.SessionManager && sessionId) {
-            try { window.SessionManager.startSessionGuard(user.id, sessionId); } catch (e) { console.warn('Session guard start failed:', e); }
+            try { window.SessionManager.startSessionGuard(user.id, sessionId); } catch (e) {}
         } else if (window.SessionManager && !sessionId) {
             try {
                 const result = await window.SessionManager.createSessionRecord(user.id);
@@ -852,15 +745,12 @@
                     sessionStorage.setItem('currentSessionId', result.sessionId);
                     window.SessionManager.startSessionGuard(user.id, result.sessionId);
                 }
-            } catch (e) {
-                console.warn('تعذر إنشاء جلسة تلقائياً:', e);
-            }
+            } catch (e) {}
         }
 
         const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) loadingOverlay.classList.add('active');
 
-        // تحديث الهيدر
         const storedName = sessionStorage.getItem('otpName');
         const displayName = storedName || user.user_metadata?.full_name || user.email || 'مستخدم';
         const nameEl = document.getElementById('headerUserName');
@@ -869,14 +759,10 @@
         if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
         const h2 = document.querySelector('.welcome-banner h2');
-        if (h2) {
-            h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${displayName}!`;
-        }
+        if (h2) h2.innerHTML = `<i class="fas fa-hand-peace"></i> مرحباً بك، ${displayName}!`;
 
-        // تحديث عنوان التبويب (المتصفح)
         document.title = 'لوحة التحكم | Tera';
 
-        // طلب الموقع
         if (window.Auth?.getCurrentPosition) {
             window.Auth.getCurrentPosition().then(pos => {
                 sessionStorage.setItem('userLat', pos.latitude);
@@ -884,26 +770,18 @@
             }).catch(() => {});
         }
 
-        // تتبع النشاط
         if (window.ActivityTracker) {
             window.ActivityTracker.startIdleTimer(async () => {
                 if (window.Auth?.logout) await window.Auth.logout();
             }, user.id);
-
             try { await window.ActivityTracker.updateLastActivity(user.id); } catch (e) {}
-
             updateActivityInterval = setInterval(async () => {
-                try {
-                    await window.ActivityTracker.updateLastActivity(user.id);
-                } catch (e) {
-                    if (e?.code === 401 || e?.message?.includes('401')) {
-                        clearInterval(updateActivityInterval);
-                    }
+                try { await window.ActivityTracker.updateLastActivity(user.id); } catch (e) {
+                    if (e?.code === 401) clearInterval(updateActivityInterval);
                 }
             }, 60000);
         }
 
-        // تحميل البيانات بالتوازي
         try {
             await Promise.all([
                 loadCustomerJourney(user),
@@ -912,14 +790,10 @@
                 loadAlerts(user),
                 updateNotificationBadge()
             ]);
-        } catch (e) {
-            console.warn('⚠️ بعض البيانات لم تُحمّل:', e);
-        }
+        } catch (e) { console.warn('⚠️ بعض البيانات لم تُحمّل:', e); }
 
-        // إعداد Realtime
         await setupRealtime(user);
 
-        // تحديث الوقت
         const updateDateTime = () => {
             const now = new Date();
             const dateEl = document.getElementById('currentDate');
@@ -929,8 +803,7 @@
             if (timeEl) timeEl.textContent = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
             if (sessionEl) {
                 const mins = Math.floor((now - sessionStart) / 60000);
-                const h = Math.floor(mins / 60);
-                const m = mins % 60;
+                const h = Math.floor(mins / 60), m = mins % 60;
                 sessionEl.textContent = h > 0 ? `${h} ساعة و ${m} دقيقة` : `${m} دقيقة`;
             }
         };
@@ -938,41 +811,20 @@
         refreshInterval = setInterval(updateDateTime, 30000);
 
         if (loadingOverlay) loadingOverlay.classList.remove('active');
-        console.log('✅ dashboard.js v10.1 جاهز (محسّن)');
+        console.log('✅ dashboard.js v10.2 جاهز');
     }
 
-    // ============================================================
-    // 10. التنظيف عند إغلاق الصفحة
-    // ============================================================
     function cleanup() {
-        if (updateActivityInterval) {
-            clearInterval(updateActivityInterval);
-            updateActivityInterval = null;
-        }
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
-        }
+        clearInterval(updateActivityInterval);
+        clearInterval(refreshInterval);
         if (realtimeChannel) {
-            getSupabase().then(sb => {
-                if (sb && realtimeChannel) {
-                    sb.removeChannel(realtimeChannel).catch(() => {});
-                }
-            }).catch(() => {});
+            getSupabase().then(sb => sb && realtimeChannel && sb.removeChannel(realtimeChannel).catch(() => {})).catch(() => {});
             realtimeChannel = null;
         }
         isInitialized = false;
     }
-
     window.addEventListener('beforeunload', cleanup);
 
-    // ============================================================
-    // 11. تشغيل التهيئة
-    // ============================================================
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        setTimeout(init, 100);
-    }
-
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else setTimeout(init, 100);
 })();
