@@ -1,8 +1,9 @@
 /**
- * dashboard.js – v10.2 (إصلاح لوحة التنبيهات + تحسينات)
- * متوافق مع auth.js v31، supabase-client.js، support.js v2
- * يدعم عرض التنبيهات مع روابط وقراءة المزيد
- * متكامل مع نظام الإشعارات Realtime
+ * dashboard.js – v10.3 (الإصدار النهائي المُصلح)
+ * - إصلاح تكرار التنبيهات بعد التحديث
+ * - إصلاح خطأ Canvas (Chart.getChart)
+ * - إصلاح خطأ Realtime (عدم إضافة مستمعين بعد الاشتراك)
+ * - عرض التنبيهات داخل #alertsContainer بدون فوضى
  */
 
 (function() {
@@ -24,7 +25,8 @@
     const MAX_RECONNECT_ATTEMPTS = 5;
     let isInitialized = false;
     let refreshInterval = null;
-    let isSettingUpRealtime = false; // لمنع التداخل
+    let isSettingUpRealtime = false;
+    let isRendering = false;           // ← يمنع تداخل renderAlerts
 
     // ============================================================
     // 2. الأدوات المساعدة
@@ -143,7 +145,6 @@
             return;
         }
 
-        // منع تشغيل الدالة بشكل متداخل
         if (isSettingUpRealtime) {
             console.warn('⏳ Realtime setup already in progress, skipping');
             return;
@@ -165,7 +166,6 @@
                 realtimeChannel = null;
             }
 
-            // إنشاء قناة جديدة
             realtimeChannel = sb
                 .channel('dashboard-notifications')
                 .on(
@@ -262,7 +262,7 @@
     }
 
     // ============================================================
-    // 6. تحميل وعرض التنبيهات (محسّن)
+    // 6. تحميل وعرض التنبيهات (محسّن – يمنع التكرار والفوضى)
     // ============================================================
     async function loadAlerts(user) {
         let container = document.getElementById('alertsPanel');
@@ -312,7 +312,7 @@
                         type: 'warning',
                         icon: 'fa-user-edit',
                         title: 'استكمال الملف الشخصي',
-                        description: `يجب استكمال ${missingSteps.length} مرحلة لإتمام طلب التحقق: ${missingSteps.map(s => s.label).join('، ')}`,
+                        description: `يجب استكمال ${missingSteps.length} مرحلة: ${missingSteps.map(s => s.label).join('، ')}`,
                         link: '/pages/profile/personal-information.html',
                         linkText: 'استكمال الملف',
                         readMore: `المراحل المطلوبة: <ul>${missingSteps.map(s => `<li><a href="${s.link}">${s.label}</a></li>`).join('')}</ul>`,
@@ -440,143 +440,155 @@
     function renderAlerts(alerts, container) {
         if (!container) return;
 
-        if (!alerts || alerts.length === 0) {
-            container.style.display = 'none';
+        // منع التداخل
+        if (isRendering) {
+            console.warn('⚠️ تجاوز استدعاء renderAlerts متزامن');
             return;
         }
+        isRendering = true;
 
-        const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
-        const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
-
-        const countBadge = document.getElementById('alertsCount');
-        if (countBadge) countBadge.textContent = visibleAlerts.length;
-
-        if (visibleAlerts.length === 0) {
-            container.style.display = 'none';
-            const alertsContainer = document.getElementById('alertsContainer');
-            if (alertsContainer) alertsContainer.innerHTML = '';
-            return;
-        }
-
-        container.style.display = 'block';
-
-        let alertsContainer = document.getElementById('alertsContainer');
-        if (!alertsContainer) {
-            alertsContainer = document.createElement('div');
-            alertsContainer.id = 'alertsContainer';
-            const header = container.querySelector('.panel-header');
-            if (header) {
-                header.after(alertsContainer);
-            } else {
-                container.appendChild(alertsContainer);
+        try {
+            if (!alerts || alerts.length === 0) {
+                container.style.display = 'none';
+                return;
             }
-        }
 
-        const showAll = visibleAlerts.length <= 3;
-        const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
+            const dismissed = JSON.parse(localStorage.getItem('dismissedAlerts') || '[]');
+            const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
 
-        let html = '';
-        alertsToShow.forEach(alert => {
-            const alertClass = Utils.getAlertClass(alert.type);
-            const icon = alert.icon || Utils.getAlertIcon(alert.type);
-            const isDismissible = alert.dismissible !== false;
-            html += `
-                <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
-                    <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
-                        <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <i class="fas ${icon}" style="font-size:18px;"></i>
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-                                <strong style="font-size:15px;">${alert.title}</strong>
-                                ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
-                                ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
-                                <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
-                            </div>
-                            <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
-                            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
-                                ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
-                                ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
-                                ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل"><i class="fas fa-times"></i></button>` : ''}
-                            </div>
-                            ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;">${alert.readMore}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
+            const countBadge = document.getElementById('alertsCount');
+            if (countBadge) countBadge.textContent = visibleAlerts.length;
 
-        if (!showAll && visibleAlerts.length > 3) {
-            const hiddenCount = visibleAlerts.length - 3;
-            html += `<div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">`;
-            visibleAlerts.slice(3).forEach(alert => {
+            if (visibleAlerts.length === 0) {
+                container.style.display = 'none';
+                const alertsContainer = document.getElementById('alertsContainer');
+                if (alertsContainer) alertsContainer.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            let alertsContainer = document.getElementById('alertsContainer');
+            if (!alertsContainer) {
+                alertsContainer = document.createElement('div');
+                alertsContainer.id = 'alertsContainer';
+                const header = container.querySelector('.panel-header');
+                if (header) {
+                    header.after(alertsContainer);
+                } else {
+                    container.appendChild(alertsContainer);
+                }
+            } else {
+                alertsContainer.innerHTML = '';  // تفريغ تام قبل إعادة البناء
+            }
+
+            const showAll = visibleAlerts.length <= 3;
+            const alertsToShow = showAll ? visibleAlerts : visibleAlerts.slice(0, 3);
+
+            let html = '';
+            alertsToShow.forEach(alert => {
                 const alertClass = Utils.getAlertClass(alert.type);
                 const icon = alert.icon || Utils.getAlertIcon(alert.type);
+                const isDismissible = alert.dismissible !== false;
                 html += `
                     <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
                         <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
                             <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                 <i class="fas ${icon}" style="font-size:18px;"></i>
                             </div>
-                            <div style="flex:1;">
-                                <strong style="font-size:15px;">${alert.title}</strong>
-                                <p style="margin:4px 0;font-size:14px;color:var(--gray-600);">${alert.description}</p>
-                                ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="margin-top:4px;">${alert.linkText||'عرض'}</a>` : ''}
+                            <div style="flex:1;min-width:0;">
+                                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
+                                    <strong style="font-size:15px;">${alert.title}</strong>
+                                    ${alert.priority === 'critical' ? '<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-weight:700;">عاجل</span>' : ''}
+                                    ${alert.priority === 'high' ? '<span style="font-size:10px;background:#fffbeb;color:#d97706;padding:2px 8px;border-radius:12px;font-weight:700;">مرتفع</span>' : ''}
+                                    <span style="font-size:11px;color:var(--gray-400);margin-right:auto;">${Utils.formatTimeAgo(alert.date)}</span>
+                                </div>
+                                <p style="margin:0;font-size:14px;color:var(--gray-600);line-height:1.6;">${alert.description}</p>
+                                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;align-items:center;">
+                                    ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="padding:4px 14px;font-size:12px;"><i class="fas fa-arrow-left"></i> ${alert.linkText || 'عرض التفاصيل'}</a>` : ''}
+                                    ${alert.readMore ? `<button class="read-more-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;padding:4px 8px;">قراءة المزيد <i class="fas fa-chevron-down" style="font-size:10px;"></i></button>` : ''}
+                                    ${isDismissible ? `<button class="dismiss-alert-btn" data-alert-id="${alert.id}" style="background:transparent;border:none;color:var(--gray-400);cursor:pointer;font-size:14px;padding:4px;margin-right:auto;" title="تجاهل"><i class="fas fa-times"></i></button>` : ''}
+                                </div>
+                                ${alert.readMore ? `<div class="read-more-content" id="readmore_${alert.id}" style="display:none;margin-top:8px;padding:12px 16px;background:rgba(0,0,0,0.03);border-radius:8px;font-size:13px;">${alert.readMore}</div>` : ''}
                             </div>
                         </div>
                     </div>
                 `;
             });
-            html += `</div>
-                <button class="btn-text-action" id="showMoreAlerts" style="width:100%;padding:8px;text-align:center;">
-                    <i class="fas fa-chevron-down"></i> عرض ${hiddenCount} تنبيهات إضافية
-                </button>
-                <button class="btn-text-action" id="showLessAlerts" style="display:none;width:100%;padding:8px;text-align:center;">
-                    <i class="fas fa-chevron-up"></i> عرض أقل
-                </button>`;
-        }
 
-        alertsContainer.innerHTML = html;
+            if (!showAll && visibleAlerts.length > 3) {
+                const hiddenCount = visibleAlerts.length - 3;
+                html += `<div id="hiddenAlerts" style="display:none;flex-direction:column;gap:12px;">`;
+                visibleAlerts.slice(3).forEach(alert => {
+                    const alertClass = Utils.getAlertClass(alert.type);
+                    const icon = alert.icon || Utils.getAlertIcon(alert.type);
+                    html += `
+                        <div class="alert-item-box ${alertClass}" data-alert-id="${alert.id}">
+                            <div style="display:flex;align-items:flex-start;gap:12px;width:100%;">
+                                <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="fas ${icon}" style="font-size:18px;"></i>
+                                </div>
+                                <div style="flex:1;">
+                                    <strong style="font-size:15px;">${alert.title}</strong>
+                                    <p style="margin:4px 0;font-size:14px;color:var(--gray-600);">${alert.description}</p>
+                                    ${alert.link ? `<a href="${alert.link}" class="btn-table-link" style="margin-top:4px;">${alert.linkText||'عرض'}</a>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>
+                    <button class="btn-text-action" id="showMoreAlerts" style="width:100%;padding:8px;text-align:center;">
+                        <i class="fas fa-chevron-down"></i> عرض ${hiddenCount} تنبيهات إضافية
+                    </button>
+                    <button class="btn-text-action" id="showLessAlerts" style="display:none;width:100%;padding:8px;text-align:center;">
+                        <i class="fas fa-chevron-up"></i> عرض أقل
+                    </button>`;
+            }
 
-        alertsContainer.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dismissAlert(this.dataset.alertId);
+            alertsContainer.innerHTML = html;
+
+            // ربط الأحداث
+            alertsContainer.querySelectorAll('.dismiss-alert-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dismissAlert(this.dataset.alertId);
+                });
             });
-        });
 
-        alertsContainer.querySelectorAll('.read-more-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const alertId = this.dataset.alertId;
-                const content = document.getElementById(`readmore_${alertId}`);
-                const icon = this.querySelector('i');
-                if (content) {
-                    const isHidden = content.style.display === 'none' || content.style.display === '';
-                    content.style.display = isHidden ? 'block' : 'none';
-                    if (icon) {
-                        icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            alertsContainer.querySelectorAll('.read-more-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const alertId = this.dataset.alertId;
+                    const content = document.getElementById(`readmore_${alertId}`);
+                    const icon = this.querySelector('i');
+                    if (content) {
+                        const isHidden = content.style.display === 'none' || content.style.display === '';
+                        content.style.display = isHidden ? 'block' : 'none';
+                        if (icon) icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
                     }
-                }
+                });
             });
-        });
 
-        const showMoreBtn = document.getElementById('showMoreAlerts');
-        const showLessBtn = document.getElementById('showLessAlerts');
-        const hiddenDiv = document.getElementById('hiddenAlerts');
-        if (showMoreBtn && hiddenDiv) {
-            showMoreBtn.addEventListener('click', () => {
-                hiddenDiv.style.display = 'flex';
-                showMoreBtn.style.display = 'none';
-                if (showLessBtn) showLessBtn.style.display = 'block';
-            });
-        }
-        if (showLessBtn && hiddenDiv) {
-            showLessBtn.addEventListener('click', () => {
-                hiddenDiv.style.display = 'none';
-                showLessBtn.style.display = 'none';
-                if (showMoreBtn) showMoreBtn.style.display = 'block';
-            });
+            const showMoreBtn = document.getElementById('showMoreAlerts');
+            const showLessBtn = document.getElementById('showLessAlerts');
+            const hiddenDiv = document.getElementById('hiddenAlerts');
+            if (showMoreBtn && hiddenDiv) {
+                showMoreBtn.addEventListener('click', () => {
+                    hiddenDiv.style.display = 'flex';
+                    showMoreBtn.style.display = 'none';
+                    if (showLessBtn) showLessBtn.style.display = 'block';
+                });
+            }
+            if (showLessBtn && hiddenDiv) {
+                showLessBtn.addEventListener('click', () => {
+                    hiddenDiv.style.display = 'none';
+                    showLessBtn.style.display = 'none';
+                    if (showMoreBtn) showMoreBtn.style.display = 'block';
+                });
+            }
+        } finally {
+            isRendering = false;
         }
     }
 
@@ -591,6 +603,8 @@
             renderAlerts(alertsData, container);
         }
     }
+
+    // ... (باقي الدوال كما هي بدون تغيير: loadCustomerJourney, renderIncompleteProfile, renderRequestStatus, loadStats, loadChartData, init, cleanup)
 
     // ============================================================
     // 7. حالة الطلب والملف الشخصي
@@ -691,7 +705,7 @@
     }
 
     // ============================================================
-    // 8. الإحصائيات والمخطط (مُصلح)
+    // 8. الإحصائيات والمخطط
     // ============================================================
     async function loadStats(user) {
         try {
@@ -720,11 +734,9 @@
             if (data?.length) { labels = data.map(r => r.month); values = data.map(r => r.value); }
             if (!labels.length) { labels = ['لا توجد بيانات']; values = [0]; }
 
-            // تدمير المخطط القديم بطريقة آمنة
+            // تدمير المخطط القديم بأمان
             let existingChart = Chart.getChart('mainChart');
-            if (existingChart) {
-                existingChart.destroy();
-            }
+            if (existingChart) existingChart.destroy();
             chartInstance = null;
 
             chartInstance = new Chart(ctx, {
@@ -828,7 +840,7 @@
         refreshInterval = setInterval(updateDateTime, 30000);
 
         if (loadingOverlay) loadingOverlay.classList.remove('active');
-        console.log('✅ dashboard.js v10.2 جاهز');
+        console.log('✅ dashboard.js v10.3 جاهز');
     }
 
     function cleanup() {
