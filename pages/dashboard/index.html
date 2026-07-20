@@ -22,10 +22,10 @@
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/responsive.css" />
 
-    <!-- ======== إضافة سكربتات OneSignal ======== -->
+    <!-- ======== OneSignal SDK ======== -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script src="/assets/js/onesignal-init.js" defer></script>
-    <!-- ======================================== -->
+    <!-- ================================= -->
 
     <style>
         /* ========== جميع التنسيقات الأصلية دون تغيير ========== */
@@ -556,6 +556,18 @@
     <script src="/assets/js/modules/session-manager.js"></script>
     <script src="/assets/js/modules/ui-helpers.js"></script>
 
+    <!-- ===== نظام الإشعارات الجديد (موديولات) ===== -->
+    <script src="/assets/js/notifications/notification-manager.js"></script>
+    <script src="/assets/js/notifications/notification-api.js"></script>
+    <script src="/assets/js/notifications/notification-cache.js"></script>
+    <script src="/assets/js/notifications/notification-onesignal.js"></script>
+    <script src="/assets/js/notifications/notification-realtime.js"></script>
+    <script src="/assets/js/notifications/notification-actions.js"></script>
+    <script src="/assets/js/notifications/notification-ui.js"></script>
+    <script src="/assets/js/notifications/notification-filters.js"></script>
+    <script src="/assets/js/notifications/notification-history.js"></script>
+    <script src="/assets/js/notifications/support-notifications.js"></script>
+
     <!-- ⚡ سكريبت موحد للقائمة وزر الخروج -->
     <script>
     (function() {
@@ -568,7 +580,6 @@
             const closeBtn = document.getElementById('closeSidebarBtn');
             const overlay = document.getElementById('sidebarOverlay');
 
-            // فتح/إغلاق القائمة
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', () => {
                     if (window.innerWidth < 992) {
@@ -594,7 +605,6 @@
                 });
             }
 
-            // القوائم الفرعية
             document.querySelectorAll('.has-submenu > a').forEach(link => {
                 link.addEventListener('click', function(e) {
                     const href = this.getAttribute('href');
@@ -604,7 +614,6 @@
                 });
             });
 
-            // 🟢 زر الخروج – يستخدم Auth.logout الآمنة
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async (e) => {
@@ -636,7 +645,7 @@
     })();
     </script>
 
-    <!-- سكريبت لوحة التحكم (v6 مع نظام التنبيهات المتقدم) -->
+    <!-- سكريبت لوحة التحكم -->
     <script src="/assets/js/dashboard.js"></script>
 </body>
 </html>
