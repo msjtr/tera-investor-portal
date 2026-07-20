@@ -3,6 +3,7 @@
  * support-notifications.js – تهيئة نظام الإشعارات
  * ============================================================
  * ملف التهيئة فقط، جميع المنطق في الوحدات المستقلة
+ * ============================================================
  */
 
 (function() {
@@ -12,7 +13,7 @@
     window.__supportNotificationsReady = true;
 
     // ─── انتظار تحميل جميع الوحدات ───
-    async function waitForModules() {
+    async function waitForModules(timeout = 10000) {
         const modules = [
             'NotificationManager',
             'NotificationAPI',
@@ -25,10 +26,12 @@
             'NotificationHistory'
         ];
 
+        const startTime = Date.now();
+
         for (const name of modules) {
             let attempts = 0;
-            while (!window[name] && attempts < 20) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+            while (!window[name] && attempts < 20 && (Date.now() - startTime) < timeout) {
+                await new Promise(resolve => setTimeout(resolve, 300));
                 attempts++;
             }
             if (!window[name]) {
@@ -50,46 +53,63 @@
             const onesignal = window.OneSignalManager;
             const realtime = window.RealtimeManager;
 
+            if (!manager || !api) {
+                throw new Error('Core modules not loaded');
+            }
+
             // 2. تهيئة المدير
             await manager.init();
 
-            // 3. انتظار OneSignal (بدون تهيئة)
+            // 3. OneSignal (استخدام التهيئة الموجودة فقط)
             try {
-                const OneSignal = await onesignal.waitForOneSignal();
-                if (OneSignal) {
-                    const user = await window.Auth?.getCurrentUser?.();
-                    if (user?.id) {
-                        await onesignal.setExternalId(user.id);
+                if (onesignal && typeof onesignal.waitForOneSignal === 'function') {
+                    const OneSignalInstance = await onesignal.waitForOneSignal(10000);
+                    if (OneSignalInstance) {
+                        const user = await window.Auth?.getCurrentUser?.();
+                        if (user?.id) {
+                            await onesignal.setExternalId(user.id);
+                        }
+                        // إضافة مستمع للإشعارات الواردة
+                        await onesignal.addListener(async (notification) => {
+                            manager.addNotification(notification);
+                        });
                     }
-                    onesignal.addListener(async (notification) => {
-                        manager.addNotification(notification);
-                    });
+                } else {
+                    console.warn('⚠️ OneSignalManager not available or missing waitForOneSignal');
                 }
             } catch (err) {
-                console.warn('⚠️ OneSignal not available:', err.message);
+                console.warn('⚠️ OneSignal initialization skipped:', err.message);
             }
 
             // 4. جلب الإشعارات الأولية
-            const result = await api.fetchNotifications();
-            if (result?.data) {
-                result.data.forEach(n => manager.addNotification(n));
+            try {
+                const result = await api.fetchNotifications();
+                if (result?.data) {
+                    result.data.forEach(n => manager.addNotification(n));
+                }
+            } catch (err) {
+                console.warn('⚠️ Failed to fetch initial notifications:', err.message);
             }
 
             // 5. بدء Realtime
-            const user = await window.Auth?.getCurrentUser?.();
-            if (user?.id) {
-                await realtime.start(
-                    user.id,
-                    (newNotif) => {
-                        manager.addNotification(newNotif);
-                    },
-                    (updatedNotif) => {
-                        manager.updateNotification(updatedNotif.id, updatedNotif);
-                    }
-                );
+            try {
+                const user = await window.Auth?.getCurrentUser?.();
+                if (user?.id && realtime && typeof realtime.start === 'function') {
+                    await realtime.start(
+                        user.id,
+                        (newNotif) => {
+                            manager.addNotification(newNotif);
+                        },
+                        (updatedNotif) => {
+                            manager.updateNotification(updatedNotif.id, updatedNotif);
+                        }
+                    );
+                }
+            } catch (err) {
+                console.warn('⚠️ Realtime connection failed:', err.message);
             }
 
-            // 6. الاستماع لتغييرات الحالة وتحديث الواجهة
+            // 6. الاستماع لتغييرات الحالة
             manager.on('state:changed', (state) => {
                 updateUI(state);
             });
@@ -121,35 +141,64 @@
             important: document.getElementById('statImportant')
         };
 
-        if (stats.total) stats.total.textContent = state.totalCount;
-        if (stats.unread) stats.unread.textContent = state.unreadCount;
-        if (stats.read) stats.read.textContent = state.cache.filter(n => n.status === 'read').length;
-        if (stats.archived) stats.archived.textContent = state.cache.filter(n => n.status === 'archived').length;
-        if (stats.important) stats.important.textContent = state.cache.filter(n => n.priority === 'urgent' || n.priority === 'high').length;
+        const cache = state.cache || [];
+        const unreadCount = state.unreadCount || 0;
+        const totalCount = state.totalCount || cache.length;
+        const readCount = cache.filter(n => n.status === 'read').length;
+        const archivedCount = cache.filter(n => n.status === 'archived').length;
+        const importantCount = cache.filter(n => n.priority === 'urgent' || n.priority === 'high').length;
+
+        if (stats.total) stats.total.textContent = totalCount;
+        if (stats.unread) stats.unread.textContent = unreadCount;
+        if (stats.read) stats.read.textContent = readCount;
+        if (stats.archived) stats.archived.textContent = archivedCount;
+        if (stats.important) stats.important.textContent = importantCount;
 
         // تحديث عنوان الصفحة
-        document.title = state.unreadCount > 0 ? `(${state.unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
+        document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
     }
 
     // ─── التشغيل ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
+        // إذا كان DOM جاهزاً بالفعل، شغل التهيئة فوراً
         init();
     }
 
     // ─── تصدير API عامة للاستخدام في HTML ───
     window.__openDetail = (id) => {
         console.log('📖 Open notification detail:', id);
+        // يمكن توسيعها لفتح الـ Modal
+        const manager = window.NotificationManager;
+        if (manager) {
+            const notification = manager.getState().cache.find(n => n.id === id);
+            if (notification) {
+                window.NotificationUI?.openDetail?.(notification);
+            }
+        }
     };
 
     window.__deleteNotification = async (id) => {
         const manager = window.NotificationManager;
         if (manager) {
-            await window.NotificationAPI.updateNotification(id, { status: 'deleted' });
+            await window.NotificationAPI?.updateNotification?.(id, { status: 'deleted' });
             manager.deleteNotification(id);
         }
     };
 
+    window.__refreshNotifications = async () => {
+        const manager = window.NotificationManager;
+        if (manager) {
+            const api = window.NotificationAPI;
+            const result = await api.fetchNotifications(true);
+            if (result?.data) {
+                manager.getState().cache = [];
+                result.data.forEach(n => manager.addNotification(n));
+            }
+        }
+    };
+
     console.log('✅ support-notifications.js ready');
+
 })();
