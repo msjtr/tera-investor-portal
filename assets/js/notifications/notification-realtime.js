@@ -2,7 +2,6 @@
  * ============================================================
  * notification-realtime.js – Supabase Realtime
  * ============================================================
- * يستمع لتغييرات الإشعارات في الوقت الفعلي
  */
 
 (function() {
@@ -12,76 +11,56 @@
     window.__notificationRealtime = true;
 
     let channel = null;
-    let isConnected = false;
 
-    // ─── الحصول على Supabase ───
     async function getSupabase() {
         return window.teraSupabase || await window.waitForSupabase?.();
     }
 
-    // ─── بدء الاستماع ───
-    async function startListening(userId, onInsert, onUpdate) {
+    async function start(userId, onInsert, onUpdate) {
         try {
             const sb = await getSupabase();
             if (!sb) throw new Error('Supabase not available');
 
             if (channel) {
-                await sb.removeChannel(channel);
+                try { await sb.removeChannel(channel); } catch (e) { /* ignore */ }
                 channel = null;
             }
 
             channel = sb
                 .channel('notifications-realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${userId}`
-                    },
-                    (payload) => {
-                        if (onInsert && typeof onInsert === 'function') {
-                            onInsert(payload.new);
-                        }
-                    }
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'notifications',
-                        filter: `user_id=eq.${userId}`
-                    },
-                    (payload) => {
-                        if (onUpdate && typeof onUpdate === 'function') {
-                            onUpdate(payload.new);
-                        }
-                    }
-                )
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${userId}`
+                }, (payload) => {
+                    if (onInsert && typeof onInsert === 'function') onInsert(payload.new);
+                })
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${userId}`
+                }, (payload) => {
+                    if (onUpdate && typeof onUpdate === 'function') onUpdate(payload.new);
+                })
                 .subscribe((status) => {
-                    isConnected = status === 'SUBSCRIBED';
                     console.log(`📡 Realtime status: ${status}`);
                 });
 
             return true;
         } catch (err) {
-            console.error('❌ Realtime error:', err);
+            console.warn('⚠️ Realtime start error:', err);
             return false;
         }
     }
 
-    // ─── إيقاف الاستماع ───
-    async function stopListening() {
+    async function stop() {
         try {
             if (channel) {
                 const sb = await getSupabase();
-                if (sb) {
-                    await sb.removeChannel(channel);
-                }
+                if (sb) await sb.removeChannel(channel);
                 channel = null;
-                isConnected = false;
             }
             return true;
         } catch (err) {
@@ -90,13 +69,6 @@
         }
     }
 
-    // ─── API العامة ───
-    window.RealtimeManager = {
-        start: startListening,
-        stop: stopListening,
-        isConnected: () => isConnected
-    };
-
+    window.RealtimeManager = { start, stop };
     console.log('✅ notification-realtime.js ready');
-
 })();
