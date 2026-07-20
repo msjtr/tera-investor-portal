@@ -1,16 +1,10 @@
 /**
  * ============================================================
- * notification-onesignal.js – OneSignal SDK v16 (الإصدار النهائي)
+ * notification-onesignal.js – OneSignal SDK v16 (الإصدار النهائي المُصلح)
  * ============================================================
  * 
- * تم إصلاحه لتجنب الأخطاء الداخلية في OneSignal.login()
- * باستخدام addAlias فقط، وهو أكثر استقراراً.
- * 
- * الخلل السابق:
- * TypeError: Cannot read properties of undefined (reading 'Qe')
- * 
- * السبب: OneSignal.login() قد يفشل إذا لم يكتمل تهيئة SDK بالكامل.
- * الحل: استخدام OneSignal.User.addAlias() وهو أكثر أماناً.
+ * تم إصلاح خطأ "label is the wrong type" في addAlias.
+ * الصيغة الصحيحة: addAlias(label, id) وليس addAlias({ label, id })
  */
 
 (function() {
@@ -48,25 +42,27 @@
         });
     }
 
-    // ─── ربط المستخدم (باستخدام addAlias فقط) ───
+    // ─── ربط المستخدم (باستخدام addAlias بطريقة صحيحة) ───
     async function setExternalId(userId) {
         if (!userId) {
             console.warn('⚠️ OneSignal: No userId');
             return false;
         }
 
+        // التأكد من أن userId نصي
+        const userIdStr = String(userId);
+
         try {
-            // ننتظر OneSignal مع مهلة قصيرة
             const OneSignal = await waitForOneSignal(5000);
             if (!OneSignal || !OneSignal.User) {
                 console.warn('⚠️ OneSignal not ready, skipping');
                 return false;
             }
 
-            // استخدام addAlias (الطريقة الموصى بها لتحديد external_id)
+            // ✅ الإصلاح: استخدام addAlias بوسيطين منفصلين
             if (typeof OneSignal.User.addAlias === 'function') {
-                await OneSignal.User.addAlias({ label: 'external_id', id: userId });
-                console.log('✅ OneSignal external_id set for user:', userId);
+                await OneSignal.User.addAlias('external_id', userIdStr);
+                console.log('✅ OneSignal external_id set for user:', userIdStr);
                 return true;
             } else {
                 console.warn('⚠️ OneSignal.User.addAlias not available');
@@ -78,7 +74,7 @@
         }
     }
 
-    // ─── تسجيل الخروج (لا نحتاجه فعلياً، لكن نتركه) ───
+    // ─── تسجيل الخروج ───
     async function logout() {
         try {
             const OneSignal = await waitForOneSignal(3000);
@@ -161,5 +157,5 @@
         removeAllListeners
     };
 
-    console.log('✅ notification-onesignal.js ready (using addAlias only)');
+    console.log('✅ notification-onesignal.js ready (addAlias fixed)');
 })();
