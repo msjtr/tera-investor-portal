@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * notification-ui.js – عرض الواجهة والتفاعل (مُصلح)
+ * notification-ui.js – عرض الواجهة والتفاعل (مُصلح بالكامل)
  * ============================================================
  */
 
@@ -40,7 +40,6 @@
             deleteBtn: document.getElementById('deleteBtn')
         };
 
-        // تحقق من وجود العناصر الأساسية
         if (!DOM.list) {
             console.warn('⚠️ notificationsList not found, will retry on next render');
         }
@@ -101,13 +100,19 @@
 
         if (!DOM.list) {
             console.warn('⚠️ notificationsList element not found, cannot render');
-            // محاولة مرة أخرى بعد تأخير
-            setTimeout(() => {
-                refreshDOMReferences();
-                if (DOM.list) {
-                    render(notifications, page);
-                }
-            }, 500);
+            // محاولة مرة أخرى بعد تأخير (مرة واحدة فقط)
+            if (!render._retry) {
+                render._retry = true;
+                setTimeout(() => {
+                    render._retry = false;
+                    refreshDOMReferences();
+                    if (DOM.list) {
+                        render(notifications, page);
+                    } else {
+                        console.error('❌ notificationsList still not found after retry');
+                    }
+                }, 500);
+            }
             return;
         }
 
@@ -216,6 +221,8 @@
         renderPagination(filtered.length);
         updateSelectAllButton();
     }
+    // منع إعادة المحاولة المتكررة
+    render._retry = false;
 
     // ─── معالج النقر على الأزرار ───
     function handleCardClick(e) {
@@ -473,12 +480,15 @@
 
     // ─── التهيئة ───
     function init() {
-        refreshDOMReferences();
+        // تأكد من وجود العنصر
+        const list = document.getElementById('notificationsList');
+        if (!list) {
+            console.warn('⏳ notificationsList not ready, retrying in 500ms');
+            setTimeout(init, 500);
+            return;
+        }
 
-        if (DOM.closeModal) DOM.closeModal.addEventListener('click', closeDetail);
-        if (DOM.modal) DOM.modal.addEventListener('click', (e) => {
-            if (e.target === DOM.modal) closeDetail();
-        });
+        refreshDOMReferences();
         bindFilters();
         bindToolbarButtons();
 
@@ -511,6 +521,7 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
+        // إذا كان DOM جاهزاً بالفعل، حاول التهيئة فوراً
         init();
     }
 
