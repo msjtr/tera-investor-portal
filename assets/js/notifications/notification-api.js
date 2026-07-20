@@ -1,8 +1,7 @@
 /**
  * ============================================================
- * notification-api.js – الاتصال بـ Edge Functions فقط
+ * notification-api.js – الاتصال بـ Edge Functions
  * ============================================================
- * جميع الاستعلامات تمر عبر Edge Functions
  */
 
 (function() {
@@ -11,8 +10,7 @@
     if (window.__notificationApi) return;
     window.__notificationApi = true;
 
-    const SUPABASE_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
-    const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+    const FUNCTIONS_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1';
 
     async function getAccessToken() {
         try {
@@ -26,7 +24,7 @@
             }
             return session.access_token;
         } catch (e) {
-            console.warn('⚠️ فشل جلب التوكن:', e);
+            console.warn('⚠️ getAccessToken error:', e);
             return null;
         }
     }
@@ -34,37 +32,23 @@
     async function fetchNotifications() {
         try {
             const token = await getAccessToken();
-            if (!token) throw new Error('لا يوجد توكن صالح');
-
-            const response = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+            if (!token) throw new Error('No token');
+            const res = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (response.status === 401) {
+            if (res.status === 401) {
                 const token2 = await getAccessToken();
-                if (!token2) throw new Error('انتهت الجلسة');
-                const retryResponse = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
+                if (!token2) throw new Error('Session expired');
+                const retry = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
                     headers: { 'Authorization': `Bearer ${token2}` }
                 });
-                if (!retryResponse.ok) {
-                    const err = await retryResponse.json().catch(() => ({}));
-                    throw new Error(err.error || `HTTP ${retryResponse.status}`);
-                }
-                return await retryResponse.json();
+                if (!retry.ok) throw new Error(`HTTP ${retry.status}`);
+                return await retry.json();
             }
-
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || `HTTP ${response.status}`);
-            }
-
-            return await response.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
         } catch (err) {
-            console.error('❌ فشل جلب الإشعارات:', err);
+            console.error('❌ fetchNotifications error:', err);
             throw err;
         }
     }
@@ -72,34 +56,20 @@
     async function updateNotification(id, updates) {
         try {
             const token = await getAccessToken();
-            if (!token) throw new Error('لا يوجد توكن صالح');
-
-            const response = await fetch(`${FUNCTIONS_URL}/update-notification`, {
+            if (!token) throw new Error('No token');
+            const res = await fetch(`${FUNCTIONS_URL}/update-notification`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, ...updates })
             });
-
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || `HTTP ${response.status}`);
-            }
-
-            return await response.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
         } catch (err) {
-            console.error('❌ فشل تحديث الإشعار:', err);
+            console.error('❌ updateNotification error:', err);
             throw err;
         }
     }
 
-    window.NotificationAPI = {
-        fetchNotifications,
-        updateNotification,
-        getAccessToken
-    };
-
+    window.NotificationAPI = { fetchNotifications, updateNotification, getAccessToken };
     console.log('✅ notification-api.js ready');
 })();
