@@ -1,8 +1,10 @@
-// ============================================================
-// notification-ui.js – عرض وتحديث الواجهة
-// ============================================================
-// مسؤول عن عرض الإشعارات وتحديث الـ DOM بكفاءة
-// ============================================================
+/**
+ * ============================================================
+ * notification-ui.js – عرض وتحديث الواجهة (مُصلح)
+ * ============================================================
+ * مسؤول عن عرض الإشعارات وتحديث الـ DOM بكفاءة
+ * ربط الأحداث عبر Delegation لتجنب فقدان الربط
+ */
 
 (function() {
     'use strict';
@@ -26,6 +28,10 @@
         modalBody: document.getElementById('modalBody'),
         modalTitle: document.getElementById('modalTitle')
     };
+
+    let currentPage = 1;
+    let pageSize = 20;
+    let allNotifications = [];
 
     // ─── الأدوات المساعدة ───
     const Utils = {
@@ -97,8 +103,10 @@
     function renderNotifications(notifications, page = 1, pageSize = 20) {
         if (!DOM.list) return;
 
-        // تصفية المنتهية
-        const filtered = notifications.filter(n => !Utils.isExpired(n.expires_at));
+        allNotifications = notifications || [];
+        currentPage = page;
+
+        const filtered = allNotifications.filter(n => !Utils.isExpired(n.expires_at));
 
         if (filtered.length === 0) {
             DOM.list.innerHTML = `
@@ -108,10 +116,10 @@
                     <p style="margin-top:8px;font-size:14px;">سيتم عرض الإشعارات هنا عند ورودها.</p>
                 </div>
             `;
+            renderPagination(0, page, pageSize);
             return;
         }
 
-        // Pagination
         const from = (page - 1) * pageSize;
         const to = Math.min(from + pageSize, filtered.length);
         const pageItems = filtered.slice(from, to);
@@ -163,56 +171,94 @@
 
         DOM.list.innerHTML = html;
 
-        // ربط الأحداث
-        bindEvents();
+        // ✅ ربط الأحداث باستخدام Delegation (حدث واحد على القائمة)
+        DOM.list.removeEventListener('click', handleCardClick);
+        DOM.list.addEventListener('click', handleCardClick);
 
         // تحديث Pagination
         renderPagination(filtered.length, page, pageSize);
     }
 
-    // ─── ربط الأحداث ───
-    function bindEvents() {
-        if (!DOM.list) return;
+    // ─── معالج أحداث البطاقات (Delegation) ───
+    function handleCardClick(e) {
+        const target = e.target.closest('button');
+        if (!target) return;
 
-        DOM.list.querySelectorAll('.view-details').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                if (id) window.NotificationUI?.openDetail?.(id);
-            });
-        });
+        const card = target.closest('.notification-card');
+        if (!card) return;
 
-        DOM.list.querySelectorAll('.mark-read-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                if (id) window.NotificationActions?.markAsRead?.(id);
-            });
-        });
+        const id = card.dataset.id;
+        if (!id) return;
 
-        DOM.list.querySelectorAll('.archive-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                if (id) window.NotificationActions?.archive?.(id);
-            });
-        });
+        // عرض التفاصيل
+        if (target.classList.contains('view-details')) {
+            e.stopPropagation();
+            const notification = allNotifications.find(n => n.id === id);
+            if (notification) {
+                openDetail(notification);
+            }
+            return;
+        }
 
-        DOM.list.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                if (id) window.NotificationActions?.deleteNotification?.(id);
-            });
-        });
+        // تعليم كمقروء
+        if (target.classList.contains('mark-read-btn')) {
+            e.stopPropagation();
+            if (window.NotificationActions && typeof window.NotificationActions.markAsRead === 'function') {
+                window.NotificationActions.markAsRead(id).then(() => {
+                    // تحديث القائمة بعد العملية
+                    refreshCurrentList();
+                });
+            } else {
+                console.warn('⚠️ NotificationActions.markAsRead غير متوفر');
+            }
+            return;
+        }
 
-        // النقر على البطاقة لفتح التفاصيل
-        DOM.list.querySelectorAll('.notification-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const id = this.dataset.id;
-                if (id) window.NotificationUI?.openDetail?.(id);
-            });
-        });
+        // أرشفة
+        if (target.classList.contains('archive-btn')) {
+            e.stopPropagation();
+            if (window.NotificationActions && typeof window.NotificationActions.archive === 'function') {
+                window.NotificationActions.archive(id).then(() => {
+                    refreshCurrentList();
+                });
+            } else {
+                console.warn('⚠️ NotificationActions.archive غير متوفر');
+            }
+            return;
+        }
+
+        // حذف
+        if (target.classList.contains('delete-btn')) {
+            e.stopPropagation();
+            if (window.NotificationActions && typeof window.NotificationActions.deleteNotification === 'function') {
+                window.NotificationActions.deleteNotification(id).then(() => {
+                    refreshCurrentList();
+                });
+            } else {
+                console.warn('⚠️ NotificationActions.deleteNotification غير متوفر');
+            }
+            return;
+        }
+
+        // النقر على البطاقة نفسها (غير الزر) لفتح التفاصيل
+        if (target === card || target.closest('.notif-content')) {
+            const notification = allNotifications.find(n => n.id === id);
+            if (notification) {
+                openDetail(notification);
+            }
+        }
+    }
+
+    // ─── تحديث القائمة الحالية ───
+    function refreshCurrentList() {
+        // جلب البيانات من الكاش وإعادة العرض
+        const cache = window.NotificationCache;
+        if (cache) {
+            const all = cache.getAll();
+            renderNotifications(all, currentPage, pageSize);
+        } else {
+            console.warn('⚠️ NotificationCache غير متوفر');
+        }
     }
 
     // ─── عرض Pagination ───
@@ -237,8 +283,10 @@
         DOM.pagination.querySelectorAll('button[data-page]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const p = parseInt(this.dataset.page);
-                if (p && window.NotificationUI?.goToPage) {
-                    window.NotificationUI.goToPage(p);
+                if (p && p !== currentPage) {
+                    currentPage = p;
+                    renderNotifications(allNotifications, p, pageSize);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             });
         });
@@ -252,13 +300,11 @@
         if (DOM.stats.archived) DOM.stats.archived.textContent = stats.archived || 0;
         if (DOM.stats.important) DOM.stats.important.textContent = stats.important || 0;
 
-        // تحديث البادج
         if (DOM.unreadBadge) {
             DOM.unreadBadge.textContent = stats.unread || 0;
             DOM.unreadBadge.style.display = stats.unread > 0 ? 'inline-block' : 'none';
         }
 
-        // تحديث عنوان الصفحة
         document.title = stats.unread > 0 ? `(${stats.unread}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
     }
 
@@ -311,9 +357,10 @@
 
         DOM.modal.classList.add('active');
 
-        // تعليم كمقروء تلقائياً
         if (notification.status === 'unread') {
-            window.NotificationActions?.markAsRead?.(notification.id);
+            if (window.NotificationActions && typeof window.NotificationActions.markAsRead === 'function') {
+                window.NotificationActions.markAsRead(notification.id);
+            }
         }
     }
 
@@ -324,24 +371,6 @@
         }
     }
 
-    // ─── إضافة إشعار إلى الواجهة (تحديث فوري) ───
-    function addNotificationToUI(notification) {
-        // إعادة تحميل القائمة بالكامل (سيتم تحسينها لاحقاً)
-        const currentPage = window.__notificationCurrentPage || 1;
-        const pageSize = 20;
-        const all = window.NotificationCache?.getAll() || [];
-        renderNotifications(all, currentPage, pageSize);
-    }
-
-    // ─── تحديث إشعار في الواجهة ───
-    function updateNotificationInUI(id) {
-        // إعادة تحميل القائمة بالكامل (سيتم تحسينها لاحقاً)
-        const currentPage = window.__notificationCurrentPage || 1;
-        const pageSize = 20;
-        const all = window.NotificationCache?.getAll() || [];
-        renderNotifications(all, currentPage, pageSize);
-    }
-
     // ─── API العامة ───
     window.NotificationUI = {
         render: renderNotifications,
@@ -350,12 +379,16 @@
         openDetail,
         closeDetail,
         goToPage: (page) => {
-            window.__notificationCurrentPage = page;
-            const all = window.NotificationCache?.getAll() || [];
-            renderNotifications(all, page, 20);
+            if (page && page !== currentPage) {
+                currentPage = page;
+                const cache = window.NotificationCache;
+                if (cache) {
+                    const all = cache.getAll();
+                    renderNotifications(all, page, pageSize);
+                }
+            }
         },
-        addNotification: addNotificationToUI,
-        updateNotification: updateNotificationInUI,
+        refresh: refreshCurrentList,
         DOM
     };
 
@@ -372,6 +405,5 @@
         closeBtn.addEventListener('click', closeDetail);
     }
 
-    console.log('✅ notification-ui.js ready');
-
+    console.log('✅ notification-ui.js ready (with event delegation)');
 })();
