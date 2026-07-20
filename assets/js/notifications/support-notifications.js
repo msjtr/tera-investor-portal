@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * support-notifications.js – تهيئة نظام الإشعارات
+ * support-notifications.js – تهيئة نظام الإشعارات (مُصلح)
  * ============================================================
  * ملف التهيئة فقط، جميع المنطق في الوحدات المستقلة
  * ============================================================
@@ -45,7 +45,7 @@
         try {
             const user = await window.Auth?.getCurrentUser?.();
             if (user?.id) {
-                await onesignal.setExternalId(user.id); // يستخدم OneSignal.login()
+                await onesignal.setExternalId(user.id);
                 return true;
             }
             return false;
@@ -63,7 +63,6 @@
         const deleteBtn = document.getElementById('deleteBtn');
         const refreshBtn = document.getElementById('refreshBtn');
 
-        // تحديد الكل
         if (selectAllBtn) {
             selectAllBtn.addEventListener('click', () => {
                 const cards = document.querySelectorAll('.notification-card');
@@ -98,7 +97,6 @@
             });
         }
 
-        // تعليم كمقروء (للمحددين)
         if (markReadBtn) {
             markReadBtn.addEventListener('click', async () => {
                 const manager = window.NotificationManager;
@@ -114,16 +112,10 @@
                     await window.NotificationActions.markAsRead(id);
                 }
                 manager.getState().selected.clear();
-                // تحديث القائمة
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    window.NotificationUI.refresh();
-                }
-                // تحديث العداد
-                await window.Support?.updateNotificationBadge?.();
+                await refreshUI();
             });
         }
 
-        // أرشفة (للمحددين)
         if (archiveBtn) {
             archiveBtn.addEventListener('click', async () => {
                 const manager = window.NotificationManager;
@@ -139,14 +131,10 @@
                     await window.NotificationActions.archive(id);
                 }
                 manager.getState().selected.clear();
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    window.NotificationUI.refresh();
-                }
-                await window.Support?.updateNotificationBadge?.();
+                await refreshUI();
             });
         }
 
-        // حذف (للمحددين)
         if (deleteBtn) {
             deleteBtn.addEventListener('click', async () => {
                 const manager = window.NotificationManager;
@@ -162,162 +150,58 @@
                     await window.NotificationActions.deleteNotification(id);
                 }
                 manager.getState().selected.clear();
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    window.NotificationUI.refresh();
-                }
-                await window.Support?.updateNotificationBadge?.();
+                await refreshUI();
             });
         }
 
-        // تحديث (Refresh)
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    window.NotificationUI.refresh();
-                }
+            refreshBtn.addEventListener('click', async () => {
+                await refreshUI();
                 // إعادة تحميل من الخادم
-                window.NotificationAPI?.fetchNotifications(true).then(result => {
-                    if (result?.data) {
-                        const manager = window.NotificationManager;
-                        if (manager) {
-                            manager.getState().cache = [];
-                            result.data.forEach(n => manager.addNotification(n));
-                        }
+                const result = await window.NotificationAPI?.fetchNotifications(true);
+                if (result?.data) {
+                    const manager = window.NotificationManager;
+                    if (manager) {
+                        manager.getState().cache = [];
+                        result.data.forEach(n => manager.addNotification(n));
                     }
-                });
+                }
+                await refreshUI();
             });
         }
 
         console.log('✅ Toolbar buttons bound');
     }
 
-    // ─── التهيئة ───
-    async function init() {
-        console.log('🚀 Initializing Notification System...');
+    // ─── تحديث الواجهة ───
+    async function refreshUI() {
+        const manager = window.NotificationManager;
+        if (!manager) return;
 
-        try {
-            // 1. انتظار الوحدات
-            await waitForModules();
-
-            const manager = window.NotificationManager;
-            const api = window.NotificationAPI;
-            const onesignal = window.OneSignalManager;
-            const realtime = window.RealtimeManager;
-
-            if (!manager || !api) {
-                throw new Error('Core modules not loaded');
-            }
-
-            // 2. تهيئة المدير
-            await manager.init();
-
-            // 3. OneSignal (استخدام التهيئة الموجودة فقط)
-            let oneSignalReady = false;
-            try {
-                if (onesignal && typeof onesignal.waitForOneSignal === 'function') {
-                    const OneSignalInstance = await onesignal.waitForOneSignal(10000);
-                    if (OneSignalInstance) {
-                        await linkOneSignalUser(onesignal);
-
-                        // إضافة مستمع للإشعارات الواردة
-                        await onesignal.addListener(async (notification) => {
-                            manager.addNotification(notification);
-                        });
-
-                        oneSignalReady = true;
-                    }
-                } else {
-                    console.warn('⚠️ OneSignalManager not available or missing waitForOneSignal');
-                }
-            } catch (err) {
-                console.warn('⚠️ OneSignal initialization skipped:', err.message);
-            }
-
-            // 4. جلب الإشعارات الأولية
-            try {
-                const result = await api.fetchNotifications();
-                if (result?.data) {
-                    result.data.forEach(n => manager.addNotification(n));
-                }
-            } catch (err) {
-                console.warn('⚠️ Failed to fetch initial notifications:', err.message);
-            }
-
-            // 5. عرض الإشعارات في الواجهة
-            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                const cache = window.NotificationCache;
-                if (cache) {
-                    const all = cache.getAll();
-                    window.NotificationUI.render(all, 1, 20);
-                } else {
-                    // إذا لم يكن الكاش جاهزاً، استخدم المدير
-                    const state = manager.getState();
-                    window.NotificationUI.render(state.cache, 1, 20);
-                }
-            }
-
-            // 6. ربط أزرار شريط الأدوات
-            bindToolbarButtons();
-
-            // 7. بدء Realtime
-            try {
-                const user = await window.Auth?.getCurrentUser?.();
-                if (user?.id && realtime && typeof realtime.start === 'function') {
-                    await realtime.start(
-                        user.id,
-                        (newNotif) => {
-                            manager.addNotification(newNotif);
-                            // تحديث الواجهة عند إضافة جديد
-                            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                                window.NotificationUI.refresh();
-                            }
-                        },
-                        (updatedNotif) => {
-                            manager.updateNotification(updatedNotif.id, updatedNotif);
-                            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                                window.NotificationUI.refresh();
-                            }
-                        }
-                    );
-                }
-            } catch (err) {
-                console.warn('⚠️ Realtime connection failed:', err.message);
-            }
-
-            // 8. الاستماع لتغييرات الحالة
-            manager.on('state:changed', (state) => {
-                updateUI(state);
-                // تحديث الواجهة عند تغير الحالة
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    window.NotificationUI.refresh();
-                }
-            });
-
-            // 9. الاستماع لتغييرات تسجيل الدخول/الخروج لتحديث OneSignal
-            if (window.Auth && typeof window.Auth.onAuthStateChange === 'function') {
-                window.Auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'SIGNED_IN' && session?.user) {
-                        if (oneSignalReady && onesignal) {
-                            await linkOneSignalUser(onesignal);
-                        }
-                    } else if (event === 'SIGNED_OUT') {
-                        if (oneSignalReady && onesignal && typeof onesignal.logout === 'function') {
-                            await onesignal.logout();
-                        }
-                    }
-                });
-            }
-
-            console.log('✅ Notification System ready');
-
-        } catch (err) {
-            console.error('❌ Notification System initialization failed:', err);
+        const cache = window.NotificationCache;
+        let notifications = [];
+        if (cache && typeof cache.getAll === 'function') {
+            notifications = cache.getAll();
+        } else {
+            notifications = manager.getState().cache || [];
         }
+
+        // تحديث الإحصائيات
+        updateUI(manager.getState());
+
+        // تحديث القائمة
+        if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+            window.NotificationUI.render(notifications, 1, 20);
+        } else {
+            console.warn('⚠️ NotificationUI.render not available');
+        }
+
+        // تحديث العداد
+        await window.Support?.updateNotificationBadge?.();
     }
 
-    // ─── تحديث الواجهة (الإحصائيات والعدادات) ───
+    // ─── تحديث الإحصائيات والعدادات (UI) ───
     function updateUI(state) {
-        // تحديث العداد
         const badges = document.querySelectorAll('.badge-count, #unreadBadge');
         badges.forEach(el => {
             if (el) {
@@ -326,7 +210,6 @@
             }
         });
 
-        // تحديث الإحصائيات
         const stats = {
             total: document.getElementById('statTotal'),
             unread: document.getElementById('statUnread'),
@@ -348,55 +231,149 @@
         if (stats.archived) stats.archived.textContent = archivedCount;
         if (stats.important) stats.important.textContent = importantCount;
 
-        // تحديث عنوان الصفحة
         document.title = unreadCount > 0 ? `(${unreadCount}) مركز الإشعارات | Tera` : 'مركز الإشعارات | Tera';
+    }
+
+    // ─── التهيئة ───
+    async function init() {
+        console.log('🚀 Initializing Notification System...');
+
+        try {
+            await waitForModules();
+
+            const manager = window.NotificationManager;
+            const api = window.NotificationAPI;
+            const onesignal = window.OneSignalManager;
+            const realtime = window.RealtimeManager;
+
+            if (!manager || !api) {
+                throw new Error('Core modules not loaded');
+            }
+
+            await manager.init();
+
+            // OneSignal
+            let oneSignalReady = false;
+            try {
+                if (onesignal && typeof onesignal.waitForOneSignal === 'function') {
+                    const OneSignalInstance = await onesignal.waitForOneSignal(10000);
+                    if (OneSignalInstance) {
+                        await linkOneSignalUser(onesignal);
+                        await onesignal.addListener(async (notification) => {
+                            manager.addNotification(notification);
+                            await refreshUI();
+                        });
+                        oneSignalReady = true;
+                    }
+                }
+            } catch (err) {
+                console.warn('⚠️ OneSignal initialization skipped:', err.message);
+            }
+
+            // جلب الإشعارات الأولية
+            let initialData = [];
+            try {
+                const result = await api.fetchNotifications();
+                if (result?.data) {
+                    initialData = result.data;
+                    initialData.forEach(n => manager.addNotification(n));
+                }
+            } catch (err) {
+                console.warn('⚠️ Failed to fetch initial notifications:', err.message);
+            }
+
+            // عرض الإشعارات
+            await refreshUI();
+
+            // ربط أزرار شريط الأدوات
+            bindToolbarButtons();
+
+            // بدء Realtime
+            try {
+                const user = await window.Auth?.getCurrentUser?.();
+                if (user?.id && realtime && typeof realtime.start === 'function') {
+                    await realtime.start(
+                        user.id,
+                        async (newNotif) => {
+                            manager.addNotification(newNotif);
+                            await refreshUI();
+                        },
+                        async (updatedNotif) => {
+                            manager.updateNotification(updatedNotif.id, updatedNotif);
+                            await refreshUI();
+                        }
+                    );
+                }
+            } catch (err) {
+                console.warn('⚠️ Realtime connection failed:', err.message);
+            }
+
+            // الاستماع لتغييرات الحالة
+            manager.on('state:changed', async (state) => {
+                updateUI(state);
+                // إعادة عرض القائمة عند تغير الحالة
+                const cache = window.NotificationCache;
+                if (cache && typeof cache.getAll === 'function') {
+                    const all = cache.getAll();
+                    if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                        window.NotificationUI.render(all, 1, 20);
+                    }
+                }
+            });
+
+            // Auth state change
+            if (window.Auth && typeof window.Auth.onAuthStateChange === 'function') {
+                window.Auth.onAuthStateChange(async (event, session) => {
+                    if (event === 'SIGNED_IN' && session?.user) {
+                        if (oneSignalReady && onesignal) {
+                            await linkOneSignalUser(onesignal);
+                        }
+                        await refreshUI();
+                    } else if (event === 'SIGNED_OUT') {
+                        if (oneSignalReady && onesignal && typeof onesignal.logout === 'function') {
+                            await onesignal.logout();
+                        }
+                    }
+                });
+            }
+
+            console.log('✅ Notification System ready');
+            console.log(`📊 Total notifications: ${initialData.length}`);
+
+        } catch (err) {
+            console.error('❌ Notification System initialization failed:', err);
+        }
     }
 
     // ─── التشغيل ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        // إذا كان DOM جاهزاً بالفعل، شغل التهيئة فوراً
         init();
     }
 
-    // ─── تصدير API عامة للاستخدام في HTML ───
+    // ─── تصدير API عامة ───
     window.__openDetail = (id) => {
-        console.log('📖 Open notification detail:', id);
         const manager = window.NotificationManager;
         if (manager) {
             const notification = manager.getState().cache.find(n => n.id === id);
             if (notification && window.NotificationUI && typeof window.NotificationUI.openDetail === 'function') {
                 window.NotificationUI.openDetail(notification);
-            } else if (notification) {
-                console.warn('⚠️ NotificationUI not available, cannot open detail');
             }
         }
     };
 
     window.__deleteNotification = async (id) => {
-        const manager = window.NotificationManager;
-        if (manager) {
-            await window.NotificationAPI?.updateNotification?.(id, { status: 'deleted' });
-            manager.deleteNotification(id);
-            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                window.NotificationUI.refresh();
-            }
-        }
+        await window.NotificationActions?.deleteNotification(id);
+        await refreshUI();
     };
 
     window.__refreshNotifications = async () => {
-        const manager = window.NotificationManager;
-        if (manager) {
-            const api = window.NotificationAPI;
-            const result = await api.fetchNotifications(true);
-            if (result?.data) {
-                manager.getState().cache = [];
-                result.data.forEach(n => manager.addNotification(n));
-            }
-        }
+        await refreshUI();
     };
 
-    console.log('✅ support-notifications.js ready');
+    // تصدير refreshUI للاستخدام في وحدات أخرى
+    window.__refreshUI = refreshUI;
 
+    console.log('✅ support-notifications.js ready');
 })();
