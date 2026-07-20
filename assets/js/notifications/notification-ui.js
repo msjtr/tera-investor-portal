@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * notification-ui.js – عرض الواجهة والتفاعل (الإصدار النهائي)
+ * notification-ui.js – عرض الواجهة والتفاعل (إصدار محسّن)
  * ============================================================
  */
 
@@ -39,10 +39,6 @@
             archiveBtn: document.getElementById('archiveBtn'),
             deleteBtn: document.getElementById('deleteBtn')
         };
-
-        if (!DOM.list) {
-            console.warn('⚠️ notificationsList not found');
-        }
     }
 
     refreshDOMReferences();
@@ -92,23 +88,15 @@
         }
     };
 
-    // ─── إنشاء عنصر القائمة إذا لم يكن موجوداً ───
+    // ─── إنشاء عنصر القائمة إذا لم يكن موجوداً (لا يفشل أبداً) ───
     function ensureListElement() {
-        if (DOM.list) return true;
+        if (DOM.list && DOM.list.isConnected) return true;
 
         // البحث مرة أخرى
         DOM.list = document.getElementById('notificationsList');
         if (DOM.list) return true;
 
-        // البحث في جميع الإطارات
-        const allLists = document.querySelectorAll('.notifications-list');
-        if (allLists.length > 0) {
-            DOM.list = allLists[0];
-            DOM.list.id = 'notificationsList';
-            return true;
-        }
-
-        // إنشاء العنصر
+        // البحث عن حاويات بديلة
         const container = document.querySelector('.tab-panel.active') || 
                          document.querySelector('#panel-inbox') ||
                          document.querySelector('.content-container');
@@ -118,21 +106,22 @@
             DOM.list.id = 'notificationsList';
             DOM.list.className = 'notifications-list';
             container.appendChild(DOM.list);
-            console.log('✅ Created notificationsList element');
+            console.log('✅ أنشئ notificationsList داخل الحاوية الموجودة');
             return true;
         }
 
-        return false;
+        // الحل الأخير: إنشاؤه في body
+        DOM.list = document.createElement('div');
+        DOM.list.id = 'notificationsList';
+        DOM.list.className = 'notifications-list';
+        document.body.appendChild(DOM.list);
+        console.log('✅ أنشئ notificationsList في body كحل أخير');
+        return true;
     }
 
     // ─── عرض الإشعارات ───
     function render(notifications, page = 1) {
-        // تأكد من وجود العنصر
-        if (!ensureListElement()) {
-            console.warn('⏳ Waiting for notificationsList...');
-            setTimeout(() => render(notifications, page), 300);
-            return;
-        }
+        if (!ensureListElement()) return; // لن يحدث مع الحل أعلاه، ولكن احتياطاً
 
         refreshDOMReferences();
 
@@ -200,88 +189,74 @@
         });
 
         DOM.list.innerHTML = html;
+
+        // تفويض حدث واحد على القائمة بالكامل
         DOM.list.removeEventListener('click', handleCardClick);
         DOM.list.addEventListener('click', handleCardClick);
-
-        // ربط أحداث الـ Checkbox
-        DOM.list.querySelectorAll('.notif-checkbox input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', function(e) {
-                e.stopPropagation();
-                const id = this.dataset.id;
-                if (this.checked) {
-                    selectedIds.add(id);
-                } else {
-                    selectedIds.delete(id);
-                }
-                const card = this.closest('.notification-card');
-                if (card) {
-                    card.classList.toggle('selected');
-                    if (this.checked) {
-                        card.style.borderLeft = '4px solid var(--primary)';
-                    } else {
-                        card.style.borderLeft = '';
-                    }
-                }
-                updateSelectAllButton();
-            });
-        });
-
-        // النقر على البطاقة نفسها لفتح التفاصيل
-        DOM.list.querySelectorAll('.notification-card').forEach(card => {
-            card.addEventListener('click', function(e) {
-                if (e.target.closest('button') || e.target.closest('.notif-checkbox')) return;
-                const id = this.dataset.id;
-                if (id) {
-                    const notification = allNotifications.find(n => n.id === id);
-                    if (notification) openDetail(notification);
-                }
-            });
-        });
 
         renderPagination(filtered.length);
         updateSelectAllButton();
     }
 
-    // ─── معالج النقر على الأزرار ───
+    // ─── معالج النقر الموحّد (تفويض الحدث) ───
     function handleCardClick(e) {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const card = btn.closest('.notification-card');
+        const card = e.target.closest('.notification-card');
         if (!card) return;
         const id = card.dataset.id;
         if (!id) return;
 
+        // النقر على زر
+        const btn = e.target.closest('button');
+        if (btn) {
+            e.stopPropagation(); // منع فتح التفاصيل
+            const notification = allNotifications.find(n => n.id === id);
+            if (!notification) return;
+
+            if (btn.classList.contains('view-details')) {
+                openDetail(notification);
+            } else if (btn.classList.contains('mark-read-btn')) {
+                window.NotificationActions?.markAsRead(id).then(() => refresh());
+            } else if (btn.classList.contains('archive-btn')) {
+                if (confirm('هل تريد أرشفة هذا الإشعار؟')) {
+                    window.NotificationActions?.archive(id).then(() => refresh());
+                }
+            } else if (btn.classList.contains('delete-btn')) {
+                if (confirm('هل أنت متأكد من حذف هذا الإشعار نهائياً؟')) {
+                    window.NotificationActions?.deleteNotification(id).then(() => refresh());
+                }
+            }
+            return;
+        }
+
+        // النقر على الـ checkbox
+        if (e.target.closest('.notif-checkbox') || e.target.matches('input[type="checkbox"]')) {
+            // تتعامل معه عبر مستمع التغيير أدناه (لا نفعل شيئاً هنا)
+            return;
+        }
+
+        // النقر على البطاقة نفسها (وليس على زر أو checkbox) -> فتح التفاصيل
         const notification = allNotifications.find(n => n.id === id);
-        if (!notification) return;
-
-        if (btn.classList.contains('view-details')) {
-            e.stopPropagation();
-            openDetail(notification);
-            return;
-        }
-
-        if (btn.classList.contains('mark-read-btn')) {
-            e.stopPropagation();
-            window.NotificationActions?.markAsRead(id).then(() => refresh());
-            return;
-        }
-
-        if (btn.classList.contains('archive-btn')) {
-            e.stopPropagation();
-            if (confirm('هل تريد أرشفة هذا الإشعار؟')) {
-                window.NotificationActions?.archive(id).then(() => refresh());
-            }
-            return;
-        }
-
-        if (btn.classList.contains('delete-btn')) {
-            e.stopPropagation();
-            if (confirm('هل أنت متأكد من حذف هذا الإشعار نهائياً؟')) {
-                window.NotificationActions?.deleteNotification(id).then(() => refresh());
-            }
-            return;
-        }
+        if (notification) openDetail(notification);
     }
+
+    // ─── ربط أحداث الـ Checkbox (بعد التصيير) ───
+    // (نقوم بربطها مرة واحدة عبر تفويض أو عبر مستمع change على الحاوية)
+    DOM.list?.addEventListener('change', function(e) {
+        if (e.target.matches('.notif-checkbox input[type="checkbox"]')) {
+            const id = e.target.dataset.id;
+            if (e.target.checked) {
+                selectedIds.add(id);
+            } else {
+                selectedIds.delete(id);
+            }
+            const card = e.target.closest('.notification-card');
+            if (card) {
+                card.classList.toggle('selected');
+                card.style.borderLeft = e.target.checked ? '4px solid var(--primary)' : '';
+            }
+            updateSelectAllButton();
+        }
+    });
 
     // ─── Pagination ───
     function renderPagination(total) {
@@ -473,14 +448,13 @@
         }
     }
 
-    // ─── ربط الفلاتر ───
+    // ─── ربط الفلاتر (بشكل منفصل) ───
     function bindFilters() {
-        const elements = [DOM.search, DOM.filterType, DOM.filterStatus, DOM.filterPriority, DOM.sortOrder];
-        elements.forEach(el => {
-            if (!el) return;
-            el.addEventListener('input', handleFilterChange);
-            el.addEventListener('change', handleFilterChange);
-        });
+        if (DOM.search) DOM.search.addEventListener('input', handleFilterChange);
+        if (DOM.filterType) DOM.filterType.addEventListener('change', handleFilterChange);
+        if (DOM.filterStatus) DOM.filterStatus.addEventListener('change', handleFilterChange);
+        if (DOM.filterPriority) DOM.filterPriority.addEventListener('change', handleFilterChange);
+        if (DOM.sortOrder) DOM.sortOrder.addEventListener('change', handleFilterChange);
     }
 
     function handleFilterChange() {
@@ -493,21 +467,32 @@
         };
         window.NotificationFilters?.update(filters);
         selectedIds.clear();
+        currentPage = 1; // مهم: إعادة تعيين الصفحة الحالية
         refresh();
     }
 
-    // ─── التهيئة ───
+    // ─── التهيئة (مع حد أقصى للمحاولات) ───
+    let initRetries = 0;
+    const MAX_INIT_RETRIES = 20; // 10 ثوانٍ تقريباً
+
     function init() {
-        // تأكد من وجود العنصر
         if (!ensureListElement()) {
-            console.warn('⏳ notificationsList not ready, retrying in 500ms');
-            setTimeout(init, 500);
+            if (++initRetries < MAX_INIT_RETRIES) {
+                setTimeout(init, 500);
+            } else {
+                console.error('❌ تعذّر إنشاء عنصر قائمة الإشعارات بعد عدة محاولات.');
+            }
             return;
         }
 
         refreshDOMReferences();
         bindFilters();
         bindToolbarButtons();
+
+        // ربط زر إغلاق النافذة المنبثقة
+        if (DOM.closeModal) {
+            DOM.closeModal.addEventListener('click', closeDetail);
+        }
 
         const cache = window.NotificationCache;
         if (cache) {
@@ -519,7 +504,7 @@
             });
         }
 
-        console.log('✅ notification-ui.js ready');
+        console.log('✅ notification-ui.js جاهز');
     }
 
     // ─── API العامة ───
@@ -540,6 +525,4 @@
     } else {
         init();
     }
-
-    console.log('✅ notification-ui.js ready');
 })();
