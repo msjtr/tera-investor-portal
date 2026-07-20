@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * support-notifications.js – تهيئة نظام الإشعارات (مُصلح)
+ * support-notifications.js – تهيئة نظام الإشعارات (مُصلح بالكامل)
  * ============================================================
  * ملف التهيئة فقط، جميع المنطق في الوحدات المستقلة
  * ============================================================
@@ -156,8 +156,6 @@
 
         if (refreshBtn) {
             refreshBtn.addEventListener('click', async () => {
-                await refreshUI();
-                // إعادة تحميل من الخادم
                 const result = await window.NotificationAPI?.fetchNotifications(true);
                 if (result?.data) {
                     const manager = window.NotificationManager;
@@ -171,6 +169,67 @@
         }
 
         console.log('✅ Toolbar buttons bound');
+    }
+
+    // ─── ربط التبويبات ───
+    function bindTabs() {
+        const tabs = document.querySelectorAll('.tab-btn');
+        if (!tabs || tabs.length === 0) {
+            console.warn('⚠️ No tabs found');
+            return;
+        }
+
+        tabs.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // إزالة التنشيط عن جميع التبويبات
+                tabs.forEach(b => b.classList.remove('active'));
+
+                // تفعيل التبويب المحدد
+                this.classList.add('active');
+
+                // إخفاء جميع الألواح
+                const panels = document.querySelectorAll('.tab-panel');
+                panels.forEach(p => p.classList.remove('active'));
+
+                // إظهار اللوحة المطابقة
+                const tabName = this.dataset.tab;
+                const targetPanel = document.getElementById(`panel-${tabName}`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                } else {
+                    console.warn(`⚠️ Panel panel-${tabName} not found`);
+                }
+
+                // تحميل المحتوى حسب التبويب
+                if (tabName === 'inbox') {
+                    // تحديث قائمة الوارد
+                    refreshUI();
+                } else if (tabName === 'history') {
+                    // تحميل السجل
+                    if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
+                        window.NotificationHistory.load(1);
+                    } else {
+                        console.warn('⚠️ NotificationHistory not available');
+                    }
+                } else if (tabName === 'settings') {
+                    // لا حاجة لتحميل شيء
+                }
+            });
+        });
+
+        // تفعيل التبويب النشط افتراضياً (على أساس class active)
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab) {
+            const tabName = activeTab.dataset.tab;
+            const targetPanel = document.getElementById(`panel-${tabName}`);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        }
+
+        console.log('✅ Tabs bound');
     }
 
     // ─── تحديث الواجهة ───
@@ -189,11 +248,15 @@
         // تحديث الإحصائيات
         updateUI(manager.getState());
 
-        // تحديث القائمة
-        if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-            window.NotificationUI.render(notifications, 1, 20);
-        } else {
-            console.warn('⚠️ NotificationUI.render not available');
+        // عرض القائمة فقط إذا كان التبويب النشط هو الوارد
+        const activeTab = document.querySelector('.tab-btn.active');
+        const tabName = activeTab ? activeTab.dataset.tab : 'inbox';
+        if (tabName === 'inbox') {
+            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                window.NotificationUI.render(notifications, 1, 20);
+            } else {
+                console.warn('⚠️ NotificationUI.render not available');
+            }
         }
 
         // تحديث العداد
@@ -282,6 +345,9 @@
                 console.warn('⚠️ Failed to fetch initial notifications:', err.message);
             }
 
+            // ربط التبويبات (يجب أن يتم قبل عرض القائمة)
+            bindTabs();
+
             // عرض الإشعارات
             await refreshUI();
 
@@ -311,12 +377,15 @@
             // الاستماع لتغييرات الحالة
             manager.on('state:changed', async (state) => {
                 updateUI(state);
-                // إعادة عرض القائمة عند تغير الحالة
-                const cache = window.NotificationCache;
-                if (cache && typeof cache.getAll === 'function') {
-                    const all = cache.getAll();
-                    if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                        window.NotificationUI.render(all, 1, 20);
+                const activeTab = document.querySelector('.tab-btn.active');
+                const tabName = activeTab ? activeTab.dataset.tab : 'inbox';
+                if (tabName === 'inbox') {
+                    const cache = window.NotificationCache;
+                    if (cache && typeof cache.getAll === 'function') {
+                        const all = cache.getAll();
+                        if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                            window.NotificationUI.render(all, 1, 20);
+                        }
                     }
                 }
             });
@@ -372,7 +441,6 @@
         await refreshUI();
     };
 
-    // تصدير refreshUI للاستخدام في وحدات أخرى
     window.__refreshUI = refreshUI;
 
     console.log('✅ support-notifications.js ready');
