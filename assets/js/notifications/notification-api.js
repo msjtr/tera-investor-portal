@@ -2,9 +2,6 @@
  * ============================================================
  * notification-api.js – الاتصال بـ Edge Functions (مُحسّن)
  * ============================================================
- * هذا الملف سليم ولا يحتاج إلى تغيير، المشكلة في الدالة نفسها
- * ولكن تم تحسين معالجة الأخطاء هنا أيضاً
- * ============================================================
  */
 
 (function() {
@@ -15,42 +12,27 @@
 
     const FUNCTIONS_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1';
 
-    // ─── الحصول على التوكن مع إعادة المحاولة ───
-    async function getAccessToken(retries = 2) {
+    async function getAccessToken() {
         try {
             const sb = window.teraSupabase || await window.waitForSupabase?.();
             if (!sb) return null;
-            
             const { data: { session }, error } = await sb.auth.getSession();
             if (error || !session) {
-                // محاولة تجديد الجلسة
                 const { data: refreshData, error: refreshError } = await sb.auth.refreshSession();
-                if (refreshError || !refreshData.session) {
-                    if (retries > 0) {
-                        console.warn(`⚠️ Retrying getAccessToken (${retries} attempts left)`);
-                        await new Promise(r => setTimeout(r, 500));
-                        return getAccessToken(retries - 1);
-                    }
-                    return null;
-                }
+                if (refreshError || !refreshData.session) return null;
                 return refreshData.session.access_token;
             }
             return session.access_token;
         } catch (e) {
             console.warn('⚠️ getAccessToken error:', e);
-            if (retries > 0) {
-                await new Promise(r => setTimeout(r, 500));
-                return getAccessToken(retries - 1);
-            }
             return null;
         }
     }
 
-    // ─── جلب الإشعارات ───
     async function fetchNotifications() {
         try {
             const token = await getAccessToken();
-            if (!token) throw new Error('No token available');
+            if (!token) throw new Error('No token');
 
             const res = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
                 headers: { 
@@ -59,34 +41,24 @@
                 }
             });
 
-            if (res.status === 401) {
-                // محاولة تجديد التوكن وإعادة المحاولة مرة واحدة
-                const token2 = await getAccessToken(3);
-                if (!token2) throw new Error('Session expired');
-                const retry = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
-                    headers: { 'Authorization': `Bearer ${token2}` }
-                });
-                if (!retry.ok) throw new Error(`HTTP ${retry.status}`);
-                return await retry.json();
-            }
+            // ✅ قراءة الاستجابة مرة واحدة فقط
+            const result = await res.json();
 
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || `HTTP ${res.status}`);
+                throw new Error(result.error || `HTTP ${res.status}`);
             }
 
-            return await res.json();
+            return result;
         } catch (err) {
             console.error('❌ fetchNotifications error:', err);
             throw err;
         }
     }
 
-    // ─── تحديث إشعار ───
     async function updateNotification(id, updates) {
         try {
             const token = await getAccessToken();
-            if (!token) throw new Error('No token available');
+            if (!token) throw new Error('No token');
 
             const res = await fetch(`${FUNCTIONS_URL}/update-notification`, {
                 method: 'POST',
@@ -97,26 +69,22 @@
                 body: JSON.stringify({ id, ...updates })
             });
 
-            // محاولة قراءة رسالة الخطأ من الخادم
-            let errorMessage = `HTTP ${res.status}`;
-            try {
-                const errData = await res.json();
-                if (errData.error) errorMessage = errData.error;
-            } catch (e) { /* ignore */ }
+            // ✅ قراءة الاستجابة مرة واحدة فقط
+            const result = await res.json();
 
             if (!res.ok) {
-                console.error(`❌ updateNotification failed (${res.status}):`, errorMessage);
-                throw new Error(errorMessage);
+                // استخدام رسالة الخطأ من الخادم إذا كانت موجودة
+                const errorMsg = result.error || result.message || `HTTP ${res.status}`;
+                throw new Error(errorMsg);
             }
 
-            return await res.json();
+            return result;
         } catch (err) {
             console.error('❌ updateNotification error:', err);
             throw err;
         }
     }
 
-    // ─── API العامة ───
     window.NotificationAPI = { 
         fetchNotifications, 
         updateNotification, 
