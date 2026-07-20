@@ -1,5 +1,5 @@
 /**
- * dashboard.js – v9.1 (محسّن الأداء والتوافق)
+ * dashboard.js – v10 (محسّن الأداء والتوافق)
  * متوافق مع auth.js v31، supabase-client.js، support.js v2
  * يدعم عرض التنبيهات مع روابط وقراءة المزيد
  * متكامل مع نظام الإشعارات Realtime
@@ -22,6 +22,8 @@
     let isRealtimeConnected = false;
     let reconnectAttempts = 0;
     const MAX_RECONNECT_ATTEMPTS = 5;
+    let isInitialized = false;
+    let refreshInterval = null;
 
     // ============================================================
     // 2. الأدوات المساعدة (متوافقة مع support-notifications.js)
@@ -89,6 +91,15 @@
                 primary: 'alert-primary'
             };
             return classes[type] || 'alert-info';
+        },
+
+        // دالة مساعدة للتحقق من صحة الكائنات
+        safeGet(obj, path, fallback = null) {
+            try {
+                return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? fallback;
+            } catch {
+                return fallback;
+            }
         }
     };
 
@@ -135,6 +146,11 @@
     // 4. إدارة Realtime (مع إعادة الاتصال التلقائي)
     // ============================================================
     async function setupRealtime(user) {
+        if (!user?.id) {
+            console.warn('⚠️ No user ID for Realtime');
+            return;
+        }
+
         try {
             const sb = await getSupabase();
             if (!sb) return;
@@ -257,11 +273,14 @@
     }
 
     // ============================================================
-    // 6. تحميل وعرض التنبيهات
+    // 6. تحميل وعرض التنبيهات (محسّن مع التحقق من العناصر)
     // ============================================================
     async function loadAlerts(user) {
         const container = document.getElementById('alertsPanel');
-        if (!container) return;
+        if (!container) {
+            console.debug('⚠️ alertsPanel element not found');
+            return;
+        }
 
         try {
             const alerts = [];
@@ -415,9 +434,8 @@
     }
 
     function renderAlerts(alerts, container) {
-        if (!alerts || alerts.length === 0) {
-            container.innerHTML = '';
-            container.style.display = 'none';
+        if (!container || !alerts || alerts.length === 0) {
+            if (container) container.style.display = 'none';
             return;
         }
 
@@ -427,7 +445,6 @@
         const visibleAlerts = alerts.filter(a => !dismissed.includes(a.id));
 
         if (visibleAlerts.length === 0) {
-            container.innerHTML = '';
             container.style.display = 'none';
             return;
         }
@@ -624,6 +641,7 @@
     }
 
     function renderIncompleteProfile(panel, req) {
+        if (!panel) return;
         const stages = [
             { key: 'personal_info_completed', label: 'المعلومات الشخصية', icon: 'fa-user', link: '/pages/profile/personal-information.html' },
             { key: 'contact_info_completed', label: 'معلومات التواصل', icon: 'fa-phone', link: '/pages/profile/contact-information.html' },
@@ -663,6 +681,7 @@
     }
 
     function renderRequestStatus(panel, req) {
+        if (!panel || !req) return;
         const statusIcons = {
             'under_review': 'fa-search',
             'approved': 'fa-check-circle',
@@ -808,6 +827,9 @@
     // 9. التهيئة
     // ============================================================
     async function init() {
+        if (isInitialized) return;
+        isInitialized = true;
+
         // التحقق من وجود Auth
         if (!window.Auth || typeof window.Auth.requireAuth !== 'function') {
             console.error('❌ نظام المصادقة غير متوفر');
@@ -816,11 +838,15 @@
         }
 
         const user = await window.Auth.requireAuth();
-        if (!user) return;
+        if (!user) {
+            isInitialized = false;
+            return;
+        }
 
         supabase = await getSupabase();
         if (!supabase) {
             console.error('❌ Supabase غير متوفر');
+            isInitialized = false;
             return;
         }
 
@@ -915,19 +941,23 @@
             }
         };
         updateDateTime();
-        setInterval(updateDateTime, 30000);
+        refreshInterval = setInterval(updateDateTime, 30000);
 
         if (loadingOverlay) loadingOverlay.classList.remove('active');
-        console.log('✅ dashboard.js v9.1 ready (محسّن الأداء والتوافق)');
+        console.log('✅ dashboard.js v10 ready (محسّن الأداء والتوافق)');
     }
 
     // ============================================================
     // 10. التنظيف عند إغلاق الصفحة
     // ============================================================
-    window.addEventListener('beforeunload', () => {
+    function cleanup() {
         if (updateActivityInterval) {
             clearInterval(updateActivityInterval);
             updateActivityInterval = null;
+        }
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
         }
         if (realtimeChannel) {
             getSupabase().then(sb => {
@@ -937,7 +967,10 @@
                 }
             }).catch(() => {});
         }
-    });
+        isInitialized = false;
+    }
+
+    window.addEventListener('beforeunload', cleanup);
 
     // ============================================================
     // 11. تشغيل التهيئة
@@ -945,7 +978,8 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        init();
+        // إذا كان DOM جاهزاً، انتظر قليلاً للتأكد من تحميل جميع المكونات
+        setTimeout(init, 100);
     }
 
 })();
