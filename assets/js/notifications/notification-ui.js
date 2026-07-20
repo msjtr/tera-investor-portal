@@ -10,31 +10,44 @@
     if (window.__notificationUI) return;
     window.__notificationUI = true;
 
-    const DOM = {
-        list: document.getElementById('notificationsList'),
-        pagination: document.getElementById('pagination'),
-        stats: {
-            total: document.getElementById('statTotal'),
-            unread: document.getElementById('statUnread'),
-            read: document.getElementById('statRead'),
-            archived: document.getElementById('statArchived'),
-            important: document.getElementById('statImportant')
-        },
-        unreadBadge: document.getElementById('unreadBadge'),
-        modal: document.getElementById('detailModal'),
-        modalBody: document.getElementById('modalBody'),
-        modalTitle: document.getElementById('modalTitle'),
-        closeModal: document.getElementById('closeDetailModal'),
-        search: document.getElementById('searchInput'),
-        filterType: document.getElementById('filterType'),
-        filterStatus: document.getElementById('filterStatus'),
-        filterPriority: document.getElementById('filterPriority'),
-        sortOrder: document.getElementById('sortOrder'),
-        selectAllBtn: document.getElementById('selectAllBtn'),
-        markReadBtn: document.getElementById('markReadBtn'),
-        archiveBtn: document.getElementById('archiveBtn'),
-        deleteBtn: document.getElementById('deleteBtn')
-    };
+    // ─── المراجع – نعيد تعريفها بشكل آمن ───
+    let DOM = {};
+
+    function refreshDOMReferences() {
+        DOM = {
+            list: document.getElementById('notificationsList'),
+            pagination: document.getElementById('pagination'),
+            stats: {
+                total: document.getElementById('statTotal'),
+                unread: document.getElementById('statUnread'),
+                read: document.getElementById('statRead'),
+                archived: document.getElementById('statArchived'),
+                important: document.getElementById('statImportant')
+            },
+            unreadBadge: document.getElementById('unreadBadge'),
+            modal: document.getElementById('detailModal'),
+            modalBody: document.getElementById('modalBody'),
+            modalTitle: document.getElementById('modalTitle'),
+            closeModal: document.getElementById('closeDetailModal'),
+            search: document.getElementById('searchInput'),
+            filterType: document.getElementById('filterType'),
+            filterStatus: document.getElementById('filterStatus'),
+            filterPriority: document.getElementById('filterPriority'),
+            sortOrder: document.getElementById('sortOrder'),
+            selectAllBtn: document.getElementById('selectAllBtn'),
+            markReadBtn: document.getElementById('markReadBtn'),
+            archiveBtn: document.getElementById('archiveBtn'),
+            deleteBtn: document.getElementById('deleteBtn')
+        };
+
+        // تحقق من وجود العناصر الأساسية
+        if (!DOM.list) {
+            console.warn('⚠️ notificationsList not found, will retry on next render');
+        }
+    }
+
+    // ─── تحديث المراجع عند الحاجة ───
+    refreshDOMReferences();
 
     let allNotifications = [];
     let currentPage = 1;
@@ -83,13 +96,23 @@
 
     // ─── عرض الإشعارات ───
     function render(notifications, page = 1) {
+        // تحديث المراجع قبل الاستخدام
+        refreshDOMReferences();
+
+        if (!DOM.list) {
+            console.warn('⚠️ notificationsList element not found, cannot render');
+            // محاولة مرة أخرى بعد تأخير
+            setTimeout(() => {
+                refreshDOMReferences();
+                if (DOM.list) {
+                    render(notifications, page);
+                }
+            }, 500);
+            return;
+        }
+
         allNotifications = notifications || [];
         currentPage = page;
-
-        // إعادة تعيين التحديد عند تغيير الصفحة أو التصفية
-        if (page === 1) {
-            // لا نعيد تعيين التحديد تلقائياً، بل نتركه للمستخدم
-        }
 
         const filtered = allNotifications.filter(n => !Utils.isExpired(n.expires_at));
         if (filtered.length === 0) {
@@ -123,6 +146,9 @@
                 <div class="notification-card ${isUnread ? 'unread' : ''} ${isSelected ? 'selected' : ''}" 
                      data-id="${n.id}"
                      style="${isSelected ? 'border-left:4px solid var(--primary);' : ''}">
+                    <div class="notif-checkbox">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} data-id="${n.id}" />
+                    </div>
                     <div class="notif-icon ${typeClass}"><i class="fas ${icon}"></i></div>
                     <div class="notif-content">
                         <div class="notif-title">
@@ -152,13 +178,38 @@
         DOM.list.removeEventListener('click', handleCardClick);
         DOM.list.addEventListener('click', handleCardClick);
 
-        // النقر على البطاقة نفسها لتبديل التحديد
+        // ربط أحداث الـ Checkbox
+        DOM.list.querySelectorAll('.notif-checkbox input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', function(e) {
+                e.stopPropagation();
+                const id = this.dataset.id;
+                if (this.checked) {
+                    selectedIds.add(id);
+                } else {
+                    selectedIds.delete(id);
+                }
+                const card = this.closest('.notification-card');
+                if (card) {
+                    card.classList.toggle('selected');
+                    if (this.checked) {
+                        card.style.borderLeft = '4px solid var(--primary)';
+                    } else {
+                        card.style.borderLeft = '';
+                    }
+                }
+                updateSelectAllButton();
+            });
+        });
+
+        // النقر على البطاقة نفسها لفتح التفاصيل
         DOM.list.querySelectorAll('.notification-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                // منع إذا تم النقر على زر داخل البطاقة
-                if (e.target.closest('button')) return;
+                if (e.target.closest('button') || e.target.closest('.notif-checkbox')) return;
                 const id = this.dataset.id;
-                if (id) toggleSelect(id);
+                if (id) {
+                    const notification = allNotifications.find(n => n.id === id);
+                    if (notification) openDetail(notification);
+                }
             });
         });
 
@@ -166,69 +217,7 @@
         updateSelectAllButton();
     }
 
-    // ─── تبديل التحديد ───
-    function toggleSelect(id) {
-        if (!id) return;
-        if (selectedIds.has(id)) {
-            selectedIds.delete(id);
-        } else {
-            selectedIds.add(id);
-        }
-        // تحديث المظهر
-        const card = document.querySelector(`.notification-card[data-id="${id}"]`);
-        if (card) {
-            card.classList.toggle('selected');
-            if (selectedIds.has(id)) {
-                card.style.borderLeft = '4px solid var(--primary)';
-            } else {
-                card.style.borderLeft = '';
-            }
-        }
-        updateSelectAllButton();
-    }
-
-    // ─── تحديد الكل / إلغاء التحديد ───
-    function toggleSelectAll() {
-        const cards = document.querySelectorAll('.notification-card');
-        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
-        if (allIds.length === 0) return;
-
-        const allSelected = allIds.every(id => selectedIds.has(id));
-        if (allSelected) {
-            selectedIds.clear();
-        } else {
-            allIds.forEach(id => selectedIds.add(id));
-        }
-
-        cards.forEach(el => {
-            const id = el.dataset.id;
-            if (selectedIds.has(id)) {
-                el.classList.add('selected');
-                el.style.borderLeft = '4px solid var(--primary)';
-            } else {
-                el.classList.remove('selected');
-                el.style.borderLeft = '';
-            }
-        });
-        updateSelectAllButton();
-    }
-
-    // ─── تحديث زر "تحديد الكل" ───
-    function updateSelectAllButton() {
-        if (!DOM.selectAllBtn) return;
-        const cards = document.querySelectorAll('.notification-card');
-        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
-        if (allIds.length === 0) {
-            DOM.selectAllBtn.innerHTML = '<i class="fas fa-check-double"></i> تحديد الكل';
-            return;
-        }
-        const allSelected = allIds.every(id => selectedIds.has(id));
-        DOM.selectAllBtn.innerHTML = allSelected ?
-            '<i class="fas fa-check-square"></i> إلغاء التحديد' :
-            '<i class="fas fa-check-double"></i> تحديد الكل';
-    }
-
-    // ─── معالج النقر على الأزرار داخل البطاقات ───
+    // ─── معالج النقر على الأزرار ───
     function handleCardClick(e) {
         const btn = e.target.closest('button');
         if (!btn) return;
@@ -240,21 +229,18 @@
         const notification = allNotifications.find(n => n.id === id);
         if (!notification) return;
 
-        // عرض التفاصيل
         if (btn.classList.contains('view-details')) {
             e.stopPropagation();
             openDetail(notification);
             return;
         }
 
-        // تعليم كمقروء (فردي)
         if (btn.classList.contains('mark-read-btn')) {
             e.stopPropagation();
             window.NotificationActions?.markAsRead(id).then(() => refresh());
             return;
         }
 
-        // أرشفة (فردي)
         if (btn.classList.contains('archive-btn')) {
             e.stopPropagation();
             if (confirm('هل تريد أرشفة هذا الإشعار؟')) {
@@ -263,7 +249,6 @@
             return;
         }
 
-        // حذف (فردي)
         if (btn.classList.contains('delete-btn')) {
             e.stopPropagation();
             if (confirm('هل أنت متأكد من حذف هذا الإشعار نهائياً؟')) {
@@ -301,6 +286,51 @@
                 }
             });
         });
+    }
+
+    // ─── تحديث زر "تحديد الكل" ───
+    function updateSelectAllButton() {
+        if (!DOM.selectAllBtn) return;
+        const cards = document.querySelectorAll('.notification-card');
+        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
+        if (allIds.length === 0) {
+            DOM.selectAllBtn.innerHTML = '<i class="fas fa-check-double"></i> تحديد الكل';
+            return;
+        }
+        const allSelected = allIds.every(id => selectedIds.has(id));
+        DOM.selectAllBtn.innerHTML = allSelected ?
+            '<i class="fas fa-check-square"></i> إلغاء التحديد' :
+            '<i class="fas fa-check-double"></i> تحديد الكل';
+    }
+
+    // ─── تحديد الكل / إلغاء التحديد ───
+    function toggleSelectAll() {
+        const cards = document.querySelectorAll('.notification-card');
+        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
+        if (allIds.length === 0) return;
+
+        const allSelected = allIds.every(id => selectedIds.has(id));
+        if (allSelected) {
+            selectedIds.clear();
+        } else {
+            allIds.forEach(id => selectedIds.add(id));
+        }
+
+        cards.forEach(el => {
+            const id = el.dataset.id;
+            const checkbox = el.querySelector('.notif-checkbox input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = selectedIds.has(id);
+            }
+            if (selectedIds.has(id)) {
+                el.classList.add('selected');
+                el.style.borderLeft = '4px solid var(--primary)';
+            } else {
+                el.classList.remove('selected');
+                el.style.borderLeft = '';
+            }
+        });
+        updateSelectAllButton();
     }
 
     // ─── تحديث الإحصائيات ───
@@ -359,12 +389,10 @@
 
     // ─── ربط أزرار شريط الأدوات ───
     function bindToolbarButtons() {
-        // تحديد الكل
         if (DOM.selectAllBtn) {
             DOM.selectAllBtn.addEventListener('click', toggleSelectAll);
         }
 
-        // تعليم كمقروء (جماعي)
         if (DOM.markReadBtn) {
             DOM.markReadBtn.addEventListener('click', async function() {
                 const ids = Array.from(selectedIds);
@@ -383,7 +411,6 @@
             });
         }
 
-        // أرشفة (جماعي)
         if (DOM.archiveBtn) {
             DOM.archiveBtn.addEventListener('click', async function() {
                 const ids = Array.from(selectedIds);
@@ -402,7 +429,6 @@
             });
         }
 
-        // حذف (جماعي)
         if (DOM.deleteBtn) {
             DOM.deleteBtn.addEventListener('click', async function() {
                 const ids = Array.from(selectedIds);
@@ -441,13 +467,14 @@
             sort: DOM.sortOrder?.value || 'desc'
         };
         window.NotificationFilters?.update(filters);
-        // إعادة تعيين التحديد عند تغيير الفلاتر
         selectedIds.clear();
         refresh();
     }
 
     // ─── التهيئة ───
     function init() {
+        refreshDOMReferences();
+
         if (DOM.closeModal) DOM.closeModal.addEventListener('click', closeDetail);
         if (DOM.modal) DOM.modal.addEventListener('click', (e) => {
             if (e.target === DOM.modal) closeDetail();
@@ -455,7 +482,6 @@
         bindFilters();
         bindToolbarButtons();
 
-        // استمع لتحديثات الكاش
         const cache = window.NotificationCache;
         if (cache) {
             cache.addListener((items, stats) => {
@@ -466,9 +492,10 @@
             });
         }
 
-        console.log('✅ notification-ui.js ready (with selection)');
+        console.log('✅ notification-ui.js ready');
     }
 
+    // ─── API العامة ───
     window.NotificationUI = {
         render,
         refresh,
@@ -479,6 +506,13 @@
         selectedIds: () => selectedIds,
         toggleSelectAll
     };
+
+    // تشغيل التهيئة إذا كان DOM جاهزاً
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     console.log('✅ notification-ui.js ready');
 })();
