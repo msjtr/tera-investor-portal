@@ -39,10 +39,6 @@
             archiveBtn: document.getElementById('archiveBtn'),
             deleteBtn: document.getElementById('deleteBtn')
         };
-
-        if (!DOM.list) {
-            console.warn('⚠️ notificationsList not found');
-        }
     }
 
     refreshDOMReferences();
@@ -92,7 +88,7 @@
         }
     };
 
-    // ─── إنشاء عنصر القائمة إذا لم يكن موجوداً (لا يفشل أبداً) ───
+    // ─── إنشاء عنصر القائمة إذا لم يكن موجوداً ───
     function ensureListElement() {
         if (DOM.list && DOM.list.isConnected) return true;
 
@@ -112,7 +108,6 @@
             return true;
         }
 
-        // الحل الأخير: body
         DOM.list = document.createElement('div');
         DOM.list.id = 'notificationsList';
         DOM.list.className = 'notifications-list';
@@ -192,7 +187,6 @@
 
         DOM.list.innerHTML = html;
 
-        // تفويض حدث واحد على القائمة بالكامل
         DOM.list.removeEventListener('click', handleCardClick);
         DOM.list.addEventListener('click', handleCardClick);
 
@@ -207,7 +201,6 @@
         const id = card.dataset.id;
         if (!id) return;
 
-        // النقر على زر
         const btn = e.target.closest('button');
         if (btn) {
             e.stopPropagation();
@@ -230,17 +223,15 @@
             return;
         }
 
-        // النقر على checkbox
         if (e.target.closest('.notif-checkbox') || e.target.matches('input[type="checkbox"]')) {
             return;
         }
 
-        // النقر على البطاقة نفسها -> فتح التفاصيل
         const notification = allNotifications.find(n => n.id === id);
         if (notification) openDetail(notification);
     }
 
-    // ─── ربط أحداث الـ Checkbox (تفويض change) ───
+    // ─── ربط أحداث الـ Checkbox ───
     DOM.list?.addEventListener('change', function(e) {
         if (e.target.matches('.notif-checkbox input[type="checkbox"]')) {
             const id = e.target.dataset.id;
@@ -471,11 +462,17 @@
         refresh();
     }
 
-    // ─── التهيئة (مع حد أقصى للمحاولات) ───
+    // ─── التهيئة فقط إذا كان العنصر موجوداً ───
     let initRetries = 0;
-    const MAX_INIT_RETRIES = 20;
+    const MAX_INIT_RETRIES = 10;
 
     function init() {
+        // إذا لم يكن هناك notificationsList في الصفحة، لا تفعل شيئاً
+        if (!document.getElementById('notificationsList')) {
+            console.log('ℹ️ notificationsList غير موجود في هذه الصفحة، تم تخطي NotificationUI.');
+            return;
+        }
+
         if (!ensureListElement()) {
             if (++initRetries < MAX_INIT_RETRIES) {
                 setTimeout(init, 500);
@@ -524,6 +521,4 @@
     } else {
         init();
     }
-
-    console.log('✅ notification-ui.js ready');
 })();
