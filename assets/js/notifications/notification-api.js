@@ -14,7 +14,6 @@
     const SUPABASE_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co';
     const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
-    // ─── الحصول على التوكن ───
     async function getAccessToken() {
         try {
             const sb = window.teraSupabase || await window.waitForSupabase?.();
@@ -32,7 +31,6 @@
         }
     }
 
-    // ─── جلب جميع الإشعارات ───
     async function fetchNotifications() {
         try {
             const token = await getAccessToken();
@@ -47,7 +45,6 @@
             });
 
             if (response.status === 401) {
-                // محاولة تجديد التوكن وإعادة المحاولة
                 const token2 = await getAccessToken();
                 if (!token2) throw new Error('انتهت الجلسة');
                 const retryResponse = await fetch(`${FUNCTIONS_URL}/get-notifications`, {
@@ -72,7 +69,6 @@
         }
     }
 
-    // ─── تحديث إشعار (مركزي) ───
     async function updateNotification(id, updates) {
         try {
             const token = await getAccessToken();
@@ -99,41 +95,11 @@
         }
     }
 
-    // ─── إرسال إشعار ───
-    async function sendNotification(data) {
-        try {
-            const token = await getAccessToken();
-            if (!token) throw new Error('لا يوجد توكن صالح');
-
-            const response = await fetch(`${FUNCTIONS_URL}/send-notification`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.error || `HTTP ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (err) {
-            console.error('❌ فشل إرسال الإشعار:', err);
-            throw err;
-        }
-    }
-
-    // ─── API العامة ───
     window.NotificationAPI = {
         fetchNotifications,
         updateNotification,
-        sendNotification,
         getAccessToken
     };
 
     console.log('✅ notification-api.js ready');
-
 })();
