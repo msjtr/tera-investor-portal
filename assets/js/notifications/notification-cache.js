@@ -1,8 +1,7 @@
 /**
  * ============================================================
- * notification-cache.js – إدارة الكاش (تحديث جزئي)
+ * notification-cache.js – الكاش المحلي
  * ============================================================
- * مسؤول عن تخزين الإشعارات وتحديثها بشكل ذكي دون إعادة تحميل كامل
  */
 
 (function() {
@@ -14,81 +13,36 @@
     class NotificationCache {
         constructor() {
             this.items = [];
-            this.maxSize = 500;
             this.listeners = [];
-            this.isInitialized = false;
         }
 
-        init(notifications) {
-            this.items = notifications || [];
-            this.isInitialized = true;
-            this.notifyListeners();
+        init(items) {
+            this.items = items || [];
+            this.notify();
             return this;
         }
 
-        add(notification) {
-            if (!notification || !notification.id) return false;
-            const exists = this.items.some(n => n.id === notification.id);
-            if (exists) return false;
-            this.items.unshift(notification);
-            if (this.items.length > this.maxSize) {
-                this.items = this.items.slice(0, this.maxSize);
-            }
-            this.notifyListeners();
+        add(item) {
+            if (this.items.some(n => n.id === item.id)) return false;
+            this.items.unshift(item);
+            this.notify();
             return true;
         }
 
         update(id, updates) {
-            if (!id || !updates) return false;
-            const index = this.items.findIndex(n => n.id === id);
-            if (index === -1) return false;
-            this.items[index] = { ...this.items[index], ...updates };
-            this.notifyListeners();
+            const idx = this.items.findIndex(n => n.id === id);
+            if (idx === -1) return false;
+            this.items[idx] = { ...this.items[idx], ...updates };
+            this.notify();
             return true;
         }
 
         delete(id) {
-            const index = this.items.findIndex(n => n.id === id);
-            if (index === -1) return false;
-            this.items.splice(index, 1);
-            this.notifyListeners();
+            const idx = this.items.findIndex(n => n.id === id);
+            if (idx === -1) return false;
+            this.items.splice(idx, 1);
+            this.notify();
             return true;
-        }
-
-        deleteMultiple(ids) {
-            if (!ids || ids.length === 0) return false;
-            this.items = this.items.filter(n => !ids.includes(n.id));
-            this.notifyListeners();
-            return true;
-        }
-
-        markAsRead(id) {
-            return this.update(id, {
-                status: 'read',
-                is_read: true,
-                read_at: new Date().toISOString()
-            });
-        }
-
-        markAllAsRead(ids) {
-            if (!ids || ids.length === 0) return false;
-            const now = new Date().toISOString();
-            let updated = 0;
-            this.items.forEach((n, i) => {
-                if (ids.includes(n.id) && n.status === 'unread') {
-                    this.items[i] = { ...n, status: 'read', is_read: true, read_at: now };
-                    updated++;
-                }
-            });
-            if (updated > 0) this.notifyListeners();
-            return updated > 0;
-        }
-
-        archive(id) {
-            return this.update(id, {
-                status: 'archived',
-                archived_at: new Date().toISOString()
-            });
         }
 
         getAll() {
@@ -100,67 +54,38 @@
         }
 
         getStats() {
-            const total = this.items.filter(n => n.status !== 'deleted').length;
-            const unread = this.items.filter(n => n.status === 'unread').length;
-            const read = this.items.filter(n => n.status === 'read').length;
-            const archived = this.items.filter(n => n.status === 'archived').length;
-            const important = this.items.filter(n => n.priority === 'urgent' || n.priority === 'high').length;
-            return { total, unread, read, archived, important };
-        }
-
-        getUnreadCount() {
-            return this.items.filter(n => n.status === 'unread').length;
-        }
-
-        reset() {
-            this.items = [];
-            this.isInitialized = false;
-            this.notifyListeners();
+            const items = this.items.filter(n => n.status !== 'deleted');
+            return {
+                total: items.length,
+                unread: items.filter(n => n.status === 'unread').length,
+                read: items.filter(n => n.status === 'read').length,
+                archived: items.filter(n => n.status === 'archived').length,
+                important: items.filter(n => n.priority === 'urgent' || n.priority === 'high').length
+            };
         }
 
         addListener(callback) {
             this.listeners.push(callback);
-            return () => {
-                this.listeners = this.listeners.filter(cb => cb !== callback);
-            };
+            return () => { this.listeners = this.listeners.filter(cb => cb !== callback); };
         }
 
-        notifyListeners() {
+        notify() {
             const stats = this.getStats();
-            this.listeners.forEach(cb => {
-                try {
-                    cb(this.items, stats);
-                } catch (e) {
-                    console.warn('⚠️ Cache listener error:', e);
-                }
-            });
-        }
-
-        size() {
-            return this.items.length;
+            this.listeners.forEach(cb => cb(this.items, stats));
         }
     }
 
     const cache = new NotificationCache();
     window.__notificationCache = cache;
-
     window.NotificationCache = {
-        getInstance: () => cache,
-        init: (data) => cache.init(data),
+        init: (items) => cache.init(items),
         add: (n) => cache.add(n),
-        update: (id, updates) => cache.update(id, updates),
+        update: (id, u) => cache.update(id, u),
         delete: (id) => cache.delete(id),
-        deleteMultiple: (ids) => cache.deleteMultiple(ids),
-        markAsRead: (id) => cache.markAsRead(id),
-        markAllAsRead: (ids) => cache.markAllAsRead(ids),
-        archive: (id) => cache.archive(id),
         getAll: () => cache.getAll(),
         get: (id) => cache.get(id),
         getStats: () => cache.getStats(),
-        getUnreadCount: () => cache.getUnreadCount(),
-        reset: () => cache.reset(),
-        addListener: (cb) => cache.addListener(cb),
-        size: () => cache.size()
+        addListener: (cb) => cache.addListener(cb)
     };
 
     console.log('✅ notification-cache.js ready');
