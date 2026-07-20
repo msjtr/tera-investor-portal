@@ -4,6 +4,7 @@
  * ============================================================
  * يعتمد على التهيئة الموجودة من onesignal-init.js
  * يستخدم OneSignal.login() لربط المستخدم بدلاً من addAlias
+ * مع معالجة آمنة للأخطاء
  * ============================================================
  */
 
@@ -56,12 +57,17 @@
                 return false;
             }
 
-            // ✅ الطريقة الصحيحة في SDK v16 لربط المستخدم
-            await OneSignal.login(userId);
-            console.log('✅ OneSignal user logged in:', userId);
-            return true;
+            // التحقق من وجود دالة login
+            if (typeof OneSignal.login === 'function') {
+                await OneSignal.login(userId);
+                console.log('✅ OneSignal user logged in:', userId);
+                return true;
+            } else {
+                console.warn('⚠️ OneSignal.login not available, skipping');
+                return false;
+            }
         } catch (err) {
-            console.error('❌ OneSignal login error:', err);
+            console.warn('⚠️ OneSignal login skipped (non-critical):', err.message);
             return false;
         }
     }
@@ -75,11 +81,16 @@
                 return false;
             }
 
-            await OneSignal.logout();
-            console.log('✅ OneSignal user logged out');
-            return true;
+            if (typeof OneSignal.logout === 'function') {
+                await OneSignal.logout();
+                console.log('✅ OneSignal user logged out');
+                return true;
+            } else {
+                console.warn('⚠️ OneSignal.logout not available, skipping');
+                return false;
+            }
         } catch (err) {
-            console.error('❌ OneSignal logout error:', err);
+            console.warn('⚠️ OneSignal logout skipped:', err.message);
             return false;
         }
     }
@@ -112,23 +123,27 @@
                 return false;
             }
 
-            OneSignal.Notifications.addEventListener('foregroundWillDisplay', async (notification) => {
-                const data = notification.data || notification;
-                const payload = {
-                    id: data.id || notification.id,
-                    title: data.title || notification.title || 'إشعار جديد',
-                    body: data.body || notification.body || '',
-                    type: data.type || 'general',
-                    priority: data.priority || 'normal',
-                    action_url: data.action_url || null,
-                    is_silent: data.is_silent === true,
-                    metadata: data.metadata || {}
-                };
-                callback(payload);
-            });
-
-            console.log('✅ OneSignal listener added');
-            return true;
+            if (typeof OneSignal.Notifications.addEventListener === 'function') {
+                OneSignal.Notifications.addEventListener('foregroundWillDisplay', async (notification) => {
+                    const data = notification.data || notification;
+                    const payload = {
+                        id: data.id || notification.id,
+                        title: data.title || notification.title || 'إشعار جديد',
+                        body: data.body || notification.body || '',
+                        type: data.type || 'general',
+                        priority: data.priority || 'normal',
+                        action_url: data.action_url || null,
+                        is_silent: data.is_silent === true,
+                        metadata: data.metadata || {}
+                    };
+                    callback(payload);
+                });
+                console.log('✅ OneSignal listener added');
+                return true;
+            } else {
+                console.warn('⚠️ OneSignal.addEventListener not available');
+                return false;
+            }
         } catch (err) {
             console.error('❌ OneSignal addListener error:', err);
             return false;
@@ -140,8 +155,10 @@
         const OneSignal = window.OneSignal;
         if (!OneSignal || !OneSignal.Notifications) return;
         try {
-            OneSignal.Notifications.removeAllListeners();
-            console.log('✅ OneSignal listeners removed');
+            if (typeof OneSignal.Notifications.removeAllListeners === 'function') {
+                OneSignal.Notifications.removeAllListeners();
+                console.log('✅ OneSignal listeners removed');
+            }
         } catch (err) {
             console.warn('⚠️ OneSignal removeAllListeners error:', err);
         }
@@ -150,13 +167,12 @@
     // ─── API العامة ───
     window.OneSignalManager = {
         waitForOneSignal,
-        setExternalId,     // يستخدم OneSignal.login()
-        logout,            // يستخدم OneSignal.logout()
+        setExternalId,
+        logout,
         getSubscriptionStatus,
         addListener,
         removeAllListeners
     };
 
-    console.log('✅ notification-onesignal.js ready (v16 compatible with login/logout)');
-
+    console.log('✅ notification-onesignal.js ready (with safe error handling)');
 })();
