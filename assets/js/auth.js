@@ -1,5 +1,5 @@
 /**
- * auth.js – v30 (محسّن بالكامل)
+ * auth.js – v31 (محسّن بالكامل مع OneSignal v16)
  * 
  * الميزات:
  * - تخزين اسم العميل تلقائياً (otpName) في sessionStorage
@@ -9,7 +9,7 @@
  * - تكامل مع SessionManager و ActivityTracker
  * - دعم تسجيل الخروج الآمن مع تنظيف شامل
  * - تحسينات الأمان والأداء
- * - دمج OneSignal
+ * - دمج OneSignal v16 باستخدام login/logout بدلاً من addAlias
  */
 
 (function() {
@@ -199,6 +199,13 @@
             currentUser = data.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
+
+            // ربط OneSignal بعد تسجيل الدخول (اختياري)
+            try {
+                await registerPushNotifications(data.user.id);
+            } catch (e) {
+                console.warn('⚠️ فشل ربط OneSignal أثناء تسجيل الدخول:', e);
+            }
         }
         return data;
     }
@@ -207,6 +214,13 @@
     async function logout() {
         // إيقاف المؤقتات
         stopSessionRefresh();
+
+        // تسجيل خروج OneSignal أولاً (إذا كان موجوداً)
+        try {
+            await unregisterPushNotifications();
+        } catch (e) {
+            console.warn('⚠️ فشل تسجيل خروج OneSignal:', e);
+        }
 
         // إنهاء الجلسة عبر SessionManager إذا كان متاحاً
         if (window.SessionManager) {
@@ -288,6 +302,13 @@
             currentUser = data.session.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
+
+            // ربط OneSignal بعد التحقق الناجح
+            try {
+                await registerPushNotifications(data.session.user.id);
+            } catch (e) {
+                console.warn('⚠️ فشل ربط OneSignal بعد OTP:', e);
+            }
         }
         return data;
     }
@@ -375,6 +396,14 @@
             currentUser = user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
+
+            // ربط OneSignal بعد تسجيل الدخول الناجح
+            try {
+                await registerPushNotifications(user.id);
+            } catch (e) {
+                console.warn('⚠️ فشل ربط OneSignal بعد تسجيل الدخول:', e);
+            }
+
             return { success: true, user };
         } catch (e) {
             if (getLoginAttempts() >= MAX_ATTEMPTS) throw new Error('تم تجاوز عدد المحاولات. يرجى استخدام المصادقة الثنائية.');
@@ -394,6 +423,14 @@
         currentUser = user;
         currentUserCacheTime = Date.now();
         startSessionRefresh();
+
+        // ربط OneSignal بعد إكمال TOTP
+        try {
+            await registerPushNotifications(user.id);
+        } catch (e) {
+            console.warn('⚠️ فشل ربط OneSignal بعد TOTP:', e);
+        }
+
         return { success: true, user };
     }
 
@@ -417,6 +454,13 @@
             currentUser = session.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
+
+            // ربط OneSignal
+            try {
+                await registerPushNotifications(session.user.id);
+            } catch (e) {
+                console.warn('⚠️ فشل ربط OneSignal بعد TOTP login:', e);
+            }
         }
         return { success: true };
     }
@@ -450,27 +494,20 @@
 
     // ─── تغيير كلمة المرور (مع التحقق من القديمة) ───
     async function changePassword(oldPassword, newPassword) {
-        // هذه الدالة تتطلب من المستخدم إعادة المصادقة
-        // يتم تنفيذها عبر تسجيل الدخول مؤقتاً ثم التحديث
         const user = await getCurrentUser();
         if (!user) throw new Error('يجب تسجيل الدخول أولاً');
         
-        // التحقق من صحة كلمة المرور الجديدة
         const passwordError = validatePassword(newPassword);
         if (passwordError) throw new Error(passwordError);
         
-        // لا يمكن التحقق من كلمة المرور القديمة مباشرة عبر API،
-        // لذلك نستخدم signInWithPassword كطريقة للتحقق
         const sb = await getSupabase();
         try {
-            // محاولة تسجيل الدخول بكلمة المرور القديمة للتحقق
             const { error: signError } = await sb.auth.signInWithPassword({
                 email: user.email,
                 password: oldPassword
             });
             if (signError) throw new Error('كلمة المرور الحالية غير صحيحة');
             
-            // تحديث كلمة المرور
             const { error } = await sb.auth.updateUser({ password: newPassword });
             if (error) throw error;
             
@@ -494,22 +531,39 @@
         return data;
     }
 
-    // ─── ربط OneSignal ───
-    async function registerPushNotifications() {
+    // ─── ربط OneSignal (باستخدام OneSignal.login) ───
+    async function registerPushNotifications(userId) {
         try {
-            const user = await getCurrentUser();
-            if (!user) return { success: false, error: 'يجب تسجيل الدخول أولاً' };
-            
+            // إذا تم تمرير userId، استخدمه، وإلا استخدم المستخدم الحالي
+            let targetUserId = userId;
+            if (!targetUserId) {
+                const user = await getCurrentUser();
+                if (!user) return { success: false, error: 'يجب تسجيل الدخول أولاً' };
+                targetUserId = user.id;
+            }
+
+            // استخدام OneSignalManager إذا كان متاحاً
+            if (window.OneSignalManager && typeof window.OneSignalManager.setExternalId === 'function') {
+                const result = await window.OneSignalManager.setExternalId(targetUserId);
+                if (result) {
+                    return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
+                } else {
+                    return { success: false, error: 'فشل ربط OneSignal عبر المدير' };
+                }
+            }
+
+            // خطة احتياطية: استخدام OneSignal.login مباشرة
             if (typeof window.OneSignal === 'undefined') {
                 return { success: false, error: 'OneSignal غير متوفر' };
             }
-            
+
             if (!window.OneSignal.User) {
                 return { success: false, error: 'OneSignal User غير متوفر' };
             }
-            
-            await window.OneSignal.User.addAlias({ external_id: user.id });
-            console.log('✅ OneSignal External ID set:', user.id);
+
+            // ✅ الطريقة الصحيحة في v16: استخدام login بدلاً من addAlias
+            await window.OneSignal.login(targetUserId);
+            console.log('✅ OneSignal user logged in (login):', targetUserId);
             return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
         } catch (e) {
             console.error('❌ فشل ربط OneSignal:', e);
@@ -517,15 +571,30 @@
         }
     }
 
-    // ─── إلغاء ربط OneSignal ───
+    // ─── إلغاء ربط OneSignal (باستخدام OneSignal.logout) ───
     async function unregisterPushNotifications() {
         try {
+            // استخدام OneSignalManager إذا كان متاحاً
+            if (window.OneSignalManager && typeof window.OneSignalManager.logout === 'function') {
+                const result = await window.OneSignalManager.logout();
+                if (result) {
+                    return { success: true, message: 'تم إلغاء ربط الإشعارات الفورية' };
+                } else {
+                    return { success: false, error: 'فشل إلغاء ربط OneSignal عبر المدير' };
+                }
+            }
+
+            // خطة احتياطية: استخدام OneSignal.logout مباشرة
             if (typeof window.OneSignal === 'undefined') {
                 return { success: false, error: 'OneSignal غير متوفر' };
             }
-            // إزالة External ID
-            await window.OneSignal.User.removeAlias('external_id');
-            console.log('✅ OneSignal External ID removed');
+
+            if (!window.OneSignal.User) {
+                return { success: false, error: 'OneSignal User غير متوفر' };
+            }
+
+            await window.OneSignal.logout();
+            console.log('✅ OneSignal user logged out');
             return { success: true };
         } catch (e) {
             console.error('❌ فشل إلغاء ربط OneSignal:', e);
@@ -536,24 +605,21 @@
     // ─── طلب المصادقة الإلزامية ───
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         try {
-            // محاولة جلب المستخدم من التخزين المؤقت
             let user = await getCurrentUser();
             if (user) {
                 startSessionRefresh();
                 return user;
             }
             
-            // محاولة تجديد الجلسة
             const refreshed = await refreshSession();
             if (refreshed) {
-                user = await getCurrentUser(true); // فرض التحديث
+                user = await getCurrentUser(true);
                 if (user) {
                     startSessionRefresh();
                     return user;
                 }
             }
             
-            // إذا فشل كل شيء، إعادة التوجيه
             window.location.replace(redirectUrl);
             return null;
         } catch (e) {
@@ -573,12 +639,20 @@
                     currentUser = session.user;
                     currentUserCacheTime = Date.now();
                     startSessionRefresh();
+                    // ربط OneSignal عند تسجيل الدخول
+                    registerPushNotifications(session.user.id).catch(e => {
+                        console.warn('⚠️ فشل ربط OneSignal في onAuthStateChange:', e);
+                    });
                 }
                 if (event === 'SIGNED_OUT') {
                     stopSessionRefresh();
                     currentUser = null;
                     currentUserCacheTime = 0;
                     clearStorage();
+                    // إلغاء ربط OneSignal عند تسجيل الخروج
+                    unregisterPushNotifications().catch(e => {
+                        console.warn('⚠️ فشل إلغاء ربط OneSignal في onAuthStateChange:', e);
+                    });
                 }
                 callback(event, session);
             });
@@ -588,7 +662,6 @@
     // ─── الحصول على موقع المستخدم ───
     function getCurrentPosition() {
         return new Promise((resolve, reject) => {
-            // التحقق من التخزين المؤقت
             const lat = sessionStorage.getItem(STORAGE_KEYS.USER_LAT);
             const lon = sessionStorage.getItem(STORAGE_KEYS.USER_LON);
             if (lat && lon) {
@@ -646,7 +719,7 @@
         // كلمة المرور
         resetPassword,
         updatePassword,
-        changePassword, // جديد: تغيير كلمة المرور مع التحقق
+        changePassword,
 
         // بيانات المستخدم
         updateUserMetadata,
@@ -663,10 +736,10 @@
         startSessionRefresh,
         stopSessionRefresh,
 
-        // OneSignal
+        // OneSignal (محسّن لـ v16)
         registerPushNotifications,
         unregisterPushNotifications
     };
 
-    console.log('✅ auth.js v30 جاهز (محسّن بالكامل مع دعم OneSignal)');
+    console.log('✅ auth.js v31 جاهز (محسّن بالكامل مع OneSignal v16 login/logout)');
 })();
