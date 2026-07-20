@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * notification-ui.js – عرض الواجهة والتفاعل
+ * notification-ui.js – عرض الواجهة والتفاعل (مُصلح)
  * ============================================================
  */
 
@@ -29,12 +29,17 @@
         filterType: document.getElementById('filterType'),
         filterStatus: document.getElementById('filterStatus'),
         filterPriority: document.getElementById('filterPriority'),
-        sortOrder: document.getElementById('sortOrder')
+        sortOrder: document.getElementById('sortOrder'),
+        selectAllBtn: document.getElementById('selectAllBtn'),
+        markReadBtn: document.getElementById('markReadBtn'),
+        archiveBtn: document.getElementById('archiveBtn'),
+        deleteBtn: document.getElementById('deleteBtn')
     };
 
     let allNotifications = [];
     let currentPage = 1;
     const pageSize = 20;
+    let selectedIds = new Set();
 
     // ─── مساعدات ───
     const Utils = {
@@ -81,6 +86,11 @@
         allNotifications = notifications || [];
         currentPage = page;
 
+        // إعادة تعيين التحديد عند تغيير الصفحة أو التصفية
+        if (page === 1) {
+            // لا نعيد تعيين التحديد تلقائياً، بل نتركه للمستخدم
+        }
+
         const filtered = allNotifications.filter(n => !Utils.isExpired(n.expires_at));
         if (filtered.length === 0) {
             DOM.list.innerHTML = `
@@ -91,6 +101,7 @@
                 </div>
             `;
             renderPagination(0);
+            updateSelectAllButton();
             return;
         }
 
@@ -106,9 +117,12 @@
             const typeClass = Utils.getTypeClass(n.type);
             const priorityClass = Utils.getPriorityClass(n.priority);
             const statusLabel = Utils.getStatusLabel(n.status);
+            const isSelected = selectedIds.has(n.id);
 
             html += `
-                <div class="notification-card ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+                <div class="notification-card ${isUnread ? 'unread' : ''} ${isSelected ? 'selected' : ''}" 
+                     data-id="${n.id}"
+                     style="${isSelected ? 'border-left:4px solid var(--primary);' : ''}">
                     <div class="notif-icon ${typeClass}"><i class="fas ${icon}"></i></div>
                     <div class="notif-content">
                         <div class="notif-title">
@@ -138,10 +152,83 @@
         DOM.list.removeEventListener('click', handleCardClick);
         DOM.list.addEventListener('click', handleCardClick);
 
+        // النقر على البطاقة نفسها لتبديل التحديد
+        DOM.list.querySelectorAll('.notification-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // منع إذا تم النقر على زر داخل البطاقة
+                if (e.target.closest('button')) return;
+                const id = this.dataset.id;
+                if (id) toggleSelect(id);
+            });
+        });
+
         renderPagination(filtered.length);
+        updateSelectAllButton();
     }
 
-    // ─── معالج النقر على البطاقات ───
+    // ─── تبديل التحديد ───
+    function toggleSelect(id) {
+        if (!id) return;
+        if (selectedIds.has(id)) {
+            selectedIds.delete(id);
+        } else {
+            selectedIds.add(id);
+        }
+        // تحديث المظهر
+        const card = document.querySelector(`.notification-card[data-id="${id}"]`);
+        if (card) {
+            card.classList.toggle('selected');
+            if (selectedIds.has(id)) {
+                card.style.borderLeft = '4px solid var(--primary)';
+            } else {
+                card.style.borderLeft = '';
+            }
+        }
+        updateSelectAllButton();
+    }
+
+    // ─── تحديد الكل / إلغاء التحديد ───
+    function toggleSelectAll() {
+        const cards = document.querySelectorAll('.notification-card');
+        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
+        if (allIds.length === 0) return;
+
+        const allSelected = allIds.every(id => selectedIds.has(id));
+        if (allSelected) {
+            selectedIds.clear();
+        } else {
+            allIds.forEach(id => selectedIds.add(id));
+        }
+
+        cards.forEach(el => {
+            const id = el.dataset.id;
+            if (selectedIds.has(id)) {
+                el.classList.add('selected');
+                el.style.borderLeft = '4px solid var(--primary)';
+            } else {
+                el.classList.remove('selected');
+                el.style.borderLeft = '';
+            }
+        });
+        updateSelectAllButton();
+    }
+
+    // ─── تحديث زر "تحديد الكل" ───
+    function updateSelectAllButton() {
+        if (!DOM.selectAllBtn) return;
+        const cards = document.querySelectorAll('.notification-card');
+        const allIds = Array.from(cards).map(el => el.dataset.id).filter(id => id);
+        if (allIds.length === 0) {
+            DOM.selectAllBtn.innerHTML = '<i class="fas fa-check-double"></i> تحديد الكل';
+            return;
+        }
+        const allSelected = allIds.every(id => selectedIds.has(id));
+        DOM.selectAllBtn.innerHTML = allSelected ?
+            '<i class="fas fa-check-square"></i> إلغاء التحديد' :
+            '<i class="fas fa-check-double"></i> تحديد الكل';
+    }
+
+    // ─── معالج النقر على الأزرار داخل البطاقات ───
     function handleCardClick(e) {
         const btn = e.target.closest('button');
         if (!btn) return;
@@ -153,36 +240,47 @@
         const notification = allNotifications.find(n => n.id === id);
         if (!notification) return;
 
-        if (btn.classList.contains('view-details') || e.target.closest('.notif-content') || e.target === card) {
+        // عرض التفاصيل
+        if (btn.classList.contains('view-details')) {
             e.stopPropagation();
             openDetail(notification);
             return;
         }
 
+        // تعليم كمقروء (فردي)
         if (btn.classList.contains('mark-read-btn')) {
             e.stopPropagation();
             window.NotificationActions?.markAsRead(id).then(() => refresh());
             return;
         }
 
+        // أرشفة (فردي)
         if (btn.classList.contains('archive-btn')) {
             e.stopPropagation();
-            window.NotificationActions?.archive(id).then(() => refresh());
+            if (confirm('هل تريد أرشفة هذا الإشعار؟')) {
+                window.NotificationActions?.archive(id).then(() => refresh());
+            }
             return;
         }
 
+        // حذف (فردي)
         if (btn.classList.contains('delete-btn')) {
             e.stopPropagation();
-            if (confirm('حذف هذا الإشعار؟')) {
+            if (confirm('هل أنت متأكد من حذف هذا الإشعار نهائياً؟')) {
                 window.NotificationActions?.deleteNotification(id).then(() => refresh());
             }
+            return;
         }
     }
 
     // ─── Pagination ───
     function renderPagination(total) {
+        if (!DOM.pagination) return;
         const totalPages = Math.ceil(total / pageSize);
-        if (totalPages <= 1) { DOM.pagination.innerHTML = ''; return; }
+        if (totalPages <= 1) {
+            DOM.pagination.innerHTML = '';
+            return;
+        }
 
         let html = '';
         html += `<button ${currentPage <= 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹</button>`;
@@ -239,10 +337,14 @@
             ${n.action_url ? `<div class="detail-row"><span class="label">الإجراء</span><span class="value"><a href="${n.action_url}" target="_blank" class="action-link">تنفيذ</a></span></div>` : ''}
         `;
         DOM.modal.classList.add('active');
-        if (n.status === 'unread') window.NotificationActions?.markAsRead(n.id).then(() => refresh());
+        if (n.status === 'unread') {
+            window.NotificationActions?.markAsRead(n.id).then(() => refresh());
+        }
     }
 
-    function closeDetail() { if (DOM.modal) DOM.modal.classList.remove('active'); }
+    function closeDetail() {
+        if (DOM.modal) DOM.modal.classList.remove('active');
+    }
 
     // ─── تحديث القائمة ───
     function refresh() {
@@ -252,6 +354,71 @@
             const filtered = window.NotificationFilters?.apply(all) || all;
             render(filtered, currentPage);
             updateStats(cache.getStats());
+        }
+    }
+
+    // ─── ربط أزرار شريط الأدوات ───
+    function bindToolbarButtons() {
+        // تحديد الكل
+        if (DOM.selectAllBtn) {
+            DOM.selectAllBtn.addEventListener('click', toggleSelectAll);
+        }
+
+        // تعليم كمقروء (جماعي)
+        if (DOM.markReadBtn) {
+            DOM.markReadBtn.addEventListener('click', async function() {
+                const ids = Array.from(selectedIds);
+                if (ids.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد تعليم ${ids.length} إشعار كمقروء؟`)) return;
+
+                for (const id of ids) {
+                    await window.NotificationActions?.markAsRead(id);
+                }
+                selectedIds.clear();
+                refresh();
+                await window.Support?.updateNotificationBadge?.();
+            });
+        }
+
+        // أرشفة (جماعي)
+        if (DOM.archiveBtn) {
+            DOM.archiveBtn.addEventListener('click', async function() {
+                const ids = Array.from(selectedIds);
+                if (ids.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد أرشفة ${ids.length} إشعار؟`)) return;
+
+                for (const id of ids) {
+                    await window.NotificationActions?.archive(id);
+                }
+                selectedIds.clear();
+                refresh();
+                await window.Support?.updateNotificationBadge?.();
+            });
+        }
+
+        // حذف (جماعي)
+        if (DOM.deleteBtn) {
+            DOM.deleteBtn.addEventListener('click', async function() {
+                const ids = Array.from(selectedIds);
+                if (ids.length === 0) {
+                    alert('يرجى تحديد إشعارات أولاً');
+                    return;
+                }
+                if (!confirm(`هل تريد حذف ${ids.length} إشعار نهائياً؟`)) return;
+
+                for (const id of ids) {
+                    await window.NotificationActions?.deleteNotification(id);
+                }
+                selectedIds.clear();
+                refresh();
+                await window.Support?.updateNotificationBadge?.();
+            });
         }
     }
 
@@ -274,14 +441,19 @@
             sort: DOM.sortOrder?.value || 'desc'
         };
         window.NotificationFilters?.update(filters);
+        // إعادة تعيين التحديد عند تغيير الفلاتر
+        selectedIds.clear();
         refresh();
     }
 
     // ─── التهيئة ───
     function init() {
         if (DOM.closeModal) DOM.closeModal.addEventListener('click', closeDetail);
-        if (DOM.modal) DOM.modal.addEventListener('click', (e) => { if (e.target === DOM.modal) closeDetail(); });
+        if (DOM.modal) DOM.modal.addEventListener('click', (e) => {
+            if (e.target === DOM.modal) closeDetail();
+        });
         bindFilters();
+        bindToolbarButtons();
 
         // استمع لتحديثات الكاش
         const cache = window.NotificationCache;
@@ -294,9 +466,19 @@
             });
         }
 
-        console.log('✅ notification-ui.js ready');
+        console.log('✅ notification-ui.js ready (with selection)');
     }
 
-    window.NotificationUI = { render, refresh, updateStats, openDetail, closeDetail, init };
+    window.NotificationUI = {
+        render,
+        refresh,
+        updateStats,
+        openDetail,
+        closeDetail,
+        init,
+        selectedIds: () => selectedIds,
+        toggleSelectAll
+    };
+
     console.log('✅ notification-ui.js ready');
 })();
