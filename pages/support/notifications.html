@@ -1090,7 +1090,7 @@
     <script src="/assets/js/notifications/notification-history.js"></script>
     <script src="/assets/js/notifications/support-notifications.js"></script>
 
-    <!-- خطة احتياطية للتبويبات والأزرار -->
+    <!-- خطة احتياطية للتبويبات والأزرار + تحديث حالة OneSignal -->
     <script>
         (function() {
             'use strict';
@@ -1167,6 +1167,39 @@
                 }
                 loadSettings();
                 bindToggles();
+
+                // ✅ تحديث حالة OneSignal في الواجهة
+                setTimeout(async () => {
+                    const statusEl = document.getElementById('osStatusText');
+                    const playerIdEl = document.getElementById('osPlayerId');
+                    if (!statusEl) return;
+
+                    try {
+                        if (window.waitForOneSignal) {
+                            await window.waitForOneSignal(5000);
+                        }
+                        if (window.getOneSignalStatus) {
+                            const status = window.getOneSignalStatus();
+                            if (status.initialized && status.subscriptionId) {
+                                statusEl.textContent = 'مفعلة (Subscribed)';
+                                statusEl.className = 'status-value subscribed';
+                                if (playerIdEl) playerIdEl.textContent = `Player ID: ${status.subscriptionId}`;
+                            } else if (status.initialized) {
+                                statusEl.textContent = 'غير مشترك (Unsubscribed)';
+                                statusEl.className = 'status-value unsubscribed';
+                            } else {
+                                statusEl.textContent = 'غير مهيأة بعد...';
+                                statusEl.className = 'status-value';
+                            }
+                        } else {
+                            statusEl.textContent = 'تعذّر التحقق من الحالة';
+                            statusEl.className = 'status-value';
+                        }
+                    } catch (e) {
+                        statusEl.textContent = 'خطأ في التحقق';
+                        statusEl.className = 'status-value';
+                    }
+                }, 2000);
 
                 console.log('✅ Fallback ready with settings');
             });
