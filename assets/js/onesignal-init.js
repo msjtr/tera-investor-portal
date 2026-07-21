@@ -1,6 +1,5 @@
 /**
- * onesignal-init.js – تهيئة OneSignal Web SDK v16
- * يستخدم OneSignalDeferred لضمان التحميل الكامل
+ * onesignal-init.js – OneSignal Web SDK v16 مع تخزين Player ID
  */
 (function () {
     "use strict";
@@ -25,8 +24,18 @@
             window.OneSignal = OneSignal;
             console.log("✅ OneSignal Initialized");
 
-            // تسجيل دخول المستخدم الحالي إن وُجد
-            const user = window.Auth?.getCurrentUser ? await window.Auth.getCurrentUser() : null;
+            // انتظر حتى يكتمل الاشتراك
+            await waitForSubscription(OneSignal);
+
+            // خزّن playerId في sessionStorage
+            const playerId = OneSignal.User?.PushSubscription?.id;
+            if (playerId) {
+                sessionStorage.setItem("onesignal_subscription_id", playerId);
+                console.log("📌 Player ID saved:", playerId);
+            }
+
+            // تسجيل دخول المستخدم (اختياري، لكن نتركه)
+            const user = await getCurrentUser();
             if (user?.id) {
                 try {
                     await OneSignal.login(user.id);
@@ -39,21 +48,13 @@
             // تحديث واجهة الحالة
             updateStatusDisplay(OneSignal);
 
-            // استماع لتغييرات المستخدم
-            document.addEventListener("user:updated", async (e) => {
-                if (e.detail?.id) await OneSignal.login(e.detail.id);
-            });
-            document.addEventListener("user:loggedOut", async () => {
-                await OneSignal.logout();
-            });
-
             // تصدير دوال مساعدة
-            window.waitForOneSignal = (timeout = 5000) => Promise.resolve(OneSignal);
+            window.waitForOneSignal = () => Promise.resolve(OneSignal);
             window.getOneSignalStatus = () => ({
                 initialized: true,
                 permission: Notification.permission,
                 optedIn: OneSignal.User?.PushSubscription?.optedIn ?? false,
-                subscriptionId: OneSignal.User?.PushSubscription?.id ?? null,
+                subscriptionId: playerId ?? null,
                 externalId: null
             });
 
@@ -61,6 +62,24 @@
             console.error("❌ OneSignal Initialization Error", err);
         }
     });
+
+    async function waitForSubscription(OneSignal, timeout = 10000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+            if (OneSignal.User?.PushSubscription?.id) return;
+            await new Promise(r => setTimeout(r, 500));
+        }
+        console.warn("⚠️ PushSubscription did not become ready in time");
+    }
+
+    async function getCurrentUser() {
+        if (window.Auth?.getCurrentUser) return await window.Auth.getCurrentUser();
+        if (window.teraSupabase) {
+            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            return user;
+        }
+        return null;
+    }
 
     function updateStatusDisplay(OneSignal) {
         const statusEl = document.getElementById("osStatusText");
