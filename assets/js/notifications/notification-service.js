@@ -1,6 +1,6 @@
 /**
  * NotificationService – المحرك المركزي للإشعارات
- * المسار: assets/js/notifications/notification-service.js
+ * يستخدم Player ID من sessionStorage لضمان وصول الإشعارات
  */
 (function() {
   'use strict';
@@ -15,9 +15,6 @@
       console.log('✅ NotificationService initialized');
     }
 
-    /**
-     * إرسال إشعار – المدخل الوحيد
-     */
     async send({ userId, title, body, type = 'system', priority = 'normal', data = {} }) {
       if (!this.supabase) throw new Error('NotificationService not initialized');
       if (!userId || !title) throw new Error('userId and title are required');
@@ -49,7 +46,7 @@
       this._showToast(notification);
       this._dispatchLocalEvent(notification);
 
-      // 3. إرسال Push عبر Edge Function
+      // 3. إرسال Push باستخدام Player ID
       this._sendPushViaEdge(notification).catch(err => {
         console.warn('⚠️ Push sending failed (logged):', err);
       });
@@ -76,11 +73,20 @@
     async _sendPushViaEdge(notification) {
       if (!this.supabase) return;
 
+      // جلب playerId من sessionStorage
+      const playerId = sessionStorage.getItem('onesignal_subscription_id');
+      if (!playerId) {
+        console.warn('⚠️ No playerId found in sessionStorage, push skipped');
+        // لا نرمي خطأ لأن الإشعار قد أُرسل عبر Realtime والواجهة
+        return;
+      }
+
       const { data: response, error } = await this.supabase.functions.invoke(
         'send-push-notification',
         {
           body: {
             userId: notification.user_id,
+            playerIds: [playerId], // ← نمرر playerId مباشرة
             title: notification.title,
             body: notification.body,
             url: notification.data?.action_url || null,
