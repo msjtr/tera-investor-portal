@@ -49,7 +49,7 @@
       this._showToast(notification);
       this._dispatchLocalEvent(notification);
 
-      // 3. إرسال Push عبر Edge Function وتسجيل النتيجة
+      // 3. إرسال Push عبر Edge Function
       this._sendPushViaEdge(notification).catch(err => {
         console.warn('⚠️ Push sending failed (logged):', err);
       });
@@ -61,7 +61,6 @@
       if (window.toastManager) {
         window.toastManager.show(notification.title, notification.body, notification.type);
       } else {
-        // Fallback بسيط
         const toast = document.createElement('div');
         toast.className = `notification-toast toast-${notification.priority || 'normal'}`;
         toast.innerText = `${notification.title}: ${notification.body}`;
@@ -77,7 +76,6 @@
     async _sendPushViaEdge(notification) {
       if (!this.supabase) return;
 
-      // استدعاء Edge Function
       const { data: response, error } = await this.supabase.functions.invoke(
         'send-push-notification',
         {
@@ -93,7 +91,6 @@
       );
 
       if (error) {
-        // تسجيل فشل الاستدعاء نفسه
         await this._log(notification.id, notification.user_id, 'failed', error.message);
         throw error;
       }
@@ -101,8 +98,7 @@
       if (response?.success) {
         await this._log(notification.id, notification.user_id, 'success', null, response.notificationId);
       } else {
-        const errorMsg = response?.error || 'Unknown OneSignal error';
-        await this._log(notification.id, notification.user_id, 'failed', errorMsg);
+        await this._log(notification.id, notification.user_id, 'failed', response?.error || 'Unknown error');
       }
     }
 
