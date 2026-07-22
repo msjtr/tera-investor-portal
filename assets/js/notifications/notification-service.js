@@ -81,7 +81,7 @@
         return;
       }
 
-      // ---- الحل: استخدام fetch مباشرة بدلاً من supabase.functions.invoke ----
+      // ---- استخدام fetch مباشرة لتفادي مشكلة CORS ----
       const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
       try {
         const response = await fetch(url, {
@@ -132,7 +132,6 @@
         });
       } catch (e) {
         console.warn('⚠️ Failed to log notification:', e);
-        // إذا كانت المشكلة RLS، سيظهر 403. سنحتاج إلى تعطيل RLS على الجدول أو إضافة سياسة.
         if (e.code === '42501' || e.message?.includes('permission denied')) {
           console.warn('💡 تلميح: عطّل RLS على notification_logs أو أضف سياسة INSERT مناسبة.');
         }
