@@ -1,7 +1,7 @@
 /**
- * NotificationService – المحرك المركزي للإشعارات (الإصدار النهائي)
+ * NotificationService – المحرك المركزي للإشعارات (الإصدار النهائي المبسط)
  * - يحفظ الإشعار في DB
- * - يرسل Push عبر Edge Function مع Authorization token
+ * - يرسل Push عبر Edge Function مباشرة (بدون Authorization)
  * - يسجل النتيجة في notification_logs
  */
 (function() {
@@ -86,25 +86,15 @@
         return;
       }
 
-      // الحصول على access token لحل مشكلة 401
-      const { data: { session } } = await this.supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) {
-        console.warn('⚠️ No access token, cannot authenticate');
-        await this._log(notification.id, notification.user_id, 'failed', 'No access token');
-        return;
-      }
-
       const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
       try {
         const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
+            // لا نرسل Authorization لأن Edge Function لا تشترطه حالياً
           },
           body: JSON.stringify({
-            userId: notification.user_id,
             playerIds: [playerId],
             title: notification.title,
             body: notification.body,
@@ -145,7 +135,6 @@
         });
       } catch (e) {
         console.warn('⚠️ Failed to log notification:', e);
-        // في حال كان RLS لا يزال مفعلاً، نعطي تلميحًا
         if (e.code === '42501' || e.message?.includes('permission denied')) {
           console.warn('💡 تلميح: عطّل RLS على notification_logs أو أضف سياسة INSERT مناسبة.');
         }
