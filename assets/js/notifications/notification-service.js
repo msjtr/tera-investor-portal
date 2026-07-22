@@ -1,6 +1,7 @@
 /**
  * NotificationService – المحرك المركزي للإشعارات
  * يستخدم Player ID من sessionStorage لضمان وصول الإشعارات
+ * تم إصلاح مشكلة CORS باستخدام fetch مباشرة بدلاً من supabase.functions.invoke
  */
 (function() {
   'use strict';
@@ -77,47 +78,65 @@
       const playerId = sessionStorage.getItem('onesignal_subscription_id');
       if (!playerId) {
         console.warn('⚠️ No playerId found in sessionStorage, push skipped');
-        // لا نرمي خطأ لأن الإشعار قد أُرسل عبر Realtime والواجهة
         return;
       }
 
-      const { data: response, error } = await this.supabase.functions.invoke(
-        'send-push-notification',
-        {
-          body: {
+      // ---- الحل: استخدام fetch مباشرة بدلاً من supabase.functions.invoke ----
+      const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             userId: notification.user_id,
-            playerIds: [playerId], // ← نمرر playerId مباشرة
+            playerIds: [playerId],
             title: notification.title,
             body: notification.body,
             url: notification.data?.action_url || null,
             data: notification.data || {},
             silent: false
-          }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          await this._log(notification.id, notification.user_id, 'failed', errorText);
+          throw new Error(`Edge function error: ${response.status} ${errorText}`);
         }
-      );
 
-      if (error) {
-        await this._log(notification.id, notification.user_id, 'failed', error.message);
-        throw error;
-      }
-
-      if (response?.success) {
-        await this._log(notification.id, notification.user_id, 'success', null, response.notificationId);
-      } else {
-        await this._log(notification.id, notification.user_id, 'failed', response?.error || 'Unknown error');
+        const result = await response.json();
+        if (result.success) {
+          await this._log(notification.id, notification.user_id, 'success', null, result.notificationId);
+          console.log('✅ Push notification sent:', result.notificationId);
+        } else {
+          await this._log(notification.id, notification.user_id, 'failed', result.error || 'Unknown error');
+        }
+      } catch (err) {
+        await this._log(notification.id, notification.user_id, 'failed', err.message);
+        console.warn('⚠️ Push sending failed:', err);
       }
     }
 
     async _log(notificationId, userId, status, errorMessage = null, messageId = null) {
       if (!this.supabase) return;
-      await this.supabase.from('notification_logs').insert({
-        notification_id: notificationId,
-        user_id: userId,
-        status,
-        error_message: errorMessage,
-        message_id: messageId,
-        sent_at: new Date().toISOString()
-      });
+      try {
+        await this.supabase.from('notification_logs').insert({
+          notification_id: notificationId,
+          user_id: userId,
+          status,
+          error_message: errorMessage,
+          message_id: messageId,
+          sent_at: new Date().toISOString()
+        });
+      } catch (e) {
+        console.warn('⚠️ Failed to log notification:', e);
+        // إذا كانت المشكلة RLS، سيظهر 403. سنحتاج إلى تعطيل RLS على الجدول أو إضافة سياسة.
+        if (e.code === '42501' || e.message?.includes('permission denied')) {
+          console.warn('💡 تلميح: عطّل RLS على notification_logs أو أضف سياسة INSERT مناسبة.');
+        }
+      }
     }
   }
 
