@@ -1,6 +1,6 @@
 /**
  * onesignal-init.js – OneSignal Web SDK v16 مع مزامنة الاشتراك مع Supabase
- * يحفظ player_id في user_push_subscriptions عند الاشتراك
+ * يحفظ player_id في user_push_subscriptions عند الاشتراك (طريقة آمنة بدون upsert)
  * يُحدّث الاشتراك عند تغير المستخدم
  */
 (function () {
@@ -11,26 +11,44 @@
 
     const ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
 
-    // دالة لحفظ الاشتراك في قاعدة البيانات (UPSERT)
+    // دالة لحفظ الاشتراك في قاعدة البيانات (يدوياً، بدون upsert)
     async function saveSubscriptionToDB(userId, playerId) {
         if (!userId || !playerId) return;
         const sb = window.teraSupabase;
         if (!sb) return;
 
         try {
-            const { error } = await sb
+            // التحقق مما إذا كان player_id موجوداً بالفعل
+            const { data: existing } = await sb
                 .from('user_push_subscriptions')
-                .upsert({
-                    user_id: userId,
-                    player_id: playerId,
-                    is_active: true,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'player_id' });
+                .select('id')
+                .eq('player_id', playerId)
+                .maybeSingle();
 
-            if (error) console.warn('⚠️ Failed to save subscription:', error);
-            else console.log('✅ Subscription saved to DB:', playerId);
+            if (existing) {
+                // تحديث السجل الحالي
+                await sb
+                    .from('user_push_subscriptions')
+                    .update({
+                        user_id: userId,
+                        is_active: true,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('player_id', playerId);
+            } else {
+                // إدراج سجل جديد
+                await sb
+                    .from('user_push_subscriptions')
+                    .insert({
+                        user_id: userId,
+                        player_id: playerId,
+                        is_active: true,
+                        updated_at: new Date().toISOString()
+                    });
+            }
+            console.log('✅ Subscription saved to DB:', playerId);
         } catch (e) {
-            console.warn('⚠️ Subscription save error:', e);
+            console.warn('⚠️ Failed to save subscription:', e);
         }
     }
 
