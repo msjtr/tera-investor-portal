@@ -1,5 +1,7 @@
 /**
- * onesignal-init.js – OneSignal Web SDK v16 مع تخزين Player ID
+ * onesignal-init.js – OneSignal Web SDK v16 مع مزامنة الاشتراك مع Supabase
+ * يحفظ player_id في user_push_subscriptions عند الاشتراك
+ * يُحدّث الاشتراك عند تغير المستخدم
  */
 (function () {
     "use strict";
@@ -8,6 +10,39 @@
     window.__onesignalInitialized = true;
 
     const ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
+
+    // دالة لحفظ الاشتراك في قاعدة البيانات (UPSERT)
+    async function saveSubscriptionToDB(userId, playerId) {
+        if (!userId || !playerId) return;
+        const sb = window.teraSupabase;
+        if (!sb) return;
+
+        try {
+            const { error } = await sb
+                .from('user_push_subscriptions')
+                .upsert({
+                    user_id: userId,
+                    player_id: playerId,
+                    is_active: true,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'player_id' });
+
+            if (error) console.warn('⚠️ Failed to save subscription:', error);
+            else console.log('✅ Subscription saved to DB:', playerId);
+        } catch (e) {
+            console.warn('⚠️ Subscription save error:', e);
+        }
+    }
+
+    // دالة مساعدة للحصول على المستخدم الحالي
+    async function getCurrentUser() {
+        if (window.Auth?.getCurrentUser) return await window.Auth.getCurrentUser();
+        if (window.teraSupabase) {
+            const { data: { user } } = await window.teraSupabase.auth.getUser();
+            return user;
+        }
+        return null;
+    }
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
@@ -24,31 +59,32 @@
             window.OneSignal = OneSignal;
             console.log("✅ OneSignal Initialized");
 
-            // انتظر حتى يكتمل الاشتراك
+            // انتظر حتى يصبح الاشتراك جاهزًا
             await waitForSubscription(OneSignal);
 
-            // خزّن playerId في sessionStorage
             const playerId = OneSignal.User?.PushSubscription?.id;
             if (playerId) {
                 sessionStorage.setItem("onesignal_subscription_id", playerId);
-                console.log("📌 Player ID saved:", playerId);
-            }
+                console.log("📌 Player ID:", playerId);
 
-            // تسجيل دخول المستخدم (اختياري، لكن نتركه)
-            const user = await getCurrentUser();
-            if (user?.id) {
-                try {
-                    await OneSignal.login(user.id);
-                    console.log("✅ OneSignal login:", user.id);
-                } catch (e) {
-                    console.warn("⚠️ OneSignal login failed:", e.message);
+                // حفظ الاشتراك في قاعدة البيانات
+                const user = await getCurrentUser();
+                if (user?.id) {
+                    await saveSubscriptionToDB(user.id, playerId);
+                    try {
+                        await OneSignal.login(user.id);
+                        console.log("✅ OneSignal login:", user.id);
+                    } catch (e) {
+                        console.warn("⚠️ OneSignal login failed:", e.message);
+                    }
                 }
             }
 
             // تحديث واجهة الحالة
             updateStatusDisplay(OneSignal);
 
-            // تصدير دوال مساعدة
+            // دوال مساعدة عامة
+            window.getPlayerId = () => window.OneSignal?.User?.PushSubscription?.id || null;
             window.waitForOneSignal = () => Promise.resolve(OneSignal);
             window.getOneSignalStatus = () => ({
                 initialized: true,
@@ -63,6 +99,32 @@
         }
     });
 
+    // الاستماع لتغييرات المستخدم (تحديث الاشتراك عند تغير الحساب)
+    document.addEventListener('user:updated', async (e) => {
+        const userId = e.detail?.id;
+        if (!userId || !window.OneSignal) return;
+        const playerId = window.OneSignal.User?.PushSubscription?.id;
+        if (playerId) {
+            await saveSubscriptionToDB(userId, playerId);
+            try { await window.OneSignal.login(userId); } catch (e) {}
+        }
+    });
+
+    document.addEventListener('user:loggedOut', async () => {
+        if (!window.OneSignal) return;
+        const playerId = window.OneSignal.User?.PushSubscription?.id;
+        if (playerId) {
+            const sb = window.teraSupabase;
+            if (sb) {
+                await sb.from('user_push_subscriptions')
+                    .update({ is_active: false, updated_at: new Date().toISOString() })
+                    .eq('player_id', playerId);
+            }
+        }
+        try { await window.OneSignal.logout(); } catch (e) {}
+        sessionStorage.removeItem('onesignal_subscription_id');
+    });
+
     async function waitForSubscription(OneSignal, timeout = 10000) {
         const start = Date.now();
         while (Date.now() - start < timeout) {
@@ -70,15 +132,6 @@
             await new Promise(r => setTimeout(r, 500));
         }
         console.warn("⚠️ PushSubscription did not become ready in time");
-    }
-
-    async function getCurrentUser() {
-        if (window.Auth?.getCurrentUser) return await window.Auth.getCurrentUser();
-        if (window.teraSupabase) {
-            const { data: { user } } = await window.teraSupabase.auth.getUser();
-            return user;
-        }
-        return null;
     }
 
     function updateStatusDisplay(OneSignal) {
