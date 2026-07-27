@@ -1,121 +1,171 @@
 /**
- * ============================================================
- * notification-manager.js – المدير المركزي للإشعارات
- * ============================================================
+ * notification-manager.js
+ * مدير الإشعارات – جلب وعرض وتحديث الإشعارات مع دعم RLS
+ * يستخدم withAuth للتحقق من الجلسة قبل أي طلب
+ * 
+ * المتغيرات المعتمدة:
+ * - window.teraSupabase : عميل Supabase (مفترض وجوده)
+ * - window.OneSignalManager : (اختياري) للاستفادة من دوال withAuth
  */
 
 (function() {
-    'use strict';
+  "use strict";
 
-    if (window.__notificationManager) return;
-    window.__notificationManager = true;
-
-    // ─── Event Bus ───
-    class EventBus {
-        constructor() {
-            this.events = {};
-        }
-        on(event, callback) {
-            if (!this.events[event]) this.events[event] = [];
-            this.events[event].push(callback);
-            return () => this.off(event, callback);
-        }
-        off(event, callback) {
-            if (!this.events[event]) return;
-            this.events[event] = this.events[event].filter(cb => cb !== callback);
-        }
-        emit(event, data) {
-            if (!this.events[event]) return;
-            this.events[event].forEach(cb => cb(data));
-        }
-        once(event, callback) {
-            const wrapper = (data) => { callback(data); this.off(event, wrapper); };
-            this.on(event, wrapper);
-        }
+  // ============================================================
+  // 1. دالة withAuth (نسخة مستقلة في هذا الملف)
+  //    يمكنك أيضاً استيرادها من OneSignalManager إذا كان موجوداً
+  // ============================================================
+  async function withAuth(callback) {
+    const sb = window.teraSupabase || window.supabase;
+    if (!sb) {
+      console.warn('⚠️ [notifications] Supabase غير متاح');
+      return null;
     }
 
-    // ─── الحالة المركزية ───
-    class NotificationState {
-        constructor() {
-            this.cache = [];
-            this.selected = new Set();
-            this.unreadCount = 0;
-            this.totalCount = 0;
-            this.filters = { search: '', type: 'all', status: 'all', priority: 'all', sort: 'desc' };
-            this.subscribers = [];
-        }
-
-        add(notification) {
-            if (this.cache.some(n => n.id === notification.id)) return;
-            this.cache.unshift(notification);
-            this.recalculate();
-        }
-
-        update(id, updates) {
-            const idx = this.cache.findIndex(n => n.id === id);
-            if (idx === -1) return false;
-            this.cache[idx] = { ...this.cache[idx], ...updates };
-            this.recalculate();
-            return true;
-        }
-
-        remove(id) {
-            this.cache = this.cache.filter(n => n.id !== id);
-            this.selected.delete(id);
-            this.recalculate();
-        }
-
-        recalculate() {
-            this.unreadCount = this.cache.filter(n => n.status === 'unread').length;
-            this.totalCount = this.cache.filter(n => n.status !== 'deleted').length;
-            this.notify();
-        }
-
-        notify() {
-            this.subscribers.forEach(cb => cb(this));
-        }
-
-        subscribe(callback) {
-            this.subscribers.push(callback);
-            return () => { this.subscribers = this.subscribers.filter(cb => cb !== callback); };
-        }
+    try {
+      const { data: { session }, error } = await sb.auth.getSession();
+      if (error || !session) {
+        console.log('⏳ [notifications] المستخدم غير مسجل، سيتم تخطي الطلب');
+        return null;
+      }
+      return await callback(session);
+    } catch (e) {
+      console.warn('⚠️ [notifications] خطأ في التحقق من الجلسة:', e);
+      return null;
     }
+  }
 
-    // ─── المدير الرئيسي ───
-    class NotificationManager {
-        constructor() {
-            if (NotificationManager.instance) return NotificationManager.instance;
-            NotificationManager.instance = this;
-            this.events = new EventBus();
-            this.state = new NotificationState();
-            this.isInitialized = false;
-        }
+  // ============================================================
+  // 2. دوال جلب الإشعارات (معدلة)
+  // ============================================================
 
-        init() {
-            if (this.isInitialized) return this;
-            this.isInitialized = true;
-            console.log('✅ NotificationManager initialized');
-            return this;
-        }
+  /**
+   * جلب آخر 50 إشعار للمستخدم الحالي (غير مقروءة)
+   * @returns {Promise<Array|null>}
+   */
+  async function fetchUnreadNotifications() {
+    return withAuth(async (session) => {
+      const sb = window.teraSupabase || window.supabase;
+      const { data, error } = await sb
+        .from('notifications')
+        .select('*')
+        // ❌ لا ترسل user_id هنا، RLS ستقوم بتصفيتها تلقائياً
+        .eq('status', 'unread')
+        .eq('deleted_at', null)      // استثناء المحذوف منطقياً
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-        addNotification(n) { this.state.add(n); this.events.emit('notification:added', n); return n; }
-        updateNotification(id, updates) { const r = this.state.update(id, updates); if (r) this.events.emit('notification:updated', { id, updates }); return r; }
-        deleteNotification(id) { this.state.remove(id); this.events.emit('notification:deleted', id); }
-        getState() { return this.state; }
-        on(event, cb) { return this.events.on(event, cb); }
-    }
+      if (error) throw error;
+      return data;
+    });
+  }
 
-    const manager = new NotificationManager();
-    window.__notificationManager = manager;
-    window.NotificationManager = {
-        getInstance: () => manager,
-        init: () => manager.init(),
-        addNotification: (n) => manager.addNotification(n),
-        updateNotification: (id, u) => manager.updateNotification(id, u),
-        deleteNotification: (id) => manager.deleteNotification(id),
-        getState: () => manager.getState(),
-        on: (event, cb) => manager.on(event, cb)
-    };
+  /**
+   * جلب جميع الإشعارات (مع دعم التصفية حسب النوع)
+   * @param {Object} filters - مثلاً { type: 'system', category: 'alert' }
+   * @param {number} limit - عدد النتائج
+   * @returns {Promise<Array|null>}
+   */
+  async function fetchNotifications(filters = {}, limit = 20) {
+    return withAuth(async (session) => {
+      const sb = window.teraSupabase || window.supabase;
+      let query = sb
+        .from('notifications')
+        .select('*')
+        .eq('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
-    console.log('✅ notification-manager.js ready');
+      // تطبيق الفلاتر (مع تجاهل user_id)
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.is_read !== undefined) query = query.eq('is_read', filters.is_read);
+      // يمكن إضافة المزيد حسب الحاجة
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    });
+  }
+
+  /**
+   * تحديث حالة الإشعار (تحديد كمقروء)
+   * @param {string} notificationId
+   * @returns {Promise<boolean>}
+   */
+  async function markAsRead(notificationId) {
+    return withAuth(async (session) => {
+      const sb = window.teraSupabase || window.supabase;
+      const { error } = await sb
+        .from('notifications')
+        .update({
+          is_read: true,
+          read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', notificationId)
+        .eq('user_id', session.user.id); // تأكد من أنها تخص المستخدم
+
+      if (error) throw error;
+      return true;
+    });
+  }
+
+  /**
+   * تحديد جميع الإشعارات كمقروءة
+   * @returns {Promise<boolean>}
+   */
+  async function markAllAsRead() {
+    return withAuth(async (session) => {
+      const sb = window.teraSupabase || window.supabase;
+      const { error } = await sb
+        .from('notifications')
+        .update({
+          is_read: true,
+          read_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', session.user.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      return true;
+    });
+  }
+
+  /**
+   * الحصول على عدد الإشعارات غير المقروءة (لشارة العد)
+   * @returns {Promise<number>}
+   */
+  async function getUnreadCount() {
+    const result = await withAuth(async (session) => {
+      const sb = window.teraSupabase || window.supabase;
+      const { count, error } = await sb
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .eq('is_read', false)
+        .eq('deleted_at', null);
+
+      if (error) throw error;
+      return count;
+    });
+    return result || 0;
+  }
+
+  // ============================================================
+  // 3. تصدير الدوال إلى النطاق العام (اختياري)
+  // ============================================================
+
+  window.NotificationManager = {
+    fetchUnreadNotifications,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    getUnreadCount,
+    withAuth   // يمكن استخدامها من الخارج
+  };
+
+  console.log('✅ [notification-manager] تم تحميل مدير الإشعارات بنجاح');
+
 })();
