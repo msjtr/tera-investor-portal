@@ -9,6 +9,7 @@
  * ✅ يمنع login المتكرر
  * ✅ يستخدم User.PushSubscription الصحيحة
  * ✅ يحفظ الاشتراك في Supabase تلقائياً (مع withAuth لتجنب 403)
+ * ✅ يستخدم دالة getSupabaseClient الموحدة
  */
 
 (function () {
@@ -18,24 +19,24 @@
     window.__notificationOneSignal = true;
 
     let lastLoggedUserId = null;
-    let supabaseClient = null;
+
+    // ─── دالة موحدة للحصول على Supabase Client ───
+    function getSupabaseClient() {
+        if (window.teraSupabase) return window.teraSupabase;
+        if (window.Support?.getSupabase) return window.Support.getSupabase();
+        if (window.waitForSupabase) return window.waitForSupabase();
+        if (window.supabase) return window.supabase;
+        return null;
+    }
 
     // ─── دوال مساعدة ───
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // ─── الحصول على Supabase Client ───
-    function getSupabase() {
-        if (supabaseClient) return supabaseClient;
-        if (window.teraSupabase) return window.teraSupabase;
-        if (window.Support?.getSupabase) return window.Support.getSupabase();
-        return null;
-    }
-
-    // ─── دالة withAuth (نسخة مستقلة) ───
+    // ─── دالة withAuth الموحدة ───
     async function withAuth(callback) {
-        const sb = getSupabase();
+        const sb = getSupabaseClient();
         if (!sb) {
             console.warn('⚠️ [OneSignal] Supabase client not available');
             return null;
@@ -46,6 +47,7 @@
                 console.log('⏳ [OneSignal] No active session, skipping DB save');
                 return null;
             }
+            console.log('✅ [OneSignal] Session active for user:', session.user.id);
             return await callback(session);
         } catch (e) {
             console.warn('⚠️ [OneSignal] withAuth error:', e.message);
@@ -61,7 +63,7 @@
         }
 
         const result = await withAuth(async (session) => {
-            const sb = getSupabase();
+            const sb = getSupabaseClient();
             if (!sb) return false;
 
             const { error } = await sb
@@ -301,8 +303,11 @@
 
     // ─── الاستماع لتغيرات المصادقة في Supabase ───
     function setupAuthListener() {
-        const sb = getSupabase();
-        if (!sb) return;
+        const sb = getSupabaseClient();
+        if (!sb) {
+            console.warn('⚠️ [OneSignal] Cannot setup auth listener: Supabase not available');
+            return;
+        }
 
         sb.auth.onAuthStateChange(async (event, session) => {
             console.log(`🔐 [OneSignal] Auth event: ${event}`);
@@ -322,7 +327,7 @@
                 const playerId = await getPlayerId();
                 if (playerId) {
                     await withAuth(async (session) => {
-                        const sb2 = getSupabase();
+                        const sb2 = getSupabaseClient();
                         if (!sb2) return;
                         await sb2
                             .from('user_push_subscriptions')
@@ -342,8 +347,18 @@
 
     // ─── التهيئة التلقائية ───
     function init() {
-        // تعيين Supabase client
-        supabaseClient = getSupabase();
+        // التحقق من توفر Supabase
+        const sb = getSupabaseClient();
+        if (!sb) {
+            console.warn('⚠️ [OneSignal] Supabase not available, init delayed');
+            // إعادة المحاولة بعد فترة
+            setTimeout(() => {
+                if (getSupabaseClient()) {
+                    init();
+                }
+            }, 2000);
+            return;
+        }
 
         // إضافة مستمع المصادقة
         setupAuthListener();
@@ -383,11 +398,12 @@
         init
     };
 
-    // بدء التهيئة
+    // ─── بدء التهيئة عند تحميل الصفحة ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
-        init();
+        // إذا كان DOM جاهزاً بالفعل، نبدأ التهيئة فوراً
+        setTimeout(init, 500);
     }
 
     console.log("✅ notification-onesignal.js loaded (with Supabase sync)");
