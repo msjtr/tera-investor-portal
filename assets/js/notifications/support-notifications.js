@@ -1,60 +1,16 @@
 /**
- * ============================================================
- * support-notifications.js – التهيئة النهائية + إعدادات الإشعارات
- * يعمل فقط في الصفحات التي تحتوي على عنصر #notificationsList
- * تم التحديث لاستخدام NotificationService و withAuth لتجنب 403
- * ============================================================
+ * support-notifications.js – تهيئة مركز الإشعارات مع RLS-safe
+ * تم فصله من HTML إلى ملف مستقل
+ * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
  */
-
 (function() {
     'use strict';
 
     if (window.__supportNotificationsReady) return;
     window.__supportNotificationsReady = true;
 
-    // ─── متغيرات عامة ───
     let supabaseClient = null;
-    let authChannel = null; // لمتابعة تغييرات المصادقة
-
-    // ─── دوال الإعدادات (بدون تغيير) ───
-    function loadSettings() {
-        // ... الكود الحالي ...
-    }
-    function saveSettings() {
-        // ... الكود الحالي ...
-    }
-    function bindToggles() {
-        // ... الكود الحالي ...
-    }
-    function bindSaveButton() {
-        // ... الكود الحالي ...
-    }
-    function initSettings() {
-        loadSettings();
-        bindToggles();
-        bindSaveButton();
-        console.log('✅ Notification settings ready');
-    }
-
-    // ─── الانتظار حتى يصبح NotificationManager جاهزاً ───
-    function waitForManager(timeout = 5000) {
-        return new Promise((resolve, reject) => {
-            const start = Date.now();
-            const check = () => {
-                const manager = window.NotificationManager;
-                if (manager && typeof manager.init === 'function') {
-                    resolve(manager);
-                    return;
-                }
-                if (Date.now() - start > timeout) {
-                    reject(new Error('NotificationManager.init not available after timeout'));
-                    return;
-                }
-                setTimeout(check, 200);
-            };
-            check();
-        });
-    }
+    let authChannel = null;
 
     // ─── دالة withAuth (نسخة مستقلة) ───
     async function withAuth(callback) {
@@ -75,13 +31,13 @@
         }
     }
 
-    // ─── جلب الإشعارات الأولية (باستخدام withAuth) ───
-    async function fetchInitialNotifications() {
+    // ─── جلب الإشعارات باستخدام withAuth ───
+    async function fetchNotifications() {
         return withAuth(async (session) => {
             const { data, error } = await supabaseClient
                 .from('notifications')
                 .select('*')
-                .eq('deleted_at', null)        // استثناء المحذوف منطقياً
+                .is('deleted_at', null)          // ✅ إصلاح: استخدام is بدلاً من eq
                 .order('created_at', { ascending: false })
                 .limit(50);
             if (error) throw error;
@@ -89,241 +45,52 @@
         });
     }
 
-    // ─── التهيئة الرئيسية ───
-    async function init() {
-        // التحقق من وجود عنصر القائمة
-        if (!document.getElementById('notificationsList')) {
-            console.log('ℹ️ support-notifications: skipped – no notificationsList element.');
-            return;
-        }
-
-        console.log('🚀 Initializing Notification System (with RLS-safe methods)...');
-
+    // ─── دوال الإعدادات ───
+    function loadSettings() {
         try {
-            // 1. الحصول على Supabase Client
-            supabaseClient = await getSupabaseClient();
-            if (!supabaseClient) {
-                console.error('❌ Supabase client not available');
-                return;
-            }
-
-            // 2. الانتظار حتى تحميل NotificationManager
-            let manager;
-            try {
-                manager = await waitForManager(8000);
-                console.log('✅ NotificationManager ready');
-            } catch (e) {
-                console.warn('⚠️ NotificationManager not loaded, using fallback methods');
-                // نعطي قيمة افتراضية لتجنب الأعطال
-                manager = {
-                    init: () => {},
-                    addNotification: () => {},
-                    updateNotification: () => {},
-                    on: () => {}
-                };
-            }
-
-            // 3. تهيئة المدير (إذا كان لديه init)
-            if (manager && typeof manager.init === 'function') {
-                await manager.init();
-            }
-
-            // 4. تهيئة NotificationService (إذا وجد)
-            if (window.NotificationService && typeof window.NotificationService.init === 'function') {
-                await window.NotificationService.init(supabaseClient);
-            }
-
-            // 5. جلب الإشعارات الأولية (بطريقة آمنة)
-            let initialData = [];
-            try {
-                const data = await fetchInitialNotifications();
-                if (data) {
-                    initialData = data;
-                    // تحديث الكاش (إن وجد)
-                    if (window.NotificationCache && typeof window.NotificationCache.init === 'function') {
-                        window.NotificationCache.init(initialData);
-                    }
-                    // إضافة كل إشعار للمدير
-                    if (manager && typeof manager.addNotification === 'function') {
-                        initialData.forEach(n => manager.addNotification(n));
-                    }
+            const saved = localStorage.getItem('notificationSettings');
+            if (!saved) return;
+            const settings = JSON.parse(saved);
+            document.querySelectorAll('.toggle-switch').forEach(el => {
+                const key = el.dataset.key;
+                if (settings[key] !== undefined) {
+                    if (settings[key]) el.classList.add('active');
+                    else el.classList.remove('active');
                 }
-            } catch (e) {
-                console.warn('⚠️ Initial fetch failed:', e.message);
-                // إذا كان الخطأ بسبب الجلسة، فهذا متوقع
-            }
-
-            // 6. تهيئة واجهة المستخدم (UI)
-            if (window.NotificationUI && typeof window.NotificationUI.init === 'function') {
-                window.NotificationUI.init();
-            }
-
-            // 7. عرض الإشعارات في الواجهة
-            renderNotifications();
-
-            // 8. ربط Realtime (مع فلتر user_id من RLS)
-            await setupRealtime();
-
-            // 9. إعداد OneSignal (إن وجد)
-            await setupOneSignal();
-
-            // 10. الاستماع لتغييرات المدير (لتحديث الواجهة)
-            if (manager && typeof manager.on === 'function') {
-                manager.on('state:changed', () => {
-                    renderNotifications();
-                });
-            }
-
-            // 11. تحديث العداد العام
-            await updateBadge();
-
-            // 12. تحميل السجل (إن وجد)
-            if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
-                window.NotificationHistory.load(1);
-            }
-
-            // 13. تهيئة إعدادات التبديلات
-            initSettings();
-
-            // 14. الاستماع لتغيرات المصادقة لتحديث البيانات
-            setupAuthListener();
-
-            console.log('✅ Notification System ready (with 403 prevention)');
-
-        } catch (err) {
-            console.error('❌ Notification System init failed:', err);
-        }
+            });
+        } catch (e) { /* ignore */ }
     }
 
-    // ─── عرض الإشعارات في الواجهة ───
-    function renderNotifications() {
-        const cache = window.NotificationCache;
-        if (cache && typeof cache.getAll === 'function') {
-            const all = cache.getAll();
-            const filtered = window.NotificationFilters?.apply(all) || all;
-            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                window.NotificationUI.render(filtered, 1);
-                window.NotificationUI.updateStats(cache.getStats());
-            }
-        }
-    }
-
-    // ─── إعداد Realtime ───
-    async function setupRealtime() {
-        const userId = await getCurrentUserId();
-        if (!userId || !supabaseClient) return;
-
-        // إلغاء الاشتراك من القناة السابقة إن وجدت
-        if (authChannel) {
-            await supabaseClient.removeChannel(authChannel);
-            authChannel = null;
-        }
-
-        const channel = supabaseClient
-            .channel('notifications-changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${userId}`
-                },
-                (payload) => {
-                    const newNotif = payload.new;
-                    if (window.NotificationCache?.add) window.NotificationCache.add(newNotif);
-                    if (window.NotificationManager?.addNotification) window.NotificationManager.addNotification(newNotif);
-                    renderNotifications();
-                    // عرض Toast (إن وجد)
-                    if (window.NotificationService && window.NotificationService._showToast) {
-                        window.NotificationService._showToast(newNotif);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${userId}`
-                },
-                (payload) => {
-                    const updated = payload.new;
-                    if (window.NotificationCache?.update) window.NotificationCache.update(updated.id, updated);
-                    if (window.NotificationManager?.updateNotification) window.NotificationManager.updateNotification(updated.id, updated);
-                    renderNotifications();
-                }
-            )
-            .subscribe();
-
-        authChannel = channel;
-    }
-
-    // ─── إعداد OneSignal ───
-    async function setupOneSignal() {
-        try {
-            const os = window.OneSignalManager;
-            if (!os) return;
-            const user = await getCurrentUserId();
-            if (user && typeof os.setExternalId === 'function') {
-                await os.setExternalId(user);
-            }
-            if (typeof os.addListener === 'function') {
-                await os.addListener((notification) => {
-                    // إضافة الإشعار الوارد من OneSignal (لكن لا ندرجه في DB)
-                    if (window.NotificationManager?.addNotification) {
-                        window.NotificationManager.addNotification(notification);
-                        renderNotifications();
-                    }
-                });
-            }
-        } catch (e) {
-            console.warn('⚠️ OneSignal setup skipped:', e.message);
-        }
-    }
-
-    // ─── تحديث العداد ───
-    async function updateBadge() {
-        if (window.Support?.updateNotificationBadge) {
-            await window.Support.updateNotificationBadge();
-        } else {
-            // محاولة جلب العدد من الكاش
-            const cache = window.NotificationCache;
-            if (cache && typeof cache.getStats === 'function') {
-                const stats = cache.getStats();
-                const badge = document.getElementById('notificationBadge');
-                if (badge) badge.textContent = stats.unread || 0;
-            }
-        }
-    }
-
-    // ─── الاستماع لتغيرات المصادقة ───
-    function setupAuthListener() {
-        if (!supabaseClient) return;
-        supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            console.log('🔐 Auth state changed:', event);
-            if (event === 'SIGNED_IN' && session) {
-                // إعادة تحميل الإشعارات بعد تسجيل الدخول
-                const data = await fetchInitialNotifications();
-                if (data) {
-                    if (window.NotificationCache?.init) window.NotificationCache.init(data);
-                    if (window.NotificationManager?.clear) window.NotificationManager.clear();
-                    data.forEach(n => window.NotificationManager?.addNotification(n));
-                    renderNotifications();
-                    // إعادة ربط Realtime
-                    await setupRealtime();
-                    await updateBadge();
-                }
-            } else if (event === 'SIGNED_OUT') {
-                // مسح الإشعارات المحلية
-                if (window.NotificationCache?.clear) window.NotificationCache.clear();
-                if (window.NotificationManager?.clear) window.NotificationManager.clear();
-                renderNotifications();
-                const badge = document.getElementById('notificationBadge');
-                if (badge) badge.textContent = '0';
-            }
+    function saveSettings() {
+        const toggles = document.querySelectorAll('.toggle-switch');
+        const settings = {};
+        toggles.forEach(el => {
+            const key = el.dataset.key;
+            settings[key] = el.classList.contains('active');
         });
+        try {
+            localStorage.setItem('notificationSettings', JSON.stringify(settings));
+            alert('✅ تم حفظ الإعدادات بنجاح');
+        } catch (e) {
+            alert('⚠️ حدث خطأ أثناء الحفظ');
+        }
+    }
+
+    function bindToggles() {
+        document.querySelectorAll('.toggle-switch').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+            });
+        });
+    }
+
+    function initSettings() {
+        loadSettings();
+        bindToggles();
+        const saveBtn = document.getElementById('saveSettingsBtn');
+        if (saveBtn) saveBtn.addEventListener('click', saveSettings);
+        console.log('✅ Notification settings ready');
     }
 
     // ─── دوال مساعدة ───
@@ -339,12 +106,209 @@
         try {
             const { data: { user } } = await supabaseClient.auth.getUser();
             return user?.id || null;
-        } catch {
-            return null;
+        } catch { return null; }
+    }
+
+    // ─── تحديث العداد ───
+    async function updateBadge() {
+        const cache = window.NotificationCache;
+        if (cache && typeof cache.getStats === 'function') {
+            const stats = cache.getStats();
+            const badge = document.getElementById('notificationBadge');
+            if (badge) badge.textContent = stats.unread || 0;
         }
     }
 
-    // ─── تصدير دوال للاستخدام في HTML ───
+    // ─── عرض الإشعارات ───
+    function renderNotifications() {
+        const cache = window.NotificationCache;
+        if (cache && typeof cache.getAll === 'function') {
+            const all = cache.getAll();
+            const filtered = window.NotificationFilters?.apply(all) || all;
+            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                window.NotificationUI.render(filtered, 1);
+                window.NotificationUI.updateStats(cache.getStats());
+            }
+        }
+    }
+
+    // ─── Realtime ───
+    async function setupRealtime() {
+        const userId = await getCurrentUserId();
+        if (!userId || !supabaseClient) return;
+        if (authChannel) {
+            await supabaseClient.removeChannel(authChannel);
+            authChannel = null;
+        }
+        const channel = supabaseClient
+            .channel('notifications-changes')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+                (payload) => {
+                    const newNotif = payload.new;
+                    if (window.NotificationCache?.add) window.NotificationCache.add(newNotif);
+                    if (window.NotificationManager?.addNotification) window.NotificationManager.addNotification(newNotif);
+                    renderNotifications();
+                    if (window.NotificationService && window.NotificationService._showToast) {
+                        window.NotificationService._showToast(newNotif);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+                (payload) => {
+                    const updated = payload.new;
+                    if (window.NotificationCache?.update) window.NotificationCache.update(updated.id, updated);
+                    if (window.NotificationManager?.updateNotification) window.NotificationManager.updateNotification(updated.id, updated);
+                    renderNotifications();
+                }
+            )
+            .subscribe();
+        authChannel = channel;
+    }
+
+    // ─── OneSignal ───
+    async function setupOneSignal() {
+        try {
+            const os = window.OneSignalManager;
+            if (!os) return;
+            const user = await getCurrentUserId();
+            if (user && typeof os.setExternalId === 'function') {
+                await os.setExternalId(user);
+            }
+            if (typeof os.addListener === 'function') {
+                await os.addListener((notification) => {
+                    if (window.NotificationManager?.addNotification) {
+                        window.NotificationManager.addNotification(notification);
+                        renderNotifications();
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('⚠️ OneSignal setup skipped:', e.message);
+        }
+    }
+
+    // ─── مستمع المصادقة ───
+    function setupAuthListener() {
+        if (!supabaseClient) return;
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log('🔐 Auth state changed:', event);
+            if (event === 'SIGNED_IN' && session) {
+                const data = await fetchNotifications();
+                if (data) {
+                    if (window.NotificationCache?.init) window.NotificationCache.init(data);
+                    if (window.NotificationManager?.clear) window.NotificationManager.clear();
+                    data.forEach(n => window.NotificationManager?.addNotification(n));
+                    renderNotifications();
+                    await setupRealtime();
+                    await updateBadge();
+                }
+            } else if (event === 'SIGNED_OUT') {
+                if (window.NotificationCache?.clear) window.NotificationCache.clear();
+                if (window.NotificationManager?.clear) window.NotificationManager.clear();
+                renderNotifications();
+                const badge = document.getElementById('notificationBadge');
+                if (badge) badge.textContent = '0';
+            }
+        });
+    }
+
+    // ─── التهيئة الرئيسية ───
+    async function init() {
+        if (!document.getElementById('notificationsList')) {
+            console.log('ℹ️ support-notifications: skipped – no notificationsList element.');
+            return;
+        }
+
+        console.log('🚀 Initializing Notification System (RLS-safe)...');
+
+        try {
+            // 1. الحصول على Supabase
+            supabaseClient = await getSupabaseClient();
+            if (!supabaseClient) {
+                console.error('❌ Supabase client not available');
+                return;
+            }
+
+            // 2. تهيئة NotificationService إن وجد
+            if (window.NotificationService && typeof window.NotificationService.init === 'function') {
+                await window.NotificationService.init(supabaseClient);
+            }
+
+            // 3. تهيئة NotificationManager (إذا لم يكن له init، نضيفها)
+            const manager = window.NotificationManager;
+            if (manager) {
+                if (typeof manager.init !== 'function') {
+                    manager.init = function() {
+                        console.log('NotificationManager.init (fallback) called');
+                    };
+                }
+                manager.init();
+            }
+
+            // 4. جلب الإشعارات الأولية (بطريقة آمنة)
+            let initialData = [];
+            try {
+                const data = await fetchNotifications();
+                if (data) {
+                    initialData = data;
+                    if (window.NotificationCache && typeof window.NotificationCache.init === 'function') {
+                        window.NotificationCache.init(initialData);
+                    }
+                    if (manager && typeof manager.addNotification === 'function') {
+                        initialData.forEach(n => manager.addNotification(n));
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Initial fetch failed:', e.message);
+            }
+
+            // 5. تهيئة UI
+            if (window.NotificationUI && typeof window.NotificationUI.init === 'function') {
+                window.NotificationUI.init();
+            }
+
+            // 6. عرض الإشعارات
+            renderNotifications();
+
+            // 7. ربط Realtime
+            await setupRealtime();
+
+            // 8. OneSignal (إن وجد)
+            await setupOneSignal();
+
+            // 9. الاستماع لتغييرات المدير
+            if (manager && typeof manager.on === 'function') {
+                manager.on('state:changed', () => {
+                    renderNotifications();
+                });
+            }
+
+            // 10. تحديث العداد
+            await updateBadge();
+
+            // 11. السجل
+            if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
+                window.NotificationHistory.load(1);
+            }
+
+            // 12. الإعدادات
+            initSettings();
+
+            // 13. الاستماع لأحداث المصادقة
+            setupAuthListener();
+
+            console.log('✅ Notification System ready (with 403 prevention)');
+
+        } catch (err) {
+            console.error('❌ Notification System init failed:', err);
+        }
+    }
+
+    // ─── دوال للاستخدام في HTML ───
     window.__openDetail = (id) => {
         const cache = window.NotificationCache;
         if (cache && typeof cache.get === 'function') {
