@@ -4,6 +4,7 @@
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
  * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
  * إضافة رسائل تصحيح لتتبع الجلسة
+ * إضافة تحقق إضافي لمنع الطلبات بدون جلسة
  */
 (function() {
     'use strict';
@@ -20,37 +21,60 @@
             console.warn('⚠️ [withAuth] Supabase client not available');
             return null;
         }
+        
         try {
+            // التحقق من الجلسة
             const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (error || !session) {
-                console.log('⏳ [withAuth] No active session, skipping request');
+            
+            if (error) {
+                console.warn('⚠️ [withAuth] Session error:', error.message);
                 return null;
             }
+            
+            if (!session) {
+                console.warn('⏳ [withAuth] No active session - user is not logged in');
+                return null;
+            }
+            
             console.log('✅ [withAuth] Session active for user:', session.user.id);
+            
+            // تنفيذ الطلب مع الجلسة
             return await callback(session);
+            
         } catch (e) {
-            console.warn('⚠️ [withAuth] Error:', e.message);
+            console.warn('⚠️ [withAuth] Unexpected error:', e.message);
             return null;
         }
     }
 
     // ─── جلب الإشعارات باستخدام withAuth ───
     async function fetchNotifications() {
-        return withAuth(async (session) => {
+        console.log('🔍 [fetchNotifications] Attempting to fetch notifications...');
+        
+        const result = await withAuth(async (session) => {
             console.log('🔍 [fetchNotifications] Executing query for user:', session.user.id);
+            
             const { data, error } = await supabaseClient
                 .from('notifications')
                 .select('*')
-                .is('deleted_at', null)          // ✅ إصلاح: استخدام is بدلاً من eq
+                .is('deleted_at', null)
                 .order('created_at', { ascending: false })
                 .limit(50);
+                
             if (error) {
                 console.error('❌ [fetchNotifications] Query error:', error);
                 throw error;
             }
+            
             console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications`);
             return data;
         });
+        
+        if (result === null) {
+            console.warn('⏳ [fetchNotifications] Skipped - no active session');
+        }
+        
+        return result;
     }
 
     // ─── دوال الإعدادات ───
@@ -143,11 +167,16 @@
     // ─── Realtime ───
     async function setupRealtime() {
         const userId = await getCurrentUserId();
-        if (!userId || !supabaseClient) return;
+        if (!userId || !supabaseClient) {
+            console.log('⏳ Realtime skipped - no user or client');
+            return;
+        }
+        
         if (authChannel) {
             await supabaseClient.removeChannel(authChannel);
             authChannel = null;
         }
+        
         const channel = supabaseClient
             .channel('notifications-changes')
             .on(
@@ -174,8 +203,9 @@
                 }
             )
             .subscribe();
+            
         authChannel = channel;
-        console.log('✅ Realtime subscription active');
+        console.log('✅ Realtime subscription active for user:', userId);
     }
 
     // ─── OneSignal ───
@@ -203,10 +233,12 @@
     // ─── مستمع المصادقة ───
     function setupAuthListener() {
         if (!supabaseClient) return;
+        
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             console.log('🔐 Auth state changed:', event);
+            
             if (event === 'SIGNED_IN' && session) {
-                console.log('🔄 Refreshing notifications after sign in');
+                console.log('🔄 User signed in, refreshing notifications');
                 const data = await fetchNotifications();
                 if (data) {
                     if (window.NotificationCache?.init) window.NotificationCache.init(data);
@@ -217,7 +249,7 @@
                     await updateBadge();
                 }
             } else if (event === 'SIGNED_OUT') {
-                console.log('🧹 Clearing notifications after sign out');
+                console.log('🧹 User signed out, clearing notifications');
                 if (window.NotificationCache?.clear) window.NotificationCache.clear();
                 if (window.NotificationManager?.clear) window.NotificationManager.clear();
                 renderNotifications();
@@ -249,12 +281,20 @@
             }
             console.log('✅ Supabase client obtained');
 
-            // 2. تهيئة NotificationService إن وجد
+            // 2. التحقق من الجلسة الحالية
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                console.log('👤 User already logged in:', session.user.id);
+            } else {
+                console.log('👤 No active session - notifications will be loaded after login');
+            }
+
+            // 3. تهيئة NotificationService إن وجد
             if (window.NotificationService && typeof window.NotificationService.init === 'function') {
                 await window.NotificationService.init(supabaseClient);
             }
 
-            // 3. تهيئة NotificationManager (إذا لم يكن له init، نضيفها)
+            // 4. تهيئة NotificationManager (إذا لم يكن له init، نضيفها)
             const manager = window.NotificationManager;
             if (manager) {
                 if (typeof manager.init !== 'function') {
@@ -265,7 +305,7 @@
                 manager.init();
             }
 
-            // 4. جلب الإشعارات الأولية (بطريقة آمنة)
+            // 5. جلب الإشعارات الأولية (بطريقة آمنة)
             let initialData = [];
             try {
                 const data = await fetchNotifications();
@@ -278,47 +318,51 @@
                         initialData.forEach(n => manager.addNotification(n));
                     }
                     console.log(`✅ Loaded ${initialData.length} initial notifications`);
+                } else {
+                    console.log('⏳ No notifications loaded (user may not be logged in)');
                 }
             } catch (e) {
                 console.warn('⚠️ Initial fetch failed:', e.message);
             }
 
-            // 5. تهيئة UI
+            // 6. تهيئة UI
             if (window.NotificationUI && typeof window.NotificationUI.init === 'function') {
                 window.NotificationUI.init();
             }
 
-            // 6. عرض الإشعارات
+            // 7. عرض الإشعارات
             renderNotifications();
 
-            // 7. ربط Realtime
-            await setupRealtime();
+            // 8. ربط Realtime (فقط إذا كان هناك مستخدم)
+            if (session) {
+                await setupRealtime();
+            }
 
-            // 8. OneSignal (إن وجد)
+            // 9. OneSignal (إن وجد)
             await setupOneSignal();
 
-            // 9. الاستماع لتغييرات المدير
+            // 10. الاستماع لتغييرات المدير
             if (manager && typeof manager.on === 'function') {
                 manager.on('state:changed', () => {
                     renderNotifications();
                 });
             }
 
-            // 10. تحديث العداد
+            // 11. تحديث العداد
             await updateBadge();
 
-            // 11. السجل
+            // 12. السجل
             if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
                 window.NotificationHistory.load(1);
             }
 
-            // 12. الإعدادات
+            // 13. الإعدادات
             initSettings();
 
-            // 13. الاستماع لأحداث المصادقة
+            // 14. الاستماع لأحداث المصادقة
             setupAuthListener();
 
-            console.log('✅ Notification System ready (with 403 prevention)');
+            console.log('✅ Notification System ready');
 
         } catch (err) {
             console.error('❌ Notification System init failed:', err);
