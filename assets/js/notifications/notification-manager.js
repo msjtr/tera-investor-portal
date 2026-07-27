@@ -2,47 +2,64 @@
  * notification-manager.js
  * مدير الإشعارات المتكامل مع دعم RLS و OneSignal
  * يوفر واجهة init ودوال جلب وتحديث
+ * تم التحديث لاستخدام دالة مساعدة للحصول على Supabase client
+ * مع تحسين معالجة الأخطاء وتوحيد withAuth مع support-notifications.js
  */
 
 (function() {
   "use strict";
 
   // ============================================================
+  // 0. دالة مساعدة للحصول على Supabase Client
+  // ============================================================
+  function getSupabaseClient() {
+    if (window.teraSupabase) return window.teraSupabase;
+    if (window.Support?.getSupabase) return window.Support.getSupabase();
+    if (window.waitForSupabase) return window.waitForSupabase();
+    if (window.supabase) return window.supabase;
+    return null;
+  }
+
+  // ============================================================
   // 1. دالة withAuth (لضمان الجلسة قبل أي طلب)
   // ============================================================
   async function withAuth(callback) {
-    const sb = window.teraSupabase || window.supabase;
+    const sb = getSupabaseClient();
     if (!sb) {
-      console.warn('⚠️ [NotificationManager] Supabase غير متاح');
+      console.warn('⚠️ [NotificationManager] Supabase client not available');
       return null;
     }
 
     try {
       const { data: { session }, error } = await sb.auth.getSession();
       if (error || !session) {
-        console.log('⏳ [NotificationManager] المستخدم غير مسجل، سيتم تخطي الطلب');
+        console.log('⏳ [NotificationManager] No active session, skipping request');
         return null;
       }
+      console.log('✅ [NotificationManager] Session active for user:', session.user.id);
       return await callback(session);
     } catch (e) {
-      console.warn('⚠️ [NotificationManager] خطأ في التحقق من الجلسة:', e);
+      console.warn('⚠️ [NotificationManager] withAuth error:', e.message);
       return null;
     }
   }
 
   // ============================================================
-  // 2. الدوال الأساسية (دون تغيير)
+  // 2. الدوال الأساسية (مع تحسينات)
   // ============================================================
   async function fetchUnreadNotifications() {
     return withAuth(async (session) => {
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
+      if (!sb) throw new Error('Supabase client not available');
+      
       const { data, error } = await sb
         .from('notifications')
         .select('*')
         .eq('status', 'unread')
-        .eq('deleted_at', null)
+        .is('deleted_at', null)   // ✅ إصلاح: استخدام is بدلاً من eq
         .order('created_at', { ascending: false })
         .limit(50);
+        
       if (error) throw error;
       return data;
     });
@@ -50,16 +67,20 @@
 
   async function fetchNotifications(filters = {}, limit = 20) {
     return withAuth(async (session) => {
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
+      if (!sb) throw new Error('Supabase client not available');
+      
       let query = sb
         .from('notifications')
         .select('*')
-        .eq('deleted_at', null)
+        .is('deleted_at', null)   // ✅ إصلاح
         .order('created_at', { ascending: false })
         .limit(limit);
+        
       if (filters.type) query = query.eq('type', filters.type);
       if (filters.category) query = query.eq('category', filters.category);
       if (filters.is_read !== undefined) query = query.eq('is_read', filters.is_read);
+      
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -68,7 +89,9 @@
 
   async function markAsRead(notificationId) {
     return withAuth(async (session) => {
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
+      if (!sb) throw new Error('Supabase client not available');
+      
       const { error } = await sb
         .from('notifications')
         .update({
@@ -78,6 +101,7 @@
         })
         .eq('id', notificationId)
         .eq('user_id', session.user.id);
+        
       if (error) throw error;
       return true;
     });
@@ -85,7 +109,9 @@
 
   async function markAllAsRead() {
     return withAuth(async (session) => {
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
+      if (!sb) throw new Error('Supabase client not available');
+      
       const { error } = await sb
         .from('notifications')
         .update({
@@ -95,6 +121,7 @@
         })
         .eq('user_id', session.user.id)
         .eq('is_read', false);
+        
       if (error) throw error;
       return true;
     });
@@ -102,13 +129,16 @@
 
   async function getUnreadCount() {
     const result = await withAuth(async (session) => {
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
+      if (!sb) throw new Error('Supabase client not available');
+      
       const { count, error } = await sb
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id)
         .eq('is_read', false)
-        .eq('deleted_at', null);
+        .is('deleted_at', null);   // ✅ إصلاح
+      
       if (error) throw error;
       return count;
     });
@@ -119,34 +149,31 @@
   // 3. دالة init المطلوبة من support-notifications.js
   // ============================================================
   async function init(options = {}) {
-    console.log('🔔 [NotificationManager] جاري تهيئة نظام الإشعارات...');
+    console.log('🔔 [NotificationManager] Initializing notification system...');
     try {
-      // يمكننا هنا إضافة أي إعدادات إضافية (مثل تسجيل المستخدم في OneSignal)
-      // لكن الأساس هو التأكد من أن Supabase جاهز
-      const sb = window.teraSupabase || window.supabase;
+      const sb = getSupabaseClient();
       if (!sb) {
-        throw new Error('Supabase غير معرّف');
+        throw new Error('Supabase client not available');
       }
 
-      // التحقق من الجلسة (اختياري)
+      // التحقق من الجلسة الحالية
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
-        console.log('✅ [NotificationManager] المستخدم مسجل دخول:', session.user.id);
-        // يمكننا ربط OneSignal هنا إذا أردنا
+        console.log('✅ [NotificationManager] User logged in:', session.user.id);
       } else {
-        console.log('⏳ [NotificationManager] لا توجد جلسة، سيتم تأجيل الطلبات');
+        console.log('⏳ [NotificationManager] No session, requests will be deferred');
       }
 
       // إرجاع الكائن manager نفسه للاستخدام
       return window.NotificationManager;
     } catch (e) {
-      console.error('❌ [NotificationManager] فشل التهيئة:', e);
+      console.error('❌ [NotificationManager] Init failed:', e);
       throw e;
     }
   }
 
   // ============================================================
-  // 4. تصدير الكائن العام (مع دالة init)
+  // 4. تصدير الكائن العام
   // ============================================================
   const manager = {
     init,
@@ -159,6 +186,6 @@
   };
 
   window.NotificationManager = manager;
-  console.log('✅ [NotificationManager] تم التحميل بنجاح');
+  console.log('✅ [NotificationManager] Loaded successfully');
 
 })();
