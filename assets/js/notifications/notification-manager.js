@@ -1,71 +1,53 @@
 /**
  * notification-manager.js
- * مدير الإشعارات – جلب وعرض وتحديث الإشعارات مع دعم RLS
- * يستخدم withAuth للتحقق من الجلسة قبل أي طلب
- * 
- * المتغيرات المعتمدة:
- * - window.teraSupabase : عميل Supabase (مفترض وجوده)
- * - window.OneSignalManager : (اختياري) للاستفادة من دوال withAuth
+ * مدير الإشعارات المتكامل مع دعم RLS و OneSignal
+ * يوفر واجهة init ودوال جلب وتحديث
  */
 
 (function() {
   "use strict";
 
   // ============================================================
-  // 1. دالة withAuth (نسخة مستقلة في هذا الملف)
-  //    يمكنك أيضاً استيرادها من OneSignalManager إذا كان موجوداً
+  // 1. دالة withAuth (لضمان الجلسة قبل أي طلب)
   // ============================================================
   async function withAuth(callback) {
     const sb = window.teraSupabase || window.supabase;
     if (!sb) {
-      console.warn('⚠️ [notifications] Supabase غير متاح');
+      console.warn('⚠️ [NotificationManager] Supabase غير متاح');
       return null;
     }
 
     try {
       const { data: { session }, error } = await sb.auth.getSession();
       if (error || !session) {
-        console.log('⏳ [notifications] المستخدم غير مسجل، سيتم تخطي الطلب');
+        console.log('⏳ [NotificationManager] المستخدم غير مسجل، سيتم تخطي الطلب');
         return null;
       }
       return await callback(session);
     } catch (e) {
-      console.warn('⚠️ [notifications] خطأ في التحقق من الجلسة:', e);
+      console.warn('⚠️ [NotificationManager] خطأ في التحقق من الجلسة:', e);
       return null;
     }
   }
 
   // ============================================================
-  // 2. دوال جلب الإشعارات (معدلة)
+  // 2. الدوال الأساسية (دون تغيير)
   // ============================================================
-
-  /**
-   * جلب آخر 50 إشعار للمستخدم الحالي (غير مقروءة)
-   * @returns {Promise<Array|null>}
-   */
   async function fetchUnreadNotifications() {
     return withAuth(async (session) => {
       const sb = window.teraSupabase || window.supabase;
       const { data, error } = await sb
         .from('notifications')
         .select('*')
-        // ❌ لا ترسل user_id هنا، RLS ستقوم بتصفيتها تلقائياً
         .eq('status', 'unread')
-        .eq('deleted_at', null)      // استثناء المحذوف منطقياً
+        .eq('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
-
       if (error) throw error;
       return data;
     });
   }
 
-  /**
-   * جلب جميع الإشعارات (مع دعم التصفية حسب النوع)
-   * @param {Object} filters - مثلاً { type: 'system', category: 'alert' }
-   * @param {number} limit - عدد النتائج
-   * @returns {Promise<Array|null>}
-   */
   async function fetchNotifications(filters = {}, limit = 20) {
     return withAuth(async (session) => {
       const sb = window.teraSupabase || window.supabase;
@@ -75,24 +57,15 @@
         .eq('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(limit);
-
-      // تطبيق الفلاتر (مع تجاهل user_id)
       if (filters.type) query = query.eq('type', filters.type);
       if (filters.category) query = query.eq('category', filters.category);
       if (filters.is_read !== undefined) query = query.eq('is_read', filters.is_read);
-      // يمكن إضافة المزيد حسب الحاجة
-
       const { data, error } = await query;
       if (error) throw error;
       return data;
     });
   }
 
-  /**
-   * تحديث حالة الإشعار (تحديد كمقروء)
-   * @param {string} notificationId
-   * @returns {Promise<boolean>}
-   */
   async function markAsRead(notificationId) {
     return withAuth(async (session) => {
       const sb = window.teraSupabase || window.supabase;
@@ -104,17 +77,12 @@
           updated_at: new Date().toISOString()
         })
         .eq('id', notificationId)
-        .eq('user_id', session.user.id); // تأكد من أنها تخص المستخدم
-
+        .eq('user_id', session.user.id);
       if (error) throw error;
       return true;
     });
   }
 
-  /**
-   * تحديد جميع الإشعارات كمقروءة
-   * @returns {Promise<boolean>}
-   */
   async function markAllAsRead() {
     return withAuth(async (session) => {
       const sb = window.teraSupabase || window.supabase;
@@ -127,16 +95,11 @@
         })
         .eq('user_id', session.user.id)
         .eq('is_read', false);
-
       if (error) throw error;
       return true;
     });
   }
 
-  /**
-   * الحصول على عدد الإشعارات غير المقروءة (لشارة العد)
-   * @returns {Promise<number>}
-   */
   async function getUnreadCount() {
     const result = await withAuth(async (session) => {
       const sb = window.teraSupabase || window.supabase;
@@ -146,7 +109,6 @@
         .eq('user_id', session.user.id)
         .eq('is_read', false)
         .eq('deleted_at', null);
-
       if (error) throw error;
       return count;
     });
@@ -154,18 +116,49 @@
   }
 
   // ============================================================
-  // 3. تصدير الدوال إلى النطاق العام (اختياري)
+  // 3. دالة init المطلوبة من support-notifications.js
   // ============================================================
+  async function init(options = {}) {
+    console.log('🔔 [NotificationManager] جاري تهيئة نظام الإشعارات...');
+    try {
+      // يمكننا هنا إضافة أي إعدادات إضافية (مثل تسجيل المستخدم في OneSignal)
+      // لكن الأساس هو التأكد من أن Supabase جاهز
+      const sb = window.teraSupabase || window.supabase;
+      if (!sb) {
+        throw new Error('Supabase غير معرّف');
+      }
 
-  window.NotificationManager = {
+      // التحقق من الجلسة (اختياري)
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        console.log('✅ [NotificationManager] المستخدم مسجل دخول:', session.user.id);
+        // يمكننا ربط OneSignal هنا إذا أردنا
+      } else {
+        console.log('⏳ [NotificationManager] لا توجد جلسة، سيتم تأجيل الطلبات');
+      }
+
+      // إرجاع الكائن manager نفسه للاستخدام
+      return window.NotificationManager;
+    } catch (e) {
+      console.error('❌ [NotificationManager] فشل التهيئة:', e);
+      throw e;
+    }
+  }
+
+  // ============================================================
+  // 4. تصدير الكائن العام (مع دالة init)
+  // ============================================================
+  const manager = {
+    init,
     fetchUnreadNotifications,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
     getUnreadCount,
-    withAuth   // يمكن استخدامها من الخارج
+    withAuth   // يمكن استخدامها خارجياً
   };
 
-  console.log('✅ [notification-manager] تم تحميل مدير الإشعارات بنجاح');
+  window.NotificationManager = manager;
+  console.log('✅ [NotificationManager] تم التحميل بنجاح');
 
 })();
