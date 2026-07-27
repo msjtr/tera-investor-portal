@@ -1,9 +1,9 @@
 /**
- * NotificationService – المحرك المركزي للإشعارات (الإصدار النهائي)
+ * NotificationService – المحرك المركزي للإشعارات (الإصدار النهائي المُحسَّن)
  * - يحفظ الإشعار في DB باستخدام withAuth
- * - يرسل Push عبر Edge Function مباشرة
+ * - يرسل Push عبر Edge Function
  * - يسجل النتيجة في notification_logs
- * - متوافق مع نظام RLS والمصادقة
+ * - يحدّث الواجهة تلقائياً
  */
 (function() {
   'use strict';
@@ -33,9 +33,10 @@
       try {
         const { data: { session }, error } = await sb.auth.getSession();
         if (error || !session) {
-          console.log('⏳ [NotificationService] No active session, skipping request');
+          console.warn('⏳ [NotificationService] No active session');
           return null;
         }
+        console.log('✅ [NotificationService] Session active for user:', session.user.id);
         return await callback(session);
       } catch (e) {
         console.warn('⚠️ [NotificationService] withAuth error:', e.message);
@@ -50,32 +51,42 @@
       return this;
     }
 
-    // ─── إرسال إشعار ───
+    // ─── إرسال إشعار (الوظيفة الرئيسية) ───
     async send({ userId, title, body, type = 'system', priority = 'normal', data = {} }) {
-      // تحقق من وجود البيانات الأساسية
-      if (!title) throw new Error('title is required');
+      if (!title) {
+        throw new Error('title is required');
+      }
 
-      // تنفيذ العملية داخل withAuth لضمان الجلسة
+      console.log('📤 [NotificationService] Sending notification:', { userId, title });
+
+      // تنفيذ العملية داخل withAuth
       const result = await this._withAuth(async (session) => {
         const sb = this._getSupabaseClient();
         if (!sb) throw new Error('Supabase client not available');
 
         // استخدام userId من الجلسة إذا لم يتم تمريره
         const targetUserId = userId || session.user.id;
+        console.log('👤 Target user ID:', targetUserId);
 
         // 1. حفظ الإشعار في قاعدة البيانات
+        const notificationData = {
+          user_id: targetUserId,
+          title,
+          body: body || '',
+          type: type || 'system',
+          priority: priority || 'normal',
+          status: 'unread',
+          is_read: false,
+          data: data || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        console.log('💾 Saving notification to DB:', notificationData);
+
         const { data: notification, error: insertError } = await sb
           .from('notifications')
-          .insert({
-            user_id: targetUserId,
-            title,
-            body,
-            type,
-            priority,
-            status: 'unread',
-            data: data || {},
-            created_at: new Date().toISOString()
-          })
+          .insert(notificationData)
           .select()
           .single();
 
@@ -84,13 +95,18 @@
           throw insertError;
         }
 
-        console.log('✅ Notification saved:', notification.id);
+        console.log('✅ Notification saved successfully:', notification.id);
 
-        // 2. إظهار Toast + حدث محلي
+        // 2. إظهار Toast
         this._showToast(notification);
+
+        // 3. إرسال حدث محلي لتحديث الواجهة
         this._dispatchLocalEvent(notification);
 
-        // 3. إرسال Push عبر Edge Function (لا ننتظر النتيجة)
+        // 4. تحديث الـ Cache و UI مباشرة
+        this._updateUI(notification);
+
+        // 5. إرسال Push عبر Edge Function (غير متزامن)
         this._sendPushViaEdge(notification).catch(err => {
           console.warn('⚠️ Push sending failed (logged):', err);
         });
@@ -99,7 +115,7 @@
       });
 
       if (result === null) {
-        // المستخدم غير مسجل → نلقي خطأ أو نعيد كائن خطأ
+        // المستخدم غير مسجل
         const error = new Error('User not authenticated. Please sign in to send notifications.');
         error.code = 'UNAUTHENTICATED';
         throw error;
@@ -108,21 +124,57 @@
       return result;
     }
 
+    // ─── تحديث الواجهة مباشرة ───
+    _updateUI(notification) {
+      try {
+        // إضافة إلى NotificationCache إن وجد
+        if (window.NotificationCache && typeof window.NotificationCache.add === 'function') {
+          window.NotificationCache.add(notification);
+          console.log('✅ Notification added to cache');
+        }
+
+        // إضافة إلى NotificationManager إن وجد
+        if (window.NotificationManager && typeof window.NotificationManager.addNotification === 'function') {
+          window.NotificationManager.addNotification(notification);
+          console.log('✅ Notification added to manager');
+        }
+
+        // تحديث UI
+        if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+          window.NotificationUI.refresh();
+          console.log('✅ UI refreshed');
+        }
+
+        // تحديث العداد
+        if (window.NotificationUI && typeof window.NotificationUI.updateStats === 'function') {
+          const cache = window.NotificationCache;
+          if (cache && typeof cache.getStats === 'function') {
+            window.NotificationUI.updateStats(cache.getStats());
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ UI update failed:', e);
+      }
+    }
+
     // ─── عرض Toast ───
     _showToast(notification) {
-      if (window.toastManager) {
-        window.toastManager.show(notification.title, notification.body, notification.type);
-        return;
+      try {
+        if (window.toastManager && typeof window.toastManager.show === 'function') {
+          window.toastManager.show(notification.title, notification.body, notification.type);
+          return;
+        }
+      } catch (e) {
+        console.warn('⚠️ Toast manager not available');
       }
 
-      // Toast بسيط كاحتياطي
+      // Toast احتياطي
       const toast = document.createElement('div');
-      toast.className = `notification-toast toast-${notification.priority || 'normal'}`;
       toast.style.cssText = `
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background: ${notification.priority === 'high' ? '#dc2626' : '#028090'};
+        background: #028090;
         color: #fff;
         padding: 16px 24px;
         border-radius: 12px;
@@ -148,13 +200,21 @@
 
     // ─── إرسال حدث محلي ───
     _dispatchLocalEvent(notification) {
-      document.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
+      try {
+        document.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
+        console.log('📡 Dispatched new-notification event');
+      } catch (e) {
+        console.warn('⚠️ Event dispatch failed:', e);
+      }
     }
 
     // ─── إرسال Push عبر Edge Function ───
     async _sendPushViaEdge(notification) {
       const sb = this._getSupabaseClient();
-      if (!sb) return;
+      if (!sb) {
+        console.warn('⚠️ No Supabase client for push');
+        return;
+      }
 
       // الحصول على playerId
       let playerId = sessionStorage.getItem('onesignal_subscription_id');
@@ -174,11 +234,10 @@
 
       const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
       try {
+        console.log('📨 Sending push to playerId:', playerId);
         const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             playerIds: [playerId],
             title: notification.title,
@@ -197,7 +256,7 @@
         const result = await response.json();
         if (result.success) {
           await this._log(notification.id, notification.user_id, 'success', null, result.notificationId);
-          console.log('✅ Push sent:', result.notificationId);
+          console.log('✅ Push sent successfully:', result.notificationId);
         } else {
           await this._log(notification.id, notification.user_id, 'failed', result.error || 'Unknown');
         }
@@ -212,12 +271,10 @@
       const sb = this._getSupabaseClient();
       if (!sb) return;
 
-      // استخدام withAuth للتسجيل
       await this._withAuth(async (session) => {
-        // تأكد من أن userId يطابق الجلسة
         const targetUserId = userId || session.user.id;
 
-        await sb.from('notification_logs').insert({
+        const { error } = await sb.from('notification_logs').insert({
           notification_id: notificationId,
           user_id: targetUserId,
           status,
@@ -225,15 +282,15 @@
           message_id: messageId,
           sent_at: new Date().toISOString()
         });
-        console.log(`📝 Logged notification ${notificationId}: ${status}`);
+
+        if (error) {
+          console.warn('⚠️ Failed to log:', error.message);
+        } else {
+          console.log(`📝 Logged notification ${notificationId}: ${status}`);
+        }
         return true;
       }).catch(e => {
-        // إذا فشل التسجيل بسبب RLS، نسجل تحذيراً فقط
-        if (e.code === '42501' || e.message?.includes('permission denied')) {
-          console.warn('⚠️ Failed to log notification (permission denied). Check RLS on notification_logs.');
-        } else {
-          console.warn('⚠️ Failed to log notification:', e);
-        }
+        console.warn('⚠️ Logging failed (ignored):', e.message);
       });
     }
 
@@ -251,11 +308,12 @@
           .limit(limit);
 
         if (error) throw error;
+        console.log(`📥 Fetched ${data?.length || 0} notifications`);
         return data;
       }) || [];
     }
 
-    // ─── تحديث حالة الإشعار (دالة مساعدة) ───
+    // ─── تحديث حالة الإشعار ───
     async markAsRead(notificationId) {
       return await this._withAuth(async (session) => {
         const sb = this._getSupabaseClient();
@@ -272,6 +330,7 @@
           .eq('user_id', session.user.id);
 
         if (error) throw error;
+        console.log(`✅ Notification ${notificationId} marked as read`);
         return true;
       }) || false;
     }
@@ -279,5 +338,5 @@
 
   // ─── تصدير الكائن العام ───
   window.NotificationService = new NotificationServiceClass();
-  console.log('✅ NotificationService loaded (with auth support)');
+  console.log('✅ NotificationService loaded (with UI sync)');
 })();
