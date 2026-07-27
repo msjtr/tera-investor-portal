@@ -2,6 +2,8 @@
  * support-notifications.js – تهيئة مركز الإشعارات مع RLS-safe
  * تم فصله من HTML إلى ملف مستقل
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
+ * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
+ * إضافة رسائل تصحيح لتتبع الجلسة
  */
 (function() {
     'use strict';
@@ -12,7 +14,7 @@
     let supabaseClient = null;
     let authChannel = null;
 
-    // ─── دالة withAuth (نسخة مستقلة) ───
+    // ─── دالة withAuth (نسخة مستقلة مع رسائل تصحيح) ───
     async function withAuth(callback) {
         if (!supabaseClient) {
             console.warn('⚠️ [withAuth] Supabase client not available');
@@ -24,6 +26,7 @@
                 console.log('⏳ [withAuth] No active session, skipping request');
                 return null;
             }
+            console.log('✅ [withAuth] Session active for user:', session.user.id);
             return await callback(session);
         } catch (e) {
             console.warn('⚠️ [withAuth] Error:', e.message);
@@ -34,13 +37,18 @@
     // ─── جلب الإشعارات باستخدام withAuth ───
     async function fetchNotifications() {
         return withAuth(async (session) => {
+            console.log('🔍 [fetchNotifications] Executing query for user:', session.user.id);
             const { data, error } = await supabaseClient
                 .from('notifications')
                 .select('*')
                 .is('deleted_at', null)          // ✅ إصلاح: استخدام is بدلاً من eq
                 .order('created_at', { ascending: false })
                 .limit(50);
-            if (error) throw error;
+            if (error) {
+                console.error('❌ [fetchNotifications] Query error:', error);
+                throw error;
+            }
+            console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications`);
             return data;
         });
     }
@@ -167,6 +175,7 @@
             )
             .subscribe();
         authChannel = channel;
+        console.log('✅ Realtime subscription active');
     }
 
     // ─── OneSignal ───
@@ -197,6 +206,7 @@
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             console.log('🔐 Auth state changed:', event);
             if (event === 'SIGNED_IN' && session) {
+                console.log('🔄 Refreshing notifications after sign in');
                 const data = await fetchNotifications();
                 if (data) {
                     if (window.NotificationCache?.init) window.NotificationCache.init(data);
@@ -207,11 +217,16 @@
                     await updateBadge();
                 }
             } else if (event === 'SIGNED_OUT') {
+                console.log('🧹 Clearing notifications after sign out');
                 if (window.NotificationCache?.clear) window.NotificationCache.clear();
                 if (window.NotificationManager?.clear) window.NotificationManager.clear();
                 renderNotifications();
                 const badge = document.getElementById('notificationBadge');
                 if (badge) badge.textContent = '0';
+                if (authChannel) {
+                    await supabaseClient.removeChannel(authChannel);
+                    authChannel = null;
+                }
             }
         });
     }
@@ -232,6 +247,7 @@
                 console.error('❌ Supabase client not available');
                 return;
             }
+            console.log('✅ Supabase client obtained');
 
             // 2. تهيئة NotificationService إن وجد
             if (window.NotificationService && typeof window.NotificationService.init === 'function') {
@@ -261,6 +277,7 @@
                     if (manager && typeof manager.addNotification === 'function') {
                         initialData.forEach(n => manager.addNotification(n));
                     }
+                    console.log(`✅ Loaded ${initialData.length} initial notifications`);
                 }
             } catch (e) {
                 console.warn('⚠️ Initial fetch failed:', e.message);
