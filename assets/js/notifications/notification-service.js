@@ -1,7 +1,7 @@
 /**
  * NotificationService – المحرك المركزي للإشعارات (الإصدار النهائي المُحسَّن)
  * - يحفظ الإشعار في DB باستخدام withAuth
- * - يرسل Push عبر Edge Function
+ * - يرسل Push عبر Edge Function مع app_id
  * - يسجل النتيجة في notification_logs
  * - يحدّث الواجهة تلقائياً
  */
@@ -11,6 +11,8 @@
   class NotificationServiceClass {
     constructor() {
       this.supabase = null;
+      // ✅ تعريف ONESIGNAL_APP_ID كقيمة ثابتة داخل الخدمة
+      this.ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
     }
 
     // ─── دالة مساعدة للحصول على Supabase Client ───
@@ -208,7 +210,7 @@
       }
     }
 
-    // ─── إرسال Push عبر Edge Function ───
+    // ─── إرسال Push عبر Edge Function (مع app_id) ───
     async _sendPushViaEdge(notification) {
       const sb = this._getSupabaseClient();
       if (!sb) {
@@ -216,8 +218,10 @@
         return;
       }
 
-      // الحصول على playerId
-      let playerId = sessionStorage.getItem('onesignal_subscription_id');
+      // الحصول على playerId من مصادر متعددة
+      let playerId = sessionStorage.getItem('onesignal_subscription_id') || 
+                     sessionStorage.getItem('pending_player_id');
+
       if (!playerId && window.getPlayerId) {
         try {
           playerId = window.getPlayerId();
@@ -232,9 +236,12 @@
         return;
       }
 
+      // ✅ إضافة app_id إلى الطلب
+      const appId = this.ONESIGNAL_APP_ID;
+
       const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
       try {
-        // ✅ الدالة أصبحت تتطلب مصادقة حقيقية الآن (كانت بلا حماية سابقاً)
+        // الحصول على التوكن للمصادقة
         const { data: { session } } = await sb.auth.getSession();
         if (!session?.access_token) {
           console.warn('⚠️ No active session, push skipped');
@@ -242,6 +249,7 @@
           return;
         }
 
+        // ✅ إرسال الطلب مع app_id في الـ Body
         console.log('📨 Sending push to playerId:', playerId);
         const response = await fetch(url, {
           method: 'POST',
@@ -250,10 +258,11 @@
             'Authorization': `Bearer ${session.access_token}`
           },
           body: JSON.stringify({
+            app_id: appId,                      // ✅ الحقل الذي تنتظره Edge Function
             playerIds: [playerId],
             title: notification.title,
             body: notification.body,
-            url: notification.data?.action_url || null,
+            url: notification.data?.action_url || '',
             data: notification.data || {}
           })
         });
@@ -283,7 +292,8 @@
       if (!sb) return;
 
       await this._withAuth(async (session) => {
-        const targetUserId = userId || session.user.id;
+        // استخدام user_id من الجلسة لضمان تطابق auth.uid()
+        const targetUserId = session.user.id;
 
         const { error } = await sb.from('notification_logs').insert({
           notification_id: notificationId,
@@ -349,5 +359,5 @@
 
   // ─── تصدير الكائن العام ───
   window.NotificationService = new NotificationServiceClass();
-  console.log('✅ NotificationService loaded (with UI sync)');
+  console.log('✅ NotificationService loaded (with app_id support)');
 })();
