@@ -1,8 +1,10 @@
 /**
  * support-notifications.js – تهيئة مركز الإشعارات مع RLS-safe
+ * تم فصله من HTML إلى ملف مستقل
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
- * استخدام NotificationCache و NotificationUI لعرض الإشعارات
- * تم إضافة إعادة محاولة الجلب تلقائياً
+ * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
+ * إضافة رسائل تصحيح لتتبع الجلسة
+ * استخدام NotificationCache و NotificationUI بشكل صحيح
  */
 (function() {
     'use strict';
@@ -22,61 +24,54 @@
         
         try {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (error || !session) {
-                console.warn('⏳ [withAuth] No active session');
+            
+            if (error) {
+                console.warn('⚠️ [withAuth] Session error:', error.message);
                 return null;
             }
+            
+            if (!session) {
+                console.warn('⏳ [withAuth] No active session - user is not logged in');
+                return null;
+            }
+            
             console.log('✅ [withAuth] Session active for user:', session.user.id);
             return await callback(session);
+            
         } catch (e) {
-            console.warn('⚠️ [withAuth] Error:', e.message);
+            console.warn('⚠️ [withAuth] Unexpected error:', e.message);
             return null;
         }
     }
 
-    // ─── جلب الإشعارات مع إعادة محاولة ───
-    async function fetchNotificationsWithRetry(maxRetries = 3) {
+    // ─── جلب الإشعارات ───
+    async function fetchNotifications() {
         console.log('🔍 [fetchNotifications] Attempting to fetch notifications...');
         
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                const result = await withAuth(async (session) => {
-                    console.log(`🔍 [fetchNotifications] Attempt ${attempt} for user:`, session.user.id);
-                    
-                    const { data, error } = await supabaseClient
-                        .from('notifications')
-                        .select('*')
-                        .is('deleted_at', null)
-                        .order('created_at', { ascending: false })
-                        .limit(50);
-                        
-                    if (error) {
-                        console.error('❌ [fetchNotifications] Query error:', error);
-                        throw error;
-                    }
-                    
-                    console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications (attempt ${attempt})`);
-                    return data;
-                });
+        const result = await withAuth(async (session) => {
+            console.log('🔍 [fetchNotifications] Executing query for user:', session.user.id);
+            
+            const { data, error } = await supabaseClient
+                .from('notifications')
+                .select('*')
+                .is('deleted_at', null)
+                .order('created_at', { ascending: false })
+                .limit(50);
                 
-                if (result && result.length > 0) {
-                    return result;
-                }
-                
-                if (attempt < maxRetries) {
-                    console.log(`⏳ No data yet, retrying in 500ms... (${attempt}/${maxRetries})`);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            } catch (e) {
-                console.warn(`⚠️ [fetchNotifications] Attempt ${attempt} failed:`, e.message);
-                if (attempt < maxRetries) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
+            if (error) {
+                console.error('❌ [fetchNotifications] Query error:', error);
+                throw error;
             }
+            
+            console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications`);
+            return data;
+        });
+        
+        if (result === null) {
+            console.warn('⏳ [fetchNotifications] Skipped - no active session');
         }
         
-        console.warn('⚠️ [fetchNotifications] All attempts failed or returned empty');
-        return [];
+        return result || [];
     }
 
     // ─── دوال الإعدادات ───
@@ -149,43 +144,78 @@
         if (cache && typeof cache.getStats === 'function') {
             const stats = cache.getStats();
             const badge = document.getElementById('notificationBadge');
-            if (badge) badge.textContent = stats.unread || 0;
+            if (badge) {
+                const unreadCount = stats.unread || 0;
+                badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+            }
+            // تحديث الإحصائيات في الواجهة
+            updateStatsDisplay(stats);
         }
+    }
+
+    // ─── تحديث عرض الإحصائيات ───
+    function updateStatsDisplay(stats) {
+        const totalEl = document.getElementById('statTotal');
+        const unreadEl = document.getElementById('statUnread');
+        const readEl = document.getElementById('statRead');
+        const importantEl = document.getElementById('statImportant');
+        const archivedEl = document.getElementById('statArchived');
+        
+        if (totalEl) totalEl.textContent = stats.total || 0;
+        if (unreadEl) unreadEl.textContent = stats.unread || 0;
+        if (readEl) readEl.textContent = (stats.total || 0) - (stats.unread || 0);
+        // للأسف important و archived غير موجودين في stats، نضع 0 مؤقتاً
+        if (importantEl) importantEl.textContent = 0;
+        if (archivedEl) archivedEl.textContent = 0;
     }
 
     // ─── عرض الإشعارات ───
     function renderNotifications() {
         const cache = window.NotificationCache;
-        if (cache && typeof cache.getAll === 'function') {
-            const all = cache.getAll();
-            console.log(`📊 [renderNotifications] Rendering ${all.length} notifications`);
-            const filtered = window.NotificationFilters?.apply(all) || all;
-            if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
-                window.NotificationUI.render(filtered, 1);
-                if (typeof window.NotificationUI.updateStats === 'function') {
-                    window.NotificationUI.updateStats(cache.getStats());
-                }
-            }
-        } else {
-            console.warn('⚠️ [renderNotifications] NotificationCache not available');
+        if (!cache) {
+            console.warn('⚠️ NotificationCache not available');
+            return;
         }
+        
+        if (typeof cache.getAll !== 'function') {
+            console.warn('⚠️ NotificationCache.getAll is not a function');
+            return;
+        }
+        
+        const all = cache.getAll();
+        console.log(`📊 Rendering ${all.length} notifications`);
+        
+        const filtered = window.NotificationFilters?.apply(all) || all;
+        
+        if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+            window.NotificationUI.render(filtered, 1);
+            if (typeof window.NotificationUI.updateStats === 'function') {
+                const stats = typeof cache.getStats === 'function' ? cache.getStats() : { total: all.length, unread: 0 };
+                window.NotificationUI.updateStats(stats);
+            }
+        }
+        
+        // تحديث الإحصائيات
+        if (typeof cache.getStats === 'function') {
+            updateStatsDisplay(cache.getStats());
+        }
+        
+        // تحديث العداد
+        updateBadge();
     }
 
-    // ─── إضافة إشعار للكاش والعرض ───
+    // ─── إضافة إشعار للكاش ───
     function addNotificationToCache(notification) {
-        console.log('📨 [addNotificationToCache] Adding notification:', notification.id);
         const cache = window.NotificationCache;
         if (cache && typeof cache.add === 'function') {
             cache.add(notification);
-        } else {
-            console.warn('⚠️ [addNotificationToCache] NotificationCache.add not available');
         }
         renderNotifications();
     }
 
     // ─── تحديث إشعار في الكاش ───
     function updateNotificationInCache(id, updates) {
-        console.log('🔄 [updateNotificationInCache] Updating notification:', id);
         const cache = window.NotificationCache;
         if (cache && typeof cache.update === 'function') {
             cache.update(id, updates);
@@ -213,7 +243,7 @@
                 { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const newNotif = payload.new;
-                    console.log('📨 [Realtime] New notification received:', newNotif.id);
+                    console.log('📨 New notification via Realtime:', newNotif.id);
                     addNotificationToCache(newNotif);
                     if (window.NotificationService && window.NotificationService._showToast) {
                         window.NotificationService._showToast(newNotif);
@@ -225,7 +255,7 @@
                 { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const updated = payload.new;
-                    console.log('🔄 [Realtime] Notification updated:', updated.id);
+                    console.log('🔄 Updated notification via Realtime:', updated.id);
                     updateNotificationInCache(updated.id, updated);
                 }
             )
@@ -246,7 +276,7 @@
             }
             if (typeof os.addListener === 'function') {
                 await os.addListener((notification) => {
-                    console.log('📨 [OneSignal] Notification received:', notification.id);
+                    console.log('📨 OneSignal notification received:', notification);
                     addNotificationToCache(notification);
                 });
             }
@@ -264,16 +294,14 @@
             
             if (event === 'SIGNED_IN' && session) {
                 console.log('🔄 User signed in, refreshing notifications');
-                const data = await fetchNotificationsWithRetry(3);
-                if (data && data.length > 0) {
-                    const cache = window.NotificationCache;
-                    if (cache && typeof cache.init === 'function') {
-                        cache.init(data);
-                    }
-                    renderNotifications();
-                    await setupRealtime();
-                    await updateBadge();
+                const data = await fetchNotifications();
+                const cache = window.NotificationCache;
+                if (cache && typeof cache.init === 'function') {
+                    cache.init(data);
                 }
+                renderNotifications();
+                await setupRealtime();
+                await updateBadge();
             } else if (event === 'SIGNED_OUT') {
                 console.log('🧹 User signed out, clearing notifications');
                 const cache = window.NotificationCache;
@@ -282,7 +310,10 @@
                 }
                 renderNotifications();
                 const badge = document.getElementById('notificationBadge');
-                if (badge) badge.textContent = '0';
+                if (badge) {
+                    badge.textContent = '0';
+                    badge.style.display = 'none';
+                }
                 if (authChannel) {
                     await supabaseClient.removeChannel(authChannel);
                     authChannel = null;
@@ -328,18 +359,13 @@
                 await manager.init();
             }
 
-            // 5. جلب الإشعارات الأولية مع إعادة المحاولة
+            // 5. جلب الإشعارات الأولية
             let initialData = [];
             try {
-                initialData = await fetchNotificationsWithRetry(3);
-                if (initialData && initialData.length > 0) {
-                    const cache = window.NotificationCache;
-                    if (cache && typeof cache.init === 'function') {
-                        cache.init(initialData);
-                        console.log(`✅ Loaded ${initialData.length} initial notifications into cache`);
-                    } else {
-                        console.warn('⚠️ NotificationCache.init not available');
-                    }
+                const data = await fetchNotifications();
+                if (data && data.length > 0) {
+                    initialData = data;
+                    console.log(`✅ Fetched ${initialData.length} notifications from database`);
                 } else {
                     console.log('ℹ️ No notifications found in database');
                 }
@@ -347,34 +373,44 @@
                 console.warn('⚠️ Initial fetch failed:', e.message);
             }
 
-            // 6. تهيئة UI
+            // 6. تهيئة الكاش (بغض النظر عن وجود بيانات)
+            const cache = window.NotificationCache;
+            if (cache && typeof cache.init === 'function') {
+                console.log('📦 Initializing NotificationCache with', initialData.length, 'items');
+                cache.init(initialData);
+            } else {
+                console.warn('⚠️ NotificationCache not available or missing init method');
+            }
+
+            // 7. تهيئة UI
             if (window.NotificationUI && typeof window.NotificationUI.init === 'function') {
+                console.log('🎨 Initializing NotificationUI');
                 window.NotificationUI.init();
             }
 
-            // 7. عرض الإشعارات
+            // 8. عرض الإشعارات
             renderNotifications();
 
-            // 8. ربط Realtime (فقط إذا كان هناك مستخدم)
+            // 9. ربط Realtime (فقط إذا كان هناك مستخدم)
             if (session) {
                 await setupRealtime();
             }
 
-            // 9. OneSignal (إن وجد)
+            // 10. OneSignal (إن وجد)
             await setupOneSignal();
 
-            // 10. تحديث العداد
+            // 11. تحديث العداد
             await updateBadge();
 
-            // 11. السجل
+            // 12. السجل
             if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
                 window.NotificationHistory.load(1);
             }
 
-            // 12. الإعدادات
+            // 13. الإعدادات
             initSettings();
 
-            // 13. الاستماع لأحداث المصادقة
+            // 14. الاستماع لأحداث المصادقة
             setupAuthListener();
 
             console.log('✅ Notification System ready');
