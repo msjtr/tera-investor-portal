@@ -234,10 +234,21 @@
 
       const url = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/send-push-notification';
       try {
+        // ✅ الدالة أصبحت تتطلب مصادقة حقيقية الآن (كانت بلا حماية سابقاً)
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session?.access_token) {
+          console.warn('⚠️ No active session, push skipped');
+          await this._log(notification.id, notification.user_id, 'failed', 'No active session');
+          return;
+        }
+
         console.log('📨 Sending push to playerId:', playerId);
         const response = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
           body: JSON.stringify({
             playerIds: [playerId],
             title: notification.title,
