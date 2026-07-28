@@ -1094,7 +1094,15 @@
     <script>
         (function() {
             'use strict';
-            document.addEventListener('DOMContentLoaded', function() {
+            
+            // انتظار تحميل DOM بالكامل
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initFallback);
+            } else {
+                initFallback();
+            }
+
+            function initFallback() {
                 console.log('🔧 Fallback ready');
 
                 // ربط التبويبات
@@ -1115,11 +1123,26 @@
                 });
 
                 // تحديث الواجهة بعد تحميل البيانات
-                if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                    setTimeout(function() {
+                setTimeout(function() {
+                    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
                         window.NotificationUI.refresh();
-                    }, 1000);
-                }
+                        console.log('🔄 UI refreshed');
+                    }
+                    
+                    // محاولة عرض الإشعارات من الكاش
+                    if (window.NotificationCache) {
+                        const cache = window.NotificationCache;
+                        const all = cache.getAll ? cache.getAll() : [];
+                        console.log(`📊 Fallback: ${all.length} notifications in cache`);
+                        if (all.length > 0 && window.NotificationUI && typeof window.NotificationUI.render === 'function') {
+                            const filtered = window.NotificationFilters?.apply(all) || all;
+                            window.NotificationUI.render(filtered, 1);
+                            if (typeof window.NotificationUI.updateStats === 'function') {
+                                window.NotificationUI.updateStats(cache.getStats ? cache.getStats() : {});
+                            }
+                        }
+                    }
+                }, 1500);
 
                 // ✅ تحديث حالة OneSignal في الواجهة
                 setTimeout(async () => {
@@ -1152,10 +1175,21 @@
                         statusEl.textContent = 'خطأ في التحقق';
                         statusEl.className = 'status-value';
                     }
-                }, 2000);
+                }, 3000);
 
                 console.log('✅ Fallback ready');
+            }
+
+            // إضافة مستمع لتحديث الواجهة عند إضافة إشعار جديد
+            document.addEventListener('new-notification', function(e) {
+                console.log('📨 New notification event received:', e.detail);
+                setTimeout(function() {
+                    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+                        window.NotificationUI.refresh();
+                    }
+                }, 500);
             });
+
         })();
     </script>
 
