@@ -51,7 +51,11 @@ app.get('/api/location/reverse', async (req, res) => {
             return res.status(400).json({ error: 'Latitude and Longitude are required' });
         }
 
-        const apiKey = process.env.LOCATIONIQ_API_KEY || 'pk.ca7b33e8b24ce857f868fa5ec4dce8d0';
+        const apiKey = process.env.LOCATIONIQ_API_KEY;
+        if (!apiKey) {
+            console.error('❌ LOCATIONIQ_API_KEY is not set in the environment.');
+            return res.status(500).json({ error: 'Server misconfiguration: LOCATIONIQ_API_KEY missing', lookup_status: 0 });
+        }
         const baseUrl = 'https://us1.locationiq.com';
         const endpoint = '/v1/reverse';
 
