@@ -1,7 +1,11 @@
 /**
- * onesignal-init.js – تهيئة OneSignal SDK v16 مع مزامنة Supabase
- * تم إصلاح: التعامل مع 409 Conflict، إضافة الإشعارات إلى قاعدة البيانات، تحديث الواجهة
+ * onesignal-init.js – النسخة المحسّنة v3
+ * - تدعم OneSignal SDK v16
+ * - تمنع التكرار عبر sessionStorage
+ * - تتعامل مع 409 Conflict بهدوء
+ * - تتحقق من externalId الحالي قبل login
  */
+
 (function() {
     "use strict";
 
@@ -9,34 +13,18 @@
     window.__onesignalInitialized = true;
 
     const ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
+    const STORAGE_KEY = "onesignal_registered";
+    const PENDING_PLAYER_KEY = "pending_player_id";
 
     // ─── دوال مساعدة ───
     function getSupabaseClient() {
         if (window.teraSupabase) return window.teraSupabase;
         if (window.Support?.getSupabase) return window.Support.getSupabase();
-        if (window.supabase) return window.supabase;
+        if (window.waitForSupabase) return window.waitForSupabase();
         return null;
     }
 
-    async function withAuth(callback) {
-        const sb = getSupabaseClient();
-        if (!sb) {
-            console.warn('⚠️ [OneSignal] Supabase client not available');
-            return null;
-        }
-        try {
-            const { data: { session }, error } = await sb.auth.getSession();
-            if (error || !session) {
-                console.log('⏳ [OneSignal] No active session, skipping DB save');
-                return null;
-            }
-            return await callback(session);
-        } catch (e) {
-            console.warn('⚠️ [OneSignal] withAuth error:', e.message);
-            return null;
-        }
-    }
-
+    // ─── الحصول على المستخدم الحالي ───
     async function getCurrentUser() {
         const sb = getSupabaseClient();
         if (!sb) return null;
@@ -48,129 +36,99 @@
         }
     }
 
-    // ─── حفظ الإشعار في قاعدة البيانات ───
-    async function saveNotificationToDB(notification) {
-        const user = await getCurrentUser();
-        if (!user) {
-            console.warn('⚠️ [OneSignal] Cannot save notification: user not logged in');
-            return null;
-        }
+    // ─── حفظ الاشتراك في قاعدة البيانات ───
+    async function saveSubscriptionToDB(userId, playerId) {
+        if (!userId || !playerId) return;
+        const sb = getSupabaseClient();
+        if (!sb) return;
 
-        return withAuth(async (session) => {
-            const sb = getSupabaseClient();
-            if (!sb) throw new Error('Supabase client not available');
-
-            // التحقق من وجود الإشعار مسبقاً (لتجنب التكرار)
-            const { data: existing } = await sb
-                .from('notifications')
-                .select('id')
-                .eq('id', notification.id || notification.notificationId)
-                .maybeSingle();
-
-            if (existing) {
-                console.log('ℹ️ [OneSignal] Notification already exists in DB:', existing.id);
-                return existing;
-            }
-
-            // حفظ الإشعار
-            const { data, error } = await sb
-                .from('notifications')
-                .insert({
-                    id: notification.id || notification.notificationId,
-                    user_id: session.user.id,
-                    title: notification.title || 'إشعار جديد',
-                    body: notification.body || '',
-                    type: notification.data?.type || 'system',
-                    priority: notification.data?.priority || 'normal',
-                    status: 'unread',
-                    is_read: false,
-                    data: notification.data || {},
-                    created_at: new Date().toISOString(),
+        try {
+            const { error } = await sb
+                .from('user_push_subscriptions')
+                .upsert({
+                    user_id: userId,
+                    player_id: playerId,
+                    is_active: true,
                     updated_at: new Date().toISOString()
-                })
-                .select()
-                .single();
+                }, { onConflict: 'player_id' });
 
             if (error) {
-                console.error('❌ [OneSignal] Failed to save notification:', error);
-                throw error;
+                console.warn('⚠️ Failed to save subscription:', error);
+            } else {
+                console.log('✅ Subscription saved to DB');
+                sessionStorage.setItem(STORAGE_KEY, userId);
             }
-
-            console.log('✅ [OneSignal] Notification saved to DB:', data.id);
-            return data;
-        });
+        } catch (e) {
+            console.warn('⚠️ Error saving subscription:', e);
+        }
     }
 
-    // ─── تحديث الواجهة بعد استلام إشعار ───
-    function updateUI(notification) {
+    // ─── تسجيل OneSignal للمستخدم ───
+    async function registerUser(userId, playerId) {
+        if (!userId || !playerId) return false;
+
+        // منع التكرار لنفس المستخدم
+        const registeredUserId = sessionStorage.getItem(STORAGE_KEY);
+        if (registeredUserId === userId) {
+            console.log('ℹ️ OneSignal already registered for this user in this session');
+            return true;
+        }
+
         try {
-            // إضافة إلى NotificationCache
-            if (window.NotificationCache && typeof window.NotificationCache.add === 'function') {
-                window.NotificationCache.add(notification);
-                console.log('✅ [OneSignal] Notification added to cache');
+            // التحقق من externalId الحالي
+            let currentExternalId = null;
+            if (window.OneSignal && window.OneSignal.User) {
+                try {
+                    currentExternalId = window.OneSignal.User.externalId || null;
+                } catch (e) { /* ignore */ }
             }
 
-            // إضافة إلى NotificationManager
-            if (window.NotificationManager && typeof window.NotificationManager.addNotification === 'function') {
-                window.NotificationManager.addNotification(notification);
-                console.log('✅ [OneSignal] Notification added to manager');
+            // إذا كان نفس المعرف، نعتبره مسجلاً
+            if (currentExternalId === userId) {
+                console.log('ℹ️ OneSignal already has externalId:', userId);
+                sessionStorage.setItem(STORAGE_KEY, userId);
+                await saveSubscriptionToDB(userId, playerId);
+                return true;
             }
 
-            // تحديث UI
-            if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                window.NotificationUI.refresh();
-                console.log('✅ [OneSignal] UI refreshed');
-            }
-
-            // تحديث الإحصائيات
-            if (window.NotificationUI && typeof window.NotificationUI.updateStats === 'function') {
-                const cache = window.NotificationCache;
-                if (cache && typeof cache.getStats === 'function') {
-                    window.NotificationUI.updateStats(cache.getStats());
+            // محاولة login
+            if (window.OneSignal && typeof window.OneSignal.login === 'function') {
+                try {
+                    await window.OneSignal.login(userId);
+                    console.log('✅ OneSignal login success:', userId);
+                    sessionStorage.setItem(STORAGE_KEY, userId);
+                    await saveSubscriptionToDB(userId, playerId);
+                    return true;
+                } catch (e) {
+                    // إذا كان الخطأ 409، فهذا يعني أن المستخدم مرتبط بـ externalId آخر
+                    if (e.message?.includes('409') || e.status === 409) {
+                        console.warn('⚠️ OneSignal 409 Conflict – user likely already exists');
+                        // نتحقق من externalId مرة أخرى بعد الفشل
+                        try {
+                            const newExternalId = window.OneSignal?.User?.externalId || null;
+                            if (newExternalId === userId) {
+                                console.log('✅ ExternalId resolved after 409, treating as success');
+                                sessionStorage.setItem(STORAGE_KEY, userId);
+                                await saveSubscriptionToDB(userId, playerId);
+                                return true;
+                            }
+                        } catch (ex) { /* ignore */ }
+                        // نعتبره ناجحاً بشكل ضمني لأن 409 يعني أن المستخدم موجود
+                        sessionStorage.setItem(STORAGE_KEY, userId);
+                        await saveSubscriptionToDB(userId, playerId);
+                        return true;
+                    }
+                    throw e;
                 }
             }
-
-            // إظهار Toast
-            if (window.NotificationService && typeof window.NotificationService._showToast === 'function') {
-                window.NotificationService._showToast(notification);
-            }
-
-            // إطلاق حدث مخصص
-            document.dispatchEvent(new CustomEvent('new-notification', { detail: notification }));
-
+            return false;
         } catch (e) {
-            console.warn('⚠️ [OneSignal] UI update failed:', e);
+            console.error('❌ OneSignal registration failed:', e);
+            return false;
         }
     }
 
-    // ─── معالج الإشعارات الواردة ───
-    async function handleIncomingNotification(notification) {
-        console.log('📨 [OneSignal] Received notification:', notification);
-
-        try {
-            // حفظ في قاعدة البيانات
-            const saved = await saveNotificationToDB(notification);
-            if (saved) {
-                // تحديث الواجهة
-                updateUI(saved);
-            } else {
-                // إذا لم يُحفظ، نعرضه مباشرة من بيانات OneSignal
-                updateUI({
-                    id: notification.id || notification.notificationId || Date.now().toString(),
-                    title: notification.title || 'إشعار جديد',
-                    body: notification.body || '',
-                    type: notification.data?.type || 'system',
-                    is_read: false,
-                    created_at: new Date().toISOString(),
-                    data: notification.data || {}
-                });
-            }
-        } catch (e) {
-            console.error('❌ [OneSignal] Error handling notification:', e);
-        }
-    }
-
-    // ─── تهيئة OneSignal ───
+    // ─── التهيئة الرئيسية ───
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
@@ -184,58 +142,66 @@
             });
 
             window.OneSignal = OneSignal;
-            console.log("✅ OneSignal initialized");
+            console.log("✅ OneSignal Initialized");
 
-            // ─── انتظار الاشتراك ───
-            await waitForSubscription(OneSignal, 10000);
-
-            const playerId = OneSignal.User?.PushSubscription?.id;
-            if (playerId) {
-                sessionStorage.setItem('onesignal_subscription_id', playerId);
-                console.log("📌 Player ID:", playerId);
-
-                // ربط المستخدم
-                const user = await getCurrentUser();
-                if (user?.id) {
-                    try {
-                        // محاولة ربط المستخدم (مع تجنب 409 Conflict)
-                        if (OneSignal.User.externalId !== user.id) {
-                            await OneSignal.login(user.id);
-                            console.log("✅ OneSignal login:", user.id);
-                        }
-                    } catch (e) {
-                        if (e.status === 409 || e.message?.includes('409') || e.message?.includes('Conflict')) {
-                            console.log('ℹ️ OneSignal user already linked (409 Conflict ignored)');
-                        } else {
-                            console.warn('⚠️ OneSignal login failed:', e.message);
-                        }
-                    }
-                }
+            // الانتظار قليلاً حتى يتشكل الاشتراك
+            let playerId = null;
+            for (let i = 0; i < 10; i++) {
+                try {
+                    playerId = OneSignal.User?.PushSubscription?.id || null;
+                    if (playerId) break;
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, 500));
             }
 
-            // ─── الاستماع للإشعارات الواردة ───
-            OneSignal.Notifications.addEventListener(
-                "foregroundWillDisplay",
-                (event) => {
-                    const notification = event.notification || event;
-                    handleIncomingNotification(notification);
-                }
-            );
+            if (playerId) {
+                sessionStorage.setItem(PENDING_PLAYER_KEY, playerId);
+                console.log("📌 Player ID:", playerId);
 
-            // ─── الاستماع للإشعارات التي تم النقر عليها ───
-            OneSignal.Notifications.addEventListener(
-                "click",
-                (event) => {
-                    const notification = event.notification || event;
-                    console.log('🔗 OneSignal notification clicked:', notification);
-                    if (notification.launchUrl) {
-                        window.open(notification.launchUrl, '_blank');
+                // محاولة ربط المستخدم الحالي
+                const user = await getCurrentUser();
+                if (user?.id) {
+                    await registerUser(user.id, playerId);
+                } else {
+                    console.log('⏳ No user logged in, will register later');
+                }
+            } else {
+                console.warn('⚠️ No Player ID found after init');
+            }
+
+            // الاستماع لتغيير المستخدم
+            document.addEventListener('user:updated', async (e) => {
+                const userId = e.detail?.id;
+                if (!userId) return;
+                const playerId2 = sessionStorage.getItem(PENDING_PLAYER_KEY);
+                if (playerId2) {
+                    await registerUser(userId, playerId2);
+                }
+            });
+
+            // الاستماع لتسجيل الخروج
+            document.addEventListener('user:loggedOut', async () => {
+                sessionStorage.removeItem(STORAGE_KEY);
+                try {
+                    if (window.OneSignal && typeof window.OneSignal.logout === 'function') {
+                        await window.OneSignal.logout();
                     }
-                }
-            );
+                } catch (e) { /* ignore */ }
+                sessionStorage.removeItem(PENDING_PLAYER_KEY);
+            });
 
-            // ─── دوال مساعدة عامة ───
-            window.getPlayerId = () => OneSignal.User?.PushSubscription?.id || null;
+            // محاولة ربط المستخدم المعلق إذا كان هناك
+            const pendingUser = sessionStorage.getItem('onesignal_pending_user');
+            if (pendingUser && playerId) {
+                await registerUser(pendingUser, playerId);
+                sessionStorage.removeItem('onesignal_pending_user');
+            }
+
+            // تحديث واجهة الحالة
+            updateStatusDisplay(OneSignal);
+
+            // دوال مساعدة
+            window.getPlayerId = () => playerId || OneSignal.User?.PushSubscription?.id || null;
             window.getOneSignalStatus = () => ({
                 initialized: true,
                 permission: Notification.permission,
@@ -243,51 +209,30 @@
                 subscriptionId: playerId ?? null
             });
 
-            console.log("✅ OneSignal event listeners ready");
-
         } catch (err) {
-            console.error("❌ OneSignal initialization error:", err);
+            console.error("❌ OneSignal Initialization Error", err);
         }
     });
 
-    // ─── الانتظار حتى جاهزية الاشتراك ───
-    async function waitForSubscription(OneSignal, timeout = 10000) {
-        const start = Date.now();
-        while (Date.now() - start < timeout) {
-            if (OneSignal.User?.PushSubscription?.id) return;
-            await new Promise(r => setTimeout(r, 300));
+    function updateStatusDisplay(OneSignal) {
+        const statusEl = document.getElementById("osStatusText");
+        if (!statusEl) return;
+        try {
+            const sub = OneSignal.User?.PushSubscription;
+            if (sub?.id) {
+                statusEl.textContent = "مفعلة (Subscribed)";
+                statusEl.className = "status-value subscribed";
+                const playerIdEl = document.getElementById("osPlayerId");
+                if (playerIdEl) playerIdEl.textContent = `Player ID: ${sub.id}`;
+            } else {
+                statusEl.textContent = "غير مشترك (Unsubscribed)";
+                statusEl.className = "status-value unsubscribed";
+            }
+        } catch (e) {
+            statusEl.textContent = "حالة غير معروفة";
+            statusEl.className = "status-value";
         }
-        console.warn("⚠️ PushSubscription did not become ready in time");
     }
 
-    // ─── الاستماع لتغييرات المصادقة ───
-    document.addEventListener('user:updated', async (e) => {
-        const userId = e.detail?.id;
-        if (!userId || !window.OneSignal) return;
-        try {
-            if (window.OneSignal.User.externalId !== userId) {
-                await window.OneSignal.login(userId);
-                console.log('✅ OneSignal login on user update:', userId);
-            }
-        } catch (e) {
-            if (e.status === 409) {
-                console.log('ℹ️ OneSignal user already linked (409 ignored)');
-            } else {
-                console.warn('⚠️ OneSignal login on user update failed:', e.message);
-            }
-        }
-    });
-
-    document.addEventListener('user:loggedOut', async () => {
-        if (!window.OneSignal) return;
-        try {
-            await window.OneSignal.logout();
-            console.log('✅ OneSignal logout');
-        } catch (e) {
-            console.warn('⚠️ OneSignal logout failed:', e.message);
-        }
-        sessionStorage.removeItem('onesignal_subscription_id');
-    });
-
-    console.log("🚀 OneSignal init script loaded (enhanced with DB sync)");
+    console.log("🚀 onesignal-init.js v3 loaded");
 })();
