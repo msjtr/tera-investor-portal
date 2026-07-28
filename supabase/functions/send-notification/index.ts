@@ -83,14 +83,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    // ✅ هذه الدالة لا يستدعيها أي كود في الواجهة الأمامية — هي مخصصة للاستدعاء
+    // الداخلي (Database Webhook / وظيفة أخرى) فقط. سابقاً كان يكفي إرسال أي قيمة
+    // في رأس Authorization لتجاوز هذا الفحص. الآن نتحقق أن القيمة هي فعلاً
+    // مفتاح service_role الحقيقي.
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const providedToken = authHeader?.replace('Bearer ', '').trim();
+
+    if (!authHeader || !serviceRoleKey || providedToken !== serviceRoleKey) {
       return errorResponse('Unauthorized', 401);
     }
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      serviceRoleKey
     );
 
     const payload = await req.json();
