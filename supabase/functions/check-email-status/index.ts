@@ -36,14 +36,27 @@ serve(async (req: Request) => {
     let userConfirmed = false
 
     try {
-      const { data: users, error: listError } = await supabase.auth.admin.listUsers()
-      if (!listError && users?.users) {
-        const foundUser = users.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())
-        if (foundUser) {
-          userExists = true
-          userConfirmed = foundUser.confirmed_at !== null
-          userActive = userConfirmed && !foundUser.banned && !foundUser.deleted
-        }
+      // ✅ إصلاح: listUsers() تُرجع صفحة واحدة فقط افتراضياً (~50 مستخدم).
+      // بدون ترقيم الصفحات، أي بريد إلكتروني لمستخدم مسجّل بعد الصفحة الأولى
+      // كان يُعتبر خطأً "متاحاً للاستخدام". نمر الآن على كل الصفحات حتى النهاية.
+      const targetEmail = email.toLowerCase()
+      let page = 1
+      const perPage = 1000
+      let foundUser: any = null
+
+      while (!foundUser) {
+        const { data: users, error: listError } = await supabase.auth.admin.listUsers({ page, perPage })
+        if (listError || !users?.users?.length) break
+
+        foundUser = users.users.find(u => u.email && u.email.toLowerCase() === targetEmail)
+        if (foundUser || users.users.length < perPage) break
+        page += 1
+      }
+
+      if (foundUser) {
+        userExists = true
+        userConfirmed = foundUser.confirmed_at !== null
+        userActive = userConfirmed && !foundUser.banned && !foundUser.deleted
       }
     } catch (err) {
       console.error('فشل الوصول إلى auth.users:', err)
