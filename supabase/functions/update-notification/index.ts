@@ -12,6 +12,27 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// ─── دالة التحقق الفعلي من صحة الـ JWT ───
+// تتحقق من التوكن مع خادم Supabase Auth وتُرجع المستخدم الحقيقي المرتبط به،
+// بدلاً من الاكتفاء بالتحقق من وجود رأس Authorization فقط.
+async function getAuthenticatedUser(authHeader: string, supabaseUrl: string, anonKey: string) {
+  const token = authHeader.replace('Bearer ', '').trim();
+
+  // مسار خاص: مفتاح service_role نفسه (للاستدعاءات الداخلية بين الخوادم فقط،
+  // مثل Database Webhooks). هذا المسار يمنح صلاحية كاملة بدون تقييد user_id.
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  if (serviceRoleKey && token === serviceRoleKey) {
+    return { isService: true, userId: null as string | null };
+  }
+
+  const authClient = createClient(supabaseUrl, anonKey);
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data?.user) {
+    return { isService: false, userId: null };
+  }
+  return { isService: false, userId: data.user.id };
+}
+
 // ─── رؤوس CORS ───
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,10 +68,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    // ─── 3. التحقق من التوكن ───
+    // ─── 3. التحقق الفعلي من التوكن ───
     const authHeader = req.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return errorResponse('Unauthorized: Missing or invalid token', 401);
+    }
+
+    const supabaseUrlForAuth = Deno.env.get('SUPABASE_URL') ?? '';
+    const anonKeyForAuth = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const { isService, userId: authedUserId } = await getAuthenticatedUser(
+      authHeader,
+      supabaseUrlForAuth,
+      anonKeyForAuth
+    );
+
+    if (!isService && !authedUserId) {
+      return errorResponse('Unauthorized: Invalid or expired token', 401);
     }
 
     // ─── 4. قراءة البيانات ───
@@ -113,11 +146,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ─── 8. تنفيذ التحديث ───
     console.log(`📝 [${requestId}] Updating notification ${id} with:`, Object.keys(updates));
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .update(updates)
-      .eq('id', id)
-      .select();
+    // ✅ تقييد التحديث بمالك الإشعار الحقيقي (ما لم يكن الاستدعاء داخلياً بمفتاح service_role)
+    // هذا يمنع أي مستخدم من تعديل إشعارات مستخدم آخر عبر تخمين المعرّف (id)
+    let query = supabase.from('notifications').update(updates).eq('id', id);
+    if (!isService) {
+      query = query.eq('user_id', authedUserId);
+    }
+    const { data, error } = await query.select();
 
     if (error) {
       console.error(`❌ [${requestId}] Database error:`, error);
