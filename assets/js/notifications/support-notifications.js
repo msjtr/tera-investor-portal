@@ -1,10 +1,8 @@
 /**
  * support-notifications.js – تهيئة مركز الإشعارات مع RLS-safe
- * تم فصله من HTML إلى ملف مستقل
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
- * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
- * إضافة رسائل تصحيح لتتبع الجلسة
- * استخدام NotificationCache و NotificationUI بدلاً من NotificationManager
+ * استخدام NotificationCache و NotificationUI لعرض الإشعارات
+ * تم إضافة إعادة محاولة الجلب تلقائياً
  */
 (function() {
     'use strict';
@@ -15,7 +13,7 @@
     let supabaseClient = null;
     let authChannel = null;
 
-    // ─── دالة withAuth (نسخة مستقلة مع رسائل تصحيح) ───
+    // ─── دالة withAuth ───
     async function withAuth(callback) {
         if (!supabaseClient) {
             console.warn('⚠️ [withAuth] Supabase client not available');
@@ -24,54 +22,61 @@
         
         try {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
-            
-            if (error) {
-                console.warn('⚠️ [withAuth] Session error:', error.message);
+            if (error || !session) {
+                console.warn('⏳ [withAuth] No active session');
                 return null;
             }
-            
-            if (!session) {
-                console.warn('⏳ [withAuth] No active session - user is not logged in');
-                return null;
-            }
-            
             console.log('✅ [withAuth] Session active for user:', session.user.id);
             return await callback(session);
-            
         } catch (e) {
-            console.warn('⚠️ [withAuth] Unexpected error:', e.message);
+            console.warn('⚠️ [withAuth] Error:', e.message);
             return null;
         }
     }
 
-    // ─── جلب الإشعارات باستخدام withAuth ───
-    async function fetchNotifications() {
+    // ─── جلب الإشعارات مع إعادة محاولة ───
+    async function fetchNotificationsWithRetry(maxRetries = 3) {
         console.log('🔍 [fetchNotifications] Attempting to fetch notifications...');
         
-        const result = await withAuth(async (session) => {
-            console.log('🔍 [fetchNotifications] Executing query for user:', session.user.id);
-            
-            const { data, error } = await supabaseClient
-                .from('notifications')
-                .select('*')
-                .is('deleted_at', null)
-                .order('created_at', { ascending: false })
-                .limit(50);
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const result = await withAuth(async (session) => {
+                    console.log(`🔍 [fetchNotifications] Attempt ${attempt} for user:`, session.user.id);
+                    
+                    const { data, error } = await supabaseClient
+                        .from('notifications')
+                        .select('*')
+                        .is('deleted_at', null)
+                        .order('created_at', { ascending: false })
+                        .limit(50);
+                        
+                    if (error) {
+                        console.error('❌ [fetchNotifications] Query error:', error);
+                        throw error;
+                    }
+                    
+                    console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications (attempt ${attempt})`);
+                    return data;
+                });
                 
-            if (error) {
-                console.error('❌ [fetchNotifications] Query error:', error);
-                throw error;
+                if (result && result.length > 0) {
+                    return result;
+                }
+                
+                if (attempt < maxRetries) {
+                    console.log(`⏳ No data yet, retrying in 500ms... (${attempt}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            } catch (e) {
+                console.warn(`⚠️ [fetchNotifications] Attempt ${attempt} failed:`, e.message);
+                if (attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             }
-            
-            console.log(`✅ [fetchNotifications] Fetched ${data?.length || 0} notifications`);
-            return data;
-        });
-        
-        if (result === null) {
-            console.warn('⏳ [fetchNotifications] Skipped - no active session');
         }
         
-        return result;
+        console.warn('⚠️ [fetchNotifications] All attempts failed or returned empty');
+        return [];
     }
 
     // ─── دوال الإعدادات ───
@@ -153,6 +158,7 @@
         const cache = window.NotificationCache;
         if (cache && typeof cache.getAll === 'function') {
             const all = cache.getAll();
+            console.log(`📊 [renderNotifications] Rendering ${all.length} notifications`);
             const filtered = window.NotificationFilters?.apply(all) || all;
             if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
                 window.NotificationUI.render(filtered, 1);
@@ -160,20 +166,26 @@
                     window.NotificationUI.updateStats(cache.getStats());
                 }
             }
+        } else {
+            console.warn('⚠️ [renderNotifications] NotificationCache not available');
         }
     }
 
     // ─── إضافة إشعار للكاش والعرض ───
     function addNotificationToCache(notification) {
+        console.log('📨 [addNotificationToCache] Adding notification:', notification.id);
         const cache = window.NotificationCache;
         if (cache && typeof cache.add === 'function') {
             cache.add(notification);
+        } else {
+            console.warn('⚠️ [addNotificationToCache] NotificationCache.add not available');
         }
         renderNotifications();
     }
 
     // ─── تحديث إشعار في الكاش ───
     function updateNotificationInCache(id, updates) {
+        console.log('🔄 [updateNotificationInCache] Updating notification:', id);
         const cache = window.NotificationCache;
         if (cache && typeof cache.update === 'function') {
             cache.update(id, updates);
@@ -201,6 +213,7 @@
                 { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const newNotif = payload.new;
+                    console.log('📨 [Realtime] New notification received:', newNotif.id);
                     addNotificationToCache(newNotif);
                     if (window.NotificationService && window.NotificationService._showToast) {
                         window.NotificationService._showToast(newNotif);
@@ -212,6 +225,7 @@
                 { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const updated = payload.new;
+                    console.log('🔄 [Realtime] Notification updated:', updated.id);
                     updateNotificationInCache(updated.id, updated);
                 }
             )
@@ -232,7 +246,7 @@
             }
             if (typeof os.addListener === 'function') {
                 await os.addListener((notification) => {
-                    // إضافة الإشعار الوارد من OneSignal (لا ندرجه في DB، فقط نعرضه)
+                    console.log('📨 [OneSignal] Notification received:', notification.id);
                     addNotificationToCache(notification);
                 });
             }
@@ -250,8 +264,8 @@
             
             if (event === 'SIGNED_IN' && session) {
                 console.log('🔄 User signed in, refreshing notifications');
-                const data = await fetchNotifications();
-                if (data) {
+                const data = await fetchNotificationsWithRetry(3);
+                if (data && data.length > 0) {
                     const cache = window.NotificationCache;
                     if (cache && typeof cache.init === 'function') {
                         cache.init(data);
@@ -314,19 +328,20 @@
                 await manager.init();
             }
 
-            // 5. جلب الإشعارات الأولية
+            // 5. جلب الإشعارات الأولية مع إعادة المحاولة
             let initialData = [];
             try {
-                const data = await fetchNotifications();
-                if (data) {
-                    initialData = data;
+                initialData = await fetchNotificationsWithRetry(3);
+                if (initialData && initialData.length > 0) {
                     const cache = window.NotificationCache;
                     if (cache && typeof cache.init === 'function') {
                         cache.init(initialData);
+                        console.log(`✅ Loaded ${initialData.length} initial notifications into cache`);
+                    } else {
+                        console.warn('⚠️ NotificationCache.init not available');
                     }
-                    console.log(`✅ Loaded ${initialData.length} initial notifications`);
                 } else {
-                    console.log('⏳ No notifications loaded (user may not be logged in)');
+                    console.log('ℹ️ No notifications found in database');
                 }
             } catch (e) {
                 console.warn('⚠️ Initial fetch failed:', e.message);
