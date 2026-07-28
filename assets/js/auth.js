@@ -1,5 +1,5 @@
 /**
- * auth.js – v33 (محسّن للتعامل مع OneSignal v16 وتفادي 409 Conflict مع منع التكرار)
+ * auth.js – v34 (محسّن للتعامل مع OneSignal v16 وحل مشكلة "Cannot read properties of undefined")
  * 
  * الميزات:
  * - تخزين اسم العميل تلقائياً (otpName) في sessionStorage
@@ -9,8 +9,9 @@
  * - تكامل مع SessionManager و ActivityTracker
  * - دعم تسجيل الخروج الآمن مع تنظيف شامل
  * - تحسينات الأمان والأداء
- * - دمج OneSignal v16 باستخدام login/logout بدلاً من addAlias
- * - معالجة خطأ 409 Conflict مع منع التكرار وتحسين المزامنة
+ * - دمج OneSignal v16 باستخدام login/logout
+ * - معالجة خطأ 409 Conflict وانتظار جاهزية SDK
+ * - حل مشكلة "Cannot read properties of undefined (reading 'Qe')"
  */
 
 (function() {
@@ -24,8 +25,8 @@
     let sessionRefreshInterval = null;
     const REFRESH_INTERVAL = 4 * 60 * 1000; // 4 دقائق
     let lastPushRegisteredUserId = null; // منع تكرار تسجيل OneSignal
-    let isRegisteringPush = false; // منع التنفيذ المتزامن
-    let registerPromise = null; // لتخزين الوعد الحالي
+    let isRegisteringPush = false;
+    let registerPromise = null;
 
     // ─── المفاتيح المحفوظة في sessionStorage ───
     const STORAGE_KEYS = {
@@ -35,7 +36,7 @@
         USER_LAT: 'userLat',
         USER_LON: 'userLon',
         CURRENT_SESSION_ID: 'currentSessionId',
-        ONESIGNAL_REGISTERED: 'onesignal_registered' // مفتاح جديد
+        ONESIGNAL_REGISTERED: 'onesignal_registered'
     };
 
     // ─── الحصول على Supabase ───
@@ -188,15 +189,27 @@
         }
     }
 
-    // ─── انتظار تهيئة OneSignal (مع مهلة) ───
-    async function waitForOneSignal(timeout = 5000) {
+    // ─── الانتظار حتى يصبح OneSignal جاهزاً (مع مهلة) ───
+    async function waitForOneSignalReady(timeout = 8000) {
         const start = Date.now();
         while (Date.now() - start < timeout) {
-            if (window.OneSignal && typeof window.OneSignal.login === 'function') {
-                return window.OneSignal;
+            try {
+                // التحقق من وجود OneSignal وكائن User و PushSubscription
+                if (window.OneSignal && 
+                    window.OneSignal.User && 
+                    typeof window.OneSignal.User.PushSubscription !== 'undefined') {
+                    // محاولة الوصول إلى PushSubscription للتأكد من أنه جاهز
+                    const sub = window.OneSignal.User.PushSubscription;
+                    if (sub && typeof sub.id !== 'undefined') {
+                        return window.OneSignal;
+                    }
+                }
+            } catch (e) {
+                // تجاهل الأخطاء المؤقتة
             }
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
+        console.warn('⚠️ OneSignal not ready after timeout');
         return null;
     }
 
@@ -212,21 +225,21 @@
         }
     }
 
-    // ─── ربط OneSignal (محسّن للتعامل مع 409 Conflict ومنع التكرار) ───
+    // ─── ربط OneSignal (محسّن مع انتظار الجاهزية ومعالجة 409) ───
     async function registerPushNotifications(userId) {
-        // منع التنفيذ المتزامن المتعدد
+        // منع التنفيذ المتزامن
         if (registerPromise) {
             console.log('⏳ OneSignal registration already in progress, waiting...');
             return registerPromise;
         }
 
-        // تجنب التكرار لنفس المستخدم (ذاكرة مؤقتة)
+        // تجنب التكرار لنفس المستخدم
         if (lastPushRegisteredUserId === userId) {
             console.log('ℹ️ OneSignal already registered for user:', userId);
             return { success: true, message: 'تم الربط مسبقاً', alreadyRegistered: true };
         }
 
-        // التحقق من sessionStorage لمنع التكرار عبر الجلسات
+        // التحقق من sessionStorage
         const storedRegisteredUserId = sessionStorage.getItem(STORAGE_KEYS.ONESIGNAL_REGISTERED);
         if (storedRegisteredUserId === userId) {
             console.log('ℹ️ OneSignal registered in session storage for user:', userId);
@@ -246,14 +259,14 @@
                     targetUserId = user.id;
                 }
 
-                // الانتظار حتى يصبح OneSignal جاهزاً (مع مهلة)
-                const oneSignal = await waitForOneSignal(5000);
+                // انتظار جاهزية OneSignal (مع مهلة أطول)
+                const oneSignal = await waitForOneSignalReady(10000);
                 if (!oneSignal) {
-                    console.warn('⚠️ OneSignal not ready after waiting, will retry later');
-                    // محاولة مرة أخرى بعد تأخير
+                    console.warn('⚠️ OneSignal not ready, registration postponed');
+                    // إعادة المحاولة بعد تأخير
                     setTimeout(() => {
                         registerPushNotifications(targetUserId).catch(() => {});
-                    }, 3000);
+                    }, 5000);
                     return { success: false, error: 'OneSignal not ready' };
                 }
 
@@ -266,7 +279,7 @@
                     return { success: true, message: 'الربط موجود مسبقاً', alreadyRegistered: true };
                 }
 
-                // محاولة login مع معالجة 409
+                // محاولة login
                 try {
                     await oneSignal.login(targetUserId);
                     console.log('✅ OneSignal login success:', targetUserId);
@@ -286,10 +299,9 @@
                             sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
                             return { success: true, message: 'الربط موجود (بعد 409)' };
                         }
-                        // إذا لم يتطابق، ربما نحتاج إلى إعادة المحاولة بعد وقت أطول
+                        // إذا لم يتطابق، نحاول مرة أخرى بعد وقت أطول
                         console.log('🔄 Retrying OneSignal login after 409...');
                         await new Promise(resolve => setTimeout(resolve, 1500));
-                        // محاولة أخيرة
                         await oneSignal.login(targetUserId);
                         lastPushRegisteredUserId = targetUserId;
                         sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
@@ -315,7 +327,7 @@
     // ─── إلغاء ربط OneSignal ───
     async function unregisterPushNotifications() {
         try {
-            const oneSignal = await waitForOneSignal(2000);
+            const oneSignal = await waitForOneSignalReady(3000);
             if (!oneSignal) {
                 console.warn('⚠️ OneSignal not available for logout');
                 return { success: false, error: 'OneSignal not available' };
@@ -347,7 +359,6 @@
             currentUser = data.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-            // محاولة ربط OneSignal بعد تسجيل الدخول (بدون انتظار)
             registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e));
         }
         return data;
@@ -739,5 +750,5 @@
         unregisterPushNotifications
     };
 
-    console.log('✅ auth.js v33 جاهز (مع تحسين منع 409 Conflict والتكرار)');
+    console.log('✅ auth.js v34 جاهز (مع حل مشكلة OneSignal readiness)');
 })();
