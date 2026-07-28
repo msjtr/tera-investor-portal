@@ -189,16 +189,14 @@
         }
     }
 
-    // ─── الانتظار حتى يصبح OneSignal جاهزاً (مع مهلة) ───
+    // ─── الانتظار حتى يصبح OneSignal جاهزاً ───
     async function waitForOneSignalReady(timeout = 8000) {
         const start = Date.now();
         while (Date.now() - start < timeout) {
             try {
-                // التحقق من وجود OneSignal وكائن User و PushSubscription
                 if (window.OneSignal && 
                     window.OneSignal.User && 
                     typeof window.OneSignal.User.PushSubscription !== 'undefined') {
-                    // محاولة الوصول إلى PushSubscription للتأكد من أنه جاهز
                     const sub = window.OneSignal.User.PushSubscription;
                     if (sub && typeof sub.id !== 'undefined') {
                         return window.OneSignal;
@@ -259,11 +257,10 @@
                     targetUserId = user.id;
                 }
 
-                // انتظار جاهزية OneSignal (مع مهلة أطول)
+                // انتظار جاهزية OneSignal
                 const oneSignal = await waitForOneSignalReady(10000);
                 if (!oneSignal) {
                     console.warn('⚠️ OneSignal not ready, registration postponed');
-                    // إعادة المحاولة بعد تأخير
                     setTimeout(() => {
                         registerPushNotifications(targetUserId).catch(() => {});
                     }, 5000);
@@ -281,6 +278,18 @@
 
                 // محاولة login
                 try {
+                    // ✅ التحقق من وجود OneSignalManager.setExternalId
+                    if (window.OneSignalManager && typeof window.OneSignalManager.setExternalId === 'function') {
+                        const result = await window.OneSignalManager.setExternalId(targetUserId);
+                        if (result) {
+                            console.log('✅ OneSignal setExternalId success:', targetUserId);
+                            lastPushRegisteredUserId = targetUserId;
+                            sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
+                            return { success: true, message: 'تم الربط بنجاح' };
+                        }
+                    }
+
+                    // خطة احتياطية: استخدام login
                     await oneSignal.login(targetUserId);
                     console.log('✅ OneSignal login success:', targetUserId);
                     lastPushRegisteredUserId = targetUserId;
@@ -289,25 +298,36 @@
                 } catch (loginError) {
                     // معالجة 409
                     if (loginError.message && loginError.message.includes('409')) {
-                        console.warn('⚠️ OneSignal login 409 Conflict, checking externalId again...');
-                        // انتظار قليل ثم التحقق مرة أخرى
+                        console.warn('⚠️ OneSignal 409 Conflict, verifying externalId...');
                         await new Promise(resolve => setTimeout(resolve, 500));
                         const newExternalId = getCurrentExternalId();
                         if (newExternalId === targetUserId) {
-                            console.log('✅ ExternalId resolved after 409');
+                            console.log('✅ ExternalId confirmed after 409');
                             lastPushRegisteredUserId = targetUserId;
                             sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
                             return { success: true, message: 'الربط موجود (بعد 409)' };
                         }
-                        // إذا لم يتطابق، نحاول مرة أخرى بعد وقت أطول
-                        console.log('🔄 Retrying OneSignal login after 409...');
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        await oneSignal.login(targetUserId);
-                        lastPushRegisteredUserId = targetUserId;
-                        sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
-                        return { success: true, message: 'تم الربط بعد إعادة المحاولة' };
+                        // إعادة المحاولة بعد logout
+                        console.log('🔄 Logging out and retrying login...');
+                        try {
+                            await oneSignal.logout();
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            await oneSignal.login(targetUserId);
+                            lastPushRegisteredUserId = targetUserId;
+                            sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
+                            return { success: true, message: 'تم الربط بعد إعادة المحاولة' };
+                        } catch (retryError) {
+                            if (retryError.message && retryError.message.includes('409')) {
+                                const finalExternalId = getCurrentExternalId();
+                                if (finalExternalId === targetUserId) {
+                                    lastPushRegisteredUserId = targetUserId;
+                                    sessionStorage.setItem(STORAGE_KEYS.ONESIGNAL_REGISTERED, targetUserId);
+                                    return { success: true, message: 'الربط موجود (بعد إعادة المحاولة)' };
+                                }
+                            }
+                            throw retryError;
+                        }
                     }
-                    // أخطاء أخرى
                     throw loginError;
                 }
             } catch (e) {
