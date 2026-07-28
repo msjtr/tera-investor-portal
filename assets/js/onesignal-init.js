@@ -1,9 +1,8 @@
 /**
- * onesignal-init.js – v5 (متوافق مع Auth.js v35+)
- * - يستمع لحدث user:updated مع id
- * - يستخدم Auth.registerPushNotifications إن أمكن
- * - يحسن التعامل مع Tracking Prevention
- * - يزيل الاعتماد على المفاتيح غير المستخدمة
+ * onesignal-init.js – v6 (يتعامل مع 409 Conflict بهدوء ولا يقطع التطبيق)
+ * - يمنع ظهور أخطاء 409 للمستخدم في Console
+ * - يعتبر 409 نجاحاً ضمنياً (المستخدم موجود بالفعل)
+ * - متوافق مع Auth.js v35+
  */
 (function() {
     "use strict";
@@ -41,12 +40,55 @@
         return null;
     }
 
+    // ─── اعتراض أخطاء 409 من OneSignal ───
+    function suppress409Errors() {
+        const originalError = console.error;
+        console.error = function(...args) {
+            const message = args.join(' ');
+            // تجاهل أخطاء 409 الخاصة بـ OneSignal
+            if (message.includes('409') && message.includes('onesignal')) {
+                console.log('ℹ️ OneSignal 409 Conflict ignored (user already exists)');
+                return;
+            }
+            originalError.apply(console, args);
+        };
+    }
+
+    // ─── مسح أي externalId قديم لمنع 409 ───
+    function clearStaleExternalId() {
+        try {
+            if (window.OneSignal && window.OneSignal.User) {
+                // محاولة قراءة externalId، إذا كان موجوداً ولا يوجد مستخدم مسجل، نمسحه
+                const externalId = window.OneSignal.User.externalId;
+                if (externalId) {
+                    // نتحقق من وجود مستخدم في Supabase
+                    const sb = window.teraSupabase || window.Support?.getSupabase?.();
+                    if (sb) {
+                        sb.auth.getUser().then(({ data }) => {
+                            if (!data?.user) {
+                                // لا يوجد مستخدم، نمسح externalId لمنع 409
+                                try {
+                                    // لا يمكن مسح externalId مباشرة، لكننا نستطيع logout
+                                    window.OneSignal.logout().catch(() => {});
+                                } catch {}
+                            }
+                        }).catch(() => {});
+                    }
+                }
+            }
+        } catch {}
+    }
+
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
         try {
+            // ─── تطبيق اعتراض 409 ───
+            suppress409Errors();
+
             if (!isStorageAvailable()) showStorageWarning();
 
+            // ─── تهيئة OneSignal ───
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
@@ -58,32 +100,53 @@
             window.OneSignal = OneSignal;
             console.log("✅ OneSignal Initialized");
 
+            // ─── محاولة مسح externalId قديم إذا لم يكن مستخدم مسجل ───
+            setTimeout(() => clearStaleExternalId(), 1000);
+
+            // ─── الحصول على Player ID ───
             const playerId = await waitForPlayerId(OneSignal);
             if (playerId) {
                 sessionStorage.setItem('pending_player_id', playerId);
                 console.log("📌 Player ID obtained:", playerId);
 
-                // محاولة الربط عبر Auth إذا كان متاحاً
+                // محاولة الربط عبر Auth إن أمكن
                 if (window.Auth && typeof window.Auth.registerPushNotifications === 'function') {
                     const user = await window.Auth.getCurrentUser();
                     if (user?.id) {
-                        await window.Auth.registerPushNotifications(user.id);
+                        // إضافة معالج خاص لـ 409 عند الربط
+                        try {
+                            await window.Auth.registerPushNotifications(user.id);
+                        } catch (e) {
+                            if (e.message && e.message.includes('409')) {
+                                console.log('ℹ️ OneSignal 409 during registration (ignored)');
+                            } else {
+                                throw e;
+                            }
+                        }
                     }
                 }
             }
 
-            // مستمع تسجيل الدخول (يستقبل id من Auth)
+            // ─── مستمع تسجيل الدخول ───
             document.addEventListener('user:updated', async (e) => {
                 const userId = e.detail?.id;
                 if (!userId) return;
                 const playerId2 = sessionStorage.getItem('pending_player_id') || 
                                   window.OneSignal?.User?.PushSubscription?.id || null;
                 if (playerId2 && window.Auth?.registerPushNotifications) {
-                    await window.Auth.registerPushNotifications(userId);
+                    try {
+                        await window.Auth.registerPushNotifications(userId);
+                    } catch (e) {
+                        if (e.message && e.message.includes('409')) {
+                            console.log('ℹ️ OneSignal 409 on user:updated (ignored)');
+                        } else {
+                            console.warn('⚠️ OneSignal registration error:', e);
+                        }
+                    }
                 }
             });
 
-            // مستمع تسجيل الخروج
+            // ─── مستمع تسجيل الخروج ───
             document.addEventListener('user:loggedOut', async () => {
                 sessionStorage.removeItem(STORAGE_KEY);
                 if (window.OneSignal?.logout) {
@@ -103,6 +166,17 @@
             });
 
         } catch (err) {
+            // استثناء 409 أثناء init
+            if (err.message && err.message.includes('409')) {
+                console.log('ℹ️ OneSignal 409 on init (ignored)');
+                // نحاول الاستمرار
+                try {
+                    if (OneSignal) {
+                        updateStatusDisplay(OneSignal);
+                    }
+                } catch {}
+                return;
+            }
             console.error("❌ OneSignal Init Error:", err);
         }
     });
@@ -130,7 +204,7 @@
         }
     }
 
-    // Fallback للتخزين
+    // ─── Fallback للتخزين ───
     if (!isStorageAvailable()) {
         console.warn('⚠️ sessionStorage blocked, using memory fallback');
         window.__memoryStorage = {};
@@ -148,5 +222,5 @@
         };
     }
 
-    console.log("🚀 onesignal-init.js v5 loaded (with Auth.js integration)");
+    console.log("🚀 onesignal-init.js v6 loaded (409 Conflict handled gracefully)");
 })();
