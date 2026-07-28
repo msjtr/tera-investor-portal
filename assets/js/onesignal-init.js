@@ -1,9 +1,10 @@
 /**
- * onesignal-init.js – النسخة المحسّنة v3
- * - تدعم OneSignal SDK v16
- * - تمنع التكرار عبر sessionStorage
+ * onesignal-init.js – v4 (مع دعم Tracking Prevention والتحقق من التخزين)
+ * - تكتشف حظر التخزين وتقدم توجيهات للمستخدم
+ * - تنتظر Player ID لفترة أطول مع إعادة محاولة ذكية
  * - تتعامل مع 409 Conflict بهدوء
- * - تتحقق من externalId الحالي قبل login
+ * - تمنع التكرار عبر sessionStorage
+ * - تستمع لأحداث المصادقة من Auth.js
  */
 
 (function() {
@@ -15,6 +16,30 @@
     const ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
     const STORAGE_KEY = "onesignal_registered";
     const PENDING_PLAYER_KEY = "pending_player_id";
+
+    // ─── التحقق من توفر التخزين ───
+    function isStorageAvailable() {
+        try {
+            const testKey = '__storage_test__';
+            sessionStorage.setItem(testKey, 'test');
+            sessionStorage.removeItem(testKey);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ─── عرض تحذير التخزين ───
+    function showStorageWarning() {
+        const statusEl = document.getElementById('osStatusText');
+        if (statusEl) {
+            statusEl.textContent = '⚠️ التخزين محظور، يرجى تعطيل Tracking Prevention';
+            statusEl.className = 'status-value warning';
+            statusEl.style.color = '#b45309';
+            statusEl.style.backgroundColor = '#fffbeb';
+        }
+        console.warn('⚠️ Tracking Prevention is blocking storage. Please disable it for this site.');
+    }
 
     // ─── دوال مساعدة ───
     function getSupabaseClient() {
@@ -128,11 +153,39 @@
         }
     }
 
+    // ─── الانتظار للحصول على Player ID (مع إعادة محاولة) ───
+    async function waitForPlayerId(OneSignal, maxAttempts = 15) {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                if (OneSignal.User && OneSignal.User.PushSubscription) {
+                    const id = OneSignal.User.PushSubscription.id || null;
+                    if (id) {
+                        console.log(`📌 Player ID found after ${attempt + 1} attempts:`, id);
+                        return id;
+                    }
+                }
+            } catch (e) {
+                // تجاهل الأخطاء المؤقتة
+            }
+            // انتظار 500 مللي بين المحاولات
+            await new Promise(r => setTimeout(r, 500));
+        }
+        console.warn('⚠️ Player ID not found after max attempts');
+        return null;
+    }
+
     // ─── التهيئة الرئيسية ───
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
         try {
+            // 1. التحقق من توفر التخزين
+            if (!isStorageAvailable()) {
+                showStorageWarning();
+                // نستمر مع التحذير ولكن نحاول التهيئة
+            }
+
+            // 2. تهيئة OneSignal
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
@@ -144,19 +197,12 @@
             window.OneSignal = OneSignal;
             console.log("✅ OneSignal Initialized");
 
-            // الانتظار قليلاً حتى يتشكل الاشتراك
-            let playerId = null;
-            for (let i = 0; i < 10; i++) {
-                try {
-                    playerId = OneSignal.User?.PushSubscription?.id || null;
-                    if (playerId) break;
-                } catch (e) {}
-                await new Promise(r => setTimeout(r, 500));
-            }
+            // 3. الانتظار للحصول على Player ID (مع إعادة محاولة)
+            const playerId = await waitForPlayerId(OneSignal);
 
             if (playerId) {
                 sessionStorage.setItem(PENDING_PLAYER_KEY, playerId);
-                console.log("📌 Player ID:", playerId);
+                console.log("📌 Player ID obtained:", playerId);
 
                 // محاولة ربط المستخدم الحالي
                 const user = await getCurrentUser();
@@ -166,20 +212,36 @@
                     console.log('⏳ No user logged in, will register later');
                 }
             } else {
-                console.warn('⚠️ No Player ID found after init');
+                console.warn('⚠️ Player ID not available after waiting. This may be due to Tracking Prevention.');
+                // محاولة تحديث الحالة لتوجيه المستخدم
+                const statusEl = document.getElementById('osStatusText');
+                if (statusEl) {
+                    statusEl.textContent = '⏳ جاري التهيئة... يرجى السماح بالإشعارات';
+                    statusEl.className = 'status-value';
+                }
             }
 
-            // الاستماع لتغيير المستخدم
+            // 4. الاستماع لتغيير المستخدم (من Auth.js)
             document.addEventListener('user:updated', async (e) => {
                 const userId = e.detail?.id;
                 if (!userId) return;
-                const playerId2 = sessionStorage.getItem(PENDING_PLAYER_KEY);
-                if (playerId2) {
-                    await registerUser(userId, playerId2);
+                // محاولة الحصول على Player ID مرة أخرى (قد يكون الآن متاحاً)
+                const currentPlayerId = sessionStorage.getItem(PENDING_PLAYER_KEY) || 
+                                       (window.OneSignal?.User?.PushSubscription?.id || null);
+                if (currentPlayerId) {
+                    await registerUser(userId, currentPlayerId);
+                } else {
+                    // إذا لم يكن Player ID متاحاً، ننتظر قليلاً ثم نحاول مرة أخرى
+                    await new Promise(r => setTimeout(r, 2000));
+                    const newPlayerId = window.OneSignal?.User?.PushSubscription?.id || null;
+                    if (newPlayerId) {
+                        sessionStorage.setItem(PENDING_PLAYER_KEY, newPlayerId);
+                        await registerUser(userId, newPlayerId);
+                    }
                 }
             });
 
-            // الاستماع لتسجيل الخروج
+            // 5. الاستماع لتسجيل الخروج
             document.addEventListener('user:loggedOut', async () => {
                 sessionStorage.removeItem(STORAGE_KEY);
                 try {
@@ -190,49 +252,122 @@
                 sessionStorage.removeItem(PENDING_PLAYER_KEY);
             });
 
-            // محاولة ربط المستخدم المعلق إذا كان هناك
+            // 6. محاولة ربط المستخدم المعلق (من auth.js)
             const pendingUser = sessionStorage.getItem('onesignal_pending_user');
-            if (pendingUser && playerId) {
-                await registerUser(pendingUser, playerId);
-                sessionStorage.removeItem('onesignal_pending_user');
+            if (pendingUser) {
+                // الانتظار قليلاً لعل Player ID يتوفر
+                await new Promise(r => setTimeout(r, 1000));
+                const currentPlayerId = sessionStorage.getItem(PENDING_PLAYER_KEY) || 
+                                       (window.OneSignal?.User?.PushSubscription?.id || null);
+                if (currentPlayerId) {
+                    await registerUser(pendingUser, currentPlayerId);
+                    sessionStorage.removeItem('onesignal_pending_user');
+                } else {
+                    // إذا لم يتوفر، ننتظر أكثر
+                    await new Promise(r => setTimeout(r, 3000));
+                    const newPlayerId = window.OneSignal?.User?.PushSubscription?.id || null;
+                    if (newPlayerId) {
+                        sessionStorage.setItem(PENDING_PLAYER_KEY, newPlayerId);
+                        await registerUser(pendingUser, newPlayerId);
+                        sessionStorage.removeItem('onesignal_pending_user');
+                    }
+                }
             }
 
-            // تحديث واجهة الحالة
+            // 7. تحديث واجهة الحالة
             updateStatusDisplay(OneSignal);
 
-            // دوال مساعدة
-            window.getPlayerId = () => playerId || OneSignal.User?.PushSubscription?.id || null;
+            // 8. دوال مساعدة
+            window.getPlayerId = () => {
+                try {
+                    return window.OneSignal?.User?.PushSubscription?.id || null;
+                } catch (e) {
+                    return null;
+                }
+            };
             window.getOneSignalStatus = () => ({
                 initialized: true,
                 permission: Notification.permission,
                 optedIn: OneSignal.User?.PushSubscription?.optedIn ?? false,
-                subscriptionId: playerId ?? null
+                subscriptionId: window.getPlayerId()
             });
+
+            // 9. مراقبة تغيير الإذن
+            if (Notification.permission === 'denied') {
+                console.warn('⚠️ Notifications permission denied by user.');
+                const statusEl = document.getElementById('osStatusText');
+                if (statusEl) {
+                    statusEl.textContent = '🔇 الإشعارات مرفوضة، يرجى تغيير الإعدادات';
+                    statusEl.className = 'status-value denied';
+                }
+            }
 
         } catch (err) {
             console.error("❌ OneSignal Initialization Error", err);
+            const statusEl = document.getElementById('osStatusText');
+            if (statusEl) {
+                statusEl.textContent = '❌ خطأ في تهيئة الإشعارات';
+                statusEl.className = 'status-value error';
+            }
         }
     });
 
+    // ─── تحديث واجهة الحالة ───
     function updateStatusDisplay(OneSignal) {
         const statusEl = document.getElementById("osStatusText");
         if (!statusEl) return;
         try {
             const sub = OneSignal.User?.PushSubscription;
             if (sub?.id) {
-                statusEl.textContent = "مفعلة (Subscribed)";
+                statusEl.textContent = "✅ مفعلة (Subscribed)";
                 statusEl.className = "status-value subscribed";
                 const playerIdEl = document.getElementById("osPlayerId");
                 if (playerIdEl) playerIdEl.textContent = `Player ID: ${sub.id}`;
+            } else if (Notification.permission === 'denied') {
+                statusEl.textContent = "🔇 مرفوضة (Denied)";
+                statusEl.className = "status-value denied";
             } else {
-                statusEl.textContent = "غير مشترك (Unsubscribed)";
+                statusEl.textContent = "⏳ غير مشترك بعد (Waiting)";
                 statusEl.className = "status-value unsubscribed";
             }
         } catch (e) {
-            statusEl.textContent = "حالة غير معروفة";
-            statusEl.className = "status-value";
+            statusEl.textContent = "❌ حالة غير معروفة";
+            statusEl.className = "status-value error";
         }
     }
 
-    console.log("🚀 onesignal-init.js v3 loaded");
+    // ─── إصلاح مشكلة Tracking Prevention: محاولة استخدام fallback للتخزين ───
+    // إذا كان sessionStorage محظوراً، نستخدم متغير مؤقت في الذاكرة
+    if (!isStorageAvailable()) {
+        console.warn('⚠️ sessionStorage is blocked. Using memory fallback.');
+        // نضيف متغيرات عامة كحل بديل
+        window.__memoryStorage = {};
+        const originalSetItem = sessionStorage.setItem;
+        const originalGetItem = sessionStorage.getItem;
+        const originalRemoveItem = sessionStorage.removeItem;
+
+        sessionStorage.setItem = function(key, value) {
+            try {
+                originalSetItem.call(this, key, value);
+            } catch (e) {
+                window.__memoryStorage[key] = value;
+            }
+        };
+        sessionStorage.getItem = function(key) {
+            try {
+                return originalGetItem.call(this, key);
+            } catch (e) {
+                return window.__memoryStorage[key] || null;
+            }
+        };
+        sessionStorage.removeItem = function(key) {
+            try {
+                originalRemoveItem.call(this, key);
+            } catch (e) {
+                delete window.__memoryStorage[key];
+            }
+        };
+    }
+
+    console.log("🚀 onesignal-init.js v4 loaded (with Tracking Prevention handling)");
 })();
