@@ -1,5 +1,5 @@
 /**
- * auth.js – v31 (محسّن بالكامل مع OneSignal v16)
+ * auth.js – v32 (محسّن للتعامل مع OneSignal v16 وتفادي 409 Conflict)
  * 
  * الميزات:
  * - تخزين اسم العميل تلقائياً (otpName) في sessionStorage
@@ -10,7 +10,7 @@
  * - دعم تسجيل الخروج الآمن مع تنظيف شامل
  * - تحسينات الأمان والأداء
  * - دمج OneSignal v16 باستخدام login/logout بدلاً من addAlias
- * - تحسين استدعاءات OneSignal لتجنب الازدواجية وانتظار التهيئة
+ * - معالجة خطأ 409 Conflict عند تعيين external_id
  */
 
 (function() {
@@ -24,6 +24,7 @@
     let sessionRefreshInterval = null;
     const REFRESH_INTERVAL = 4 * 60 * 1000; // 4 دقائق
     let lastPushRegisteredUserId = null; // منع تكرار تسجيل OneSignal
+    let isRegisteringPush = false; // منع التنفيذ المتزامن
 
     // ─── المفاتيح المحفوظة في sessionStorage ───
     const STORAGE_KEYS = {
@@ -46,7 +47,6 @@
             }
             
             if (window.waitForSupabase) {
-                // إضافة مهلة 10 ثوانٍ لتجنب التجميد
                 const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error('Supabase initialization timeout')), 10000)
                 );
@@ -64,22 +64,18 @@
         }
     }
 
-    // ─── تنظيف التخزين المحلي (بدلاً من clear) ───
+    // ─── تنظيف التخزين المحلي ───
     function clearStorage() {
-        // حذف المفاتيح المعروفة فقط
         Object.values(STORAGE_KEYS).forEach(key => {
             sessionStorage.removeItem(key);
         });
-        // حذف مفاتيح Supabase من localStorage
         ['supabase.auth.token', 'supabase.auth.refreshToken'].forEach(key => {
             localStorage.removeItem(key);
         });
-        // حذف أي مفاتيح إضافية متعلقة بالمستخدم
         const keysToRemove = ['dismissedAlerts', 'notificationFilters', 'systemMessage'];
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);
         });
-        // مسح الـ OneSignal pending
         sessionStorage.removeItem('pending_player_id');
         sessionStorage.removeItem('onesignal_pending_user');
     }
@@ -95,7 +91,6 @@
         if (email || user?.email) {
             sessionStorage.setItem(STORAGE_KEYS.USER_EMAIL, email || user?.email || '');
         }
-        // إطلاق حدث لتحديث واجهة المستخدم
         document.dispatchEvent(new CustomEvent('user:updated', { 
             detail: { name, email: email || user?.email || '' } 
         }));
@@ -122,7 +117,6 @@
 
     // ─── الحصول على المستخدم الحالي مع تخزين مؤقت ───
     async function getCurrentUser(forceRefresh = false) {
-        // استخدام التخزين المؤقت إذا كان صالحاً
         if (!forceRefresh && currentUser && (Date.now() - currentUserCacheTime) < CACHE_DURATION) {
             return currentUser;
         }
@@ -156,7 +150,6 @@
                 console.warn('⚠️ فشل تجديد الجلسة:', error?.message);
                 return false;
             }
-            // تحديث التخزين المؤقت
             if (session.user) {
                 currentUser = session.user;
                 currentUserCacheTime = Date.now();
@@ -176,7 +169,6 @@
             const refreshed = await refreshSession();
             if (!refreshed) {
                 console.warn('⚠️ فشل تجديد الجلسة، قد تكون منتهية');
-                // محاولة إعادة الاتصال
                 if (window.SessionManager) {
                     try {
                         await window.SessionManager.handleSessionExpired?.();
@@ -206,8 +198,35 @@
         return null;
     }
 
-    // ─── ربط OneSignal (محسّن لمنع التكرار وانتظار التهيئة) ───
+    // ─── الحصول على externalId الحالي من OneSignal ───
+    function getCurrentExternalId() {
+        try {
+            if (window.OneSignal && window.OneSignal.User) {
+                return window.OneSignal.User.externalId || null;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ─── ربط OneSignal (محسّن للتعامل مع 409 Conflict) ───
     async function registerPushNotifications(userId) {
+        // منع التنفيذ المتزامن
+        if (isRegisteringPush) {
+            console.log('⏳ OneSignal registration already in progress, waiting...');
+            // انتظار حتى انتهاء العملية الحالية
+            let retries = 10;
+            while (isRegisteringPush && retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+                retries--;
+            }
+            if (isRegisteringPush) {
+                console.warn('⚠️ OneSignal registration timeout, proceeding anyway');
+            }
+        }
+
+        isRegisteringPush = true;
         try {
             // تجنب التكرار لنفس المستخدم
             if (lastPushRegisteredUserId === userId) {
@@ -222,44 +241,94 @@
                 targetUserId = user.id;
             }
 
-            // محاولة استخدام OneSignalManager (الأفضل)
+            // التحقق من externalId الحالي
+            const currentExternalId = getCurrentExternalId();
+            if (currentExternalId === targetUserId) {
+                console.log('ℹ️ OneSignal already has externalId:', targetUserId);
+                lastPushRegisteredUserId = targetUserId;
+                return { success: true, message: 'الربط موجود مسبقاً' };
+            }
+
+            // محاولة استخدام OneSignalManager
             const manager = await waitForOneSignalManager(3000);
             if (manager && typeof manager.setExternalId === 'function') {
-                const result = await manager.setExternalId(targetUserId);
-                if (result) {
-                    lastPushRegisteredUserId = targetUserId;
-                    return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
-                } else {
-                    console.warn('⚠️ OneSignalManager.setExternalId returned false');
+                try {
+                    const result = await manager.setExternalId(targetUserId);
+                    if (result) {
+                        lastPushRegisteredUserId = targetUserId;
+                        return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
+                    }
+                } catch (e) {
+                    // إذا كان الخطأ 409، نتعامل معه بشكل خاص
+                    if (e.message && e.message.includes('409')) {
+                        console.warn('⚠️ OneSignal 409 Conflict, checking if already assigned to same user');
+                        // نتحقق مرة أخرى من externalId بعد قليل
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        const newExternalId = getCurrentExternalId();
+                        if (newExternalId === targetUserId) {
+                            lastPushRegisteredUserId = targetUserId;
+                            return { success: true, message: 'الربط موجود بالفعل (بعد 409)' };
+                        }
+                        // إذا كان مختلفاً، نعيد المحاولة بعد تأخير
+                        console.log('🔄 Retrying OneSignal login after 409...');
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        const retryResult = await manager.setExternalId(targetUserId);
+                        if (retryResult) {
+                            lastPushRegisteredUserId = targetUserId;
+                            return { success: true, message: 'تم الربط بعد إعادة المحاولة' };
+                        }
+                    }
+                    console.warn('⚠️ OneSignalManager.setExternalId error:', e);
                     // نستمر للخطة الاحتياطية
                 }
             }
 
-            // خطة احتياطية: استخدام OneSignal.login مباشرة (بعد انتظار جاهزية SDK)
+            // خطة احتياطية: استخدام OneSignal.login مباشرة
             if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
-                // الانتظار قليلاً لعل SDK يتهيأ
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
                     return { success: false, error: 'OneSignal غير متوفر بعد' };
                 }
             }
 
-            // في v16 نستخدم login
-            await window.OneSignal.login(targetUserId);
-            console.log('✅ OneSignal user logged in (login):', targetUserId);
-            lastPushRegisteredUserId = targetUserId;
-            return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
+            // التحقق من externalId قبل login
+            const externalIdBefore = getCurrentExternalId();
+            if (externalIdBefore === targetUserId) {
+                lastPushRegisteredUserId = targetUserId;
+                return { success: true, message: 'الربط موجود بالفعل' };
+            }
+
+            try {
+                await window.OneSignal.login(targetUserId);
+                console.log('✅ OneSignal user logged in (login):', targetUserId);
+                lastPushRegisteredUserId = targetUserId;
+                return { success: true, message: 'تم ربط الإشعارات الفورية بنجاح' };
+            } catch (loginError) {
+                // معالجة 409 من login أيضاً
+                if (loginError.message && loginError.message.includes('409')) {
+                    console.warn('⚠️ OneSignal login 409 Conflict, checking externalId again');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const externalIdAfter = getCurrentExternalId();
+                    if (externalIdAfter === targetUserId) {
+                        lastPushRegisteredUserId = targetUserId;
+                        return { success: true, message: 'الربط موجود بالفعل (بعد login 409)' };
+                    }
+                }
+                throw loginError;
+            }
+
         } catch (e) {
             console.error('❌ فشل ربط OneSignal:', e);
             lastPushRegisteredUserId = null;
             return { success: false, error: e.message || 'خطأ في الربط' };
+        } finally {
+            isRegisteringPush = false;
         }
     }
 
-    // ─── إلغاء ربط OneSignal (محسّن) ───
+    // ─── إلغاء ربط OneSignal ───
     async function unregisterPushNotifications() {
         try {
-            // استخدام OneSignalManager إذا كان متاحاً
             const manager = await waitForOneSignalManager(2000);
             if (manager && typeof manager.logout === 'function') {
                 const result = await manager.logout();
@@ -269,7 +338,6 @@
                 }
             }
 
-            // خطة احتياطية: OneSignal.logout
             if (typeof window.OneSignal === 'undefined' || !window.OneSignal.User) {
                 return { success: false, error: 'OneSignal غير متوفر' };
             }
@@ -295,8 +363,6 @@
             currentUser = data.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-
-            // ربط OneSignal بعد تسجيل الدخول (بدون انتظار)
             registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e));
         }
         return data;
@@ -304,13 +370,9 @@
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        // إيقاف المؤقتات
         stopSessionRefresh();
-
-        // تسجيل خروج OneSignal أولاً
         await unregisterPushNotifications();
 
-        // إنهاء الجلسة عبر SessionManager إذا كان متاحاً
         if (window.SessionManager) {
             try {
                 const info = window.SessionManager.getCurrentSessionInfo?.();
@@ -321,26 +383,20 @@
             try { window.SessionManager.stopSessionGuard?.(); } catch (e) { /* تجاهل */ }
         }
 
-        // إيقاف تتبع النشاط
         if (window.ActivityTracker) {
             try { window.ActivityTracker.stopIdleTimer?.(); } catch (e) { /* تجاهل */ }
         }
 
-        // تسجيل الخروج من Supabase
         const sb = await getSupabase();
         if (sb) {
             try { await sb.auth.signOut(); } catch (e) { /* تجاهل */ }
         }
 
-        // تنظيف التخزين المحلي
         clearStorage();
         currentUser = null;
         currentUserCacheTime = 0;
 
-        // إطلاق حدث تسجيل الخروج
         document.dispatchEvent(new CustomEvent('user:loggedOut'));
-
-        // إعادة التوجيه إلى صفحة تسجيل الدخول
         window.location.replace('/auth/auth/login/login.html');
     }
 
@@ -368,7 +424,7 @@
         }
     }
 
-    // ─── طلب التحقق من البريد الإلكتروني (OTP) ───
+    // ─── OTP ───
     async function sendOTP(email) {
         const emailError = validateEmail(email);
         if (emailError) throw new Error(emailError);
@@ -379,7 +435,6 @@
         return data;
     }
 
-    // ─── التحقق من رمز OTP ───
     async function verifyOTP(email, token) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -390,13 +445,12 @@
             currentUser = data.session.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-
             registerPushNotifications(data.session.user.id).catch(e => console.warn('⚠️ OneSignal OTP:', e));
         }
         return data;
     }
 
-    // ─── دوال TOTP (المصادقة الثنائية) ───
+    // ─── دوال TOTP ───
     const TOTP_FUNCTION_URL = window._env?.TOTP_FUNCTION_URL || 
         'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/two-factor';
 
@@ -479,9 +533,7 @@
             currentUser = user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-
             registerPushNotifications(user.id).catch(e => console.warn('⚠️ OneSignal loginWithPassword:', e));
-
             return { success: true, user };
         } catch (e) {
             if (getLoginAttempts() >= MAX_ATTEMPTS) throw new Error('تم تجاوز عدد المحاولات. يرجى استخدام المصادقة الثنائية.');
@@ -501,9 +553,7 @@
         currentUser = user;
         currentUserCacheTime = Date.now();
         startSessionRefresh();
-
         registerPushNotifications(user.id).catch(e => console.warn('⚠️ OneSignal completeLoginWithTOTP:', e));
-
         return { success: true, user };
     }
 
@@ -527,7 +577,6 @@
             currentUser = session.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-
             registerPushNotifications(session.user.id).catch(e => console.warn('⚠️ OneSignal loginWithTOTP:', e));
         }
         return { success: true };
@@ -560,14 +609,11 @@
         return { success: true };
     }
 
-    // ─── تغيير كلمة المرور (مع التحقق من القديمة) ───
     async function changePassword(oldPassword, newPassword) {
         const user = await getCurrentUser();
         if (!user) throw new Error('يجب تسجيل الدخول أولاً');
-        
         const passwordError = validatePassword(newPassword);
         if (passwordError) throw new Error(passwordError);
-        
         const sb = await getSupabase();
         try {
             const { error: signError } = await sb.auth.signInWithPassword({
@@ -575,17 +621,14 @@
                 password: oldPassword
             });
             if (signError) throw new Error('كلمة المرور الحالية غير صحيحة');
-            
             const { error } = await sb.auth.updateUser({ password: newPassword });
             if (error) throw error;
-            
             return { success: true, message: 'تم تغيير كلمة المرور بنجاح' };
         } catch (e) {
             throw new Error(e.message || 'فشل تغيير كلمة المرور');
         }
     }
 
-    // ─── تحديث بيانات المستخدم ───
     async function updateUserMetadata(metadata) {
         const sb = await getSupabase();
         if (!sb) throw new Error('خدمة المصادقة غير متاحة');
@@ -599,7 +642,6 @@
         return data;
     }
 
-    // ─── طلب المصادقة الإلزامية ───
     async function requireAuth(redirectUrl = '/auth/auth/login/login.html') {
         try {
             let user = await getCurrentUser();
@@ -607,7 +649,6 @@
                 startSessionRefresh();
                 return user;
             }
-            
             const refreshed = await refreshSession();
             if (refreshed) {
                 user = await getCurrentUser(true);
@@ -616,7 +657,6 @@
                     return user;
                 }
             }
-            
             window.location.replace(redirectUrl);
             return null;
         } catch (e) {
@@ -626,7 +666,6 @@
         }
     }
 
-    // ─── مراقبة تغييرات حالة المصادقة ───
     function onAuthStateChange(callback) {
         getSupabase().then(sb => {
             if (!sb) return;
@@ -654,7 +693,6 @@
         }).catch(console.warn);
     }
 
-    // ─── الحصول على موقع المستخدم ───
     function getCurrentPosition() {
         return new Promise((resolve, reject) => {
             const lat = sessionStorage.getItem(STORAGE_KEYS.USER_LAT);
@@ -663,7 +701,6 @@
                 resolve({ latitude: parseFloat(lat), longitude: parseFloat(lon), fromCache: true });
                 return;
             }
-            
             if (!navigator.geolocation) {
                 reject(new Error('Geolocation not supported'));
                 return;
@@ -683,7 +720,6 @@
 
     // ─── API العامة ───
     window.Auth = {
-        // الأساسيات
         login,
         logout,
         getSession,
@@ -692,49 +728,31 @@
         isSessionValid,
         requireAuth,
         onAuthStateChange,
-
-        // OTP
         sendOTP,
         verifyOTP,
-
-        // TOTP
         setupTwoFactor,
         enableTwoFactor,
         getTwoFactorStatus,
         verifyTwoFactor,
         disableTwoFactor,
         regenerateBackupCodes,
-
-        // تسجيل الدخول الذكي
         loginWithPassword,
         completeLoginWithTOTP,
         loginWithTOTP,
         cancelTOTPLogin,
-
-        // كلمة المرور
         resetPassword,
         updatePassword,
         changePassword,
-
-        // بيانات المستخدم
         updateUserMetadata,
-
-        // التحقق
         validateEmail,
         validatePassword,
-
-        // الموقع
         getCurrentPosition,
-
-        // الجلسة
         refreshSession,
         startSessionRefresh,
         stopSessionRefresh,
-
-        // OneSignal (محسّن)
         registerPushNotifications,
         unregisterPushNotifications
     };
 
-    console.log('✅ auth.js v31 جاهز (محسّن بالكامل مع OneSignal v16 login/logout)');
+    console.log('✅ auth.js v32 جاهز (مع دعم 409 Conflict لـ OneSignal)');
 })();
