@@ -1,17 +1,17 @@
 /**
  * notification-manager.js
  * مدير الإشعارات المتكامل مع دعم RLS و OneSignal
- * يوفر واجهة init ودوال جلب وتحديث
- * تم التحديث لاستخدام دالة مساعدة للحصول على Supabase client
- * مع تحسين معالجة الأخطاء وتوحيد withAuth مع support-notifications.js
+ * يوفر واجهة init ودوال جلب وتحديث وإضافة
+ * تم إضافة: addNotification, updateNotification, clear
  */
 
 (function() {
   "use strict";
 
-  // ============================================================
-  // 0. دالة مساعدة للحصول على Supabase Client
-  // ============================================================
+  // ─── المتغيرات الداخلية ───
+  let listeners = {};
+
+  // ─── دالة مساعدة للحصول على Supabase Client ───
   function getSupabaseClient() {
     if (window.teraSupabase) return window.teraSupabase;
     if (window.Support?.getSupabase) return window.Support.getSupabase();
@@ -20,9 +20,7 @@
     return null;
   }
 
-  // ============================================================
-  // 1. دالة withAuth (لضمان الجلسة قبل أي طلب)
-  // ============================================================
+  // ─── دالة withAuth (لضمان الجلسة قبل أي طلب) ───
   async function withAuth(callback) {
     const sb = getSupabaseClient();
     if (!sb) {
@@ -44,9 +42,7 @@
     }
   }
 
-  // ============================================================
-  // 2. الدوال الأساسية (مع تحسينات)
-  // ============================================================
+  // ─── دوال جلب البيانات ───
   async function fetchUnreadNotifications() {
     return withAuth(async (session) => {
       const sb = getSupabaseClient();
@@ -56,7 +52,7 @@
         .from('notifications')
         .select('*')
         .eq('status', 'unread')
-        .is('deleted_at', null)   // ✅ إصلاح: استخدام is بدلاً من eq
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(50);
         
@@ -73,7 +69,7 @@
       let query = sb
         .from('notifications')
         .select('*')
-        .is('deleted_at', null)   // ✅ إصلاح
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(limit);
         
@@ -103,6 +99,16 @@
         .eq('user_id', session.user.id);
         
       if (error) throw error;
+      
+      // تحديث الكاش والواجهة محلياً
+      const cache = window.NotificationCache;
+      if (cache && typeof cache.update === 'function') {
+        cache.update(notificationId, { is_read: true, read_at: new Date().toISOString() });
+      }
+      if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+        window.NotificationUI.refresh();
+      }
+      
       return true;
     });
   }
@@ -123,6 +129,16 @@
         .eq('is_read', false);
         
       if (error) throw error;
+      
+      // تحديث الكاش والواجهة محلياً
+      const cache = window.NotificationCache;
+      if (cache && typeof cache.markAllAsRead === 'function') {
+        cache.markAllAsRead();
+      }
+      if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+        window.NotificationUI.refresh();
+      }
+      
       return true;
     });
   }
@@ -137,7 +153,7 @@
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id)
         .eq('is_read', false)
-        .is('deleted_at', null);   // ✅ إصلاح
+        .is('deleted_at', null);
       
       if (error) throw error;
       return count;
@@ -145,9 +161,108 @@
     return result || 0;
   }
 
-  // ============================================================
-  // 3. دالة init المطلوبة من support-notifications.js
-  // ============================================================
+  // ─── دوال إدارة الإشعارات المحلية (المضافة حديثاً) ───
+  
+  /**
+   * إضافة إشعار جديد إلى الكاش والواجهة
+   * @param {Object} notification - كائن الإشعار
+   */
+  function addNotification(notification) {
+    if (!notification || !notification.id) {
+      console.warn('⚠️ [NotificationManager] Invalid notification:', notification);
+      return;
+    }
+
+    console.log('📨 [NotificationManager] Adding notification:', notification.id);
+
+    // إضافة إلى الكاش
+    const cache = window.NotificationCache;
+    if (cache && typeof cache.add === 'function') {
+      cache.add(notification);
+    } else if (cache && typeof cache.init === 'function') {
+      // إذا كان الكاش لا يدعم add، نجمع الموجود مع الجديد
+      const existing = cache.getAll ? cache.getAll() : [];
+      existing.push(notification);
+      cache.init(existing);
+    }
+
+    // تحديث الواجهة
+    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+      window.NotificationUI.refresh();
+    }
+
+    // إشعار المستمعين
+    _emit('notification:added', notification);
+  }
+
+  /**
+   * تحديث إشعار موجود
+   * @param {string} id - معرف الإشعار
+   * @param {Object} updates - الحقول المراد تحديثها
+   */
+  function updateNotification(id, updates) {
+    if (!id || !updates) {
+      console.warn('⚠️ [NotificationManager] Invalid update params');
+      return;
+    }
+
+    console.log('🔄 [NotificationManager] Updating notification:', id);
+
+    const cache = window.NotificationCache;
+    if (cache && typeof cache.update === 'function') {
+      cache.update(id, updates);
+    }
+
+    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+      window.NotificationUI.refresh();
+    }
+
+    _emit('notification:updated', { id, updates });
+  }
+
+  /**
+   * مسح جميع الإشعارات من الكاش والواجهة
+   */
+  function clear() {
+    console.log('🧹 [NotificationManager] Clearing all notifications');
+    
+    const cache = window.NotificationCache;
+    if (cache && typeof cache.clear === 'function') {
+      cache.clear();
+    } else if (cache && typeof cache.init === 'function') {
+      cache.init([]);
+    }
+
+    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+      window.NotificationUI.refresh();
+    }
+
+    _emit('notifications:cleared');
+  }
+
+  // ─── نظام المستمعين (للتوافق مع support-notifications.js) ───
+  function on(event, callback) {
+    if (!listeners[event]) listeners[event] = [];
+    listeners[event].push(callback);
+  }
+
+  function off(event, callback) {
+    if (!listeners[event]) return;
+    listeners[event] = listeners[event].filter(cb => cb !== callback);
+  }
+
+  function _emit(event, data) {
+    if (!listeners[event]) return;
+    listeners[event].forEach(cb => {
+      try {
+        cb(data);
+      } catch (e) {
+        console.warn('⚠️ [NotificationManager] Listener error:', e);
+      }
+    });
+  }
+
+  // ─── دالة init (لتهيئة المدير) ───
   async function init(options = {}) {
     console.log('🔔 [NotificationManager] Initializing notification system...');
     try {
@@ -156,7 +271,6 @@
         throw new Error('Supabase client not available');
       }
 
-      // التحقق من الجلسة الحالية
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
         console.log('✅ [NotificationManager] User logged in:', session.user.id);
@@ -164,7 +278,6 @@
         console.log('⏳ [NotificationManager] No session, requests will be deferred');
       }
 
-      // إرجاع الكائن manager نفسه للاستخدام
       return window.NotificationManager;
     } catch (e) {
       console.error('❌ [NotificationManager] Init failed:', e);
@@ -172,20 +285,25 @@
     }
   }
 
-  // ============================================================
-  // 4. تصدير الكائن العام
-  // ============================================================
+  // ─── تصدير الكائن العام ───
   const manager = {
+    // دوال موجودة سابقاً
     init,
     fetchUnreadNotifications,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
     getUnreadCount,
-    withAuth   // يمكن استخدامها خارجياً
+    withAuth,
+    
+    // دوال جديدة
+    addNotification,
+    updateNotification,
+    clear,
+    on,
+    off
   };
 
   window.NotificationManager = manager;
-  console.log('✅ [NotificationManager] Loaded successfully');
-
+  console.log('✅ [NotificationManager] Loaded successfully (with addNotification, updateNotification, clear)');
 })();
