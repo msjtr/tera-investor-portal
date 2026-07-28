@@ -4,7 +4,7 @@
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
  * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
  * إضافة رسائل تصحيح لتتبع الجلسة
- * إضافة تحقق إضافي لمنع الطلبات بدون جلسة
+ * استخدام NotificationCache و NotificationUI بدلاً من NotificationManager
  */
 (function() {
     'use strict';
@@ -23,7 +23,6 @@
         }
         
         try {
-            // التحقق من الجلسة
             const { data: { session }, error } = await supabaseClient.auth.getSession();
             
             if (error) {
@@ -37,8 +36,6 @@
             }
             
             console.log('✅ [withAuth] Session active for user:', session.user.id);
-            
-            // تنفيذ الطلب مع الجلسة
             return await callback(session);
             
         } catch (e) {
@@ -159,9 +156,29 @@
             const filtered = window.NotificationFilters?.apply(all) || all;
             if (window.NotificationUI && typeof window.NotificationUI.render === 'function') {
                 window.NotificationUI.render(filtered, 1);
-                window.NotificationUI.updateStats(cache.getStats());
+                if (typeof window.NotificationUI.updateStats === 'function') {
+                    window.NotificationUI.updateStats(cache.getStats());
+                }
             }
         }
+    }
+
+    // ─── إضافة إشعار للكاش والعرض ───
+    function addNotificationToCache(notification) {
+        const cache = window.NotificationCache;
+        if (cache && typeof cache.add === 'function') {
+            cache.add(notification);
+        }
+        renderNotifications();
+    }
+
+    // ─── تحديث إشعار في الكاش ───
+    function updateNotificationInCache(id, updates) {
+        const cache = window.NotificationCache;
+        if (cache && typeof cache.update === 'function') {
+            cache.update(id, updates);
+        }
+        renderNotifications();
     }
 
     // ─── Realtime ───
@@ -184,9 +201,7 @@
                 { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const newNotif = payload.new;
-                    if (window.NotificationCache?.add) window.NotificationCache.add(newNotif);
-                    if (window.NotificationManager?.addNotification) window.NotificationManager.addNotification(newNotif);
-                    renderNotifications();
+                    addNotificationToCache(newNotif);
                     if (window.NotificationService && window.NotificationService._showToast) {
                         window.NotificationService._showToast(newNotif);
                     }
@@ -197,9 +212,7 @@
                 { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
                 (payload) => {
                     const updated = payload.new;
-                    if (window.NotificationCache?.update) window.NotificationCache.update(updated.id, updated);
-                    if (window.NotificationManager?.updateNotification) window.NotificationManager.updateNotification(updated.id, updated);
-                    renderNotifications();
+                    updateNotificationInCache(updated.id, updated);
                 }
             )
             .subscribe();
@@ -219,10 +232,8 @@
             }
             if (typeof os.addListener === 'function') {
                 await os.addListener((notification) => {
-                    if (window.NotificationManager?.addNotification) {
-                        window.NotificationManager.addNotification(notification);
-                        renderNotifications();
-                    }
+                    // إضافة الإشعار الوارد من OneSignal (لا ندرجه في DB، فقط نعرضه)
+                    addNotificationToCache(notification);
                 });
             }
         } catch (e) {
@@ -241,17 +252,20 @@
                 console.log('🔄 User signed in, refreshing notifications');
                 const data = await fetchNotifications();
                 if (data) {
-                    if (window.NotificationCache?.init) window.NotificationCache.init(data);
-                    if (window.NotificationManager?.clear) window.NotificationManager.clear();
-                    data.forEach(n => window.NotificationManager?.addNotification(n));
+                    const cache = window.NotificationCache;
+                    if (cache && typeof cache.init === 'function') {
+                        cache.init(data);
+                    }
                     renderNotifications();
                     await setupRealtime();
                     await updateBadge();
                 }
             } else if (event === 'SIGNED_OUT') {
                 console.log('🧹 User signed out, clearing notifications');
-                if (window.NotificationCache?.clear) window.NotificationCache.clear();
-                if (window.NotificationManager?.clear) window.NotificationManager.clear();
+                const cache = window.NotificationCache;
+                if (cache && typeof cache.clear === 'function') {
+                    cache.clear();
+                }
                 renderNotifications();
                 const badge = document.getElementById('notificationBadge');
                 if (badge) badge.textContent = '0';
@@ -294,28 +308,21 @@
                 await window.NotificationService.init(supabaseClient);
             }
 
-            // 4. تهيئة NotificationManager (إذا لم يكن له init، نضيفها)
+            // 4. تهيئة NotificationManager (إذا كان موجوداً)
             const manager = window.NotificationManager;
-            if (manager) {
-                if (typeof manager.init !== 'function') {
-                    manager.init = function() {
-                        console.log('NotificationManager.init (fallback) called');
-                    };
-                }
-                manager.init();
+            if (manager && typeof manager.init === 'function') {
+                await manager.init();
             }
 
-            // 5. جلب الإشعارات الأولية (بطريقة آمنة)
+            // 5. جلب الإشعارات الأولية
             let initialData = [];
             try {
                 const data = await fetchNotifications();
                 if (data) {
                     initialData = data;
-                    if (window.NotificationCache && typeof window.NotificationCache.init === 'function') {
-                        window.NotificationCache.init(initialData);
-                    }
-                    if (manager && typeof manager.addNotification === 'function') {
-                        initialData.forEach(n => manager.addNotification(n));
+                    const cache = window.NotificationCache;
+                    if (cache && typeof cache.init === 'function') {
+                        cache.init(initialData);
                     }
                     console.log(`✅ Loaded ${initialData.length} initial notifications`);
                 } else {
@@ -341,25 +348,18 @@
             // 9. OneSignal (إن وجد)
             await setupOneSignal();
 
-            // 10. الاستماع لتغييرات المدير
-            if (manager && typeof manager.on === 'function') {
-                manager.on('state:changed', () => {
-                    renderNotifications();
-                });
-            }
-
-            // 11. تحديث العداد
+            // 10. تحديث العداد
             await updateBadge();
 
-            // 12. السجل
+            // 11. السجل
             if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
                 window.NotificationHistory.load(1);
             }
 
-            // 13. الإعدادات
+            // 12. الإعدادات
             initSettings();
 
-            // 14. الاستماع لأحداث المصادقة
+            // 13. الاستماع لأحداث المصادقة
             setupAuthListener();
 
             console.log('✅ Notification System ready');
