@@ -1,9 +1,10 @@
 /**
- * onesignal-init.js – v7 (التهيئة فقط، لا ربط للمستخدم)
+ * onesignal-init.js – v8 (التهيئة فقط، لا تسجيل للمستخدم)
  * - يقوم بتهيئة OneSignal SDK فقط
  * - يحصل على Player ID ويخزنه في sessionStorage
  * - لا يحاول تسجيل المستخدم أبداً (يترك ذلك لـ Auth.js)
  * - يتعامل مع Tracking Prevention
+ * - لا يسبب أي أخطاء 409
  */
 
 (function() {
@@ -138,5 +139,5 @@
         };
     }
 
-    console.log("🚀 onesignal-init.js v7 loaded (init only, no user binding)");
+    console.log("🚀 onesignal-init.js v8 loaded (init only, no user binding)");
 })();
