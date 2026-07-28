@@ -3,6 +3,7 @@
  * مدير الإشعارات المتكامل مع دعم RLS و OneSignal
  * يوفر واجهة init ودوال جلب وتحديث وإضافة
  * تم إضافة: addNotification, updateNotification, clear
+ * تم تحسين الجلب مع إعادة المحاولة وتحديث الواجهة تلقائياً
  */
 
 (function() {
@@ -10,6 +11,7 @@
 
   // ─── المتغيرات الداخلية ───
   let listeners = {};
+  let _initialized = false;
 
   // ─── دالة مساعدة للحصول على Supabase Client ───
   function getSupabaseClient() {
@@ -42,7 +44,57 @@
     }
   }
 
-  // ─── دوال جلب البيانات ───
+  // ─── دوال جلب البيانات مع إعادة المحاولة ───
+  async function fetchNotificationsWithRetry(filters = {}, limit = 50, maxRetries = 3) {
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔍 [NotificationManager] Fetch attempt ${attempt}/${maxRetries}`);
+        
+        const data = await withAuth(async (session) => {
+          const sb = getSupabaseClient();
+          if (!sb) throw new Error('Supabase client not available');
+          
+          let query = sb
+            .from('notifications')
+            .select('*')
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+            
+          if (filters.type) query = query.eq('type', filters.type);
+          if (filters.category) query = query.eq('category', filters.category);
+          if (filters.is_read !== undefined) query = query.eq('is_read', filters.is_read);
+          
+          const { data, error } = await query;
+          if (error) throw error;
+          return data;
+        });
+        
+        if (data && data.length > 0) {
+          console.log(`✅ [NotificationManager] Fetched ${data.length} notifications on attempt ${attempt}`);
+          return data;
+        }
+        
+        if (attempt < maxRetries) {
+          console.log(`⏳ [NotificationManager] No data yet, retrying in 500ms... (${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (e) {
+        lastError = e;
+        console.warn(`⚠️ [NotificationManager] Attempt ${attempt} failed:`, e.message);
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    }
+    
+    console.warn('⚠️ [NotificationManager] All fetch attempts failed or returned empty');
+    return [];
+  }
+
+  // ─── دوال جلب البيانات العامة ───
   async function fetchUnreadNotifications() {
     return withAuth(async (session) => {
       const sb = getSupabaseClient();
@@ -83,6 +135,7 @@
     });
   }
 
+  // ─── دوال التحديث ───
   async function markAsRead(notificationId) {
     return withAuth(async (session) => {
       const sb = getSupabaseClient();
@@ -105,9 +158,7 @@
       if (cache && typeof cache.update === 'function') {
         cache.update(notificationId, { is_read: true, read_at: new Date().toISOString() });
       }
-      if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-        window.NotificationUI.refresh();
-      }
+      refreshUI();
       
       return true;
     });
@@ -135,9 +186,7 @@
       if (cache && typeof cache.markAllAsRead === 'function') {
         cache.markAllAsRead();
       }
-      if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-        window.NotificationUI.refresh();
-      }
+      refreshUI();
       
       return true;
     });
@@ -161,12 +210,8 @@
     return result || 0;
   }
 
-  // ─── دوال إدارة الإشعارات المحلية (المضافة حديثاً) ───
+  // ─── دوال إدارة الإشعارات المحلية ───
   
-  /**
-   * إضافة إشعار جديد إلى الكاش والواجهة
-   * @param {Object} notification - كائن الإشعار
-   */
   function addNotification(notification) {
     if (!notification || !notification.id) {
       console.warn('⚠️ [NotificationManager] Invalid notification:', notification);
@@ -175,31 +220,19 @@
 
     console.log('📨 [NotificationManager] Adding notification:', notification.id);
 
-    // إضافة إلى الكاش
     const cache = window.NotificationCache;
     if (cache && typeof cache.add === 'function') {
       cache.add(notification);
     } else if (cache && typeof cache.init === 'function') {
-      // إذا كان الكاش لا يدعم add، نجمع الموجود مع الجديد
       const existing = cache.getAll ? cache.getAll() : [];
       existing.push(notification);
       cache.init(existing);
     }
 
-    // تحديث الواجهة
-    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-      window.NotificationUI.refresh();
-    }
-
-    // إشعار المستمعين
+    refreshUI();
     _emit('notification:added', notification);
   }
 
-  /**
-   * تحديث إشعار موجود
-   * @param {string} id - معرف الإشعار
-   * @param {Object} updates - الحقول المراد تحديثها
-   */
   function updateNotification(id, updates) {
     if (!id || !updates) {
       console.warn('⚠️ [NotificationManager] Invalid update params');
@@ -213,16 +246,10 @@
       cache.update(id, updates);
     }
 
-    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-      window.NotificationUI.refresh();
-    }
-
+    refreshUI();
     _emit('notification:updated', { id, updates });
   }
 
-  /**
-   * مسح جميع الإشعارات من الكاش والواجهة
-   */
   function clear() {
     console.log('🧹 [NotificationManager] Clearing all notifications');
     
@@ -233,14 +260,24 @@
       cache.init([]);
     }
 
-    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-      window.NotificationUI.refresh();
-    }
-
+    refreshUI();
     _emit('notifications:cleared');
   }
 
-  // ─── نظام المستمعين (للتوافق مع support-notifications.js) ───
+  // ─── دالة مساعدة لتحديث الواجهة ───
+  function refreshUI() {
+    if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
+      window.NotificationUI.refresh();
+    } else {
+      // احتياطي: محاولة تحديث الإحصائيات فقط
+      const cache = window.NotificationCache;
+      if (cache && typeof cache.getStats === 'function' && window.NotificationUI && typeof window.NotificationUI.updateStats === 'function') {
+        window.NotificationUI.updateStats(cache.getStats());
+      }
+    }
+  }
+
+  // ─── نظام المستمعين ───
   function on(event, callback) {
     if (!listeners[event]) listeners[event] = [];
     listeners[event].push(callback);
@@ -262,7 +299,7 @@
     });
   }
 
-  // ─── دالة init (لتهيئة المدير) ───
+  // ─── دالة init (مع تحميل البيانات الأولية) ───
   async function init(options = {}) {
     console.log('🔔 [NotificationManager] Initializing notification system...');
     try {
@@ -271,13 +308,30 @@
         throw new Error('Supabase client not available');
       }
 
+      // التحقق من الجلسة
       const { data: { session } } = await sb.auth.getSession();
       if (session) {
         console.log('✅ [NotificationManager] User logged in:', session.user.id);
+        
+        // جلب الإشعارات مع إعادة المحاولة
+        const data = await fetchNotificationsWithRetry({}, 50, 3);
+        if (data && data.length > 0) {
+          // تهيئة الكاش
+          const cache = window.NotificationCache;
+          if (cache && typeof cache.init === 'function') {
+            cache.init(data);
+          }
+          // إضافة كل إشعار إلى المدير (لتحديث الواجهة)
+          data.forEach(n => addNotification(n));
+          console.log(`✅ [NotificationManager] Loaded ${data.length} notifications`);
+        } else {
+          console.log('ℹ️ [NotificationManager] No notifications found');
+        }
       } else {
-        console.log('⏳ [NotificationManager] No session, requests will be deferred');
+        console.log('⏳ [NotificationManager] No session, notifications will be loaded after login');
       }
 
+      _initialized = true;
       return window.NotificationManager;
     } catch (e) {
       console.error('❌ [NotificationManager] Init failed:', e);
@@ -287,7 +341,6 @@
 
   // ─── تصدير الكائن العام ───
   const manager = {
-    // دوال موجودة سابقاً
     init,
     fetchUnreadNotifications,
     fetchNotifications,
@@ -295,15 +348,16 @@
     markAllAsRead,
     getUnreadCount,
     withAuth,
-    
-    // دوال جديدة
     addNotification,
     updateNotification,
     clear,
     on,
-    off
+    off,
+    refreshUI, // للاستخدام الخارجي
+    // تصدير دالة الجلب مع إعادة المحاولة للاستخدام المباشر
+    fetchNotificationsWithRetry
   };
 
   window.NotificationManager = manager;
-  console.log('✅ [NotificationManager] Loaded successfully (with addNotification, updateNotification, clear)');
+  console.log('✅ [NotificationManager] Loaded successfully (with enhanced fetch and retry)');
 })();
