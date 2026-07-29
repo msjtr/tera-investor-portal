@@ -4,6 +4,8 @@
  * يعتمد على withAuth لتجنب 403 ولا يرسل user_id في الفلتر
  * تم إصلاح: استخدام .is('deleted_at', null) بدلاً من .eq
  * إضافة إعادة محاولة الجلب وتأكيد عرض البيانات
+ * 
+ * 🆕 إضافة: زر "تفعيل الإشعارات" وطلب إذن OneSignal
  */
 (function() {
     'use strict';
@@ -252,8 +254,166 @@
                     addNotificationToCache(notification);
                 });
             }
+            
+            // ✅ تحديث واجهة الحالة بعد تهيئة OneSignal
+            updateOneSignalStatus();
         } catch (e) {
             console.warn('⚠️ OneSignal setup skipped:', e.message);
+        }
+    }
+
+    // ─── 🆕 طلب إذن الإشعارات ───
+    async function requestNotificationPermission() {
+        const enableBtn = document.getElementById('enableNotificationsBtn');
+        if (enableBtn) {
+            enableBtn.disabled = true;
+            enableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطلب...';
+        }
+
+        try {
+            // استخدام OneSignal SDK إذا كان متاحاً
+            if (window.OneSignal && typeof window.OneSignal.Notifications?.requestPermission === 'function') {
+                const result = await window.OneSignal.Notifications.requestPermission({ force: true });
+                console.log('📢 OneSignal permission result:', result);
+                
+                if (result === 'granted') {
+                    // انتظار ظهور Player ID
+                    let playerId = null;
+                    let attempts = 0;
+                    while (!playerId && attempts < 15) {
+                        await new Promise(r => setTimeout(r, 500));
+                        try {
+                            playerId = window.OneSignal.User?.PushSubscription?.id || null;
+                        } catch (e) { /* ignore */ }
+                        attempts++;
+                    }
+                    
+                    if (playerId) {
+                        sessionStorage.setItem('pending_player_id', playerId);
+                        sessionStorage.setItem('onesignal_subscription_id', playerId);
+                        console.log('📌 Player ID obtained:', playerId);
+                        
+                        // محاولة ربط المستخدم
+                        if (window.Auth?.registerPushNotifications) {
+                            const user = await window.Auth.getCurrentUser();
+                            if (user?.id) {
+                                await window.Auth.registerPushNotifications(user.id);
+                            }
+                        }
+                        
+                        updateOneSignalStatus();
+                        alert('✅ تم تفعيل الإشعارات بنجاح!');
+                        return true;
+                    }
+                } else {
+                    alert('⚠️ لم يتم منح الإذن. يمكنك تغيير ذلك من إعدادات المتصفح.');
+                    return false;
+                }
+            } else {
+                // خطة احتياطية: استخدام Notification API المدمج
+                const result = await Notification.requestPermission();
+                console.log('📢 Native permission result:', result);
+                if (result === 'granted') {
+                    alert('✅ تم تفعيل الإشعارات بنجاح!');
+                    // إعادة تحميل الصفحة لتحديث حالة OneSignal
+                    window.location.reload();
+                    return true;
+                } else {
+                    alert('⚠️ لم يتم منح الإذن. يمكنك تغيير ذلك من إعدادات المتصفح.');
+                    return false;
+                }
+            }
+        } catch (err) {
+            console.error('❌ Permission request failed:', err);
+            alert('❌ حدث خطأ أثناء طلب الإذن. حاول مرة أخرى.');
+            return false;
+        } finally {
+            const enableBtn2 = document.getElementById('enableNotificationsBtn');
+            if (enableBtn2) {
+                enableBtn2.disabled = false;
+                enableBtn2.innerHTML = '<i class="fas fa-bell"></i> تفعيل الإشعارات';
+            }
+        }
+    }
+
+    // ─── 🆕 تحديث حالة OneSignal في الواجهة ───
+    function updateOneSignalStatus() {
+        const statusEl = document.getElementById('osStatusText');
+        const playerIdEl = document.getElementById('osPlayerId');
+        const enableBtn = document.getElementById('enableNotificationsBtn');
+        
+        if (!statusEl) return;
+        
+        try {
+            // محاولة الحصول على Player ID من OneSignal
+            let playerId = null;
+            if (window.OneSignal && window.OneSignal.User) {
+                try {
+                    playerId = window.OneSignal.User.PushSubscription?.id || null;
+                } catch (e) { /* ignore */ }
+            }
+            
+            // إذا لم يوجد، نحاول من sessionStorage
+            if (!playerId) {
+                playerId = sessionStorage.getItem('pending_player_id') || 
+                           sessionStorage.getItem('onesignal_subscription_id');
+            }
+            
+            if (playerId) {
+                statusEl.textContent = '✅ مفعلة (Subscribed)';
+                statusEl.className = 'status-value subscribed';
+                if (playerIdEl) playerIdEl.textContent = `Player ID: ${playerId}`;
+                if (enableBtn) enableBtn.style.display = 'none';
+            } else if (Notification.permission === 'denied') {
+                statusEl.textContent = '🔇 مرفوضة (Denied)';
+                statusEl.className = 'status-value denied';
+                if (enableBtn) {
+                    enableBtn.style.display = 'inline-flex';
+                    enableBtn.textContent = '🔔 إعادة التفعيل';
+                }
+            } else {
+                statusEl.textContent = '⏳ غير مشترك بعد (Waiting)';
+                statusEl.className = 'status-value unsubscribed';
+                if (enableBtn) {
+                    enableBtn.style.display = 'inline-flex';
+                    enableBtn.textContent = '🔔 تفعيل الإشعارات';
+                }
+            }
+        } catch (e) {
+            statusEl.textContent = '❌ حالة غير معروفة';
+            statusEl.className = 'status-value error';
+        }
+    }
+
+    // ─── 🆕 ربط زر "تفعيل الإشعارات" ───
+    function setupNotificationButton() {
+        const enableBtn = document.getElementById('enableNotificationsBtn');
+        if (enableBtn) {
+            // إزالة أي مستمع سابق لتجنب التكرار
+            const newBtn = enableBtn.cloneNode(true);
+            enableBtn.parentNode.replaceChild(newBtn, enableBtn);
+            
+            newBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                await requestNotificationPermission();
+            });
+            
+            console.log('✅ Enable notifications button ready');
+        }
+        
+        // تحديث حالة الزر والواجهة
+        updateOneSignalStatus();
+        
+        // الاستماع لتغييرات إذن الإشعارات
+        if (navigator.permissions && navigator.permissions.query) {
+            try {
+                navigator.permissions.query({ name: 'notifications' }).then(result => {
+                    result.onchange = function() {
+                        console.log('🔔 Notification permission changed:', this.state);
+                        updateOneSignalStatus();
+                    };
+                });
+            } catch (e) { /* ignore */ }
         }
     }
 
@@ -281,6 +441,8 @@
                 } else {
                     console.log('ℹ️ No notifications found after sign in');
                 }
+                // تحديث حالة OneSignal بعد تسجيل الدخول
+                updateOneSignalStatus();
             } else if (event === 'SIGNED_OUT') {
                 console.log('🧹 User signed out, clearing notifications');
                 const cache = window.NotificationCache;
@@ -386,18 +548,21 @@
             // 9. OneSignal (إن وجد)
             await setupOneSignal();
 
-            // 10. تحديث العداد
+            // 🆕 10. إعداد زر "تفعيل الإشعارات"
+            setupNotificationButton();
+
+            // 11. تحديث العداد
             await updateBadge();
 
-            // 11. السجل
+            // 12. السجل
             if (window.NotificationHistory && typeof window.NotificationHistory.load === 'function') {
                 window.NotificationHistory.load(1);
             }
 
-            // 12. الإعدادات
+            // 13. الإعدادات
             initSettings();
 
-            // 13. الاستماع لأحداث المصادقة
+            // 14. الاستماع لأحداث المصادقة
             setupAuthListener();
 
             console.log('✅ Notification System ready');
