@@ -462,7 +462,32 @@
         validateEmail,
         validatePassword,
         // الموقع
-        getCurrentPosition: () => { /* ... */ },
+        getCurrentPosition: () => {
+            // ✅ إعادة استخدام المنطق الموجود فعلياً في LocationServices.getGPSCoords()
+            // (يتعامل مع حالة الإذن، المهلة الزمنية، ودقة GPS) بدلاً من تكراره —
+            // متاح في صفحة لوحة التحكم فقط. للصفحات الأخرى التي تستدعي هذه الدالة
+            // ولا تُحمّل location-services.js، نستخدم fallback مباشر وبسيط.
+            if (window.LocationServices?.getGPSCoords) {
+                return window.LocationServices.getGPSCoords().then(result => {
+                    if (result?.coords) {
+                        return { latitude: result.coords.latitude, longitude: result.coords.longitude };
+                    }
+                    throw new Error(result?.error || 'تعذر الحصول على الموقع الجغرافي');
+                });
+            }
+
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation API not available'));
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                    (err) => reject(new Error(err.message || 'تعذر الحصول على الموقع الجغرافي')),
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            });
+        },
         // الجلسة
         refreshSession,
         startSessionRefresh,
