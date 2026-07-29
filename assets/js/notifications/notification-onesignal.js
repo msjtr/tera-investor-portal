@@ -4,12 +4,10 @@
  * ============================================================
  *
  * ✅ متوافق مع OneSignal SDK v16
- * ✅ ينتظر جاهزية SDK بالكامل
- * ✅ ينتظر إنشاء Push Subscription قبل login
- * ✅ يمنع login المتكرر
- * ✅ يستخدم User.PushSubscription الصحيحة
- * ✅ يحفظ الاشتراك في Supabase تلقائياً (مع withAuth لتجنب 403)
- * ✅ يستخدم دالة getSupabaseClient الموحدة
+ * ✅ دوال مساعدة للتعامل مع OneSignal
+ * ✅ يستخدم Auth.registerPushNotifications لتسجيل المستخدم
+ * ✅ لا يقوم بتهيئة مزدوجة (يترك التهيئة لـ onesignal-init.js)
+ * ✅ يستمع للإشعارات الواردة
  */
 
 (function () {
@@ -29,89 +27,7 @@
         return null;
     }
 
-    // ─── دوال مساعدة ───
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    // ─── دالة withAuth الموحدة ───
-    async function withAuth(callback) {
-        const sb = getSupabaseClient();
-        if (!sb) {
-            console.warn('⚠️ [OneSignal] Supabase client not available');
-            return null;
-        }
-        try {
-            const { data: { session }, error } = await sb.auth.getSession();
-            if (error || !session) {
-                console.log('⏳ [OneSignal] No active session, skipping DB save');
-                return null;
-            }
-            console.log('✅ [OneSignal] Session active for user:', session.user.id);
-            return await callback(session);
-        } catch (e) {
-            console.warn('⚠️ [OneSignal] withAuth error:', e.message);
-            return null;
-        }
-    }
-
-    // ─── حفظ الاشتراك في قاعدة البيانات ───
-    async function saveSubscriptionToDB(playerId) {
-        if (!playerId) {
-            console.warn('⚠️ [OneSignal] Cannot save: missing playerId');
-            return false;
-        }
-
-        const result = await withAuth(async (session) => {
-            const sb = getSupabaseClient();
-            if (!sb) return false;
-
-            const { error } = await sb
-                .from('user_push_subscriptions')
-                .upsert(
-                    {
-                        user_id: session.user.id,
-                        player_id: playerId,
-                        is_active: true,
-                        updated_at: new Date().toISOString()
-                    },
-                    {
-                        onConflict: 'player_id',
-                        ignoreDuplicates: false
-                    }
-                );
-
-            if (error) {
-                console.error('❌ [OneSignal] Failed to save subscription:', error);
-                return false;
-            }
-            return true;
-        });
-
-        if (result === null) {
-            // المستخدم غير مسجل → تأجيل الحفظ
-            sessionStorage.setItem('pending_player_id', playerId);
-            console.log(`⏳ [OneSignal] Deferred save for playerId: ${playerId}`);
-            return false;
-        }
-
-        if (result === true) {
-            console.log(`✅ [OneSignal] Subscription saved to DB: ${playerId}`);
-            sessionStorage.removeItem('pending_player_id');
-            return true;
-        }
-
-        return false;
-    }
-
-    // ─── محاولة حفظ الاشتراك المعلق ───
-    async function savePendingSubscription() {
-        const pendingPlayerId = sessionStorage.getItem('pending_player_id');
-        if (!pendingPlayerId) return;
-        await saveSubscriptionToDB(pendingPlayerId);
-    }
-
-    // ─── الانتظار حتى جاهزية OneSignal ───
+    // ─── انتظار جاهزية OneSignal ───
     async function waitForOneSignal(timeout = 10000) {
         return new Promise((resolve, reject) => {
             if (
@@ -143,77 +59,6 @@
         });
     }
 
-    // ─── الانتظار حتى جاهزية الاشتراك ───
-    async function waitForSubscription(maxWait = 10000) {
-        const OneSignal = await waitForOneSignal();
-        const start = Date.now();
-        while (Date.now() - start < maxWait) {
-            try {
-                if (
-                    OneSignal.User &&
-                    OneSignal.User.PushSubscription &&
-                    OneSignal.User.PushSubscription.id
-                ) {
-                    return true;
-                }
-            } catch (e) {}
-            await sleep(500);
-        }
-        return false;
-    }
-
-    // ─── تعيين External ID للمستخدم + حفظ الاشتراك ───
-    async function setExternalId(userId) {
-        if (!userId) {
-            console.warn("⚠️ [OneSignal] Missing userId");
-            return false;
-        }
-
-        if (lastLoggedUserId === userId) {
-            // نفس المستخدم، نحاول حفظ الاشتراك فقط (قد يكون player_id تغير)
-            const playerId = await getPlayerId();
-            if (playerId) {
-                await saveSubscriptionToDB(playerId);
-            }
-            return true;
-        }
-
-        try {
-            const OneSignal = await waitForOneSignal();
-            const subscribed = await waitForSubscription();
-
-            if (!subscribed) {
-                console.warn("⚠️ [OneSignal] No Push Subscription yet.");
-                // نخزّن userId لحين توفر الاشتراك
-                sessionStorage.setItem('onesignal_pending_user', userId);
-                return false;
-            }
-
-            const playerId = OneSignal.User.PushSubscription.id;
-
-            // ربط المستخدم بـ OneSignal
-            if (OneSignal.User.externalId !== userId) {
-                await OneSignal.login(userId);
-                console.log(`✅ [OneSignal] Login success for user: ${userId}`);
-            }
-
-            lastLoggedUserId = userId;
-
-            // حفظ الاشتراك في قاعدة البيانات
-            await saveSubscriptionToDB(playerId);
-
-            // محاولة حفظ أي اشتراك معلق
-            await savePendingSubscription();
-
-            return true;
-
-        } catch (err) {
-            lastLoggedUserId = null;
-            console.error("❌ [OneSignal] setExternalId failed", err);
-            return false;
-        }
-    }
-
     // ─── الحصول على Player ID الحالي ───
     async function getPlayerId() {
         try {
@@ -224,23 +69,7 @@
         }
     }
 
-    // ─── تسجيل الخروج ───
-    async function logout() {
-        try {
-            const OneSignal = await waitForOneSignal();
-            if (typeof OneSignal.logout === "function") {
-                await OneSignal.logout();
-                lastLoggedUserId = null;
-                console.log("✅ [OneSignal] Logout");
-                return true;
-            }
-        } catch (e) {
-            console.error("❌ [OneSignal] Logout failed", e);
-        }
-        return false;
-    }
-
-    // ─── الحصول على حالة الاشتراك ───
+    // ─── حالة الاشتراك ───
     async function getSubscriptionStatus() {
         try {
             const OneSignal = await waitForOneSignal();
@@ -301,87 +130,84 @@
         }
     }
 
-    // ─── الاستماع لتغيرات المصادقة في Supabase ───
-    function setupAuthListener() {
-        const sb = getSupabaseClient();
-        if (!sb) {
-            console.warn('⚠️ [OneSignal] Cannot setup auth listener: Supabase not available');
-            return;
-        }
-
-        sb.auth.onAuthStateChange(async (event, session) => {
-            console.log(`🔐 [OneSignal] Auth event: ${event}`);
-
-            if (event === 'SIGNED_IN' && session) {
-                // محاولة ربط المستخدم وحفظ الاشتراك
-                const playerId = await getPlayerId();
-                if (playerId) {
-                    await saveSubscriptionToDB(playerId);
-                }
-                // محاولة حفظ أي اشتراك معلق
-                await savePendingSubscription();
-            }
-
-            if (event === 'SIGNED_OUT') {
-                // تحديث الاشتراك في DB إلى غير نشط (اختياري)
-                const playerId = await getPlayerId();
-                if (playerId) {
-                    await withAuth(async (session) => {
-                        const sb2 = getSupabaseClient();
-                        if (!sb2) return;
-                        await sb2
-                            .from('user_push_subscriptions')
-                            .update({
-                                is_active: false,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('player_id', playerId);
-                    });
-                }
+    // ─── تسجيل الخروج من OneSignal ───
+    async function logout() {
+        try {
+            const OneSignal = await waitForOneSignal();
+            if (typeof OneSignal.logout === "function") {
+                await OneSignal.logout();
                 lastLoggedUserId = null;
+                console.log("✅ [OneSignal] Logout");
+                return true;
             }
-        });
-
-        console.log('✅ [OneSignal] Auth listener ready');
+        } catch (e) {
+            console.error("❌ [OneSignal] Logout failed", e);
+        }
+        return false;
     }
 
-    // ─── التهيئة التلقائية ───
-    function init() {
-        // التحقق من توفر Supabase
-        const sb = getSupabaseClient();
-        if (!sb) {
-            console.warn('⚠️ [OneSignal] Supabase not available, init delayed');
-            // إعادة المحاولة بعد فترة
-            setTimeout(() => {
-                if (getSupabaseClient()) {
-                    init();
-                }
-            }, 2000);
-            return;
+    // ─── ربط المستخدم بـ OneSignal (باستخدام Auth) ───
+    async function setExternalId(userId) {
+        if (!userId) {
+            console.warn("⚠️ [OneSignal] Missing userId");
+            return false;
         }
 
-        // إضافة مستمع المصادقة
-        setupAuthListener();
-
-        // محاولة حفظ الاشتراك المعلق عند التحميل
-        setTimeout(async () => {
-            const pendingPlayerId = sessionStorage.getItem('pending_player_id');
-            if (pendingPlayerId) {
-                await saveSubscriptionToDB(pendingPlayerId);
-            }
-
-            // إذا كان هناك userId معلق من OneSignal
-            const pendingUser = sessionStorage.getItem('onesignal_pending_user');
-            if (pendingUser) {
-                const playerId = await getPlayerId();
-                if (playerId) {
-                    await setExternalId(pendingUser);
-                    sessionStorage.removeItem('onesignal_pending_user');
+        // استخدام Auth.registerPushNotifications إن وجد
+        if (window.Auth && typeof window.Auth.registerPushNotifications === 'function') {
+            try {
+                const result = await window.Auth.registerPushNotifications(userId);
+                if (result && result.success) {
+                    lastLoggedUserId = userId;
+                    return true;
                 }
+                console.warn('⚠️ [OneSignal] Auth.registerPushNotifications failed:', result?.error);
+                return false;
+            } catch (e) {
+                console.error('❌ [OneSignal] setExternalId via Auth failed:', e);
+                return false;
             }
-        }, 3000);
+        }
 
-        console.log('✅ [OneSignal] Manager initialized with Supabase sync');
+        // خطة احتياطية: استخدام OneSignal.login مباشرة (مع تجنب 409)
+        try {
+            const OneSignal = await waitForOneSignal();
+            if (!OneSignal) {
+                console.warn('⚠️ [OneSignal] OneSignal not ready');
+                return false;
+            }
+
+            // التحقق من externalId الحالي
+            const currentExternalId = OneSignal.User?.externalId;
+            if (currentExternalId === userId) {
+                console.log('ℹ️ [OneSignal] ExternalId already set:', userId);
+                lastLoggedUserId = userId;
+                return true;
+            }
+
+            // محاولة login
+            await OneSignal.login(userId);
+            console.log(`✅ [OneSignal] Login success for user: ${userId}`);
+            lastLoggedUserId = userId;
+
+            // محاولة حفظ الاشتراك في DB (باستخدام Auth إن وجد)
+            if (window.Auth && typeof window.Auth.registerPushNotifications === 'function') {
+                // هذا سيحدث أيضاً حفظ الاشتراك في DB، لكنه قد يكون مكرراً
+                // نتركه للتأكد
+                await window.Auth.registerPushNotifications(userId);
+            }
+
+            return true;
+        } catch (err) {
+            // معالجة 409
+            if (err.message && err.message.includes('409')) {
+                console.warn('⚠️ [OneSignal] 409 Conflict, assuming already registered');
+                lastLoggedUserId = userId;
+                return true;
+            }
+            console.error("❌ [OneSignal] setExternalId failed", err);
+            return false;
+        }
     }
 
     // ─── تصدير الكائن العام ───
@@ -392,19 +218,8 @@
         getSubscriptionStatus,
         addListener,
         removeAllListeners,
-        getPlayerId,
-        saveSubscriptionToDB,
-        savePendingSubscription,
-        init
+        getPlayerId
     };
 
-    // ─── بدء التهيئة عند تحميل الصفحة ───
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        // إذا كان DOM جاهزاً بالفعل، نبدأ التهيئة فوراً
-        setTimeout(init, 500);
-    }
-
-    console.log("✅ notification-onesignal.js loaded (with Supabase sync)");
+    console.log("✅ notification-onesignal.js loaded (using Auth for registration)");
 })();
