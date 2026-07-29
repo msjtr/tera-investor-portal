@@ -1,11 +1,8 @@
 /**
- * OneSignal Service Worker – الإصدار الآمن والمستقر
- * يستخدم السكربت الرسمي من OneSignal ويتجنب أخطاء تسجيل المستمعات
+ * OneSignal Updater Service Worker – الإصدار الآمن والمستقر
+ * ✅ ملف كان مفقوداً تماماً من المشروع رغم أن onesignal-init.js يشير إليه
+ * عبر serviceWorkerUpdaterPath، مما كان يسبب فشلاً صامتاً (404) عند
+ * محاولة OneSignal تسجيل هذا الـ Service Worker.
+ * المحتوى مطابق لـ OneSignalSDKWorker.js كما توصي به وثائق OneSignal الرسمية.
  */
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
-// يمكنك إضافة أي مستمعات أحداث إضافية هنا (في المستوى الأعلى)
-// مثال:
-// self.addEventListener('notificationclick', function(event) {
-//   // تخصيص سلوك النقر على الإشعار
-// });
