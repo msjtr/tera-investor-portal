@@ -1,10 +1,11 @@
 /**
- * onesignal-init.js – v8 (التهيئة فقط، لا تسجيل للمستخدم)
- * - يقوم بتهيئة OneSignal SDK فقط
+ * onesignal-init.js – v9 (مع طلب إذن تلقائي)
+ * - يقوم بتهيئة OneSignal SDK
+ * - يطلب إذن الإشعارات تلقائياً إذا لم يكن محدداً
  * - يحصل على Player ID ويخزنه في sessionStorage
- * - لا يحاول تسجيل المستخدم أبداً (يترك ذلك لـ Auth.js)
+ * - لا يحاول تسجيل المستخدم (يترك ذلك لـ Auth.js)
  * - يتعامل مع Tracking Prevention
- * - لا يسبب أي أخطاء 409
+ * - يحدّث واجهة الحالة
  */
 
 (function() {
@@ -42,12 +43,46 @@
         return null;
     }
 
+    // ─── طلب إذن الإشعارات ───
+    async function requestNotificationPermission(OneSignal) {
+        try {
+            // إذا كان الإذن محدداً مسبقاً، نعود مباشرة
+            if (Notification.permission === 'granted') {
+                console.log('✅ Notification permission already granted');
+                return true;
+            }
+            if (Notification.permission === 'denied') {
+                console.warn('⚠️ Notification permission denied by user');
+                return false;
+            }
+
+            // حالة 'default' – نطلب الإذن
+            console.log('📢 Requesting notification permission...');
+            
+            // استخدام OneSignal SDK إن أمكن
+            if (OneSignal && typeof OneSignal.Notifications?.requestPermission === 'function') {
+                const result = await OneSignal.Notifications.requestPermission({ force: true });
+                console.log('📢 OneSignal permission result:', result);
+                return result === 'granted';
+            }
+
+            // خطة احتياطية: استخدام Notification API المدمج
+            const result = await Notification.requestPermission();
+            console.log('📢 Native permission result:', result);
+            return result === 'granted';
+        } catch (err) {
+            console.error('❌ Permission request failed:', err);
+            return false;
+        }
+    }
+
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     window.OneSignalDeferred.push(async function(OneSignal) {
         try {
             if (!isStorageAvailable()) showStorageWarning();
 
+            // ─── تهيئة OneSignal ───
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
@@ -57,19 +92,36 @@
             });
 
             window.OneSignal = OneSignal;
-            console.log("✅ OneSignal Initialized (no user binding)");
+            console.log("✅ OneSignal Initialized");
 
-            // الحصول على Player ID وتخزينه لاستخدامه لاحقاً
+            // ─── طلب إذن الإشعارات ───
+            const hasPermission = await requestNotificationPermission(OneSignal);
+            if (!hasPermission) {
+                console.warn('⚠️ Permission not granted, push will not work.');
+                // تحديث الواجهة لإظهار حالة الرفض
+                const el = document.getElementById('osStatusText');
+                if (el) {
+                    el.textContent = '🔇 الإشعارات مرفوضة، يرجى تغيير الإعدادات';
+                    el.className = 'status-value denied';
+                }
+                // لا ننتظر Player ID إذا كان الإذن مرفوضاً
+                return;
+            }
+
+            // ─── الحصول على Player ID ───
             const playerId = await waitForPlayerId(OneSignal);
             if (playerId) {
                 sessionStorage.setItem('pending_player_id', playerId);
+                sessionStorage.setItem('onesignal_subscription_id', playerId);
                 console.log("📌 Player ID obtained:", playerId);
+            } else {
+                console.warn('⚠️ Player ID not available after waiting.');
             }
 
-            // تحديث واجهة الحالة
+            // ─── تحديث واجهة الحالة ───
             updateStatusDisplay(OneSignal);
 
-            // دوال مساعدة
+            // ─── دوال مساعدة ───
             window.getPlayerId = () => window.OneSignal?.User?.PushSubscription?.id || null;
             window.getOneSignalStatus = () => ({
                 initialized: true,
@@ -78,13 +130,31 @@
                 subscriptionId: window.getPlayerId()
             });
 
-            // مراقبة تغيير إذن الإشعارات
+            // ─── مراقبة تغيير إذن الإشعارات ───
             if (Notification.permission === 'denied') {
                 console.warn('⚠️ Notifications permission denied.');
                 const el = document.getElementById('osStatusText');
                 if (el) {
                     el.textContent = '🔇 الإشعارات مرفوضة';
                     el.className = 'status-value denied';
+                }
+            } else if (Notification.permission === 'granted' && playerId) {
+                const el = document.getElementById('osStatusText');
+                if (el) {
+                    el.textContent = '✅ مفعلة (Subscribed)';
+                    el.className = 'status-value subscribed';
+                }
+                const pidEl = document.getElementById('osPlayerId');
+                if (pidEl) pidEl.textContent = `Player ID: ${playerId}`;
+            }
+
+            // ─── إضافة زر "تفعيل الإشعارات" إذا كانت الحالة default أو denied ───
+            // (الزر موجود في support-notifications.js، لكننا نضيفه هنا أيضاً كضمان)
+            if (Notification.permission !== 'granted') {
+                const enableBtn = document.getElementById('enableNotificationsBtn');
+                if (enableBtn) {
+                    enableBtn.style.display = 'inline-flex';
+                    enableBtn.textContent = Notification.permission === 'denied' ? '🔔 إعادة التفعيل' : '🔔 تفعيل الإشعارات';
                 }
             }
 
@@ -121,7 +191,7 @@
         }
     }
 
-    // Fallback للتخزين
+    // ─── Fallback للتخزين ───
     if (!isStorageAvailable()) {
         console.warn('⚠️ sessionStorage blocked, using memory fallback');
         window.__memoryStorage = {};
@@ -139,5 +209,5 @@
         };
     }
 
-    console.log("🚀 onesignal-init.js v8 loaded (init only, no user binding)");
+    console.log("🚀 onesignal-init.js v9 loaded (with auto permission request)");
 })();
