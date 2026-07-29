@@ -1,11 +1,11 @@
 /**
- * onesignal-init.js – v9 (مع طلب إذن تلقائي)
+ * onesignal-init.js – v9 (التهيئة + طلب إذن الإشعارات فعلياً)
  * - يقوم بتهيئة OneSignal SDK
- * - يطلب إذن الإشعارات تلقائياً إذا لم يكن محدداً
  * - يحصل على Player ID ويخزنه في sessionStorage
- * - لا يحاول تسجيل المستخدم (يترك ذلك لـ Auth.js)
+ * - ✅ جديد: يطلب إذن الإشعارات فعلياً من المتصفح (لم يكن يُطلب أبداً سابقاً،
+ *   وهذا كان السبب في عدم وصول أي إشعار push حتى لو أُرسل بنجاح من OneSignal)
  * - يتعامل مع Tracking Prevention
- * - يحدّث واجهة الحالة
+ * - لا يسبب أي أخطاء 409
  */
 
 (function() {
@@ -15,6 +15,7 @@
     window.__onesignalInitialized = true;
 
     const ONESIGNAL_APP_ID = "512d9b65-ec50-41a5-ac12-059a83441a72";
+    const ASKED_FLAG = 'onesignal_permission_asked';
 
     function isStorageAvailable() {
         try {
@@ -43,38 +44,64 @@
         return null;
     }
 
-    // ─── طلب إذن الإشعارات ───
-    async function requestNotificationPermission(OneSignal) {
+    // ─── ربط الجهاز بالمستخدم الحالي فور توفر Player ID ───
+    // يعيد استخدام منطق الربط الموجود بالفعل في notification-onesignal.js
+    // بدلاً من تكراره هنا.
+    async function linkCurrentUserIfPossible() {
         try {
-            // إذا كان الإذن محدداً مسبقاً، نعود مباشرة
-            if (Notification.permission === 'granted') {
-                console.log('✅ Notification permission already granted');
-                return true;
+            const user = await window.Auth?.getCurrentUser?.();
+            if (user?.id && window.OneSignalManager?.setExternalId) {
+                await window.OneSignalManager.setExternalId(user.id);
+            } else if (user?.id && window.Auth?.registerPushNotifications) {
+                await window.Auth.registerPushNotifications(user.id);
             }
-            if (Notification.permission === 'denied') {
-                console.warn('⚠️ Notification permission denied by user');
-                return false;
-            }
-
-            // حالة 'default' – نطلب الإذن
-            console.log('📢 Requesting notification permission...');
-            
-            // استخدام OneSignal SDK إن أمكن
-            if (OneSignal && typeof OneSignal.Notifications?.requestPermission === 'function') {
-                const result = await OneSignal.Notifications.requestPermission({ force: true });
-                console.log('📢 OneSignal permission result:', result);
-                return result === 'granted';
-            }
-
-            // خطة احتياطية: استخدام Notification API المدمج
-            const result = await Notification.requestPermission();
-            console.log('📢 Native permission result:', result);
-            return result === 'granted';
-        } catch (err) {
-            console.error('❌ Permission request failed:', err);
-            return false;
+        } catch (e) {
+            console.warn('⚠️ تعذر ربط الجهاز بالمستخدم بعد منح الإذن:', e);
         }
     }
+
+    // ─── طلب إذن الإشعارات فعلياً (كانت هذه الخطوة مفقودة تماماً من الكود) ───
+    // مُعرّضة على window ليتم استدعاؤها من زر "تفعيل الإشعارات" في الواجهة.
+    async function requestOneSignalPermission() {
+        try {
+            const OneSignal = window.OneSignal;
+            if (!OneSignal) return { success: false, error: 'OneSignal غير مهيأ بعد' };
+
+            if (Notification.permission === 'denied') {
+                return { success: false, error: 'الإشعارات مرفوضة من إعدادات المتصفح. يرجى تفعيلها يدوياً من إعدادات الموقع.' };
+            }
+
+            await OneSignal.Notifications.requestPermission();
+            try { localStorage.setItem(ASKED_FLAG, '1'); } catch {}
+
+            const playerId = await waitForPlayerId(OneSignal, 20);
+            if (playerId) {
+                sessionStorage.setItem('pending_player_id', playerId);
+                updateStatusDisplay(OneSignal);
+                await linkCurrentUserIfPossible();
+                return { success: true, playerId };
+            }
+            return { success: false, error: 'لم يتم إنشاء اشتراك. تحقق من إذن الإشعارات.' };
+        } catch (err) {
+            console.error('❌ فشل طلب إذن الإشعارات:', err);
+            return { success: false, error: err.message };
+        }
+    }
+    window.requestOneSignalPermission = requestOneSignalPermission;
+
+    // ─── انتظار جاهزية OneSignal (مُستخدمة من notifications.html وكانت غير معرّفة سابقاً) ───
+    window.waitForOneSignal = function(timeoutMs = 5000) {
+        return new Promise((resolve) => {
+            if (window.OneSignal) return resolve(true);
+            const start = Date.now();
+            const interval = setInterval(() => {
+                if (window.OneSignal || Date.now() - start > timeoutMs) {
+                    clearInterval(interval);
+                    resolve(!!window.OneSignal);
+                }
+            }, 200);
+        });
+    };
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
@@ -82,7 +109,6 @@
         try {
             if (!isStorageAvailable()) showStorageWarning();
 
-            // ─── تهيئة OneSignal ───
             await OneSignal.init({
                 appId: ONESIGNAL_APP_ID,
                 serviceWorkerPath: "/OneSignalSDKWorker.js",
@@ -92,36 +118,19 @@
             });
 
             window.OneSignal = OneSignal;
-            console.log("✅ OneSignal Initialized");
+            console.log("✅ OneSignal Initialized (no user binding)");
 
-            // ─── طلب إذن الإشعارات ───
-            const hasPermission = await requestNotificationPermission(OneSignal);
-            if (!hasPermission) {
-                console.warn('⚠️ Permission not granted, push will not work.');
-                // تحديث الواجهة لإظهار حالة الرفض
-                const el = document.getElementById('osStatusText');
-                if (el) {
-                    el.textContent = '🔇 الإشعارات مرفوضة، يرجى تغيير الإعدادات';
-                    el.className = 'status-value denied';
-                }
-                // لا ننتظر Player ID إذا كان الإذن مرفوضاً
-                return;
-            }
-
-            // ─── الحصول على Player ID ───
+            // الحصول على Player ID وتخزينه لاستخدامه لاحقاً
             const playerId = await waitForPlayerId(OneSignal);
             if (playerId) {
                 sessionStorage.setItem('pending_player_id', playerId);
-                sessionStorage.setItem('onesignal_subscription_id', playerId);
                 console.log("📌 Player ID obtained:", playerId);
-            } else {
-                console.warn('⚠️ Player ID not available after waiting.');
             }
 
-            // ─── تحديث واجهة الحالة ───
+            // تحديث واجهة الحالة
             updateStatusDisplay(OneSignal);
 
-            // ─── دوال مساعدة ───
+            // دوال مساعدة
             window.getPlayerId = () => window.OneSignal?.User?.PushSubscription?.id || null;
             window.getOneSignalStatus = () => ({
                 initialized: true,
@@ -130,31 +139,21 @@
                 subscriptionId: window.getPlayerId()
             });
 
-            // ─── مراقبة تغيير إذن الإشعارات ───
+            // ✅ طلب الإذن تلقائياً مرة واحدة فقط لكل متصفح (لم يكن يحدث أبداً من قبل)
+            // لا نكرر الطلب إذا كان مرفوضاً بالفعل أو تم السؤال سابقاً، احتراماً لتجربة المستخدم.
+            let askedBefore = false;
+            try { askedBefore = localStorage.getItem(ASKED_FLAG) === '1'; } catch {}
+            if (!playerId && Notification.permission === 'default' && !askedBefore) {
+                setTimeout(() => { requestOneSignalPermission(); }, 1200);
+            }
+
+            // مراقبة تغيير إذن الإشعارات
             if (Notification.permission === 'denied') {
                 console.warn('⚠️ Notifications permission denied.');
                 const el = document.getElementById('osStatusText');
                 if (el) {
                     el.textContent = '🔇 الإشعارات مرفوضة';
                     el.className = 'status-value denied';
-                }
-            } else if (Notification.permission === 'granted' && playerId) {
-                const el = document.getElementById('osStatusText');
-                if (el) {
-                    el.textContent = '✅ مفعلة (Subscribed)';
-                    el.className = 'status-value subscribed';
-                }
-                const pidEl = document.getElementById('osPlayerId');
-                if (pidEl) pidEl.textContent = `Player ID: ${playerId}`;
-            }
-
-            // ─── إضافة زر "تفعيل الإشعارات" إذا كانت الحالة default أو denied ───
-            // (الزر موجود في support-notifications.js، لكننا نضيفه هنا أيضاً كضمان)
-            if (Notification.permission !== 'granted') {
-                const enableBtn = document.getElementById('enableNotificationsBtn');
-                if (enableBtn) {
-                    enableBtn.style.display = 'inline-flex';
-                    enableBtn.textContent = Notification.permission === 'denied' ? '🔔 إعادة التفعيل' : '🔔 تفعيل الإشعارات';
                 }
             }
 
@@ -191,7 +190,7 @@
         }
     }
 
-    // ─── Fallback للتخزين ───
+    // Fallback للتخزين
     if (!isStorageAvailable()) {
         console.warn('⚠️ sessionStorage blocked, using memory fallback');
         window.__memoryStorage = {};
@@ -209,5 +208,5 @@
         };
     }
 
-    console.log("🚀 onesignal-init.js v9 loaded (with auto permission request)");
+    console.log("🚀 onesignal-init.js v9 loaded (init + permission request)");
 })();
