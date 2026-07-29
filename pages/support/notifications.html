@@ -745,6 +745,35 @@
         }
         .onesignal-status .status-value.subscribed { background: #d1fae5; color: #065f46; }
         .onesignal-status .status-value.unsubscribed { background: #fef2f2; color: #991b1b; }
+        .onesignal-status .status-value.warning { background: #fffbeb; color: #b45309; }
+        .onesignal-status .status-value.denied { background: #fef2f2; color: #991b1b; }
+        .onesignal-status .status-value.error { background: #fee2e2; color: #dc2626; }
+
+        /* زر تفعيل الإشعارات */
+        #enableNotificationsBtn {
+            display: none;
+            margin-right: auto;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            height: 36px;
+        }
+        #enableNotificationsBtn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(2,128,144,0.3);
+        }
+        #enableNotificationsBtn:disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
 
         /* ===== سجل الإشعارات (جدول) ===== */
         .table-wrapper {
@@ -841,6 +870,8 @@
             .notification-card .notif-actions { width: 100%; justify-content: flex-start; margin-top: 8px; }
             .toolbar { padding: 12px 14px; }
             .toolbar .search-wrap { flex: 1 1 100%; }
+            .onesignal-status { flex-direction: column; align-items: stretch; gap: 10px; }
+            #enableNotificationsBtn { margin-right: 0; width: 100%; justify-content: center; }
         }
         @media (max-width: 576px) {
             .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -930,6 +961,9 @@
             <span class="status-label"><i class="fas fa-broadcast"></i> حالة الإشعارات الفورية:</span>
             <span class="status-value" id="osStatusText">جاري التحقق...</span>
             <span style="font-size:12px; color:var(--gray-400);" id="osPlayerId"></span>
+            <button id="enableNotificationsBtn" class="btn-tool primary" style="display:none;">
+                <i class="fas fa-bell"></i> تفعيل الإشعارات
+            </button>
         </div>
 
         <!-- ===== تبويبات ===== -->
@@ -1176,6 +1210,62 @@
                         statusEl.className = 'status-value';
                     }
                 }, 3000);
+
+                // 🆕 زر تفعيل الإشعارات (في حال لم يتم تحميله من support-notifications.js)
+                const enableBtn = document.getElementById('enableNotificationsBtn');
+                if (enableBtn) {
+                    // التحقق من الحالة وتحديث الزر
+                    setTimeout(() => {
+                        if (Notification.permission === 'granted') {
+                            enableBtn.style.display = 'none';
+                        } else {
+                            enableBtn.style.display = 'inline-flex';
+                            enableBtn.textContent = Notification.permission === 'denied' ? '🔔 إعادة التفعيل' : '🔔 تفعيل الإشعارات';
+                        }
+                    }, 1000);
+
+                    // حدث النقر
+                    enableBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        this.disabled = true;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الطلب...';
+                        try {
+                            // استخدام وظيفة الطلب من support-notifications.js إذا وجدت
+                            if (window.requestNotificationPermission && typeof window.requestNotificationPermission === 'function') {
+                                await window.requestNotificationPermission();
+                            } else {
+                                // خطة احتياطية: طلب إذن مباشر
+                                if (window.OneSignal && typeof window.OneSignal.Notifications?.requestPermission === 'function') {
+                                    const result = await window.OneSignal.Notifications.requestPermission({ force: true });
+                                    if (result === 'granted') {
+                                        window.location.reload();
+                                    } else {
+                                        alert('⚠️ لم يتم منح الإذن. يمكنك تغيير ذلك من إعدادات المتصفح.');
+                                    }
+                                } else {
+                                    const result = await Notification.requestPermission();
+                                    if (result === 'granted') {
+                                        window.location.reload();
+                                    } else {
+                                        alert('⚠️ لم يتم منح الإذن. يمكنك تغيير ذلك من إعدادات المتصفح.');
+                                    }
+                                }
+                            }
+                        } catch (err) {
+                            console.error('❌ Permission request failed:', err);
+                            alert('❌ حدث خطأ أثناء طلب الإذن. حاول مرة أخرى.');
+                        } finally {
+                            this.disabled = false;
+                            this.innerHTML = '<i class="fas fa-bell"></i> تفعيل الإشعارات';
+                            // تحديث الحالة
+                            if (Notification.permission === 'granted') {
+                                this.style.display = 'none';
+                                document.getElementById('osStatusText').textContent = '✅ مفعلة (Subscribed)';
+                                document.getElementById('osStatusText').className = 'status-value subscribed';
+                            }
+                        }
+                    });
+                }
 
                 console.log('✅ Fallback ready');
             }
