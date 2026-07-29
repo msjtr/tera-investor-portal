@@ -3,6 +3,10 @@
  * notification-api.js – الاتصال بـ Edge Functions (مُحسّن)
  * متوافق مع نظام المصادقة الموحد using withAuth
  * ============================================================
+ * 
+ * ✅ يستخدم withAuth لتوحيد المصادقة
+ * ✅ يعود تلقائياً إلى REST API إذا فشلت Edge Functions
+ * ✅ معالجة أخطاء محسّنة
  */
 
 (function() {
@@ -51,9 +55,34 @@
         return result;
     }
 
+    // ─── التحقق من وجود Edge Function ───
+    async function isEdgeFunctionAvailable(functionName) {
+        try {
+            const token = await getAccessToken();
+            if (!token) return false;
+            
+            const res = await fetch(`${FUNCTIONS_URL}/${functionName}`, {
+                method: 'HEAD',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            // إذا كان 404، الدالة غير موجودة
+            return res.status !== 404;
+        } catch {
+            return false;
+        }
+    }
+
     // ─── جلب الإشعارات عبر Edge Function ───
     async function fetchNotifications() {
         try {
+            // التحقق من وجود الدالة أولاً (اختياري، يمكن تعطيله لتوفير طلب إضافي)
+            // const available = await isEdgeFunctionAvailable('get-notifications');
+            // if (!available) {
+            //     console.log('ℹ️ [NotificationAPI] Edge Function not available, using REST API');
+            //     return await fetchNotificationsDirect();
+            // }
+
             const token = await getAccessToken();
             if (!token) {
                 console.warn('⚠️ [NotificationAPI] No access token available');
@@ -68,6 +97,12 @@
                 }
             });
 
+            // إذا كانت الدالة غير موجودة (404)، نعود مباشرة إلى REST API
+            if (res.status === 404) {
+                console.log('ℹ️ [NotificationAPI] Edge Function not found (404), using REST API');
+                return await fetchNotificationsDirect();
+            }
+
             const result = await res.json();
 
             if (!res.ok) {
@@ -78,7 +113,6 @@
             return result;
         } catch (err) {
             console.error('❌ [NotificationAPI] fetchNotifications error:', err);
-            // ✅ في حالة فشل Edge Function، نعود للطريقة المباشرة عبر REST API
             console.warn('⚠️ [NotificationAPI] Falling back to direct REST API...');
             return await fetchNotificationsDirect();
         }
@@ -120,6 +154,12 @@
                 body: JSON.stringify({ id, ...updates })
             });
 
+            // إذا كانت الدالة غير موجودة (404)، نعود مباشرة إلى REST API
+            if (res.status === 404) {
+                console.log('ℹ️ [NotificationAPI] Edge Function not found (404), using REST API');
+                return await updateNotificationDirect(id, updates);
+            }
+
             const result = await res.json();
 
             if (!res.ok) {
@@ -130,7 +170,6 @@
             return result;
         } catch (err) {
             console.error('❌ [NotificationAPI] updateNotification error:', err);
-            // ✅ في حالة فشل Edge Function، نعود للطريقة المباشرة عبر REST API
             console.warn('⚠️ [NotificationAPI] Falling back to direct REST API for update...');
             return await updateNotificationDirect(id, updates);
         }
@@ -166,9 +205,9 @@
         fetchNotifications,
         updateNotification,
         getAccessToken,
-        // تصدير الدوال المباشرة للاستخدام الاختياري
         fetchNotificationsDirect,
-        updateNotificationDirect
+        updateNotificationDirect,
+        isEdgeFunctionAvailable // للاستخدام الاختياري
     };
 
     console.log('✅ notification-api.js ready (with fallback to REST API)');
