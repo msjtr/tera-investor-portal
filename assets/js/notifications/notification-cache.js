@@ -2,6 +2,11 @@
  * ============================================================
  * notification-cache.js – الكاش المحلي (مُحسّن ومتكامل)
  * ============================================================
+ * 
+ * ✅ يدير الإشعارات محلياً مع تحديث تلقائي للواجهة
+ * ✅ يستمع للتغييرات ويُعلم المكونات الأخرى
+ * ✅ يتكامل مع NotificationUI و Support و NotificationManager
+ * ✅ يمنع التحديثات المتكررة عبر debounce
  */
 
 (function() {
@@ -15,23 +20,40 @@
             this.items = [];
             this.listeners = [];
             this.isInitialized = false;
+            this._uiTimer = null;
+            this._badgeTimer = null;
         }
 
         // ─── تهيئة الكاش ───
         init(items) {
-            this.items = items || [];
+            // منع التكرارات
+            const uniqueItems = items ? this._deduplicate(items) : [];
+            this.items = uniqueItems;
             this.isInitialized = true;
             this.notify();
             return this;
         }
 
+        // ─── إزالة التكرارات ───
+        _deduplicate(items) {
+            const seen = new Set();
+            return items.filter(item => {
+                if (seen.has(item.id)) return false;
+                seen.add(item.id);
+                return true;
+            });
+        }
+
         // ─── إضافة إشعار جديد ───
         add(item) {
             if (!item || !item.id) return false;
-            if (this.items.some(n => n.id === item.id)) return false;
+            // منع التكرار
+            if (this.items.some(n => n.id === item.id)) {
+                // إذا كان موجوداً، نحدثه بدلاً من إضافته
+                return this.update(item.id, item);
+            }
             this.items.unshift(item);
-            this.notify();
-            this.triggerUIUpdate();
+            this._scheduleUIUpdate();
             return true;
         }
 
@@ -41,8 +63,7 @@
             const idx = this.items.findIndex(n => n.id === id);
             if (idx === -1) return false;
             this.items[idx] = { ...this.items[idx], ...updates };
-            this.notify();
-            this.triggerUIUpdate();
+            this._scheduleUIUpdate();
             return true;
         }
 
@@ -52,8 +73,7 @@
             const idx = this.items.findIndex(n => n.id === id);
             if (idx === -1) return false;
             this.items.splice(idx, 1);
-            this.notify();
-            this.triggerUIUpdate();
+            this._scheduleUIUpdate();
             return true;
         }
 
@@ -61,8 +81,7 @@
         deleteMultiple(ids) {
             if (!ids || ids.length === 0) return false;
             this.items = this.items.filter(n => !ids.includes(n.id));
-            this.notify();
-            this.triggerUIUpdate();
+            this._scheduleUIUpdate();
             return true;
         }
 
@@ -114,13 +133,13 @@
         reset() {
             this.items = [];
             this.isInitialized = false;
-            this.notify();
-            this.triggerUIUpdate();
+            this._scheduleUIUpdate();
         }
 
         // ─── إضافة مستمع ───
         addListener(callback) {
             this.listeners.push(callback);
+            // إرجاع دالة لإزالة المستمع
             return () => {
                 this.listeners = this.listeners.filter(cb => cb !== callback);
             };
@@ -139,34 +158,55 @@
             });
         }
 
+        // ─── جدولة تحديث الواجهة (debounce) ───
+        _scheduleUIUpdate() {
+            // إخطار المستمعين أولاً
+            this.notify();
+
+            // تحديث الواجهة بعد تأخير قصير (لتجميع التغييرات المتعددة)
+            if (this._uiTimer) {
+                clearTimeout(this._uiTimer);
+                this._uiTimer = null;
+            }
+            this._uiTimer = setTimeout(() => {
+                this._uiTimer = null;
+                this._updateUI();
+            }, 80);
+        }
+
         // ─── تحديث الواجهة والعداد تلقائياً ───
-        triggerUIUpdate() {
-            // تحديث الـ UI إذا كان متاحاً
+        _updateUI() {
+            // 1. تحديث الـ UI
             if (window.NotificationUI && typeof window.NotificationUI.refresh === 'function') {
-                // نستخدم setTimeout لتجنب التكرار المتكرر
-                if (this._uiTimer) clearTimeout(this._uiTimer);
-                this._uiTimer = setTimeout(() => {
+                try {
                     window.NotificationUI.refresh();
-                    this._uiTimer = null;
-                }, 100);
+                } catch (e) {
+                    console.warn('⚠️ UI refresh error:', e);
+                }
             }
 
-            // تحديث العداد العام
+            // 2. تحديث العداد العام
             if (window.Support && typeof window.Support.updateNotificationBadge === 'function') {
-                if (this._badgeTimer) clearTimeout(this._badgeTimer);
-                this._badgeTimer = setTimeout(() => {
-                    window.Support.updateNotificationBadge();
+                if (this._badgeTimer) {
+                    clearTimeout(this._badgeTimer);
                     this._badgeTimer = null;
-                }, 150);
+                }
+                this._badgeTimer = setTimeout(() => {
+                    this._badgeTimer = null;
+                    try {
+                        window.Support.updateNotificationBadge();
+                    } catch (e) {
+                        console.warn('⚠️ Badge update error:', e);
+                    }
+                }, 50);
             }
 
-            // تحديث المدير إذا كان متاحاً
-            if (window.NotificationManager) {
-                const manager = window.NotificationManager;
-                if (manager.getState && manager.getState().notify) {
-                    // إعلام المدير بتغير البيانات
-                    manager.getState().cache = this.items;
-                    manager.getState().recalculate();
+            // 3. إعلام NotificationManager بتغير البيانات (إن وجد)
+            if (window.NotificationManager && typeof window.NotificationManager.refreshUI === 'function') {
+                try {
+                    window.NotificationManager.refreshUI();
+                } catch (e) {
+                    // تجاهل
                 }
             }
         }
@@ -190,11 +230,12 @@
         size: () => cache.size(),
         reset: () => cache.reset(),
         addListener: (cb) => cache.addListener(cb),
-        _instance: cache // للوصول الداخلي
+        // للوصول الداخلي
+        _instance: cache
     };
 
     // ─── إضافة متغير داخلي للوصول السريع ───
     window.__notificationCacheInstance = cache;
 
-    console.log('✅ notification-cache.js ready (enhanced with auto-refresh)');
+    console.log('✅ notification-cache.js ready (enhanced with auto-refresh and debounce)');
 })();
