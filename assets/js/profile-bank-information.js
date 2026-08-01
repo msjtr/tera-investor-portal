@@ -295,7 +295,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'bank_info');
 
-                    showAlert('✅ تم حفظ البيانات البنكية. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد البيانات البنكية', 'security').catch(function(){}); }
+                    showAlert('✅ تم حفظ البيانات البنكية. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد البيانات البنكية', 'security').catch(function(){}); } if (window.TeraActivity) { window.TeraActivity.logEvent(user.id, 'تحديث البيانات البنكية', 'تم تحديث البيانات البنكية المرتبطة بحسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(user.email, 'bank_update', (user.user_metadata && user.user_metadata.full_name) || ''); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
