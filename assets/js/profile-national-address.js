@@ -343,7 +343,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'national_address');
 
-                    showAlert('✅ تم حفظ العنوان الوطني. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد العنوان الوطني', 'security').catch(function(){}); }
+                    showAlert('✅ تم حفظ العنوان الوطني. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد العنوان الوطني', 'security').catch(function(){}); } if (window.TeraActivity) { window.TeraActivity.logEvent(user.id, 'تحديث العنوان الوطني', 'تم تحديث العنوان الوطني المرتبط بحسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(user.email, 'address_update', (user.user_metadata && user.user_metadata.full_name) || ''); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
