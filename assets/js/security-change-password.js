@@ -284,7 +284,7 @@
                 throw error;
             }
 
-            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الحالي.', 'success');
+            showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني الحالي.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(currentUser.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتغيير كلمة المرور', 'security').catch(function(){}); }
             const otpCode = document.getElementById('otpCode');
             if (otpCode) {
                 otpCode.disabled = false;
