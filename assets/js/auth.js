@@ -293,7 +293,7 @@
         }
     }
 
-    async function sendAuthEmail(email, eventType, fullName) { try { if (!email || !eventType) return; const sb = await getSupabase(); if (!sb) return; await sb.functions.invoke('send-auth-email', { body: { email: email, eventType: eventType, fullName: fullName || '' } }); } catch (e) { } }
+    async function sendAuthEmail(email, eventType, fullName) { try { if (!email || !eventType) return; const sb = await getSupabase(); if (!sb) return; const url = (sb.supabaseUrl || 'https://ucmzavrsgkfpypgewpbd.supabase.co') + '/functions/v1/send-auth-email'; const key = sb.supabaseKey || ''; fetch(url, { method: 'POST', keepalive: true, headers: { 'Authorization': 'Bearer ' + key, 'apikey': key, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, eventType: eventType, fullName: fullName || '' }) }).catch(function(e) {}); } catch (e) { } }
 
     async function logNotificationEvent(userId, title, body, type) { try { if (!userId) return; const sb = await getSupabase(); if (!sb) return; const now = new Date(); const dateStr = now.toLocaleString('ar-SA', { calendar: 'gregory', timeZone: 'Asia/Riyadh', day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }); const fullBody = (body || '') + ' - بتاريخ ' + dateStr; await sb.from('notifications').insert({ user_id: userId, title: title, body: fullBody, type: type || 'security', priority: 'normal', status: 'unread', is_read: false, sender: 'system', created_at: now.toISOString(), updated_at: now.toISOString() }); } catch (e) { console.warn('logNotificationEvent failed:', e.message); } } // ─── تسجيل الدخول الأساسي ───
     async function login(email, password) {
