@@ -524,6 +524,10 @@
             showAlert('تم تقديم الطلب', 'success');
             closeModal('newRequestModal');
             fetchRequests();
+            if (window.TeraActivity && currentUser) {
+                window.TeraActivity.logEvent(currentUser.id, 'طلب تغيير رقم الجوال', 'تم تقديم طلب لتغيير رقم الجوال المرتبط بحسابك', 'security').catch(function(e) {});
+                window.TeraActivity.sendEmail(currentUser.email, 'mobile_change', (currentUser.user_metadata && currentUser.user_metadata.full_name) || '');
+            }
         } else {
             showAlert('فشل تقديم الطلب', 'error');
         }
