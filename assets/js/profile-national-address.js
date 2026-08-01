@@ -343,7 +343,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'national_address');
 
-                    showAlert('✅ تم حفظ العنوان الوطني. جاري توجيهك لتأكيد هويتك...', 'success');
+                    showAlert('✅ تم حفظ العنوان الوطني. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد العنوان الوطني', 'security').catch(function(){}); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
