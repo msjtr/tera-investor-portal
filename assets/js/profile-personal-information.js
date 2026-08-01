@@ -410,7 +410,7 @@
 
                     await updateProgressTracker(supabase, user.id);
 
-                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد المعلومات الشخصية', 'security').catch(function(){}); }
+                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد المعلومات الشخصية', 'security').catch(function(){}); } if (window.TeraActivity) { window.TeraActivity.logEvent(user.id, 'تحديث البيانات الشخصية', 'تم تحديث بياناتك الشخصية بنجاح', 'security').catch(function(e){}); window.TeraActivity.sendEmail(user.email, 'profile_update', (user.user_metadata && user.user_metadata.full_name) || ''); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
@@ -441,7 +441,7 @@
                     }, { onConflict: 'user_id' });
 
                     await updateProgressTracker(supabase, user.id);
-                    showAlert('✅ تم إرسال طلبك للمراجعة بنجاح!', 'success');
+                    showAlert('✅ تم إرسال طلبك للمراجعة بنجاح!', 'success'); if (window.TeraActivity) { window.TeraActivity.logEvent(user.id, 'تقديم طلب مراجعة الحساب', 'تم تقديم طلب لمراجعة حسابك بالكامل', 'security').catch(function(e){}); window.TeraActivity.sendEmail(user.email, 'profile_update', (user.user_metadata && user.user_metadata.full_name) || ''); }
                 } catch (error) {
                     showAlert('تعذر الإرسال: ' + error.message, 'error');
                 }
