@@ -62,7 +62,7 @@ const ForgotPasswordModule = {
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // تخزين البريد الإلكتروني في الجلسة لاستخدامه في صفحة OTP
-            sessionStorage.setItem('tera_reset_email', email);
+            sessionStorage.setItem('tera_reset_email', email); try { const sb = window.teraSupabase; if (sb) { fetch('https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/forgot-password-notify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sb.supabaseKey, 'apikey': sb.supabaseKey }, body: JSON.stringify({ email: email }) }).catch(function(e){ console.warn('forgot-password-notify failed:', e); }); } } catch (notifyErr) { console.warn('forgot-password-notify failed:', notifyErr); }
 
             // 3. عرض رسالة النجاح والتوجيه
             this.showAlert('تم إرسال رمز التحقق إلى بريدك بنجاح.', 'success');
