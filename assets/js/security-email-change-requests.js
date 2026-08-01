@@ -653,6 +653,10 @@
             if (error) throw error;
 
             showAlert('✅ تم إرسال طلب تغيير البريد الإلكتروني بنجاح، وسيتم مراجعته قريباً.', 'success');
+            if (window.TeraActivity && currentUser) {
+                window.TeraActivity.logEvent(currentUser.id, 'طلب تغيير البريد الإلكتروني', 'تم تقديم طلب لتغيير البريد الإلكتروني المرتبط بحسابك', 'security').catch(function(e) {});
+                window.TeraActivity.sendEmail(currentUser.email, 'email_change_request', (currentUser.user_metadata && currentUser.user_metadata.full_name) || '');
+            }
             newRequestModal.classList.remove('show');
             newRequestModal.style.display = 'none';
             newRequestForm.reset();
