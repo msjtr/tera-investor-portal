@@ -464,7 +464,7 @@
             return;
         }
 
-        document.getElementById('otpSectionNew').style.display = 'block';
+        document.getElementById('otpSectionNew').style.display = 'block'; if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(currentUser.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتغيير رقم الجوال', 'security').catch(function(){}); }
         document.getElementById('sendOtpBtnNew').style.display = 'none';
         const verifyBtn = document.getElementById('verifyOtpBtnNew');
         if (verifyBtn) {
