@@ -255,6 +255,7 @@
                 closeModal();
                 showToast('تم التفعيل بنجاح', 'success');
                 if (result.backup_codes) showBackupCodesModal(result.backup_codes);
+                (async function() { try { const u = await window.Auth.getUser(); if (u && window.TeraActivity) { window.TeraActivity.logEvent(u.id, 'تفعيل المصادقة الثنائية', 'تم تفعيل المصادقة الثنائية (2FA) على حسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(u.email, 'two_factor_change', (u.user_metadata && u.user_metadata.full_name) || ''); } } catch(e) {} })();
                 await loadData();
             } else {
                 if (errorEl) { errorEl.textContent = result?.error || 'فشل التفعيل'; errorEl.style.display = 'block'; }
@@ -308,6 +309,7 @@
             const result = await regenerateBackupCodes(token);
             if (result.success) {
                 closeModal(); showToast('تم إنشاء رموز جديدة', 'success');
+                (async function() { try { const u = await window.Auth.getUser(); if (u && window.TeraActivity) { window.TeraActivity.logEvent(u.id, 'إعادة توليد رموز الاسترجاع', 'تم إنشاء رموز استرجاع جديدة للمصادقة الثنائية لحسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(u.email, 'two_factor_change', (u.user_metadata && u.user_metadata.full_name) || ''); } } catch(e) {} })();
                 showBackupCodesModal(result.backup_codes); await loadData();
             } else showToast('فشل', 'error');
         } catch (err) { showToast('خطأ: ' + err.message, 'error'); }
@@ -323,7 +325,7 @@
         if (!token) return;
         try {
             const result = await disableTwoFactor(token);
-            if (result.success) { closeModal(); showToast('تم التعطيل', 'success'); await loadData(); }
+            if (result.success) { closeModal(); showToast('تم التعطيل', 'success'); await loadData(); (async function() { try { const u = await window.Auth.getUser(); if (u && window.TeraActivity) { window.TeraActivity.logEvent(u.id, 'تعطيل المصادقة الثنائية', 'تم تعطيل المصادقة الثنائية (2FA) على حسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(u.email, 'two_factor_change', (u.user_metadata && u.user_metadata.full_name) || ''); } } catch(e) {} })(); }
             else showToast('فشل التعطيل', 'error');
         } catch (err) { showToast('خطأ: ' + err.message, 'error'); }
     }
