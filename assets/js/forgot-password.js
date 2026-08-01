@@ -13,7 +13,7 @@ const ForgotPasswordModule = {
     cacheDOM() {
         this.form = document.getElementById('forgotPasswordForm');
         if (this.form) {
-            this.emailInput = this.form.querySelector('#email');
+            this.emailInput = this.form.querySelector('#identity');
             this.submitBtn = this.form.querySelector('button[type="submit"]');
             // إنشاء حاوية للرسائل التنبيهية أعلى النموذج إذا لم تكن موجودة
             this.alertBox = document.createElement('div');
