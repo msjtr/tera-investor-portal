@@ -222,6 +222,10 @@
             if (error) alert(error.code === '42501' ? 'ليس لديك صلاحية.' : 'حدث خطأ.');
         }
         if (!result.success) { alert('تعذر إنهاء الجلسة.'); return; }
+        if (window.TeraActivity && currentUser) {
+            window.TeraActivity.logEvent(currentUser.id, 'إنهاء جلسة دخول', 'تم إنهاء إحدى جلسات الدخول النشطة في حسابك', 'security').catch(function(e) {});
+            window.TeraActivity.sendEmail(currentUser.email, 'session_terminate', (currentUser.user_metadata && currentUser.user_metadata.full_name) || '');
+        }
         if (isCurrent && window.Auth?.logout) { await window.Auth.logout(); return; }
         await fetchSessions();
     };
@@ -235,6 +239,10 @@
                     window.UIHelpers.showToast(`تم إنهاء ${result.count} جلسة نشطة أخرى.`, 'info', 3000);
                 } else {
                     alert(`تم إنهاء ${result.count} جلسة نشطة أخرى.`);
+                }
+                if (window.TeraActivity && currentUser) {
+                    window.TeraActivity.logEvent(currentUser.id, 'إنهاء جميع الجلسات', 'تم إنهاء جميع الجلسات النشطة الأخرى في حسابك', 'security').catch(function(e) {});
+                    window.TeraActivity.sendEmail(currentUser.email, 'all_sessions_terminate', (currentUser.user_metadata && currentUser.user_metadata.full_name) || '');
                 }
                 await fetchSessions();
             }
