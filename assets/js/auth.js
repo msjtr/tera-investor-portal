@@ -310,7 +310,7 @@
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} 
+        if (currentUser && currentUser.id) { try {  await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
         await unregisterPushNotifications();
 
         if (window.SessionManager) {
