@@ -293,6 +293,8 @@
         }
     }
 
+    async function sendAuthEmail(email, eventType, fullName) { try { if (!email || !eventType) return; const sb = await getSupabase(); if (!sb) return; await sb.functions.invoke('send-auth-email', { body: { email: email, eventType: eventType, fullName: fullName || '' } }); } catch (e) { } }
+
     async function logNotificationEvent(userId, title, body, type) { try { if (!userId) return; const sb = await getSupabase(); if (!sb) return; const now = new Date(); const dateStr = now.toLocaleString('ar-SA', { calendar: 'gregory', timeZone: 'Asia/Riyadh', day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }); const fullBody = (body || '') + ' - بتاريخ ' + dateStr; await sb.from('notifications').insert({ user_id: userId, title: title, body: fullBody, type: type || 'security', priority: 'normal', status: 'unread', is_read: false, sender: 'system', created_at: now.toISOString(), updated_at: now.toISOString() }); } catch (e) { console.warn('logNotificationEvent failed:', e.message); } } // ─── تسجيل الدخول الأساسي ───
     async function login(email, password) {
         const sb = await getSupabase();
@@ -303,14 +305,14 @@
             currentUser = data.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-            registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e)); logNotificationEvent(data.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك بنجاح', 'security').catch(e => {});
+            registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e)); logNotificationEvent(data.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك بنجاح', 'security').catch(e => {}); sendAuthEmail(data.user.email, 'login', (data.user.user_metadata && data.user.user_metadata.full_name) || '');
         }
         return data;
     }
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        try { let uid = (currentUser && currentUser.id) || null; if (!uid) { const sb2 = await getSupabase(); const r2 = await sb2.auth.getUser(); uid = r2 && r2.data && r2.data.user ? r2.data.user.id : null; } if (uid) { await logNotificationEvent(uid, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } } catch (e) {} await unregisterPushNotifications();
+        try { let uid = (currentUser && currentUser.id) || null; let uEmail = (currentUser && currentUser.email) || null; if (!uid) { const sb2 = await getSupabase(); const r2 = await sb2.auth.getUser(); uid = r2 && r2.data && r2.data.user ? r2.data.user.id : null; uEmail = r2 && r2.data && r2.data.user ? r2.data.user.email : uEmail; } if (uid) { await logNotificationEvent(uid, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } if (uEmail) { sendAuthEmail(uEmail, 'logout', ''); } } catch (e) {} await unregisterPushNotifications();
 
         if (window.SessionManager) {
             try {
@@ -435,7 +437,7 @@
                 currentUser = data.session.user;
                 currentUserCacheTime = Date.now();
                 startSessionRefresh();
-                registerPushNotifications(data.session.user.id).catch(e => console.warn('⚠️ OneSignal OTP:', e)); logNotificationEvent(data.session.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك عبر رمز التحقق', 'security').catch(e => {});
+                registerPushNotifications(data.session.user.id).catch(e => console.warn('⚠️ OneSignal OTP:', e)); logNotificationEvent(data.session.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك عبر رمز التحقق', 'security').catch(e => {}); sendAuthEmail(data.session.user.email, 'login', (data.session.user.user_metadata && data.session.user.user_metadata.full_name) || '');
             }
             return data;
         },
