@@ -410,7 +410,7 @@
 
                     await updateProgressTracker(supabase, user.id);
 
-                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success');
+                    showAlert('✅ تم حفظ البيانات. سيتم توجيهك لتأكيد هويتك برمز التحقق.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد المعلومات الشخصية', 'security').catch(function(){}); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
