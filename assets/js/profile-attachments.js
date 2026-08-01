@@ -256,7 +256,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'attachments');
 
-                    showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success');
+                    showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لإكمال حفظ المرفقات', 'security').catch(()=>{}); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 1500);
@@ -293,7 +293,7 @@
                     });
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'document_view');
-                    showAlert('تم إرسال رمز التحقق إلى بريدكم الإلكتروني.', 'success');
+                    showAlert('تم إرسال رمز التحقق إلى بريدكم الإلكتروني.', 'success'); if (window.Auth && window.Auth.notifyEvent && user) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لعرض مستند بشكل آمن', 'security').catch(()=>{}); }
                     document.getElementById('docViewerStep1').style.display = 'none';
                     document.getElementById('docViewerStep2').style.display = 'block';
                     const docOtpInput = document.getElementById('docOtpInput');
