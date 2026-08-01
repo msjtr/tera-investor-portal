@@ -293,7 +293,7 @@
         }
     }
 
-    // ─── تسجيل الدخول الأساسي ───
+    async function logNotificationEvent(userId, title, body, type) { try { if (!userId) return; const sb = await getSupabase(); if (!sb) return; await sb.from('notifications').insert({ user_id: userId, title: title, body: body || '', type: type || 'security', priority: 'normal', status: 'unread', is_read: false, sender: 'system', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }); } catch (e) { console.warn('logNotificationEvent failed:', e.message); } } // ─── تسجيل الدخول الأساسي ───
     async function login(email, password) {
         const sb = await getSupabase();
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
@@ -303,14 +303,14 @@
             currentUser = data.user;
             currentUserCacheTime = Date.now();
             startSessionRefresh();
-            registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e));
+            registerPushNotifications(data.user.id).catch(e => console.warn('⚠️ OneSignal login:', e)); logNotificationEvent(data.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك بنجاح', 'security').catch(e => {});
         }
         return data;
     }
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        stopSessionRefresh();
+        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
         await unregisterPushNotifications();
 
         if (window.SessionManager) {
@@ -404,7 +404,7 @@
                         });
                     }
                     if (event === 'SIGNED_OUT') {
-                        stopSessionRefresh();
+                        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
                         currentUser = null;
                         currentUserCacheTime = 0;
                         clearStorage();
@@ -436,7 +436,7 @@
                 currentUser = data.session.user;
                 currentUserCacheTime = Date.now();
                 startSessionRefresh();
-                registerPushNotifications(data.session.user.id).catch(e => console.warn('⚠️ OneSignal OTP:', e));
+                registerPushNotifications(data.session.user.id).catch(e => console.warn('⚠️ OneSignal OTP:', e)); logNotificationEvent(data.session.user.id, 'تسجيل دخول جديد', 'تم تسجيل الدخول إلى حسابك عبر رمز التحقق', 'security').catch(e => {});
             }
             return data;
         },
@@ -493,7 +493,7 @@
         startSessionRefresh,
         stopSessionRefresh,
         // OneSignal
-        registerPushNotifications,
+        registerPushNotifications, notifyEvent: logNotificationEvent,
         unregisterPushNotifications
     };
 
