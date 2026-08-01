@@ -497,6 +497,12 @@
         registerPushNotifications, notifyEvent: logNotificationEvent,
         unregisterPushNotifications
     };
+    // ─── تعريض دوال تسجيل النشاط والبريد للاستخدام من ملفات أخرى ───
+    window.TeraActivity = {
+        logEvent: logNotificationEvent,
+        sendEmail: sendAuthEmail
+    };
+
 
     console.log('✅ auth.js v36 جاهز (مع دالة واحدة للتسجيل والتحقق)');
 })();
