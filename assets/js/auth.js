@@ -310,7 +310,7 @@
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        try { let uid = (currentUser && currentUser.id) || null; if (!uid) { const sb2 = await getSupabase(); const r2 = await sb2.auth.getUser(); uid = r2 && r2.data && r2.data.user ? r2.data.user.id : null; } if (uid) { await logNotificationEvent(uid, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} stopSessionRefresh();
+        try { let uid = (currentUser && currentUser.id) || null; if (!uid) { const sb2 = await getSupabase(); const r2 = await sb2.auth.getUser(); uid = r2 && r2.data && r2.data.user ? r2.data.user.id : null; } if (uid) { await logNotificationEvent(uid, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', '
         await unregisterPushNotifications();
 
         if (window.SessionManager) {
@@ -404,7 +404,7 @@
                         });
                     }
                     if (event === 'SIGNED_OUT') {
-                        if (currentUser && currentUser.id) { try { logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} stopSessionRefresh();
+                        if (currentUser && currentUser.id) { try { logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {}} stopSessionRefresh();
                         currentUser = null;
                         currentUserCacheTime = 0;
                         clearStorage();
