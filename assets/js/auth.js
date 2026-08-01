@@ -310,7 +310,7 @@
 
     // ─── تسجيل الخروج الآمن ───
     async function logout() {
-        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
+        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} 
         await unregisterPushNotifications();
 
         if (window.SessionManager) {
@@ -404,7 +404,7 @@
                         });
                     }
                     if (event === 'SIGNED_OUT') {
-                        if (currentUser && currentUser.id) { try { await logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
+                        if (currentUser && currentUser.id) { try { logNotificationEvent(currentUser.id, 'تسجيل خروج', 'تم تسجيل الخروج من حسابك بنجاح', 'security'); } catch (e) {} } stopSessionRefresh();
                         currentUser = null;
                         currentUserCacheTime = 0;
                         clearStorage();
