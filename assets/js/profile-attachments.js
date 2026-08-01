@@ -135,7 +135,7 @@
                 if (error) {
                     showAlert('فشل حذف المرفق.', 'error');
                 } else {
-                    showAlert('تم حذف المرفق بنجاح.', 'success');
+                    showAlert('تم حذف المرفق بنجاح.', 'success'); (async function(){ try { const u = await window.Auth.getUser(); if (u && window.TeraActivity) { window.TeraActivity.logEvent(u.id, 'حذف مرفق', 'تم حذف أحد المرفقات من حسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(u.email, 'attachment_update', (u.user_metadata && u.user_metadata.full_name) || ''); } } catch(e) {} })();
                     loadAttachments(supabase, userId);
                 }
             });
@@ -256,7 +256,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'attachments');
 
-                    showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لإكمال حفظ المرفقات', 'security').catch(()=>{}); }
+                    showAlert('✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لإكمال حفظ المرفقات', 'security').catch(()=>{}); } if (window.TeraActivity) { window.TeraActivity.logEvent(user.id, 'تحديث المرفقات', 'تم تحديث المرفقات الخاصة بحسابك', 'security').catch(function(e){}); window.TeraActivity.sendEmail(user.email, 'attachment_update', (user.user_metadata && user.user_metadata.full_name) || ''); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 1500);
