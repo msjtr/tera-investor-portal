@@ -295,7 +295,7 @@
                     localStorage.setItem('pendingVerificationEmail', user.email);
                     localStorage.setItem('tera_verify_type', 'bank_info');
 
-                    showAlert('✅ تم حفظ البيانات البنكية. جاري توجيهك لتأكيد هويتك...', 'success');
+                    showAlert('✅ تم حفظ البيانات البنكية. جاري توجيهك لتأكيد هويتك...', 'success'); if (window.Auth && window.Auth.notifyEvent) { window.Auth.notifyEvent(user.id, 'رمز تحقق مرسل', 'تم إرسال رمز تحقق إلى بريدك الإلكتروني لتأكيد البيانات البنكية', 'security').catch(function(){}); }
                     setTimeout(() => {
                         window.location.replace('/auth/verify-otp.html');
                     }, 2000);
