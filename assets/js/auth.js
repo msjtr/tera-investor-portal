@@ -293,7 +293,7 @@
         }
     }
 
-    async function logNotificationEvent(userId, title, body, type) { try { if (!userId) return; const sb = await getSupabase(); if (!sb) return; await sb.from('notifications').insert({ user_id: userId, title: title, body: body || '', type: type || 'security', priority: 'normal', status: 'unread', is_read: false, sender: 'system', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }); } catch (e) { console.warn('logNotificationEvent failed:', e.message); } } // ─── تسجيل الدخول الأساسي ───
+    async function logNotificationEvent(userId, title, body, type) { try { if (!userId) return; const sb = await getSupabase(); if (!sb) return; const now = new Date(); const dateStr = now.toLocaleString('ar-SA', { calendar: 'gregory', timeZone: 'Asia/Riyadh', day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }); const fullBody = (body || '') + ' - بتاريخ ' + dateStr; await sb.from('notifications').insert({ user_id: userId, title: title, body: fullBody, type: type || 'security', priority: 'normal', status: 'unread', is_read: false, sender: 'system', created_at: now.toISOString(), updated_at: now.toISOString() }); } catch (e) { console.warn('logNotificationEvent failed:', e.message); } } // ─── تسجيل الدخول الأساسي ───
     async function login(email, password) {
         const sb = await getSupabase();
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
