@@ -328,6 +328,7 @@
 
             await updateVerificationAndSubmit();
             showAlert('✅ تم حفظ بيانات الاتصال بنجاح.', 'success');
+            if (window.TeraActivity && currentUser) { window.TeraActivity.logEvent(currentUser.id, 'تحديث بيانات التواصل', 'تم تحديث بيانات التواصل الخاصة بحسابك بنجاح', 'security').catch(function(e){}); window.TeraActivity.sendEmail(currentUser.email, 'contact_update', (currentUser.user_metadata && currentUser.user_metadata.full_name) || ''); }
         } catch (err) {
             console.error(err);
             showAlert('تعذر حفظ البيانات. تأكد من اتصالك وحاول مجدداً.', 'error');
