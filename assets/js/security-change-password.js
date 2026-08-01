@@ -538,6 +538,10 @@
 
             showAlert('✅ تم تغيير كلمة المرور بنجاح.', 'success');
             showSuccessModal();
+            if (window.TeraActivity && currentUser) {
+                window.TeraActivity.logEvent(currentUser.id, 'تغيير كلمة المرور', 'تم تغيير كلمة المرور الخاصة بحسابك بنجاح', 'security').catch(function(e) {});
+                window.TeraActivity.sendEmail(currentUser.email, 'password_change', (currentUser.user_metadata && currentUser.user_metadata.full_name) || '');
+            }
 
             if (currentPasswordInput) currentPasswordInput.value = '';
             if (newPasswordInput) newPasswordInput.value = '';
