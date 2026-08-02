@@ -4,6 +4,8 @@
 (function() {
 'use strict';
 
+const NOTIFY_DISPATCH_URL = 'https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/notify-dispatch';
+
 let supabase = null;
 let updateActivityInterval = null;
 
@@ -72,6 +74,24 @@ async function initPageAuthAndHeader() {
   return user;
 }
 
+// يرسل إشعار Push + بريد إلكتروني فوراً عبر notify-dispatch باستخدام توكن جلسة
+// المستخدم نفسه (self-only) - لا حاجة لأي مفتاح سري على العميل.
+async function dispatchNotification(notificationId) {
+  if (!notificationId) return;
+  try {
+    const sb = await getSupabase();
+    if (!sb) return;
+    const { data: sessionData } = await sb.auth.getSession();
+    const token = sessionData && sessionData.session && sessionData.session.access_token;
+    if (!token) return;
+    await fetch(NOTIFY_DISPATCH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ notificationId: notificationId })
+    });
+  } catch (e) { console.warn('[withdraw-request] dispatchNotification failed', e); }
+}
+
 async function logActivityAndNotify(user, opts) {
   try {
     const sb = await getSupabase();
@@ -91,7 +111,7 @@ async function logActivityAndNotify(user, opts) {
   try {
     const sb = await getSupabase();
     if (!sb) return;
-    await sb.from('notifications').insert({
+    const { data: notif, error } = await sb.from('notifications').insert({
       user_id: user.id,
       title: opts.notifTitle || opts.description,
       body: opts.notifBody || opts.description,
@@ -100,7 +120,10 @@ async function logActivityAndNotify(user, opts) {
       status: 'unread',
       action_url: opts.actionUrl || null,
       sender: 'system'
-    });
+    }).select().maybeSingle();
+    if (!error && notif && notif.id) {
+      dispatchNotification(notif.id);
+    }
   } catch (e) { console.warn('notifications insert failed', e); }
 }
 
@@ -163,12 +186,12 @@ function renderRequests(list) {
     return '<div class="contract-card">' +
       '<div class="contract-card-top"><div class="contract-card-title"><i class="fas fa-receipt" style="color:var(--primary);margin-left:8px;"></i>' + (r.reference_number || ('#' + r.id)) + '</div>' + statusBadge(r.status) + '</div>' +
       '<div class="contract-card-grid" style="margin-bottom:16px;">' +
-        '<div><div class="contract-metric-label">المبلغ</div><div class="contract-metric-value">' + fmtMoney(r.amount) + '</div></div>' +
-        '<div><div class="contract-metric-label">البنك</div><div class="contract-metric-value" style="font-size:13px;">' + (r.bank_name||'-') + '</div></div>' +
-        '<div><div class="contract-metric-label">تاريخ الطلب</div><div class="contract-metric-value" style="font-size:13px;">' + fmtDateShort(r.requested_at || r.created_at) + '</div></div>' +
+      '<div><div class="contract-metric-label">المبلغ</div><div class="contract-metric-value">' + fmtMoney(r.amount) + '</div></div>' +
+      '<div><div class="contract-metric-label">البنك</div><div class="contract-metric-value" style="font-size:13px;">' + (r.bank_name||'-') + '</div></div>' +
+      '<div><div class="contract-metric-label">تاريخ الطلب</div><div class="contract-metric-value" style="font-size:13px;">' + fmtDateShort(r.requested_at || r.created_at) + '</div></div>' +
       '</div>' +
       buildTimeline(r) +
-    '</div>';
+      '</div>';
   }).join('');
 }
 
