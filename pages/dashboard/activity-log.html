@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+<title>سجل النشاط | Tera Investor Portal</title>
+
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="apple-touch-icon" href="/images/share-thumb.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<link rel="stylesheet" href="/assets/css/core.css" />
+<link rel="stylesheet" href="/assets/css/main.css" />
+<link rel="stylesheet" href="/assets/css/responsive.css" />
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="/assets/js/onesignal-init.js" defer></script>
+
+<style>
+.activity-filters-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:4px;}
+.activity-filters-bar .filter-group{display:flex;align-items:center;gap:8px;}
+.activity-filters-bar .filter-group label{font-size:13px;font-weight:700;color:#0A1B3F;white-space:nowrap;}
+.activity-filters-bar select,.activity-filters-bar input{padding:8px 14px;border:1px solid #d1d9e6;border-radius:8px;font-family:inherit;font-size:13px;background:#fafcff;color:#1e293b;outline:none;height:40px;transition:0.2s;}
+.activity-filters-bar select:focus,.activity-filters-bar input:focus{border-color:#028090;box-shadow:0 0 0 4px rgba(2,128,144,0.10);}
+.activity-filters-bar input[type="search"]{min-width:200px;}
+.btn-filter-reset{padding:8px 20px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-weight:700;font-size:13px;cursor:pointer;height:40px;display:inline-flex;align-items:center;gap:6px;font-family:'Tajawal',sans-serif;}
+.btn-filter-reset:hover{background:#f1f5f9;border-color:#cbd5e1;}
+
+.timeline-wrapper{position:relative;padding:8px 4px;}
+.timeline-item{position:relative;display:flex;gap:16px;padding-bottom:26px;}
+.timeline-item:last-child{padding-bottom:4px;}
+.timeline-item::before{content:'';position:absolute;right:19px;top:40px;bottom:0;width:2px;background:#e2e8f0;}
+.timeline-item:last-child::before{display:none;}
+.timeline-icon{flex-shrink:0;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;z-index:1;background:#f1f5f9;color:#64748b;border:3px solid #fff;box-shadow:0 0 0 1px #e2e8f0;}
+.timeline-icon.cat-financial{background:#e0f2fe;color:#028090;}
+.timeline-icon.cat-security{background:#fef2f2;color:#dc2626;}
+.timeline-icon.cat-system{background:#f1f5f9;color:#64748b;}
+.timeline-icon.cat-investment{background:#f0fdf4;color:#16a34a;}
+.timeline-icon.cat-general{background:#fffbeb;color:#d97706;}
+.timeline-content{flex:1;min-width:0;background:#f8fafc;border:1px solid #f1f5f9;border-radius:12px;padding:14px 18px;}
+.timeline-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.timeline-header h4{margin:0;font-size:14px;font-weight:800;color:#0A1B3F;font-family:'Cairo',sans-serif;}
+.timeline-time{font-size:12px;color:#94a3b8;font-weight:600;white-space:nowrap;}
+.timeline-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.timeline-meta .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;}
+.timeline-meta .badge.status-completed,.timeline-meta .badge.status-approved,.timeline-meta .badge.status-paid{background:#D1E7DD;color:#0F5132;}
+.timeline-meta .badge.status-pending,.timeline-meta .badge.status-processing{background:#FFF3CD;color:#856404;}
+.timeline-meta .badge.status-rejected,.timeline-meta .badge.status-failed{background:#F8D7DA;color:#721C24;}
+.timeline-meta .badge.status-default{background:#e2e8f0;color:#475569;}
+.timeline-meta .cat-tag{font-size:11px;color:#64748b;background:#eef2f7;padding:3px 10px;border-radius:12px;font-weight:700;}
+.timeline-meta .actor-tag{font-size:12px;color:#94a3b8;display:inline-flex;align-items:center;gap:4px;}
+.activity-empty-state{text-align:center;padding:50px 20px;color:#94a3b8;}
+.activity-empty-state i{font-size:40px;margin-bottom:12px;display:block;color:#cbd5e1;}
+
+.pagination-wrapper{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;}
+.pagination-wrapper .pagination-info{font-size:13px;color:#64748b;}
+.pagination-wrapper .pagination-info strong{color:#0A1B3F;}
+.pagination-buttons{display:flex;gap:4px;}
+.pagination-buttons .page-btn{width:38px;height:38px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;}
+.pagination-buttons .page-btn:hover{border-color:#028090;color:#028090;}
+.pagination-buttons .page-btn.active{background:#028090;border-color:#028090;color:#fff;}
+.pagination-buttons .page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+@media (max-width:768px){
+.activity-filters-bar{flex-direction:column;align-items:stretch;}
+.activity-filters-bar .filter-group{flex-wrap:wrap;}
+.activity-filters-bar select,.activity-filters-bar input{flex:1;min-width:120px;}
+.btn-filter-reset{width:100%;justify-content:center;}
+.timeline-header{flex-direction:column;}
+.pagination-wrapper{flex-direction:column;align-items:center;}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><p>جاري تحميل سجل النشاط...</p></div>
+
+<div class="app-wrapper">
+<header class="top-header no-print">
+<div class="header-right-actions">
+<button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية"><i class="fas fa-bars"></i></button>
+<div class="header-logo"><a href="/pages/dashboard/index.html"><img src="/images/logo.svg" alt="Tera Logo"></a></div>
+</div>
+<div class="header-left-actions">
+<div class="user-profile-block">
+<div class="user-meta"><h5 id="headerUserName">مستخدم</h5><p>بوابة المستثمر</p></div>
+<div class="user-avatar-circle" id="headerAvatar">م</div>
+</div>
+</div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar-container" id="sidebar">
+<div class="sidebar-mobile-header">
+<span class="sidebar-title">القائمة الرئيسية</span>
+<button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة"><i class="fas fa-times"></i></button>
+</div>
+<nav class="sidebar-menu">
+<ul class="nav-list">
+<li class="nav-item"><a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a></li>
+<li class="nav-item active"><a href="/pages/dashboard/activity-log.html"><i class="fas fa-stream"></i><span class="nav-label">سجل النشاط</span></a></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/investments/investment-details.html">سوق الفرص والشركات المطروحة</a></li><li><a href="/pages/investments/extended-investments.html">سجل الشراكة الممتدة</a></li><li><a href="/pages/investments/opportunities.html">سجل فرص الشراكة</a></li><li><a href="/pages/investments/active-investments.html">سجل العقود</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/portfolio/portfolio-overview.html">نظرة عامة</a></li><li><a href="/pages/portfolio/transactions.html">المعاملات المالية</a></li><li><a href="/pages/portfolio/profits.html">الأرباح الدورية</a></li><li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li><li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li><li><a href="/pages/portfolio/account-statement.html">كشف الحساب الموثق</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li><li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li><li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li><li><a href="/pages/reports/profits-report.html">تقرير الأرباح الصافية</a></li><li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li><li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li><li><a href="/pages/profile/national-address.html">العنوان الوطني الموثق</a></li><li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li><li><a href="/pages/profile/attachments.html">المرفقات والوثائق</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li><li><a href="/pages/security/email-change-requests.html">طلبات تغيير البريد</a></li><li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li><li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li><li><a href="/pages/security/registered-devices.html">سجل عمليات الدخول</a></li><li><a href="/pages/security/login-history.html">الأجهزة المصرحة</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/support/help-center.html">مركز المساعدة</a></li><li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li><li><a href="/pages/support/tickets.html">تذاكر الدعم الفني</a></li><li><a href="/pages/support/notifications.html">مركز الإشعارات</a></li><li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li><li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li></ul></li>
+</ul>
+</nav>
+<div class="sidebar-footer"><button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span class="nav-label">تسجيل الخروج</span></button></div>
+</aside>
+
+<main class="main-content">
+
+<div class="page-subheader no-print" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+<h1 style="margin:0;font-family:'Cairo',sans-serif;font-size:22px;color:#0A1B3F;"><i class="fas fa-stream" style="color:#028090;margin-left:8px;"></i> سجل النشاط</h1>
+<a href="/pages/dashboard/index.html" class="btn-back"><i class="fas fa-arrow-left"></i> العودة للوحة التحكم</a>
+</div>
+
+<div class="page-desc" style="display:flex;gap:10px;align-items:flex-start;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:13px;">
+<i class="fas fa-info-circle" style="margin-top:2px;"></i>
+<span><strong>سجل النشاط:</strong> سجل زمني كامل بجميع الأحداث والعمليات التي تمت على حسابك (الطلبات المالية، العقود، الأمان، وغيرها) مع الوقت والتاريخ والحالة وتفاصيل كل حدث.</span>
+</div>
+
+<div class="panel-card" style="margin-bottom:20px;">
+<div class="panel-header">
+<i class="fas fa-filter"></i>
+<h3 style="margin-right:8px;">فلترة السجل</h3>
+<span class="panel-badge" id="totalCountBadge">0 حدث</span>
+</div>
+<div class="activity-filters-bar">
+<div class="filter-group">
+<label for="filterCategory">النوع</label>
+<select id="filterCategory">
+<option value="all">جميع الأنواع</option>
+<option value="general">عام</option>
+<option value="investment">استثمار</option>
+<option value="profit">أرباح</option>
+<option value="financial">مالي</option>
+<option value="contracts">العقود</option>
+<option value="identity_verification">التحقق من الهوية</option>
+<option value="security">الأمان</option>
+<option value="portfolio">المحافظ</option>
+<option value="support">الدعم الفني</option>
+<option value="system">النظام</option>
+</select>
+</div>
+<div class="filter-group">
+<label for="filterDateFrom">من تاريخ</label>
+<input type="date" id="filterDateFrom" />
+</div>
+<div class="filter-group">
+<label for="filterDateTo">إلى تاريخ</label>
+<input type="date" id="filterDateTo" />
+</div>
+<div class="filter-group">
+<label for="filterSearch">بحث</label>
+<input type="search" id="filterSearch" placeholder="ابحث في الوصف..." />
+</div>
+<button class="btn-filter-reset" id="resetFiltersBtn"><i class="fas fa-undo"></i> إعادة ضبط</button>
+</div>
+</div>
+
+<div class="panel-card">
+<div class="panel-header">
+<i class="fas fa-list-ul"></i>
+<h3 style="margin-right:8px;">الأحداث</h3>
+<span class="panel-badge" id="entriesCountBadge">0</span>
+</div>
+
+<div class="timeline-wrapper" id="activityTimeline">
+<div class="activity-empty-state"><i class="fas fa-spinner fa-spin"></i><p>جاري التحميل...</p></div>
+</div>
+
+<div class="pagination-wrapper">
+<div class="pagination-info">عرض <strong id="showingStart">0</strong> – <strong id="showingEnd">0</strong> من <strong id="totalEntries">0</strong> حدث</div>
+<div class="pagination-buttons" id="paginationButtons">
+<button class="page-btn" id="prevPage" disabled><i class="fas fa-chevron-right"></i></button>
+<button class="page-btn active" data-page="1">1</button>
+<button class="page-btn" id="nextPage" disabled><i class="fas fa-chevron-left"></i></button>
+</div>
+</div>
+</div>
+
+<footer class="page-footer no-print">© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</footer>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/supabase-client.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/core.js"></script>
+
+<script src="/assets/js/modules/activity-tracker.js"></script>
+<script src="/assets/js/modules/device-info.js"></script>
+<script src="/assets/js/modules/location-services.js"></script>
+<script src="/assets/js/modules/session-manager.js"></script>
+<script src="/assets/js/modules/ui-helpers.js"></script>
+
+<script src="/assets/js/notifications/notification-manager.js"></script>
+<script src="/assets/js/notifications/notification-api.js"></script>
+<script src="/assets/js/notifications/notification-cache.js"></script>
+<script src="/assets/js/notifications/notification-onesignal.js"></script>
+<script src="/assets/js/notifications/notification-realtime.js"></script>
+<script src="/assets/js/notifications/notification-actions.js"></script>
+<script src="/assets/js/notifications/notification-ui.js"></script>
+<script src="/assets/js/notifications/notification-filters.js"></script>
+<script src="/assets/js/notifications/notification-history.js"></script>
+<script src="/assets/js/notifications/support-notifications.js"></script>
+
+<script>
+(function() {
+if (window.__sidebarInitialized) return;
+window.__sidebarInitialized = true;
+function init() {
+var sidebar = document.getElementById('sidebar');
+var toggleBtn = document.getElementById('sidebarToggle');
+var closeBtn = document.getElementById('closeSidebarBtn');
+var overlay = document.getElementById('sidebarOverlay');
+if (toggleBtn && sidebar) {
+toggleBtn.addEventListener('click', function() {
+if (window.innerWidth < 992) {
+sidebar.classList.toggle('sidebar-open');
+if (overlay) overlay.classList.toggle('active');
+} else {
+sidebar.classList.toggle('collapsed');
+}
+});
+}
+if (closeBtn && overlay) {
+closeBtn.addEventListener('click', function() {
+sidebar.classList.remove('sidebar-open');
+overlay.classList.remove('active');
+});
+}
+if (overlay) {
+overlay.addEventListener('click', function() {
+sidebar.classList.remove('sidebar-open');
+overlay.classList.remove('active');
+});
+}
+document.querySelectorAll('.has-submenu > a').forEach(function(link) {
+link.addEventListener('click', function(e) {
+var href = this.getAttribute('href');
+if (href && href !== '#' && href !== 'javascript:void(0)') return;
+e.preventDefault();
+this.closest('.has-submenu').classList.toggle('submenu-open');
+});
+});
+var logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+logoutBtn.addEventListener('click', async function(e) {
+e.preventDefault();
+if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+logoutBtn.disabled = true;
+try {
+if (window.Auth && window.Auth.logout) {
+await window.Auth.logout();
+} else {
+localStorage.clear();
+sessionStorage.clear();
+window.location.replace('/auth/auth/login/login.html');
+}
+} catch (err) {
+window.location.replace('/auth/auth/login/login.html');
+}
+});
+}
+}
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', init);
+} else {
+init();
+}
+})();
+</script>
+
+<script src="/assets/js/activity-log.js"></script>
+</body>
+</html>
