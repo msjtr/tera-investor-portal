@@ -1,59 +1,278 @@
-<section class="portfolio-summary">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+<title>نظرة عامة على المحفظة | Tera Investor Portal</title>
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<link rel="apple-touch-icon" href="/images/share-thumb.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="/assets/css/core.css" />
+<link rel="stylesheet" href="/assets/css/main.css" />
+<link rel="stylesheet" href="/assets/css/responsive.css" />
+<link rel="stylesheet" href="/assets/css/portfolio.css" />
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script src="/assets/js/onesignal-init.js" defer></script>
+<style>
+:root {
+--primary: #028090; --primary-light: #14b8a6; --primary-dark: #0A1B3F;
+--danger: #dc2626; --warning: #f59e0b; --success: #10b981;
+--gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-300: #d1d9e6;
+--gray-400: #94a3b8; --gray-500: #64748b; --gray-600: #475569; --gray-700: #334155;
+--gray-800: #1e293b; --gray-900: #0A1B3F;
+--sidebar-width: 280px; --sidebar-collapsed-width: 80px;
+--header-height: 75px; --header-height-mobile: 64px;
+--radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+--shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+--transition-fast: 0.2s ease; --transition-normal: 0.3s ease;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; background-color: var(--gray-50); font-family: 'Tajawal', sans-serif; color: var(--gray-800); -webkit-font-smoothing: antialiased; }
+.app-wrapper { display: flex; min-height: 100vh; width: 100%; position: relative; }
+.top-header { height: var(--header-height); background: #fff; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: var(--shadow-sm); }
+.header-right-actions { display: flex; align-items: center; gap: 20px; }
+.header-logo { flex-shrink: 0; }
+.header-logo img { height: 44px; width: auto; display: block; }
+.menu-toggle-btn { background: var(--gray-50); border: 1px solid var(--gray-200); color: var(--gray-500); font-size: 20px; width: 44px; height: 44px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition-fast); flex-shrink: 0; }
+.menu-toggle-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+.header-left-actions { display: flex; align-items: center; }
+.user-profile-block { display: flex; align-items: center; gap: 14px; }
+.user-meta { text-align: left; }
+.user-meta h5 { margin: 0; font-size: 15px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; }
+.user-meta p { margin: 0; font-size: 12px; color: var(--gray-500); font-weight: 600; }
+.user-avatar-circle { width: 46px; height: 46px; background: var(--primary-dark); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); font-size: 20px; font-weight: 800; border: 2px solid var(--primary); flex-shrink: 0; }
+.sidebar-container { width: var(--sidebar-width); background: var(--primary-dark); color: #fff; display: flex; flex-direction: column; transition: var(--transition-normal); z-index: 999; box-shadow: 4px 0 25px rgba(0,0,0,0.1); height: calc(100vh - var(--header-height)); position: fixed; top: var(--header-height); right: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) rgba(255,255,255,0.06); }
+.sidebar-container.collapsed { width: var(--sidebar-collapsed-width); }
+.sidebar-container.collapsed .nav-label, .sidebar-container.collapsed .submenu-toggle, .sidebar-container.collapsed .submenu, .sidebar-container.collapsed .sidebar-footer span { display: none !important; }
+.sidebar-container.collapsed .nav-item a { justify-content: center; padding: 14px; }
+.sidebar-mobile-header { display: none; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.sidebar-title { font-size: 16px; font-weight: 800; color: #fff; }
+.sidebar-close-btn { background: transparent; border: none; color: var(--gray-400); font-size: 22px; cursor: pointer; }
+.sidebar-menu { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.nav-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.nav-item a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #cbd5e1; text-decoration: none; border-radius: var(--radius-md); font-weight: 700; font-size: 14px; transition: var(--transition-fast); cursor: pointer; white-space: nowrap; }
+.nav-item a i:first-child { font-size: 18px; width: 24px; text-align: center; }
+.nav-item a:hover, .nav-item.active > a { background: rgba(2,128,144,0.15); color: var(--primary-light); }
+.submenu-toggle { margin-right: auto; font-size: 12px; transition: transform var(--transition-normal); }
+.submenu { list-style: none; padding: 4px 0; margin: 0 12px 0 0; display: none; flex-direction: column; gap: 2px; border-right: 2px solid rgba(20,184,166,0.2); }
+.submenu a { padding: 10px 16px 10px 10px; font-size: 13px; color: var(--gray-400); font-weight: 600; }
+.submenu a:hover, .submenu a.active { color: #fff; }
+.submenu-open .submenu { display: flex; }
+.submenu-open > a .submenu-toggle { transform: rotate(180deg); }
+.sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+.logout-btn { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: transparent; border: none; color: #f87171; cursor: pointer; font-weight: 700; font-size: 14px; border-radius: var(--radius-md); text-align: right; }
+.logout-btn:hover { background: rgba(239,68,68,0.1); }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; cursor: pointer; }
+.sidebar-overlay.active { display: block; }
+.main-content { flex: 1; min-width: 0; margin-right: var(--sidebar-width); margin-top: var(--header-height); padding: 24px 30px 30px 30px; transition: margin var(--transition-normal); overflow-x: hidden; }
+.sidebar-container.collapsed ~ .main-content { margin-right: var(--sidebar-collapsed-width); }
+.welcome-banner { background: linear-gradient(135deg, var(--primary-dark), #1a3a6b); border-radius: var(--radius-lg); padding: 28px 32px; margin-bottom: 28px; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 4px 20px rgba(10,27,63,0.2); }
+.welcome-banner h2 { font-family: 'Cairo', sans-serif; font-size: 22px; margin: 0; color: #fff; }
+.welcome-banner h2 i { color: var(--primary-light); margin-left: 10px; }
+.welcome-banner p { margin: 4px 0 0; opacity: 0.85; font-size: 14px; }
+.date-badge-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; background: rgba(255,255,255,0.12); padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.08); }
+.date-badge-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #e2e8f0; }
+.date-badge-item i { font-size: 16px; color: var(--primary-light); width: 20px; text-align: center; }
+.portfolio-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 30px; }
+.stat-card { background: #fff; padding: 20px 22px; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow-sm); transition: var(--transition-normal); }
+.stat-card:hover { transform: translateY(-4px); border-color: var(--primary-light); box-shadow: var(--shadow-md); }
+.stat-icon { width: 52px; height: 52px; border-radius: 14px; background: rgba(2,128,144,0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.stat-card:hover .stat-icon { background: var(--primary); color: #fff; }
+.stat-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.stat-label { font-size: 13px; color: var(--gray-500); font-weight: 700; }
+.stat-value { font-size: 21px; font-weight: 800; color: var(--gray-900); font-family: 'Cairo', sans-serif; }
+.stat-value.positive { color: var(--success); }
+.stat-value.negative { color: var(--danger); }
+.dashboard-layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px; }
+.panel-card { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 24px 26px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid var(--gray-100); padding-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.panel-header h3 { margin: 0; font-size: 17px; color: var(--gray-900); font-weight: 800; font-family: 'Cairo', sans-serif; display: flex; align-items: center; gap: 8px; }
+.panel-header h3 i { color: var(--primary); }
+.panel-header .panel-badge { font-size: 11px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 20px; }
+.notif-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+.notif-item:last-child { border-bottom: none; }
+.notif-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(2,128,144,0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-body strong { font-size: 14px; color: var(--gray-900); display: block; margin-bottom: 2px; }
+.notif-body p { margin: 0; font-size: 13px; color: var(--gray-500); }
+.notif-time { font-size: 11px; color: var(--gray-400); white-space: nowrap; }
+.data-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 0 6px; }
+.data-table-list { width: 100%; min-width: 500px; border-collapse: collapse; text-align: right; font-size: 14px; }
+.data-table-list th { padding: 12px 14px; font-size: 13px; color: var(--gray-500); font-weight: 800; border-bottom: 2px solid var(--gray-100); white-space: nowrap; }
+.data-table-list td { padding: 14px; font-size: 14px; color: var(--gray-700); font-weight: 600; border-bottom: 1px solid var(--gray-100); }
+.data-table-list tbody tr:hover td { background: var(--gray-50); }
+#growthChart { width: 100% !important; height: 100% !important; max-height: 300px; }
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
+.loading-overlay.active { display: flex; }
+.spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.page-footer { text-align: center; padding: 18px 20px; color: var(--gray-400); font-size: 13px; border-top: 1px solid var(--gray-200); background: #fff; margin-top: auto; }
+@media (max-width: 1199px) { .portfolio-stats-grid { gap: 14px; } .stat-value { font-size: 18px; } }
+@media (max-width: 991px) {
+:root { --header-height: var(--header-height-mobile); }
+.top-header { height: var(--header-height); padding: 0 16px; }
+.header-logo img { height: 36px; }
+.menu-toggle-btn { width: 40px; height: 40px; font-size: 18px; }
+.user-meta { display: none; }
+.user-avatar-circle { width: 40px; height: 40px; font-size: 18px; }
+.sidebar-container { right: calc(-1 * var(--sidebar-width)); top: 0; height: 100vh; transition: right var(--transition-normal); }
+.sidebar-container.sidebar-open { right: 0; }
+.sidebar-mobile-header { display: flex; }
+.main-content { margin-right: 0 !important; padding: 16px 14px 20px 14px !important; margin-top: var(--header-height); }
+.welcome-banner { padding: 18px 20px; flex-direction: column; align-items: stretch; gap: 14px; margin-bottom: 20px; }
+.welcome-banner h2 { font-size: 18px; }
+.portfolio-stats-grid { grid-template-columns: repeat(2,1fr); gap: 12px; }
+.dashboard-layout-grid { grid-template-columns: 1fr; gap: 16px; }
+.panel-card { padding: 16px 18px; }
+.data-table-list { min-width: 450px; font-size: 13px; }
+#growthChart { max-height: 220px; }
+}
+@media (max-width: 480px) { .portfolio-stats-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><p>جاري تحميل نظرة عامة على المحفظة...</p></div>
+<div class="app-wrapper">
+<header class="top-header no-print">
+<div class="header-right-actions">
+<button class="menu-toggle-btn" id="sidebarToggle" aria-label="تبديل القائمة الجانبية"><i class="fas fa-bars"></i></button>
+<div class="header-logo"><a href="/pages/dashboard/index.html"><img src="/images/logo.svg" alt="Tera Logo"></a></div>
+</div>
+<div class="header-left-actions">
+<div class="user-profile-block">
+<div class="user-meta"><h5 id="headerUserName">مستخدم</h5><p>بوابة المستثمر</p></div>
+<div class="user-avatar-circle" id="headerAvatar">م</div>
+</div>
+</div>
+</header>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar-container" id="sidebar">
+<div class="sidebar-mobile-header"><span class="sidebar-title">القائمة الرئيسية</span><button class="sidebar-close-btn" id="closeSidebarBtn" aria-label="إغلاق القائمة"><i class="fas fa-times"></i></button></div>
+<nav class="sidebar-menu">
+<ul class="nav-list">
+<li class="nav-item"><a href="/pages/dashboard/index.html"><i class="fas fa-th-large"></i><span class="nav-label">لوحة التحكم</span></a></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-chart-line"></i><span class="nav-label">الاستثمار</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/investments/investment-details.html">سوق الفرص والشركات المطروحة</a></li><li><a href="/pages/investments/extended-investments.html">سجل الشراكة الممتدة</a></li><li><a href="/pages/investments/opportunities.html">سجل فرص الشراكة</a></li><li><a href="/pages/investments/active-investments.html">سجل العقود</a></li></ul></li>
+<li class="nav-item has-submenu submenu-open active"><a href="#"><i class="fas fa-wallet"></i><span class="nav-label">المحفظة</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/portfolio/portfolio-overview.html" class="active">نظرة عامة</a></li><li><a href="/pages/portfolio/transactions.html">المعاملات المالية</a></li><li><a href="/pages/portfolio/profits.html">الأرباح الدورية</a></li><li><a href="/pages/portfolio/withdraw-request.html">طلب سحب</a></li><li><a href="/pages/portfolio/withdrawal-history.html">سجل السحوبات</a></li><li><a href="/pages/portfolio/account-statement.html">كشف الحساب الموثق</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-file-alt"></i><span class="nav-label">التقارير</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/reports/reports-dashboard.html">لوحة التقارير</a></li><li><a href="/pages/reports/portfolio-report.html">تقرير المحفظة</a></li><li><a href="/pages/reports/investments-report.html">تقرير الاستثمارات</a></li><li><a href="/pages/reports/profits-report.html">تقرير الأرباح الصافية</a></li><li><a href="/pages/reports/withdrawals-report.html">تقرير السحوبات</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-user-circle"></i><span class="nav-label">الملف الشخصي</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/profile/personal-information.html">المعلومات الشخصية</a></li><li><a href="/pages/profile/contact-information.html">معلومات الاتصال</a></li><li><a href="/pages/profile/national-address.html">العنوان الوطني الموثق</a></li><li><a href="/pages/profile/bank-information.html">المعلومات البنكية</a></li><li><a href="/pages/profile/attachments.html">المرفقات والوثائق</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-shield-alt"></i><span class="nav-label">الأمان</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/security/change-password.html">تغيير كلمة المرور</a></li><li><a href="/pages/security/email-change-requests.html">طلبات تغيير البريد</a></li><li><a href="/pages/security/change-mobile.html">تغيير رقم الجوال</a></li><li><a href="/pages/security/two-factor-authentication.html">المصادقة الثنائية</a></li><li><a href="/pages/security/registered-devices.html">سجل عمليات الدخول</a></li><li><a href="/pages/security/login-history.html">الأجهزة المصرحة</a></li></ul></li>
+<li class="nav-item has-submenu"><a href="#"><i class="fas fa-headset"></i><span class="nav-label">الدعم الفني</span><i class="fas fa-chevron-down submenu-toggle"></i></a><ul class="submenu"><li><a href="/pages/support/help-center.html">مركز المساعدة</a></li><li><a href="/pages/support/faq.html">الأسئلة الشائعة</a></li><li><a href="/pages/support/tickets.html">تذاكر الدعم الفني</a></li><li><a href="/pages/support/notifications.html">مركز الإشعارات</a></li><li><a href="/pages/support/privacy-policy.html">سياسة الخصوصية</a></li><li><a href="/pages/support/terms-and-conditions.html">الشروط والأحكام</a></li></ul></li>
+</ul>
+</nav>
+<div class="sidebar-footer"><button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span class="nav-label">تسجيل الخروج</span></button></div>
+</aside>
+<main class="main-content">
+<div class="welcome-banner">
+<div><h2><i class="fas fa-wallet"></i> نظرة عامة على المحفظة</h2><p>ملخص شامل وحي لأداء محفظتك الاستثمارية مع تيرا.</p></div>
+<div class="date-badge-group"><div class="date-badge-item"><i class="fas fa-calendar-alt"></i><span id="currentDate"></span></div></div>
+</div>
 
-    <h1>المحفظة الاستثمارية</h1>
+<div class="portfolio-stats-grid">
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-briefcase"></i></div><div class="stat-info"><span class="stat-label">إجمالي قيمة المحفظة</span><span class="stat-value" id="statTotalValue">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-wallet"></i></div><div class="stat-info"><span class="stat-label">الرصيد المتاح</span><span class="stat-value" id="statAvailable">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-hourglass-half"></i></div><div class="stat-info"><span class="stat-label">الرصيد قيد المعالجة</span><span class="stat-value" id="statPending">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><span class="stat-label">الأرباح المتوقعة</span><span class="stat-value" id="statExpectedProfit">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><span class="stat-label">الأرباح القادمة للصرف</span><span class="stat-value" id="statUpcomingPayout">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div><div class="stat-info"><span class="stat-label">إجمالي الأرباح المحققة</span><span class="stat-value" id="statRealizedProfit">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><span class="stat-label">إجمالي العوائد منذ البداية</span><span class="stat-value" id="statTotalReturn">0.00 ر.س</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-arrow-trend-up"></i></div><div class="stat-info"><span class="stat-label">معدل نمو المحفظة</span><span class="stat-value" id="statGrowthRate">0%</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-file-contract"></i></div><div class="stat-info"><span class="stat-label">الاستثمارات النشطة</span><span class="stat-value" id="statActiveInvestments">0</span></div></div>
+<div class="stat-card"><div class="stat-icon"><i class="fas fa-tasks"></i></div><div class="stat-info"><span class="stat-label">الطلبات الحالية</span><span class="stat-value" id="statActiveRequests">0</span></div></div>
+</div>
 
-    <div class="portfolio-cards">
+<div class="dashboard-layout-grid">
+<div class="panel-card"><div class="panel-header"><h3><i class="fas fa-chart-area"></i> نمو المحفظة عبر الزمن</h3></div><div style="height:300px;"><canvas id="growthChart"></canvas></div></div>
+<div class="panel-card"><div class="panel-header"><h3><i class="fas fa-bell"></i> آخر الإشعارات</h3><span class="panel-badge" id="notifCount">0</span></div><div id="notifList"><p style="text-align:center;color:var(--gray-400);padding:20px 0;">لا توجد إشعارات حالياً</p></div></div>
+</div>
 
-        <div class="card">
-            <h3>إجمالي رأس المال</h3>
-            <span>150,000 ريال</span>
-        </div>
+<div class="dashboard-layout-grid" style="grid-template-columns: 1fr;">
+<div class="panel-card">
+<div class="panel-header"><h3><i class="fas fa-history"></i> آخر العمليات المالية</h3></div>
+<div class="data-table-wrapper"><table class="data-table-list"><thead><tr><th>البيان</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody id="transactionsTableBody"><tr><td colspan="3" style="text-align:center;padding:20px;">لا توجد عمليات مالية حديثة</td></tr></tbody></table></div>
+</div>
+</div>
 
-        <div class="card">
-            <h3>الأرباح المحققة</h3>
-            <span>12,500 ريال</span>
-        </div>
-
-        <div class="card">
-            <h3>الأرباح المتاحة للسحب</h3>
-            <span>3,250 ريال</span>
-        </div>
-
-        <div class="card">
-            <h3>الاستثمارات النشطة</h3>
-            <span>8</span>
-        </div>
-
-    </div>
-
-</section>
-<section class="portfolio-distribution">
-
-    <h2>توزيع الاستثمارات</h2>
-
-    <div class="chart-placeholder">
-        مخطط توزيع الاستثمارات
-    </div>
-
-</section>
-<section class="latest-activity">
-
-    <h2>آخر العمليات</h2>
-
-    <table>
-
-        <tr>
-            <th>العملية</th>
-            <th>المبلغ</th>
-            <th>التاريخ</th>
-        </tr>
-
-        <tr>
-            <td>استثمار جديد</td>
-            <td>10,000 ريال</td>
-            <td>01/06/2026</td>
-        </tr>
-
-    </table>
-
-</section>
+<footer class="page-footer no-print">© 2026 بوابة تيرا للمستثمرين. جميع الحقوق محفوظة.</footer>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/supabase-client.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/core.js"></script>
+<script src="/assets/js/modules/activity-tracker.js"></script>
+<script src="/assets/js/modules/device-info.js"></script>
+<script src="/assets/js/modules/location-services.js"></script>
+<script src="/assets/js/modules/session-manager.js"></script>
+<script src="/assets/js/modules/ui-helpers.js"></script>
+<script src="/assets/js/notifications/notification-manager.js"></script>
+<script src="/assets/js/notifications/notification-api.js"></script>
+<script src="/assets/js/notifications/notification-cache.js"></script>
+<script src="/assets/js/notifications/notification-onesignal.js"></script>
+<script src="/assets/js/notifications/notification-realtime.js"></script>
+<script src="/assets/js/notifications/notification-actions.js"></script>
+<script src="/assets/js/notifications/notification-ui.js"></script>
+<script src="/assets/js/notifications/notification-filters.js"></script>
+<script src="/assets/js/notifications/notification-history.js"></script>
+<script src="/assets/js/notifications/support-notifications.js"></script>
+<script>
+(function() {
+if (window.__sidebarInitialized) return;
+window.__sidebarInitialized = true;
+function init() {
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('sidebarToggle');
+const closeBtn = document.getElementById('closeSidebarBtn');
+const overlay = document.getElementById('sidebarOverlay');
+if (toggleBtn && sidebar) {
+toggleBtn.addEventListener('click', () => {
+if (window.innerWidth < 992) {
+sidebar.classList.toggle('sidebar-open');
+if (overlay) overlay.classList.toggle('active');
+} else {
+sidebar.classList.toggle('collapsed');
+}
+});
+}
+if (closeBtn && overlay) {
+closeBtn.addEventListener('click', () => {
+sidebar.classList.remove('sidebar-open');
+overlay.classList.remove('active');
+});
+}
+if (overlay) {
+overlay.addEventListener('click', () => {
+sidebar.classList.remove('sidebar-open');
+overlay.classList.remove('active');
+});
+}
+document.querySelectorAll('.has-submenu > a').forEach(link => {
+link.addEventListener('click', function(e) {
+const href = this.getAttribute('href');
+if (href && href !== '#' && href !== 'javascript:void(0)') return;
+e.preventDefault();
+this.closest('.has-submenu').classList.toggle('submenu-open');
+});
+});
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+logoutBtn.addEventListener('click', async (e) => {
+e.preventDefault();
+if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+logoutBtn.disabled = true;
+try {
+if (window.Auth && window.Auth.logout) { await window.Auth.logout(); }
+else { localStorage.clear(); sessionStorage.clear(); window.location.replace('/auth/auth/login/login.html'); }
+} catch (err) { window.location.replace('/auth/auth/login/login.html'); }
+});
+}
+}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+<script src="/assets/js/portfolio-overview.js"></script>
+</body>
+</html>
