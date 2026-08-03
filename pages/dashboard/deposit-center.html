@@ -503,11 +503,19 @@
 .qr-box{width:110px;height:110px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;margin-top:10px}
 .filters-bar{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;align-items:center}
 .filters-bar select,.filters-bar input{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff}
+.filters-bar select:focus,.filters-bar input:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
+.filters-bar select:hover:not(:focus),.filters-bar input:hover:not(:focus){border-color:#c7cdd6}
 .date-wrap{position:relative;display:inline-block;vertical-align:middle}
 .date-wrap .date-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:13px;color:#767676;background:#fff;pointer-events:none;direction:ltr;unicode-bidi:isolate;white-space:nowrap;overflow:hidden;border-radius:10px}
 .date-wrap.has-value .date-ph{display:none}
 .form-group input:not([type="date"]),.form-group select,.form-group textarea{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;font-family:inherit;width:100%;box-sizing:border-box}
 .form-group input:not([type="date"]):focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+.form-group input:not([type="date"]):hover:not(:focus),.form-group select:hover:not(:focus),.form-group textarea:hover:not(:focus){border-color:#c7cdd6}
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#028090;color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.btn-primary:hover{background:#026b73;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
 .form-group textarea{resize:vertical;min-height:70px;font-family:inherit}
 .form-group input[type="file"]{padding:7px 10px;cursor:pointer}
 .form-group input[type="file"]::file-selector-button{border:1px solid #e5e7eb;border-radius:8px;padding:5px 10px;background:#f8fafc;color:#0A1B3F;font-size:12px;cursor:pointer;margin-inline-end:8px}
