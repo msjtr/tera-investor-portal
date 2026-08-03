@@ -183,7 +183,7 @@
     var vatRate = 0.15;
     var serviceFee = amount * serviceFeeRate;
     var vat = serviceFee * vatRate;
-    var totalFees = amount * 0.05;
+    var totalFees = serviceFee + vat;
     var grandTotal = amount + totalFees;
     return { amount: amount, serviceFee: serviceFee, vat: vat, totalFees: totalFees, grandTotal: grandTotal };
   }
@@ -196,7 +196,6 @@
     set('gwBaseAmount', calc.amount);
     set('gwServiceFee', calc.serviceFee);
     set('gwVat', calc.vat);
-    set('gwTotalFees', calc.totalFees);
     set('gwGrandTotal', calc.grandTotal);
   }
 
@@ -262,6 +261,7 @@
       var fromBank = document.getElementById('bdFromBank').value;
       var date = document.getElementById('bdDate').value;
       var time = document.getElementById('bdTime').value;
+      if (!date) { alert('يرجى اختيار تاريخ التحويل'); return; }
       var ref = document.getElementById('bdRef').value;
       var notes = document.getElementById('bdNotes').value;
       var fileInput = document.getElementById('bdReceipt');
@@ -359,6 +359,43 @@
     renderTable();
   }
 
+  function initCustomDateTime() {
+    var day = document.getElementById('bdDateDay');
+    var month = document.getElementById('bdDateMonth');
+    var year = document.getElementById('bdDateYear');
+    var hiddenDate = document.getElementById('bdDate');
+    if (day && month && year && hiddenDate && !day.dataset.ready) {
+      for (var d = 1; d <= 31; d++) { var o = document.createElement('option'); o.value = String(d).padStart(2, '0'); o.textContent = String(d); day.appendChild(o); }
+      var monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      monthNames.forEach(function (name, i) { var o = document.createElement('option'); o.value = String(i + 1).padStart(2, '0'); o.textContent = name; month.appendChild(o); });
+      var curYear = new Date().getFullYear();
+      for (var y = curYear; y >= curYear - 3; y--) { var o2 = document.createElement('option'); o2.value = String(y); o2.textContent = String(y); year.appendChild(o2); }
+      var syncDate = function () {
+        if (day.value && month.value && year.value) { hiddenDate.value = year.value + '-' + month.value + '-' + day.value; }
+        else { hiddenDate.value = ''; }
+        hiddenDate.dispatchEvent(new Event('change'));
+      };
+      day.addEventListener('change', syncDate);
+      month.addEventListener('change', syncDate);
+      year.addEventListener('change', syncDate);
+      day.dataset.ready = '1';
+    }
+    var hour = document.getElementById('bdTimeHour');
+    var minute = document.getElementById('bdTimeMinute');
+    var hiddenTime = document.getElementById('bdTime');
+    if (hour && minute && hiddenTime && !hour.dataset.ready) {
+      for (var h = 0; h < 24; h++) { var o3 = document.createElement('option'); o3.value = String(h).padStart(2, '0'); o3.textContent = String(h).padStart(2, '0'); hour.appendChild(o3); }
+      for (var mi = 0; mi < 60; mi++) { var o4 = document.createElement('option'); o4.value = String(mi).padStart(2, '0'); o4.textContent = String(mi).padStart(2, '0'); minute.appendChild(o4); }
+      var syncTime = function () {
+        if (hour.value && minute.value) { hiddenTime.value = hour.value + ':' + minute.value; }
+        else { hiddenTime.value = ''; }
+      };
+      hour.addEventListener('change', syncTime);
+      minute.addEventListener('change', syncTime);
+      hour.dataset.ready = '1';
+    }
+  }
+
   function bindEvents() {
     document.querySelectorAll('.copy-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -371,15 +408,36 @@
     var qrBtn = document.getElementById('btnShowQr');
     if (qrBtn) qrBtn.addEventListener('click', function () {
       var box = document.getElementById('bankQrBox');
-      if (box) box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+      if (!box) return;
+      if (!box.dataset.loaded) {
+        box.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(BANK_INFO.iban) + '" alt="QR" style="width:160px;height:160px">';
+        box.dataset.loaded = '1';
+      }
+      box.style.display = box.style.display === 'none' ? 'flex' : 'none';
     });
 
     var shareBtn = document.getElementById('btnShareBankInfo');
     if (shareBtn) shareBtn.addEventListener('click', function () {
       var text = 'اسم البنك: ' + BANK_INFO.bankName + '\nاسم الحساب: ' + BANK_INFO.accountName + '\nرقم الحساب: ' + BANK_INFO.accountNumber + '\nIBAN: ' + BANK_INFO.iban;
-      if (navigator.share) { navigator.share({ text: text }).catch(function () {}); }
+      if (navigator.share) { navigator.share({ text: text }).catch(function () { copyToClipboard(text, shareBtn); }); }
       else { copyToClipboard(text, shareBtn); }
     });
+
+    var openBankModalBtn = document.getElementById('openBankModalBtn');
+    var bankModal = document.getElementById('bankModal');
+    if (openBankModalBtn && bankModal) openBankModalBtn.addEventListener('click', function () { bankModal.classList.add('active'); });
+    var closeBankModal = document.getElementById('closeBankModal');
+    if (closeBankModal && bankModal) closeBankModal.addEventListener('click', function () { bankModal.classList.remove('active'); });
+    if (bankModal) bankModal.addEventListener('click', function (e) { if (e.target === bankModal) bankModal.classList.remove('active'); });
+
+    var openGatewayModalBtn = document.getElementById('openGatewayModalBtn');
+    var gatewayModal = document.getElementById('gatewayModal');
+    if (openGatewayModalBtn && gatewayModal) openGatewayModalBtn.addEventListener('click', function () { gatewayModal.classList.add('active'); renderGatewayBreakdown(); });
+    var closeGatewayModal = document.getElementById('closeGatewayModal');
+    if (closeGatewayModal && gatewayModal) closeGatewayModal.addEventListener('click', function () { gatewayModal.classList.remove('active'); });
+    if (gatewayModal) gatewayModal.addEventListener('click', function (e) { if (e.target === gatewayModal) gatewayModal.classList.remove('active'); });
+
+    initCustomDateTime();
 
     var bankForm = document.getElementById('bankDepositForm');
     if (bankForm) bankForm.addEventListener('submit', submitBankDeposit);
