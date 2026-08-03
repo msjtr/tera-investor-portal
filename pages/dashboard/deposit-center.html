@@ -495,6 +495,9 @@
 .qr-box{width:110px;height:110px;background:#f3f4f6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:12px;margin-top:10px}
 .filters-bar{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;align-items:center}
 .filters-bar select,.filters-bar input{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff}
+.date-wrap{position:relative;display:inline-block;vertical-align:middle}
+.date-wrap .date-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:13px;color:#767676;background:#fff;pointer-events:none;direction:ltr;unicode-bidi:isolate;white-space:nowrap;overflow:hidden;border-radius:10px}
+.date-wrap.has-value .date-ph{display:none}
 </style>
 <body>
 <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><p>جاري تحميل نظرة عامة على المحفظة...</p></div>
@@ -603,7 +606,7 @@
       <div class="form-grid-2">
         <div class="form-group"><label>مبلغ التحويل (ر.س)</label><input type="number" step="0.01" min="1" id="bdAmount" required></div>
         <div class="form-group"><label>البنك المُحوَّل منه</label><input type="text" id="bdFromBank" required></div>
-        <div class="form-group"><label>تاريخ التحويل</label><input type="date" id="bdDate" required style="direction:ltr;text-align:right"></div>
+        <div class="form-group"><label>تاريخ التحويل</label><div class="date-wrap"><input type="date" id="bdDate" required style="direction:ltr;text-align:right"><span class="date-ph">يوم/شهر/سنة</span></div></div>
         <div class="form-group"><label>وقت التحويل (اختياري)</label><input type="time" id="bdTime"></div>
         <div class="form-group"><label>رقم المرجع (اختياري)</label><input type="text" id="bdRef"></div>
         <div class="form-group"><label>رفع إيصال التحويل</label><input type="file" id="bdReceipt" accept="image/*,.pdf" required style="direction:ltr;text-align:right"></div>
@@ -651,8 +654,8 @@
     <option value="bank_transfer">تحويل بنكي</option>
     <option value="payment_gateway">بوابة دفع</option>
   </select>
-  <input type="date" id="filterFrom" style="direction:ltr;text-align:right">
-  <input type="date" id="filterTo" style="direction:ltr;text-align:right">
+  <div class="date-wrap"><input type="date" id="filterFrom" style="direction:ltr;text-align:right"><span class="date-ph">يوم/شهر/سنة</span></div>
+  <div class="date-wrap"><input type="date" id="filterTo" style="direction:ltr;text-align:right"><span class="date-ph">يوم/شهر/سنة</span></div>
   <button class="btn-secondary" id="btnExportExcel"><i class="fas fa-file-excel"></i> Excel</button>
   <button class="btn-secondary" id="btnExportPdf"><i class="fas fa-file-pdf"></i> PDF</button>
   <button class="btn-secondary" id="btnPrintTable"><i class="fas fa-print"></i> طباعة</button>
