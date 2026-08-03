@@ -322,6 +322,8 @@
         btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
         setTimeout(function () { btn.classList.remove('copied'); btn.innerHTML = original; }, 1800);
       }
+    }).catch(function () {
+      window.prompt('تعذر النسخ التلقائي، يرجى نسخ القيمة يدوياً:', text);
     });
   }
 
@@ -384,6 +386,7 @@
 
     var gwAmount = document.getElementById('gwAmount');
     if (gwAmount) gwAmount.addEventListener('input', renderGatewayBreakdown);
+    renderGatewayBreakdown();
 
     var gwBtn = document.getElementById('btnGoToGateway');
     if (gwBtn) gwBtn.addEventListener('click', function () {
