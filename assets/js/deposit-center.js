@@ -382,16 +382,25 @@
     }
     var hour = document.getElementById('bdTimeHour');
     var minute = document.getElementById('bdTimeMinute');
+    var period = document.getElementById('bdTimePeriod');
     var hiddenTime = document.getElementById('bdTime');
-    if (hour && minute && hiddenTime && !hour.dataset.ready) {
-      for (var h = 0; h < 24; h++) { var o3 = document.createElement('option'); o3.value = String(h).padStart(2, '0'); o3.textContent = String(h).padStart(2, '0'); hour.appendChild(o3); }
+    if (hour && minute && period && hiddenTime && !hour.dataset.ready) {
+      for (var h = 1; h <= 12; h++) { var o3 = document.createElement('option'); o3.value = String(h).padStart(2, '0'); o3.textContent = String(h).padStart(2, '0'); hour.appendChild(o3); }
       for (var mi = 0; mi < 60; mi++) { var o4 = document.createElement('option'); o4.value = String(mi).padStart(2, '0'); o4.textContent = String(mi).padStart(2, '0'); minute.appendChild(o4); }
+      var pOpts = ['ص', 'م'];
+      pOpts.forEach(function (p) { var o5 = document.createElement('option'); o5.value = p; o5.textContent = p; period.appendChild(o5); });
       var syncTime = function () {
-        if (hour.value && minute.value) { hiddenTime.value = hour.value + ':' + minute.value; }
+        if (hour.value && minute.value && period.value) {
+          var h24 = parseInt(hour.value, 10);
+          if (period.value === 'ص') { if (h24 === 12) h24 = 0; }
+          else { if (h24 !== 12) h24 += 12; }
+          hiddenTime.value = String(h24).padStart(2, '0') + ':' + minute.value;
+        }
         else { hiddenTime.value = ''; }
       };
       hour.addEventListener('change', syncTime);
       minute.addEventListener('change', syncTime);
+      period.addEventListener('change', syncTime);
       hour.dataset.ready = '1';
     }
   }
