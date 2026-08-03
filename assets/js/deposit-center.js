@@ -429,3 +429,21 @@
     init();
   }
 })();
+
+(function () {
+  function initDatePlaceholders() {
+    document.querySelectorAll('.date-wrap').forEach(function (wrap) {
+      var inp = wrap.querySelector('input[type="date"]');
+      if (!inp) return;
+      var sync = function () { wrap.classList.toggle('has-value', !!inp.value); };
+      inp.addEventListener('input', sync);
+      inp.addEventListener('change', sync);
+      sync();
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDatePlaceholders);
+  } else {
+    initDatePlaceholders();
+  }
+})();
