@@ -405,6 +405,32 @@
     }
   }
 
+  function initFilterDateSelects() {
+    function setup(dayId, monthId, yearId, hiddenId) {
+      var day = document.getElementById(dayId);
+      var month = document.getElementById(monthId);
+      var year = document.getElementById(yearId);
+      var hidden = document.getElementById(hiddenId);
+      if (!day || !month || !year || !hidden || day.dataset.ready) return;
+      for (var d = 1; d <= 31; d++) { var o = document.createElement('option'); o.value = String(d).padStart(2, '0'); o.textContent = String(d); day.appendChild(o); }
+      var monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      monthNames.forEach(function (name, i) { var o = document.createElement('option'); o.value = String(i + 1).padStart(2, '0'); o.textContent = name; month.appendChild(o); });
+      var curYear = new Date().getFullYear();
+      for (var y = curYear; y >= curYear - 3; y--) { var o2 = document.createElement('option'); o2.value = String(y); o2.textContent = String(y); year.appendChild(o2); }
+      var sync = function () {
+        if (day.value && month.value && year.value) { hidden.value = year.value + '-' + month.value + '-' + day.value; }
+        else { hidden.value = ''; }
+        hidden.dispatchEvent(new Event('input'));
+      };
+      day.addEventListener('change', sync);
+      month.addEventListener('change', sync);
+      year.addEventListener('change', sync);
+      day.dataset.ready = '1';
+    }
+    setup('filterFromDay', 'filterFromMonth', 'filterFromYear', 'filterFrom');
+    setup('filterToDay', 'filterToMonth', 'filterToYear', 'filterTo');
+  }
+
   function bindEvents() {
     document.querySelectorAll('.copy-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -436,6 +462,7 @@
     if (gatewayModal) gatewayModal.addEventListener('click', function (e) { if (e.target === gatewayModal) gatewayModal.classList.remove('active'); });
 
     initCustomDateTime();
+    initFilterDateSelects();
 
     var bankForm = document.getElementById('bankDepositForm');
     if (bankForm) bankForm.addEventListener('submit', submitBankDeposit);
