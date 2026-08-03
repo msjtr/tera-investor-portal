@@ -516,6 +516,11 @@
 .filters-bar select,.filters-bar input{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff}
 .filters-bar select:focus,.filters-bar input:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
 .filters-bar select:hover:not(:focus),.filters-bar input:hover:not(:focus){border-color:#c7cdd6}
+.filter-date-group{display:flex;gap:6px;width:196px}
+.filter-date-group select{padding:9px 8px;min-width:0}
+.filter-date-group select.fd-day{flex:0 0 50px}
+.filter-date-group select.fd-year{flex:0 0 66px}
+.filter-date-group select.fd-month{flex:1 1 auto}
 .date-wrap{position:relative;display:inline-block;vertical-align:middle}
 .form-group .date-wrap{width:100%}
 .date-wrap input[type="date"]{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;font-family:inherit;width:100%;box-sizing:border-box}
@@ -731,8 +736,18 @@
     <option value="bank_transfer">تحويل بنكي</option>
     <option value="payment_gateway">بوابة دفع</option>
   </select>
-  <div class="date-wrap"><input type="date" id="filterFrom" style="direction:ltr;text-align:right"><span class="date-ph">يوم/شهر/سنة</span></div>
-  <div class="date-wrap"><input type="date" id="filterTo" style="direction:ltr;text-align:right"><span class="date-ph">يوم/شهر/سنة</span></div>
+  <div class="filter-date-group" id="filterFromGroup">
+    <select class="fd-day" id="filterFromDay"><option value="">يوم</option></select>
+    <select class="fd-month" id="filterFromMonth"><option value="">شهر</option></select>
+    <select class="fd-year" id="filterFromYear"><option value="">سنة</option></select>
+  </div>
+  <input type="hidden" id="filterFrom">
+  <div class="filter-date-group" id="filterToGroup">
+    <select class="fd-day" id="filterToDay"><option value="">يوم</option></select>
+    <select class="fd-month" id="filterToMonth"><option value="">شهر</option></select>
+    <select class="fd-year" id="filterToYear"><option value="">سنة</option></select>
+  </div>
+  <input type="hidden" id="filterTo">
   <button class="btn-secondary" id="btnExportExcel"><i class="fas fa-file-excel"></i> Excel</button>
   <button class="btn-secondary" id="btnExportPdf"><i class="fas fa-file-pdf"></i> PDF</button>
   <button class="btn-secondary" id="btnPrintTable"><i class="fas fa-print"></i> طباعة</button>
