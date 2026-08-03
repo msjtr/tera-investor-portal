@@ -130,7 +130,7 @@
           '<td>' + fmtMoney(d.amount) + '</td>' +
           '<td>' + fmtMoney(d.fee_amount) + '</td>' +
           '<td>' + fmtMoney(d.vat_amount) + '</td>' +
-          '<td>' + fmtMoney(d.net_amount || d.amount) + '</td>' +
+          '<td>' + fmtMoney(d.total_amount || d.amount) + '</td>' +
           '<td>' + fmtDate(d.created_at) + '</td>' +
           '<td>' + fmtDate(d.approved_at) + '</td>' +
           '<td>' + statusBadge(d.status) + '</td>' +
@@ -266,9 +266,10 @@
         amount: amount,
         fee_amount: 0,
         vat_amount: 0,
-        net_amount: amount,
+        total_amount: amount,
         status: 'pending_receipt',
-        from_bank: fromBank,
+        bank_name: fromBank,
+        request_number: 'DEP-' + Date.now(),
         transfer_date: date,
         transfer_time: time || null,
         reference_number: ref || null,
@@ -281,7 +282,7 @@
       if (file) {
         var path = await uploadReceipt(file, deposit.id);
         if (path) {
-          await client.from('deposit_requests').update({ receipt_path: path, status: 'pending_review' }).eq('id', deposit.id);
+          await client.from('deposit_requests').update({ receipt_url: path, status: 'pending_review' }).eq('id', deposit.id);
         }
       }
 
