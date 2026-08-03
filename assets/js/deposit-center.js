@@ -414,17 +414,6 @@
       });
     });
 
-    var qrBtn = document.getElementById('btnShowQr');
-    if (qrBtn) qrBtn.addEventListener('click', function () {
-      var box = document.getElementById('bankQrBox');
-      if (!box) return;
-      if (!box.dataset.loaded) {
-        box.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(BANK_INFO.iban) + '" alt="QR" style="width:160px;height:160px">';
-        box.dataset.loaded = '1';
-      }
-      box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-    });
-
     var shareBtn = document.getElementById('btnShareBankInfo');
     if (shareBtn) shareBtn.addEventListener('click', function () {
       var text = 'اسم البنك: ' + BANK_INFO.bankName + '\nاسم الحساب: ' + BANK_INFO.accountName + '\nرقم الحساب: ' + BANK_INFO.accountNumber + '\nIBAN: ' + BANK_INFO.iban;
