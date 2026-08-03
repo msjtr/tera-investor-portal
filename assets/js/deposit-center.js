@@ -231,7 +231,13 @@
       }).select().single();
       if (!error && data) {
         try {
-          await client.functions.invoke('notify-dispatch', { body: { notificationId: data.id } });
+          var sessionRes = await client.auth.getSession();
+          var token = sessionRes.data.session ? sessionRes.data.session.access_token : null;
+          await fetch('https://ucmzavrsgkfpypgewpbd.supabase.co/functions/v1/notify-dispatch', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notificationId: data.id })
+          });
         } catch (e2) { console.warn('notify-dispatch failed', e2); }
       }
     } catch (e) { console.warn('createNotification failed', e); }
