@@ -200,14 +200,15 @@
     set('gwGrandTotal', calc.grandTotal);
   }
 
-  async function logActivity(action, details) {
+  async function logActivity(action, details, description) {
     try {
       var client = await getClient();
       if (!client || !currentUser) return;
       await client.from('activity_log').insert({
         user_id: currentUser.id,
-        action: action,
-        details: details || {},
+        event_type: action,
+        description: description || action,
+        metadata: details || {},
         created_at: new Date().toISOString()
       });
     } catch (e) { console.warn('activity log failed', e); }
@@ -293,7 +294,7 @@
         created_at: new Date().toISOString()
       });
 
-      await logActivity('deposit_request_created', { deposit_id: deposit.id, amount: amount, method: 'bank_transfer' });
+      await logActivity('deposit_request_created', { deposit_id: deposit.id, amount: amount, method: 'bank_transfer' }, 'تم إنشاء طلب إيداع بنكي بمبلغ ' + fmtMoney(amount));
       await createNotification('تم استلام طلب الإيداع', 'تم استلام طلب إيداعك بمبلغ ' + fmtMoney(amount) + ' وسيتم مراجعته قريباً.', 'deposit');
 
       alert('تم إرسال طلب الإيداع بنجاح، سيتم مراجعته واعتماده خلال يوم عمل واحد.');
