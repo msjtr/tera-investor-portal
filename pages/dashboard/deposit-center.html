@@ -506,7 +506,11 @@
 .filters-bar select:focus,.filters-bar input:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
 .filters-bar select:hover:not(:focus),.filters-bar input:hover:not(:focus){border-color:#c7cdd6}
 .date-wrap{position:relative;display:inline-block;vertical-align:middle}
-.date-wrap .date-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:13px;color:#767676;background:#fff;pointer-events:none;direction:ltr;unicode-bidi:isolate;white-space:nowrap;overflow:hidden;border-radius:10px}
+.form-group .date-wrap{width:100%}
+.date-wrap input[type="date"]{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;font-family:inherit;width:100%;box-sizing:border-box}
+.date-wrap input[type="date"]:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
+.date-wrap input[type="date"]:hover:not(:focus){border-color:#c7cdd6}
+.date-wrap .date-ph{position:absolute;top:1px;bottom:1px;left:1px;right:28px;display:flex;align-items:center;justify-content:flex-end;padding:0 8px;font-size:13px;color:#767676;background:#fff;pointer-events:none;direction:ltr;unicode-bidi:isolate;white-space:nowrap;overflow:hidden;border-radius:10px 0 0 10px}
 .date-wrap.has-value .date-ph{display:none}
 .form-group input:not([type="date"]),.form-group select,.form-group textarea{border:1px solid #e5e7eb;border-radius:10px;padding:9px 12px;font-size:13px;background:#fff;font-family:inherit;width:100%;box-sizing:border-box}
 .form-group input:not([type="date"]):focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#028090;box-shadow:0 0 0 3px rgba(2,128,144,.12)}
