@@ -462,6 +462,9 @@
 .deposit-table{width:100%;border-collapse:collapse;min-width:960px}
 .deposit-table th{background:#f8f9fb;color:#6b7280;font-size:13px;font-weight:600;padding:12px 14px;text-align:right;white-space:nowrap}
 .deposit-table td{padding:12px 14px;font-size:13.5px;border-top:1px solid #f1f2f4;white-space:nowrap;color:#111827}
+.deposit-table th:last-child,.deposit-table td:last-child{position:sticky;left:0;z-index:2}
+.deposit-table th:last-child{background:#f8f9fb}
+.deposit-table td:last-child{background:#fff;box-shadow:2px 0 4px rgba(0,0,0,.05)}
 .modal-overlay{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
 .modal-overlay.active{display:flex}
 .modal-box{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.25)}
@@ -600,10 +603,10 @@
       <div class="form-grid-2">
         <div class="form-group"><label>مبلغ التحويل (ر.س)</label><input type="number" step="0.01" min="1" id="bdAmount" required></div>
         <div class="form-group"><label>البنك المُحوَّل منه</label><input type="text" id="bdFromBank" required></div>
-        <div class="form-group"><label>تاريخ التحويل</label><input type="date" id="bdDate" required></div>
+        <div class="form-group"><label>تاريخ التحويل</label><input type="date" id="bdDate" required style="direction:ltr;text-align:right"></div>
         <div class="form-group"><label>وقت التحويل (اختياري)</label><input type="time" id="bdTime"></div>
         <div class="form-group"><label>رقم المرجع (اختياري)</label><input type="text" id="bdRef"></div>
-        <div class="form-group"><label>رفع إيصال التحويل</label><input type="file" id="bdReceipt" accept="image/*,.pdf" required></div>
+        <div class="form-group"><label>رفع إيصال التحويل</label><input type="file" id="bdReceipt" accept="image/*,.pdf" required style="direction:ltr;text-align:right"></div>
       </div>
       <div class="form-group"><label>ملاحظات إضافية</label><textarea id="bdNotes" rows="2"></textarea></div>
       <button type="submit" class="btn-primary" id="btnSubmitBankDeposit"><i class="fas fa-paper-plane"></i> إرسال طلب الإيداع</button>
@@ -648,8 +651,8 @@
     <option value="bank_transfer">تحويل بنكي</option>
     <option value="payment_gateway">بوابة دفع</option>
   </select>
-  <input type="date" id="filterFrom">
-  <input type="date" id="filterTo">
+  <input type="date" id="filterFrom" style="direction:ltr;text-align:right">
+  <input type="date" id="filterTo" style="direction:ltr;text-align:right">
   <button class="btn-secondary" id="btnExportExcel"><i class="fas fa-file-excel"></i> Excel</button>
   <button class="btn-secondary" id="btnExportPdf"><i class="fas fa-file-pdf"></i> PDF</button>
   <button class="btn-secondary" id="btnPrintTable"><i class="fas fa-print"></i> طباعة</button>
